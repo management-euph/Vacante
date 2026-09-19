@@ -48,6 +48,9 @@ if (!defined('BOOTSTRAP')) {
 }
 
 // ── CS-Cart function stubs ───────────────────────────────────────────────
+// The db_* stubs delegate to Tests\Support\DbStub so a test can program the
+// rows they return and assert on the statements the code under test issued.
+// Unprogrammed, they behave exactly like the inert stubs they replaced.
 if (!function_exists('fn_log_event')) {
     function fn_log_event(string $type, string $action, array $data = []): void
     {
@@ -57,30 +60,40 @@ if (!function_exists('fn_log_event')) {
 if (!function_exists('db_get_field')) {
     function db_get_field(string $query, ...$params): mixed
     {
-        return null;
+        \Tygh\Addons\FgoInvoicing\Tests\Support\DbStub::record($query, $params);
+
+        return \Tygh\Addons\FgoInvoicing\Tests\Support\DbStub::$field;
     }
 }
 if (!function_exists('db_get_row')) {
     function db_get_row(string $query, ...$params): array|false
     {
-        return false;
+        \Tygh\Addons\FgoInvoicing\Tests\Support\DbStub::record($query, $params);
+
+        return \Tygh\Addons\FgoInvoicing\Tests\Support\DbStub::$row;
     }
 }
 if (!function_exists('db_get_array')) {
     function db_get_array(string $query, ...$params): array
     {
-        return [];
+        \Tygh\Addons\FgoInvoicing\Tests\Support\DbStub::record($query, $params);
+
+        return \Tygh\Addons\FgoInvoicing\Tests\Support\DbStub::$rows;
     }
 }
 if (!function_exists('db_query')) {
     function db_query(string $query, ...$params): int
     {
+        \Tygh\Addons\FgoInvoicing\Tests\Support\DbStub::record($query, $params);
+
         return 0;
     }
 }
 if (!function_exists('db_replace_into')) {
     function db_replace_into(string $table, array $data): int
     {
+        \Tygh\Addons\FgoInvoicing\Tests\Support\DbStub::record('REPLACE INTO ' . $table, [$data]);
+
         return 1;
     }
 }

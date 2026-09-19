@@ -355,12 +355,16 @@ jobs:
         run: vendor/bin/phpunit --colors=always --coverage-text=coverage.txt --coverage-clover=coverage.xml
 
       # ── Coverage floor (same ratchet as the other suites). Floor =
-      # measured coverage at introduction (52.53% on 2026-07-22) minus a
-      # small margin. Raise the floor as coverage grows — never lower it to
-      # make a PR pass; write the missing tests instead.
+      # measured coverage minus a small margin. Raise the floor as coverage
+      # grows — never lower it to make a PR pass; write the missing tests
+      # instead.
+      #   2026-07-22: introduced at 52.53% measured, floor 51.0.
+      #   2026-09-19: the floor went red at 49.67% — LanguageSeeder,
+      #     TypeCoerce and ConfigProvider had shipped with no tests of their
+      #     own. Unit tests added for all three; measured 63.59%, floor 62.0.
       - name: Enforce coverage floor
         run: |
-          floor=51.0
+          floor=62.0
           pct=$(python3 -c "
           import xml.etree.ElementTree as ET
           m = ET.parse('coverage.xml').getroot().find('./project/metrics')
@@ -470,6 +474,12 @@ jobs:
         run: npm test
 
   # ── Qodana (JetBrains static analysis) ──
+  # THE single Qodana entry point for this repo. A second, ungated workflow
+  # (.github/workflows/qodana_code_quality.yml) was added by the Qodana Cloud
+  # setup automation in #1 and removed again on 2026-09-19: it duplicated every
+  # scan, bypassed the `needs` gate below, and pointed at a different cloud
+  # project token. The token below prefers the newer project and falls back to
+  # the original one, so whichever secret the repo actually holds is used.
   # Gated behind the rest of the gauntlet via `needs`, so Qodana runs only
   # AFTER PHPStan / php-cs-fixer / Rector / PHPUnit / Lint / ESLint have all
   # passed — it is the final quality gate, not a parallel one. (If any of those
@@ -504,5 +514,5 @@ jobs:
           pr-mode: false
           upload-result: true   # publish qodana.sarif.json as a build artifact for offline triage
         env:
-          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN_1757207161 }}
+          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN_28473803 || secrets.QODANA_TOKEN_1757207161 }}
           QODANA_ENDPOINT: 'https://qodana.cloud'
