@@ -249,7 +249,18 @@ function _travel_core_prepare_hotel_seo_data(int $productId): void
     // which runs DURING rendering and causes the Data.php:265 crash).
     $view = \Tygh\Tygh::$app['view'];
     if (is_object($view) && method_exists($view, 'assign')) {
-        $view->assign('travel_hotel_schema_json', json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        // JSON_HEX_TAG is load-bearing, not cosmetic. This string is printed
+        // raw (`nofilter`) inside <script type="application/ld+json"> in
+        // hooks/products/product_detail_bottom.post.tpl, and every value in
+        // $schema — name, description, address, website — arrives from a
+        // provider feed (Novoton/Sphinx XML) or the admin. JSON_UNESCAPED_SLASHES
+        // alone would let a hotel field containing "</script>" close the tag and
+        // run whatever follows, on every product page for that hotel. HEX_TAG
+        // escapes < and > to </>, which is still valid JSON-LD.
+        $view->assign(
+            'travel_hotel_schema_json',
+            json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG),
+        );
         $view->assign('travel_og_title', $productDesc['page_title'] ?? $hotel->name);
         $view->assign('travel_og_description', $productDesc['meta_description'] ?? '');
         $view->assign('travel_og_image', $hotel->imageUrl ?? '');
