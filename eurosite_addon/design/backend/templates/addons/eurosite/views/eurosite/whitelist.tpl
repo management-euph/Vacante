@@ -1,6 +1,3 @@
-{script src="js/lib/select2/dist/js/select2.full.min.js"}
-{style src="js/lib/select2/dist/css/select2.min.css"}
-
 {capture name="mainbox"}
 
 <div class="travel-admin-panel" id="eurosite-whitelist">
@@ -9,6 +6,17 @@
         <div class="alert alert-warning">
             <i class="icon-warning-sign"></i>
             {__("eurosite.whitelist_needs_countries", ["[default]" => "The country catalog has not been synced yet — run the 'countries' sync from the dashboard first. City lists fall back to live API calls."])}
+        </div>
+    {elseif $eurosite_country_names_missing}
+        {* The catalog holds codes but no names: the rows render as bare "TT" /
+           "VC" and the search box (which matches on name) finds nothing. The
+           controller already tried to refill it from the API on this request. *}
+        <div class="alert alert-warning">
+            <i class="icon-warning-sign"></i>
+            {__("eurosite.whitelist_names_missing", ["[default]" => "The country catalog has codes but no names. Run the 'countries' sync to refill it."])}
+            {if $eurosite_country_heal_error}
+                <br/><span class="muted">{$eurosite_country_heal_error|escape:html}</span>
+            {/if}
         </div>
     {/if}
 
@@ -32,6 +40,22 @@
         {__("eurosite.whitelist_hint", ["[default]" => "Only whitelisted destinations are synced and searchable on the storefront. Tick a country to include all of its cities, or expand it and pick specific cities."])}
     </p>
 
+    <div style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+        <form action="{""|fn_url}" method="post" style="display:inline; margin:0;">
+            <input type="hidden" name="dispatch" value="eurosite.run_sync" />
+            <input type="hidden" name="sync_type" value="countries" />
+            <input type="hidden" name="return_to" value="whitelist" />
+            <button type="submit" class="btn btn-micro">
+                <i class="icon-refresh"></i> {__("eurosite.sync_countries", ["[default]" => "Sync countries"])}
+            </button>
+        </form>
+        {if $eurosite_countries_last_synced}
+            <span class="muted" style="font-size: 11px;">
+                {__("eurosite.last_synced", ["[default]" => "Last synced"])}: {$eurosite_countries_last_synced|escape:html}
+            </span>
+        {/if}
+    </div>
+
     {* All values the page script needs ride as data attributes; the script
        itself is a real JS file (js/addons/eurosite/whitelist.js) — inline
        scripts go through the backend's inline_script/CSP rewriter and
@@ -47,18 +71,26 @@
          data-txt-selected="{__("eurosite.selected", ["[default]" => "selected"])|escape:html}"
          data-txt-shown="{__("eurosite.shown", ["[default]" => "shown"])|escape:html}"
          data-txt-confirm-remove="{__("eurosite.confirm_remove_all", ["[default]" => "Remove all whitelisted destinations? Click Save to persist."])|escape:html}"
-         data-txt-search="{__("eurosite.search_destinations", ["[default]" => "Search country or city..."])|escape:html}"></div>
+         data-txt-no-results="{__("eurosite.no_search_results", ["[default]" => "No matches."])|escape:html}"
+         data-txt-countries="{__("eurosite.countries", ["[default]" => "Countries"])|escape:html}"
+         data-txt-cities="{__("eurosite.cities", ["[default]" => "Cities"])|escape:html}"></div>
 
     <div style="display: flex; gap: 30px; align-items: flex-start;">
 
         {* ── Left: country list ── *}
         <div style="flex: 1; min-width: 0;">
 
-            {* Select2 search over countries + cities *}
-            <div style="margin-bottom: 12px;">
-                <select id="eurosite-wl-search" style="width: 100%;">
-                    <option></option>
-                </select>
+            {* Search over countries + cities. A plain input with its own
+               dropdown (the sphinx whitelist pattern) — no select2, so the page
+               does not depend on a library the kit may not ship. *}
+            <div style="margin-bottom: 12px; position: relative;">
+                <input type="text" id="eurosite-wl-search" class="input-large" style="width: 100%;"
+                       autocomplete="off"
+                       placeholder="{__("eurosite.search_destinations", ["[default]" => "Search country or city..."])|escape:html}" />
+                <div id="eurosite-wl-search-results"
+                     style="display:none; position:absolute; z-index:100; left:0; right:0; top:100%;
+                            background:#fff; border:1px solid #ddd; border-top:0; max-height:320px;
+                            overflow-y:auto; box-shadow:0 4px 10px rgba(0,0,0,.08);"></div>
             </div>
 
             {* Whitelisted-only filter *}
@@ -82,11 +114,11 @@
                         <div class="eurosite-country-row" id="eurosite-wl-row-{$cc}" data-country="{$cc}" style="border-bottom: 1px solid #eee;">
                             <div style="display: flex; align-items: center; gap: 8px; padding: 6px 0;">
                                 <span class="eurosite-expand" data-country="{$cc}" style="cursor: pointer; width: 20px; text-align: center; color: #999; user-select: none;">&#9654;</span>
-                                <label style="margin: 0; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                                    <input type="checkbox" class="eurosite-country-all" data-country="{$cc}"
-                                           {if $wl && ($wl.all || $wl.cities)}checked{/if} />
-                                    {$country.name|escape:html} <code>{$cc}</code>
-                                </label>
+                                <input type="checkbox" class="eurosite-country-all" data-country="{$cc}"
+                                       {if $wl && ($wl.all || $wl.cities)}checked{/if} />
+                                <span class="eurosite-country-name" data-country="{$cc}"
+                                      style="font-weight: bold; cursor: pointer;">{$country.name|default:$cc|escape:html}</span>
+                                <code>{$cc}</code>
                                 <span class="eurosite-wl-badge" data-country="{$cc}" style="font-size: 11px;">
                                     {if $wl && $wl.all}
                                         <span style="background: #28a745; color: #fff; padding: 2px 8px; border-radius: 3px;">{__("eurosite.all_cities_included", ["[default]" => "ALL CITIES"])}</span>

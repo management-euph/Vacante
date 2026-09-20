@@ -60,6 +60,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ob_end_clean();
         }
 
+        // A sync fired from the whitelist editor returns there, not to the
+        // dashboard — being bounced off the page you were working on is how
+        // you lose your place in an 86-row list.
+        $returnTo = RequestCoerce::string($_REQUEST, 'return_to') === 'whitelist'
+            ? 'eurosite.whitelist'
+            : 'eurosite.manage';
+
         $success = TypeCoerce::toBool($result['success'] ?? false);
         $stats = TypeCoerce::toStringMap($result['stats'] ?? []);
         $summary = TypeCoerce::toInt($stats['synced'] ?? 0) . '/' . TypeCoerce::toInt($stats['total'] ?? 0) . ' synced';
@@ -71,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             fn_set_notification('E', __('error'), "Eurosite sync '{$syncType}' failed: " . TypeCoerce::toString($result['error'] ?? 'unknown error'));
         }
 
-        return [CONTROLLER_STATUS_REDIRECT, 'eurosite.manage'];
+        return [CONTROLLER_STATUS_REDIRECT, $returnTo];
     }
 
     if ($mode === 'save_whitelist') {
@@ -159,9 +166,9 @@ if ($mode === 'get_cities') {
 }
 
 if ($mode === 'search_destinations') {
-    // AJAX for the whitelist select2 box: countries + cities by name, from
-    // the synced catalogs. Results carry enough context for the picker to
-    // jump to (and check) the right row.
+    // AJAX for the whitelist search box: countries + cities by name OR code,
+    // from the synced catalogs. Each result carries enough context for the
+    // picker to open the right country and scroll to the right city.
     $query = trim(RequestCoerce::string($_REQUEST, 'q'));
     $results = [];
     if (mb_strlen($query) >= 2) {
@@ -198,6 +205,42 @@ if ($mode === 'search_destinations') {
 
 if ($mode === 'whitelist') {
     $countries = Container::countries()->findAll();
+
+    // Self-heal the country catalog before rendering.
+    //
+    // Two states put the editor in front of an unusable list: an empty catalog
+    // (no `countries` sync has ever run) and — the one seen in the field — a
+    // catalog whose rows carry a code but no name, which renders as a column of
+    // bare "TT" / "VC" and makes the search box useless, because it matches on
+    // name. Both are repaired the same way the city list already repairs itself:
+    // ask the API and upsert what comes back. getCountryRequest is a small,
+    // static call, and this only runs while the catalog is unusable.
+    // "Unusable" means EVERY row is nameless — one odd row is not worth an API
+    // round trip on each page load.
+    $namesMissing = $countries !== [];
+    foreach ($countries as $row) {
+        if (trim(TypeCoerce::toString($row['name'] ?? '')) !== '') {
+            $namesMissing = false;
+            break;
+        }
+    }
+
+    $healFailed = '';
+    if ($countries === [] || $namesMissing) {
+        try {
+            $live = Container::getApi()->getCountries();
+            if ($live !== []) {
+                Container::countries()->upsertBatch($live);
+                $countries = Container::countries()->findAll();
+                $namesMissing = false;
+            }
+        } catch (\Throwable $e) {
+            // No API (unconfigured store, network, bad credentials) is not a
+            // reason to 503 the editor — it still works off codes.
+            $healFailed = $e->getMessage();
+        }
+    }
+
     $entries = Container::whitelist()->findAll();
 
     // country => ['all' => bool, 'cities' => list<string>]
@@ -220,6 +263,9 @@ if ($mode === 'whitelist') {
     $view->assign('eurosite_whitelist_map', $whitelistMap);
     $view->assign('eurosite_whitelist_json', json_encode($whitelistMap));
     $view->assign('eurosite_countries_synced', $countries !== []);
+    $view->assign('eurosite_country_names_missing', $countries !== [] && $namesMissing);
+    $view->assign('eurosite_country_heal_error', $healFailed);
+    $view->assign('eurosite_countries_last_synced', Container::countries()->getLastSyncedAt());
     $view->assign('eurosite_wl_country_count', count($countries));
     $view->assign('eurosite_wl_city_count', Container::cities()->count());
     $view->assign('eurosite_wl_own_city_count', Container::cities()->count(true));
@@ -303,12 +349,43 @@ if ($mode === 'manage' || empty($mode)) {
         $cronUrls[$m] = $baseUrl . "index.php?dispatch=eurosite_cron.run&access_key={$cronKey}&cron_mode={$m}";
     }
 
+    // One prepared row per cron mode — URL, CLI equivalent and a suggested
+    // crontab schedule — so the dashboard can offer Run / Copy URL / Copy CLI
+    // the way the Sphinx dashboard does. Schedules are suggestions sized to how
+    // often each catalog actually moves: the static catalogs weekly, anything
+    // driven by the whitelist daily, the full pipeline nightly.
+    $cronSchedules = [
+        'full'         => '0 1 * * *',
+        'countries'    => '0 1 * * 0',
+        'own_cities'   => '30 1 * * 0',
+        'cities'       => '0 2 * * 0',
+        'hotels'       => '0 3 * * *',
+        'room_types'   => '30 3 * * 0',
+        'tags'         => '45 3 * * 0',
+        'product_info' => '0 4 * * *',
+        'cleanup'      => '0 5 * * 0',
+    ];
+    $cronCli = 'php app/addons/eurosite/cron.php access_key=' . $cronKey . ' mode=full';
+    $cronRows = [];
+    foreach ($syncModes as $m => $description) {
+        $mode = TypeCoerce::toString($m);
+        $cronRows[] = [
+            'mode'        => $mode,
+            'description' => TypeCoerce::toString($description),
+            'schedule'    => $cronSchedules[$mode] ?? '0 4 * * *',
+            'url'         => $cronUrls[$mode] ?? '',
+            'cli'         => 'php app/addons/eurosite/cron.php access_key=' . $cronKey . ' mode=' . $mode,
+        ];
+    }
+
     $apiUser = ConfigProvider::getApiUser();
     $view->assign('eurosite_counts', $counts);
     $view->assign('eurosite_catalog_rows', $catalogRows);
     $view->assign('eurosite_recent_bookings', $recentBookings);
     $view->assign('eurosite_sync_modes', $syncModes);
     $view->assign('eurosite_cron_urls', $cronUrls);
+    $view->assign('eurosite_cron_rows', $cronRows);
+    $view->assign('eurosite_cron_cli', $cronCli);
     $view->assign('eurosite_cron_key', $cronKey);
     $view->assign('eurosite_api_url', ConfigProvider::getApiUrl());
     $view->assign('eurosite_api_user', $apiUser);

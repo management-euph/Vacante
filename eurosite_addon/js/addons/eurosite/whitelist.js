@@ -1,10 +1,16 @@
 // Eurosite — destination whitelist page (sphinx whitelist UX).
 //
-// Lives as a real file (loaded via {script src=...}) instead of an inline
-// <script> block: CS-Cart's backend rewrites inline scripts into
-// {inline_script} Smarty blocks for CSP nonces, and that rewrite chokes on
-// a script body wrapped in {literal}. All server-side values ride as data
-// attributes on #eurosite-whitelist-data, so this file is plain JS.
+// Lives under <addon>/js/addons/eurosite/ — i.e. the DOCROOT /js/ tree — because
+// whitelist.tpl loads it as {script src="js/addons/eurosite/whitelist.js"}. In a
+// backend template a leading "js/" resolves to the docroot /js/, while a path
+// with no prefix resolves to design/backend/js/. This file used to sit in
+// design/backend/js/ while the template asked for "js/…", so it 404'd and the
+// whole page was inert: no search, no expand, no save. Keep the two in step.
+//
+// It is a real file rather than an inline <script> because CS-Cart's backend
+// rewrites inline scripts into {inline_script} Smarty blocks for CSP nonces,
+// and that rewrite chokes on a body wrapped in {literal}. All server-side
+// values ride as data attributes on #eurosite-whitelist-data.
 //
 // Model: state[cc] = { all: bool, cities: Set<code> } — mirrors the saved
 // whitelist on load and is the single source of truth for badges, the
@@ -26,7 +32,9 @@
             selected: dataEl.getAttribute('data-txt-selected') || 'selected',
             shown: dataEl.getAttribute('data-txt-shown') || 'shown',
             confirmRemove: dataEl.getAttribute('data-txt-confirm-remove') || 'Remove all whitelisted destinations?',
-            search: dataEl.getAttribute('data-txt-search') || 'Search country or city...'
+            noResults: dataEl.getAttribute('data-txt-no-results') || 'No matches.',
+            countries: dataEl.getAttribute('data-txt-countries') || 'Countries',
+            cities: dataEl.getAttribute('data-txt-cities') || 'Cities'
         };
 
         // ── State ──
@@ -56,12 +64,14 @@
         function selectAllCb(cc) { return q('.eurosite-select-all[data-country="' + cc + '"]'); }
         function cityBox(cc) { return q('.eurosite-city-box[data-country="' + cc + '"]'); }
         function cityGrid(cc) { return q('.eurosite-city-grid[data-country="' + cc + '"]'); }
+        function arrow(cc) { return q('.eurosite-expand[data-country="' + cc + '"]'); }
 
         function countryName(cc) {
             var r = row(cc);
             if (!r) { return cc; }
-            var label = r.querySelector('label');
-            return label ? label.textContent.trim() : cc;
+            var nameEl = r.querySelector('.eurosite-country-name');
+            var name = nameEl ? nameEl.textContent.trim() : '';
+            return name || cc;
         }
 
         // ── Badges / summary / filter ──
@@ -138,7 +148,7 @@
                 var own = city.is_own ? ' <span class="label label-info" title="own offers">own</span>' : '';
                 html += '<label style="display:inline-flex; align-items:center; gap:3px; min-width:200px; font-size:12px; color:#444; cursor:pointer;">'
                     + '<input type="checkbox" class="eurosite-city" data-country="' + esc(cc) + '" value="' + esc(city.code) + '"' + checked + '> '
-                    + '<span>' + esc(city.name) + ' <code>' + esc(city.code) + '</code>' + own + '</span></label>';
+                    + '<span>' + esc(city.name || city.code) + ' <code>' + esc(city.code) + '</code>' + own + '</span></label>';
             });
             grid.innerHTML = html || '<span class="muted" style="font-size:12px;">' + esc(txt.noCities) + '</span>';
             qa('.eurosite-city[data-country="' + cc + '"]').forEach(function (cb) {
@@ -160,6 +170,7 @@
                     }
                     cityLists[cc] = data.cities || [];
                     renderCities(cc);
+                    updateSummary();
                     if (done) { done(); }
                 })
                 .catch(function () {
@@ -167,13 +178,17 @@
                 });
         }
 
+        // forceOpen=true never collapses — used by the search picker, which must
+        // leave the country open whether or not it already was.
         function expand(cc, forceOpen) {
             var box = cityBox(cc);
             if (!box) { return; }
             var isOpen = box.style.display !== 'none';
-            if (isOpen && !forceOpen) { box.style.display = 'none'; return; }
-            box.style.display = 'block';
-            loadCities(cc);
+            var open = forceOpen || !isOpen;
+            box.style.display = open ? 'block' : 'none';
+            var a = arrow(cc);
+            if (a) { a.innerHTML = open ? '&#9660;' : '&#9654;'; }
+            if (open) { loadCities(cc); }
         }
 
         // ── Selection handlers (sphinx semantics) ──
@@ -240,7 +255,15 @@
         }
 
         // ── Wire static elements ──
+        // The arrow AND the country name both expand: a 20px glyph is a small
+        // target, and clicking the name is what everyone tries first.
         qa('.eurosite-expand').forEach(function (el) {
+            el.addEventListener('click', function (e) {
+                e.preventDefault();
+                expand(el.getAttribute('data-country'), false);
+            });
+        });
+        qa('.eurosite-country-name').forEach(function (el) {
             el.addEventListener('click', function (e) {
                 e.preventDefault();
                 expand(el.getAttribute('data-country'), false);
@@ -292,7 +315,21 @@
             });
         }
 
-        // ── Select2 search (country + city) ──
+        // ── Search (country + city), sphinx-style ──
+        //
+        // A plain input plus an own dropdown, NOT select2: the whitelist page
+        // must not depend on a library shipped by the CS-Cart kit. The sphinx
+        // whitelist — the page this one is modelled on — does exactly this.
+        var searchInput = document.getElementById('eurosite-wl-search');
+        var searchBox = document.getElementById('eurosite-wl-search-results');
+
+        function hideResults() {
+            if (searchBox) {
+                searchBox.style.display = 'none';
+                searchBox.innerHTML = '';
+            }
+        }
+
         function jumpToCountry(cc, flash) {
             var r = row(cc);
             if (!r) { return; }
@@ -308,18 +345,27 @@
             }
         }
 
+        // A search hit only navigates — it never ticks a box. Checking on click
+        // would make a mistyped search silently whitelist a destination.
         function handleSearchPick(item) {
             if (!item || !item.country_code) { return; }
             var cc = item.country_code;
+            hideResults();
+            if (searchInput) { searchInput.value = ''; }
             if (item.type === 'city' && item.city_code) {
                 expand(cc, true);
                 loadCities(cc, function () {
                     var cb = q('.eurosite-city[data-country="' + cc + '"][value="' + item.city_code + '"]');
-                    if (cb && !cb.checked && (!state[cc] || !state[cc].all)) {
-                        cb.checked = true;
-                        onCityToggle(cc, cb);
+                    if (cb) {
+                        var label = cb.closest('label');
+                        if (label) {
+                            label.style.outline = '2px solid #f0ad4e';
+                            label.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            setTimeout(function () { label.style.outline = ''; }, 1600);
+                        }
+                    } else {
+                        jumpToCountry(cc, true);
                     }
-                    jumpToCountry(cc, true);
                 });
             } else {
                 expand(cc, true);
@@ -327,25 +373,74 @@
             }
         }
 
-        if (typeof window.$ !== 'undefined' && window.$.fn && typeof window.$.fn.select2 !== 'undefined') {
-            var $sel = window.$('#eurosite-wl-search');
-            $sel.select2({
-                ajax: {
-                    url: searchUrl,
-                    dataType: 'json',
-                    delay: 250,
-                    data: function (params) { return { q: params.term }; },
-                    processResults: function (data) { return { results: data.results || [] }; },
-                    cache: true
-                },
-                minimumInputLength: 2,
-                placeholder: txt.search,
-                allowClear: true,
-                width: '100%'
+        function renderResults(results) {
+            if (!searchBox) { return; }
+            if (!results.length) {
+                searchBox.innerHTML = '<div style="padding:8px 12px; color:#888; font-size:12px;">' + esc(txt.noResults) + '</div>';
+                searchBox.style.display = 'block';
+                return;
+            }
+            var groups = { country: [], city: [] };
+            results.forEach(function (r) { (groups[r.type] || groups.city).push(r); });
+
+            var html = '';
+            [['country', txt.countries], ['city', txt.cities]].forEach(function (pair) {
+                var items = groups[pair[0]];
+                if (!items.length) { return; }
+                html += '<div style="padding:4px 12px; background:#f5f5f5; font-size:11px; text-transform:uppercase; color:#888;">'
+                    + esc(pair[1]) + '</div>';
+                items.forEach(function (item) {
+                    html += '<div class="eurosite-wl-hit" data-type="' + esc(item.type) + '"'
+                        + ' data-country="' + esc(item.country_code) + '"'
+                        + ' data-city="' + esc(item.city_code || '') + '"'
+                        + ' style="padding:6px 12px; cursor:pointer; border-bottom:1px solid #f5f5f5; font-size:13px;">'
+                        + esc(item.text) + '</div>';
+                });
             });
-            $sel.on('select2:select', function (e) {
-                handleSearchPick(e.params.data);
-                $sel.val(null).trigger('change');
+            searchBox.innerHTML = html;
+            searchBox.style.display = 'block';
+            qa('.eurosite-wl-hit').forEach(function (el) {
+                el.addEventListener('mouseenter', function () { el.style.background = '#f8f9fa'; });
+                el.addEventListener('mouseleave', function () { el.style.background = ''; });
+                el.addEventListener('click', function () {
+                    handleSearchPick({
+                        type: el.getAttribute('data-type'),
+                        country_code: el.getAttribute('data-country'),
+                        city_code: el.getAttribute('data-city')
+                    });
+                });
+            });
+        }
+
+        if (searchInput && searchBox) {
+            var searchTimer = null;
+            var lastQuery = '';
+
+            searchInput.addEventListener('input', function () {
+                var term = searchInput.value.trim();
+                if (searchTimer) { clearTimeout(searchTimer); }
+                if (term.length < 2) { hideResults(); return; }
+                searchTimer = setTimeout(function () {
+                    lastQuery = term;
+                    fetch(searchUrl + '&q=' + encodeURIComponent(term), { credentials: 'same-origin' })
+                        .then(function (r) { return r.json(); })
+                        .then(function (data) {
+                            if (term !== lastQuery) { return; } // a newer keystroke won
+                            renderResults(data.results || []);
+                        })
+                        .catch(function () {
+                            searchBox.innerHTML = '<div style="padding:8px 12px;" class="text-error">' + esc(txt.failed) + '</div>';
+                            searchBox.style.display = 'block';
+                        });
+                }, 250);
+            });
+
+            searchInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') { hideResults(); }
+            });
+
+            document.addEventListener('click', function (e) {
+                if (!searchBox.contains(e.target) && e.target !== searchInput) { hideResults(); }
             });
         }
 

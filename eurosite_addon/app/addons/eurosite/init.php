@@ -61,12 +61,29 @@ if (defined('AREA') && AREA === 'A' && function_exists('fn_eurosite_ensure_schem
 // the source fingerprint changes (novoton pattern, all areas). Admin menu
 // labels and storefront strings must not depend on the install-time .po
 // import — a linked dev store may never have run it.
-if (function_exists('fn_travel_core_heal_language_keys') && function_exists('fn_eurosite_language_variables')) {
+//
+// The sources are reached through LanguageSeeder, NOT through the
+// fn_eurosite_language_* wrappers in func.php, so this block does not depend
+// on whether CS-Cart includes func.php before or after init.php. That order is
+// not stable across cores, and on one that loads init.php first a
+// `function_exists('fn_eurosite_language_variables')` guard here is always
+// false — which silently disables the heal on every request and leaves the
+// admin reading raw keys ("_eurosite.countries"). fgo_invoicing was converted
+// away from that guard for the same reason; this was the last addon still
+// carrying it. The class resolves either way: the autoloader is registered
+// above, in this file.
+//
+// fn_travel_core_* IS safe to probe: travel_core has a lower priority so it
+// loads first, and its own init.php require_once's functions/self_heal.php.
+if (
+    function_exists('fn_travel_core_heal_language_keys')
+    && function_exists('fn_travel_core_self_heal_guard')
+) {
     fn_travel_core_self_heal_guard('eurosite_langs', static function (): void {
         fn_travel_core_heal_language_keys(
             'eurosite',
-            'fn_eurosite_language_variables',
-            fn_eurosite_language_seed_hash(),
+            static fn (): array => \Tygh\Addons\Eurosite\Install\LanguageSeeder::variables(),
+            \Tygh\Addons\Eurosite\Install\LanguageSeeder::seedHash(),
         );
     });
 }

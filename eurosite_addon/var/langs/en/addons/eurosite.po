@@ -463,3 +463,71 @@ msgstr "Booking checkout is not fully configured yet — please contact us to fi
 msgctxt "Languages::eurosite.added_to_cart"
 msgid "Your stay was added to the cart — complete checkout to confirm the reservation."
 msgstr "Your stay was added to the cart — complete checkout to confirm the reservation."
+
+msgctxt "Languages::eurosite.no_search_results"
+msgid "No matches."
+msgstr "No matches."
+
+msgctxt "Languages::eurosite.whitelist_names_missing"
+msgid "The country catalog has codes but no names. Run the 'countries' sync to refill it."
+msgstr "The country catalog has codes but no names. Run the 'countries' sync to refill it."
+
+msgctxt "Languages::eurosite.sync_countries"
+msgid "Sync countries"
+msgstr "Sync countries"
+
+msgctxt "Languages::eurosite.last_synced"
+msgid "Last synced"
+msgstr "Last synced"
+
+msgctxt "Languages::eurosite.cron_commands"
+msgid "Cron commands"
+msgstr "Cron commands"
+
+msgctxt "Languages::eurosite.cron_col_mode"
+msgid "Mode"
+msgstr "Mode"
+
+msgctxt "Languages::eurosite.cron_col_description"
+msgid "What it does"
+msgstr "What it does"
+
+msgctxt "Languages::eurosite.cron_col_schedule"
+msgid "Schedule"
+msgstr "Schedule"
+
+msgctxt "Languages::eurosite.cron_col_url"
+msgid "URL"
+msgstr "URL"
+
+msgctxt "Languages::eurosite.cron_col_actions"
+msgid "Actions"
+msgstr "Actions"
+
+msgctxt "Languages::eurosite.run"
+msgid "Run"
+msgstr "Run"
+
+msgctxt "Languages::eurosite.copy"
+msgid "Copy"
+msgstr "Copy"
+
+msgctxt "Languages::eurosite.copy_url"
+msgid "Copy URL"
+msgstr "Copy URL"
+
+msgctxt "Languages::eurosite.copy_cli"
+msgid "Copy CLI"
+msgstr "Copy CLI"
+
+msgctxt "Languages::eurosite.copied"
+msgid "Copied"
+msgstr "Copied"
+
+msgctxt "Languages::eurosite.copy_failed"
+msgid "Copy failed"
+msgstr "Copy failed"
+
+msgctxt "Languages::eurosite.cron_access_key_note"
+msgid "The access key in these URLs is the addon's cron key — treat them as secrets."
+msgstr "The access key in these URLs is the addon's cron key — treat them as secrets."
