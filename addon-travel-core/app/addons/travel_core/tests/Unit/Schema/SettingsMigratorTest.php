@@ -27,6 +27,27 @@ final class SettingsMigratorTest extends TestCase
         return (string) file_get_contents(dirname(__DIR__, 3) . '/' . $rel);
     }
 
+    /**
+     * The same file with every comment removed.
+     *
+     * Asserting against raw source lets a docblock satisfy a claim about the
+     * code — which it did here: a test for "derives the list from
+     * KNOWN_PROVIDER_ADDONS" passed against a version that only NAMED the
+     * constant in a comment while iterating a hand-written list.
+     */
+    private static function code(string $rel): string
+    {
+        $out = '';
+        foreach (token_get_all(self::src($rel)) as $token) {
+            if (is_array($token) && in_array($token[0], [T_COMMENT, T_DOC_COMMENT], true)) {
+                continue;
+            }
+            $out .= is_array($token) ? $token[1] : $token;
+        }
+
+        return $out;
+    }
+
     public function testUsesTheSupportedCreationApiNotRawSql(): void
     {
         $m = self::src('src/Install/SettingsMigrator.php');
@@ -157,22 +178,32 @@ final class SettingsMigratorTest extends TestCase
         $heal = self::src('functions/self_heal.php');
         self::assertStringContainsString('function fn_travel_core_ensure_all_settings()', $heal);
         self::assertStringContainsString('function fn_travel_core_heal_settings_once()', $heal);
+        // The covered addons are DERIVED, never written out again here. A
+        // second literal list is what left eurosite unhealed: it was added to
+        // the registry, not to this loop, so its cron access key never
+        // reached a single store installed before it.
+        self::assertStringContainsString('function fn_travel_core_settings_heal_addons()', $heal);
+        self::assertStringContainsString(
+            'foreach (fn_travel_core_settings_heal_addons() as $addon)',
+            $heal,
+        );
         // Providers first, travel_core LAST: a value carried out of a retired
         // provider row lands in travel_core before default-seeding, so an
         // operator-configured value beats a repo default.
         self::assertStringContainsString(
-            "foreach (['novoton_holidays', 'sphinx_holidays', 'travel_core'] as \$addon)",
+            'return [...$providers, \'travel_core\'];',
             $heal,
         );
         // One addon's failure must not shield the others' stale rows — the
         // CART_LANGUAGE crash in travel_core's pass did exactly that to
         // novoton's retirement.
-        $loopPos = strpos($heal, "foreach (['novoton_holidays'");
+        $loopPos = strpos($heal, 'foreach (fn_travel_core_settings_heal_addons() as $addon) {
+        $dir');
         self::assertIsInt($loopPos);
         self::assertStringContainsString('} catch (\Throwable $e) {', substr($heal, $loopPos, 700));
 
         // Stamp-gated through the guard, fingerprinted on the migrator, THIS
-        // orchestration file (__FILE__) and all three addon.xml files: the
+        // orchestration file (__FILE__) and every covered addon.xml: the
         // guard stamps even a failed run, so only a fingerprint change ever
         // re-runs the heal — any fix to the mechanism must re-arm it.
         self::assertStringContainsString("fn_travel_core_self_heal_due('travel_settings'", $heal);
@@ -196,6 +227,96 @@ final class SettingsMigratorTest extends TestCase
         $init = self::src('init.php');
         self::assertStringNotContainsString('fn_travel_core_ensure_all_settings', $init);
         self::assertStringNotContainsString("fn_travel_core_self_heal_due('travel_settings'", $init);
+    }
+
+    /**
+     * Every provider the registry knows must be healed — and be healable.
+     *
+     * Field failure, second round: eurosite shipped `cron_access_key` in its
+     * addon.xml, but the settings heal iterated a hand-written list that
+     * still read novoton + sphinx + travel_core. CS-Cart imports <settings>
+     * only at install/upgrade, so on a store installed before that item the
+     * row never existed: the "Cron access key" field was absent from the
+     * settings page, every scheduled sync URL answered 403, and the
+     * dashboard's "Generate a key" button wrote to a setting that was not
+     * there and reported success.
+     *
+     * Two literal lists of the same thing is the bug. This pins the union:
+     * the heal derives its addons from KNOWN_PROVIDER_ADDONS, and each of
+     * those addons carries what the migrator needs to build a usable field —
+     * an addon.xml to read the declaration from, and an English .po to read
+     * the label from, or the healed setting renders as a raw key.
+     */
+    public function testEveryKnownProviderIsCoveredByTheSettingsHealAndHealable(): void
+    {
+        $heal = self::code('functions/self_heal.php');
+        self::assertStringContainsString(
+            '? \\Tygh\\Addons\\TravelCore\\Services\\TravelProviderRegistry::KNOWN_PROVIDER_ADDONS',
+            $heal,
+            'the settings heal must derive its addon list, not repeat it',
+        );
+
+        $repoRoot = dirname(__DIR__, 7);
+        $dirs = [
+            'novoton_holidays' => '/addon-novoton-holidays',
+            'sphinx_holidays' => '/addon-sphinx-holidays',
+            'eurosite' => '/eurosite_addon',
+        ];
+
+        foreach (\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::KNOWN_PROVIDER_ADDONS as $addon) {
+            self::assertArrayHasKey($addon, $dirs, "new provider {$addon} needs a directory mapping here");
+            $root = $repoRoot . $dirs[$addon];
+
+            self::assertFileExists($root . '/app/addons/' . $addon . '/addon.xml');
+            self::assertFileExists(
+                $root . '/var/langs/en/addons/' . $addon . '.po',
+                "{$addon} has no English .po, so any healed setting would render as a raw key",
+            );
+        }
+
+        // The fallback used when the autoloader has not reached the registry
+        // must not silently shrink the coverage either. Matched against that
+        // one line: anywhere in the file, an unrelated mention would do.
+        self::assertSame(
+            1,
+            preg_match('/:\s*(\[[^\]]*\]);/', $heal, $m),
+            'the derived list needs a literal fallback for the no-autoloader case',
+        );
+        foreach (\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::KNOWN_PROVIDER_ADDONS as $addon) {
+            self::assertStringContainsString("'{$addon}'", $m[1]);
+        }
+    }
+
+    /**
+     * The specific setting the drift hid, end to end: declared, labelled, and
+     * reachable from the code that reads it.
+     */
+    public function testEurositeCronAccessKeyIsDeclaredAndLabelled(): void
+    {
+        $repoRoot = dirname(__DIR__, 7);
+        $xml = (string) file_get_contents($repoRoot . '/eurosite_addon/app/addons/eurosite/addon.xml');
+        $po = (string) file_get_contents($repoRoot . '/eurosite_addon/var/langs/en/addons/eurosite.po');
+
+        self::assertStringContainsString('<item id="cron_access_key">', $xml);
+        self::assertStringContainsString('msgctxt "SettingsOptions::eurosite::cron_access_key"', $po);
+
+        // The dashboard button must create the row when it is missing — an
+        // updateValue() on a non-existent setting is a silent no-op, which is
+        // how it came to report success while changing nothing.
+        $ctrl = (string) file_get_contents(
+            $repoRoot . '/eurosite_addon/app/addons/eurosite/controllers/backend/eurosite.php',
+        );
+        $pos = strpos($ctrl, "\$mode === 'generate_cron_key'");
+        self::assertIsInt($pos);
+        $block = substr($ctrl, $pos, 3200);
+        self::assertStringContainsString("isExists('cron_access_key', 'eurosite')", $block);
+        self::assertStringContainsString('fn_travel_core_ensure_settings(', $block);
+        // And verify the write landed rather than trusting it — against the
+        // stored value, not the bootstrap-time Registry the ConfigProvider
+        // reads, which cannot see a write made in this same request.
+        self::assertStringContainsString("\$settings->getValue('cron_access_key', 'eurosite')", $block);
+        self::assertStringContainsString('if ($stored !== $newKey) {', $block);
+        self::assertStringNotContainsString('ConfigProvider::getCronAccessKey() !==', $block);
     }
 
     /**
