@@ -403,8 +403,8 @@ return [
         'ro' => 'Ultima sincronizare',
     ],
     'eurosite.cron_commands' => [
-        'en' => 'Cron commands',
-        'ro' => 'Comenzi cron',
+        'en' => 'Scheduled jobs',
+        'ro' => 'Sarcini programate',
     ],
     'eurosite.cron_col_mode' => [
         'en' => 'Mode',
@@ -453,5 +453,101 @@ return [
     'eurosite.cron_access_key_note' => [
         'en' => 'The access key in these URLs is the addon\'s cron key — treat them as secrets.',
         'ro' => 'Cheia de acces din aceste linkuri este cheia cron a modulului — tratați-le ca date secrete.',
+    ],
+    'eurosite.catalogs_and_schedules' => [
+        'en' => 'Catalogs & schedules',
+        'ro' => 'Cataloage și programări',
+    ],
+    'eurosite.catalogs_hint' => [
+        'en' => 'One row per job, in the order the full pipeline runs them. Times are server time.',
+        'ro' => 'Câte un rând per sarcină, în ordinea în care le rulează sincronizarea completă. Orele sunt ora serverului.',
+    ],
+    'eurosite.hotels_need_whitelist' => [
+        'en' => 'Nothing to fetch: no destinations are whitelisted.',
+        'ro' => 'Nu are ce prelua: nicio destinație nu este în listă.',
+    ],
+    'eurosite.open_whitelist' => [
+        'en' => 'Open the whitelist',
+        'ro' => 'Deschide lista de destinații',
+    ],
+    'eurosite.copy_crontab_line' => [
+        'en' => 'Copy line',
+        'ro' => 'Copiază linia',
+    ],
+    'eurosite.cron_no_key_title' => [
+        'en' => 'No cron access key is set',
+        'ro' => 'Nu este setată cheia de acces cron',
+    ],
+    'eurosite.cron_no_key_body' => [
+        'en' => 'Scheduled syncs answer 403 until a key exists, so there are no commands to schedule yet. Nothing is exposed — the endpoint refuses every request while the key is blank.',
+        'ro' => 'Sincronizările programate răspund cu 403 până când există o cheie, deci nu există încă nicio comandă de programat. Nimic nu este expus — endpointul refuză orice cerere cât timp cheia este goală.',
+    ],
+    'eurosite.generate_cron_key' => [
+        'en' => 'Generate a key',
+        'ro' => 'Generează o cheie',
+    ],
+    'eurosite.set_key_in_settings' => [
+        'en' => 'Set it in addon settings',
+        'ro' => 'Setează-o în setările modulului',
+    ],
+    'eurosite.cron_paste_hint' => [
+        'en' => 'Paste this into the server crontab or cPanel → Cron Jobs.',
+        'ro' => 'Lipiți acest bloc în crontab-ul serverului sau în cPanel → Cron Jobs.',
+    ],
+    'eurosite.cron_plan' => [
+        'en' => 'Plan',
+        'ro' => 'Plan',
+    ],
+    'eurosite.cron_plan_full' => [
+        'en' => 'One nightly full sync',
+        'ro' => 'O sincronizare completă în fiecare noapte',
+    ],
+    'eurosite.cron_plan_per' => [
+        'en' => 'Per-catalog schedule',
+        'ro' => 'Programare per catalog',
+    ],
+    'eurosite.recommended' => [
+        'en' => 'recommended',
+        'ro' => 'recomandat',
+    ],
+    'eurosite.cron_format' => [
+        'en' => 'Format',
+        'ro' => 'Format',
+    ],
+    'eurosite.cron_format_url' => [
+        'en' => 'URL (curl)',
+        'ro' => 'URL (curl)',
+    ],
+    'eurosite.cron_format_cli' => [
+        'en' => 'CLI (php)',
+        'ro' => 'CLI (php)',
+    ],
+    'eurosite.copy_all' => [
+        'en' => 'Copy all',
+        'ro' => 'Copiază tot',
+    ],
+    'eurosite.reveal_key' => [
+        'en' => 'Reveal access key',
+        'ro' => 'Afișează cheia de acces',
+    ],
+    'eurosite.hide_key' => [
+        'en' => 'Hide access key',
+        'ro' => 'Ascunde cheia de acces',
+    ],
+    'eurosite.key_hidden_note' => [
+        'en' => 'Access key hidden — copying still copies the real value',
+        'ro' => 'Cheia de acces este ascunsă — copierea copiază totuși valoarea reală',
+    ],
+    'eurosite.key_shown_note' => [
+        'en' => 'Access key shown',
+        'ro' => 'Cheia de acces este afișată',
+    ],
+    'eurosite.rotate_key' => [
+        'en' => 'Rotate key',
+        'ro' => 'Schimbă cheia',
+    ],
+    'eurosite.rotate_key_confirm' => [
+        'en' => 'Generate a new cron access key? Every scheduled job must be updated with the new URL.',
+        'ro' => 'Generați o cheie nouă de acces cron? Fiecare sarcină programată trebuie actualizată cu noul URL.',
     ],
 ];

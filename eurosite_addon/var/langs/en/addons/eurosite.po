@@ -481,8 +481,8 @@ msgid "Last synced"
 msgstr "Last synced"
 
 msgctxt "Languages::eurosite.cron_commands"
-msgid "Cron commands"
-msgstr "Cron commands"
+msgid "Scheduled jobs"
+msgstr "Scheduled jobs"
 
 msgctxt "Languages::eurosite.cron_col_mode"
 msgid "Mode"
@@ -531,3 +531,99 @@ msgstr "Copy failed"
 msgctxt "Languages::eurosite.cron_access_key_note"
 msgid "The access key in these URLs is the addon's cron key — treat them as secrets."
 msgstr "The access key in these URLs is the addon's cron key — treat them as secrets."
+
+msgctxt "Languages::eurosite.catalogs_and_schedules"
+msgid "Catalogs & schedules"
+msgstr "Catalogs & schedules"
+
+msgctxt "Languages::eurosite.catalogs_hint"
+msgid "One row per job, in the order the full pipeline runs them. Times are server time."
+msgstr "One row per job, in the order the full pipeline runs them. Times are server time."
+
+msgctxt "Languages::eurosite.hotels_need_whitelist"
+msgid "Nothing to fetch: no destinations are whitelisted."
+msgstr "Nothing to fetch: no destinations are whitelisted."
+
+msgctxt "Languages::eurosite.open_whitelist"
+msgid "Open the whitelist"
+msgstr "Open the whitelist"
+
+msgctxt "Languages::eurosite.copy_crontab_line"
+msgid "Copy line"
+msgstr "Copy line"
+
+msgctxt "Languages::eurosite.cron_no_key_title"
+msgid "No cron access key is set"
+msgstr "No cron access key is set"
+
+msgctxt "Languages::eurosite.cron_no_key_body"
+msgid "Scheduled syncs answer 403 until a key exists, so there are no commands to schedule yet. Nothing is exposed — the endpoint refuses every request while the key is blank."
+msgstr "Scheduled syncs answer 403 until a key exists, so there are no commands to schedule yet. Nothing is exposed — the endpoint refuses every request while the key is blank."
+
+msgctxt "Languages::eurosite.generate_cron_key"
+msgid "Generate a key"
+msgstr "Generate a key"
+
+msgctxt "Languages::eurosite.set_key_in_settings"
+msgid "Set it in addon settings"
+msgstr "Set it in addon settings"
+
+msgctxt "Languages::eurosite.cron_paste_hint"
+msgid "Paste this into the server crontab or cPanel → Cron Jobs."
+msgstr "Paste this into the server crontab or cPanel → Cron Jobs."
+
+msgctxt "Languages::eurosite.cron_plan"
+msgid "Plan"
+msgstr "Plan"
+
+msgctxt "Languages::eurosite.cron_plan_full"
+msgid "One nightly full sync"
+msgstr "One nightly full sync"
+
+msgctxt "Languages::eurosite.cron_plan_per"
+msgid "Per-catalog schedule"
+msgstr "Per-catalog schedule"
+
+msgctxt "Languages::eurosite.recommended"
+msgid "recommended"
+msgstr "recommended"
+
+msgctxt "Languages::eurosite.cron_format"
+msgid "Format"
+msgstr "Format"
+
+msgctxt "Languages::eurosite.cron_format_url"
+msgid "URL (curl)"
+msgstr "URL (curl)"
+
+msgctxt "Languages::eurosite.cron_format_cli"
+msgid "CLI (php)"
+msgstr "CLI (php)"
+
+msgctxt "Languages::eurosite.copy_all"
+msgid "Copy all"
+msgstr "Copy all"
+
+msgctxt "Languages::eurosite.reveal_key"
+msgid "Reveal access key"
+msgstr "Reveal access key"
+
+msgctxt "Languages::eurosite.hide_key"
+msgid "Hide access key"
+msgstr "Hide access key"
+
+msgctxt "Languages::eurosite.key_hidden_note"
+msgid "Access key hidden — copying still copies the real value"
+msgstr "Access key hidden — copying still copies the real value"
+
+msgctxt "Languages::eurosite.key_shown_note"
+msgid "Access key shown"
+msgstr "Access key shown"
+
+msgctxt "Languages::eurosite.rotate_key"
+msgid "Rotate key"
+msgstr "Rotate key"
+
+msgctxt "Languages::eurosite.rotate_key_confirm"
+msgid "Generate a new cron access key? Every scheduled job must be updated with the new URL."
+msgstr "Generate a new cron access key? Every scheduled job must be updated with the new URL."

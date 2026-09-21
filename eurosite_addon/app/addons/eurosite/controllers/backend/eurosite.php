@@ -13,11 +13,13 @@ declare(strict_types=1);
  *   - run_sync (POST): run one cron command inline (sync_type param)
  *   - save_whitelist (POST): replace the whitelist (whitelist_json field)
  *   - test_connection (POST): cheap auth probe (getRoomTypes)
+ *   - generate_cron_key (POST): write a fresh random cron access key
  */
 
 use Tygh\Addons\Eurosite\Cron\CronDispatcher;
 use Tygh\Addons\Eurosite\Services\ConfigProvider;
 use Tygh\Addons\Eurosite\Services\Container;
+use Tygh\Addons\Eurosite\Services\CronPlanBuilder;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Tygh;
@@ -104,6 +106,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         fn_set_notification('N', __('notice'), 'Eurosite destination whitelist saved (' . count($entries) . ' entries).');
 
         return [CONTROLLER_STATUS_REDIRECT, 'eurosite.whitelist'];
+    }
+
+    if ($mode === 'generate_cron_key') {
+        // The dashboard offers this because the alternative — an operator
+        // inventing a key in the settings form — is what left this store with
+        // a blank one, and a blank key makes every scheduled sync answer 403.
+        $settings = \Tygh\Settings::instance();
+        if (!is_object($settings) || !method_exists($settings, 'updateValue')) {
+            fn_set_notification('E', __('error'), 'Settings API unavailable on this CS-Cart build.');
+
+            return [CONTROLLER_STATUS_REDIRECT, 'eurosite.manage'];
+        }
+
+        $newKey = bin2hex(random_bytes(16));
+        $settings->updateValue('cron_access_key', $newKey, 'eurosite', true);
+        ConfigProvider::reset();
+        fn_set_notification(
+            'N',
+            __('notice'),
+            'A new Eurosite cron access key was generated. Re-copy your crontab — the old URLs no longer work.',
+        );
+
+        return [CONTROLLER_STATUS_REDIRECT, 'eurosite.manage'];
     }
 
     if ($mode === 'seed_menu') {
@@ -329,63 +354,42 @@ if ($mode === 'manage' || empty($mode)) {
 
     $syncModes = CronDispatcher::getAvailableModes();
 
-    // One prepared row per catalog (the template stays expression-free —
-    // Smarty-5 array literals in {foreach} were a 503 risk).
-    $catalogRows = [];
-    foreach (['countries', 'cities', 'own_cities', 'hotels', 'room_types', 'tags', 'product_info'] as $catalog) {
-        $countKey = $catalog === 'product_info' ? 'cache' : $catalog;
-        $catalogRows[] = [
-            'key'      => $catalog,
-            'count'    => $counts[$countKey],
-            'last'     => $lastSyncs[$catalog] ?? null,
-            'syncable' => isset($syncModes[$catalog]),
-        ];
+    // ── Catalogs and their schedules, as ONE list ──
+    //
+    // CronPlanBuilder owns the ordering, the schedule wording, the staleness
+    // test and the crontab text; the controller only hands it the numbers it
+    // already gathered. See its docblock for why the dashboard stopped
+    // describing the same eight jobs in two separate tables.
+    $cronKey = ConfigProvider::getCronAccessKey();
+    $baseUrl = TypeCoerce::toString(\Tygh\Registry::get('config.http_location'));
+    $plan = new CronPlanBuilder($baseUrl, $cronKey);
+
+    $cronRows = $plan->rows($syncModes, $counts, $lastSyncs);
+
+    // All four crontab variants up front: the page switches plan (nightly full
+    // vs per-catalog) and format (curl vs CLI) client-side, with no round trip.
+    $generatedOn = date('j M Y') . ' · server time ' . date_default_timezone_get();
+    $crontabs = [];
+    foreach (['full', 'per'] as $planKey) {
+        foreach (['url', 'cli'] as $format) {
+            $crontabs[$planKey . '_' . $format] = $plan->crontab($planKey, $format, $syncModes, $generatedOn);
+        }
     }
 
-    $cronKey = ConfigProvider::getCronAccessKey();
-    $baseUrl = TypeCoerce::toString(\Tygh\Registry::get('config.http_location')) . '/';
+    // Kept for the "Sync now" buttons, which post a mode rather than call a URL.
     $cronUrls = [];
     foreach (array_keys($syncModes) as $m) {
-        $cronUrls[$m] = $baseUrl . "index.php?dispatch=eurosite_cron.run&access_key={$cronKey}&cron_mode={$m}";
-    }
-
-    // One prepared row per cron mode — URL, CLI equivalent and a suggested
-    // crontab schedule — so the dashboard can offer Run / Copy URL / Copy CLI
-    // the way the Sphinx dashboard does. Schedules are suggestions sized to how
-    // often each catalog actually moves: the static catalogs weekly, anything
-    // driven by the whitelist daily, the full pipeline nightly.
-    $cronSchedules = [
-        'full'         => '0 1 * * *',
-        'countries'    => '0 1 * * 0',
-        'own_cities'   => '30 1 * * 0',
-        'cities'       => '0 2 * * 0',
-        'hotels'       => '0 3 * * *',
-        'room_types'   => '30 3 * * 0',
-        'tags'         => '45 3 * * 0',
-        'product_info' => '0 4 * * *',
-        'cleanup'      => '0 5 * * 0',
-    ];
-    $cronCli = 'php app/addons/eurosite/cron.php access_key=' . $cronKey . ' mode=full';
-    $cronRows = [];
-    foreach ($syncModes as $m => $description) {
-        $mode = TypeCoerce::toString($m);
-        $cronRows[] = [
-            'mode'        => $mode,
-            'description' => TypeCoerce::toString($description),
-            'schedule'    => $cronSchedules[$mode] ?? '0 4 * * *',
-            'url'         => $cronUrls[$mode] ?? '',
-            'cli'         => 'php app/addons/eurosite/cron.php access_key=' . $cronKey . ' mode=' . $mode,
-        ];
+        $cronUrls[$m] = $plan->url(TypeCoerce::toString($m));
     }
 
     $apiUser = ConfigProvider::getApiUser();
     $view->assign('eurosite_counts', $counts);
-    $view->assign('eurosite_catalog_rows', $catalogRows);
     $view->assign('eurosite_recent_bookings', $recentBookings);
     $view->assign('eurosite_sync_modes', $syncModes);
     $view->assign('eurosite_cron_urls', $cronUrls);
     $view->assign('eurosite_cron_rows', $cronRows);
-    $view->assign('eurosite_cron_cli', $cronCli);
+    $view->assign('eurosite_crontabs_json', json_encode($crontabs));
+    $view->assign('eurosite_cron_has_key', $plan->hasKey());
     $view->assign('eurosite_cron_key', $cronKey);
     $view->assign('eurosite_api_url', ConfigProvider::getApiUrl());
     $view->assign('eurosite_api_user', $apiUser);
