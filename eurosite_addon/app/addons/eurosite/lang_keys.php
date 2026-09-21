@@ -471,8 +471,8 @@ return [
         'ro' => 'Deschide lista de destinații',
     ],
     'eurosite.copy_crontab_line' => [
-        'en' => 'Copy line',
-        'ro' => 'Copiază linia',
+        'en' => 'Copy crontab line',
+        'ro' => 'Copiază linia de crontab',
     ],
     'eurosite.cron_no_key_title' => [
         'en' => 'No cron access key is set',
@@ -549,5 +549,13 @@ return [
     'eurosite.rotate_key_confirm' => [
         'en' => 'Generate a new cron access key? Every scheduled job must be updated with the new URL.',
         'ro' => 'Generați o cheie nouă de acces cron? Fiecare sarcină programată trebuie actualizată cu noul URL.',
+    ],
+    'eurosite.more_actions' => [
+        'en' => 'More actions',
+        'ro' => 'Mai multe acțiuni',
+    ],
+    'eurosite.menu_needs_key' => [
+        'en' => 'Set a cron access key to copy scheduled commands.',
+        'ro' => 'Setați o cheie de acces cron pentru a copia comenzile programate.',
     ],
 ];

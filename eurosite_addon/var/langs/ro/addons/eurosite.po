@@ -549,8 +549,8 @@ msgid "Open the whitelist"
 msgstr "Deschide lista de destinații"
 
 msgctxt "Languages::eurosite.copy_crontab_line"
-msgid "Copy line"
-msgstr "Copiază linia"
+msgid "Copy crontab line"
+msgstr "Copiază linia de crontab"
 
 msgctxt "Languages::eurosite.cron_no_key_title"
 msgid "No cron access key is set"
@@ -627,3 +627,11 @@ msgstr "Schimbă cheia"
 msgctxt "Languages::eurosite.rotate_key_confirm"
 msgid "Generate a new cron access key? Every scheduled job must be updated with the new URL."
 msgstr "Generați o cheie nouă de acces cron? Fiecare sarcină programată trebuie actualizată cu noul URL."
+
+msgctxt "Languages::eurosite.more_actions"
+msgid "More actions"
+msgstr "Mai multe acțiuni"
+
+msgctxt "Languages::eurosite.menu_needs_key"
+msgid "Set a cron access key to copy scheduled commands."
+msgstr "Setați o cheie de acces cron pentru a copia comenzile programate."

@@ -212,6 +212,92 @@ final class DashboardCronContractTest extends TestCase
         }
     }
 
+    /**
+     * The per-row actions live behind one glyph. Two things must hold: the
+     * toggle is a real menu button (an icon-only div with a click handler is
+     * invisible to Tab and to a screen reader), and the menu still renders
+     * when there is no key — saying why the copies are missing beats a column
+     * that silently loses its actions, which is how this looked on the store.
+     */
+    public function testEveryRowHasAnAccessibleOverflowMenu(): void
+    {
+        $tpl = self::template();
+
+        self::assertStringContainsString('class="eurosite-menu-wrap"', $tpl);
+        self::assertStringContainsString('class="btn btn-micro eurosite-menu-toggle"', $tpl);
+        self::assertStringContainsString('&#8943;', $tpl, 'the toggle needs its ⋯ glyph');
+
+        foreach (['aria-haspopup="true"', 'aria-expanded="false"', 'aria-controls="eurosite-menu-{$job.mode}"'] as $attr) {
+            self::assertStringContainsString($attr, $tpl, "the menu button is missing {$attr}");
+        }
+        self::assertStringContainsString('eurosite.more_actions', $tpl, 'an icon-only button needs a label');
+        self::assertStringContainsString('role="menu"', $tpl);
+        self::assertStringContainsString('id="eurosite-menu-{$job.mode}"', $tpl);
+
+        // The menu itself is outside the has-key branch; only its contents differ.
+        $menuStart = strpos($tpl, 'class="eurosite-menu-wrap"');
+        self::assertIsInt($menuStart);
+        $rowEnd = strpos($tpl, '</td>', $menuStart);
+        self::assertIsInt($rowEnd);
+        $cell = substr($tpl, $menuStart, $rowEnd - $menuStart);
+        self::assertStringContainsString('{if $eurosite_cron_has_key}', $cell);
+        self::assertStringContainsString('{else}', $cell);
+        self::assertStringContainsString('eurosite.menu_needs_key', $cell);
+        self::assertStringContainsString('#eurosite-scheduled-jobs', $cell, 'the no-key note must link to the fix');
+    }
+
+    public function testTheMenuOffersAllThreeCopiesAsMenuItems(): void
+    {
+        $tpl = self::template();
+
+        foreach ([
+            '$job.crontab_line' => 'eurosite.copy_crontab_line',
+            '$job.url' => 'eurosite.copy_url',
+            '$job.cli' => 'eurosite.copy_cli',
+        ] as $payload => $label) {
+            self::assertStringContainsString('data-copy="{' . $payload . '|escape:html}"', $tpl);
+            self::assertStringContainsString($label, $tpl);
+        }
+
+        // Each is a real menuitem carrying the shared copy behaviour.
+        preg_match_all('#<button[^>]*role="menuitem"[^>]*>#s', $tpl, $m);
+        self::assertCount(3, $m[0]);
+        foreach ($m[0] as $button) {
+            self::assertStringContainsString('eurosite-copy', $button);
+        }
+    }
+
+    /**
+     * A dropdown that cannot be dismissed or escaped is worse than no
+     * dropdown: it covers the row below it until you reload.
+     */
+    public function testTheMenuScriptHandlesDismissalAndKeyboardUse(): void
+    {
+        $js = self::script();
+
+        self::assertStringContainsString('function initMenus(', $js);
+        self::assertStringContainsString("aria-expanded", $js, 'the toggle state must be announced');
+        self::assertStringContainsString("e.key === 'Escape'", $js);
+        self::assertStringContainsString("e.key === 'ArrowDown'", $js);
+        self::assertStringContainsString("e.key === 'ArrowUp'", $js);
+        self::assertStringContainsString('toggle.focus()', $js, 'Escape must not strand focus in a hidden menu');
+        self::assertStringContainsString('!open.menu.contains(e.target)', $js, 'clicking outside must close it');
+    }
+
+    public function testTheWrapperDivIsClosed(): void
+    {
+        // The page wrapper went unclosed for the life of this template; the
+        // browser recovered by closing it at the end of the capture, which
+        // also swallows anything appended after it.
+        $tpl = preg_replace('/\{\*.*?\*\}/s', '', self::template());
+        self::assertIsString($tpl);
+        self::assertSame(
+            substr_count($tpl, '<div'),
+            substr_count($tpl, '</div>'),
+            'unbalanced <div> in manage.tpl',
+        );
+    }
+
     public function testTheAccessKeyWarningIsShown(): void
     {
         self::assertStringContainsString('eurosite.cron_access_key_note', self::template());

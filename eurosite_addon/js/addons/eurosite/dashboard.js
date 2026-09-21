@@ -161,9 +161,109 @@
         render();
     }
 
+    // ── Row overflow menus ──
+    //
+    // One glyph per row instead of a growing line of buttons. Built by hand
+    // rather than with the admin's own dropdown because this page already
+    // rolls its own (see whitelist.js) and the CS-Cart component needs markup
+    // and init this template does not carry.
+    function initMenus() {
+        var wraps = Array.prototype.slice.call(document.querySelectorAll('.eurosite-menu-wrap'));
+        if (!wraps.length) {
+            return;
+        }
+
+        var open = null; // { toggle, menu }
+
+        function close() {
+            if (!open) { return; }
+            open.menu.hidden = true;
+            open.toggle.setAttribute('aria-expanded', 'false');
+            open = null;
+        }
+
+        function items(menu) {
+            return Array.prototype.slice.call(menu.querySelectorAll('[role="menuitem"]'));
+        }
+
+        function openMenu(toggle, menu, focusFirst) {
+            close(); // only ever one open: two dropdowns at once is never what you meant
+            menu.hidden = false;
+            toggle.setAttribute('aria-expanded', 'true');
+            open = { toggle: toggle, menu: menu };
+            if (focusFirst) {
+                var first = items(menu)[0];
+                if (first) { first.focus(); }
+            }
+        }
+
+        wraps.forEach(function (wrap) {
+            var toggle = wrap.querySelector('.eurosite-menu-toggle');
+            var menu = wrap.querySelector('.eurosite-menu');
+            if (!toggle || !menu) { return; }
+
+            toggle.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (open && open.menu === menu) { close(); return; }
+                openMenu(toggle, menu, false);
+            });
+
+            // Down-arrow opens and lands on the first item, as a menu button should.
+            toggle.addEventListener('keydown', function (e) {
+                if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    openMenu(toggle, menu, true);
+                }
+            });
+
+            menu.addEventListener('keydown', function (e) {
+                var list = items(menu);
+                var at = list.indexOf(document.activeElement);
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    close();
+                    toggle.focus(); // never strand focus inside a hidden element
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (list.length) { list[(at + 1 + list.length) % list.length].focus(); }
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (list.length) { list[(at - 1 + list.length) % list.length].focus(); }
+                } else if (e.key === 'Tab') {
+                    close();
+                }
+            });
+
+            // A menu item that copies keeps its feedback visible, then closes.
+            items(menu).forEach(function (item) {
+                item.addEventListener('click', function () {
+                    setTimeout(close, 900);
+                });
+                item.addEventListener('mouseenter', function () { item.style.background = '#f2f6fc'; });
+                item.addEventListener('mouseleave', function () { item.style.background = 'none'; });
+            });
+        });
+
+        document.addEventListener('click', function (e) {
+            if (open && !open.menu.contains(e.target) && e.target !== open.toggle) {
+                close();
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && open) {
+                var t = open.toggle;
+                close();
+                t.focus();
+            }
+        });
+    }
+
     function init() {
         initCopyButtons();
         initCrontab();
+        initMenus();
     }
 
     if (document.readyState === 'loading') {

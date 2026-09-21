@@ -29,6 +29,34 @@ beforeAll(async () => {
                 data-txt-copied="Copied"
                 data-txt-copy-failed="Copy failed">Copy line</button>
 
+        <div class="eurosite-menu-wrap">
+            <button type="button" class="eurosite-menu-toggle" data-menu="countries"
+                    aria-haspopup="true" aria-expanded="false"
+                    aria-controls="eurosite-menu-countries" aria-label="More actions: countries">⋯</button>
+            <div class="eurosite-menu" id="eurosite-menu-countries" role="menu" hidden>
+                <button type="button" role="menuitem" class="eurosite-menu-item eurosite-copy"
+                        data-copy="0 1 * * 0  line-for-countries"
+                        data-txt-copied="Copied" data-txt-copy-failed="Copy failed">Copy crontab line</button>
+                <button type="button" role="menuitem" class="eurosite-menu-item eurosite-copy"
+                        data-copy="https://shop.example.ro/countries"
+                        data-txt-copied="Copied" data-txt-copy-failed="Copy failed">Copy URL</button>
+                <button type="button" role="menuitem" class="eurosite-menu-item eurosite-copy"
+                        data-copy="php cron.php mode=countries"
+                        data-txt-copied="Copied" data-txt-copy-failed="Copy failed">Copy CLI command</button>
+            </div>
+        </div>
+
+        <div class="eurosite-menu-wrap">
+            <button type="button" class="eurosite-menu-toggle" data-menu="cities"
+                    aria-haspopup="true" aria-expanded="false"
+                    aria-controls="eurosite-menu-cities" aria-label="More actions: cities">⋯</button>
+            <div class="eurosite-menu" id="eurosite-menu-cities" role="menu" hidden>
+                <button type="button" role="menuitem" class="eurosite-menu-item eurosite-copy"
+                        data-copy="0 2 * * 0  line-for-cities"
+                        data-txt-copied="Copied" data-txt-copy-failed="Copy failed">Copy crontab line</button>
+            </div>
+        </div>
+
         <div id="eurosite-crontab"
              data-crontabs='${JSON.stringify(CRONTABS)}'
              data-key="${KEY}"
@@ -195,5 +223,83 @@ describe('copy', () => {
         expect(copied).toHaveLength(1);
         expect(copied[0]).toContain('0 3 * * *');
         expect(copied[0]).toContain(KEY);
+    });
+});
+
+describe('row overflow menu', () => {
+    const toggle = (mode) => $(`.eurosite-menu-toggle[data-menu="${mode}"]`);
+    const menu = (mode) => $(`#eurosite-menu-${mode}`);
+    const itemsOf = (mode) => Array.from(menu(mode).querySelectorAll('[role="menuitem"]'));
+
+    it('starts closed, with the toggle saying so', () => {
+        expect(menu('countries').hidden).toBe(true);
+        expect(toggle('countries').getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('opens and closes on the toggle, keeping aria-expanded honest', () => {
+        toggle('countries').click();
+        expect(menu('countries').hidden).toBe(false);
+        expect(toggle('countries').getAttribute('aria-expanded')).toBe('true');
+
+        toggle('countries').click();
+        expect(menu('countries').hidden).toBe(true);
+        expect(toggle('countries').getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('never leaves two menus open at once', () => {
+        toggle('countries').click();
+        toggle('cities').click();
+
+        expect(menu('countries').hidden).toBe(true);
+        expect(toggle('countries').getAttribute('aria-expanded')).toBe('false');
+        expect(menu('cities').hidden).toBe(false);
+    });
+
+    it('closes when you click outside it', () => {
+        toggle('countries').click();
+        expect(menu('countries').hidden).toBe(false);
+
+        document.body.click();
+        expect(menu('countries').hidden).toBe(true);
+    });
+
+    it('opens on ArrowDown with focus on the first item', () => {
+        toggle('countries').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+
+        expect(menu('countries').hidden).toBe(false);
+        expect(document.activeElement).toBe(itemsOf('countries')[0]);
+    });
+
+    it('walks the items with the arrow keys and wraps around', () => {
+        const items = itemsOf('countries');
+        expect(document.activeElement).toBe(items[0]);
+
+        menu('countries').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+        expect(document.activeElement).toBe(items[1]);
+
+        menu('countries').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+        menu('countries').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+        expect(document.activeElement).toBe(items[items.length - 1]);
+    });
+
+    it('Escape closes it and returns focus to the toggle, never stranding it', () => {
+        toggle('countries').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+        expect(menu('countries').hidden).toBe(false);
+
+        menu('countries').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+        expect(menu('countries').hidden).toBe(true);
+        expect(document.activeElement).toBe(toggle('countries'));
+    });
+
+    it('a menu item copies its own payload, then the menu closes', async () => {
+        toggle('countries').click();
+        itemsOf('countries')[1].click();
+        await flush();
+
+        expect(copied).toEqual(['https://shop.example.ro/countries']);
+
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        expect(menu('countries').hidden).toBe(true);
     });
 });
