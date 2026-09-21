@@ -87,21 +87,52 @@
                                 <i class="icon-refresh"></i> {__("eurosite.sync_now", ["[default]" => "Sync now"])}
                             </button>
                         </form>
-                        {if $eurosite_cron_has_key}
-                            <button type="button" class="btn btn-micro eurosite-copy"
-                                    data-copy="{$job.crontab_line|escape:html}"
-                                    data-txt-copied="{__("eurosite.copied", ["[default]" => "Copied"])|escape:html}"
-                                    data-txt-copy-failed="{__("eurosite.copy_failed", ["[default]" => "Copy failed"])|escape:html}"
-                                    title="{$job.schedule_cron|escape:html}">
-                                <i class="icon-file"></i> {__("eurosite.copy_crontab_line", ["[default]" => "Copy line"])}
+                        {* Overflow menu: three copy actions behind one glyph, so the
+                           column stays one button wide however many we add. Rendered
+                           for every row — with no cron key it explains why the copies
+                           are unavailable instead of handing out commands that 403. *}
+                        <div class="eurosite-menu-wrap" style="position: relative; display: inline-block; margin-left: 2px;">
+                            <button type="button" class="btn btn-micro eurosite-menu-toggle"
+                                    data-menu="{$job.mode}"
+                                    aria-haspopup="true" aria-expanded="false"
+                                    aria-controls="eurosite-menu-{$job.mode}"
+                                    aria-label="{__("eurosite.more_actions", ["[default]" => "More actions"])|escape:html}: {$job.mode|escape:html}">
+                                &#8943;
                             </button>
-                            <button type="button" class="btn btn-micro eurosite-copy"
-                                    data-copy="{$job.url|escape:html}"
-                                    data-txt-copied="{__("eurosite.copied", ["[default]" => "Copied"])|escape:html}"
-                                    data-txt-copy-failed="{__("eurosite.copy_failed", ["[default]" => "Copy failed"])|escape:html}">
-                                <i class="icon-file"></i> {__("eurosite.copy_url", ["[default]" => "Copy URL"])}
-                            </button>
-                        {/if}
+                            <div class="eurosite-menu" id="eurosite-menu-{$job.mode}" role="menu" hidden
+                                 style="position: absolute; right: 0; top: 100%; z-index: 100; min-width: 210px;
+                                        padding: 4px; margin-top: 2px; text-align: left; background: #fff;
+                                        border: 1px solid #d5dae1; border-radius: 6px; box-shadow: 0 6px 18px rgba(16,24,40,0.14);">
+                                {if $eurosite_cron_has_key}
+                                    <button type="button" role="menuitem" class="eurosite-menu-item eurosite-copy"
+                                            data-copy="{$job.crontab_line|escape:html}"
+                                            data-txt-copied="{__("eurosite.copied", ["[default]" => "Copied"])|escape:html}"
+                                            data-txt-copy-failed="{__("eurosite.copy_failed", ["[default]" => "Copy failed"])|escape:html}"
+                                            style="display: block; width: 100%; padding: 6px 10px; border: 0; border-radius: 4px; background: none; text-align: left; white-space: nowrap; cursor: pointer;">
+                                        {__("eurosite.copy_crontab_line", ["[default]" => "Copy crontab line"])}
+                                    </button>
+                                    <button type="button" role="menuitem" class="eurosite-menu-item eurosite-copy"
+                                            data-copy="{$job.url|escape:html}"
+                                            data-txt-copied="{__("eurosite.copied", ["[default]" => "Copied"])|escape:html}"
+                                            data-txt-copy-failed="{__("eurosite.copy_failed", ["[default]" => "Copy failed"])|escape:html}"
+                                            style="display: block; width: 100%; padding: 6px 10px; border: 0; border-radius: 4px; background: none; text-align: left; white-space: nowrap; cursor: pointer;">
+                                        {__("eurosite.copy_url", ["[default]" => "Copy URL"])}
+                                    </button>
+                                    <button type="button" role="menuitem" class="eurosite-menu-item eurosite-copy"
+                                            data-copy="{$job.cli|escape:html}"
+                                            data-txt-copied="{__("eurosite.copied", ["[default]" => "Copied"])|escape:html}"
+                                            data-txt-copy-failed="{__("eurosite.copy_failed", ["[default]" => "Copy failed"])|escape:html}"
+                                            style="display: block; width: 100%; padding: 6px 10px; border: 0; border-radius: 4px; background: none; text-align: left; white-space: nowrap; cursor: pointer;">
+                                        {__("eurosite.copy_cli", ["[default]" => "Copy CLI command"])}
+                                    </button>
+                                {else}
+                                    <div class="muted" style="padding: 6px 10px; font-size: 11px; white-space: normal;">
+                                        {__("eurosite.menu_needs_key", ["[default]" => "Set a cron access key to copy scheduled commands."])}
+                                        <a href="#eurosite-scheduled-jobs">{__("eurosite.generate_cron_key", ["[default]" => "Generate a key"])}</a>
+                                    </div>
+                                {/if}
+                            </div>
+                        </div>
                     </td>
                 </tr>
             {/foreach}
@@ -164,7 +195,7 @@
     {/if}
 
     {* ── Scheduled jobs: the crontab you actually paste, not nine URLs ── *}
-    <h4 style="margin-top: 20px;">{__("eurosite.cron_commands", ["[default]" => "Scheduled jobs"])}</h4>
+    <h4 id="eurosite-scheduled-jobs" style="margin-top: 20px;">{__("eurosite.cron_commands", ["[default]" => "Scheduled jobs"])}</h4>
 
     {if !$eurosite_cron_has_key}
         {* No key means eurosite_cron.run answers 403 to everything, so there is
@@ -254,6 +285,10 @@
             </form>
         </div>
     {/if}
+
+</div>{* /.travel-admin-panel — opened at the top and never closed until now;
+        the browser recovered by closing it at the end of the capture, which
+        also swallowed anything appended after it. *}
 
 {* Inside the capture on purpose: this page is reached through the admin
    top-nav (an AJAX navigation) whose response carries only the captured
