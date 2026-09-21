@@ -121,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $newKey = bin2hex(random_bytes(16));
         $settings->updateValue('cron_access_key', $newKey, 'eurosite', true);
-        ConfigProvider::reset();
+        ConfigProvider::resetSettingsCache();
         fn_set_notification(
             'N',
             __('notice'),

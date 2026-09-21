@@ -112,7 +112,7 @@ final class DashboardCronContractTest extends TestCase
         self::assertStringContainsString("updateValue('cron_access_key', \$newKey, 'eurosite', true)", $controller);
         // The cached settings array would otherwise still hold the old key for
         // the rest of the request.
-        self::assertStringContainsString('ConfigProvider::reset();', $controller);
+        self::assertStringContainsString('ConfigProvider::resetSettingsCache();', $controller);
         // Rotating invalidates every scheduled URL — the operator has to know.
         self::assertStringContainsString('Re-copy your crontab', $controller);
     }

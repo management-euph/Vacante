@@ -119,7 +119,7 @@ final class CronPlanBuilder
 
         foreach ($this->orderedModes($modes) as $mode) {
             $schedule = self::SCHEDULES[$mode] ?? self::FALLBACK;
-            $last = isset($lastSyncs[$mode]) && is_array($lastSyncs[$mode]) ? $lastSyncs[$mode] : null;
+            $last = $lastSyncs[$mode] ?? null;
             $health = $this->health($last, $schedule['every_hours'], $now);
 
             $rows[] = [
@@ -259,7 +259,7 @@ final class CronPlanBuilder
         $rest = array_diff($known, $ordered, ['full']);
         sort($rest);
 
-        return [...$ordered, ...array_values($rest)];
+        return [...$ordered, ...$rest];
     }
 
     /**
