@@ -481,8 +481,8 @@ msgid "Last synced"
 msgstr "Ultima sincronizare"
 
 msgctxt "Languages::eurosite.cron_commands"
-msgid "Cron commands"
-msgstr "Comenzi cron"
+msgid "Scheduled jobs"
+msgstr "Sarcini programate"
 
 msgctxt "Languages::eurosite.cron_col_mode"
 msgid "Mode"
@@ -531,3 +531,99 @@ msgstr "Copierea a eșuat"
 msgctxt "Languages::eurosite.cron_access_key_note"
 msgid "The access key in these URLs is the addon's cron key — treat them as secrets."
 msgstr "Cheia de acces din aceste linkuri este cheia cron a modulului — tratați-le ca date secrete."
+
+msgctxt "Languages::eurosite.catalogs_and_schedules"
+msgid "Catalogs & schedules"
+msgstr "Cataloage și programări"
+
+msgctxt "Languages::eurosite.catalogs_hint"
+msgid "One row per job, in the order the full pipeline runs them. Times are server time."
+msgstr "Câte un rând per sarcină, în ordinea în care le rulează sincronizarea completă. Orele sunt ora serverului."
+
+msgctxt "Languages::eurosite.hotels_need_whitelist"
+msgid "Nothing to fetch: no destinations are whitelisted."
+msgstr "Nu are ce prelua: nicio destinație nu este în listă."
+
+msgctxt "Languages::eurosite.open_whitelist"
+msgid "Open the whitelist"
+msgstr "Deschide lista de destinații"
+
+msgctxt "Languages::eurosite.copy_crontab_line"
+msgid "Copy line"
+msgstr "Copiază linia"
+
+msgctxt "Languages::eurosite.cron_no_key_title"
+msgid "No cron access key is set"
+msgstr "Nu este setată cheia de acces cron"
+
+msgctxt "Languages::eurosite.cron_no_key_body"
+msgid "Scheduled syncs answer 403 until a key exists, so there are no commands to schedule yet. Nothing is exposed — the endpoint refuses every request while the key is blank."
+msgstr "Sincronizările programate răspund cu 403 până când există o cheie, deci nu există încă nicio comandă de programat. Nimic nu este expus — endpointul refuză orice cerere cât timp cheia este goală."
+
+msgctxt "Languages::eurosite.generate_cron_key"
+msgid "Generate a key"
+msgstr "Generează o cheie"
+
+msgctxt "Languages::eurosite.set_key_in_settings"
+msgid "Set it in addon settings"
+msgstr "Setează-o în setările modulului"
+
+msgctxt "Languages::eurosite.cron_paste_hint"
+msgid "Paste this into the server crontab or cPanel → Cron Jobs."
+msgstr "Lipiți acest bloc în crontab-ul serverului sau în cPanel → Cron Jobs."
+
+msgctxt "Languages::eurosite.cron_plan"
+msgid "Plan"
+msgstr "Plan"
+
+msgctxt "Languages::eurosite.cron_plan_full"
+msgid "One nightly full sync"
+msgstr "O sincronizare completă în fiecare noapte"
+
+msgctxt "Languages::eurosite.cron_plan_per"
+msgid "Per-catalog schedule"
+msgstr "Programare per catalog"
+
+msgctxt "Languages::eurosite.recommended"
+msgid "recommended"
+msgstr "recomandat"
+
+msgctxt "Languages::eurosite.cron_format"
+msgid "Format"
+msgstr "Format"
+
+msgctxt "Languages::eurosite.cron_format_url"
+msgid "URL (curl)"
+msgstr "URL (curl)"
+
+msgctxt "Languages::eurosite.cron_format_cli"
+msgid "CLI (php)"
+msgstr "CLI (php)"
+
+msgctxt "Languages::eurosite.copy_all"
+msgid "Copy all"
+msgstr "Copiază tot"
+
+msgctxt "Languages::eurosite.reveal_key"
+msgid "Reveal access key"
+msgstr "Afișează cheia de acces"
+
+msgctxt "Languages::eurosite.hide_key"
+msgid "Hide access key"
+msgstr "Ascunde cheia de acces"
+
+msgctxt "Languages::eurosite.key_hidden_note"
+msgid "Access key hidden — copying still copies the real value"
+msgstr "Cheia de acces este ascunsă — copierea copiază totuși valoarea reală"
+
+msgctxt "Languages::eurosite.key_shown_note"
+msgid "Access key shown"
+msgstr "Cheia de acces este afișată"
+
+msgctxt "Languages::eurosite.rotate_key"
+msgid "Rotate key"
+msgstr "Schimbă cheia"
+
+msgctxt "Languages::eurosite.rotate_key_confirm"
+msgid "Generate a new cron access key? Every scheduled job must be updated with the new URL."
+msgstr "Generați o cheie nouă de acces cron? Fiecare sarcină programată trebuie actualizată cu noul URL."
