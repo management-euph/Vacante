@@ -101,8 +101,12 @@ class CityRepository
     }
 
     /**
-     * Name lookup for the whitelist search box; carries the country name so
-     * the result line can read "Mamaia — Romania".
+     * Name/code lookup for the whitelist search box; carries the country name
+     * so the result line can read "Mamaia — Romania".
+     *
+     * The code is matched as well as the name, deliberately: a catalog synced
+     * before a name column was populated holds rows whose name is empty, and a
+     * name-only search returns nothing at all for them.
      *
      * @return list<array<string, mixed>>
      */
@@ -112,8 +116,9 @@ class CityRepository
             'SELECT c.city_code, c.name, c.country_code, c.is_own, co.name AS country_name
              FROM ?:eurosite_cities AS c
              LEFT JOIN ?:eurosite_countries AS co ON co.country_code = c.country_code
-             WHERE c.name LIKE ?l
+             WHERE c.name LIKE ?l OR c.city_code LIKE ?l
              ORDER BY c.is_own DESC, c.name LIMIT ?i',
+            "%{$query}%",
             "%{$query}%",
             $limit,
         ));

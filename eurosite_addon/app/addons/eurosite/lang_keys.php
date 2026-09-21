@@ -386,4 +386,72 @@ return [
         'en' => 'Your stay was added to the cart — complete checkout to confirm the reservation.',
         'ro' => 'Sejurul a fost adăugat în coș — finalizați comanda pentru a confirma rezervarea.',
     ],
+    'eurosite.no_search_results' => [
+        'en' => 'No matches.',
+        'ro' => 'Niciun rezultat.',
+    ],
+    'eurosite.whitelist_names_missing' => [
+        'en' => 'The country catalog has codes but no names. Run the \'countries\' sync to refill it.',
+        'ro' => 'Catalogul de țări are coduri, dar nu și denumiri. Rulați sincronizarea „countries” pentru a-l reface.',
+    ],
+    'eurosite.sync_countries' => [
+        'en' => 'Sync countries',
+        'ro' => 'Sincronizează țările',
+    ],
+    'eurosite.last_synced' => [
+        'en' => 'Last synced',
+        'ro' => 'Ultima sincronizare',
+    ],
+    'eurosite.cron_commands' => [
+        'en' => 'Cron commands',
+        'ro' => 'Comenzi cron',
+    ],
+    'eurosite.cron_col_mode' => [
+        'en' => 'Mode',
+        'ro' => 'Mod',
+    ],
+    'eurosite.cron_col_description' => [
+        'en' => 'What it does',
+        'ro' => 'Ce face',
+    ],
+    'eurosite.cron_col_schedule' => [
+        'en' => 'Schedule',
+        'ro' => 'Programare',
+    ],
+    'eurosite.cron_col_url' => [
+        'en' => 'URL',
+        'ro' => 'URL',
+    ],
+    'eurosite.cron_col_actions' => [
+        'en' => 'Actions',
+        'ro' => 'Acțiuni',
+    ],
+    'eurosite.run' => [
+        'en' => 'Run',
+        'ro' => 'Rulează',
+    ],
+    'eurosite.copy' => [
+        'en' => 'Copy',
+        'ro' => 'Copiază',
+    ],
+    'eurosite.copy_url' => [
+        'en' => 'Copy URL',
+        'ro' => 'Copiază URL',
+    ],
+    'eurosite.copy_cli' => [
+        'en' => 'Copy CLI',
+        'ro' => 'Copiază CLI',
+    ],
+    'eurosite.copied' => [
+        'en' => 'Copied',
+        'ro' => 'Copiat',
+    ],
+    'eurosite.copy_failed' => [
+        'en' => 'Copy failed',
+        'ro' => 'Copierea a eșuat',
+    ],
+    'eurosite.cron_access_key_note' => [
+        'en' => 'The access key in these URLs is the addon\'s cron key — treat them as secrets.',
+        'ro' => 'Cheia de acces din aceste linkuri este cheia cron a modulului — tratați-le ca date secrete.',
+    ],
 ];

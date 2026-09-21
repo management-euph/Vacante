@@ -44,33 +44,32 @@ function fn_eurosite_ensure_schema(): void
 }
 
 /**
- * The runtime language keys (lang_keys.php) for the init.php self-heal —
- * CS-Cart imports .po files only at install time, so labels added later
- * would render raw ("_eurosite.dashboard") without this.
+ * Force-seed every eurosite label, ignoring the init.php probe's stamp.
+ * Entry point for dev/tools/seed-langs.php `force`.
+ */
+function fn_eurosite_seed_language_keys(): void
+{
+    \Tygh\Addons\Eurosite\Install\LanguageSeeder::seed();
+}
+
+/**
+ * The runtime language keys for the init.php self-heal. Thin wrapper over
+ * LanguageSeeder, which is what init.php itself calls — this exists for the
+ * dev tools and for parity with the sibling addons' fn_*_language_variables().
  *
  * @return array<string, array<string, string>> key => [lang_code => value]
  */
 function fn_eurosite_language_variables(): array
 {
-    $keysFile = __DIR__ . '/lang_keys.php';
-    /** @var array<string, array<string, string>> $vars */
-    $vars = file_exists($keysFile) ? require $keysFile : [];
-
-    return $vars;
+    return \Tygh\Addons\Eurosite\Install\LanguageSeeder::variables();
 }
 
 /**
- * Fingerprint of the language sources (stat-based — runs on every request).
+ * Fingerprint of the language sources. Wrapper over LanguageSeeder::seedHash().
  */
 function fn_eurosite_language_seed_hash(): string
 {
-    $parts = [];
-    foreach ([__DIR__ . '/addon.xml', __DIR__ . '/lang_keys.php'] as $file) {
-        $stat = @stat($file);
-        $parts[] = $file . '|' . (is_array($stat) ? $stat['size'] . '|' . $stat['mtime'] : 'absent');
-    }
-
-    return md5(implode(';', $parts));
+    return \Tygh\Addons\Eurosite\Install\LanguageSeeder::seedHash();
 }
 
 // ── Order pipeline hooks (registered in init.php) ────────────────────────────

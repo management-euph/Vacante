@@ -123,25 +123,67 @@
         <p class="muted">{__("eurosite.no_bookings", ["[default]" => "No bookings yet."])}</p>
     {/if}
 
-    {* ── Cron URLs ── *}
-    <h4 style="margin-top: 20px;">{__("eurosite.cron_jobs", ["[default]" => "Cron jobs"])}</h4>
+    {* ── Cron commands (sphinx dashboard layout) ── *}
+    <h4 style="margin-top: 20px;">{__("eurosite.cron_commands", ["[default]" => "Cron commands"])}</h4>
     <p class="muted">
         {__("eurosite.cron_hint", ["[default]" => "Schedule these from the server crontab / cPanel. CLI equivalent:"])}
-        <code>php app/addons/eurosite/cron.php access_key={$eurosite_cron_key} mode=full</code>
+        <code id="eurosite-cron-cli">{$eurosite_cron_cli}</code>
+        <button type="button" class="btn btn-micro eurosite-copy"
+                data-copy="{$eurosite_cron_cli|escape:html}"
+                data-txt-copied="{__("eurosite.copied", ["[default]" => "Copied"])|escape:html}"
+                data-txt-copy-failed="{__("eurosite.copy_failed", ["[default]" => "Copy failed"])|escape:html}">
+            <i class="icon-file"></i> {__("eurosite.copy", ["[default]" => "Copy"])}
+        </button>
     </p>
-    <table class="table table-middle" style="max-width: 900px;">
+    <table class="table table-middle" style="max-width: 1100px;">
+        <thead>
+            <tr>
+                <th style="width: 120px;">{__("eurosite.cron_col_mode", ["[default]" => "Mode"])}</th>
+                <th>{__("eurosite.cron_col_description", ["[default]" => "What it does"])}</th>
+                <th style="width: 110px;">{__("eurosite.cron_col_schedule", ["[default]" => "Schedule"])}</th>
+                <th>{__("eurosite.cron_col_url", ["[default]" => "URL"])}</th>
+                <th style="width: 190px;">{__("eurosite.cron_col_actions", ["[default]" => "Actions"])}</th>
+            </tr>
+        </thead>
         <tbody>
-            {foreach from=$eurosite_cron_urls key=cron_mode item=url}
+            {foreach from=$eurosite_cron_rows item=cron}
                 <tr>
-                    <td style="width: 120px;"><code>{$cron_mode}</code></td>
-                    <td class="muted">{$eurosite_sync_modes.$cron_mode|escape:html}</td>
-                    <td><a href="{$url}" target="_blank" rel="noopener" class="btn btn-micro">{__("eurosite.open", ["[default]" => "Open"])}</a></td>
+                    <td><code>{$cron.mode|escape:html}</code></td>
+                    <td class="muted">{$cron.description|escape:html}</td>
+                    <td><code>{$cron.schedule|escape:html}</code></td>
+                    <td style="word-break: break-all; font-size: 11px; overflow: hidden;"><code>{$cron.url|escape:html}</code></td>
+                    <td>
+                        <a href="{$cron.url}" target="_blank" rel="noopener" class="btn btn-micro">
+                            <i class="icon-play"></i> {__("eurosite.run", ["[default]" => "Run"])}
+                        </a>
+                        <button type="button" class="btn btn-micro eurosite-copy"
+                                data-copy="{$cron.url|escape:html}"
+                                data-txt-copied="{__("eurosite.copied", ["[default]" => "Copied"])|escape:html}"
+                                data-txt-copy-failed="{__("eurosite.copy_failed", ["[default]" => "Copy failed"])|escape:html}">
+                            <i class="icon-file"></i> {__("eurosite.copy_url", ["[default]" => "Copy URL"])}
+                        </button>
+                        <button type="button" class="btn btn-micro eurosite-copy"
+                                data-copy="{$cron.cli|escape:html}"
+                                data-txt-copied="{__("eurosite.copied", ["[default]" => "Copied"])|escape:html}"
+                                data-txt-copy-failed="{__("eurosite.copy_failed", ["[default]" => "Copy failed"])|escape:html}">
+                            <i class="icon-file"></i> {__("eurosite.copy_cli", ["[default]" => "Copy CLI"])}
+                        </button>
+                    </td>
                 </tr>
             {/foreach}
         </tbody>
     </table>
+    <p class="muted" style="font-size: 11px;">
+        {__("eurosite.cron_access_key_note", ["[default]" => "The access key in these URLs is the addon's cron key — treat them as secrets."])}
+    </p>
 
 </div>
+
+{* Inside the capture on purpose: this page is reached through the admin
+   top-nav (an AJAX navigation) whose response carries only the captured
+   mainbox, so a {script src=} placed outside it is dropped and the copy
+   buttons never wire up. *}
+{script src="js/addons/eurosite/dashboard.js"}
 
 {/capture}
 

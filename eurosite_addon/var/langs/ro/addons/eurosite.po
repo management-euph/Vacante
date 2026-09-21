@@ -463,3 +463,71 @@ msgstr "Finalizarea rezervării nu este configurată complet — contactați-ne 
 msgctxt "Languages::eurosite.added_to_cart"
 msgid "Your stay was added to the cart — complete checkout to confirm the reservation."
 msgstr "Sejurul a fost adăugat în coș — finalizați comanda pentru a confirma rezervarea."
+
+msgctxt "Languages::eurosite.no_search_results"
+msgid "No matches."
+msgstr "Niciun rezultat."
+
+msgctxt "Languages::eurosite.whitelist_names_missing"
+msgid "The country catalog has codes but no names. Run the 'countries' sync to refill it."
+msgstr "Catalogul de țări are coduri, dar nu și denumiri. Rulați sincronizarea „countries” pentru a-l reface."
+
+msgctxt "Languages::eurosite.sync_countries"
+msgid "Sync countries"
+msgstr "Sincronizează țările"
+
+msgctxt "Languages::eurosite.last_synced"
+msgid "Last synced"
+msgstr "Ultima sincronizare"
+
+msgctxt "Languages::eurosite.cron_commands"
+msgid "Cron commands"
+msgstr "Comenzi cron"
+
+msgctxt "Languages::eurosite.cron_col_mode"
+msgid "Mode"
+msgstr "Mod"
+
+msgctxt "Languages::eurosite.cron_col_description"
+msgid "What it does"
+msgstr "Ce face"
+
+msgctxt "Languages::eurosite.cron_col_schedule"
+msgid "Schedule"
+msgstr "Programare"
+
+msgctxt "Languages::eurosite.cron_col_url"
+msgid "URL"
+msgstr "URL"
+
+msgctxt "Languages::eurosite.cron_col_actions"
+msgid "Actions"
+msgstr "Acțiuni"
+
+msgctxt "Languages::eurosite.run"
+msgid "Run"
+msgstr "Rulează"
+
+msgctxt "Languages::eurosite.copy"
+msgid "Copy"
+msgstr "Copiază"
+
+msgctxt "Languages::eurosite.copy_url"
+msgid "Copy URL"
+msgstr "Copiază URL"
+
+msgctxt "Languages::eurosite.copy_cli"
+msgid "Copy CLI"
+msgstr "Copiază CLI"
+
+msgctxt "Languages::eurosite.copied"
+msgid "Copied"
+msgstr "Copiat"
+
+msgctxt "Languages::eurosite.copy_failed"
+msgid "Copy failed"
+msgstr "Copierea a eșuat"
+
+msgctxt "Languages::eurosite.cron_access_key_note"
+msgid "The access key in these URLs is the addon's cron key — treat them as secrets."
+msgstr "Cheia de acces din aceste linkuri este cheia cron a modulului — tratați-le ca date secrete."

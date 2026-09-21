@@ -78,6 +78,11 @@ $sl_addons = [
         'fn_fgo_invoicing_language_seed_hash',
         'fgo_invoicing._lang_seed_hash',
     ],
+    'eurosite' => [
+        'fn_eurosite_seed_language_keys',
+        'fn_eurosite_language_seed_hash',
+        'eurosite._lang_seed_hash',
+    ],
 ];
 
 /**
@@ -108,6 +113,16 @@ $sl_sentinels = [
     'travelcore_template',
     'travel_core.reserve_now',
     'novoton_holidays.n_offers',
+    // The eurosite whitelist editor — every one of these rendered as a raw
+    // "_eurosite.*" key in the admin because the heal was disabled.
+    'eurosite.countries',
+    'eurosite.cities',
+    'eurosite.own_offer_cities',
+    'eurosite.whitelist_summary',
+    'eurosite.whitelisted_countries',
+    'eurosite.whitelisted_cities',
+    'eurosite.save_whitelist',
+    'eurosite.remove_all',
 ];
 
 function sl_line(string $s = ''): void
