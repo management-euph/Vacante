@@ -128,14 +128,28 @@
                         <type>header</type>
                         <variants/>
                     </item>
-                    <!-- NO default: a shipped secret is a guessable secret.
+                    <!-- ONE cron secret for every travel addon, read through
+                         CronKeyService. This authenticates OUR OWN endpoints,
+                         so it is store policy and lives here; a provider's
+                         api_password authenticates us TO a provider and stays
+                         in that provider's addon.
+
+                         A NEW name rather than reusing cron_access_key, for two
+                         reasons that only bite on already-installed stores:
+                         SettingsMigrator::ensure() never changes an existing
+                         row's type (the old one is `input`, i.e. plaintext in
+                         the admin form, and no addon.xml edit would fix that),
+                         and carryValueToCore() refuses to overwrite a non-empty
+                         successor, so retiring three provider keys onto an
+                         existing row would have discarded all three.
+
+                         NO default: a shipped secret is a guessable secret.
                          Every cron entry point refuses an empty key, so an
-                         unconfigured store fails CLOSED. This also stops
-                         SettingsMigrator::repairValue() re-seeding a key an
-                         operator deliberately cleared — it returns early when
-                         the declared default is empty. -->
-                    <item id="cron_access_key">
-                        <type>input</type>
+                         unconfigured store fails CLOSED. It also stops
+                         repairValue() re-seeding a key an operator cleared —
+                         that returns early when the declared default is empty. -->
+                    <item id="cron_key">
+                        <type>password</type>
                         <variants/>
                     </item>
 

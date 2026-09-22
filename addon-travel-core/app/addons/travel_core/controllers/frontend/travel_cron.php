@@ -11,6 +11,7 @@ declare(strict_types=1);
  * @since   1.1.0
  */
 
+use Tygh\Addons\TravelCore\Cron\CronKeyService;
 use Tygh\Addons\TravelCore\Cron\CronRunner;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
@@ -25,7 +26,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 // no Content-Type — so this endpoint reported healthy to any monitoring while
 // refusing every request. The other three cron controllers already answer 403
 // and exit; this one was the odd one out.
-$storedKey = TypeCoerce::toString(Registry::get('addons.travel_core.cron_access_key'));
+$storedKey = CronKeyService::getFor('travel_core');
 $providedKey = RequestCoerce::string($_REQUEST, 'access_key');
 
 CronRunner::authenticate($storedKey, $providedKey, 'Travel Core');

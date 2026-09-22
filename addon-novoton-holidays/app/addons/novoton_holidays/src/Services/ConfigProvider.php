@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\TravelCore\Cron\CronKeyService;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\AbstractConfigProvider;
 use Tygh\Addons\TravelCore\Services\TravelCoreConfig;
@@ -208,9 +209,21 @@ class ConfigProvider extends AbstractConfigProvider
         return TypeCoerce::toString(self::settings()['api_key'] ?? '');
     }
 
+    /**
+     * Travel Core owns this one.
+     *
+     * It authenticates OUR OWN cron endpoint, not us to the provider — we
+     * issue it, we rotate it, it goes in one crontab — so it is store policy
+     * and lives in Core, shared with the other travel add-ons. The provider's
+     * own API credentials are the opposite case and stay here.
+     *
+     * The delegate keeps this method name so existing code goes on reading its
+     * own ConfigProvider. getFor() falls back to this add-on's legacy
+     * `cron_access_key` until the Core key is set; see CronKeyService.
+     */
     public static function getCronAccessKey(): string
     {
-        return TypeCoerce::toString(self::settings()['cron_access_key'] ?? '');
+        return CronKeyService::getFor('novoton_holidays');
     }
 
     public static function isCronReportEmailEnabled(): bool

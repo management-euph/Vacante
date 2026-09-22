@@ -140,13 +140,13 @@ msgctxt "SettingsOptions::travel_core::cron_header"
 msgid "Cron Settings"
 msgstr "Setări Cron"
 
-msgctxt "SettingsOptions::travel_core::cron_access_key"
+msgctxt "SettingsOptions::travel_core::cron_key"
 msgid "Cron access key"
 msgstr "Cheie acces cron"
 
-msgctxt "SettingsTooltips::travel_core::cron_access_key"
-msgid "Secret key for authenticating automated cron job requests"
-msgstr "Cheie secretă pentru autentificarea cererilor cron automate"
+msgctxt "SettingsTooltips::travel_core::cron_key"
+msgid "One shared secret for every travel add-on's scheduled jobs — Travel Core, Novoton, Sphinx and Eurosite all authenticate against this. Leave it empty to keep the cron endpoints closed; generate a value before installing your crontab, and re-copy the cron commands whenever you change it."
+msgstr "O singură cheie secretă pentru joburile programate ale tuturor modulelor de călătorii — Travel Core, Novoton, Sphinx și Eurosite se autentifică toate cu aceasta. Lăsați-o goală pentru a ține endpoint-urile cron închise; generați o valoare înainte de a instala crontab-ul și recopiați comenzile cron ori de câte ori o schimbați."
 
 msgctxt "Languages::travel_core.availability"
 msgid "Availability"

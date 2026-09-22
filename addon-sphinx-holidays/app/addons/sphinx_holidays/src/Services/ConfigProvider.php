@@ -6,6 +6,7 @@ namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\SphinxHolidays\Contracts\ConfigProviderInterface;
 use Tygh\Addons\SphinxHolidays\Repository\DestinationWhitelistRepository;
+use Tygh\Addons\TravelCore\Cron\CronKeyService;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\AbstractConfigProvider;
 use Tygh\Registry;
@@ -154,9 +155,21 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
         return self::getSetting('search_metrics') === 'Y' || self::isDebugLogging();
     }
 
+    /**
+     * Travel Core owns this one.
+     *
+     * It authenticates OUR OWN cron endpoint, not us to the provider — we
+     * issue it, we rotate it, it goes in one crontab — so it is store policy
+     * and lives in Core, shared with the other travel add-ons. The provider's
+     * own API credentials are the opposite case and stay here.
+     *
+     * The delegate keeps this method name so existing code goes on reading its
+     * own ConfigProvider. getFor() falls back to this add-on's legacy
+     * `cron_access_key` until the Core key is set; see CronKeyService.
+     */
     public static function getCronAccessKey(): string
     {
-        return TypeCoerce::toString(self::getSetting('cron_access_key'));
+        return CronKeyService::getFor('sphinx_holidays');
     }
 
     /**

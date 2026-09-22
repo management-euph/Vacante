@@ -384,7 +384,11 @@ if ($mode === 'manage' || empty($mode)) {
         'resort_list' => $syncLogRepo->getLastSyncDate('resort_list'),
     ];
 
-    $cron_key = TypeCoerce::toString($addon_settings['cron_access_key'] ?? '');
+    // Through the ConfigProvider, not the raw settings array: the cron key
+    // lives in Travel Core now, so a direct read of novoton's own settings
+    // would print URLs carrying the legacy key (or none) while the endpoint
+    // authenticates against Core's.
+    $cron_key = ConfigProvider::getCronAccessKey();
     $base_url = TypeCoerce::toString(Registry::get('config.http_location')) . '/';
 
     $cron_urls = [
