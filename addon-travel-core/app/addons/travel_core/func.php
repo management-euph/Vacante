@@ -28,10 +28,21 @@ require_once __DIR__ . '/src/Helpers/TypeCoerce.php';
  */
 function fn_travel_core_uninstall(): bool
 {
-    // Block uninstall if provider addons are still active
-    // Hardcoded to avoid autoloader dependency (init.php may not have run)
+    // Block uninstall if provider addons are still active.
+    //
+    // Deliberately a LITERAL, not TravelProviderRegistry::KNOWN_PROVIDER_ADDONS:
+    // this runs during uninstall, where init.php — the only registrar of the
+    // Tygh\Addons\TravelCore\* autoloader — may not have run. Referencing the
+    // class here would reintroduce exactly the bootstrap coupling the provider
+    // init.php files were just cleaned of.
+    //
+    // The cost of a literal is drift, and it drifted: eurosite was added to
+    // the registry and not to this list, so travel_core could be uninstalled
+    // out from under a live eurosite — dropping ?:travel_bookings,
+    // ?:travel_api_alias and ?:travel_feature_map, all of which eurosite
+    // writes to. UninstallGuardCoverageTest now fails if the two disagree.
     $active_providers = [];
-    $provider_addons = ['novoton_holidays', 'sphinx_holidays'];
+    $provider_addons = ['novoton_holidays', 'sphinx_holidays', 'eurosite'];
     foreach ($provider_addons as $addon) {
         $status = db_get_field('SELECT status FROM ?:addons WHERE addon = ?s', $addon);
         if ($status === 'A') {

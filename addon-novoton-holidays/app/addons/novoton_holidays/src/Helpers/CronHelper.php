@@ -67,27 +67,43 @@ class CronHelper
     }
 
     /**
-     * Send authentication error response.
+     * Refuse a cron request: 403, plain text, non-zero exit, and a log line.
      *
-     * Inside CS-Cart dispatch: sets notification and redirects.
-     * Standalone cron entry: writes to STDERR and exits with code 1.
+     * Three things were wrong here, and the middle one was the dangerous one.
+     *
+     * IT RETURNED. Under BOOTSTRAP this set 403, then fn_redirect()'d to the
+     * storefront home, then `return`ed — and the caller (novoton_cron.php) has
+     * no exit after it, so termination depended entirely on fn_redirect()
+     * exiting. If it ever did not, execution fell through to the dispatcher
+     * UNAUTHENTICATED. It is now `never`, so the caller cannot get that wrong.
+     *
+     * IT REDIRECTED. A cron URL has no human at the other end to send to the
+     * shop homepage, and the flash notification just accumulates in a session
+     * nobody reads. A refused machine request should say so in its body.
+     *
+     * IT THREW ON CLI. The docblock claimed "exits with code 1"; the code threw
+     * a RuntimeException, so the exit status depended on whoever caught it.
      *
      * @param string $message Error message
      */
-    public static function sendAuthError(string $message): void
+    public static function sendAuthError(string $message): never
     {
-        header('Content-Type: text/plain');
-        http_response_code(403);
-
-        if (defined('BOOTSTRAP')) {
-            fn_set_notification('E', __('error'), "ERROR: {$message}");
-            fn_redirect(fn_url(''));
-            return;
+        if (PHP_SAPI !== 'cli' && !headers_sent()) {
+            http_response_code(403);
+            header('Content-Type: text/plain; charset=utf-8');
         }
 
-        // Standalone CLI / cron entry point
-        fwrite(STDERR, "ERROR: {$message}\n");
-        throw new \RuntimeException($message);
+        if (function_exists('fn_log_event')) {
+            $from = TypeCoerce::toString($_SERVER['REMOTE_ADDR'] ?? '');
+            fn_log_event('general', 'runtime', [
+                'message' => "Novoton Holidays cron auth refused: {$message}"
+                    . ($from === '' ? '' : " (from {$from})"),
+            ]);
+        }
+
+        echo "ERROR: {$message}\n";
+
+        exit(1);
     }
 
     /**

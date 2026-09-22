@@ -11,6 +11,7 @@ declare(strict_types=1);
  * @since   1.1.0
  */
 
+use Tygh\Addons\TravelCore\Cron\CronRunner;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Registry;
@@ -18,15 +19,16 @@ use Tygh\Registry;
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 // --- Authenticate ---
-$storedKey = Registry::get('addons.travel_core.cron_access_key');
+//
+// Through the shared CronRunner rather than a hand-rolled check. The version
+// this replaces ended both failures in a bare die(), which sends HTTP 200 with
+// no Content-Type — so this endpoint reported healthy to any monitoring while
+// refusing every request. The other three cron controllers already answer 403
+// and exit; this one was the odd one out.
+$storedKey = TypeCoerce::toString(Registry::get('addons.travel_core.cron_access_key'));
 $providedKey = RequestCoerce::string($_REQUEST, 'access_key');
 
-if (empty($storedKey)) {
-    die("ERROR: Cron access key not set in Travel Core addon settings.\n");
-}
-if (empty($providedKey) || !hash_equals(TypeCoerce::toString($storedKey), $providedKey)) {
-    die("ERROR: Invalid or missing access key.\n");
-}
+CronRunner::authenticate($storedKey, $providedKey, 'Travel Core');
 
 if ($mode === 'run') {
     $cron_mode = isset($_REQUEST['mode']) ? preg_replace('/[^a-z0-9_]/', '', strtolower(RequestCoerce::string($_REQUEST, 'mode'))) : '';

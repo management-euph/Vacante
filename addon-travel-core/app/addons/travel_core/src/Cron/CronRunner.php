@@ -66,16 +66,57 @@ class CronRunner
     /**
      * Authenticate the access key using timing-safe comparison.
      *
-     * Exits with an error message if authentication fails.
+     * Returns only on success; a failure terminates via refuse().
      */
     public static function authenticate(string $storedKey, string $providedKey, string $addonLabel = ''): void
     {
-        if (empty($storedKey)) {
-            exit("ERROR: Cron access key not set in {$addonLabel} addon settings.\n");
+        if ($storedKey === '') {
+            self::refuse("Cron access key not set in {$addonLabel} addon settings.", $addonLabel);
         }
-        if (empty($providedKey) || !hash_equals($storedKey, $providedKey)) {
-            exit("ERROR: Invalid or missing access key.\n");
+        if ($providedKey === '' || !hash_equals($storedKey, $providedKey)) {
+            self::refuse('Invalid or missing access key.', $addonLabel);
         }
+    }
+
+    /**
+     * Refuse a cron request: 403 over HTTP, non-zero exit, and a log line.
+     *
+     * All three matter, and none of them used to happen.
+     *
+     * EXIT CODE. Both failures used to end in a bare `exit("ERROR: …")`, which
+     * is status **0** — while run() right below uses exit(1) for an unknown
+     * mode and for a caught Throwable, so this was a slip rather than a
+     * convention. A crontab wrapper checking $? saw success while every
+     * scheduled sync was being refused. That is the failure mode of a botched
+     * key rotation, and it was invisible.
+     *
+     * STATUS CODE. Over HTTP the same bare exit sent 200 with no Content-Type,
+     * so uptime monitoring pointed at a cron URL reported healthy while the
+     * endpoint rejected everything.
+     *
+     * LOGGING. There was no failed-auth logging anywhere in the repo — only
+     * successful starts were logged. With one shared key that is also the only
+     * signal distinguishing "nobody ran it" from "someone is guessing at it",
+     * so the remote address goes in the line.
+     */
+    private static function refuse(string $reason, string $addonLabel): never
+    {
+        if (PHP_SAPI !== 'cli' && !headers_sent()) {
+            http_response_code(403);
+            header('Content-Type: text/plain; charset=utf-8');
+        }
+
+        if (function_exists('fn_log_event')) {
+            $from = TypeCoerce::toString($_SERVER['REMOTE_ADDR'] ?? '');
+            fn_log_event('general', 'runtime', [
+                'message' => trim("{$addonLabel} cron auth refused: {$reason}")
+                    . ($from === '' ? '' : " (from {$from})"),
+            ]);
+        }
+
+        echo "ERROR: {$reason}\n";
+
+        exit(1);
     }
 
     /**
