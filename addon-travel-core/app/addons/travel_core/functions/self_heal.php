@@ -77,7 +77,7 @@ function fn_travel_core_heal_settings_once(): void
     $addonsRoot = dirname(__DIR__, 2);
     $fingerprint = (string) @md5_file(dirname(__DIR__) . '/src/Install/SettingsMigrator.php');
     $fingerprint .= (string) @md5_file(__FILE__);
-    foreach (['travel_core', 'novoton_holidays', 'sphinx_holidays'] as $addon) {
+    foreach (fn_travel_core_settings_heal_addons() as $addon) {
         $fingerprint .= (string) @md5_file($addonsRoot . '/' . $addon . '/addon.xml');
     }
     $fingerprint = md5($fingerprint);
@@ -250,6 +250,34 @@ function fn_travel_core_ensure_settings(string $addon, string $addonDir, string 
 }
 
 /**
+ * The addons the settings heal covers: every known provider, then travel_core.
+ *
+ * Derived from TravelProviderRegistry::KNOWN_PROVIDER_ADDONS rather than
+ * written out a second time. The literal list this replaces fell a provider
+ * behind: eurosite was added to the registry but not here, so its
+ * `cron_access_key` — declared in addon.xml, imported by CS-Cart only at
+ * install/upgrade — was never created on stores installed before it. The
+ * field was simply absent from the addon's settings page, with no way to set
+ * it and no way to authenticate a single scheduled sync.
+ *
+ * PROVIDERS FIRST, travel_core LAST is load-bearing; see the caller.
+ *
+ * The literal fallback is for the case where the autoloader has not reached
+ * this class: the heal must still cover what it covered before, never
+ * silently shrink to travel_core alone.
+ *
+ * @return list<string>
+ */
+function fn_travel_core_settings_heal_addons(): array
+{
+    $providers = class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
+        ? \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::KNOWN_PROVIDER_ADDONS
+        : ['novoton_holidays', 'sphinx_holidays', 'eurosite'];
+
+    return [...$providers, 'travel_core'];
+}
+
+/**
  * Heal the settings of every travel addon that is installed and deployed.
  *
  * Each addon ships its own addon.xml + .po pair, so the paths are derived
@@ -271,7 +299,7 @@ function fn_travel_core_ensure_all_settings(): array
     $varLangs = dirname($addonsRoot, 2) . '/var/langs';
 
     $created = [];
-    foreach (['novoton_holidays', 'sphinx_holidays', 'travel_core'] as $addon) {
+    foreach (fn_travel_core_settings_heal_addons() as $addon) {
         $dir = $addonsRoot . '/' . $addon;
         if (!is_file($dir . '/addon.xml')) {
             continue;

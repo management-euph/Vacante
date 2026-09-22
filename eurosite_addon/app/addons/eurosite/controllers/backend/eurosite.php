@@ -119,9 +119,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return [CONTROLLER_STATUS_REDIRECT, 'eurosite.manage'];
         }
 
+        // On a store installed before cron_access_key was declared, the
+        // ?:settings_objects row does not exist at all — CS-Cart imports an
+        // addon's <settings> only at install/upgrade, never on a code deploy.
+        // updateValue() silently no-ops on a setting that is not there, so
+        // this button would have reported success and changed nothing.
+        // Create the row first, through the same migrator the self-heal uses.
+        if (method_exists($settings, 'isExists')
+            && !$settings->isExists('cron_access_key', 'eurosite')
+            && function_exists('fn_travel_core_ensure_settings')
+        ) {
+            $addonDir = dirname(__DIR__, 2);
+            fn_travel_core_ensure_settings('eurosite', $addonDir, dirname($addonDir, 3) . '/var/langs');
+        }
+
         $newKey = bin2hex(random_bytes(16));
         $settings->updateValue('cron_access_key', $newKey, 'eurosite', true);
         ConfigProvider::resetSettingsCache();
+
+        // Read it back rather than trust the write: a silent no-op here is a
+        // dashboard full of URLs that all answer 403 at 01:00.
+        //
+        // Through Settings::getValue, NOT ConfigProvider: the provider reads
+        // Registry 'addons.eurosite', which CS-Cart populated at bootstrap
+        // from the database. resetSettingsCache() drops the provider's own
+        // cache but cannot refresh that Registry entry, so a provider read
+        // here would report failure on a write that actually landed.
+        $stored = method_exists($settings, 'getValue')
+            ? $settings->getValue('cron_access_key', 'eurosite')
+            : $newKey;
+        if ($stored !== $newKey) {
+            fn_set_notification(
+                'E',
+                __('error'),
+                'Could not store the cron access key — the "cron_access_key" setting is missing from this store. '
+                . 'Open any admin page once to let the settings self-heal create it, then try again.',
+            );
+
+            return [CONTROLLER_STATUS_REDIRECT, 'eurosite.manage'];
+        }
+
         fn_set_notification(
             'N',
             __('notice'),

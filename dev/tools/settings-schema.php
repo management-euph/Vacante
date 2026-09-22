@@ -126,10 +126,13 @@ foreach (['settings_sections', 'settings_objects', 'settings_descriptions', 'set
 
 // ── 3. What the addon actually has ──────────────────────────────────────────
 
-// ?addon=… (or argv[1] on the CLI) so any of the three can be inspected;
-// travel_core stays the default because it owns the shared sections.
+// ?addon=… (or argv[1] on the CLI) so any of them can be inspected;
+// travel_core stays the default because it owns the shared sections. The
+// allowlist tracks the settings heal — an addon this tool cannot show is an
+// addon whose missing settings nobody can diagnose (eurosite's absence here
+// is why its missing cron access key took a screenshot to find).
 $ss_addon = (string) ($_GET['addon'] ?? ($ss_is_cli ? ($argv[1] ?? '') : ''));
-if (!in_array($ss_addon, ['travel_core', 'novoton_holidays', 'sphinx_holidays'], true)) {
+if (!in_array($ss_addon, ['travel_core', 'novoton_holidays', 'sphinx_holidays', 'eurosite'], true)) {
     $ss_addon = 'travel_core';
 }
 
