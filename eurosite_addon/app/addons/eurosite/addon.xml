@@ -120,10 +120,15 @@ Diferența de 70% cu 21 de zile înainte de check-in.</default_value>
                         <type>header</type>
                         <variants/>
                     </item>
-                    <!-- Shared secret for eurosite_cron.run / cron.php. -->
+                    <!-- Shared secret for eurosite_cron.run / cron.php.
+                         NO default: a shipped secret is a guessable secret.
+                         Every cron entry point refuses an empty key, so an
+                         unconfigured store fails CLOSED. This also stops
+                         SettingsMigrator::repairValue() re-seeding a key an
+                         operator deliberately cleared — it returns early when
+                         the declared default is empty. -->
                     <item id="cron_access_key">
                         <type>password</type>
-                        <default_value>1234</default_value>
                         <variants/>
                     </item>
 
