@@ -89,10 +89,15 @@ if (defined('AREA') && AREA === 'A' && function_exists('fn_travel_core_ensure_sc
 // 503 on every page — the failure mode must be "not healed", never "no store".
 if (function_exists('fn_travel_core_heal_language_keys')) {
     fn_travel_core_self_heal_guard('travel_core_langs', static function (): void {
+        // The class, NOT the fn_travel_core_language_* helpers: those live in
+        // func.php, which init.php never loads, and older CS-Cart cores include
+        // init.php FIRST. There the call hit an undefined function, the guard
+        // swallowed the Error on every request, and no label added after
+        // install ever reached the store.
         fn_travel_core_heal_language_keys(
             'travel_core',
-            'fn_travel_core_language_variables',
-            fn_travel_core_language_seed_hash(),
+            static fn (): array => \Tygh\Addons\TravelCore\Install\LanguageSeeder::variables(),
+            \Tygh\Addons\TravelCore\Install\LanguageSeeder::seedHash(),
         );
     });
 }

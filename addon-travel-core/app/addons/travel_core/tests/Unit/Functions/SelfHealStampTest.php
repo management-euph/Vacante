@@ -103,8 +103,11 @@ namespace Tygh\Addons\TravelCore\Tests\Unit\Functions {
         {
             $repoRoot = dirname(__DIR__, 7);
             $sites = [
-                dirname(__DIR__, 3) . '/func.php' => 'function fn_travel_core_language_seed_hash',
-                $repoRoot . '/addon-novoton-holidays/app/addons/novoton_holidays/func.php' => 'function fn_novoton_holidays_language_seed_hash',
+                // The fingerprints moved from func.php into LanguageSeeder
+                // classes, so init.php can reach them whatever the file load
+                // order (see InitFirstLanguageHealTest). Pin where they live now.
+                dirname(__DIR__, 3) . '/src/Install/LanguageSeeder.php' => 'function seedHash',
+                $repoRoot . '/addon-novoton-holidays/app/addons/novoton_holidays/src/Install/LanguageSeeder.php' => 'function seedHash',
                 $repoRoot . '/addon-sphinx-holidays/app/addons/sphinx_holidays/src/Install/LanguageSeeder.php' => 'function seedHash',
             ];
 
