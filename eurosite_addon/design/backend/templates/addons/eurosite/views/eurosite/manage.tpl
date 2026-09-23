@@ -279,7 +279,7 @@
 
         <div class="muted" style="font-size: 11px; max-width: 1100px; margin-top: 10px;">
             <i class="icon-warning-sign"></i>
-            {__("eurosite.cron_access_key_note", ["[default]" => "These commands carry the shared Travel Core cron key. Copying puts it on your clipboard; anyone holding it can trigger a sync, and rotating it re-issues the Sphinx and Novoton commands too."])}
+            {__("eurosite.cron_access_key_note", ["[default]" => "These commands carry the shared Travel Core cron key. Copying puts it on your clipboard; anyone holding it can trigger a sync, and rotating it re-issues the Travel Core, Sphinx and Novoton commands too."])}
             <form action="{""|fn_url}" method="post" style="display:inline;">
                 <input type="hidden" name="dispatch" value="eurosite.generate_cron_key" />
                 {* CSRF token. This button now rotates the SHARED Travel Core

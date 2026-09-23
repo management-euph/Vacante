@@ -73,7 +73,12 @@ manually (all ten, including `sphinx_image_sync_queue`) and delete the
 ## 4. Configure (nothing works until these are set)
 
 ### travel_core (Settings → Travel Core)
-- `cron_access_key` — random secret for the cron URLs
+- `cron_key` — the **one** cron security key, shared by every travel addon's
+  cron URLs and CLI commands. Use **Travel Core → Tools → Generate key** rather
+  than typing one; it creates a random 128-bit key and shows it beside the
+  commands. Rotating it changes the key for Eurosite, Sphinx and Novoton too.
+  (It replaced the four per-addon `cron_access_key` settings; stores that had
+  them are migrated automatically on the first admin page load.)
 - Exchange-rate commission (applied on top of BNR rates for RON/USD/GBP)
 - **Checkout price guard** (ONE policy for all providers): `checkout_alert_percent`
   (default 20), `checkout_alert_floor` (€5), `checkout_big_overage` (€100),
@@ -98,7 +103,8 @@ manually (all ten, including `sphinx_image_sync_queue`) and delete the
   applicable). Leave `allow_insecure_api` off.
 - `commission` — markup applied to API prices
 - `api_currency` — normally `EUR`
-- `cron_access_key`, `cron_batch_size`, `cron_max_execution_time`
+- `cron_batch_size`, `cron_max_execution_time` (the cron **key** is the shared
+  one in Travel Core — see above)
 - `enable_preorder_price_check` — keep **on** (re-verifies price at checkout)
 - **Feature mapping**: create/select the CS-Cart product features (property
   rating, meals, hotel/room facilities, resort, property type) and set their
@@ -110,7 +116,7 @@ manually (all ten, including `sphinx_image_sync_queue`) and delete the
 
 ### sphinx_holidays
 - **API** credentials and endpoint
-- `cron_access_key`
+- (no cron key here — the shared one lives in Travel Core, see above)
 - Search settings: `cache_ttl_search`, `search_max_polls`, `default_currency`
   (`search_poll_interval` currently has no storefront effect — the browser
   polls on a fixed client-side cadence)

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\TravelCore\Tests\Unit\Schema;
 
 use PHPUnit\Framework\TestCase;
+use Tygh\Addons\TravelCore\Tests\Support\SourceCode;
 
 /**
  * Pins the settings self-heal against the real CS-Cart API.
@@ -414,14 +415,15 @@ final class SettingsMigratorTest extends TestCase
             '../../../var/langs/en/addons/travel_core.po',
         ));
 
-        $ctrl = (string) file_get_contents(
+        // The mode's own comment-stripped body: a raw 3200-char window was
+        // satisfied by the comment above the call, so a mint replaced by a
+        // plain read of the old key passed.
+        $block = SourceCode::body(
             $repoRoot . '/eurosite_addon/app/addons/eurosite/controllers/backend/eurosite.php',
+            "if (\$mode === 'generate_cron_key')",
         );
-        $pos = strpos($ctrl, "\$mode === 'generate_cron_key'");
-        self::assertIsInt($pos, 'the eurosite dashboard lost its generate button');
-        $block = substr($ctrl, $pos, 3200);
 
-        self::assertStringContainsString('CronKeyService::generate()', $block);
+        self::assertStringContainsString('$newKey = CronKeyService::generate();', $block);
         // A local write here would be a button that reports success while
         // every scheduled job keeps using the old key — ConfigProvider reads
         // through CronKeyService now.

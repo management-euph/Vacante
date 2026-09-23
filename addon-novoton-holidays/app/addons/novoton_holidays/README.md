@@ -103,7 +103,6 @@ Complete hotel booking integration with Novoton XML API for CS-Cart.
 | API Username | Novoton API username |
 | API Password | Novoton API password |
 | Commission % | Markup percentage on prices |
-| Cron Access Key | Secret key for cron job authentication |
 | Currency Risk Commission % | Exchange rate markup (0-5%, default 1.8%) |
 
 ---
@@ -122,7 +121,7 @@ Complete hotel booking integration with Novoton XML API for CS-Cart.
 4. **API Resilience** - Max retries, retry delay, retry multiplier, circuit breaker threshold/timeout
 5. **Products** - Selected countries, product code prefix, delete on uninstall, excluded resorts
 6. **Feature IDs Mapping** - CS-Cart feature ID selectbox dropdowns for: Star Rating, Board, Hotel Facility, Room Facility, Resort, Property Type, Travel Group, Beach Access
-7. **Cron** - Cron access key, cron links info
+7. **Cron** - cron report email, cron links info (the cron **key** itself is the shared one in Travel Core settings)
 8. **Display** - Show booking form toggle, booking form position (before tabs / after description / sidebar)
 9. **Other** - Last sync date, test booking mode, disable API submission, debug logging, debug mode
 
@@ -173,7 +172,10 @@ The dashboard (`novoton_holidays.manage`) displays:
 
 ### Authentication
 
-All cron URLs require the `access_key` parameter matching your configured **Cron Access Key**.
+All cron URLs require the `access_key` parameter matching the shared **cron key** in
+Settings → Travel Core (Travel Core → Tools can generate one). It is the same key for
+every travel addon, so rotating it means re-copying the Novoton, Sphinx, Eurosite and
+Travel Core commands.
 
 ### Available Cron Modes
 

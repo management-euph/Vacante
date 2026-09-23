@@ -117,22 +117,65 @@ final class DashboardCronContractTest extends TestCase
      */
     public function testGeneratingAKeyMintsTheSharedCoreKey(): void
     {
-        $controller = self::controller();
+        // Comment-stripped, and scoped to this one mode. The raw-source
+        // version of this test was satisfied by the COMMENT above the call
+        // ("lives in CronKeyService::generate() now"), so replacing the mint
+        // with a read of the existing key — a button that reports "a new key
+        // was generated" while changing nothing — kept every suite green.
+        $mode = self::modeBody('generate_cron_key');
 
-        self::assertStringContainsString("if (\$mode === 'generate_cron_key')", $controller);
-        self::assertStringContainsString('CronKeyService::generate()', $controller);
+        self::assertStringContainsString('$newKey = CronKeyService::generate();', $mode);
         self::assertStringNotContainsString(
-            "updateValue('cron_access_key', \$newKey, 'eurosite', true)",
-            $controller,
+            "updateValue('cron_access_key'",
+            $mode,
             'the dashboard still writes an eurosite-local cron key that nothing reads',
         );
         // The cached settings array would otherwise still hold the old key for
         // the rest of the request.
-        self::assertStringContainsString('ConfigProvider::resetSettingsCache();', $controller);
-        // Rotating invalidates every scheduled URL of EVERY travel addon —
-        // saying "Eurosite" would understate what the operator has to fix.
-        self::assertStringContainsString('re-copy the crontab commands for Eurosite, ', $controller);
-        self::assertStringContainsString('Sphinx and Novoton', $controller);
+        self::assertStringContainsString('ConfigProvider::resetSettingsCache();', $mode);
+        // Rotating invalidates every scheduled URL of EVERY travel addon,
+        // Travel Core's own exchange-rate job included.
+        foreach (['Travel Core -> Tools', 'Eurosite', 'Sphinx', 'Novoton'] as $place) {
+            self::assertStringContainsString($place, $mode, "the rotation notice never mentions {$place}");
+        }
+    }
+
+    /**
+     * The comment-stripped body of `if ($mode === '<mode>') { ... }` in the
+     * controller, found by matching braces on PHP's tokens so a brace inside a
+     * string cannot end it early.
+     */
+    private static function modeBody(string $mode): string
+    {
+        $code = '';
+        $kinds = [];
+        foreach (token_get_all(self::controller()) as $token) {
+            if (is_array($token) && in_array($token[0], [T_COMMENT, T_DOC_COMMENT], true)) {
+                continue;
+            }
+            $text = is_array($token) ? $token[1] : $token;
+            $open = $token === '{' || (is_array($token) && in_array($token[0], [T_CURLY_OPEN, T_DOLLAR_OPEN_CURLY_BRACES], true));
+            $kinds[] = [strlen($code), $open ? 1 : ($token === '}' ? -1 : 0)];
+            $code .= $text;
+        }
+
+        $at = strpos($code, "if (\$mode === '{$mode}')");
+        self::assertIsInt($at, "mode {$mode} is gone");
+
+        $depth = 0;
+        $start = null;
+        foreach ($kinds as [$offset, $delta]) {
+            if ($offset < $at || $delta === 0) {
+                continue;
+            }
+            $depth += $delta;
+            $start ??= $offset;
+            if ($depth === 0) {
+                return substr($code, $start, $offset + 1 - $start);
+            }
+        }
+
+        self::fail("mode {$mode} has no balanced body");
     }
 
     public function testTheMergedTableRendersEveryFieldThePlanProvides(): void

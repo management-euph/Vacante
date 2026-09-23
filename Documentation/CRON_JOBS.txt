@@ -24,7 +24,9 @@ BASE URL FORMAT
 
 Where:
   {SITE_URL}     → Your site URL (e.g., https://example.com)
-  {ACCESS_KEY}   → Cron access key from: Admin → Addons → Novoton Holidays → Settings
+  {ACCESS_KEY}   → The shared cron key from: Admin → Addons → Travel Core → Settings
+                   (or Travel Core → Tools, which can generate one). The same key
+                   authenticates every travel addon's cron URLs.
   MODE_NAME      → One of the modes listed below
 
 Note: The complete URLs with your domain and key are shown in:
@@ -806,7 +808,7 @@ EUROSITE TOURING (addon id: eurosite)
 Entry points (interchangeable):
   CLI:  php app/addons/eurosite/cron.php access_key=KEY mode=<mode>
   HTTP: index.php?dispatch=eurosite_cron.run&access_key=KEY&cron_mode=<mode>
-  (access key = addon setting "cron_access_key"; note HTTP uses cron_mode)
+  (access key = the shared Travel Core setting "cron_key"; note HTTP uses cron_mode)
 
 Modes:
   full          all static catalogs in dependency order (countries,

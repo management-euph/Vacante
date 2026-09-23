@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\TravelCore\Tests\Unit\Schema;
 
 use PHPUnit\Framework\TestCase;
+use Tygh\Addons\TravelCore\Tests\Support\SourceCode;
 
 /**
  * The Tools page must be able to MINT the cron key, not just display it.
@@ -40,20 +41,23 @@ final class ToolsCronKeyButtonTest extends TestCase
     public function testTheButtonPostsToAModeThatMintsThroughTheService(): void
     {
         $tpl = self::template();
-        $controller = self::controller();
 
         self::assertStringContainsString('"travel_tools.generate_cron_key"|fn_url', $tpl);
-        self::assertStringContainsString("if (\$mode === 'generate_cron_key')", $controller);
-        self::assertStringContainsString('CronKeyService::generate()', $controller);
 
-        // The mode must be inside the POST guard. A cron key mintable by GET
-        // is mintable by any link, image or prefetch that reaches an
-        // authenticated admin's browser.
-        $postPos = strpos($controller, "\$_SERVER['REQUEST_METHOD'] === 'POST'");
-        $modePos = strpos($controller, "\$mode === 'generate_cron_key'");
-        self::assertIsInt($postPos);
-        self::assertIsInt($modePos);
-        self::assertLessThan($modePos, $postPos);
+        // The mode must be INSIDE the POST guard's block — not merely after it
+        // in the file. An earlier version compared positions only, so moving
+        // the mode below the block's closing brace (where it answers GET)
+        // kept every suite green; a review proved it. A cron key mintable by
+        // GET is mintable by any link, image or prefetch that reaches an
+        // authenticated admin's browser, and CS-Cart does not check CSRF on
+        // GET.
+        $path = dirname(__DIR__, 3) . '/controllers/backend/travel_tools.php';
+        $postBlock = SourceCode::body($path, "if (\$_SERVER['REQUEST_METHOD'] === 'POST')");
+        $mode = SourceCode::body($path, "if (\$mode === 'generate_cron_key')");
+
+        self::assertStringContainsString($mode, $postBlock, 'generate_cron_key is reachable outside the POST guard');
+        // And it mints through the service — in CODE, not in a comment about it.
+        self::assertStringContainsString('$fresh = CronKeyService::generate();', $mode);
 
         // CS-Cart's CSRF token, exactly as the page's other POST forms carry it.
         $formPos = strpos($tpl, '"travel_tools.generate_cron_key"|fn_url');
@@ -71,11 +75,12 @@ final class ToolsCronKeyButtonTest extends TestCase
      */
     public function testAFailedMintIsReportedAsAnError(): void
     {
-        $controller = self::controller();
-
-        $pos = strpos($controller, "\$mode === 'generate_cron_key'");
-        self::assertIsInt($pos);
-        $block = substr($controller, $pos, 2000);
+        // The mode's own body, comments stripped — not a fixed-size window of
+        // raw source that a comment, or the next mode, could satisfy.
+        $block = SourceCode::body(
+            dirname(__DIR__, 3) . '/controllers/backend/travel_tools.php',
+            "if (\$mode === 'generate_cron_key')",
+        );
 
         self::assertStringContainsString("if (\$fresh === '') {", $block);
         self::assertStringContainsString("fn_set_notification('E'", $block);
@@ -93,11 +98,12 @@ final class ToolsCronKeyButtonTest extends TestCase
      */
     public function testTheMintedKeyIsNotEchoedIntoTheNotification(): void
     {
-        $controller = self::controller();
-
-        $pos = strpos($controller, "\$mode === 'generate_cron_key'");
-        self::assertIsInt($pos);
-        $block = substr($controller, $pos, 2000);
+        // The mode's own body, comments stripped — not a fixed-size window of
+        // raw source that a comment, or the next mode, could satisfy.
+        $block = SourceCode::body(
+            dirname(__DIR__, 3) . '/controllers/backend/travel_tools.php',
+            "if (\$mode === 'generate_cron_key')",
+        );
 
         self::assertStringNotContainsString('. $fresh', $block);
         self::assertStringNotContainsString('{$fresh}', $block);
