@@ -142,15 +142,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return [CONTROLLER_STATUS_REDIRECT, 'eurosite.manage'];
         }
 
-        // 'W', not 'N': this rotates the key for EVERY travel addon, so the
-        // Sphinx and Novoton crontab entries just stopped working too. Saying
-        // "Eurosite" here would understate what the operator has to fix.
+        // 'W', not 'N': this rotates the key for EVERY travel addon, so Travel
+        // Core's own exchange-rate job and the Sphinx and Novoton crontab
+        // entries just stopped working too. Naming fewer places than that
+        // understates what the operator has to fix.
         fn_set_notification(
             'W',
             __('warning'),
             'A new shared cron security key was generated in Travel Core. It authenticates the '
-            . 'scheduled jobs of every travel addon, so re-copy the crontab commands for Eurosite, '
-            . 'Sphinx and Novoton — the old URLs no longer work.',
+            . 'scheduled jobs of every travel addon, so re-copy the crontab commands from '
+            . 'Travel Core -> Tools and from the Eurosite, Sphinx and Novoton dashboards — '
+            . 'the old URLs no longer work.',
         );
 
         return [CONTROLLER_STATUS_REDIRECT, 'eurosite.manage'];

@@ -451,8 +451,8 @@ return [
         'ro' => 'Copierea a eșuat',
     ],
     'eurosite.cron_access_key_note' => [
-        'en' => 'The access key in these URLs is the shared Travel Core cron key — treat them as secrets. Rotating it re-issues the commands for Sphinx and Novoton too.',
-        'ro' => 'Cheia de acces din aceste linkuri este cheia cron partajată din Travel Core — tratați-le ca date secrete. Schimbarea ei reemite și comenzile pentru Sphinx și Novoton.',
+        'en' => 'The access key in these URLs is the shared Travel Core cron key — treat them as secrets. Rotating it re-issues the Travel Core, Sphinx and Novoton commands too.',
+        'ro' => 'Cheia de acces din aceste linkuri este cheia cron partajată din Travel Core — tratați-le ca date secrete. Schimbarea ei reemite și comenzile pentru Travel Core, Sphinx și Novoton.',
     ],
     'eurosite.catalogs_and_schedules' => [
         'en' => 'Catalogs & schedules',

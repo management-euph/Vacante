@@ -529,8 +529,8 @@ msgid "Copy failed"
 msgstr "Copy failed"
 
 msgctxt "Languages::eurosite.cron_access_key_note"
-msgid "The access key in these URLs is the shared Travel Core cron key — treat them as secrets. Rotating it re-issues the commands for Sphinx and Novoton too."
-msgstr "The access key in these URLs is the shared Travel Core cron key — treat them as secrets. Rotating it re-issues the commands for Sphinx and Novoton too."
+msgid "The access key in these URLs is the shared Travel Core cron key — treat them as secrets. Rotating it re-issues the Travel Core, Sphinx and Novoton commands too."
+msgstr "The access key in these URLs is the shared Travel Core cron key — treat them as secrets. Rotating it re-issues the Travel Core, Sphinx and Novoton commands too."
 
 msgctxt "Languages::eurosite.catalogs_and_schedules"
 msgid "Catalogs & schedules"

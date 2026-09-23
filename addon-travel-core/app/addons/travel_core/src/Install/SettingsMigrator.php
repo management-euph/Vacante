@@ -267,6 +267,33 @@ final class SettingsMigrator
 
     private const string CRON_KEY = 'cron_key';
 
+    /** Every legacy row already held the adopted key: no crontab changes. */
+    private const string CRON_KEY_CARRIED = 'carried';
+
+    /** An existing key was adopted, but some addons had been using another. */
+    private const string CRON_KEY_PARTIAL = 'partial';
+
+    /** No existing key could be carried; a fresh one was generated. */
+    private const string CRON_KEY_MINTED = 'minted';
+
+    /**
+     * Where each addon's cron commands are shown, for operator messages.
+     *
+     * Messages about the shared key must name EVERY place a command has to be
+     * re-copied from. Travel Core -> Tools lists Travel Core's own jobs only;
+     * the providers' commands are on their own dashboards. A notice that named
+     * only one page sent the operator to re-copy one job and believe they were
+     * done.
+     *
+     * @var array<string, string>
+     */
+    private const array CRON_COMMANDS_SHOWN_ON = [
+        'travel_core' => 'Travel Core -> Tools',
+        'eurosite' => 'the Eurosite dashboard',
+        'sphinx_holidays' => 'the Sphinx dashboard',
+        'novoton_holidays' => 'the Novoton dashboard',
+    ];
+
     /**
      * Move four per-add-on cron keys onto travel_core's single one.
      *
@@ -367,11 +394,29 @@ final class SettingsMigrator
             // so the operator was told nothing had changed while travel_core's
             // crontab, which had been authenticating with '1234', silently
             // stopped working.
+            //
+            // Three outcomes, not two. A key that was ADOPTED from some rows
+            // but not others is neither "nothing changed" nor "a new key was
+            // generated": the addons whose row already held it keep working,
+            // and exactly the others must be re-copied. Saying "new key"
+            // there sends the operator to re-copy jobs that never broke, and
+            // naming no addon hides which ones did.
             $distinct = array_values(array_unique(array_values($legacy)));
-            $carriedForEveryAddon = $distinct === [$adopted];
+            $mustRecopy = array_keys(array_filter(
+                $legacy,
+                static fn (string $value): bool => $value !== $adopted,
+            ));
+
+            if (!in_array($adopted, $distinct, true)) {
+                $outcome = self::CRON_KEY_MINTED;
+            } elseif ($distinct === [$adopted]) {
+                $outcome = self::CRON_KEY_CARRIED;
+            } else {
+                $outcome = self::CRON_KEY_PARTIAL;
+            }
 
             $changed[] = self::CRON_KEY;
-            self::reportCronKeyMove(!$carriedForEveryAddon);
+            self::reportCronKeyMove($outcome, $mustRecopy);
         }
 
         // Falls through to the delete in two more cases, both safe:
@@ -510,25 +555,68 @@ final class SettingsMigrator
         return $removed;
     }
 
-    /** Tell the operator, because whether their crontab still works depends on it. */
-    private static function reportCronKeyMove(bool $minted): void
+    /**
+     * Tell the operator, because whether their crontab still works depends on it.
+     *
+     * @param list<string> $mustRecopy addons whose legacy key differed from the adopted one
+     */
+    private static function reportCronKeyMove(string $outcome, array $mustRecopy): void
     {
-        $message = $minted
-            ? 'Travel addons: the cron keys have moved to one shared key in Travel Core '
-                . '(Settings -> Cron security key). There was no single existing key to carry '
-                . 'over, so a new one was generated: re-copy every cron command from '
-                . 'Travel Core -> Tools, because the old URLs no longer authenticate.'
-            : 'Travel addons: the cron keys have moved to one shared key in Travel Core '
-                . '(Settings -> Cron security key). Your existing key was carried over, so '
-                . 'your crontab keeps working.';
+        $prefix = 'Travel addons: the cron keys have moved to one shared key in Travel Core '
+            . '(Settings -> Travel Core). ';
 
-        error_log('travel_core: ' . $message);
+        if ($outcome === self::CRON_KEY_CARRIED) {
+            self::notify('N', $prefix . 'Your existing key was carried over, so your crontab keeps working.');
+
+            return;
+        }
+
+        if ($outcome === self::CRON_KEY_PARTIAL) {
+            $where = array_map(
+                static fn (string $addon): string => self::CRON_COMMANDS_SHOWN_ON[$addon] ?? $addon,
+                $mustRecopy,
+            );
+            self::notify(
+                'W',
+                $prefix . 'Your existing key was kept, but some cron jobs were using a different one '
+                    . 'and no longer authenticate. Re-copy the commands from: ' . implode(', ', $where) . '.',
+            );
+
+            return;
+        }
+
+        self::notify(
+            'W',
+            $prefix . 'There was no single existing key to carry over, so a new one was generated. '
+                . 'Every cron job must be updated: re-copy the commands from '
+                . implode(', ', array_values(self::CRON_COMMANDS_SHOWN_ON)) . '.',
+        );
+    }
+
+    /**
+     * Report a cron-key change on every channel an operator might read.
+     *
+     * The admin notification alone is not enough, and for these messages
+     * least of all. The heal fires on the first admin page DISPLAYED after a
+     * deploy — which can be the login form, or a tab nobody is looking at —
+     * and a notification shown there is gone. The one message that says
+     * "every cron job has stopped" must also land somewhere durable, so it
+     * goes through fn_travel_core_heal_report() into Administration > Logs,
+     * the same channel the other heal outcomes already use.
+     */
+    private static function notify(string $type, string $message): void
+    {
+        if (function_exists('fn_travel_core_heal_report')) {
+            fn_travel_core_heal_report($message); // error_log + Administration > Logs
+        } else {
+            error_log('travel_core: ' . $message);
+        }
 
         if (function_exists('fn_set_notification')) {
             try {
-                fn_set_notification($minted ? 'W' : 'N', __($minted ? 'warning' : 'notice'), $message);
+                fn_set_notification($type, __($type === 'N' ? 'notice' : 'warning'), $message);
             } catch (\Throwable) {
-                // Already in error_log; a notification failure must not escalate.
+                // Already logged; a notification failure must not escalate.
             }
         }
     }
@@ -593,19 +681,32 @@ final class SettingsMigrator
      */
     private static function reportRotation(string $addon, string $name): void
     {
-        $message = "Travel addons: the default \"1234\" {$name} on {$addon} was replaced "
-            . 'with a generated one. Re-copy the cron commands from that addon\'s dashboard '
-            . '— the old URLs no longer authenticate.';
+        // The SHARED key. It ships no default, so "the default 1234" would be
+        // false, and it authenticates every travel addon, so "that addon's
+        // dashboard" would send the operator to re-copy one job of four.
+        if ($addon === 'travel_core' && $name === self::CRON_KEY) {
+            self::notify(
+                'W',
+                'Travel addons: the shared cron key in Travel Core was the weak value "1234" and was '
+                    . 'replaced with a generated one. Every cron job must be updated: re-copy the commands '
+                    . 'from ' . implode(', ', array_values(self::CRON_COMMANDS_SHOWN_ON)) . '.',
+            );
 
-        error_log('travel_core: ' . $message);
-
-        if (function_exists('fn_set_notification')) {
-            try {
-                fn_set_notification('W', __('warning'), $message);
-            } catch (\Throwable) {
-                // Already in error_log; a notification failure must not escalate.
-            }
+            return;
         }
+
+        // A legacy per-addon key. The consolidation that runs later in this
+        // same pass normally retires it at once, so its own message is the
+        // one that matters — say so, or the operator re-copies a key that is
+        // already gone. But it can also PAUSE, and then this rotated key is
+        // the live one, so the instruction has to stand on its own too.
+        $where = self::CRON_COMMANDS_SHOWN_ON[$addon] ?? "the {$addon} dashboard";
+        self::notify(
+            'W',
+            "Travel addons: the default \"1234\" {$name} on {$addon} was replaced with a generated one. "
+                . 'If another message says the cron keys have moved to one shared key in Travel Core, '
+                . "follow that one instead — it supersedes this. Otherwise re-copy the commands from {$where}.",
+        );
     }
 
     /**
