@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 use Tygh\Registry;
 use Tygh\Tygh;
+use Tygh\Addons\TravelCore\Cron\CronKeyService;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Repository\OrderLinkCandidateRepository;
 
@@ -79,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 if ($mode === 'manage') {
-    $cron_key = TypeCoerce::toString(Registry::get('addons.travel_core.cron_access_key'));
+    $cron_key = CronKeyService::getFor('travel_core');
     $base_url = TypeCoerce::toString(Registry::get('config.http_location')) . '/';
 
     $cron_jobs = [];

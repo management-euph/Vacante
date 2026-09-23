@@ -9,15 +9,26 @@ declare(strict_types=1);
  */
 
 use Tygh\Registry;
-use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 if (!defined('BOOTSTRAP')) {
     exit('Access denied');
 }
 
-// Addon version constant (strip any -pre/-beta suffix).
+// Addon version constant.
+//
+// Deliberately NOT using TravelCore's TypeCoerce. This file is require'd from
+// fn_init_addons(), and the Tygh\Addons\TravelCore\* autoloader is registered
+// only by travel_core's OWN init.php — which a disabled travel_core never
+// runs. A runtime reference to a Core class here therefore throws "Class not
+// found" from inside bootstrap: a 503 on every page, storefront and admin,
+// including the admin page you would need to re-enable it from.
+//
+// Same bug class as the 2026-07-10 install failure that FuncSelfSufficiencyTest
+// was written for. Bootstrap code carries no dependencies; a class_exists guard
+// would keep the coupling and merely hide it.
 if (!defined('EUROSITE_VERSION')) {
-    $__ev = TypeCoerce::toString(Registry::get('addons.eurosite.version') ?: '0.0.0');
+    $__ev = Registry::get('addons.eurosite.version');
+    $__ev = is_scalar($__ev) && (string) $__ev !== '' ? (string) $__ev : '0.0.0';
     define('EUROSITE_VERSION', preg_replace('/-.*$/', '', $__ev));
     unset($__ev);
 }

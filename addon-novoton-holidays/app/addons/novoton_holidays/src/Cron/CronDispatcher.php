@@ -85,6 +85,21 @@ class CronDispatcher implements CronDispatcherInterface
 
             $class = self::$commandMap[$mode];
             $command = new $class($this->api, $this->logger, array_merge($params, ['_mode' => $mode]));
+
+            // Keep the run lock alive. Without this a mode that runs longer
+            // than CronRunLock::STALE_THRESHOLD (30 min) is taken over as
+            // stale by the next tick — and acquire() UNLINKS and reopens on
+            // that path, so the original holder keeps flock on an orphaned
+            // inode and BOTH run at once. `full` is documented at 5-30+
+            // minutes, so this was reachable on the nightly schedule.
+            //
+            // Via setHeartbeat, not setOutputCallback: the latter replaces,
+            // and this command's constructor may already have wired SyncLogger
+            // there (HTTP path) or deliberately left it null (CLI path).
+            $command->setHeartbeat(static function () use ($lock): void {
+                $lock?->touch();
+            });
+
             return $command->execute();
         } finally {
             $lock?->release();

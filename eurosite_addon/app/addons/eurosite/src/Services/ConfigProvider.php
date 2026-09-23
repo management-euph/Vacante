@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\Eurosite\Services;
 
+use Tygh\Addons\TravelCore\Cron\CronKeyService;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\AbstractConfigProvider;
 
@@ -47,9 +48,21 @@ class ConfigProvider extends AbstractConfigProvider
         return $code !== '' ? $code : 'EU';
     }
 
+    /**
+     * Travel Core owns this one.
+     *
+     * It authenticates OUR OWN cron endpoint, not us to Eurosite — we issue
+     * it, we rotate it, it goes in one crontab — so it is store policy and
+     * lives in Core, shared with the other travel add-ons. `api_password`
+     * above is the opposite case and stays here.
+     *
+     * The delegate keeps this method name so eurosite code goes on reading its
+     * own ConfigProvider. getFor() falls back to this add-on's legacy
+     * `cron_access_key` until the Core key is set; see CronKeyService.
+     */
     public static function getCronAccessKey(): string
     {
-        return TypeCoerce::toString(self::getSetting('cron_access_key'));
+        return CronKeyService::getFor('eurosite');
     }
 
     public static function getPaymentTermsText(): string

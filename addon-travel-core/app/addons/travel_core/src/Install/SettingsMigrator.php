@@ -94,6 +94,33 @@ final class SettingsMigrator
         ],
     ];
 
+    /**
+     * Shipped secrets that must be replaced with a real one, per addon.
+     *
+     * Dropping `<default_value>1234</default_value>` protects future installs.
+     * It does nothing for a store that already has the row — the value sits
+     * there, and `1234` is not a secret. This rewrites it once, in place.
+     *
+     * EXPLICIT on purpose, exactly like RETIRED. A rule like "randomise every
+     * password-typed setting holding a default" would reach `api_password`
+     * and silently destroy the provider credentials the store runs on.
+     *
+     * Self-limiting: the match is on the weak value itself, so once rewritten
+     * the row never matches again. An operator who deliberately sets `1234`
+     * gets it replaced — which is the intent.
+     *
+     * @var array<string, list<string>> addon => setting names
+     */
+    private const array WEAK_SECRETS = [
+        'travel_core' => ['cron_access_key'],
+        'novoton_holidays' => ['cron_access_key'],
+        'sphinx_holidays' => ['cron_access_key'],
+        'eurosite' => ['cron_access_key'],
+    ];
+
+    /** Values that are not secrets, whatever the setting claims. */
+    private const array WEAK_VALUES = ['1234'];
+
     /** @var array<string, true> one attempt per addon per request */
     private static array $done = [];
 
@@ -193,7 +220,86 @@ final class SettingsMigrator
             $created[] = $name;
         }
 
+        foreach (self::rotateWeakSecrets($addon) as $rotated) {
+            $created[] = $rotated;
+        }
+
         return $created;
+    }
+
+    /**
+     * Replace a shipped secret that is still in place with a real one.
+     *
+     * Verified through Settings::getValue rather than trusting updateValue:
+     * a silent no-op here would leave `1234` live while reporting a rotation,
+     * which is worse than not trying.
+     *
+     * @return list<string> names actually rotated
+     */
+    private static function rotateWeakSecrets(string $addon): array
+    {
+        $names = self::WEAK_SECRETS[$addon] ?? [];
+        if ($names === []) {
+            return [];
+        }
+
+        $settings = Settings::instance();
+        if (!$settings instanceof Settings) {
+            return [];
+        }
+
+        $rotated = [];
+        foreach ($names as $name) {
+            // EVERY kit call is inside the try, the read included: CS-Cart is
+            // licensed code that is not in this repository, so its signatures
+            // cannot be pinned by a test. This runs on every admin page load,
+            // where the failure mode must be "not rotated", never "no store".
+            try {
+                $current = $settings->getValue($name, $addon);
+                if (!is_string($current) || !in_array($current, self::WEAK_VALUES, true)) {
+                    continue;
+                }
+
+                $fresh = bin2hex(random_bytes(16));
+                $settings->updateValue($name, $fresh, $addon);
+
+                if ($settings->getValue($name, $addon) !== $fresh) {
+                    continue; // write did not land — leave the row alone and stay quiet
+                }
+            } catch (\Throwable $e) {
+                error_log("travel_core: could not rotate {$addon}.{$name} — " . $e->getMessage());
+
+                continue;
+            }
+
+            $rotated[] = $name;
+            self::reportRotation($addon, $name);
+        }
+
+        return $rotated;
+    }
+
+    /**
+     * Tell the operator, because a rotated key breaks the crontab they pasted.
+     *
+     * Silence would turn a security fix into "the syncs stopped overnight and
+     * nobody knows why".
+     */
+    private static function reportRotation(string $addon, string $name): void
+    {
+        $message = "Travel addons: the default \"1234\" {$name} on {$addon} was replaced "
+            . 'with a generated one. Re-copy the cron commands from that addon\'s dashboard '
+            . '— the old URLs no longer authenticate.';
+
+        error_log('travel_core: ' . $message);
+
+        if (function_exists('fn_set_notification')) {
+            try {
+                fn_set_notification('W', __('warning'), $message);
+            } catch (\Throwable) {
+                // Already in error_log; a notification failure must not escalate.
+            }
+        }
     }
 
     /**
@@ -305,10 +411,23 @@ final class SettingsMigrator
      * Seed an existing setting's default when it holds no value at all.
      *
      * A setting created before its default could be applied reads as an empty
-     * field, which looks like a deliberate blank. Only a genuinely empty value
-     * is filled — an admin who cleared a field on purpose, or set anything at
-     * all, is never overridden. (An unticked checkbox stores 'N', not '', so
-     * this cannot silently re-enable something.)
+     * field, which looks like a deliberate blank.
+     *
+     * READ THIS BEFORE GIVING A SECRET A DEFAULT. An earlier version of this
+     * docblock claimed "an admin who cleared a field on purpose is never
+     * overridden". That is FALSE and the code below says so: the early return
+     * fires on `$current !== ''`, so a deliberately cleared field DOES get the
+     * declared default written back on the next heal. The claim was reasoning
+     * about checkboxes, which store 'N' rather than '' — true for those, and
+     * for nothing else.
+     *
+     * The consequence was live: `cron_access_key` shipped `1234`, so clearing
+     * it to close the endpoint reopened it with a four-digit key on the next
+     * admin page load. Blank was not a stable state.
+     *
+     * The fix is the guard immediately below — a setting with no declared
+     * default is never touched — which is why no `*_access_key` item declares
+     * one any more (pinned by CronKeyDefaultsTest).
      */
     private static function repairValue(string $addon, string $name, string $default): bool
     {

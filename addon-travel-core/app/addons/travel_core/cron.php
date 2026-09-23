@@ -21,12 +21,13 @@ if (!defined('AREA')) {
 require dirname(__FILE__) . '/../../../init.php';
 
 use Tygh\Registry;
+use Tygh\Addons\TravelCore\Cron\CronKeyService;
 use Tygh\Addons\TravelCore\Cron\CronRunner;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 [$accessKey, $mode, $params] = CronRunner::parseArgs();
 CronRunner::authenticate(
-    TypeCoerce::toString(Registry::get('addons.travel_core.cron_access_key')),
+    CronKeyService::getFor('travel_core'),
     $accessKey,
     'Travel Core'
 );

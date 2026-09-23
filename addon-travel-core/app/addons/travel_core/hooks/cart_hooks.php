@@ -295,7 +295,11 @@ function _travel_core_render_debug(string $dispatch): void
     ];
 
     // ── 2. Addon status ──
-    $addons = ['travel_core', 'novoton_holidays', 'sphinx_holidays'];
+    // Derived, not listed: this file runs at dispatch time with the autoloader
+    // up, so the registry is safe to read here (unlike fn_travel_core_uninstall,
+    // which must stay literal). A hand-written list left eurosite invisible in
+    // the one surface an operator opens to ask "is my addon even active?".
+    $addons = ['travel_core', ...TravelProviderRegistry::KNOWN_PROVIDER_ADDONS];
     foreach ($addons as $addon) {
         $status = db_get_field('SELECT status FROM ?:addons WHERE addon = ?s', $addon);
         $debug['addon_status'][$addon] = $status ?: 'NOT INSTALLED';

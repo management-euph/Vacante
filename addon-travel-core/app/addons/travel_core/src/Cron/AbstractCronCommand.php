@@ -14,6 +14,21 @@ namespace Tygh\Addons\TravelCore\Cron;
 abstract class AbstractCronCommand
 {
     protected ?\Closure $outputCallback = null;
+
+    /**
+     * Called on every output(), IN ADDITION to the output callback.
+     *
+     * Kept separate from $outputCallback on purpose. A long-running command
+     * must refresh its CronRunLock or it is taken over as stale mid-run
+     * (CronRunLock::STALE_THRESHOLD is 30 minutes and novoton's `full` is
+     * documented at 5-30+), but "keep the lock alive" is not "emit output" —
+     * and setOutputCallback() REPLACES, so a dispatcher that wired the touch
+     * that way would silence whatever routing the command already had. That
+     * is exactly the trap novoton was in: its constructor wires SyncLogger as
+     * the output callback on the HTTP path and nothing on the CLI path.
+     */
+    protected ?\Closure $heartbeat = null;
+
     protected float $startTime;
 
     public function __construct()
@@ -49,10 +64,22 @@ abstract class AbstractCronCommand
 
     /**
      * Set a callback for output messages (used in web/CLI contexts).
+     *
+     * NOTE: this REPLACES any existing callback. To observe output without
+     * disturbing where it goes — keeping a run lock alive, for instance — use
+     * setHeartbeat().
      */
     public function setOutputCallback(\Closure $callback): void
     {
         $this->outputCallback = $callback;
+    }
+
+    /**
+     * Observe every output() without changing where the output goes.
+     */
+    public function setHeartbeat(\Closure $heartbeat): void
+    {
+        $this->heartbeat = $heartbeat;
     }
 
     /**
@@ -66,6 +93,10 @@ abstract class AbstractCronCommand
      */
     protected function output(string $message, bool $addNewline = true): void
     {
+        if ($this->heartbeat !== null) {
+            ($this->heartbeat)();
+        }
+
         if ($this->outputCallback !== null) {
             ($this->outputCallback)($message, $addNewline);
             return;

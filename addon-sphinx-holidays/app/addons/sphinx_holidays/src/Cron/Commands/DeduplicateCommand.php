@@ -17,8 +17,15 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  * Orphaned duplicate products are deleted.
  *
  * Usage: index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mode=deduplicate
- *        Optional: &dry_run=1  (report only, no changes)
+ *        DRY RUN BY DEFAULT — reports what it would do and changes nothing.
+ *        Optional: &dry_run=0  (actually merge and DELETE the orphan products)
  *                  &limit=N    (max duplicate groups to process)
+ *
+ * The default used to be the destructive one: a bare `cron_mode=deduplicate`
+ * deleted products via fn_delete_product() with no confirmation. That is the
+ * wrong way round for the only command here that removes catalog rows —
+ * especially as the grouping key includes property_type, so a sync that
+ * blanks that column collapses unrelated hotels into one group.
  */
 class DeduplicateCommand extends AbstractSyncCommand
 {
@@ -46,7 +53,8 @@ class DeduplicateCommand extends AbstractSyncCommand
     {
         $startMs = (int)(microtime(true) * 1000);
 
-        $dryRun = (bool) ($params['dry_run'] ?? false);
+        // Opt IN to deletion, never out of it: an absent parameter reports.
+        $dryRun = (bool) ($params['dry_run'] ?? true);
         $limit = TypeCoerce::toInt($params['limit'] ?? 0);
 
         $stats = [
@@ -60,7 +68,7 @@ class DeduplicateCommand extends AbstractSyncCommand
         $skipRepo = new HotelSkipRepository();
 
         if ($dryRun) {
-            $this->output('DRY RUN mode — no changes will be made.');
+            $this->output('DRY RUN (the default) — nothing will be changed. Add &dry_run=0 to apply.');
         }
 
         $this->output('Finding duplicate hotel groups...');
