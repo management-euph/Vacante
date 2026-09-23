@@ -111,7 +111,7 @@ final class CronKeyService
             return '';
         }
 
-        self::ensureSettingExists($settings);
+        self::ensureSettingExists();
 
         $fresh = bin2hex(random_bytes(16));
 
@@ -137,9 +137,21 @@ final class CronKeyService
      * a store that deploys and then receives nothing but cron traffic never
      * gets it. Asking for the key from a page that can create it is the one
      * moment we can close that window.
+     *
+     * Resolves Settings itself rather than taking it as a parameter. CS-Cart
+     * is licensed code that is NOT in this repository, so `Tygh\Settings` is
+     * not a class static analysis can see: PHPStan rejects it as a declared
+     * parameter type (class.notFound) even though `instanceof` against it is
+     * fine. Every other Settings consumer here — SettingsMigrator included —
+     * resolves-and-checks locally for the same reason.
      */
-    private static function ensureSettingExists(Settings $settings): void
+    private static function ensureSettingExists(): void
     {
+        $settings = Settings::instance();
+        if (!$settings instanceof Settings) {
+            return;
+        }
+
         if (!method_exists($settings, 'isExists') || $settings->isExists(self::SETTING, self::ADDON)) {
             return;
         }
