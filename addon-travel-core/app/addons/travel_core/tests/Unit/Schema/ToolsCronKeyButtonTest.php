@@ -165,6 +165,65 @@ final class ToolsCronKeyButtonTest extends TestCase
     }
 
     /**
+     * Every form that mints the SHARED key carries a CSRF token — including
+     * Eurosite's, which predates this change.
+     *
+     * Eurosite's dashboard has had a generate button for a while, and neither
+     * of its forms carried a security_hash. That was a gap when the button
+     * rotated only Eurosite's own key; repointing it at the shared key raised
+     * the payoff, because one forged POST now breaks the scheduled jobs of all
+     * three providers at once.
+     */
+    public function testEveryFormThatMintsTheSharedKeyIsCsrfProtected(): void
+    {
+        $eurosite = (string) file_get_contents(
+            dirname(__DIR__, 7)
+            . '/eurosite_addon/design/backend/templates/addons/eurosite/views/eurosite/manage.tpl',
+        );
+
+        $forms = substr_count($eurosite, 'value="eurosite.generate_cron_key"');
+        self::assertGreaterThanOrEqual(2, $forms, 'the eurosite generate forms have moved or gone');
+        self::assertSame(
+            $forms,
+            substr_count($eurosite, 'name="security_hash" value="{$security_hash}"'),
+            'an eurosite form posts generate_cron_key without a CSRF token',
+        );
+
+        // Travel Core's own two forms, same rule.
+        $tpl = self::template();
+        self::assertSame(
+            substr_count($tpl, '"travel_tools.generate_cron_key"|fn_url'),
+            substr_count($tpl, 'name="security_hash" value="{$security_hash}"')
+                - substr_count($tpl, '"travel_tools.`$job.run_action`"|fn_url'),
+            'a Travel Core generate form posts without a CSRF token',
+        );
+    }
+
+    /**
+     * The rotation notice must not send the operator to a page that does not
+     * have what it promises.
+     *
+     * It used to say "copy the commands below ... for every travel addon", but
+     * this page lists Travel Core's own cron jobs only — the Eurosite, Sphinx
+     * and Novoton commands live on their own dashboards, and they broke too.
+     * An operator who followed it literally would have re-copied one job and
+     * believed they were done.
+     */
+    public function testTheRotationNoticeNamesWhereTheOtherCommandsActuallyAre(): void
+    {
+        $xml = self::src('addon.xml');
+
+        $pos = strpos($xml, '<item lang="en" id="travel_core.tools_cron_key_rotated">');
+        self::assertIsInt($pos);
+        $en = substr($xml, $pos, 400);
+
+        self::assertStringNotContainsString('the commands below', $en);
+        foreach (['Eurosite', 'Sphinx', 'Novoton'] as $provider) {
+            self::assertStringContainsString($provider, $en, "the notice never mentions {$provider}");
+        }
+    }
+
+    /**
      * Every label the page asks for must be seeded, or it renders as a raw key
      * on an already-installed store (AdminLangKeysSeededTest bans the class;
      * this names the specific ones, so a half-done rename fails here too).

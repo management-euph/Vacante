@@ -130,8 +130,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             fn_set_notification(
                 'E',
                 __('error'),
-                'Could not store the cron security key. Open Travel Core > Tools once to let the '
-                . 'settings self-heal create the setting, then try again.',
+                // Deliberately does NOT say "open an admin page to let the '
+                // self-heal create the setting": generate() already ran that
+                // same repair (CronKeyService::ensureSettingExists) before
+                // writing, so if we are here it did not work and repeating it
+                // will not either. Point at the log and the manual field.
+                'Could not store the cron security key. Check the PHP error log, then set the key '
+                . 'by hand in Settings > Travel Core > Cron security key.',
             );
 
             return [CONTROLLER_STATUS_REDIRECT, 'eurosite.manage'];

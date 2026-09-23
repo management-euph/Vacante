@@ -211,6 +211,10 @@
             </p>
             <form action="{""|fn_url}" method="post" style="display:inline;">
                 <input type="hidden" name="dispatch" value="eurosite.generate_cron_key" />
+                {* CSRF token. This button now rotates the SHARED Travel Core
+                   key, so an unprotected POST would break the scheduled jobs of
+                   all three providers, not just this one. *}
+                <input type="hidden" name="security_hash" value="{$security_hash}" />
                 <button type="submit" class="btn btn-primary">
                     <i class="icon-key"></i> {__("eurosite.generate_cron_key", ["[default]" => "Generate a key"])}
                 </button>
@@ -278,6 +282,10 @@
             {__("eurosite.cron_access_key_note", ["[default]" => "These commands carry the shared Travel Core cron key. Copying puts it on your clipboard; anyone holding it can trigger a sync, and rotating it re-issues the Sphinx and Novoton commands too."])}
             <form action="{""|fn_url}" method="post" style="display:inline;">
                 <input type="hidden" name="dispatch" value="eurosite.generate_cron_key" />
+                {* CSRF token. This button now rotates the SHARED Travel Core
+                   key, so an unprotected POST would break the scheduled jobs of
+                   all three providers, not just this one. *}
+                <input type="hidden" name="security_hash" value="{$security_hash}" />
                 <button type="submit" class="btn btn-micro"
                         onclick="return confirm('{__("eurosite.rotate_key_confirm", ["[default]" => "Generate a new shared cron key? Every scheduled job of every travel addon must be updated with the new URL."])|escape:javascript}');">
                     {__("eurosite.rotate_key", ["[default]" => "Rotate key"])}

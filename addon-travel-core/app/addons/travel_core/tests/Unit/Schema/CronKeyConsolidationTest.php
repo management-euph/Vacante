@@ -210,6 +210,69 @@ final class CronKeyConsolidationTest extends TestCase
     }
 
     /**
+     * A legacy row that could not be READ must never be deleted as "empty".
+     *
+     * This is the sharpest edge in the whole migration. The delete is licensed
+     * by "every legacy row is empty, so there is nothing to lose" — and an
+     * earlier version reached that conclusion by `continue`ing past any
+     * getValue() that threw. A store where the reads failed then looked
+     * identical to a store with four blank rows, and the rows were deleted
+     * with the only copy of a working secret still in them.
+     *
+     * "I could not read it" and "it is empty" are different answers and the
+     * code has to carry both.
+     */
+    public function testARowThatCouldNotBeReadIsNeverTreatedAsEmpty(): void
+    {
+        $m = self::code('src/Install/SettingsMigrator.php');
+
+        // The reader reports the failure rather than swallowing it.
+        $pos = strpos($m, 'private static function legacyCronKeys');
+        self::assertIsInt($pos);
+        $body = substr($m, $pos, 1400);
+        self::assertStringContainsString('$unreadable = true;', $body);
+        self::assertStringContainsString("'unreadable' =>", $body);
+
+        // A bare `continue` in the catch, with no flag set first, is exactly
+        // the bug: it discards the fact that the read failed.
+        self::assertStringNotContainsString("catch (\\Throwable) {\n                continue;", $body);
+
+        // And the caller abandons the pass on it, BEFORE anything can delete.
+        self::assertStringContainsString("if (\$read['unreadable']) {", $m);
+        $guardPos = strpos($m, "if (\$read['unreadable']) {");
+        $deletePos = strpos($m, 'self::retireLegacyCronKeys()');
+        self::assertIsInt($guardPos);
+        self::assertIsInt($deletePos);
+        self::assertLessThan($deletePos, $guardPos);
+    }
+
+    /**
+     * "Your crontab keeps working" must be true of EVERY addon, not just one.
+     *
+     * The bug this pins: testing whether the adopted value appears anywhere in
+     * the legacy set. With rows [travel_core => '1234', eurosite => 'realkey'],
+     * chooseCronKey() drops the weak one and adopts 'realkey' — which IS in the
+     * set — so the operator was told nothing had changed, while travel_core's
+     * crontab, which had been authenticating with '1234', silently stopped
+     * working. The reassuring message is the dangerous one: it is the case
+     * where nobody goes looking.
+     */
+    public function testTheReassuringNoticeOnlyFiresWhenEveryRowHeldTheAdoptedKey(): void
+    {
+        $m = self::code('src/Install/SettingsMigrator.php');
+
+        self::assertStringContainsString('$carriedForEveryAddon = $distinct === [$adopted];', $m);
+        self::assertStringContainsString('self::reportCronKeyMove(!$carriedForEveryAddon);', $m);
+
+        // The membership test that was wrong must not come back.
+        self::assertStringNotContainsString(
+            'self::reportCronKeyMove(!in_array($adopted, array_values($legacy), true));',
+            $m,
+            'a membership test cannot tell "every row agreed" from "one row agreed and the rest broke"',
+        );
+    }
+
+    /**
      * Every add-on that ever declared a `cron_access_key` is in the move list.
      *
      * A provider left out keeps its own row forever, and getFor() keeps

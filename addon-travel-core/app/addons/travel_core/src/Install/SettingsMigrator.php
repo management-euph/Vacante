@@ -314,7 +314,16 @@ final class SettingsMigrator
             return [];
         }
 
-        $legacy = self::legacyCronKeys();
+        $read = self::legacyCronKeys();
+        if ($read['unreadable']) {
+            // At least one legacy row could not be READ. We do not know what is
+            // in it, so nothing here may delete it — an unread row is not an
+            // empty row. Abandon the whole pass rather than act on a partial
+            // picture.
+            return [];
+        }
+
+        $legacy = $read['values'];
         $current = $settings->getValue(self::CRON_KEY, 'travel_core');
         $changed = [];
 
@@ -327,8 +336,14 @@ final class SettingsMigrator
             // and failed to replace earlier in this same pass. Deleting it
             // would take the store from "the crons work, insecurely" to "the
             // crons refuse everything", with no key anywhere to explain it.
-            // Leave every row: getFor() keeps answering from them, and the
-            // next pass tries again.
+            // Leave every row: getFor() keeps answering from them.
+            //
+            // Note this does NOT retry by itself. The heal is stamp-gated on a
+            // file fingerprint and the guard stamps even a failed run, so this
+            // store stays as it is until a code change moves the fingerprint.
+            // That is the right trade here — it is the only branch that leaves
+            // a working (if insecure) store working — but it is a pause, not a
+            // retry, and the error_log above is the only trace.
             return [];
         }
 
@@ -344,16 +359,24 @@ final class SettingsMigrator
                 return [];
             }
 
-            // "Minted" is decided by what came out, not by counting what went
-            // in: chooseCronKey() also discards weak values, so a store whose
-            // rows all held `1234` agrees perfectly and still gets a fresh key.
+            // "Your crontab keeps working" is only true when EVERY legacy row
+            // already held the adopted value. Testing `in_array($adopted,
+            // $legacy)` instead was wrong in a way that matters: with rows
+            // [travel_core => '1234', eurosite => 'realkey'] chooseCronKey()
+            // drops the weak one and adopts 'realkey', which IS in $legacy —
+            // so the operator was told nothing had changed while travel_core's
+            // crontab, which had been authenticating with '1234', silently
+            // stopped working.
+            $distinct = array_values(array_unique(array_values($legacy)));
+            $carriedForEveryAddon = $distinct === [$adopted];
+
             $changed[] = self::CRON_KEY;
-            self::reportCronKeyMove(!in_array($adopted, array_values($legacy), true));
+            self::reportCronKeyMove(!$carriedForEveryAddon);
         }
 
         // Falls through to the delete in two more cases, both safe:
         //  - Core already has a key, so the legacy rows are dead weight.
-        //  - Every legacy row is empty or already gone, so there is nothing to
+        //  - Every legacy row was READ and is empty, so there is nothing to
         //    lose. Returning instead would leave an empty, dead "Cron access
         //    key" field rendering on each provider's settings page — CS-Cart
         //    builds that page from the database, so dropping the <item> from
@@ -368,29 +391,44 @@ final class SettingsMigrator
     }
 
     /**
-     * Every legacy cron key that still holds something.
+     * Every legacy cron key that still holds something, and whether any read
+     * FAILED.
+     *
+     * The two are reported separately because the caller treats "no values" as
+     * a licence to delete, and a read that threw is not evidence of an empty
+     * row — it is evidence of no knowledge. Collapsing the two (an earlier
+     * version of this just `continue`d on a throw) meant a store where every
+     * getValue() failed looked exactly like a store with four empty rows, and
+     * the rows were deleted with the operator's only copy of a working secret
+     * still in them.
      *
      * Resolves Settings itself rather than taking it as a parameter: CS-Cart
      * is not in this repository, so `Tygh\Settings` is a type static analysis
      * cannot resolve and PHPStan rejects it as a declared parameter type
      * (class.notFound), even though `instanceof` against it is fine.
      *
-     * @return array<string, string> addon => value
+     * @return array{values: array<string, string>, unreadable: bool}
      */
     private static function legacyCronKeys(): array
     {
         $settings = Settings::instance();
         if (!$settings instanceof Settings) {
-            return [];
+            return ['values' => [], 'unreadable' => true];
         }
 
         $found = [];
+        $unreadable = false;
 
         foreach (self::CRON_KEY_LEGACY_ADDONS as $addon) {
             try {
                 $value = $settings->getValue(self::CRON_KEY_LEGACY, $addon);
-            } catch (\Throwable) {
-                continue; // the row is gone, or this add-on was never installed
+            } catch (\Throwable $e) {
+                // NOT `continue` on its own. We do not know what was in that
+                // row, so the caller must not go on to delete it.
+                $unreadable = true;
+                error_log("travel_core: could not read {$addon}.cron_access_key — " . $e->getMessage());
+
+                continue;
             }
 
             if (is_string($value) && trim($value) !== '') {
@@ -398,7 +436,7 @@ final class SettingsMigrator
             }
         }
 
-        return $found;
+        return ['values' => $found, 'unreadable' => $unreadable];
     }
 
     /**
