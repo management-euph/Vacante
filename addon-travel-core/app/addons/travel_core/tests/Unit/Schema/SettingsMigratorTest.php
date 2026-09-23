@@ -48,6 +48,104 @@ final class SettingsMigratorTest extends TestCase
         return $out;
     }
 
+    /**
+     * One method's source, so an assertion cannot be satisfied by a namesake.
+     *
+     * These tests anchor on literal call strings, and the cron-key
+     * consolidation added a SECOND `$settings->removeById($objectId);` to this
+     * file. strpos() then answered about the wrong method: the ordering check
+     * below started comparing retire()'s carry against
+     * retireLegacyCronKeys()'s delete and failed on two correct methods.
+     * Scoping is the fix — loosening the assertions would have thrown away
+     * what they guard.
+     *
+     * Relies on php-cs-fixer's formatting: every method here is one indent in,
+     * so a line of exactly four spaces and a closing brace ends the body.
+     */
+    private static function method(string $rel, string $signature): string
+    {
+        $src = self::src($rel);
+
+        $start = strpos($src, $signature);
+        self::assertIsInt($start, "{$signature} is not in {$rel}");
+
+        $end = strpos($src, "\n    }\n", $start);
+        self::assertIsInt($end, "cannot find the end of {$signature} in {$rel}");
+
+        return substr($src, $start, $end - $start);
+    }
+
+    /**
+     * Every line calling `->$method(` that is NOT inside an open try block.
+     *
+     * Done on the token stream because the string version was not good enough.
+     * "Is there a `try {` somewhere above the call?" passes on a call sitting
+     * AFTER a try/catch that has already closed — which is exactly the shape
+     * retireLegacyCronKeys() has, since it opens one around a ReflectionMethod
+     * probe and then deletes rows in a later loop. A mutant that dropped the
+     * real guard went undetected until this was rewritten.
+     *
+     * A `catch` body counts as unguarded, correctly: a throw there is not
+     * caught by its own try.
+     *
+     * @return list<int> 1-based line numbers
+     */
+    private static function unguardedCalls(string $rel, string $method): array
+    {
+        $tokens = token_get_all(self::src($rel));
+
+        $depth = 0;
+        $pendingTry = false;
+        /** @var list<int> $tryDepths */
+        $tryDepths = [];
+        $sawArrow = false;
+        $offenders = [];
+
+        foreach ($tokens as $token) {
+            if ($token === '{') {
+                $depth++;
+                if ($pendingTry) {
+                    $tryDepths[] = $depth;
+                    $pendingTry = false;
+                }
+
+                continue;
+            }
+            if ($token === '}') {
+                if ($tryDepths !== [] && end($tryDepths) === $depth) {
+                    array_pop($tryDepths);
+                }
+                $depth--;
+
+                continue;
+            }
+            if (!is_array($token)) {
+                continue;
+            }
+
+            if ($token[0] === T_TRY) {
+                $pendingTry = true;
+
+                continue;
+            }
+            if ($token[0] === T_OBJECT_OPERATOR) {
+                $sawArrow = true;
+
+                continue;
+            }
+            if ($token[0] === T_STRING && $sawArrow && $token[1] === $method) {
+                if ($tryDepths === []) {
+                    $offenders[] = $token[2];
+                }
+            }
+            if ($token[0] !== T_WHITESPACE) {
+                $sawArrow = false;
+            }
+        }
+
+        return $offenders;
+    }
+
     public function testUsesTheSupportedCreationApiNotRawSql(): void
     {
         $m = self::src('src/Install/SettingsMigrator.php');
@@ -288,35 +386,55 @@ final class SettingsMigratorTest extends TestCase
     }
 
     /**
-     * The specific setting the drift hid, end to end: declared, labelled, and
-     * reachable from the code that reads it.
+     * The setting the drift hid is now Travel Core's, and reachable from here.
+     *
+     * This used to pin eurosite's OWN `cron_access_key` — declared, labelled,
+     * and mintable from its dashboard — because a store installed before that
+     * item existed had no row, no field, and no way to authenticate a single
+     * sync. The fix for that was the settings heal; the fix for the CAUSE is
+     * that there is no longer an eurosite copy to go missing. One key, in
+     * Core, healed by the same mechanism.
+     *
+     * So the assertions invert: the declaration must be GONE (or each heal
+     * would recreate the row the consolidation just deleted, and the move
+     * would never finish), and the dashboard button must mint Core's key
+     * rather than a local one nothing reads.
      */
-    public function testEurositeCronAccessKeyIsDeclaredAndLabelled(): void
+    public function testEurositeMintsTheSharedCoreKeyAndNoLongerDeclaresItsOwn(): void
     {
         $repoRoot = dirname(__DIR__, 7);
         $xml = (string) file_get_contents($repoRoot . '/eurosite_addon/app/addons/eurosite/addon.xml');
-        $po = (string) file_get_contents($repoRoot . '/eurosite_addon/var/langs/en/addons/eurosite.po');
 
-        self::assertStringContainsString('<item id="cron_access_key">', $xml);
-        self::assertStringContainsString('msgctxt "SettingsOptions::eurosite::cron_access_key"', $po);
+        self::assertStringNotContainsString('<item id="cron_access_key">', $xml);
 
-        // The dashboard button must create the row when it is missing — an
-        // updateValue() on a non-existent setting is a silent no-op, which is
-        // how it came to report success while changing nothing.
+        // Core declares it exactly once, under its new name.
+        $coreXml = self::src('addon.xml');
+        self::assertStringContainsString('<item id="cron_key">', $coreXml);
+        self::assertStringContainsString('msgctxt "SettingsOptions::travel_core::cron_key"', self::src(
+            '../../../var/langs/en/addons/travel_core.po',
+        ));
+
         $ctrl = (string) file_get_contents(
             $repoRoot . '/eurosite_addon/app/addons/eurosite/controllers/backend/eurosite.php',
         );
         $pos = strpos($ctrl, "\$mode === 'generate_cron_key'");
-        self::assertIsInt($pos);
+        self::assertIsInt($pos, 'the eurosite dashboard lost its generate button');
         $block = substr($ctrl, $pos, 3200);
-        self::assertStringContainsString("isExists('cron_access_key', 'eurosite')", $block);
-        self::assertStringContainsString('fn_travel_core_ensure_settings(', $block);
-        // And verify the write landed rather than trusting it — against the
-        // stored value, not the bootstrap-time Registry the ConfigProvider
-        // reads, which cannot see a write made in this same request.
-        self::assertStringContainsString("\$settings->getValue('cron_access_key', 'eurosite')", $block);
-        self::assertStringContainsString('if ($stored !== $newKey) {', $block);
-        self::assertStringNotContainsString('ConfigProvider::getCronAccessKey() !==', $block);
+
+        self::assertStringContainsString('CronKeyService::generate()', $block);
+        // A local write here would be a button that reports success while
+        // every scheduled job keeps using the old key — ConfigProvider reads
+        // through CronKeyService now.
+        self::assertStringNotContainsString("updateValue('cron_access_key', \$newKey, 'eurosite'", $block);
+        // The row-creation and the read-back are still REQUIRED, they just
+        // live in the service; assert they are there rather than assuming.
+        $service = self::src('src/Cron/CronKeyService.php');
+        self::assertStringContainsString('self::ensureSettingExists();', $service);
+        self::assertStringContainsString('fn_travel_core_ensure_settings(', $service);
+        self::assertStringContainsString(
+            'if ($settings->getValue(self::SETTING, self::ADDON) !== $fresh)',
+            $service,
+        );
     }
 
     /**
@@ -356,8 +474,17 @@ final class SettingsMigratorTest extends TestCase
         // provider value is carried into the same-named EMPTY travel_core
         // setting BEFORE the row is removed (a failed carry keeps the source),
         // and a travel_core value that already exists is never overwritten.
-        $carryPos = strpos($m, 'self::carryValueToCore($addon, $name);');
-        $removePos = strpos($m, '$settings->removeById($objectId);');
+        //
+        // Scoped to retire(): retireLegacyCronKeys() also calls removeById(),
+        // and it carries nothing — the cron key's successor has a DIFFERENT
+        // name, so its move is consolidateCronKey()'s job and is ordered
+        // there. An unscoped strpos() would compare the two methods.
+        $retire = self::method(
+            'src/Install/SettingsMigrator.php',
+            'private static function retire(string $addon): array',
+        );
+        $carryPos = strpos($retire, 'self::carryValueToCore($addon, $name);');
+        $removePos = strpos($retire, '$settings->removeById($objectId);');
         self::assertIsInt($carryPos);
         self::assertIsInt($removePos);
         self::assertLessThan($removePos, $carryPos);
@@ -395,12 +522,22 @@ final class SettingsMigratorTest extends TestCase
         );
         self::assertStringContainsString("fn_travel_core_self_heal_guard('sphinx_schema'", $sphinx);
 
-        // Deleting settings is the riskiest step — guard each one so a single
-        // refusal neither aborts the rest nor escapes the heal.
+        // Deleting settings is the riskiest step — EVERY call must sit inside
+        // an open try, not merely somewhere after one. There are two call
+        // sites now (retire() and retireLegacyCronKeys()) and the second one
+        // opens an unrelated try first, so anything less precise passes on it
+        // whether or not the delete is actually guarded.
+        self::assertSame(
+            [],
+            self::unguardedCalls('src/Install/SettingsMigrator.php', 'removeById'),
+            'a removeById() call is not inside a try/catch — a refusal from the kit would '
+                . 'escape the heal, and this runs on every admin page load',
+        );
+
+        // The scan must be finding calls at all, or the assertion above is
+        // vacuously true.
         $m = self::src('src/Install/SettingsMigrator.php');
-        $removePos = strpos($m, '$settings->removeById($objectId);');
-        self::assertIsInt($removePos);
-        self::assertStringContainsString('try {', substr($m, $removePos - 200, 200));
+        self::assertGreaterThanOrEqual(2, substr_count($m, '$settings->removeById($objectId);'));
     }
 
     public function testLabelsComeFromThePoFilesTheImporterWouldHaveRead(): void

@@ -49,6 +49,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         return [CONTROLLER_STATUS_REDIRECT, 'travel_tools.manage'];
     }
 
+    if ($mode === 'generate_cron_key') {
+        // The only place a cron key can be MINTED. The settings field stays
+        // editable — an operator migrating a store may need to paste a
+        // specific value — but typing a secret by hand is how this store ended
+        // up with `1234` on three add-ons and nothing on the fourth, so the
+        // page that shows the cron commands also offers a real one.
+        $fresh = CronKeyService::generate();
+
+        if ($fresh === '') {
+            fn_set_notification('E', __('error'), TypeCoerce::toString(__('travel_core.tools_cron_key_failed')));
+        } else {
+            // 'W', not 'N': every existing crontab entry just stopped
+            // authenticating. That is the point of rotating, and it is also
+            // the thing that silently breaks scheduled work if unnoticed.
+            fn_set_notification('W', __('warning'), TypeCoerce::toString(__('travel_core.tools_cron_key_rotated')));
+        }
+
+        // The key is NOT put in the notification. The page redirected to
+        // prints it, and the cron URLs built from it, in full — a notification
+        // is stored per-user and outlives the page that needs it.
+        return [CONTROLLER_STATUS_REDIRECT, 'travel_tools.manage'];
+    }
+
     if ($mode === 'link_booking_orders') {
         // Reconcile booking–order links: providers stamp order_id on their
         // booking rows during place_order_post, but a booking placed while a
@@ -81,6 +104,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 if ($mode === 'manage') {
     $cron_key = CronKeyService::getFor('travel_core');
+    // Whether the key above is Core's own or the legacy per-add-on fallback.
+    // The page says which, because on the fallback the consolidation has not
+    // completed and the other providers may still be authenticating against
+    // keys of their own — i.e. the state this whole move exists to end.
+    $cron_key_is_shared = CronKeyService::isConfigured();
     $base_url = TypeCoerce::toString(Registry::get('config.http_location')) . '/';
 
     $cron_jobs = [];
@@ -111,6 +139,7 @@ if ($mode === 'manage') {
     if (is_object($view) && method_exists($view, 'assign')) {
         $view->assign('cron_jobs', $cron_jobs);
         $view->assign('cron_key', $cron_key);
+        $view->assign('cron_key_is_shared', $cron_key_is_shared);
         $view->assign('base_url', $base_url);
     }
 }

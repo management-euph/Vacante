@@ -744,14 +744,36 @@
         <item lang="ro" id="travel_core.tools_col_run"><![CDATA[Rulare]]></item>
         <item lang="en" id="travel_core.tools_run_now"><![CDATA[Run Now]]></item>
         <item lang="ro" id="travel_core.tools_run_now"><![CDATA[Rulează acum]]></item>
-        <item lang="en" id="travel_core.tools_open_cron_url"><![CDATA[Open cron URL in new tab]]></item>
-        <item lang="ro" id="travel_core.tools_open_cron_url"><![CDATA[Deschide URL-ul cron într-un tab nou]]></item>
+        <!-- travel_core.tools_open_cron_url is gone with the link it labelled:
+             that href carried the cron key in its query string, so following
+             it put the secret in the browser history and in a Referer header.
+             The "Run Now" button beside it does the same work over an
+             authenticated admin POST. -->
+        <item lang="en" id="travel_core.tools_cron_key_title"><![CDATA[Cron security key]]></item>
+        <item lang="ro" id="travel_core.tools_cron_key_title"><![CDATA[Cheie de securitate cron]]></item>
+        <item lang="en" id="travel_core.tools_cron_key_desc"><![CDATA[One key authenticates the scheduled jobs of every travel addon. It is stored in Travel Core and is not a provider password — Eurosite, Sphinx and Novoton credentials stay in their own addons.]]></item>
+        <item lang="ro" id="travel_core.tools_cron_key_desc"><![CDATA[O singură cheie autentifică joburile programate ale tuturor addon-urilor de turism. Este stocată în Travel Core și nu este o parolă de furnizor — credențialele Eurosite, Sphinx și Novoton rămân în addon-urile lor.]]></item>
+        <item lang="en" id="travel_core.tools_cron_key_generate"><![CDATA[Generate key]]></item>
+        <item lang="ro" id="travel_core.tools_cron_key_generate"><![CDATA[Generează cheia]]></item>
+        <item lang="en" id="travel_core.tools_cron_key_rotate"><![CDATA[Generate a new key]]></item>
+        <item lang="ro" id="travel_core.tools_cron_key_rotate"><![CDATA[Generează o cheie nouă]]></item>
+        <item lang="en" id="travel_core.tools_cron_key_rotate_confirm"><![CDATA[This replaces the current cron key. Every scheduled job will stop working until you copy the new URLs into your crontab. Continue?]]></item>
+        <item lang="ro" id="travel_core.tools_cron_key_rotate_confirm"><![CDATA[Aceasta înlocuiește cheia cron actuală. Toate joburile programate vor înceta să funcționeze până când copiați noile URL-uri în crontab. Continuați?]]></item>
+        <!-- Says "each addon's own dashboard", not "the commands below": this
+             page lists Travel Core's own cron jobs only. The Eurosite, Sphinx
+             and Novoton commands live on their dashboards, and they broke too. -->
+        <item lang="en" id="travel_core.tools_cron_key_rotated"><![CDATA[A new cron security key was generated. Every travel addon's scheduled jobs use it, so the previous URLs no longer authenticate — re-copy the commands from this page and from the Eurosite, Sphinx and Novoton dashboards.]]></item>
+        <item lang="ro" id="travel_core.tools_cron_key_rotated"><![CDATA[A fost generată o cheie de securitate cron nouă. Toate joburile programate ale addon-urilor de turism o folosesc, deci URL-urile anterioare nu mai autentifică — recopiați comenzile din această pagină și din panourile Eurosite, Sphinx și Novoton.]]></item>
+        <item lang="en" id="travel_core.tools_cron_key_failed"><![CDATA[The cron security key could not be generated. Check the error log and set the key manually in the Travel Core addon settings.]]></item>
+        <item lang="ro" id="travel_core.tools_cron_key_failed"><![CDATA[Cheia de securitate cron nu a putut fi generată. Verificați jurnalul de erori și setați cheia manual în setările addon-ului Travel Core.]]></item>
+        <item lang="en" id="travel_core.tools_cron_key_legacy"><![CDATA[This is still an old per-addon key. Travel Core has no shared key of its own yet, so each addon may be authenticating against a different one. Generate a shared key to finish the move — you will need to copy the new commands into your crontab.]]></item>
+        <item lang="ro" id="travel_core.tools_cron_key_legacy"><![CDATA[Aceasta este încă o cheie veche, specifică unui addon. Travel Core nu are încă o cheie partajată proprie, deci fiecare addon poate autentifica cu una diferită. Generați o cheie partajată pentru a finaliza mutarea — va trebui să copiați noile comenzi în crontab.]]></item>
         <item lang="en" id="travel_core.tools_cron_setup_title"><![CDATA[External Cron Setup]]></item>
         <item lang="ro" id="travel_core.tools_cron_setup_title"><![CDATA[Configurare Cron Extern]]></item>
         <item lang="en" id="travel_core.tools_cron_setup_desc"><![CDATA[To automate exchange rate updates, add the URL above to your cPanel cron jobs or an external cron service (e.g. cron-job.org). The recommended schedule for exchange rates is daily at 13:05 EET.]]></item>
         <item lang="ro" id="travel_core.tools_cron_setup_desc"><![CDATA[Pentru a automatiza actualizarea cursului valutar, adăugați URL-ul de mai sus în joburile cron cPanel sau un serviciu cron extern (ex. cron-job.org). Programarea recomandată pentru cursul valutar este zilnic la ora 13:05 EET.]]></item>
-        <item lang="en" id="travel_core.tools_no_cron_key"><![CDATA[Cron access key is not configured. Please set it in]]></item>
-        <item lang="ro" id="travel_core.tools_no_cron_key"><![CDATA[Cheia de acces cron nu este configurată. Vă rugăm să o setați în]]></item>
+        <item lang="en" id="travel_core.tools_no_cron_key"><![CDATA[No cron security key is configured, so every scheduled job is being refused. Generate one below, or set your own in]]></item>
+        <item lang="ro" id="travel_core.tools_no_cron_key"><![CDATA[Nu este configurată nicio cheie de securitate cron, deci toate joburile programate sunt refuzate. Generați una mai jos sau setați-o pe a dvs. în]]></item>
         <item lang="en" id="travel_core.tools_addon_settings"><![CDATA[addon settings]]></item>
         <item lang="ro" id="travel_core.tools_addon_settings"><![CDATA[setările addon-ului]]></item>
         <item lang="en" id="travel_core.cron_exchange_rates"><![CDATA[Exchange Rates]]></item>

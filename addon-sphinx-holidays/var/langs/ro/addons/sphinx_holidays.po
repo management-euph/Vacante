@@ -1141,8 +1141,8 @@ msgid "Circuits found"
 msgstr "Circuite găsite"
 
 msgctxt "Languages::sphinx_holidays.cron_key_not_set"
-msgid "Cron key not set"
-msgstr "Cheia cron nu este setată"
+msgid "Cron key not set — set it in Settings → Travel Core → Cron security key. It is shared by every travel addon."
+msgstr "Cheia cron nu este setată — setați-o în Setări → Travel Core → Cheie de securitate cron. Este partajată de toate addon-urile de turism."
 
 msgctxt "Languages::sphinx_holidays.date"
 msgid "Date"

@@ -4,6 +4,46 @@
 
 <div class="travel-admin-panel">
 
+    {* ── Cron Security Key ────────────────────────────────────────────────
+       One key for every travel addon, owned by Travel Core. Shown here, next
+       to the commands built from it, because the settings field is a password
+       input: an operator who cannot read the value cannot check that the key
+       in their crontab is still the live one.
+       ──────────────────────────────────────────────────────────────────── *}
+    <div style="margin-bottom: 30px;">
+        <h3 style="margin-top: 0;">{__("travel_core.tools_cron_key_title")}</h3>
+        <p class="muted" style="margin-bottom: 15px;">{__("travel_core.tools_cron_key_desc")}</p>
+
+        {if $cron_key}
+        <code style="display: inline-block; padding: 8px 10px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 3px; font-size: 12px; word-break: break-all; color: #333;">{$cron_key|escape:html}</code>
+
+        {if !$cron_key_is_shared}
+        <div class="alert alert-warning" style="margin-top: 12px;">
+            {__("travel_core.tools_cron_key_legacy")}
+        </div>
+        {/if}
+
+        <form method="post" action="{"travel_tools.generate_cron_key"|fn_url}" style="margin-top: 12px;">
+            <input type="hidden" name="security_hash" value="{$security_hash}" />
+            <button type="submit" class="btn cm-confirm"
+                    data-ca-confirm-text="{__("travel_core.tools_cron_key_rotate_confirm")|escape:html}">
+                {__("travel_core.tools_cron_key_rotate")}
+            </button>
+        </form>
+        {else}
+        <div class="alert alert-warning">
+            <strong>{__("warning")}</strong>:
+            {__("travel_core.tools_no_cron_key")}
+            <a href="{"addons.update?addon=travel_core"|fn_url}">{__("travel_core.tools_addon_settings")}</a>
+        </div>
+
+        <form method="post" action="{"travel_tools.generate_cron_key"|fn_url}">
+            <input type="hidden" name="security_hash" value="{$security_hash}" />
+            <button type="submit" class="btn btn-primary">{__("travel_core.tools_cron_key_generate")}</button>
+        </form>
+        {/if}
+    </div>
+
     {if $cron_key}
 
     {* ── Cron Jobs Section ── *}
@@ -40,11 +80,12 @@
                             <input type="hidden" name="security_hash" value="{$security_hash}" />
                             <button type="submit" class="btn btn-primary btn-small">{__("travel_core.tools_run_now")}</button>
                         </form>
-                        {if $job.url}
-                        <a href="{$job.url}" target="_blank" class="btn btn-small" style="margin-top: 4px;" title="{__("travel_core.tools_open_cron_url")}">
-                            <i class="icon-external-link"></i> {__("travel_core.tools_open_cron_url")}
-                        </a>
-                        {/if}
+                        {* No "open in a new tab" link here, deliberately. The
+                           href carries the cron key in its query string, so
+                           following it sends the secret to the browser's
+                           history and — on any redirect out of the job — in a
+                           Referer header. "Run Now" above does the same work
+                           over an authenticated admin POST. *}
                     </td>
                 </tr>
                 {/foreach}
@@ -60,15 +101,10 @@
         </p>
     </div>
 
-    {else}
-
-    {* ── No Cron Key Warning ── *}
-    <div class="alert alert-warning">
-        <strong>{__("warning")}</strong>:
-        {__("travel_core.tools_no_cron_key")}
-        <a href="{"addons.update?addon=travel_core"|fn_url}">{__("travel_core.tools_addon_settings")}</a>
-    </div>
-
+    {* No {else} for the cron jobs section: without a key every URL below
+       would be empty, and the panel at the top of the page already says so
+       and offers the one button that fixes it. A second warning here only
+       competed with it. *}
     {/if}
 
 </div>

@@ -549,8 +549,14 @@ return [
         'ro' => 'Circuite găsite',
     ],
     'sphinx_holidays.cron_key_not_set' => [
-        'en' => 'Cron key not set',
-        'ro' => 'Cheia cron nu este setată',
+        // Names Travel Core because the key moved there: one shared cron
+        // secret for all three providers. Without the location this reads as
+        // "something is wrong" with nowhere to go, and the field it used to
+        // mean is no longer on this addon's settings page.
+        'en' => 'Cron key not set — set it in Settings → Travel Core → Cron security key. '
+            . 'It is shared by every travel addon.',
+        'ro' => 'Cheia cron nu este setată — setați-o în Setări → Travel Core → Cheie de securitate cron. '
+            . 'Este partajată de toate addon-urile de turism.',
     ],
     'sphinx_holidays.date' => [
         'en' => 'Date',

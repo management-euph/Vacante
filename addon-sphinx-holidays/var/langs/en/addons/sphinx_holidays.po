@@ -1141,8 +1141,8 @@ msgid "Circuits found"
 msgstr "Circuits found"
 
 msgctxt "Languages::sphinx_holidays.cron_key_not_set"
-msgid "Cron key not set"
-msgstr "Cron key not set"
+msgid "Cron key not set — set it in Settings → Travel Core → Cron security key. It is shared by every travel addon."
+msgstr "Cron key not set — set it in Settings → Travel Core → Cron security key. It is shared by every travel addon."
 
 msgctxt "Languages::sphinx_holidays.date"
 msgid "Date"

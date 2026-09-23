@@ -293,8 +293,13 @@
         </table>
         {else}
         <div class="novoton-alert novoton-alert-warning">
-            <strong>[!] Cron Access Key Not Set</strong><br>
-            Please set the <strong>Cron Access Key</strong> in <a href="{"addons.update?addon=novoton_holidays"|fn_url}">addon settings</a> to enable cron jobs.
+            <strong>[!] Cron Security Key Not Set</strong><br>
+            {* Travel Core, not novoton: the cron secret authenticates OUR
+               endpoint, so it lives once in Core and is shared by all three
+               providers. This addon's settings page no longer has the field —
+               linking there would send the operator somewhere they cannot fix
+               it. api_login / api_password stay on that page. *}
+            Please set the <strong>Cron security key</strong> in <a href="{"addons.update?addon=travel_core"|fn_url}">Travel Core settings</a> to enable cron jobs. It is shared by every travel addon.
         </div>
         {/if}
     </details>

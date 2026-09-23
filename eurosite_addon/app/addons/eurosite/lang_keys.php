@@ -451,8 +451,8 @@ return [
         'ro' => 'Copierea a eșuat',
     ],
     'eurosite.cron_access_key_note' => [
-        'en' => 'The access key in these URLs is the addon\'s cron key — treat them as secrets.',
-        'ro' => 'Cheia de acces din aceste linkuri este cheia cron a modulului — tratați-le ca date secrete.',
+        'en' => 'The access key in these URLs is the shared Travel Core cron key — treat them as secrets. Rotating it re-issues the commands for Sphinx and Novoton too.',
+        'ro' => 'Cheia de acces din aceste linkuri este cheia cron partajată din Travel Core — tratați-le ca date secrete. Schimbarea ei reemite și comenzile pentru Sphinx și Novoton.',
     ],
     'eurosite.catalogs_and_schedules' => [
         'en' => 'Catalogs & schedules',
@@ -475,8 +475,8 @@ return [
         'ro' => 'Copiază linia de crontab',
     ],
     'eurosite.cron_no_key_title' => [
-        'en' => 'No cron access key is set',
-        'ro' => 'Nu este setată cheia de acces cron',
+        'en' => 'No cron security key is set',
+        'ro' => 'Nu este setată cheia de securitate cron',
     ],
     'eurosite.cron_no_key_body' => [
         'en' => 'Scheduled syncs answer 403 until a key exists, so there are no commands to schedule yet. Nothing is exposed — the endpoint refuses every request while the key is blank.',
@@ -487,8 +487,8 @@ return [
         'ro' => 'Generează o cheie',
     ],
     'eurosite.set_key_in_settings' => [
-        'en' => 'Set it in addon settings',
-        'ro' => 'Setează-o în setările modulului',
+        'en' => 'Set it in Travel Core settings',
+        'ro' => 'Setează-o în setările Travel Core',
     ],
     'eurosite.cron_paste_hint' => [
         'en' => 'Paste this into the server crontab or cPanel → Cron Jobs.',
@@ -547,15 +547,15 @@ return [
         'ro' => 'Schimbă cheia',
     ],
     'eurosite.rotate_key_confirm' => [
-        'en' => 'Generate a new cron access key? Every scheduled job must be updated with the new URL.',
-        'ro' => 'Generați o cheie nouă de acces cron? Fiecare sarcină programată trebuie actualizată cu noul URL.',
+        'en' => 'Generate a new shared cron key? Every scheduled job of every travel addon must be updated with the new URL.',
+        'ro' => 'Generați o cheie cron partajată nouă? Fiecare sarcină programată a fiecărui addon de turism trebuie actualizată cu noul URL.',
     ],
     'eurosite.more_actions' => [
         'en' => 'More actions',
         'ro' => 'Mai multe acțiuni',
     ],
     'eurosite.menu_needs_key' => [
-        'en' => 'Set a cron access key to copy scheduled commands.',
-        'ro' => 'Setați o cheie de acces cron pentru a copia comenzile programate.',
+        'en' => 'Set a cron security key to copy scheduled commands.',
+        'ro' => 'Setați o cheie de securitate cron pentru a copia comenzile programate.',
     ],
 ];

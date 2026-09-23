@@ -202,21 +202,19 @@
                         <variants/>
                     </item>
 
-                    <!-- Cron Header -->
-                    <item id="cron_header">
-                        <type>header</type>
-                        <variants/>
-                    </item>
-                    <!-- NO default: a shipped secret is a guessable secret.
-                         Every cron entry point refuses an empty key, so an
-                         unconfigured store fails CLOSED. This also stops
-                         SettingsMigrator::repairValue() re-seeding a key an
-                         operator deliberately cleared — it returns early when
-                         the declared default is empty. -->
-                    <item id="cron_access_key">
-                        <type>password</type>
-                        <variants/>
-                    </item>
+                    <!-- No Cron section here any more. The secret that
+                         authenticates sphinx_cron.run and cron.php moved to
+                         Settings -> Travel Core -> "Cron security key": it
+                         authenticates OUR endpoint, not Sphinx's API, and
+                         four copies of it meant four chances to leave one
+                         unset — which this store took, on all four.
+                         api_key above is the opposite case and stays here:
+                         Sphinx issues it and rotates it on its own schedule.
+                         Dropping the <item> only stops FUTURE installs from
+                         getting the row; SettingsMigrator retires the ones
+                         already in the database (CRON_KEY_LEGACY_ADDONS for
+                         the key, RETIRED for this header) after carrying the
+                         value across. -->
 
                     <!-- Debug Header -->
                     <item id="debug_header">
