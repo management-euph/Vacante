@@ -318,5 +318,20 @@ function fn_travel_core_ensure_all_settings(): array
         }
     }
 
+    // AFTER the loop, deliberately. The consolidation reads four add-ons' rows
+    // and writes travel_core's, so it cannot live inside a per-add-on pass:
+    // the providers heal FIRST (load-bearing, see above) and travel_core's
+    // `cron_key` row does not exist until its own pass has run. Retiring the
+    // legacy rows from inside each provider's pass would therefore delete them
+    // before there was anywhere to put their values.
+    try {
+        $moved = \Tygh\Addons\TravelCore\Install\SettingsMigrator::consolidateCronKey();
+        if ($moved !== []) {
+            $created['travel_core:cron_key'] = $moved;
+        }
+    } catch (\Throwable $e) {
+        fn_travel_core_heal_report('cron key consolidation failed — ' . $e->getMessage());
+    }
+
     return $created;
 }

@@ -115,22 +115,20 @@ Diferența de 70% cu 21 de zile înainte de check-in.</default_value>
                         <variants/>
                     </item>
 
-                    <!-- ── Cron ── -->
-                    <item id="cron_header">
-                        <type>header</type>
-                        <variants/>
-                    </item>
-                    <!-- Shared secret for eurosite_cron.run / cron.php.
-                         NO default: a shipped secret is a guessable secret.
-                         Every cron entry point refuses an empty key, so an
-                         unconfigured store fails CLOSED. This also stops
-                         SettingsMigrator::repairValue() re-seeding a key an
-                         operator deliberately cleared — it returns early when
-                         the declared default is empty. -->
-                    <item id="cron_access_key">
-                        <type>password</type>
-                        <variants/>
-                    </item>
+                    <!-- No Cron section here any more. The secret that
+                         authenticates eurosite_cron.run and cron.php moved to
+                         Settings -> Travel Core -> "Cron security key": it
+                         authenticates OUR endpoint, not Eurosite's API, and
+                         four copies of it meant four chances to leave one
+                         unset — which this store took, on all four.
+                         api_login / api_password above are the opposite case
+                         and stay here: Eurosite issues them and rotates them
+                         on its own schedule.
+                         Dropping the <item> only stops FUTURE installs from
+                         getting the row; SettingsMigrator retires the ones
+                         already in the database (CRON_KEY_LEGACY_ADDONS for
+                         the key, RETIRED for this header) after carrying the
+                         value across. -->
 
                     <!-- ── Resilience ── -->
                     <item id="resilience_header">

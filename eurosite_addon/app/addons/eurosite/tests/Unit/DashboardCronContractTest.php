@@ -103,18 +103,36 @@ final class DashboardCronContractTest extends TestCase
         self::assertStringNotContainsString('id="eurosite-crontab"', substr($noKeyBranch, 0, $elsePos));
     }
 
-    public function testGeneratingAKeyWritesARandomValueToTheSetting(): void
+    /**
+     * The button still mints a key — Travel Core's, not an eurosite-local one.
+     *
+     * Cron authentication moved into Travel Core: one secret for all three
+     * providers, rotated in one place, in one crontab. The button stays where
+     * it is (this dashboard is where the commands are), but writing an
+     * eurosite row here would now produce a value nothing reads —
+     * ConfigProvider::getCronKey() delegates to CronKeyService — so it would
+     * report success while every scheduled job kept using the old key. That
+     * is a worse failure than the blank key this button was added for,
+     * because it looks like it worked.
+     */
+    public function testGeneratingAKeyMintsTheSharedCoreKey(): void
     {
         $controller = self::controller();
 
         self::assertStringContainsString("if (\$mode === 'generate_cron_key')", $controller);
-        self::assertStringContainsString('bin2hex(random_bytes(16))', $controller);
-        self::assertStringContainsString("updateValue('cron_access_key', \$newKey, 'eurosite', true)", $controller);
+        self::assertStringContainsString('CronKeyService::generate()', $controller);
+        self::assertStringNotContainsString(
+            "updateValue('cron_access_key', \$newKey, 'eurosite', true)",
+            $controller,
+            'the dashboard still writes an eurosite-local cron key that nothing reads',
+        );
         // The cached settings array would otherwise still hold the old key for
         // the rest of the request.
         self::assertStringContainsString('ConfigProvider::resetSettingsCache();', $controller);
-        // Rotating invalidates every scheduled URL — the operator has to know.
-        self::assertStringContainsString('Re-copy your crontab', $controller);
+        // Rotating invalidates every scheduled URL of EVERY travel addon —
+        // saying "Eurosite" would understate what the operator has to fix.
+        self::assertStringContainsString('re-copy the crontab commands for Eurosite, ', $controller);
+        self::assertStringContainsString('Sphinx and Novoton', $controller);
     }
 
     public function testTheMergedTableRendersEveryFieldThePlanProvides(): void

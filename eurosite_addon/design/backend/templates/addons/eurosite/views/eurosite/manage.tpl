@@ -127,7 +127,7 @@
                                     </button>
                                 {else}
                                     <div class="muted" style="padding: 6px 10px; font-size: 11px; white-space: normal;">
-                                        {__("eurosite.menu_needs_key", ["[default]" => "Set a cron access key to copy scheduled commands."])}
+                                        {__("eurosite.menu_needs_key", ["[default]" => "Set a cron security key to copy scheduled commands."])}
                                         <a href="#eurosite-scheduled-jobs">{__("eurosite.generate_cron_key", ["[default]" => "Generate a key"])}</a>
                                     </div>
                                 {/if}
@@ -204,7 +204,7 @@
         <div class="alert alert-error" style="max-width: 900px;">
             <h5 style="margin-top: 0;">
                 <i class="icon-warning-sign"></i>
-                {__("eurosite.cron_no_key_title", ["[default]" => "No cron access key is set"])}
+                {__("eurosite.cron_no_key_title", ["[default]" => "No cron security key is set"])}
             </h5>
             <p style="margin-bottom: 6px;">
                 {__("eurosite.cron_no_key_body", ["[default]" => "Scheduled syncs answer 403 until a key exists, so there are no commands to schedule yet. Nothing is exposed — the endpoint refuses every request while the key is blank."])}
@@ -215,8 +215,8 @@
                     <i class="icon-key"></i> {__("eurosite.generate_cron_key", ["[default]" => "Generate a key"])}
                 </button>
             </form>
-            <a href="{"addons.update&addon=eurosite"|fn_url}" class="btn">
-                <i class="icon-cog"></i> {__("eurosite.set_key_in_settings", ["[default]" => "Set it in addon settings"])}
+            <a href="{"addons.update&addon=travel_core"|fn_url}" class="btn">
+                <i class="icon-cog"></i> {__("eurosite.set_key_in_settings", ["[default]" => "Set it in Travel Core settings"])}
             </a>
         </div>
     {else}
@@ -275,11 +275,11 @@
 
         <div class="muted" style="font-size: 11px; max-width: 1100px; margin-top: 10px;">
             <i class="icon-warning-sign"></i>
-            {__("eurosite.cron_access_key_note", ["[default]" => "These commands carry the addon's cron access key. Copying puts it on your clipboard; anyone holding it can trigger a sync."])}
+            {__("eurosite.cron_access_key_note", ["[default]" => "These commands carry the shared Travel Core cron key. Copying puts it on your clipboard; anyone holding it can trigger a sync, and rotating it re-issues the Sphinx and Novoton commands too."])}
             <form action="{""|fn_url}" method="post" style="display:inline;">
                 <input type="hidden" name="dispatch" value="eurosite.generate_cron_key" />
                 <button type="submit" class="btn btn-micro"
-                        onclick="return confirm('{__("eurosite.rotate_key_confirm", ["[default]" => "Generate a new cron access key? Every scheduled job must be updated with the new URL."])|escape:javascript}');">
+                        onclick="return confirm('{__("eurosite.rotate_key_confirm", ["[default]" => "Generate a new shared cron key? Every scheduled job of every travel addon must be updated with the new URL."])|escape:javascript}');">
                     {__("eurosite.rotate_key", ["[default]" => "Rotate key"])}
                 </button>
             </form>

@@ -87,7 +87,7 @@ final class CronKeyDefaultsTest extends TestCase
      */
     public function testNoAddonShipsADefaultForAStoreOwnedSecret(): void
     {
-        $checked = 0;
+        $checked = [];
 
         foreach (array_keys(self::ADDON_DIRS) as $addon) {
             foreach (self::addonXml($addon)->xpath('//settings//item[@id]') ?: [] as $item) {
@@ -99,7 +99,7 @@ final class CronKeyDefaultsTest extends TestCase
                     continue;
                 }
 
-                $checked++;
+                $checked[] = "{$addon}.{$id}";
                 $default = trim((string) $item->default_value);
                 self::assertSame(
                     '',
@@ -115,10 +115,16 @@ final class CronKeyDefaultsTest extends TestCase
 
         // Guard the guard: a rename that stopped matching the pattern would
         // make every assertion above vacuous.
-        self::assertGreaterThanOrEqual(
-            4,
+        //
+        // Named, not counted. There used to be four cron keys and the count
+        // said so; consolidating them into travel_core.cron_key took the
+        // number to one, and a count that just follows whatever is there
+        // cannot tell "consolidated" from "the pattern stopped matching".
+        self::assertContains(
+            'travel_core.cron_key',
             $checked,
-            'expected at least the four cron access keys to be checked',
+            'the shared cron key is not being checked — either it was renamed out of the secret '
+            . 'pattern, or it is no longer declared at all',
         );
     }
 
@@ -188,18 +194,22 @@ final class CronKeyDefaultsTest extends TestCase
         self::assertStringContainsString('private const array WEAK_VALUES', $migrator);
         self::assertStringContainsString('rotateWeakSecrets(', $migrator);
 
-        // Every addon that declares a cron key must be covered by the rotation.
-        foreach (['travel_core', 'novoton_holidays', 'sphinx_holidays', 'eurosite'] as $addon) {
-            $declares = str_contains(
-                (string) file_get_contents(
-                    self::repoRoot() . '/' . self::ADDON_DIRS[$addon] . '/app/addons/' . $addon . '/addon.xml',
-                ),
-                '<item id="cron_access_key">',
-            );
-            if (!$declares) {
-                continue;
-            }
-            self::assertStringContainsString("'{$addon}' => ['cron_access_key']", $migrator);
+        // The live key must be covered by the rotation. It is the only one
+        // declared now, and it ships no default — but an operator can still
+        // type `1234` into the field, and a four-digit secret is no better
+        // for being hand-written.
+        self::assertStringContainsString("'cron_key'", $migrator);
+        $weakPos = strpos($migrator, 'private const array WEAK_SECRETS');
+        self::assertIsInt($weakPos);
+        $weak = substr($migrator, $weakPos, 900);
+        self::assertStringContainsString("'travel_core' => ['cron_access_key', 'cron_key']", $weak);
+
+        // The legacy per-addon entries stay until consolidateCronKey() has
+        // removed those rows everywhere. A store mid-migration still HAS them,
+        // and dropping the entries would leave a live `1234` unrotated on the
+        // exact stores the migration has not reached yet.
+        foreach (['novoton_holidays', 'sphinx_holidays', 'eurosite'] as $addon) {
+            self::assertStringContainsString("'{$addon}' => ['cron_access_key']", $weak);
         }
 
         // The write is read back — a silent no-op would leave 1234 live while

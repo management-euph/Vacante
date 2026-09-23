@@ -92,6 +92,20 @@ final class SettingsMigrator
             'geocoding_contact_email',
             'geocoding_endpoint',
         ],
+        // `cron_access_key` was the only field under these two headers, and it
+        // has moved to Travel Core. The header row survives its own <item>
+        // being dropped — CS-Cart renders the settings page from the database
+        // — so without this the operator is left looking at a "Cron" section
+        // with nothing in it. novoton keeps its header: send_cron_report_email
+        // is still there and is genuinely per-addon.
+        //
+        // The KEY is deliberately not listed here. RETIRED's carry step only
+        // looks for a SAME-NAMED travel_core setting, and the successor is
+        // called `cron_key` — so retire() would find nothing and delete the
+        // rows with the operator's secret still in them. consolidateCronKey()
+        // does that move, after the carry, and deletes them itself.
+        'sphinx_holidays' => ['cron_header'],
+        'eurosite' => ['cron_header'],
     ];
 
     /**
@@ -112,7 +126,12 @@ final class SettingsMigrator
      * @var array<string, list<string>> addon => setting names
      */
     private const array WEAK_SECRETS = [
-        'travel_core' => ['cron_access_key'],
+        // `cron_key` is here even though it ships no default and so cannot
+        // arrive holding 1234: an operator can still type it, and a four-digit
+        // secret is no better for being hand-written. The legacy entries stay
+        // until consolidateCronKey() has removed those rows everywhere, after
+        // which they are harmless no-ops.
+        'travel_core' => ['cron_access_key', 'cron_key'],
         'novoton_holidays' => ['cron_access_key'],
         'sphinx_holidays' => ['cron_access_key'],
         'eurosite' => ['cron_access_key'],
@@ -225,6 +244,255 @@ final class SettingsMigrator
         }
 
         return $created;
+    }
+
+    /**
+     * The add-ons whose legacy `cron_access_key` row is retired by the move.
+     *
+     * Separate from RETIRED because this retirement is a RENAME, and RETIRED's
+     * machinery carries a value only into a SAME-NAMED travel_core setting.
+     * The successor is `cron_key`, so carryValueToCore() would find nothing and
+     * delete these rows with their values still in them.
+     *
+     * @var list<string>
+     */
+    private const array CRON_KEY_LEGACY_ADDONS = [
+        'travel_core',
+        'novoton_holidays',
+        'sphinx_holidays',
+        'eurosite',
+    ];
+
+    private const string CRON_KEY_LEGACY = 'cron_access_key';
+
+    private const string CRON_KEY = 'cron_key';
+
+    /**
+     * Move four per-add-on cron keys onto travel_core's single one.
+     *
+     * Runs ONCE, after every add-on's own heal, because it reads four add-ons'
+     * rows and writes a fifth — see the caller in self_heal.php for why it
+     * cannot sit inside a per-add-on pass.
+     *
+     * The value rule is the interesting part, and it is deliberately not
+     * "pick one":
+     *
+     *  - Every legacy row holding the SAME value → adopt it. The operator's
+     *    crontab keeps working untouched, which is the best outcome available
+     *    and the common one, since a store that configured them at all most
+     *    likely pasted the same string into each.
+     *  - Legacy rows disagreeing → there is no choice that keeps every crontab
+     *    working, and silently picking one would leave the operator with two
+     *    working jobs and two dead ones and no idea why. Mint a fresh key and
+     *    say so: one clear instruction beats a partly-broken schedule.
+     *  - Every legacy row EMPTY → leave the Core key empty too, and delete the
+     *    rows. Empty is fail-closed, every entry point refuses it, and
+     *    inventing a key nobody asked for would make the endpoints live
+     *    without the operator knowing.
+     *  - A legacy row holding something we REFUSE to carry (a `1234` that
+     *    rotateWeakSecrets() could not overwrite) → change nothing at all.
+     *    That store's crons work, insecurely; deleting the row would stop them
+     *    dead with no key anywhere to explain it.
+     *
+     * Order matters: the legacy rows are deleted only after the new key is
+     * VERIFIED in place. A delete on the back of an unverified write would
+     * destroy the only copy of a working key.
+     *
+     * @return list<string> what changed, for the heal's report
+     */
+    public static function consolidateCronKey(): array
+    {
+        $settings = Settings::instance();
+        if (!$settings instanceof Settings) {
+            return [];
+        }
+
+        // The successor row is created by travel_core's own pass. If it is not
+        // there yet this store is mid-heal; retry on the next fingerprint
+        // change rather than deleting anything now.
+        if (!method_exists($settings, 'isExists') || !$settings->isExists(self::CRON_KEY, 'travel_core')) {
+            return [];
+        }
+
+        $legacy = self::legacyCronKeys();
+        $current = $settings->getValue(self::CRON_KEY, 'travel_core');
+        $changed = [];
+
+        $coreHasKey = is_string($current) && trim($current) !== '';
+        $adopted = $coreHasKey ? '' : self::chooseCronKey(array_values($legacy));
+
+        if (!$coreHasKey && $adopted === '' && $legacy !== []) {
+            // There IS something in those rows, and chooseCronKey() refused to
+            // carry it — in practice a `1234` that rotateWeakSecrets() tried
+            // and failed to replace earlier in this same pass. Deleting it
+            // would take the store from "the crons work, insecurely" to "the
+            // crons refuse everything", with no key anywhere to explain it.
+            // Leave every row: getFor() keeps answering from them, and the
+            // next pass tries again.
+            return [];
+        }
+
+        if ($adopted !== '') {
+            try {
+                $settings->updateValue(self::CRON_KEY, $adopted, 'travel_core');
+                if ($settings->getValue(self::CRON_KEY, 'travel_core') !== $adopted) {
+                    return []; // write did not land — keep every legacy row
+                }
+            } catch (\Throwable $e) {
+                error_log('travel_core: could not write the consolidated cron key — ' . $e->getMessage());
+
+                return [];
+            }
+
+            // "Minted" is decided by what came out, not by counting what went
+            // in: chooseCronKey() also discards weak values, so a store whose
+            // rows all held `1234` agrees perfectly and still gets a fresh key.
+            $changed[] = self::CRON_KEY;
+            self::reportCronKeyMove(!in_array($adopted, array_values($legacy), true));
+        }
+
+        // Falls through to the delete in two more cases, both safe:
+        //  - Core already has a key, so the legacy rows are dead weight.
+        //  - Every legacy row is empty or already gone, so there is nothing to
+        //    lose. Returning instead would leave an empty, dead "Cron access
+        //    key" field rendering on each provider's settings page — CS-Cart
+        //    builds that page from the database, so dropping the <item> from
+        //    addon.xml does not remove it — and nothing would ever clear it,
+        //    because the heal only re-runs when its fingerprint changes.
+
+        foreach (self::retireLegacyCronKeys() as $name) {
+            $changed[] = $name;
+        }
+
+        return $changed;
+    }
+
+    /**
+     * Every legacy cron key that still holds something.
+     *
+     * Resolves Settings itself rather than taking it as a parameter: CS-Cart
+     * is not in this repository, so `Tygh\Settings` is a type static analysis
+     * cannot resolve and PHPStan rejects it as a declared parameter type
+     * (class.notFound), even though `instanceof` against it is fine.
+     *
+     * @return array<string, string> addon => value
+     */
+    private static function legacyCronKeys(): array
+    {
+        $settings = Settings::instance();
+        if (!$settings instanceof Settings) {
+            return [];
+        }
+
+        $found = [];
+
+        foreach (self::CRON_KEY_LEGACY_ADDONS as $addon) {
+            try {
+                $value = $settings->getValue(self::CRON_KEY_LEGACY, $addon);
+            } catch (\Throwable) {
+                continue; // the row is gone, or this add-on was never installed
+            }
+
+            if (is_string($value) && trim($value) !== '') {
+                $found[$addon] = $value;
+            }
+        }
+
+        return $found;
+    }
+
+    /**
+     * One value when they agree, a fresh secret when they do not, '' when there
+     * is nothing to carry.
+     *
+     * WEAK_VALUES are dropped before the comparison, not after. Four rows all
+     * holding `1234` agree perfectly, and adopting that agreement would carry
+     * the shipped default into the new home — undoing Phase 0 in the one pass
+     * that was supposed to finish it. Dropping them first means a store whose
+     * only "configured" key was `1234` is treated as having no key to carry.
+     *
+     * @param list<string> $values
+     */
+    private static function chooseCronKey(array $values): string
+    {
+        $distinct = array_values(array_unique(array_filter(
+            $values,
+            static fn (string $value): bool => !in_array($value, self::WEAK_VALUES, true),
+        )));
+
+        if ($distinct === []) {
+            return '';
+        }
+
+        return count($distinct) === 1 ? $distinct[0] : bin2hex(random_bytes(16));
+    }
+
+    /**
+     * Delete the legacy rows, now that the key has a verified new home.
+     *
+     * Reflection-guarded exactly like retire(): the CS-Cart kit is licensed
+     * code supplied by the operator and is NOT in this repository, so
+     * removeById()'s signature cannot be pinned by a test. A kit that disagrees
+     * leaves a stale row, which is cosmetic; an ArgumentCountError inside a
+     * heal that runs on every admin page load is not.
+     *
+     * @return list<string> names removed
+     */
+    private static function retireLegacyCronKeys(): array
+    {
+        $settings = Settings::instance();
+        if (!$settings instanceof Settings || !method_exists($settings, 'removeById')) {
+            return [];
+        }
+
+        try {
+            $method = new \ReflectionMethod($settings, 'removeById');
+        } catch (\ReflectionException) {
+            return [];
+        }
+        if ($method->getNumberOfRequiredParameters() > 1) {
+            return [];
+        }
+
+        $removed = [];
+        foreach (self::CRON_KEY_LEGACY_ADDONS as $addon) {
+            try {
+                $objectId = TypeCoerce::toInt($settings->getId(self::CRON_KEY_LEGACY, $addon));
+                if ($objectId <= 0) {
+                    continue; // already gone, or never existed on this store
+                }
+
+                $settings->removeById($objectId);
+                $removed[] = $addon . '.' . self::CRON_KEY_LEGACY;
+            } catch (\Throwable $e) {
+                error_log("travel_core: could not retire {$addon}.cron_access_key — " . $e->getMessage());
+            }
+        }
+
+        return $removed;
+    }
+
+    /** Tell the operator, because whether their crontab still works depends on it. */
+    private static function reportCronKeyMove(bool $minted): void
+    {
+        $message = $minted
+            ? 'Travel addons: the cron keys have moved to one shared key in Travel Core '
+                . '(Settings -> Cron security key). There was no single existing key to carry '
+                . 'over, so a new one was generated: re-copy every cron command from '
+                . 'Travel Core -> Tools, because the old URLs no longer authenticate.'
+            : 'Travel addons: the cron keys have moved to one shared key in Travel Core '
+                . '(Settings -> Cron security key). Your existing key was carried over, so '
+                . 'your crontab keeps working.';
+
+        error_log('travel_core: ' . $message);
+
+        if (function_exists('fn_set_notification')) {
+            try {
+                fn_set_notification($minted ? 'W' : 'N', __($minted ? 'warning' : 'notice'), $message);
+            } catch (\Throwable) {
+                // Already in error_log; a notification failure must not escalate.
+            }
+        }
     }
 
     /**

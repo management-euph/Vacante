@@ -13,13 +13,14 @@ declare(strict_types=1);
  *   - run_sync (POST): run one cron command inline (sync_type param)
  *   - save_whitelist (POST): replace the whitelist (whitelist_json field)
  *   - test_connection (POST): cheap auth probe (getRoomTypes)
- *   - generate_cron_key (POST): write a fresh random cron access key
+ *   - generate_cron_key (POST): mint the SHARED Travel Core cron key
  */
 
 use Tygh\Addons\Eurosite\Cron\CronDispatcher;
 use Tygh\Addons\Eurosite\Services\ConfigProvider;
 use Tygh\Addons\Eurosite\Services\Container;
 use Tygh\Addons\Eurosite\Services\CronPlanBuilder;
+use Tygh\Addons\TravelCore\Cron\CronKeyService;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Tygh;
@@ -112,57 +113,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // The dashboard offers this because the alternative — an operator
         // inventing a key in the settings form — is what left this store with
         // a blank one, and a blank key makes every scheduled sync answer 403.
-        $settings = \Tygh\Settings::instance();
-        if (!is_object($settings) || !method_exists($settings, 'updateValue')) {
-            fn_set_notification('E', __('error'), 'Settings API unavailable on this CS-Cart build.');
-
-            return [CONTROLLER_STATUS_REDIRECT, 'eurosite.manage'];
-        }
-
-        // On a store installed before cron_access_key was declared, the
-        // ?:settings_objects row does not exist at all — CS-Cart imports an
-        // addon's <settings> only at install/upgrade, never on a code deploy.
-        // updateValue() silently no-ops on a setting that is not there, so
-        // this button would have reported success and changed nothing.
-        // Create the row first, through the same migrator the self-heal uses.
-        if (method_exists($settings, 'isExists')
-            && !$settings->isExists('cron_access_key', 'eurosite')
-            && function_exists('fn_travel_core_ensure_settings')
-        ) {
-            $addonDir = dirname(__DIR__, 2);
-            fn_travel_core_ensure_settings('eurosite', $addonDir, dirname($addonDir, 3) . '/var/langs');
-        }
-
-        $newKey = bin2hex(random_bytes(16));
-        $settings->updateValue('cron_access_key', $newKey, 'eurosite', true);
+        //
+        // The key it mints is NOT eurosite's any more. Cron authentication
+        // moved into Travel Core: one key, one place to rotate it, one
+        // crontab to update. Writing an eurosite-local key here would produce
+        // a row nothing reads — ConfigProvider::getCronKey() delegates to
+        // CronKeyService — so the button would report success while every
+        // scheduled job kept using the old key. The whole mint, including the
+        // row-creation and the read-back that a silent updateValue() no-op
+        // made necessary, lives in CronKeyService::generate() now; this is
+        // the same button pointed at it.
+        $newKey = CronKeyService::generate();
         ConfigProvider::resetSettingsCache();
 
-        // Read it back rather than trust the write: a silent no-op here is a
-        // dashboard full of URLs that all answer 403 at 01:00.
-        //
-        // Through Settings::getValue, NOT ConfigProvider: the provider reads
-        // Registry 'addons.eurosite', which CS-Cart populated at bootstrap
-        // from the database. resetSettingsCache() drops the provider's own
-        // cache but cannot refresh that Registry entry, so a provider read
-        // here would report failure on a write that actually landed.
-        $stored = method_exists($settings, 'getValue')
-            ? $settings->getValue('cron_access_key', 'eurosite')
-            : $newKey;
-        if ($stored !== $newKey) {
+        if ($newKey === '') {
             fn_set_notification(
                 'E',
                 __('error'),
-                'Could not store the cron access key — the "cron_access_key" setting is missing from this store. '
-                . 'Open any admin page once to let the settings self-heal create it, then try again.',
+                'Could not store the cron security key. Open Travel Core > Tools once to let the '
+                . 'settings self-heal create the setting, then try again.',
             );
 
             return [CONTROLLER_STATUS_REDIRECT, 'eurosite.manage'];
         }
 
+        // 'W', not 'N': this rotates the key for EVERY travel addon, so the
+        // Sphinx and Novoton crontab entries just stopped working too. Saying
+        // "Eurosite" here would understate what the operator has to fix.
         fn_set_notification(
-            'N',
-            __('notice'),
-            'A new Eurosite cron access key was generated. Re-copy your crontab — the old URLs no longer work.',
+            'W',
+            __('warning'),
+            'A new shared cron security key was generated in Travel Core. It authenticates the '
+            . 'scheduled jobs of every travel addon, so re-copy the crontab commands for Eurosite, '
+            . 'Sphinx and Novoton — the old URLs no longer work.',
         );
 
         return [CONTROLLER_STATUS_REDIRECT, 'eurosite.manage'];
