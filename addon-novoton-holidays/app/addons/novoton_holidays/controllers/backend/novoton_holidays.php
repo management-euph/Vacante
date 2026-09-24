@@ -435,26 +435,40 @@ if ($mode === 'manage' || empty($mode)) {
     $cron_key = ConfigProvider::getCronAccessKey();
     $base_url = TypeCoerce::toString(Registry::get('config.http_location')) . '/';
 
-    $cron_urls = [
-        'hotel_info_batched' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=hotel_info_batched",
-        'sync_priceinfo_batched' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=sync_priceinfo_batched",
-        'hotel_list' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=hotel_list",
-        'resort_list' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=resort_list",
-        'list_facilities' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=list_facilities",
-        'hotel_facilities_batched' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=hotel_facilities_batched",
-        'resinfo' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=resinfo",
-        'offers_update' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=offers_update",
-        'room_price' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=room_price",
-        'add_products' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=add_hotels_as_products",
-        'reassign_features' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=reassign_features",
-        'compute_prices' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=compute_prices",
-        'recompute_calendar_prices' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=recompute_calendar_prices",
-        'geocode_addresses' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=geocode_addresses",
-        'backfill_images' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=backfill_images",
-        'cleanup' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=cleanup",
-    ];
+    // Scheduled jobs: one row per job, in the order they run, from the plan
+    // builder. The page never prints a command with the key in it — every
+    // command is shown masked, and Copy puts the real one on the clipboard.
+    $planner = new \Tygh\Addons\NovotonHolidays\Services\CronPlanBuilder(
+        $base_url,
+        $cron_key,
+        defined('DIR_ROOT') ? TypeCoerce::toString(DIR_ROOT) : '',
+    );
+    $cron_modes = \Tygh\Addons\NovotonHolidays\Cron\CronDispatcher::getAvailableModes();
+    $cron_records = [];
+    $cron_legacy = [];
+    foreach (array_keys($cron_modes) as $cron_mode) {
+        $cron_records[$cron_mode] = \Tygh\Addons\TravelCore\Cron\CronRunLog::get(\Tygh\Addons\NovotonHolidays\Services\CronPlanBuilder::ADDON, $cron_mode);
+        foreach (\Tygh\Addons\NovotonHolidays\Services\CronPlanBuilder::legacyLogTypes($cron_mode) as $log_type) {
+            $log_row = $syncLogRepo->getLastSync($log_type);
+            $log_at = $log_row === null ? false : strtotime(TypeCoerce::toString($log_row['sync_date'] ?? ''));
+            if ($log_at !== false && $log_at > ($cron_legacy[$cron_mode]['at'] ?? 0)) {
+                $cron_legacy[$cron_mode] = ['at' => $log_at, 'ok' => TypeCoerce::toString($log_row['status'] ?? '') !== 'failed'];
+            }
+        }
+    }
+    $mask = static fn (string $text): string => $cron_key === '' ? $text : str_replace($cron_key, '••••••••', $text);
+    $crontab_cli = $planner->crontab($cron_modes, 'cli', date('Y-m-d'));
+    $xml_feed_url = $base_url . 'index.php?dispatch=novoton_export.hotel_features_xml&access_key=' . rawurlencode($cron_key);
 
-    $xml_feed_url = $base_url . "index.php?dispatch=novoton_export.hotel_features_xml&access_key={$cron_key}";
+    $view->assign('novoton_job_stages', $planner->stages($cron_modes, $cron_records, $cron_legacy, time()));
+    $view->assign('novoton_on_demand_jobs', $planner->onDemandRows($cron_modes, $cron_records, time()));
+    $view->assign('novoton_cron_has_key', $planner->hasKey());
+    $view->assign('novoton_cron_key', $cron_key);
+    $view->assign('novoton_crontab_cli', $crontab_cli);
+    $view->assign('novoton_crontab_url', $planner->crontab($cron_modes, 'url', date('Y-m-d')));
+    $view->assign('novoton_crontab_masked', $mask($crontab_cli));
+    $view->assign('novoton_xml_feed_url', $xml_feed_url);
+    $view->assign('novoton_xml_feed_masked', $mask($xml_feed_url));
 
     $view->assign('stats', $stats);
     // NOTE: deliberately NOT assigned as 'countries' — that is a CS-Cart core
@@ -462,9 +476,6 @@ if ($mode === 'manage' || empty($mode)) {
     // list shadows core data on the whole admin page. No template consumed it.
     $view->assign('recent_syncs', $recent_syncs);
     $view->assign('last_syncs', $last_syncs);
-    $view->assign('cron_urls', $cron_urls);
-    $view->assign('cron_key', $cron_key);
-    $view->assign('xml_feed_url', $xml_feed_url);
     $view->assign('addon_settings', $addon_settings);
     $view->assign('addon_version', ConfigProvider::getVersion());
 

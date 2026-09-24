@@ -118,192 +118,104 @@
     </div>
     {/if}
 
-    {** Cron URLs — id: the target of the "Open Novoton cron" link on Travel Core -> Tools **}
-    <div class="novoton-section" id="novoton-cron-jobs">
-        <h3>[C] Cron Job URLs</h3>
-        {if $cron_key}
-        <p class="novoton-alert novoton-alert-info">Copy these URLs for use in cPanel cron jobs or external cron services:</p>
-
-        {* Recommended Batched Sync - Highlighted *}
-        <div class="novoton-cron-recommended cron-hotel-info">
-            <div class="cron-header">
-                <span class="cron-tag">RECOMMENDED</span>
-                <span class="cron-title">Hotel Info Batched</span>
-            </div>
-            <p class="cron-description">
-                Smart sync with resume capability. First run syncs all hotels, then daily syncs only new/changed hotels.
-                Automatically does full re-sync every 6 months.
-            </p>
-            <div class="novoton-cron-url cron-url-box" style="position: relative;">
-                <code style="display: block; padding: 8px 70px 8px 10px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; word-break: break-all; cursor: text;" onclick="this.ownerDocument.defaultView.getSelection().selectAllChildren(this)">{$cron_urls.hotel_info_batched}</code>
-                <button type="button" class="novoton-btn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); font-size: 11px; padding: 3px 8px;" onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent.trim()).then(function(){ldelim}var b=event.target;b.textContent='Copied!';setTimeout(function(){ldelim}b.textContent='Copy';{rdelim},1500);{rdelim})">Copy</button>
-            </div>
-            <div class="cron-actions">
-                <a href="{$cron_urls.hotel_info_batched}" target="_blank" class="novoton-btn novoton-btn-success">Run Now</a>
-                <a href="{$cron_urls.hotel_info_batched}&status=1" target="_blank" class="novoton-btn">Check Status</a>
-                <a href="{$cron_urls.hotel_info_batched}&force_full=1" target="_blank" class="novoton-btn">Force Full Sync</a>
-                <a href="{$cron_urls.hotel_info_batched}&reset=1" target="_blank" class="novoton-btn novoton-btn-danger">Reset</a>
-            </div>
-            <p class="cron-hint">
-                <strong>cPanel:</strong> <code>*/5 * * * *</code> (every 5 min) |
-                <strong>Shared hosting:</strong> Add <code>&batch_size=50&max_time=120</code>
-            </p>
-        </div>
-
-        {* Recommended Batched Priceinfo Sync - Highlighted *}
-        <div class="novoton-cron-recommended cron-price-info">
-            <div class="cron-header">
-                <span class="cron-tag">RECOMMENDED</span>
-                <span class="cron-title">Price Info Batched</span>
-            </div>
-            <p class="cron-description">
-                Smart price sync with resume capability. Syncs all package prices in batches.
-                Automatically re-syncs stale packages (older than 24h) and does full re-sync every 7 days.
-            </p>
-            <div class="novoton-cron-url cron-url-box">{$cron_urls.sync_priceinfo_batched}</div>
-            <div class="cron-actions">
-                <a href="{$cron_urls.sync_priceinfo_batched}" target="_blank" class="novoton-btn" style="background: #0066cc;">Run Now</a>
-                <a href="{$cron_urls.sync_priceinfo_batched}&status=1" target="_blank" class="novoton-btn">Check Status</a>
-                <a href="{$cron_urls.sync_priceinfo_batched}&force_full=1" target="_blank" class="novoton-btn">Force Full Sync</a>
-                <a href="{$cron_urls.sync_priceinfo_batched}&reset=1" target="_blank" class="novoton-btn novoton-btn-danger">Reset</a>
-            </div>
-            <p class="cron-hint">
-                <strong>cPanel:</strong> <code>*/5 * * * *</code> (every 5 min) |
-                <strong>Shared hosting:</strong> Add <code>&batch_size=30&max_time=120</code>
-            </p>
-        </div>
-
-        {* Hotel Features XML Feed *}
-        {if $xml_feed_url}
-        <div class="novoton-cron-recommended" style="border-left: 4px solid #17a2b8; background: #f0f9ff;">
-            <div class="cron-header">
-                <span class="cron-tag" style="background: #17a2b8;">XML FEED</span>
-                <span class="cron-title">Hotel Features XML</span>
-            </div>
-            <p class="cron-description">
-                Live XML feed with all hotel features. Use this URL in CS-Cart Advanced Import "Link to file" or open directly in browser.
-            </p>
-            <div class="novoton-cron-url cron-url-box">{$xml_feed_url}</div>
-            <div class="cron-actions">
-                <a href="{$xml_feed_url}" target="_blank" class="novoton-btn novoton-btn-info">Open XML</a>
+    {** Scheduled jobs — id: the target of the "Open Novoton cron" link on Travel Core -> Tools.
+       One row per job, in the order the jobs run (CronPlanBuilder). No
+       command with the cron key is ever printed: they are shown masked and
+       Copy puts the real one on the clipboard; Run is an admin POST. **}
+    <section id="novoton-cron-jobs" class="travel-cron-card travel-cron-card--flush novoton-jobs" aria-labelledby="novoton-jobs-title">
+        <div class="travel-cron-card__head travel-cron-card__head--pad">
+            <div>
+                <h3 id="novoton-jobs-title">{__("novoton_holidays.dash_jobs_title")}</h3>
+                <p class="muted">{__("novoton_holidays.dash_jobs_intro")}</p>
             </div>
         </div>
+
+        {if !$novoton_cron_has_key}
+            <div class="alert alert-warning novoton-jobs__nokey">
+                <strong>{__("novoton_holidays.dash_no_key_title")}</strong>
+                {* Travel Core, not novoton: the cron secret authenticates OUR
+                   endpoint, so it lives once in Core and is shared by all three
+                   providers. *}
+                <p>{__("novoton_holidays.dash_no_key_body")} <a href="{"addons.update?addon=travel_core"|fn_url}">{__("novoton_holidays.dash_set_key")}</a></p>
+            </div>
         {/if}
 
-        {* Cron Jobs Table *}
-        <details>
-        <summary style="cursor: pointer; font-weight: bold; padding: 8px 0; user-select: none;">Cron Jobs</summary>
-        <table class="novoton-table">
-            <tr>
-                <th style="width: 180px;">Job</th>
-                <th>URL</th>
-                <th style="width: 100px;">Schedule</th>
-                <th style="width: 60px;">Run</th>
-            </tr>
-            <tr>
-                <td><strong>Hotel List</strong><br><small class="muted">Basic hotel data</small></td>
-                <td><div class="novoton-cron-url">{$cron_urls.hotel_list}</div></td>
-                <td>Every 3&ndash;7 days</td>
-                <td><a href="{$cron_urls.hotel_list}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
-            </tr>
-            <tr>
-                <td><strong>Resort List</strong><br><small class="muted">Sync resort names</small></td>
-                <td><div class="novoton-cron-url">{$cron_urls.resort_list}</div></td>
-                <td>Weekly</td>
-                <td><a href="{$cron_urls.resort_list}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
-            </tr>
-            <tr>
-                <td><strong>Facilities</strong><br><small class="muted">Sync facilities list</small></td>
-                <td><div class="novoton-cron-url">{$cron_urls.list_facilities}</div></td>
-                <td>Weekly</td>
-                <td><a href="{$cron_urls.list_facilities}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
-            </tr>
-            <tr>
-                <td><strong>Hotel Facilities</strong><br><small class="muted">Assign facilities to hotels</small></td>
-                <td><div class="novoton-cron-url">{$cron_urls.hotel_facilities_batched}</div></td>
-                <td>Weekly</td>
-                <td><a href="{$cron_urls.hotel_facilities_batched}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
-            </tr>
-            <tr>
-                <td><strong>Offers Update</strong><br><small class="muted">Check new offers</small></td>
-                <td><div class="novoton-cron-url">{$cron_urls.offers_update}</div></td>
-                <td>Every 2 hours</td>
-                <td><a href="{$cron_urls.offers_update}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
-            </tr>
-            <tr>
-                <td><strong>Room Price</strong><br><small class="muted">Sets has_room_price gate</small></td>
-                <td><div class="novoton-cron-url">{$cron_urls.room_price}</div></td>
-                <td>Before Add Products</td>
-                <td><a href="{$cron_urls.room_price}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
-            </tr>
-            <tr>
-                <td><strong>Add Products</strong><br><small class="muted">Create CS-Cart products</small></td>
-                <td><div class="novoton-cron-url">{$cron_urls.add_products}</div></td>
-                <td>After Room Price</td>
-                <td><a href="{$cron_urls.add_products}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
-            </tr>
-            <tr>
-                <td><strong>Reassign Features</strong><br><small class="muted">Re-apply product features</small></td>
-                <td><div class="novoton-cron-url">{$cron_urls.reassign_features}</div></td>
-                <td>After Add Products</td>
-                <td><a href="{$cron_urls.reassign_features}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
-            </tr>
-            <tr>
-                <td><strong>Compute Prices</strong><br><small class="muted">min_price, seasons, early booking</small></td>
-                <td><div class="novoton-cron-url">{$cron_urls.compute_prices}</div></td>
-                <td>Every 5 min</td>
-                <td><a href="{$cron_urls.compute_prices}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
-            </tr>
-            <tr>
-                <td><strong>Recompute Calendar</strong><br><small class="muted">Rebuild calendar_prices_raw</small></td>
-                <td><div class="novoton-cron-url">{$cron_urls.recompute_calendar_prices}</div></td>
-                <td>After sync or daily</td>
-                <td><a href="{$cron_urls.recompute_calendar_prices}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
-            </tr>
-            <tr>
-                <td><strong>Booking Status</strong><br><small class="muted">Check ASK bookings</small></td>
-                <td><div class="novoton-cron-url">{$cron_urls.resinfo}</div></td>
-                <td>Every 2 hours</td>
-                <td><a href="{$cron_urls.resinfo}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
-            </tr>
-            <tr>
-                <td><strong>Geocode Streets</strong><br><small class="muted">street_address from coordinates (OSM Nominatim, needs geocoding enabled in settings)</small></td>
-                <td><div class="novoton-cron-url">{$cron_urls.geocode_addresses}</div></td>
-                <td>Hourly until backlog drains</td>
-                <td>
-                    <a href="{$cron_urls.geocode_addresses}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a>
-                    <a href="{$cron_urls.geocode_addresses}&status=1" target="_blank" class="novoton-btn novoton-btn-sm">Status</a>
-                </td>
-            </tr>
-            <tr>
-                <td><strong>Backfill Images</strong><br><small class="muted">Re-attach images to products that synced without them (recovery)</small></td>
-                <td><div class="novoton-cron-url">{$cron_urls.backfill_images}</div></td>
-                <td>Hourly until backlog drains</td>
-                <td>
-                    <a href="{$cron_urls.backfill_images}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a>
-                    <a href="{$cron_urls.backfill_images}&status=1" target="_blank" class="novoton-btn novoton-btn-sm">Status</a>
-                </td>
-            </tr>
-            <tr>
-                <td><strong>Cleanup</strong><br><small class="muted">Orphans, logs, cache</small></td>
-                <td><div class="novoton-cron-url">{$cron_urls.cleanup}</div></td>
-                <td>Daily</td>
-                <td><a href="{$cron_urls.cleanup}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
-            </tr>
+        <table class="table table-middle travel-cron-table novoton-jobs__table">
+            <thead>
+                <tr>
+                    <th>{__("novoton_holidays.dash_col_job")}</th>
+                    <th>{__("novoton_holidays.dash_col_schedule")}</th>
+                    <th>{__("novoton_holidays.dash_col_last_run")}</th>
+                    <th class="right">{__("novoton_holidays.dash_col_actions")}</th>
+                </tr>
+            </thead>
+            {foreach from=$novoton_job_stages item=stage}
+                <tbody>
+                    <tr class="novoton-jobs__stage">
+                        <th colspan="4" scope="colgroup">{$stage.number}. {__("novoton_holidays.dash_stage_`$stage.stage`")}</th>
+                    </tr>
+                    {foreach from=$stage.jobs item=job}
+                        {include file="addons/novoton_holidays/components/job_row.tpl" job=$job has_key=$novoton_cron_has_key}
+                    {/foreach}
+                </tbody>
+            {/foreach}
         </table>
-        {else}
-        <div class="novoton-alert novoton-alert-warning">
-            <strong>[!] Cron Security Key Not Set</strong><br>
-            {* Travel Core, not novoton: the cron secret authenticates OUR
-               endpoint, so it lives once in Core and is shared by all three
-               providers. This addon's settings page no longer has the field —
-               linking there would send the operator somewhere they cannot fix
-               it. api_login / api_password stay on that page. *}
-            Please set the <strong>Cron security key</strong> in <a href="{"addons.update?addon=travel_core"|fn_url}">Travel Core settings</a> to enable cron jobs. It is shared by every travel addon.
-        </div>
+
+        {if $novoton_on_demand_jobs}
+            <details class="novoton-jobs__ondemand">
+                <summary>{__("novoton_holidays.dash_on_demand_title", ["[n]" => $novoton_on_demand_jobs|count])}</summary>
+                <p class="muted">{__("novoton_holidays.dash_on_demand_intro")}</p>
+                <table class="table table-middle travel-cron-table novoton-jobs__table">
+                    <tbody>
+                        {foreach from=$novoton_on_demand_jobs item=job}
+                            {include file="addons/novoton_holidays/components/job_row.tpl" job=$job has_key=$novoton_cron_has_key}
+                        {/foreach}
+                    </tbody>
+                </table>
+            </details>
         {/if}
-    </details>
-    </div>
+    </section>
+
+    {if $novoton_cron_has_key}
+        {* Every job's command, for the server crontab (CLI) or a cron service
+           (URL). The key is masked in the DISPLAY only: a masked command pasted
+           into a crontab is a refused run at 04:30 nobody is awake to see, so
+           Copy all copies the real text (dashboard.js). *}
+        <section id="novoton-crontab" class="travel-cron-card novoton-crontab" aria-labelledby="novoton-crontab-title"
+                 data-crontab-cli="{$novoton_crontab_cli|escape:html}"
+                 data-crontab-url="{$novoton_crontab_url|escape:html}"
+                 data-key="{$novoton_cron_key|escape:html}"
+                 data-txt-copied="{__("novoton_holidays.dash_copied")|escape:html}"
+                 data-txt-copy-failed="{__("novoton_holidays.dash_copy_failed")|escape:html}">
+            <div class="travel-cron-card__head">
+                <div>
+                    <h3 id="novoton-crontab-title">{__("novoton_holidays.dash_commands_title")}</h3>
+                    <p class="muted">{__("novoton_holidays.dash_commands_hint")}</p>
+                </div>
+                <div class="novoton-crontab__tools">
+                    <div class="btn-group" role="group" aria-label="{__("novoton_holidays.dash_format_label")|escape:html}">
+                        <button type="button" class="btn" data-novoton-format="cli" aria-pressed="true">{__("novoton_holidays.dash_format_cli")}</button>
+                        <button type="button" class="btn" data-novoton-format="url" aria-pressed="false">{__("novoton_holidays.dash_format_url")}</button>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="novoton-crontab-copy">{__("novoton_holidays.dash_copy_all")}</button>
+                </div>
+            </div>
+            <pre id="novoton-crontab-text" class="novoton-crontab__text">{$novoton_crontab_masked|escape:html}</pre>
+            <p class="travel-cron-foot novoton-crontab__note">
+                <i class="icon-lock" aria-hidden="true"></i> {__("novoton_holidays.dash_key_hidden_note")}
+                <a href="{"travel_tools.manage"|fn_url}">{__("novoton_holidays.dash_open_tools")}</a>
+            </p>
+
+            <div class="novoton-crontab__feed">
+                <strong>{__("novoton_holidays.dash_xml_feed_title")}</strong>
+                <p class="muted">{__("novoton_holidays.dash_xml_feed_hint")}</p>
+                <div class="novoton-crontab__feedrow">
+                    <code class="travel-cron-cmd">{$novoton_xml_feed_masked|escape:html}</code>
+                    <button type="button" class="btn novoton-copy" data-copy="{$novoton_xml_feed_url|escape:html}">{__("novoton_holidays.dash_copy_url")}</button>
+                </div>
+            </div>
+        </section>
+    {/if}
 
     {** Excluded Resorts Management **}
     <details class="novoton-section">
@@ -425,6 +337,10 @@
     {/if}
 
 </div>
+
+{* Inside the capture on purpose: admin top-nav navigation is AJAX and runs
+   only the scripts inside the mainbox capture. *}
+{script src="js/addons/novoton_holidays/dashboard.js"}
 
 {/capture}
 

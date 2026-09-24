@@ -1031,3 +1031,202 @@
     font-family: 'Courier New', monospace;
     white-space: pre-wrap;
 }
+
+/* ─── Dashboard: scheduled jobs (novoton_holidays.manage) ───
+ * Built on Travel Core's travel-cron-* card, table and pill styles (loaded on
+ * every admin page), so the three providers' job tables read alike. Every
+ * state is told in words and an icon, not colour alone. */
+
+.novoton-jobs__nokey {
+    margin: 0 16px 12px;
+}
+
+.novoton-jobs__nokey p {
+    margin: 4px 0 0;
+}
+
+.novoton-jobs__table {
+    margin: 0;
+}
+
+.novoton-jobs__table td {
+    vertical-align: top;
+}
+
+.novoton-jobs__stage th {
+    padding: 7px 12px;
+    background: #f5f6f8;
+    border-top: 1px solid #e3e6ea;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #4a5360;
+    text-align: left;
+}
+
+.novoton-job--recommended td {
+    background: #fffdf5;
+}
+
+.novoton-job__badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 8px;
+    border-radius: 10px;
+    background: #e3f4e8;
+    color: #1d6b34;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.novoton-job__desc {
+    font-size: 12px;
+    color: #4a5360;
+    margin-top: 2px;
+}
+
+.novoton-job__mode,
+.novoton-job__cron {
+    font-size: 11px;
+    color: #4a5360;
+    background: none;
+    border: 0;
+    padding: 0;
+}
+
+.novoton-job__actions {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.novoton-run-form {
+    display: inline-block;
+    margin: 0;
+}
+
+.novoton-menu-wrap {
+    position: relative;
+    display: inline-block;
+}
+
+.novoton-menu {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    z-index: 100;
+    min-width: 220px;
+    margin-top: 2px;
+    padding: 4px;
+    text-align: left;
+    background: #fff;
+    border: 1px solid #d5dae1;
+    border-radius: 6px;
+    box-shadow: 0 6px 18px rgba(16, 24, 40, 0.14);
+}
+
+.novoton-menu .novoton-run-form {
+    display: block;
+}
+
+.novoton-menu__item {
+    display: block;
+    width: 100%;
+    padding: 6px 10px;
+    border: 0;
+    border-radius: 4px;
+    background: none;
+    text-align: left;
+    white-space: nowrap;
+    color: #1c2330;
+    cursor: pointer;
+}
+
+.novoton-menu__item:hover,
+.novoton-menu__item:focus {
+    background: #f2f6fc;
+}
+
+.novoton-menu__item--danger {
+    color: #a3161b;
+    font-weight: 600;
+}
+
+.novoton-menu__divider {
+    height: 1px;
+    margin: 4px 0;
+    background: #eceff3;
+}
+
+.novoton-menu__note {
+    padding: 6px 10px;
+    font-size: 11px;
+    color: #4a5360;
+    white-space: normal;
+}
+
+.novoton-jobs__ondemand {
+    padding: 0 16px 12px;
+}
+
+.novoton-jobs__ondemand summary {
+    cursor: pointer;
+    padding: 10px 0;
+    font-weight: 600;
+}
+
+.novoton-crontab__tools {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.novoton-crontab__tools .btn-group {
+    margin: 0;
+}
+
+.novoton-crontab__tools [aria-pressed="true"] {
+    background: #2457c5;
+    border-color: #2457c5;
+    color: #fff;
+}
+
+.novoton-crontab__text {
+    margin: 0;
+    padding: 12px 14px;
+    background: #10151c;
+    color: #e6edf6;
+    border: 0;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 1.8;
+    white-space: pre;
+    overflow-x: auto;
+}
+
+.novoton-crontab__note {
+    padding: 10px 0 0;
+    border-top: 0;
+}
+
+.novoton-crontab__feed {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #eef0f2;
+}
+
+.novoton-crontab__feed p {
+    margin: 2px 0 8px;
+}
+
+.novoton-crontab__feedrow {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.novoton-crontab__feedrow .travel-cron-cmd {
+    flex: 1 1 auto;
+}
