@@ -465,6 +465,15 @@ class StateManager implements StateManagerInterface
      */
     public function acquireLock(int $timeout = 5): bool
     {
+        // Every write goes through here (save, and load's backup restore), so
+        // this is where the folder must exist. The constructor creating it is
+        // not enough: a CS-Cart cache clear during the run — Travel Core
+        // clears it after seeding new labels, and an admin can press "Clear
+        // cache" any time — deletes var/cache/misc/ and this folder with it.
+        // The lock and state writes then warned "No such file or directory"
+        // and the batch's progress was lost, so the next run started over.
+        $this->ensureDirectory();
+
         $lockFile = $this->stateFile . '.lock';
         $this->lockHandle = fopen($lockFile, 'c') ?: null;
 
@@ -483,6 +492,15 @@ class StateManager implements StateManagerInterface
         }
 
         return true;
+    }
+
+    /** Create the state folder if it is missing (idempotent; tolerates a parallel run creating it). */
+    private function ensureDirectory(): void
+    {
+        $dir = dirname($this->stateFile);
+        if (!is_dir($dir) && !@mkdir($dir, 0o755, true) && !is_dir($dir)) {
+            error_log('novoton_holidays: cannot create the batch state folder ' . $dir);
+        }
     }
 
     /**
