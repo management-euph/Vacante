@@ -75,18 +75,33 @@ final class HotelsSchemaAndSettingsTest extends TestCase
     }
 
     /**
-     * Travel Core's settings heal creates selectbox / multiple_checkboxes
-     * variants without their labels, so on an existing store the options
-     * would show blank: the new settings use plain inputs.
+     * Travel Core's settings heal creates stored selectbox variants without
+     * their labels, so on an existing store such options would show blank:
+     * the numeric settings are plain inputs, and the category dropdown gets
+     * its options from a variants function instead of stored variants.
      */
     public function testTheNewSettingsNeedNoVariantLabels(): void
     {
         $xml = simplexml_load_file(self::ADDON . '/addon.xml');
         self::assertNotFalse($xml);
+        $types = [];
         foreach ($xml->xpath('//settings//item[type]') ?: [] as $item) {
-            if (in_array((string) $item['id'], ['availability_near_days', 'availability_nights', 'hotels_category_id', 'availability_season_dates'], true)) {
-                self::assertSame('input', (string) $item->type, (string) $item['id']);
-            }
+            $types[(string) $item['id']] = $item;
+        }
+        foreach (['availability_near_days', 'availability_nights', 'availability_season_dates'] as $id) {
+            self::assertSame('input', (string) $types[$id]->type, $id);
+        }
+
+        // Like Sphinx's "CS-Cart category ID for Sphinx hotels": every category, by path.
+        self::assertSame('selectbox', (string) $types['hotels_category_id']->type);
+        self::assertCount(0, $types['hotels_category_id']->variants->children(), 'options come from the function, not addon.xml');
+        self::assertStringContainsString(
+            'function fn_settings_variants_addons_eurosite_hotels_category_id(): array',
+            (string) file_get_contents(self::ADDON . '/func.php'),
+        );
+        foreach (['en', 'ro'] as $lang) {
+            $po = (string) file_get_contents(self::ADDON . "/../../../var/langs/{$lang}/addons/eurosite.po");
+            self::assertStringContainsString("msgctxt \"SettingsOptions::eurosite::hotels_category_id\"\nmsgid \"CS-Cart category ID for Eurosite hotels\"", $po);
         }
     }
 }

@@ -640,8 +640,8 @@ return [
         'ro' => 'ultima sincronizare a hotelurilor [when]',
     ],
     'eurosite.hotels_no_root_category' => [
-        'en' => 'Set "Hotels root category ID" in the add-on settings before creating products: products go under it, then country, then destination.',
-        'ro' => 'Setați „ID categorie rădăcină hoteluri” în setările addon-ului înainte de a crea produse: produsele se creează sub ea, apoi pe țară, apoi pe destinație.',
+        'en' => 'Choose "CS-Cart category ID for Eurosite hotels" in the add-on settings before creating products: products go under it, then country, then destination.',
+        'ro' => 'Alegeți „ID categorie CS-Cart pentru hoteluri Eurosite” în setările addon-ului înainte de a crea produse: produsele se creează sub ea, apoi pe țară, apoi pe destinație.',
     ],
     'eurosite.destination' => [
         'en' => 'Destination',

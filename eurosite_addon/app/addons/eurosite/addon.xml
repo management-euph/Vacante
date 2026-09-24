@@ -137,10 +137,14 @@ Diferența de 70% cu 21 de zile înainte de check-in.</default_value>
                         <variants/>
                     </item>
                     <!-- Products go under this category, then country, then
-                         destination (created on demand). 0 = not set: no
-                         product is created until it is. -->
+                         destination (created on demand). 0 = None: no product
+                         is created until it is set. A dropdown of every
+                         category, like Sphinx's; its options come from
+                         fn_settings_variants_addons_eurosite_hotels_category_id
+                         (func.php), so there are no stored variants for the
+                         settings heal to leave unlabelled. -->
                     <item id="hotels_category_id">
-                        <type>input</type>
+                        <type>selectbox</type>
                         <default_value>0</default_value>
                         <variants/>
                     </item>

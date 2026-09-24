@@ -109,12 +109,12 @@ msgid "Hotels and products"
 msgstr "Hotels and products"
 
 msgctxt "SettingsOptions::eurosite::hotels_category_id"
-msgid "Hotels root category ID"
-msgstr "Hotels root category ID"
+msgid "CS-Cart category ID for Eurosite hotels"
+msgstr "CS-Cart category ID for Eurosite hotels"
 
 msgctxt "SettingsTooltips::eurosite::hotels_category_id"
-msgid "CS-Cart category ID under which Eurosite hotel products are created, then country, then destination (created automatically). 0 = no product is created."
-msgstr "CS-Cart category ID under which Eurosite hotel products are created, then country, then destination (created automatically). 0 = no product is created."
+msgid "Root category under which hotel products are created. Country and destination sub-categories are generated automatically."
+msgstr "Root category under which hotel products are created. Country and destination sub-categories are generated automatically."
 
 msgctxt "SettingsOptions::eurosite::products_without_images"
 msgid "Create products for hotels without images"
@@ -777,8 +777,8 @@ msgid "last hotels sync [when]"
 msgstr "last hotels sync [when]"
 
 msgctxt "Languages::eurosite.hotels_no_root_category"
-msgid "Set \"Hotels root category ID\" in the add-on settings before creating products: products go under it, then country, then destination."
-msgstr "Set \"Hotels root category ID\" in the add-on settings before creating products: products go under it, then country, then destination."
+msgid "Choose \"CS-Cart category ID for Eurosite hotels\" in the add-on settings before creating products: products go under it, then country, then destination."
+msgstr "Choose \"CS-Cart category ID for Eurosite hotels\" in the add-on settings before creating products: products go under it, then country, then destination."
 
 msgctxt "Languages::eurosite.destination"
 msgid "Destination"

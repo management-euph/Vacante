@@ -57,7 +57,7 @@
     </div>
     {if !$eurosite_root_category_set}
         <div class="alert alert-warning">
-            {__("eurosite.hotels_no_root_category", ["[default]" => "Set \"Hotels root category ID\" in the add-on settings before creating products: products go under it, then country, then destination."])}
+            {__("eurosite.hotels_no_root_category", ["[default]" => "Choose \"CS-Cart category ID for Eurosite hotels\" in the add-on settings before creating products: products go under it, then country, then destination."])}
             <a href="{"addons.update&addon=eurosite"|fn_url}">{__("eurosite.addon_settings", ["[default]" => "Addon settings"])}</a>
         </div>
     {/if}
