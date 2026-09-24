@@ -566,4 +566,341 @@ return [
         'en' => 'Set a cron security key to copy scheduled commands.',
         'ro' => 'Setați o cheie de securitate cron pentru a copia comenzile programate.',
     ],
+    // Eurosite → Hotels, and the product jobs
+    'eurosite.hotels' => [
+        'en' => 'Hotels',
+        'ro' => 'Hoteluri',
+    ],
+    'eurosite.hotels_title' => [
+        'en' => 'Eurosite — Hotels',
+        'ro' => 'Eurosite — Hoteluri',
+    ],
+    'eurosite.hotels_intro' => [
+        'en' => 'Hotels from your whitelisted destinations, with what the live price search says about them. Only hotels with an Immediate offer can become products.',
+        'ro' => 'Hotelurile din destinațiile active, cu ce spune despre ele căutarea live de prețuri. Doar hotelurile cu ofertă Imediată pot deveni produse.',
+    ],
+    'eurosite.hotels_tile_listed' => [
+        'en' => 'In the whitelist',
+        'ro' => 'În lista de destinații',
+    ],
+    'eurosite.hotels_in_n_destinations' => [
+        'en' => 'hotels in [n] destinations',
+        'ro' => 'hoteluri în [n] destinații',
+    ],
+    'eurosite.hotels_tile_checked' => [
+        'en' => 'Checked for availability',
+        'ro' => 'Verificate pentru disponibilitate',
+    ],
+    'eurosite.hotels_last_check' => [
+        'en' => 'last check [when]',
+        'ro' => 'ultima verificare [when]',
+    ],
+    'eurosite.hotels_never_checked' => [
+        'en' => 'not checked yet',
+        'ro' => 'neverificate încă',
+    ],
+    'eurosite.hotels_can_become_products' => [
+        'en' => 'can become products',
+        'ro' => 'pot deveni produse',
+    ],
+    'eurosite.hotels_n_not_fetched' => [
+        'en' => '[n] not fetched yet',
+        'ro' => '[n] încă neaduse',
+    ],
+    'eurosite.products' => [
+        'en' => 'Products',
+        'ro' => 'Produse',
+    ],
+    'eurosite.hotels_n_hidden_by_check' => [
+        'en' => '[n] hidden: no Immediate offer',
+        'ro' => '[n] ascunse: fără ofertă Imediată',
+    ],
+    'eurosite.hotels_all_visible' => [
+        'en' => 'all visible',
+        'ro' => 'toate vizibile',
+    ],
+    'eurosite.hotels_none_created' => [
+        'en' => 'none created yet',
+        'ro' => 'niciunul creat încă',
+    ],
+    'eurosite.hotels_whitelist_note' => [
+        'en' => 'Only hotels from whitelisted destinations are listed, checked and made into products.',
+        'ro' => 'Doar hotelurile din destinațiile active sunt listate, verificate și transformate în produse.',
+    ],
+    'eurosite.hotels_hidden_note' => [
+        'en' => '[n] hotels from [d] destinations outside it are hidden and kept; whitelist a destination and they return on the next hotels sync.',
+        'ro' => '[n] hoteluri din [d] destinații din afara listei sunt ascunse și păstrate; activați o destinație și revin la următoarea sincronizare a hotelurilor.',
+    ],
+    'eurosite.edit_whitelist' => [
+        'en' => 'Edit whitelist',
+        'ro' => 'Editează lista de destinații',
+    ],
+    'eurosite.hotels_last_sync' => [
+        'en' => 'last hotels sync [when]',
+        'ro' => 'ultima sincronizare a hotelurilor [when]',
+    ],
+    'eurosite.hotels_no_root_category' => [
+        'en' => 'Set "Hotels root category ID" in the add-on settings before creating products: products go under it, then country, then destination.',
+        'ro' => 'Setați „ID categorie rădăcină hoteluri” în setările addon-ului înainte de a crea produse: produsele se creează sub ea, apoi pe țară, apoi pe destinație.',
+    ],
+    'eurosite.destination' => [
+        'en' => 'Destination',
+        'ro' => 'Destinație',
+    ],
+    'eurosite.all_destinations' => [
+        'en' => 'All destinations',
+        'ro' => 'Toate destinațiile',
+    ],
+    'eurosite.hotels_search_placeholder' => [
+        'en' => 'Hotel name or code',
+        'ro' => 'Nume sau cod hotel',
+    ],
+    'eurosite.hotels_all' => [
+        'en' => 'All',
+        'ro' => 'Toate',
+    ],
+    'eurosite.col_hotel' => [
+        'en' => 'Hotel',
+        'ro' => 'Hotel',
+    ],
+    'eurosite.col_stars' => [
+        'en' => 'Stars',
+        'ro' => 'Stele',
+    ],
+    'eurosite.col_availability' => [
+        'en' => 'Availability',
+        'ro' => 'Disponibilitate',
+    ],
+    'eurosite.col_images' => [
+        'en' => 'Images',
+        'ro' => 'Imagini',
+    ],
+    'eurosite.col_price' => [
+        'en' => 'From (stay checked)',
+        'ro' => 'De la (sejurul verificat)',
+    ],
+    'eurosite.col_product' => [
+        'en' => 'Product',
+        'ro' => 'Produs',
+    ],
+    'eurosite.avail_im' => [
+        'en' => 'Immediate',
+        'ro' => 'Imediat',
+    ],
+    'eurosite.avail_or' => [
+        'en' => 'On request',
+        'ro' => 'La cerere',
+    ],
+    'eurosite.avail_st' => [
+        'en' => 'Stop sale',
+        'ro' => 'Stop vânzare',
+    ],
+    'eurosite.avail_none' => [
+        'en' => 'No offer',
+        'ro' => 'Fără ofertă',
+    ],
+    'eurosite.avail_unchecked' => [
+        'en' => 'Not checked',
+        'ro' => 'Neverificat',
+    ],
+    'eurosite.hotels_season' => [
+        'en' => 'season',
+        'ro' => 'sezon',
+    ],
+    'eurosite.hotels_gross' => [
+        'en' => 'gross',
+        'ro' => 'brut',
+    ],
+    'eurosite.images_with' => [
+        'en' => 'With images',
+        'ro' => 'Cu imagini',
+    ],
+    'eurosite.images_without' => [
+        'en' => 'Without images',
+        'ro' => 'Fără imagini',
+    ],
+    'eurosite.images_not_fetched' => [
+        'en' => 'Not fetched yet',
+        'ro' => 'Încă neaduse',
+    ],
+    'eurosite.images_none' => [
+        'en' => 'No pictures',
+        'ro' => 'Fără poze',
+    ],
+    'eurosite.images_cover' => [
+        'en' => 'Cover image',
+        'ro' => 'Imagine de copertă',
+    ],
+    'eurosite.images_n_pictures' => [
+        'en' => '[n] pictures',
+        'ro' => '[n] poze',
+    ],
+    'eurosite.no_image_short' => [
+        'en' => 'no image',
+        'ro' => 'fără imagine',
+    ],
+    'eurosite.product_yes' => [
+        'en' => 'Products',
+        'ro' => 'Produse',
+    ],
+    'eurosite.product_no' => [
+        'en' => 'Not products',
+        'ro' => 'Fără produs',
+    ],
+    'eurosite.product_active' => [
+        'en' => 'Active',
+        'ro' => 'Activ',
+    ],
+    'eurosite.product_hidden_by_check' => [
+        'en' => 'Hidden: no Immediate offer',
+        'ro' => 'Ascuns: fără ofertă Imediată',
+    ],
+    'eurosite.product_hidden' => [
+        'en' => 'Hidden',
+        'ro' => 'Ascuns',
+    ],
+    'eurosite.product_disabled' => [
+        'en' => 'Disabled',
+        'ro' => 'Dezactivat',
+    ],
+    'eurosite.product_missing' => [
+        'en' => 'Product deleted',
+        'ro' => 'Produs șters',
+    ],
+    'eurosite.product_ready' => [
+        'en' => 'Ready',
+        'ro' => 'Gata',
+    ],
+    'eurosite.product_details_first' => [
+        'en' => 'details fetched first',
+        'ro' => 'detaliile se aduc întâi',
+    ],
+    'eurosite.product_not_a_product' => [
+        'en' => 'Not a product',
+        'ro' => 'Nu este produs',
+    ],
+    'eurosite.hotels_selected' => [
+        'en' => 'selected',
+        'ro' => 'selectate',
+    ],
+    'eurosite.hotels_will_be_skipped' => [
+        'en' => 'will be skipped',
+        'ro' => 'vor fi omise',
+    ],
+    'eurosite.hotels_select_eligible' => [
+        'en' => 'Select all that can become products',
+        'ro' => 'Selectează toate care pot deveni produse',
+    ],
+    'eurosite.hotels_clear' => [
+        'en' => 'Clear',
+        'ro' => 'Golește',
+    ],
+    'eurosite.hotels_select_page' => [
+        'en' => 'Select this page',
+        'ro' => 'Selectează pagina',
+    ],
+    'eurosite.hotels_check_now' => [
+        'en' => 'Check availability now',
+        'ro' => 'Verifică disponibilitatea acum',
+    ],
+    'eurosite.hotels_create_products' => [
+        'en' => 'Create products',
+        'ro' => 'Creează produse',
+    ],
+    'eurosite.hotels_confirm_create' => [
+        'en' => 'Create [n] products? Hotels that cannot become products are skipped, with the reason.',
+        'ro' => 'Creați [n] produse? Hotelurile care nu pot deveni produse sunt omise, cu motivul.',
+    ],
+    'eurosite.hotels_confirm_check' => [
+        'en' => 'Check availability for the destinations of the selected hotels now? This can take a minute per destination.',
+        'ro' => 'Verificați acum disponibilitatea pentru destinațiile hotelurilor selectate? Poate dura un minut pe destinație.',
+    ],
+    'eurosite.hotels_confirm_check_all' => [
+        'en' => 'No hotel is selected: check every listed destination now? This can take several minutes.',
+        'ro' => 'Niciun hotel selectat: verificați acum toate destinațiile listate? Poate dura câteva minute.',
+    ],
+    'eurosite.hotels_select_first' => [
+        'en' => 'Select the hotels first.',
+        'ro' => 'Selectați întâi hotelurile.',
+    ],
+    'eurosite.hotels_checked' => [
+        'en' => 'Availability checked.',
+        'ro' => 'Disponibilitatea a fost verificată.',
+    ],
+    'eurosite.hotels_check_failed' => [
+        'en' => 'The availability check failed:',
+        'ro' => 'Verificarea disponibilității a eșuat:',
+    ],
+    'eurosite.hotels_created_n' => [
+        'en' => '[n] products created',
+        'ro' => '[n] produse create',
+    ],
+    'eurosite.hotels_linked_n' => [
+        'en' => '[n] linked to existing products',
+        'ro' => '[n] legate de produse existente',
+    ],
+    'eurosite.hotels_failed_n' => [
+        'en' => '[n] failed (see the log)',
+        'ro' => '[n] eșuate (vedeți jurnalul)',
+    ],
+    'eurosite.hotels_skipped' => [
+        'en' => 'Skipped:',
+        'ro' => 'Omise:',
+    ],
+    'eurosite.hotels_no_match' => [
+        'en' => 'No hotel matches these filters.',
+        'ro' => 'Niciun hotel nu corespunde filtrelor.',
+    ],
+    'eurosite.hotels_empty' => [
+        'en' => 'No hotels listed yet. Whitelist destinations, then run the hotels sync from the dashboard.',
+        'ro' => 'Niciun hotel listat încă. Activați destinații, apoi rulați sincronizarea hotelurilor din panoul de control.',
+    ],
+    'eurosite.hotels_word' => [
+        'en' => 'hotels',
+        'ro' => 'hoteluri',
+    ],
+    'eurosite.open_hotel_list' => [
+        'en' => 'Open hotel list',
+        'ro' => 'Deschide lista de hoteluri',
+    ],
+    'eurosite.skip_already_product' => [
+        'en' => 'already a product',
+        'ro' => 'este deja produs',
+    ],
+    'eurosite.skip_not_whitelisted' => [
+        'en' => 'destination not whitelisted',
+        'ro' => 'destinație inactivă',
+    ],
+    'eurosite.skip_not_checked' => [
+        'en' => 'availability not checked yet',
+        'ro' => 'disponibilitate neverificată',
+    ],
+    'eurosite.skip_on_request' => [
+        'en' => 'On request only: not bookable immediately',
+        'ro' => 'Doar la cerere: nu se poate rezerva imediat',
+    ],
+    'eurosite.skip_stop_sale' => [
+        'en' => 'Stop sale: not bookable at all',
+        'ro' => 'Stop vânzare: nu se poate rezerva',
+    ],
+    'eurosite.skip_no_offer' => [
+        'en' => 'no offer on the checked dates',
+        'ro' => 'nicio ofertă la datele verificate',
+    ],
+    'eurosite.skip_no_images' => [
+        'en' => 'no images',
+        'ro' => 'fără imagini',
+    ],
+    'eurosite.skip_no_root_category' => [
+        'en' => 'hotels root category not set',
+        'ro' => 'categoria rădăcină nu este setată',
+    ],
+    'eurosite.skip_category_failed' => [
+        'en' => 'category could not be created',
+        'ro' => 'categoria nu a putut fi creată',
+    ],
+    'eurosite.skip_creation_failed' => [
+        'en' => 'product could not be created',
+        'ro' => 'produsul nu a putut fi creat',
+    ],
 ];

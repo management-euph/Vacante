@@ -72,6 +72,36 @@ function fn_eurosite_language_seed_hash(): string
     return \Tygh\Addons\Eurosite\Install\LanguageSeeder::seedHash();
 }
 
+/**
+ * Built-in SEO templates for the hotel products EurositeProductFactory
+ * creates. Travel Core's fn_travel_core_apply_seo_fields() falls back to
+ * these (by the fn_<addon>_seo_defaults name) since eurosite has no SEO
+ * settings page of its own; without them a product would get no page title,
+ * meta description or readable URL.
+ *
+ * @return array<string, string>
+ */
+function fn_eurosite_seo_defaults(): array
+{
+    return [
+        'seo_overwrite_mode'         => 'override_all',
+        'seo_product_name'           => '{{name}}',
+        'seo_page_title'             => '{{name}} {{stars_emoji}} - {{city}}, {{country}}',
+        'seo_meta_description'       => 'Book {{name}} in {{city}}, {{country}}.',
+        'seo_meta_keywords'          => '{{name}}, {{city}}, {{country}}, hotel',
+        'seo_name_slug'              => '{{name}}-{{city}}',
+        'seo_full_description'       => '',
+        'seo_meta_description__ro'   => 'Rezervă {{name}} în {{city}}, {{country}}.',
+        'seo_meta_keywords__ro'      => '{{name}}, {{city}}, {{country}}, hotel',
+        'seo_field_product_name'     => 'Y',
+        'seo_field_page_title'       => 'Y',
+        'seo_field_meta_description' => 'Y',
+        'seo_field_meta_keywords'    => 'Y',
+        'seo_field_name_slug'        => 'Y',
+        'seo_field_full_description' => 'Y',
+    ];
+}
+
 // ── Order pipeline hooks (registered in init.php) ────────────────────────────
 
 /**

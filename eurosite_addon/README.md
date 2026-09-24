@@ -131,6 +131,36 @@ not the spec-example `EU` the `tourop_code` setting defaults to — confirm the
 right code for your account with the operator before relying on
 search/booking payloads.
 
+## Hotels and products
+
+**Eurosite → Hotels** (`eurosite.hotels`) lists the hotels of the
+*whitelisted* destinations only. The `hotels` sync fetches those
+destinations and nothing else; hotels outside the whitelist are hidden and
+kept (`sync_status = 'inactive'`, `inactive_reason = 'not_whitelisted'`), and
+return on the next sync once their destination is whitelisted. The list
+filters by destination, availability, images and product, sorts by every
+column (images: hotels without any first), pages the CS-Cart way, and has
+two actions for the ticked hotels: **Create products** and **Check
+availability now**.
+
+Three cron jobs take hotels to products, after `product_info` (04:00):
+
+| Mode | Default slot | What it does |
+|------|--------------|--------------|
+| `availability` | daily 04:30 | One price search per destination and date: the near dates (settings: 14, 30, 60 days) plus the peak-season dates (default `07-15, 08-15`, repeating yearly), 7 nights, double room, 2 adults. Each hotel keeps its best answer (Immediate > On request > Stop sale > none), the lowest price and the date that proved it. Then, with "Hide a product when…" on, products that lost every Immediate offer are hidden (H) and shown again when one returns; products changed by hand are left alone. `&city=CODE` |
+| `add_products` | daily 05:30 | A product for every listed hotel with an Immediate offer that is not a product yet. Hotel details are fetched first when missing. Hotels without images are skipped unless "Create products for hotels without images" is on. `&city=`, `&limit=` (100), `&dry_run=1` |
+| `update_products` | daily 06:00 | Price from the latest check; description and pictures only while the product has none. `&city=`, `&limit=` (200) |
+
+Products: code `EUS-<tour op>-<hotel code>` (e.g. `EUS-LA-RO0363`; no clash
+with Sphinx `HR59843` or Novoton `NVT123`), category *[Hotels root category
+ID]* › country › destination, price converted to the store currency. Set
+**Hotels root category ID** in the add-on settings first: until it is set, no
+product is created. The product page gets Travel Core's booking form, which
+searches `eurosite_booking.search` with the hotel's code (`hotel_id`).
+
+Not in this step: product features (stars, destination filters) and
+matching the same hotel across providers.
+
 ## Testing
 
 ```bash

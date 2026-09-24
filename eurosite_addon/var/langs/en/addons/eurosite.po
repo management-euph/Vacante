@@ -64,6 +64,14 @@ msgctxt "SettingsTooltips::eurosite::allow_insecure_api"
 msgid "Permit sending API credentials over unencrypted HTTP (dev only). Disable once the API URL uses https:// — connections then hard-fail rather than leak credentials in plaintext."
 msgstr "Permit sending API credentials over unencrypted HTTP (dev only). Disable once the API URL uses https:// — connections then hard-fail rather than leak credentials in plaintext."
 
+msgctxt "SettingsOptions::eurosite::payment_terms_text"
+msgid "Payment terms text"
+msgstr "Payment terms text"
+
+msgctxt "SettingsTooltips::eurosite::payment_terms_text"
+msgid "Shown in the \"Cancellation and payment terms\" window, one line per line: the Eurosite API gives no payment schedule before booking, so the store writes these lines."
+msgstr "Shown in the \"Cancellation and payment terms\" window, one line per line: the Eurosite API gives no payment schedule before booking, so the store writes these lines."
+
 msgctxt "SettingsOptions::eurosite::cron_header"
 msgid "Cron"
 msgstr "Cron"
@@ -95,6 +103,58 @@ msgstr "Circuit breaker threshold"
 msgctxt "SettingsOptions::eurosite::circuit_breaker_timeout"
 msgid "Circuit breaker cooldown (s)"
 msgstr "Circuit breaker cooldown (s)"
+
+msgctxt "SettingsOptions::eurosite::products_header"
+msgid "Hotels and products"
+msgstr "Hotels and products"
+
+msgctxt "SettingsOptions::eurosite::hotels_category_id"
+msgid "Hotels root category ID"
+msgstr "Hotels root category ID"
+
+msgctxt "SettingsTooltips::eurosite::hotels_category_id"
+msgid "CS-Cart category ID under which Eurosite hotel products are created, then country, then destination (created automatically). 0 = no product is created."
+msgstr "CS-Cart category ID under which Eurosite hotel products are created, then country, then destination (created automatically). 0 = no product is created."
+
+msgctxt "SettingsOptions::eurosite::products_without_images"
+msgid "Create products for hotels without images"
+msgstr "Create products for hotels without images"
+
+msgctxt "SettingsTooltips::eurosite::products_without_images"
+msgid "Off: hotels with no pictures and no cover image are skipped and created later, once pictures arrive. On: they become products too, marked \"no images\" in the hotel list."
+msgstr "Off: hotels with no pictures and no cover image are skipped and created later, once pictures arrive. On: they become products too, marked \"no images\" in the hotel list."
+
+msgctxt "SettingsOptions::eurosite::availability_near_days"
+msgid "Availability check: days ahead"
+msgstr "Availability check: days ahead"
+
+msgctxt "SettingsTooltips::eurosite::availability_near_days"
+msgid "Check-in dates to check, as days from today, comma separated (e.g. 14, 30, 60). A hotel counts as available when any checked date has an Immediate offer."
+msgstr "Check-in dates to check, as days from today, comma separated (e.g. 14, 30, 60). A hotel counts as available when any checked date has an Immediate offer."
+
+msgctxt "SettingsOptions::eurosite::availability_season_dates"
+msgid "Availability check: peak-season dates"
+msgstr "Availability check: peak-season dates"
+
+msgctxt "SettingsTooltips::eurosite::availability_season_dates"
+msgid "Extra check-in dates, comma separated. 07-15 repeats every year; 2027-07-15 is checked once. They keep summer hotels published all year."
+msgstr "Extra check-in dates, comma separated. 07-15 repeats every year; 2027-07-15 is checked once. They keep summer hotels published all year."
+
+msgctxt "SettingsOptions::eurosite::availability_nights"
+msgid "Availability check: nights"
+msgstr "Availability check: nights"
+
+msgctxt "SettingsTooltips::eurosite::availability_nights"
+msgid "Stay length checked (double room, 2 adults). The price shown and put on the product is for this stay."
+msgstr "Stay length checked (double room, 2 adults). The price shown and put on the product is for this stay."
+
+msgctxt "SettingsOptions::eurosite::hide_unavailable_products"
+msgid "Hide a product when none of the checked dates has an Immediate offer"
+msgstr "Hide a product when none of the checked dates has an Immediate offer"
+
+msgctxt "SettingsTooltips::eurosite::hide_unavailable_products"
+msgid "Shown again when an Immediate offer returns. Products you changed by hand are never hidden or shown automatically."
+msgstr "Shown again when an Immediate offer returns. Products you changed by hand are never hidden or shown automatically."
 
 msgctxt "Languages::eurosite.addon_name"
 msgid "Eurosite Touring"
@@ -643,3 +703,339 @@ msgstr "More actions"
 msgctxt "Languages::eurosite.menu_needs_key"
 msgid "Set a cron security key to copy scheduled commands."
 msgstr "Set a cron security key to copy scheduled commands."
+
+msgctxt "Languages::eurosite.hotels"
+msgid "Hotels"
+msgstr "Hotels"
+
+msgctxt "Languages::eurosite.hotels_title"
+msgid "Eurosite — Hotels"
+msgstr "Eurosite — Hotels"
+
+msgctxt "Languages::eurosite.hotels_intro"
+msgid "Hotels from your whitelisted destinations, with what the live price search says about them. Only hotels with an Immediate offer can become products."
+msgstr "Hotels from your whitelisted destinations, with what the live price search says about them. Only hotels with an Immediate offer can become products."
+
+msgctxt "Languages::eurosite.hotels_tile_listed"
+msgid "In the whitelist"
+msgstr "In the whitelist"
+
+msgctxt "Languages::eurosite.hotels_in_n_destinations"
+msgid "hotels in [n] destinations"
+msgstr "hotels in [n] destinations"
+
+msgctxt "Languages::eurosite.hotels_tile_checked"
+msgid "Checked for availability"
+msgstr "Checked for availability"
+
+msgctxt "Languages::eurosite.hotels_last_check"
+msgid "last check [when]"
+msgstr "last check [when]"
+
+msgctxt "Languages::eurosite.hotels_never_checked"
+msgid "not checked yet"
+msgstr "not checked yet"
+
+msgctxt "Languages::eurosite.hotels_can_become_products"
+msgid "can become products"
+msgstr "can become products"
+
+msgctxt "Languages::eurosite.hotels_n_not_fetched"
+msgid "[n] not fetched yet"
+msgstr "[n] not fetched yet"
+
+msgctxt "Languages::eurosite.products"
+msgid "Products"
+msgstr "Products"
+
+msgctxt "Languages::eurosite.hotels_n_hidden_by_check"
+msgid "[n] hidden: no Immediate offer"
+msgstr "[n] hidden: no Immediate offer"
+
+msgctxt "Languages::eurosite.hotels_all_visible"
+msgid "all visible"
+msgstr "all visible"
+
+msgctxt "Languages::eurosite.hotels_none_created"
+msgid "none created yet"
+msgstr "none created yet"
+
+msgctxt "Languages::eurosite.hotels_whitelist_note"
+msgid "Only hotels from whitelisted destinations are listed, checked and made into products."
+msgstr "Only hotels from whitelisted destinations are listed, checked and made into products."
+
+msgctxt "Languages::eurosite.hotels_hidden_note"
+msgid "[n] hotels from [d] destinations outside it are hidden and kept; whitelist a destination and they return on the next hotels sync."
+msgstr "[n] hotels from [d] destinations outside it are hidden and kept; whitelist a destination and they return on the next hotels sync."
+
+msgctxt "Languages::eurosite.edit_whitelist"
+msgid "Edit whitelist"
+msgstr "Edit whitelist"
+
+msgctxt "Languages::eurosite.hotels_last_sync"
+msgid "last hotels sync [when]"
+msgstr "last hotels sync [when]"
+
+msgctxt "Languages::eurosite.hotels_no_root_category"
+msgid "Set \"Hotels root category ID\" in the add-on settings before creating products: products go under it, then country, then destination."
+msgstr "Set \"Hotels root category ID\" in the add-on settings before creating products: products go under it, then country, then destination."
+
+msgctxt "Languages::eurosite.destination"
+msgid "Destination"
+msgstr "Destination"
+
+msgctxt "Languages::eurosite.all_destinations"
+msgid "All destinations"
+msgstr "All destinations"
+
+msgctxt "Languages::eurosite.hotels_search_placeholder"
+msgid "Hotel name or code"
+msgstr "Hotel name or code"
+
+msgctxt "Languages::eurosite.hotels_all"
+msgid "All"
+msgstr "All"
+
+msgctxt "Languages::eurosite.col_hotel"
+msgid "Hotel"
+msgstr "Hotel"
+
+msgctxt "Languages::eurosite.col_stars"
+msgid "Stars"
+msgstr "Stars"
+
+msgctxt "Languages::eurosite.col_availability"
+msgid "Availability"
+msgstr "Availability"
+
+msgctxt "Languages::eurosite.col_images"
+msgid "Images"
+msgstr "Images"
+
+msgctxt "Languages::eurosite.col_price"
+msgid "From (stay checked)"
+msgstr "From (stay checked)"
+
+msgctxt "Languages::eurosite.col_product"
+msgid "Product"
+msgstr "Product"
+
+msgctxt "Languages::eurosite.avail_im"
+msgid "Immediate"
+msgstr "Immediate"
+
+msgctxt "Languages::eurosite.avail_or"
+msgid "On request"
+msgstr "On request"
+
+msgctxt "Languages::eurosite.avail_st"
+msgid "Stop sale"
+msgstr "Stop sale"
+
+msgctxt "Languages::eurosite.avail_none"
+msgid "No offer"
+msgstr "No offer"
+
+msgctxt "Languages::eurosite.avail_unchecked"
+msgid "Not checked"
+msgstr "Not checked"
+
+msgctxt "Languages::eurosite.hotels_season"
+msgid "season"
+msgstr "season"
+
+msgctxt "Languages::eurosite.hotels_gross"
+msgid "gross"
+msgstr "gross"
+
+msgctxt "Languages::eurosite.images_with"
+msgid "With images"
+msgstr "With images"
+
+msgctxt "Languages::eurosite.images_without"
+msgid "Without images"
+msgstr "Without images"
+
+msgctxt "Languages::eurosite.images_not_fetched"
+msgid "Not fetched yet"
+msgstr "Not fetched yet"
+
+msgctxt "Languages::eurosite.images_none"
+msgid "No pictures"
+msgstr "No pictures"
+
+msgctxt "Languages::eurosite.images_cover"
+msgid "Cover image"
+msgstr "Cover image"
+
+msgctxt "Languages::eurosite.images_n_pictures"
+msgid "[n] pictures"
+msgstr "[n] pictures"
+
+msgctxt "Languages::eurosite.no_image_short"
+msgid "no image"
+msgstr "no image"
+
+msgctxt "Languages::eurosite.product_yes"
+msgid "Products"
+msgstr "Products"
+
+msgctxt "Languages::eurosite.product_no"
+msgid "Not products"
+msgstr "Not products"
+
+msgctxt "Languages::eurosite.product_active"
+msgid "Active"
+msgstr "Active"
+
+msgctxt "Languages::eurosite.product_hidden_by_check"
+msgid "Hidden: no Immediate offer"
+msgstr "Hidden: no Immediate offer"
+
+msgctxt "Languages::eurosite.product_hidden"
+msgid "Hidden"
+msgstr "Hidden"
+
+msgctxt "Languages::eurosite.product_disabled"
+msgid "Disabled"
+msgstr "Disabled"
+
+msgctxt "Languages::eurosite.product_missing"
+msgid "Product deleted"
+msgstr "Product deleted"
+
+msgctxt "Languages::eurosite.product_ready"
+msgid "Ready"
+msgstr "Ready"
+
+msgctxt "Languages::eurosite.product_details_first"
+msgid "details fetched first"
+msgstr "details fetched first"
+
+msgctxt "Languages::eurosite.product_not_a_product"
+msgid "Not a product"
+msgstr "Not a product"
+
+msgctxt "Languages::eurosite.hotels_selected"
+msgid "selected"
+msgstr "selected"
+
+msgctxt "Languages::eurosite.hotels_will_be_skipped"
+msgid "will be skipped"
+msgstr "will be skipped"
+
+msgctxt "Languages::eurosite.hotels_select_eligible"
+msgid "Select all that can become products"
+msgstr "Select all that can become products"
+
+msgctxt "Languages::eurosite.hotels_clear"
+msgid "Clear"
+msgstr "Clear"
+
+msgctxt "Languages::eurosite.hotels_select_page"
+msgid "Select this page"
+msgstr "Select this page"
+
+msgctxt "Languages::eurosite.hotels_check_now"
+msgid "Check availability now"
+msgstr "Check availability now"
+
+msgctxt "Languages::eurosite.hotels_create_products"
+msgid "Create products"
+msgstr "Create products"
+
+msgctxt "Languages::eurosite.hotels_confirm_create"
+msgid "Create [n] products? Hotels that cannot become products are skipped, with the reason."
+msgstr "Create [n] products? Hotels that cannot become products are skipped, with the reason."
+
+msgctxt "Languages::eurosite.hotels_confirm_check"
+msgid "Check availability for the destinations of the selected hotels now? This can take a minute per destination."
+msgstr "Check availability for the destinations of the selected hotels now? This can take a minute per destination."
+
+msgctxt "Languages::eurosite.hotels_confirm_check_all"
+msgid "No hotel is selected: check every listed destination now? This can take several minutes."
+msgstr "No hotel is selected: check every listed destination now? This can take several minutes."
+
+msgctxt "Languages::eurosite.hotels_select_first"
+msgid "Select the hotels first."
+msgstr "Select the hotels first."
+
+msgctxt "Languages::eurosite.hotels_checked"
+msgid "Availability checked."
+msgstr "Availability checked."
+
+msgctxt "Languages::eurosite.hotels_check_failed"
+msgid "The availability check failed:"
+msgstr "The availability check failed:"
+
+msgctxt "Languages::eurosite.hotels_created_n"
+msgid "[n] products created"
+msgstr "[n] products created"
+
+msgctxt "Languages::eurosite.hotels_linked_n"
+msgid "[n] linked to existing products"
+msgstr "[n] linked to existing products"
+
+msgctxt "Languages::eurosite.hotels_failed_n"
+msgid "[n] failed (see the log)"
+msgstr "[n] failed (see the log)"
+
+msgctxt "Languages::eurosite.hotels_skipped"
+msgid "Skipped:"
+msgstr "Skipped:"
+
+msgctxt "Languages::eurosite.hotels_no_match"
+msgid "No hotel matches these filters."
+msgstr "No hotel matches these filters."
+
+msgctxt "Languages::eurosite.hotels_empty"
+msgid "No hotels listed yet. Whitelist destinations, then run the hotels sync from the dashboard."
+msgstr "No hotels listed yet. Whitelist destinations, then run the hotels sync from the dashboard."
+
+msgctxt "Languages::eurosite.hotels_word"
+msgid "hotels"
+msgstr "hotels"
+
+msgctxt "Languages::eurosite.open_hotel_list"
+msgid "Open hotel list"
+msgstr "Open hotel list"
+
+msgctxt "Languages::eurosite.skip_already_product"
+msgid "already a product"
+msgstr "already a product"
+
+msgctxt "Languages::eurosite.skip_not_whitelisted"
+msgid "destination not whitelisted"
+msgstr "destination not whitelisted"
+
+msgctxt "Languages::eurosite.skip_not_checked"
+msgid "availability not checked yet"
+msgstr "availability not checked yet"
+
+msgctxt "Languages::eurosite.skip_on_request"
+msgid "On request only: not bookable immediately"
+msgstr "On request only: not bookable immediately"
+
+msgctxt "Languages::eurosite.skip_stop_sale"
+msgid "Stop sale: not bookable at all"
+msgstr "Stop sale: not bookable at all"
+
+msgctxt "Languages::eurosite.skip_no_offer"
+msgid "no offer on the checked dates"
+msgstr "no offer on the checked dates"
+
+msgctxt "Languages::eurosite.skip_no_images"
+msgid "no images"
+msgstr "no images"
+
+msgctxt "Languages::eurosite.skip_no_root_category"
+msgid "hotels root category not set"
+msgstr "hotels root category not set"
+
+msgctxt "Languages::eurosite.skip_category_failed"
+msgid "category could not be created"
+msgstr "category could not be created"
+
+msgctxt "Languages::eurosite.skip_creation_failed"
+msgid "product could not be created"
+msgstr "product could not be created"

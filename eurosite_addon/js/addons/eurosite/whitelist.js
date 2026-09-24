@@ -27,6 +27,7 @@
         var txt = {
             loading: dataEl.getAttribute('data-txt-loading') || 'Loading...',
             noCities: dataEl.getAttribute('data-txt-no-cities') || 'No cities found.',
+            hotels: dataEl.getAttribute('data-txt-hotels') || 'hotels',
             failed: dataEl.getAttribute('data-txt-failed') || 'Request failed.',
             allBadge: dataEl.getAttribute('data-txt-all-badge') || 'ALL CITIES',
             selected: dataEl.getAttribute('data-txt-selected') || 'selected',
@@ -146,9 +147,11 @@
             (cityLists[cc] || []).forEach(function (city) {
                 var checked = st && (st.all || st.cities.has(city.code)) ? ' checked' : '';
                 var own = city.is_own ? ' <span class="label label-info" title="own offers">own</span>' : '';
+                // Synced hotels in this destination: what whitelisting it brings in.
+                var hotels = city.hotels > 0 ? ' <span class="muted">· ' + esc(String(city.hotels)) + ' ' + esc(txt.hotels) + '</span>' : '';
                 html += '<label style="display:inline-flex; align-items:center; gap:3px; min-width:200px; font-size:12px; color:#444; cursor:pointer;">'
                     + '<input type="checkbox" class="eurosite-city" data-country="' + esc(cc) + '" value="' + esc(city.code) + '"' + checked + '> '
-                    + '<span>' + esc(city.name || city.code) + ' <code>' + esc(city.code) + '</code>' + own + '</span></label>';
+                    + '<span>' + esc(city.name || city.code) + ' <code>' + esc(city.code) + '</code>' + own + hotels + '</span></label>';
             });
             grid.innerHTML = html || '<span class="muted" style="font-size:12px;">' + esc(txt.noCities) + '</span>';
             qa('.eurosite-city[data-country="' + cc + '"]').forEach(function (cb) {

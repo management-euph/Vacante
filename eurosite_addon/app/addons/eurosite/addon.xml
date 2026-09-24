@@ -130,6 +130,53 @@ Diferența de 70% cu 21 de zile înainte de check-in.</default_value>
                          the key, RETIRED for this header) after carrying the
                          value across. -->
 
+                    <!-- ── Hotels and products (Eurosite → Hotels, and the
+                         availability / add_products / update_products jobs) ── -->
+                    <item id="products_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <!-- Products go under this category, then country, then
+                         destination (created on demand). 0 = not set: no
+                         product is created until it is. -->
+                    <item id="hotels_category_id">
+                        <type>input</type>
+                        <default_value>0</default_value>
+                        <variants/>
+                    </item>
+                    <item id="products_without_images">
+                        <type>checkbox</type>
+                        <default_value>N</default_value>
+                        <variants/>
+                    </item>
+                    <!-- Plain inputs, not multiple_checkboxes / selectbox: the
+                         Travel Core settings heal (which is how stores
+                         installed before this setting get it) creates
+                         variants without their labels, so the options would
+                         show blank. Days ahead, comma separated. -->
+                    <item id="availability_near_days">
+                        <type>input</type>
+                        <default_value>14, 30, 60</default_value>
+                        <variants/>
+                    </item>
+                    <!-- Month-day (07-15) repeats every year; a full date
+                         (2027-07-15) is checked once. Comma separated. -->
+                    <item id="availability_season_dates">
+                        <type>input</type>
+                        <default_value>07-15, 08-15</default_value>
+                        <variants/>
+                    </item>
+                    <item id="availability_nights">
+                        <type>input</type>
+                        <default_value>7</default_value>
+                        <variants/>
+                    </item>
+                    <item id="hide_unavailable_products">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                        <variants/>
+                    </item>
+
                     <!-- ── Resilience ── -->
                     <item id="resilience_header">
                         <type>header</type>
@@ -235,12 +282,26 @@ Diferența de 70% cu 21 de zile înainte de check-in.</default_value>
                 `country_code`   VARCHAR(4)   NOT NULL DEFAULT '',
                 `rooms_json`     JSON         DEFAULT NULL COMMENT 'room code => name map',
                 `category`       TINYINT UNSIGNED NOT NULL DEFAULT 0,
-                `product_id`     INT UNSIGNED DEFAULT NULL COMMENT 'future CS-Cart product link',
+                `product_id`     INT UNSIGNED DEFAULT NULL COMMENT 'CS-Cart product made from this hotel',
                 `sync_status`    ENUM('active','inactive') NOT NULL DEFAULT 'active',
+                `inactive_reason` VARCHAR(32) NOT NULL DEFAULT '' COMMENT 'not_whitelisted: kept, hidden until whitelisted',
                 `last_synced_at` DATETIME     DEFAULT NULL,
+                `availability`   VARCHAR(4)   NOT NULL DEFAULT '' COMMENT 'IM, OR, ST, NONE; empty = not checked',
+                `availability_check_in` DATE  DEFAULT NULL COMMENT 'the stay that proved the availability',
+                `availability_window` VARCHAR(8) NOT NULL DEFAULT '' COMMENT 'near or season',
+                `availability_checked_at` DATETIME DEFAULT NULL,
+                `min_price`      DECIMAL(12,2) NOT NULL DEFAULT 0.00 COMMENT 'lowest price of the best offer',
+                `min_gross`      DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+                `price_currency` VARCHAR(4)   NOT NULL DEFAULT '',
+                `first_image`    VARCHAR(512) NOT NULL DEFAULT '' COMMENT 'FirstImage from the price search',
+                `gate_hidden`    ENUM('Y','N') NOT NULL DEFAULT 'N' COMMENT 'product hidden by the availability check',
+                `product_skip_reason` VARCHAR(32) NOT NULL DEFAULT '',
+                `product_updated_at` DATETIME DEFAULT NULL,
                 PRIMARY KEY (`tourop_code`, `product_code`),
                 KEY `idx_city` (`city_code`),
-                KEY `idx_country` (`country_code`)
+                KEY `idx_country` (`country_code`),
+                KEY `idx_availability` (`availability`),
+                KEY `idx_product` (`product_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         </item>
         <item for="install">

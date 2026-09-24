@@ -29,8 +29,13 @@ final class CronPlanBuilder
      */
     public const PIPELINE = ['countries', 'own_cities', 'cities', 'hotels', 'room_types', 'tags'];
 
-    /** Jobs that are not part of the full pipeline, in the order they belong after it. */
-    public const STANDALONE = ['product_info', 'cleanup'];
+    /**
+     * Jobs that are not part of the full pipeline, in the order they belong
+     * after it: details and pictures (04:00), then which hotels have an
+     * Immediate offer (04:30), then products for them (05:30), then the
+     * existing products brought up to date (06:00).
+     */
+    public const STANDALONE = ['product_info', 'availability', 'add_products', 'update_products', 'cleanup'];
 
     /**
      * Suggested crontab slot per mode, plus how often it is expected to run.
@@ -50,6 +55,9 @@ final class CronPlanBuilder
         'room_types' => ['cron' => '30 3 * * 0', 'every_hours' => 168],
         'tags' => ['cron' => '45 3 * * 0', 'every_hours' => 168],
         'product_info' => ['cron' => '0 4 * * *', 'every_hours' => 24],
+        'availability' => ['cron' => '30 4 * * *', 'every_hours' => 24],
+        'add_products' => ['cron' => '30 5 * * *', 'every_hours' => 24],
+        'update_products' => ['cron' => '0 6 * * *', 'every_hours' => 24],
         'cleanup' => ['cron' => '0 5 * * 0', 'every_hours' => 168],
     ];
 
@@ -288,11 +296,17 @@ final class CronPlanBuilder
 
     /**
      * Which `$counts` key holds this mode's row count. The cache catalog is
-     * counted under 'cache' but synced under 'product_info'.
+     * counted under 'cache' but synced under 'product_info'; the availability
+     * check shows the Immediate hotels, the product jobs the products.
      */
     private function countKey(string $mode): string
     {
-        return $mode === 'product_info' ? 'cache' : $mode;
+        return match ($mode) {
+            'product_info' => 'cache',
+            'availability' => 'immediate',
+            'add_products', 'update_products' => 'products',
+            default => $mode,
+        };
     }
 
     /**

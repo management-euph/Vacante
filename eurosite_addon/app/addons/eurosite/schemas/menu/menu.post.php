@@ -24,6 +24,12 @@ $schema['central']['eurosite'] = [
             'position' => 100,
             'title' => __('eurosite.dashboard', ['[default]' => 'Dashboard']),
         ],
+        'eurosite_hotels' => [
+            'attrs' => ['class' => 'is-addon'],
+            'href' => 'eurosite.hotels',
+            'position' => 150,
+            'title' => __('eurosite.hotels', ['[default]' => 'Hotels']),
+        ],
         'eurosite_whitelist' => [
             'attrs' => ['class' => 'is-addon'],
             'href' => 'eurosite.whitelist',

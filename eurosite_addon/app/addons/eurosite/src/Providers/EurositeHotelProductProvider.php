@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\Eurosite\Providers;
 
 use Tygh\Addons\Eurosite\Repository\HotelRepository;
+use Tygh\Addons\Eurosite\Services\EurositeProductFactory;
 use Tygh\Addons\TravelCore\Contracts\HotelProductProviderInterface;
 use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
@@ -12,11 +13,13 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 /**
  * Eurosite implementation of HotelProductProviderInterface.
  *
- * Eurosite hotels are not (yet) materialized as CS-Cart products — search is
- * destination-driven — so product resolution intentionally returns null.
- * ownsHotelId() answers from ?:eurosite_hotels so registry-wide hotel-id
- * resolution (travel_booking dispatcher, admin links) can attribute Eurosite
- * codes correctly.
+ * A product is Eurosite's when its code is EUS-<tour op>-<hotel code> (see
+ * EurositeProductFactory) AND a hotel row links to it. The code test runs
+ * first, so every other provider's product costs no query here.
+ *
+ * Owning a product is what puts travel_core's booking form on its page; that
+ * form searches `eurosite_booking.search` with the hotel_id this returns
+ * (the Eurosite hotel code), which narrows the search to that hotel.
  */
 final class EurositeHotelProductProvider implements HotelProductProviderInterface
 {
@@ -30,7 +33,30 @@ final class EurositeHotelProductProvider implements HotelProductProviderInterfac
     #[\Override]
     public function resolveProduct(int $productId, string $productCode): ?HotelSeoData
     {
-        return null; // no CS-Cart products for eurosite hotels yet
+        if ($productId <= 0 || EurositeProductFactory::parseProductCode($productCode) === null) {
+            return null;
+        }
+        try {
+            $hotel = $this->hotels->findByProductId($productId);
+        } catch (\Throwable) {
+            return null;
+        }
+        if ($hotel === null) {
+            return null;
+        }
+        $stars = TypeCoerce::toInt($hotel['category'] ?? 0);
+        $pictures = EurositeProductFactory::pictures($hotel);
+
+        return new HotelSeoData(
+            hotelId: TypeCoerce::toString($hotel['product_code'] ?? ''),
+            providerName: 'eurosite',
+            name: EurositeProductFactory::displayName(TypeCoerce::toString($hotel['name'] ?? '')),
+            classification: $stars > 0 ? $stars : null,
+            propertyType: 'hotel',
+            city: self::nullable(TypeCoerce::toString($hotel['city_name'] ?? '')),
+            country: self::nullable(TypeCoerce::toString($hotel['country_name'] ?? '')),
+            imageUrl: $pictures[0] ?? null,
+        );
     }
 
     #[\Override]
@@ -46,6 +72,18 @@ final class EurositeHotelProductProvider implements HotelProductProviderInterfac
     #[\Override]
     public function productIdForHotelId(string $hotelId): ?int
     {
-        return null; // no product links yet
+        try {
+            $hotel = $this->hotels->findByProductCode(TypeCoerce::toString($hotelId));
+        } catch (\Throwable) {
+            return null;
+        }
+        $productId = $hotel !== null ? TypeCoerce::toInt($hotel['product_id'] ?? 0) : 0;
+
+        return $productId > 0 ? $productId : null;
+    }
+
+    private static function nullable(string $value): ?string
+    {
+        return $value === '' ? null : $value;
     }
 }

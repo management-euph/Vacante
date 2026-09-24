@@ -84,6 +84,25 @@ final class Container
 
     private static ?EurositeBookingRepository $bookings = null;
 
+    private static ?EurositeProductFactory $productFactory = null;
+
+    private static ?HotelProductService $hotelProducts = null;
+
+    public static function productFactory(): EurositeProductFactory
+    {
+        return self::$productFactory ??= new EurositeProductFactory(self::hotels());
+    }
+
+    public static function hotelProducts(): HotelProductService
+    {
+        return self::$hotelProducts ??= new HotelProductService(
+            self::hotels(),
+            self::productInfoCache(),
+            self::getApi(),
+            self::productFactory(),
+        );
+    }
+
     public static function bookings(): EurositeBookingRepository
     {
         return self::$bookings ??= new EurositeBookingRepository();
@@ -145,5 +164,7 @@ final class Container
         self::$syncLog = null;
         self::$productInfoCache = null;
         self::$bookings = null;
+        self::$productFactory = null;
+        self::$hotelProducts = null;
     }
 }
