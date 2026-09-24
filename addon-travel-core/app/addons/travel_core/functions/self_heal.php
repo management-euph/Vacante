@@ -20,6 +20,27 @@ declare(strict_types=1);
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 /**
+ * A path inside the STORE (the CS-Cart docroot), e.g. 'app/addons'.
+ *
+ * Not dirname(__DIR__, …): PHP resolves symlinks in __DIR__, so on a store
+ * whose add-ons are symlinked in (the Docker dev store links each add-on
+ * from the repo) that climbs into this add-on's own source folder, where the
+ * other add-ons do not exist. The settings heal then skipped Eurosite, Sphinx
+ * and Novoton without a word: settings added to their addon.xml never
+ * appeared. DIR_ROOT is the docroot CS-Cart booted from, with every add-on
+ * (symlinked or not) and every .po file under it. Without it (a partial
+ * bootstrap, a test) the old layout is assumed: travel_core/functions/ sits
+ * in <store>/app/addons.
+ */
+function fn_travel_core_store_path(string $relative): string
+{
+    $dirRoot = defined('DIR_ROOT') ? constant('DIR_ROOT') : null;
+    $root = is_string($dirRoot) && $dirRoot !== '' ? rtrim($dirRoot, '/') : dirname(__DIR__, 4);
+
+    return $root . '/' . trim($relative, '/');
+}
+
+/**
  * TRUE when the self-heal identified by $key must run for $fingerprint.
  *
  * Fail-open: without a storage backend (partial bootstrap) the heal runs,
@@ -74,7 +95,7 @@ function fn_travel_core_heal_settings_once(): void
     // ever re-runs the heal is a fingerprint change — a fix to either file
     // must re-arm on stores whose addon.xml has not changed since the bad run
     // (the CRLF label bug, the CART_LANGUAGE crash, this very move).
-    $addonsRoot = dirname(__DIR__, 2);
+    $addonsRoot = fn_travel_core_store_path('app/addons');
     $fingerprint = (string) @md5_file(dirname(__DIR__) . '/src/Install/SettingsMigrator.php');
     $fingerprint .= (string) @md5_file(__FILE__);
     foreach (fn_travel_core_settings_heal_addons() as $addon) {
@@ -295,8 +316,8 @@ function fn_travel_core_settings_heal_addons(): array
  */
 function fn_travel_core_ensure_all_settings(): array
 {
-    $addonsRoot = dirname(__DIR__, 2);          // …/app/addons
-    $varLangs = dirname($addonsRoot, 2) . '/var/langs';
+    $addonsRoot = fn_travel_core_store_path('app/addons');
+    $varLangs = fn_travel_core_store_path('var/langs');
 
     $created = [];
     foreach (fn_travel_core_settings_heal_addons() as $addon) {
