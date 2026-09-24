@@ -106,7 +106,8 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
     /**
      * Batch room_price requests using curl_multi.
      *
-     * Checks cache for each request first, then sends uncached requests in parallel.
+     * Checks cache for each request first (unless its params carry
+     * 'nocache' => true), then sends uncached requests in parallel.
      * Returns both the parsed SimpleXMLElement and the raw cleaned XML for each key.
      *
      * @param array<string, array<string, mixed>> $requestParams Keyed array: key => room_price params
@@ -137,7 +138,9 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
             ];
             $cacheKey = $this->buildCacheKey(Constants::API_FUNCTION_ROOM_PRICE, $cacheParams);
 
-            $cachedXml = $this->getFromCache(Constants::API_FUNCTION_ROOM_PRICE, $cacheKey);
+            // 'nocache' => true skips the cache READ, as getRoomPrice() does:
+            // the room_price cron must see the live answer, not a cached one.
+            $cachedXml = empty($params['nocache']) ? $this->getFromCache(Constants::API_FUNCTION_ROOM_PRICE, $cacheKey) : null;
             if ($cachedXml !== null && is_string($cachedXml)) {
                 try {
                     $results[$key] = [

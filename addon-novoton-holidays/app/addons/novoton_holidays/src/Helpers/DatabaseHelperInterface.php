@@ -74,6 +74,14 @@ interface DatabaseHelperInterface
     public function getHotelsForSync(array $conditions = [], int $limit = 0, array $fields = []): array;
 
     /**
+     * Hotels for the room_price check, least recently checked first.
+     *
+     * @param array<string, mixed> $conditions
+     * @return list<array<string, mixed>>
+     */
+    public function getHotelsForPriceCheck(array $conditions = [], int $limit = 0): array;
+
+    /**
      * Get last sync date for a specific sync type.
      */
     public function getLastSyncDate(string $syncType, ?string $subType = null): ?string;
