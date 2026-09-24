@@ -25,6 +25,11 @@ if (!CronHelper::validateAccessKey($provided_access_key)) {
     if (empty($storedKey)) {
         CronHelper::sendAuthError('Cron Access Key not configured in addon settings.');
     } else {
+        // Noted for Travel Core -> Tools: a WRONG key here is what a crontab
+        // still on an old key sends after a rotation.
+        if (class_exists(\Tygh\Addons\TravelCore\Cron\CronRunLog::class)) {
+            \Tygh\Addons\TravelCore\Cron\CronRunLog::refused('novoton_holidays', $provided_access_key !== '');
+        }
         CronHelper::sendAuthError('Invalid or missing API key.');
     }
 }

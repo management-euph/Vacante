@@ -20,7 +20,7 @@ use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\TravelCore\Cron\CronRunner;
 
 [$accessKey, $mode, $params] = CronRunner::parseArgs();
-CronRunner::authenticate(ConfigProvider::getCronAccessKey(), $accessKey, 'Sphinx Holidays');
+CronRunner::authenticate(ConfigProvider::getCronAccessKey(), $accessKey, 'Sphinx Holidays', 'sphinx_holidays');
 $mode = CronRunner::sanitizeMode($mode);
 
 $runner = new CronRunner('Sphinx', new CronDispatcher(), 'destinations');

@@ -12,6 +12,7 @@ declare(strict_types=1);
  */
 
 use Tygh\Addons\TravelCore\Cron\CronKeyService;
+use Tygh\Addons\TravelCore\Cron\CronRunLog;
 use Tygh\Addons\TravelCore\Cron\CronRunner;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
@@ -29,7 +30,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 $storedKey = CronKeyService::getFor('travel_core');
 $providedKey = RequestCoerce::string($_REQUEST, 'access_key');
 
-CronRunner::authenticate($storedKey, $providedKey, 'Travel Core');
+CronRunner::authenticate($storedKey, $providedKey, 'Travel Core', 'travel_core');
 
 if ($mode === 'run') {
     $cron_mode = isset($_REQUEST['mode']) ? preg_replace('/[^a-z0-9_]/', '', strtolower(RequestCoerce::string($_REQUEST, 'mode'))) : '';
@@ -63,19 +64,26 @@ if ($mode === 'run') {
         $purgeDays = max(1, TypeCoerce::toInt($_REQUEST['purge_days'] ?? 180));
 
         $repo = new \Tygh\Addons\TravelCore\Repository\AlternativeRequestRepository();
-        $expired = $repo->expireOlderThan($days, 'sphinx');
-        $purged = $repo->purgeOlderThan($purgeDays);
+        // Recorded for Travel Core -> Tools, like every provider job.
+        $counts = CronRunLog::record('travel_core', 'expire_alternative_requests', static fn (): array => [
+            'success' => true,
+            'expired' => $repo->expireOlderThan($days, 'sphinx'),
+            'purged' => $repo->purgeOlderThan($purgeDays),
+        ]);
+        $expired = TypeCoerce::toInt($counts['expired']);
+        $purged = TypeCoerce::toInt($counts['purged']);
 
         echo "Expired sphinx requests older than {$days} days: {$expired}\n";
         echo "Purged expired/cancelled rows older than {$purgeDays} days: {$purged}\n";
     } else {
         $commission = TypeCoerce::toFloat(Registry::get('addons.travel_core.currency_risk_commission'));
 
-        $result = fn_travel_core_update_exchange_rates($commission, true);
+        // Recorded for Travel Core -> Tools, like every provider job.
+        $result = CronRunLog::record('travel_core', 'exchange_rates', static function () use ($commission): array {
+            $r = fn_travel_core_update_exchange_rates($commission, true);
 
-        if (!is_array($result)) {
-            $result = ['success' => false, 'message' => 'No response from exchange rate service'];
-        }
+            return is_array($r) ? $r : ['success' => false, 'message' => 'No response from exchange rate service'];
+        });
 
         echo fn_travel_core_format_exchange_rate_output($result) . "\n";
     }

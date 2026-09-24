@@ -185,7 +185,8 @@
     </div>
 
     {* ── Cron Commands ── *}
-    <h4>{__("sphinx_holidays.cron_commands")}</h4>
+    {* id: the target of the "Open Sphinx cron" link on Travel Core -> Tools. *}
+    <h4 id="sphinx-cron-commands">{__("sphinx_holidays.cron_commands")}</h4>
     <div class="well">
         <table class="table table-condensed table-hover" style="table-layout:fixed; width:100%;">
             <colgroup>

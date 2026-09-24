@@ -12,8 +12,14 @@ declare(strict_types=1);
 
 use Tygh\Registry;
 use Tygh\Tygh;
+use Tygh\Addons\TravelCore\Cron\CronHealth;
+use Tygh\Addons\TravelCore\Cron\CronKeyChangeTracker;
 use Tygh\Addons\TravelCore\Cron\CronKeyService;
+use Tygh\Addons\TravelCore\Cron\CronOverview;
+use Tygh\Addons\TravelCore\Cron\CronRunLog;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
 use Tygh\Addons\TravelCore\Repository\OrderLinkCandidateRepository;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
@@ -23,11 +29,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($mode === 'run_exchange_rates') {
         $commission = TypeCoerce::toFloat(Registry::get('addons.travel_core.currency_risk_commission'));
 
-        $result = fn_travel_core_update_exchange_rates($commission, true);
+        // Recorded like a scheduled run, but marked as an admin one: health
+        // ignores those, so pressing Run now cannot make a broken crontab
+        // look healthy.
+        $result = CronRunLog::record(
+            'travel_core',
+            CronOverview::CORE_JOB,
+            static function () use ($commission): array {
+                $r = fn_travel_core_update_exchange_rates($commission, true);
 
-        if (!is_array($result)) {
-            $result = ['success' => false, 'message' => 'No response from exchange rate service'];
-        }
+                return is_array($r) ? $r : ['success' => false, 'message' => 'No response from exchange rate service'];
+            },
+        );
 
         if (!empty($result['success'])) {
             $parts = [];
@@ -72,6 +85,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         return [CONTROLLER_STATUS_REDIRECT, 'travel_tools.manage'];
     }
 
+    if ($mode === 'cron_recopy_done') {
+        // One page of the re-copy checklist ticked by hand. markDone() ignores
+        // a page the checklist does not list, so a forged value adds nothing.
+        CronKeyChangeTracker::markDone(RequestCoerce::string($_REQUEST, 'page'), time());
+
+        return [CONTROLLER_STATUS_REDIRECT, 'travel_tools.manage'];
+    }
+
+    if ($mode === 'cron_recopy_dismiss') {
+        CronKeyChangeTracker::dismiss();
+
+        return [CONTROLLER_STATUS_REDIRECT, 'travel_tools.manage'];
+    }
+
     if ($mode === 'link_booking_orders') {
         // Reconcile booking–order links: providers stamp order_id on their
         // booking rows during place_order_post, but a booking placed while a
@@ -110,36 +137,81 @@ if ($mode === 'manage') {
     // keys of their own — i.e. the state this whole move exists to end.
     $cron_key_is_shared = CronKeyService::isConfigured();
     $base_url = TypeCoerce::toString(Registry::get('config.http_location')) . '/';
+    $now = time();
+    $mask = '••••••••••••';
+    // Numeric, so it reads the same in the English and Romanian admin.
+    $fmt = static fn (int $ts): string => $ts > 0 ? date('d.m.Y H:i', $ts) : '';
 
-    $cron_jobs = [];
-
-    $cron_jobs['exchange_rates'] = [
-        'name'        => __('travel_core.cron_exchange_rates'),
-        'description' => __('travel_core.cron_exchange_rates_desc'),
-        'url'         => !empty($cron_key)
-            ? $base_url . "index.php?dispatch=travel_cron.run&access_key={$cron_key}&cron_mode=exchange_rates"
-            : '',
-        'schedule'    => __('travel_core.cron_schedule_daily'),
-        'cpanel'      => '5 13 * * *',
-        'run_action'  => 'run_exchange_rates',
+    // ── Travel Core's own job ──
+    // The one scheduled job Travel Core itself runs. Its command is shown
+    // with the key MASKED; tools-cron.js reveals it on request and always
+    // copies the real value (a masked command pasted into a crontab is a 403).
+    $commands = CronOverview::coreCommands($cron_key, $base_url, defined('DIR_ROOT') ? TypeCoerce::toString(constant('DIR_ROOT')) : '');
+    $core_job = [
+        'mode'         => CronOverview::CORE_JOB,
+        'cmd_url'      => $commands['url'],
+        'cmd_cli'      => $commands['cli'],
+        'cmd_masked'   => $cron_key === '' ? $commands['url'] : str_replace($cron_key, $mask, $commands['url']),
+        'cpanel'       => '5 13 * * *',
+        'run_action'   => 'run_exchange_rates',
+        'record'       => CronOverview::coreJobRecord(),
     ];
+    $core_job['started_fmt'] = $fmt($core_job['record']['started'] ?? 0);
+    $core_job['finished_fmt'] = $fmt($core_job['record']['finished'] ?? 0);
+    $core_health = CronOverview::coreHealth($now);
+    $core_health_lists = CronHealth::lists($core_health);
 
-    // On-demand maintenance (no external cron URL): backfills order links for
-    // bookings orphaned by historical submission bugs. Idempotent.
-    $cron_jobs['link_booking_orders'] = [
-        'name'        => __('travel_core.link_booking_orders'),
-        'description' => __('travel_core.link_booking_orders_desc'),
-        'url'         => '',
-        'schedule'    => '—',
-        'cpanel'      => '—',
-        'run_action'  => 'link_booking_orders',
-    ];
+    // ── Each provider's row, as the provider itself declared it ──
+    $provider_rows = [];
+    foreach (CronOverview::providerRows(TravelProviderRegistry::getCronProviders(), $now) as $row) {
+        $row['url'] = TypeCoerce::toString(fn_url($row['dashboard'])) . ($row['anchor'] === '' ? '' : '#' . $row['anchor']);
+        $row['last_at_fmt'] = $fmt($row['health']['last']['at'] ?? 0);
+        $row['lists'] = CronHealth::lists($row['health']);
+        $provider_rows[] = $row;
+    }
+
+    $used_by = array_merge(['Travel Core'], array_column($provider_rows, 'label'));
+    $jobs_total = array_sum(array_column($provider_rows, 'jobs'));
+    $attention = array_values(array_filter(
+        array_merge([['label' => 'Travel Core', 'health' => $core_health]], $provider_rows),
+        /** @param array{health: array{state: string}} $r */
+        static fn (array $r): bool => CronHealth::needsAttention($r['health']['state']),
+    ));
+
+    // ── The re-copy checklist, opened by ANY change of the key ──
+    $pages = array_merge(['travel_core'], array_column($provider_rows, 'addon'));
+    $key_state = CronKeyChangeTracker::observe($cron_key, $pages, $now);
+    $last_ok = ['travel_core' => $core_health['last_scheduled_ok']];
+    $page_meta = ['travel_core' => ['label' => 'Travel Core', 'url' => '#travel-core-jobs']];
+    foreach ($provider_rows as $row) {
+        $last_ok[$row['addon']] = $row['health']['last_scheduled_ok'];
+        $page_meta[$row['addon']] = ['label' => $row['label'], 'url' => $row['url']];
+    }
+    $recopy = [];
+    foreach (CronKeyChangeTracker::checklist($key_state, $last_ok) as $entry) {
+        if (!isset($page_meta[$entry['page']])) {
+            continue; // a provider disabled since the change: nothing to re-copy there now
+        }
+        $recopy[] = $entry + $page_meta[$entry['page']];
+    }
+    $recopy_open = CronKeyChangeTracker::isOpen($key_state, $recopy);
 
     $view = Tygh::$app['view'];
     if (is_object($view) && method_exists($view, 'assign')) {
-        $view->assign('cron_jobs', $cron_jobs);
         $view->assign('cron_key', $cron_key);
         $view->assign('cron_key_is_shared', $cron_key_is_shared);
+        $view->assign('cron_key_mask', $mask);
+        $view->assign('cron_key_changed_at', $fmt($key_state['at']));
         $view->assign('base_url', $base_url);
+        $view->assign('core_job', $core_job);
+        $view->assign('core_health', $core_health);
+        $view->assign('core_health_lists', $core_health_lists);
+        $view->assign('provider_rows', $provider_rows);
+        $view->assign('cron_used_by', $used_by);
+        $view->assign('cron_jobs_total', $jobs_total);
+        $view->assign('cron_attention', $attention);
+        $view->assign('cron_recopy', $recopy);
+        $view->assign('cron_recopy_open', $recopy_open);
+        $view->assign('cron_recopy_done', count(array_filter(array_column($recopy, 'done'))));
     }
 }

@@ -6,6 +6,7 @@ namespace Tygh\Addons\Eurosite\Cron;
 
 use Tygh\Addons\Eurosite\Cron\Commands\AbstractSyncCommand;
 use Tygh\Addons\TravelCore\Contracts\CronDispatcherInterface;
+use Tygh\Addons\TravelCore\Cron\CronRunLog;
 use Tygh\Addons\TravelCore\Helpers\CronRunLock;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
@@ -97,7 +98,11 @@ class CronDispatcher implements CronDispatcherInterface
                 flush();
                 $lock?->touch();
             });
-            $result = $command->execute($params);
+            // Recorded for Travel Core -> Tools (started, finished, ok, error).
+            // Read-only status/reset/debug requests are not runs, so they are not.
+            $result = $isReadOnly
+                ? $command->execute($params)
+                : CronRunLog::record('eurosite', $mode, static fn (): array => $command->execute($params));
         } finally {
             $lock?->release();
         }

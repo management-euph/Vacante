@@ -67,13 +67,24 @@ class CronRunner
      * Authenticate the access key using timing-safe comparison.
      *
      * Returns only on success; a failure terminates via refuse().
+     *
+     * $addon (the CS-Cart add-on id) is where a refused request is noted in
+     * CronRunLog, for Travel Core -> Tools. A WRONG key is what a crontab
+     * still on an old key sends after a rotation, so it is the one refusal
+     * worth surfacing; an unset stored key is a configuration state the page
+     * already shows, so it is not logged as a refusal.
      */
-    public static function authenticate(string $storedKey, string $providedKey, string $addonLabel = ''): void
+    public static function authenticate(string $storedKey, string $providedKey, string $addonLabel = '', string $addon = ''): void
     {
         if ($storedKey === '') {
             self::refuse("Cron access key not set in {$addonLabel} addon settings.", $addonLabel);
         }
         if ($providedKey === '' || !hash_equals($storedKey, $providedKey)) {
+            // Guarded: the refusal itself (403, exit 1) must happen even where
+            // the log cannot load — CronAuthFailureTest boots this class alone.
+            if (class_exists(CronRunLog::class)) {
+                CronRunLog::refused($addon, $providedKey !== '');
+            }
             self::refuse('Invalid or missing access key.', $addonLabel);
         }
     }

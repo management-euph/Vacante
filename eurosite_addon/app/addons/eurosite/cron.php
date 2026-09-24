@@ -31,7 +31,7 @@ if (function_exists('fn_eurosite_ensure_schema')) {
 }
 
 [$accessKey, $mode, $params] = CronRunner::parseArgs();
-CronRunner::authenticate(ConfigProvider::getCronAccessKey(), $accessKey, 'Eurosite Touring');
+CronRunner::authenticate(ConfigProvider::getCronAccessKey(), $accessKey, 'Eurosite Touring', 'eurosite');
 $mode = CronRunner::sanitizeMode($mode);
 
 $runner = new CronRunner('Eurosite', new CronDispatcher(), 'full');

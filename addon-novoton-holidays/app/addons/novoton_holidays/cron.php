@@ -21,7 +21,7 @@ use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\TravelCore\Cron\CronRunner;
 
 [$accessKey, $mode, $params] = CronRunner::parseArgs();
-CronRunner::authenticate(ConfigProvider::getCronAccessKey(), $accessKey, 'Novoton Holidays');
+CronRunner::authenticate(ConfigProvider::getCronAccessKey(), $accessKey, 'Novoton Holidays', 'novoton_holidays');
 $mode = CronRunner::sanitizeMode($mode);
 
 $api = _nvt_api();

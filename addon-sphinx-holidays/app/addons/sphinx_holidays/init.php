@@ -53,6 +53,17 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
         'Sphinx / Christian Tour',
         new \Tygh\Addons\SphinxHolidays\Api\SphinxNormalizer()
     );
+    // This add-on's cron, for Travel Core -> Tools: its job types come from
+    // the dispatcher, its runs from the shared CronRunLog, and the row links
+    // to the page below. Declared HERE so Travel Core never hard-codes
+    // another add-on's jobs — disable this add-on and its row disappears.
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setCron(
+        'sphinx',
+        'sphinx_holidays',
+        \Tygh\Addons\SphinxHolidays\Cron\CronDispatcher::class,
+        'sphinx_holidays.manage',
+        'sphinx-cron-commands',
+    );
     \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setBookingAdminProvider(
         'sphinx',
         new \Tygh\Addons\SphinxHolidays\Services\BookingAdminProvider()

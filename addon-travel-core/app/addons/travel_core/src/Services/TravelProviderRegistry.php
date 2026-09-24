@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\TravelCore\Services;
 
 use Tygh\Addons\TravelCore\Contracts\BookingAdminProviderInterface;
+use Tygh\Addons\TravelCore\Contracts\CronDispatcherInterface;
 use Tygh\Addons\TravelCore\Contracts\HotelProductProviderInterface;
 use Tygh\Addons\TravelCore\Contracts\ProviderNormalizerInterface;
 use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
@@ -26,6 +27,9 @@ class TravelProviderRegistry
 
     /** @var array<string, array{name: string, label: string, normalizer: ProviderNormalizerInterface, booking_admin_provider?: BookingAdminProviderInterface, hotel_product_provider?: HotelProductProviderInterface, status_sync_callback?: callable, single_status_callback?: callable, scan_config?: array{table: string, id_col: string, json_col: string}}> */
     private static array $providers = [];
+
+    /** @var array<string, array{name: string, label: string, addon: string, dispatcher: class-string<CronDispatcherInterface>, dashboard: string, anchor: string}> */
+    private static array $cron = [];
 
     /**
      * Register a travel provider.
@@ -242,10 +246,58 @@ class TravelProviderRegistry
     }
 
     /**
+     * A provider's cron: the add-on id its runs are logged under, the
+     * dispatcher that knows its job types, and the admin page that shows its
+     * commands.
+     *
+     * The PROVIDER supplies this, from its own init.php, so Travel Core's
+     * Tools page never hard-codes another add-on's jobs: each provider owns
+     * its schedules and options, and a disabled provider never runs init.php,
+     * so its row simply disappears. Kept apart from $providers so that array's
+     * shape — repeated in four docblocks — stays as it is.
+     *
+     * Ignored unless register() ran first, like the other set* methods, and
+     * unless $dispatcherClass really implements CronDispatcherInterface: the
+     * Tools page calls its static getAvailableModes().
+     *
+     * @param string $addon CS-Cart add-on id ('sphinx_holidays'), which the short
+     *                      registry name ('sphinx') does not carry
+     * @param string $dispatcherClass class implementing CronDispatcherInterface
+     * @param string $dashboard admin dispatch of the page listing its cron commands
+     * @param string $anchor element id of the cron section on that page, '' for none
+     */
+    public static function setCron(string $name, string $addon, string $dispatcherClass, string $dashboard, string $anchor = ''): void
+    {
+        if (!isset(self::$providers[$name]) || !is_a($dispatcherClass, CronDispatcherInterface::class, true)) {
+            return;
+        }
+
+        self::$cron[$name] = [
+            'name' => $name,
+            'label' => self::$providers[$name]['label'],
+            'addon' => $addon,
+            'dispatcher' => $dispatcherClass,
+            'dashboard' => $dashboard,
+            'anchor' => $anchor,
+        ];
+    }
+
+    /**
+     * Every registered provider that declared its cron, in registration order.
+     *
+     * @return array<string, array{name: string, label: string, addon: string, dispatcher: class-string<CronDispatcherInterface>, dashboard: string, anchor: string}>
+     */
+    public static function getCronProviders(): array
+    {
+        return array_intersect_key(self::$cron, self::$providers);
+    }
+
+    /**
      * Reset registry (for testing).
      */
     public static function reset(): void
     {
         self::$providers = [];
+        self::$cron = [];
     }
 }
