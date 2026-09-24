@@ -20,7 +20,7 @@ import { beforeAll, afterEach, describe, expect, it, vi } from 'vitest';
 const CITIES = {
     RO: [
         { code: 'BUH', name: 'Bucharest', is_own: false },
-        { code: 'CLJ', name: 'Cluj-Napoca', is_own: true },
+        { code: 'CLJ', name: 'Cluj-Napoca', is_own: true, hotels: 97 },
     ],
     IT: [{ code: 'ROM', name: 'Rome', is_own: false }],
 };
@@ -162,6 +162,15 @@ describe('expanding a country', () => {
         expect(box('RO').style.display).toBe('block');
         // RO is whitelisted as "all", so every city comes back ticked.
         expect(cityBoxes('RO').every((cb) => cb.checked)).toBe(true);
+    });
+
+    it('shows how many synced hotels each destination brings', async () => {
+        $('.eurosite-country-name[data-country="RO"]').click();
+        await sleep(0);
+
+        const label = (code) => cityBoxes('RO').find((cb) => cb.value === code).closest('label').textContent;
+        expect(label('CLJ')).toContain('97 hotels');
+        expect(label('BUH')).not.toContain('hotels'); // none synced: nothing to say
     });
 });
 

@@ -10,10 +10,21 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 /**
  * mode `hotels` — getOwnHotelsRequest per target city → ?:eurosite_hotels.
  *
- * Target cities = every whitelist-allowed city of each target country, union
- * the country's own-offer cities (is_own='Y'). Each hotel row stores its own
- * Touropcode ("LA" live) — the code search/booking payloads must use.
- * `&city=CODE` narrows to one city ad hoc.
+ * Target cities = the whitelist-allowed cities, and nothing else. It used to
+ * add every own-offer city (is_own='Y') too, which is how a store with one
+ * whitelisted country ended up with 1,202 hotels from 111 destinations: the
+ * hotel list, the availability check and the products would all have
+ * worked through destinations nobody chose. An empty whitelist syncs
+ * nothing and says so.
+ *
+ * After a full run, hotels whose destination is no longer whitelisted are
+ * hidden, not deleted (sync_status 'inactive', reason 'not_whitelisted'):
+ * whitelist the destination again and the next run brings them back with
+ * their product link intact.
+ *
+ * Each hotel row stores its own Touropcode ("LA" live) — the code
+ * search/booking payloads must use. `&city=CODE` narrows to one whitelisted
+ * city ad hoc.
  */
 final class HotelsSyncCommand extends AbstractSyncCommand
 {
@@ -26,14 +37,25 @@ final class HotelsSyncCommand extends AbstractSyncCommand
     #[\Override]
     public static function getDescription(): string
     {
-        return 'Sync own hotels + rooms for whitelisted/own-offer cities (getOwnHotelsRequest; &city=CODE for one)';
+        return 'Sync own hotels + rooms for the whitelisted destinations (getOwnHotelsRequest; &city=CODE for one)';
     }
 
     #[\Override]
     public function execute(array $params = []): array
     {
         return $this->runLogged('hotels', function () use ($params): array {
-            $cities = $this->targetCityCodes(strtoupper(trim(TypeCoerce::toString($params['city'] ?? ''))));
+            $only = strtoupper(trim(TypeCoerce::toString($params['city'] ?? '')));
+            $allowed = $this->allowedCityCodes();
+            if ($allowed === []) {
+                throw new \RuntimeException(Container::whitelist()->count() === 0
+                    ? 'No destinations are whitelisted, so there are no hotels to sync. '
+                        . 'Configure the whitelist first (Eurosite > Destination whitelist).'
+                    : 'The whitelisted countries have no synced cities yet. Run the cities sync first.');
+            }
+            if ($only !== '' && !in_array($only, $allowed, true)) {
+                throw new \RuntimeException("City {$only} is not whitelisted. Whitelist it first.");
+            }
+            $cities = $only !== '' ? [$only] : $allowed;
 
             $api = Container::getApi();
             $hotelRepo = Container::hotels();
@@ -59,10 +81,17 @@ final class HotelsSyncCommand extends AbstractSyncCommand
                 }, "city {$cityCode}", $errors);
             }
 
+            // Only after a full run: a one-city run says nothing about the others.
+            $hidden = $only === '' ? $hotelRepo->deactivateOutside($allowed) : 0;
+            if ($hidden > 0) {
+                $this->output("  {$hidden} hotels outside the whitelist hidden (kept; they return once their destination is whitelisted)");
+            }
+
             return [
                 'total' => $total,
                 'synced' => $synced,
                 'failed' => count($errors),
+                'hidden_not_whitelisted' => $hidden,
                 'error' => implode('; ', array_slice($errors, 0, 5)),
             ];
         });
@@ -83,28 +112,21 @@ final class HotelsSyncCommand extends AbstractSyncCommand
     }
 
     /**
+     * Every whitelisted city: a country's specific rows, or all its synced
+     * cities when the country is whitelisted whole.
+     *
      * @return list<string>
      */
-    private function targetCityCodes(string $only): array
+    private function allowedCityCodes(): array
     {
-        if ($only !== '') {
-            return [$only];
-        }
         $whitelist = Container::whitelist();
-        $cityRepo = Container::cities();
         $codes = [];
-        foreach ($this->targetCountryCodes() as $country) {
+        foreach ($whitelist->getCountryCodes() as $country) {
             foreach ($whitelist->getAllowedCityCodes($country) as $code) {
                 $codes[$code] = true;
             }
-            foreach ($cityRepo->getByCountry($country, true) as $row) {
-                $code = TypeCoerce::toString($row['city_code'] ?? '');
-                if ($code !== '') {
-                    $codes[$code] = true;
-                }
-            }
         }
 
-        return array_keys($codes);
+        return array_map('strval', array_keys($codes));
     }
 }

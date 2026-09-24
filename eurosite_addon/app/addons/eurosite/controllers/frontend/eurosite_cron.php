@@ -19,6 +19,9 @@ declare(strict_types=1);
  *   index.php?dispatch=eurosite_cron.run&access_key=KEY&cron_mode=room_types
  *   index.php?dispatch=eurosite_cron.run&access_key=KEY&cron_mode=tags
  *   index.php?dispatch=eurosite_cron.run&access_key=KEY&cron_mode=product_info[&limit=100][&full=1]
+ *   index.php?dispatch=eurosite_cron.run&access_key=KEY&cron_mode=availability[&city=ROMM]
+ *   index.php?dispatch=eurosite_cron.run&access_key=KEY&cron_mode=add_products[&city=ROMM][&limit=100][&dry_run=1]
+ *   index.php?dispatch=eurosite_cron.run&access_key=KEY&cron_mode=update_products[&city=ROMM][&limit=200]
  *   index.php?dispatch=eurosite_cron.run&access_key=KEY&cron_mode=cleanup
  */
 

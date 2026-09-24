@@ -30,8 +30,8 @@ final class CronDispatcherTest extends TestCase
         $modes = CronDispatcher::getAvailableModes();
 
         $expected = [
-            'cities', 'cleanup', 'countries', 'full', 'hotels',
-            'own_cities', 'product_info', 'room_types', 'tags',
+            'add_products', 'availability', 'cities', 'cleanup', 'countries', 'full', 'hotels',
+            'own_cities', 'product_info', 'room_types', 'tags', 'update_products',
         ];
         self::assertSame($expected, array_keys($modes));
         foreach ($modes as $mode => $description) {

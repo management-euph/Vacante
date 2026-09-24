@@ -8,6 +8,11 @@ declare(strict_types=1);
  *   - manage (default): dashboard — API health, catalog counts, last syncs,
  *     recent bookings, cron URL map, quick sync actions
  *   - whitelist: destination whitelist editor (countries → cities)
+ *   - hotels: the listed (whitelisted) hotels — availability, images,
+ *     products; filters, sorting and CS-Cart paging
+ *   - create_products (POST): products for the selected hotels (hotel_keys[])
+ *   - check_availability (POST): run the availability check for the selected
+ *     hotels' destinations (all listed destinations when none is selected)
  *   - get_cities (AJAX GET): synced cities of a country as JSON, with a live
  *     getCityRequest fallback for countries not yet synced
  *   - run_sync (POST): run one cron command inline (sync_type param)
@@ -17,9 +22,11 @@ declare(strict_types=1);
  */
 
 use Tygh\Addons\Eurosite\Cron\CronDispatcher;
+use Tygh\Addons\Eurosite\Repository\HotelListingRepository;
 use Tygh\Addons\Eurosite\Services\ConfigProvider;
 use Tygh\Addons\Eurosite\Services\Container;
 use Tygh\Addons\Eurosite\Services\CronPlanBuilder;
+use Tygh\Addons\Eurosite\Services\HotelListView;
 use Tygh\Addons\TravelCore\Cron\CronKeyService;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
@@ -180,6 +187,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         return [CONTROLLER_STATUS_REDIRECT, 'eurosite.manage'];
     }
 
+    if ($mode === 'create_products' || $mode === 'check_availability') {
+        $keys = [];
+        foreach ((array) ($_REQUEST['hotel_keys'] ?? []) as $key) {
+            $key = strtoupper((string) preg_replace('/[^A-Za-z0-9_:]/', '', TypeCoerce::toString($key)));
+            if (str_contains($key, ':')) {
+                $keys[$key] = $key;
+            }
+        }
+        $returnTo = HotelListView::returnUrl(RequestCoerce::string($_REQUEST, 'return_query'));
+        if (function_exists('set_time_limit')) {
+            set_time_limit(0);
+        }
+
+        if ($mode === 'create_products') {
+            if ($keys === []) {
+                fn_set_notification('W', __('warning'), __('eurosite.hotels_select_first', ['[default]' => 'Select the hotels first.']));
+
+                return [CONTROLLER_STATUS_REDIRECT, $returnTo];
+            }
+            $r = Container::hotelProducts()->createFor(Container::hotels()->findManyWithDetails(array_values($keys)));
+            [$type, $message] = HotelListView::createdNotice($r);
+            fn_set_notification($type, __($type === 'E' ? 'error' : ($type === 'W' ? 'warning' : 'notice')), $message);
+
+            return [CONTROLLER_STATUS_REDIRECT, $returnTo];
+        }
+
+        // check_availability: one run per destination of the selection.
+        $cities = [];
+        foreach (Container::hotels()->findManyWithDetails(array_values($keys)) as $row) {
+            $cities[TypeCoerce::toString($row['city_code'] ?? '')] = true;
+        }
+        $cities = array_filter(array_map('strval', array_keys($cities)), static fn (string $c): bool => $c !== '');
+        $dispatcher = new CronDispatcher();
+        $ok = 0;
+        $failed = [];
+        ob_start();
+        try {
+            foreach ($cities === [] ? [''] : $cities as $city) {
+                $result = $dispatcher->dispatch('availability', $city === '' ? [] : ['city' => $city]);
+                if (!empty($result['success'])) {
+                    $ok++;
+                } else {
+                    $failed[] = ($city !== '' ? $city . ': ' : '') . TypeCoerce::toString($result['error'] ?? $result['message'] ?? 'failed');
+                }
+            }
+        } finally {
+            ob_end_clean();
+        }
+        if ($failed === []) {
+            fn_set_notification('N', __('notice'), __('eurosite.hotels_checked', ['[default]' => 'Availability checked.']));
+        } else {
+            fn_set_notification('E', __('error'), TypeCoerce::toString(__('eurosite.hotels_check_failed', ['[default]' => 'The availability check failed:'])) . ' ' . implode('; ', array_slice($failed, 0, 3)));
+        }
+
+        return [CONTROLLER_STATUS_REDIRECT, $returnTo];
+    }
+
     return [CONTROLLER_STATUS_REDIRECT, 'eurosite.manage'];
 }
 
@@ -192,18 +256,25 @@ if ($mode === 'get_cities') {
     $cities = [];
     $source = 'db';
     if ($country !== '') {
+        try {
+            $hotelCounts = Container::hotels()->countAllByCity($country);
+        } catch (\Throwable) {
+            $hotelCounts = [];
+        }
         foreach (Container::cities()->getByCountry($country) as $row) {
+            $code = TypeCoerce::toString($row['city_code'] ?? '');
             $cities[] = [
-                'code'   => TypeCoerce::toString($row['city_code'] ?? ''),
+                'code'   => $code,
                 'name'   => TypeCoerce::toString($row['name'] ?? ''),
                 'is_own' => TypeCoerce::toString($row['is_own'] ?? 'N') === 'Y',
+                'hotels' => $hotelCounts[$code] ?? 0,
             ];
         }
         if ($cities === []) {
             $source = 'live';
             try {
                 foreach (Container::getApi()->getCities($country) as $city) {
-                    $cities[] = ['code' => $city['code'], 'name' => $city['name'], 'is_own' => false];
+                    $cities[] = ['code' => $city['code'], 'name' => $city['name'], 'is_own' => false, 'hotels' => 0];
                 }
             } catch (\Throwable $e) {
                 header('Content-Type: application/json');
@@ -253,6 +324,42 @@ if ($mode === 'search_destinations') {
     header('Content-Type: application/json');
     echo json_encode(['success' => true, 'results' => $results]);
     exit;
+}
+
+if ($mode === 'hotels') {
+    $perPageRaw = \Tygh\Registry::get('settings.Appearance.admin_elements_per_page');
+    $listing = new HotelListingRepository(is_numeric($perPageRaw) && (int) $perPageRaw > 0 ? (int) $perPageRaw : 50);
+    $hotelRepo = Container::hotels();
+    $rows = [];
+    $search = $listing->normalize($_REQUEST) + ['total_items' => 0];
+    $summary = HotelListView::emptySummary();
+    try {
+        [$rows, $search] = $listing->getListing($_REQUEST);
+        $summary = HotelListView::summary(
+            $hotelRepo->countActive(),
+            $hotelRepo->countByAvailability(),
+            $listing->imageCounts(),
+            $hotelRepo->countProducts(),
+            $hotelRepo->countGateHidden(),
+            $hotelRepo->countNotWhitelisted(),
+            $hotelRepo->countsByCity(),
+            Container::syncLog()->getLastPerType(),
+        );
+    } catch (\Throwable $e) {
+        fn_set_notification('E', __('error'), 'Eurosite hotel list unavailable: ' . $e->getMessage());
+    }
+
+    // Pre-formatted for Smarty 5 (modifiers throw inside the admin capture).
+    $view->assign('eurosite_hotels', HotelListView::rows($rows, ConfigProvider::allowProductsWithoutImages()));
+    $view->assign('search', $search);
+    $view->assign('eurosite_hotel_summary', $summary);
+    $view->assign('eurosite_hotel_chips', HotelListView::chips($search, $summary));
+    $view->assign('eurosite_hotels_url', HotelListView::listUrl($search));
+    $view->assign('eurosite_hotels_query', HotelListView::filterQuery($search));
+    $view->assign('eurosite_root_category_set', ConfigProvider::getHotelsCategoryId() > 0);
+    $view->assign('eurosite_without_images_allowed', ConfigProvider::allowProductsWithoutImages());
+
+    return;
 }
 
 if ($mode === 'whitelist') {
@@ -332,6 +439,7 @@ if ($mode === 'manage' || empty($mode)) {
     $counts = [
         'countries' => 0, 'cities' => 0, 'own_cities' => 0, 'hotels' => 0,
         'room_types' => 0, 'tags' => 0, 'cache' => 0, 'whitelist' => 0, 'bookings' => 0,
+        'immediate' => 0, 'products' => 0,
     ];
     $lastSyncs = [];
     $recentBookings = [];
@@ -342,12 +450,15 @@ if ($mode === 'manage' || empty($mode)) {
             'countries'  => Container::countries()->count(),
             'cities'     => Container::cities()->count(),
             'own_cities' => Container::cities()->count(true),
-            'hotels'     => Container::hotels()->count(),
+            'hotels'     => Container::hotels()->countActive(),
             'room_types' => Container::roomTypes()->count(),
             'tags'       => Container::tags()->count(),
             'cache'      => Container::productInfoCache()->count(),
             'whitelist'  => Container::whitelist()->count(),
             'bookings'   => Container::bookings()->count(),
+            // The rows for the availability check and the product jobs.
+            'immediate'  => Container::hotels()->countByAvailability()['IM'],
+            'products'   => Container::hotels()->countProducts(),
         ];
 
         // Pre-format for Smarty 5 (modifiers throw inside the admin capture).

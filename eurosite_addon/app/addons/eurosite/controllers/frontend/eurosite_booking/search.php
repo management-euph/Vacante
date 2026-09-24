@@ -39,6 +39,20 @@ foreach (explode(',', RequestCoerce::string($_REQUEST, 'children_ages')) as $age
     }
 }
 
+// ── From a hotel's product page ──
+// travel_core's booking form sends the hotel's code (hotel_id) instead of a
+// destination: search that hotel's city and show that hotel only.
+$onlyHotel = strtoupper((string) preg_replace('/[^A-Za-z0-9_]/', '', RequestCoerce::string($_REQUEST, 'hotel_id')));
+if ($onlyHotel !== '') {
+    $hotelRow = Container::hotels()->findByProductCode($onlyHotel);
+    if ($hotelRow === null) {
+        $onlyHotel = '';
+    } else {
+        $country = $country !== '' ? $country : strtoupper(TypeCoerce::toString($hotelRow['country_code'] ?? ''));
+        $city = $city !== '' ? $city : strtoupper(TypeCoerce::toString($hotelRow['city_code'] ?? ''));
+    }
+}
+
 // ── Destination pickers: whitelisted countries + their allowed cities ──
 $whitelist = Container::whitelist();
 $cityRepo = Container::cities();
@@ -154,6 +168,9 @@ if ($country !== '' && $city !== '' && $checkIn !== '' && $checkOut !== '') {
             $lazyBudget = 8;
             foreach ($offers as $i => $offer) {
                 $pc = $offer->productCode;
+                if ($onlyHotel !== '' && strtoupper($pc) !== $onlyHotel) {
+                    continue;
+                }
                 if (!isset($results[$pc])) {
                     $hotelRow = $hotelRepo->findByProductCode($pc);
                     $tourop = $hotelRow !== null ? TypeCoerce::toString($hotelRow['tourop_code'] ?? '') : '';

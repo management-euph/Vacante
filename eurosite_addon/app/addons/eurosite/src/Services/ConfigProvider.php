@@ -82,6 +82,55 @@ class ConfigProvider extends AbstractConfigProvider
         return $lang !== '' ? $lang : 'RO';
     }
 
+    /** Root category for hotel products; 0 = not set (no product is created). */
+    public static function getHotelsCategoryId(): int
+    {
+        return max(0, TypeCoerce::toInt(self::getSetting('hotels_category_id', 0)));
+    }
+
+    /**
+     * "Create products for hotels without images". Off by default: a product
+     * page with no picture sells nothing, so those hotels wait until
+     * pictures arrive.
+     */
+    public static function allowProductsWithoutImages(): bool
+    {
+        return self::getSetting('products_without_images', 'N') === 'Y';
+    }
+
+    /** Hide a product when none of the checked dates has an Immediate offer. */
+    public static function hideUnavailableProducts(): bool
+    {
+        return self::getSetting('hide_unavailable_products', 'Y') === 'Y';
+    }
+
+    /** @return list<int> days ahead to check, e.g. [14, 30, 60] */
+    public static function getAvailabilityNearDays(): array
+    {
+        return AvailabilityPlan::parseDays(TypeCoerce::toString(self::getSetting('availability_near_days', '14, 30, 60')));
+    }
+
+    /** Raw peak-season dates ("07-15, 08-15"); AvailabilityPlan resolves them. */
+    public static function getAvailabilitySeasonDates(): string
+    {
+        return TypeCoerce::toString(self::getSetting('availability_season_dates', '07-15, 08-15'));
+    }
+
+    public static function getAvailabilityNights(): int
+    {
+        $n = TypeCoerce::toInt(self::getSetting('availability_nights', 7));
+
+        return $n >= 1 && $n <= 21 ? $n : 7;
+    }
+
+    /** CS-Cart runtime company context — 1 in single-store mode. */
+    public static function getCompanyId(): int
+    {
+        $value = \Tygh\Registry::get('runtime.company_id');
+
+        return is_numeric($value) && (int) $value > 0 ? (int) $value : 1;
+    }
+
     public static function allowInsecureApi(): bool
     {
         return self::getSetting('allow_insecure_api', 'Y') === 'Y';

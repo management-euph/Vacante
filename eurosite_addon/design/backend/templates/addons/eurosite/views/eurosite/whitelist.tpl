@@ -66,6 +66,7 @@
          data-search-url="{"eurosite.search_destinations"|fn_url}"
          data-txt-loading="{__("loading", ["[default]" => "Loading..."])|escape:html}"
          data-txt-no-cities="{__("eurosite.no_cities", ["[default]" => "No cities found."])|escape:html}"
+         data-txt-hotels="{__("eurosite.hotels_word", ["[default]" => "hotels"])|escape:html}"
          data-txt-failed="{__("eurosite.request_failed", ["[default]" => "Request failed."])|escape:html}"
          data-txt-all-badge="{__("eurosite.all_cities_included", ["[default]" => "ALL CITIES"])|escape:html}"
          data-txt-selected="{__("eurosite.selected", ["[default]" => "selected"])|escape:html}"

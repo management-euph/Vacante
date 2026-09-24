@@ -816,18 +816,32 @@ Modes:
   countries     country catalog (86 rows live)
   own_cities    cities with own offers (marks is_own='Y'; 116 rows live)
   cities        city catalogs for whitelisted/own-offer countries (&country=RO)
-  hotels        own hotels + rooms per whitelisted/own-offer city (&city=ROMM)
+  hotels        own hotels + rooms per WHITELISTED city only (&city=ROMM);
+                hotels outside the whitelist are hidden and kept
   room_types    room-type catalog (22 rows live)
   tags          offer-tag catalog (currently empty — success at 0 rows)
   product_info  product-details cache warmer (&limit=100, &full=1)
+  availability  which listed hotels have an Immediate offer: near dates +
+                peak-season dates (add-on settings); hides/shows products
+                (&city=ROMM)
+  add_products  products for Immediate, whitelisted hotels with images
+                (&city=, &limit=100, &dry_run=1); needs "Hotels root
+                category ID" set
+  update_products  price, description, pictures of existing products
+                (&city=, &limit=200)
   cleanup       sync-log trim + orphaned product-info cache rows
 
-Suggested schedule (crontab, UTC):
-  0 2 * * *    mode=full          # nightly catalogs
-  30 2 * * *   mode=product_info  # warm details cache after catalogs
-  0 4 * * 0    mode=cleanup       # weekly housekeeping
+Suggested schedule (the dashboard's "Paste into crontab" block has the
+exact lines):
+  0 1 * * *    mode=full             # nightly catalogs
+  0 4 * * *    mode=product_info     # warm details cache after catalogs
+  30 4 * * *   mode=availability     # Immediate offers, product gate
+  30 5 * * *   mode=add_products     # new products
+  0 6 * * *    mode=update_products  # keep products current
+  0 5 * * 0    mode=cleanup          # weekly housekeeping
 
 Sync logs: database table cscart_eurosite_sync_log (dashboard: Eurosite
 Touring > Dashboard). Locks: var/cache/eurosite_cron_<mode>.lock.
 Whitelist gating: catalog syncs fail hard with "No sync targets configured"
-until Eurosite > Destination whitelist has entries (or own_cities ran once).
+until Eurosite > Destination whitelist has entries (or own_cities ran once);
+the hotels sync needs whitelist entries, full stop.

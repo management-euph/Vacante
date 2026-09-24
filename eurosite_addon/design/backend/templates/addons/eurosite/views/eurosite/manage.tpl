@@ -48,6 +48,11 @@
                     <td>
                         <code>{$job.mode|escape:html}</code>
                         <div class="muted" style="font-size: 11px;">{$job.description|escape:html}</div>
+                        {if $job.mode == 'hotels' || $job.mode == 'availability' || $job.mode == 'add_products'}
+                            <div class="es-sub">
+                                <a href="{"eurosite.hotels"|fn_url}">{__("eurosite.open_hotel_list", ["[default]" => "Open hotel list"])} &rarr;</a>
+                            </div>
+                        {/if}
                         {if $job.mode == 'hotels' && $eurosite_counts.whitelist == 0}
                             {* The one state the page can diagnose on its own: this job
                                reads the whitelist, and the whitelist is empty. *}

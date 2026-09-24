@@ -47,3 +47,35 @@ spl_autoload_register(static function (string $class) use ($travelCoreSrc): void
 if (!function_exists('fn_log_event')) {
     function fn_log_event(string $type, string $action, array $data = []): void {}
 }
+
+// Label lookup: the "[default]" text with its placeholders filled, which is
+// what a store without the label shows. Enough for code that builds messages.
+if (!function_exists('__')) {
+    function __(string $key, array $params = []): string
+    {
+        $text = isset($params['[default]']) && is_string($params['[default]']) ? $params['[default]'] : $key;
+        unset($params['[default]']);
+
+        return strtr($text, array_map(static fn ($v): string => is_scalar($v) ? (string) $v : '', $params));
+    }
+}
+
+// db_quote with the placeholders the addon uses (?s ?l ?i ?d ?a), quoted the
+// way CS-Cart does, so SQL-building code can be tested without a database.
+if (!function_exists('db_quote')) {
+    function db_quote(string $pattern, mixed ...$args): string
+    {
+        $quote = static fn ($v): string => "'" . addslashes((string) $v) . "'";
+
+        return (string) preg_replace_callback('/\?([sliad])/', static function (array $m) use (&$args, $quote): string {
+            $v = array_shift($args);
+
+            return match ($m[1]) {
+                's', 'l' => $quote($v),
+                'i' => (string) (int) $v,
+                'd' => (string) (float) $v,
+                'a' => implode(', ', array_map($quote, (array) $v)),
+            };
+        }, $pattern);
+    }
+}
