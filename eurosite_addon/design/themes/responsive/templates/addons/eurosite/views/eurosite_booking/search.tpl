@@ -90,24 +90,30 @@
                         {foreach from=$offer.meals item=meal}
                             <div class="travel-offer-board">{$meal.name|escape:html}</div>
                         {/foreach}
-                        {if $offer.availability}
+                        {if !$offer.bookable}
+                            <div class="eurosite-offer-availability eurosite-availability--stop">{__("eurosite.stop_sale", ["[default]" => "Stop sale — not bookable"])}</div>
+                        {elseif $offer.availability}
                             <div class="eurosite-offer-availability {if $offer.availability == 'OnRequest'}eurosite-availability--request{/if}">{$offer.availability|escape:html}</div>
                         {/if}
+                        {if $offer.bookable}
                         <div class="eurosite-offer-info-row">
                             <a href="#" class="eurosite-info-link" data-offer-key="{$offer.key}" data-modal-id="{$modal_id}">
                                 {__("eurosite.cancellation_and_payment_terms", ["[default]" => "Condiții de Anulare și Plată"])}
                             </a>
                         </div>
                         <div id="modal-content-{$modal_id}" style="display: none;" data-offer-key="{$offer.key}"></div>
+                        {/if}
                     </div>
                     <div class="travel-offer-price-action">
                         <div class="travel-offer-price">
                             <span class="travel-price-amount">{$offer.price} {$offer.currency}</span>
                         </div>
+                        {if $offer.bookable}
                         <a class="ty-btn ty-btn__primary travel-offer-book-btn"
                            href="{"eurosite_booking.booking_form?offer_key=`$offer.key`"|fn_url}">
                             {__("eurosite.book_now", ["[default]" => "Rezervă"])}
                         </a>
+                        {/if}
                     </div>
                 </div>
             {/foreach}

@@ -34,6 +34,11 @@ final class OfferContextStore
         $snapshots = [];
         $keys = [];
         foreach (array_slice($offers, 0, self::MAX_OFFERS) as $i => $offer) {
+            // Stop sale: shown for information, never bookable, so it gets no
+            // key — booking_form and add_to_cart only ever act on a key.
+            if (!$offer->isBookable()) {
+                continue;
+            }
             $key = self::keyFor($offer);
             $keys[$i] = $key;
             $snapshots[$key] = [
@@ -50,6 +55,7 @@ final class OfferContextStore
                 'currency' => $offer->currency,
                 'offer_type' => $offer->offerType,
                 'availability' => $offer->availability,
+                'availability_code' => $offer->availabilityCode,
                 'rooms' => $offer->rooms,
                 'meals' => $offer->meals,
                 'adults' => $occupancy['adults'],

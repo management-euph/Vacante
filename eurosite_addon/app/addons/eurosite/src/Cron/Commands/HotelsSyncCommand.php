@@ -43,16 +43,18 @@ final class HotelsSyncCommand extends AbstractSyncCommand
             $errors = [];
             foreach ($cities as $cityCode) {
                 $country = '';
+                $cityName = '';
                 $cityRow = $cityRepo->findByCode($cityCode);
                 if ($cityRow !== null) {
                     $country = TypeCoerce::toString($cityRow['country_code'] ?? '');
+                    $cityName = TypeCoerce::toString($cityRow['name'] ?? '');
                 }
-                $this->trySyncItem(function () use ($api, $hotelRepo, $cityCode, $country, &$total, &$synced): void {
+                $this->trySyncItem(function () use ($api, $hotelRepo, $cityCode, $cityName, $country, &$total, &$synced): void {
                     $hotels = $api->getOwnHotels($cityCode);
                     $total += count($hotels);
                     $synced += $hotelRepo->upsertBatch($hotels, $country);
                     if ($hotels !== []) {
-                        $this->output("  {$cityCode}: " . count($hotels) . ' hotels');
+                        $this->output(self::cityLine($cityCode, $cityName, count($hotels)));
                     }
                 }, "city {$cityCode}", $errors);
             }
@@ -64,6 +66,20 @@ final class HotelsSyncCommand extends AbstractSyncCommand
                 'error' => implode('; ', array_slice($errors, 0, 5)),
             ];
         });
+    }
+
+    /**
+     * One line of the run report: "  Techirghiol RO0218: 1 hotels". The code
+     * stays, since that is what the whitelist and the API use; the name is
+     * what an operator recognises. A city not yet synced by `cities` has no
+     * name, and prints its code alone.
+     */
+    public static function cityLine(string $cityCode, string $cityName, int $count): string
+    {
+        $cityName = trim($cityName);
+        $label = $cityName === '' || strcasecmp($cityName, $cityCode) === 0 ? $cityCode : "{$cityName} {$cityCode}";
+
+        return "  {$label}: {$count} hotels";
     }
 
     /**

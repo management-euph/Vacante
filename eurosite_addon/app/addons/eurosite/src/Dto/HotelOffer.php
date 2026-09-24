@@ -15,6 +15,7 @@ namespace Tygh\Addons\Eurosite\Dto;
  *   city_code: string, city_name: string, category: int, class: string,
  *   first_image: string, latitude: string, longitude: string,
  *   currency: string, offer_type: string, availability: string,
+ *   availability_code: string,
  *   check_in: string, check_out: string, price: float, gross: float,
  *   net: float, commission: float, variant_id: string, series_id: string,
  *   grila: string,
@@ -52,7 +53,38 @@ final class HotelOffer
         public readonly array $rooms = [],
         public readonly array $meals = [],
         public readonly string $seriesId = '',
+        public readonly string $availabilityCode = '',
     ) {
+    }
+
+    /**
+     * The spec's availability code (IM Immediate, OR On request, ST Stop sale)
+     * from `<Availability Code="…">`, falling back to the element's text when
+     * the attribute is missing. '' when neither says.
+     */
+    public static function normalizeAvailability(string $code, string $text): string
+    {
+        $code = strtoupper(trim($code));
+        if (in_array($code, ['IM', 'OR', 'ST'], true)) {
+            return $code;
+        }
+        $t = strtolower((string) preg_replace('/[^a-z]/i', '', $text));
+
+        return match (true) {
+            $t === 'immediate' => 'IM',
+            $t === 'onrequest' => 'OR',
+            str_starts_with($t, 'stop') => 'ST',
+            default => '',
+        };
+    }
+
+    /**
+     * Whether a booking may be attempted. The spec: "do not allow booking
+     * attempts on Stop Sale products; they are shown for information only."
+     */
+    public function isBookable(): bool
+    {
+        return $this->availabilityCode !== 'ST';
     }
 
     /**
@@ -74,6 +106,7 @@ final class HotelOffer
             'currency' => $this->currency,
             'offer_type' => $this->offerType,
             'availability' => $this->availability,
+            'availability_code' => $this->availabilityCode,
             'check_in' => $this->checkIn,
             'check_out' => $this->checkOut,
             'price' => $this->price,

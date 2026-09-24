@@ -190,6 +190,8 @@ if ($country !== '' && $city !== '' && $checkIn !== '' && $checkOut !== '') {
                     'row_id'       => count($results[$pc]['offers']) + 1,
                     'offer_type'   => $offer->offerType,
                     'availability' => $offer->availability,
+                    'availability_code' => $offer->availabilityCode,
+                    'bookable'     => $offer->isBookable() && ($offerKeys[$i] ?? '') !== '',
                     'check_in'     => $offer->checkIn,
                     'check_out'    => $offer->checkOut,
                     'price'        => number_format($offer->price, 2),

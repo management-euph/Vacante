@@ -765,6 +765,10 @@ final class EurositeApiClient
             rooms: $rooms,
             meals: $meals,
             seriesId: trim((string) ($offer->SeriesId ?? '')),
+            availabilityCode: HotelOffer::normalizeAvailability(
+                (string) ($offer->Availability['Code'] ?? ''),
+                (string) ($offer->Availability ?? ''),
+            ),
         );
     }
 
