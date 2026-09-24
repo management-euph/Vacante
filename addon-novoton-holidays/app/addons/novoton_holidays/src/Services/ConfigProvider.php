@@ -363,11 +363,42 @@ class ConfigProvider extends AbstractConfigProvider
         return Constants::HIDDEN_RESORTS;
     }
 
-    /** @return string[] */
+    /** @return list<string> */
     public static function getExcludedResorts(): array
     {
-        $val = self::settings()['excluded_resorts'] ?? '';
-        return $val !== '' ? array_map('trim', explode(',', TypeCoerce::toString($val))) : [];
+        return self::parseResortList(TypeCoerce::toString(self::settings()['excluded_resorts'] ?? ''));
+    }
+
+    /**
+     * The stored excluded-resorts value as a list of resort names.
+     *
+     * The dashboard saves it as a JSON array (`["ALBENA","VARNA"]`, default
+     * `[]`); this getter used to split it on commas, which turned that into
+     * `["ALBENA"` and `"VARNA"]` — names no hotel has, so add_hotels_as_products
+     * excluded nothing while the dashboard showed the resorts as excluded.
+     * Comma-separated text is still read, for values saved before the JSON form.
+     *
+     * @return list<string>
+     */
+    public static function parseResortList(string $stored): array
+    {
+        $stored = trim($stored);
+        if ($stored === '') {
+            return [];
+        }
+
+        $decoded = json_decode($stored, true);
+        $names = is_array($decoded) ? TypeCoerce::toStringList(array_values($decoded)) : explode(',', $stored);
+
+        $out = [];
+        foreach ($names as $name) {
+            $name = trim($name);
+            if ($name !== '' && !in_array($name, $out, true)) {
+                $out[] = $name;
+            }
+        }
+
+        return $out;
     }
 
     // ── Advanced Settings (Cache, Sync, Rate Limits) ──

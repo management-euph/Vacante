@@ -38,4 +38,9 @@ return [
         'en' => '[n] Child|[n] Children',
         'ro' => '[n] Copil|[n] Copii|[n] de Copii',
     ],
+    // Dashboard (novoton_holidays.manage) — scheduled jobs, run from the admin
+    'novoton_holidays.dash_job_unknown' => [
+        'en' => 'Unknown job: [job]',
+        'ro' => 'Job necunoscut: [job]',
+    ],
 ];

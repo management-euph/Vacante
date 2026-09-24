@@ -114,6 +114,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
     }
+
+    /**
+     * Mode: run_job — run one cron job from the dashboard, as the signed-in admin.
+     *
+     * The dashboard's Run / Check status / Force full sync / Reset used to be
+     * links to the public cron URL, carrying the shared cron key: the key went
+     * into browser history and Referer headers, and a GET "Reset" could be
+     * fired by any page the admin visited. This is a POST (CS-Cart checks its
+     * security_hash) and needs no key. The dashboard opens it in a new tab, where
+     * the job's log streams as plain text, exactly as the cron URL showed it.
+     */
+    if ($mode === 'run_job') {
+        if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
+            return [CONTROLLER_STATUS_DENIED];
+        }
+
+        $job = TypeCoerce::toString(preg_replace('/[^a-z0-9_]/', '', strtolower(RequestCoerce::string($_REQUEST, 'job'))));
+        if (!array_key_exists($job, \Tygh\Addons\NovotonHolidays\Cron\CronDispatcher::getAvailableModes())) {
+            fn_set_notification('E', __('error'), __('novoton_holidays.job_unknown', ['[job]' => $job]));
+
+            return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
+        }
+
+        // The batched jobs' extra actions, passed on as the flags their
+        // commands already read from the cron URL.
+        $params = [];
+        $action = RequestCoerce::string($_REQUEST, 'job_action');
+        if (in_array($action, ['status', 'force_full', 'reset'], true)) {
+            $params[$action] = '1';
+        }
+
+        header('Content-Type: text/plain; charset=utf-8');
+        $logger = new \Tygh\Addons\NovotonHolidays\Helpers\SyncLogger($job);
+        $logger->outputHeader($job);
+        try {
+            $dispatcher = new \Tygh\Addons\NovotonHolidays\Cron\CronDispatcher(_nvt_api(), $logger);
+            $result = $dispatcher->dispatch($job, $params);
+            $logger->complete(TypeCoerce::toBool($result['success'] ?? true));
+        } catch (\Throwable $e) {
+            $logger->output('ERROR: ' . $e->getMessage());
+        }
+        $logger->outputFooter();
+        exit;
+    }
 }
 
 /**

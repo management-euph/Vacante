@@ -3343,3 +3343,7 @@ msgstr "Facilități principale (separate prin virgulă)"
 msgctxt "Languages::novoton_holidays.location_show_map"
 msgid "Location - show map"
 msgstr "Locație - arată pe hartă"
+
+msgctxt "Languages::novoton_holidays.dash_job_unknown"
+msgid "Unknown job: [job]"
+msgstr "Job necunoscut: [job]"
