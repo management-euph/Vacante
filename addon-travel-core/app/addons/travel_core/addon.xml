@@ -842,8 +842,8 @@
         <item lang="ro" id="travel_core.tools_core_jobs_desc"><![CDATA[Lucrul programat pe care îl face Travel Core. Copiați comanda în cPanel → Cron Jobs.]]></item>
         <item lang="en" id="travel_core.tools_format_label"><![CDATA[Command format]]></item>
         <item lang="ro" id="travel_core.tools_format_label"><![CDATA[Formatul comenzii]]></item>
-        <item lang="en" id="travel_core.tools_format_url"><![CDATA[URL (curl)]]></item>
-        <item lang="ro" id="travel_core.tools_format_url"><![CDATA[URL (curl)]]></item>
+        <item lang="en" id="travel_core.tools_format_url"><![CDATA[URL]]></item>
+        <item lang="ro" id="travel_core.tools_format_url"><![CDATA[URL]]></item>
         <item lang="en" id="travel_core.tools_format_cli"><![CDATA[CLI (php)]]></item>
         <item lang="ro" id="travel_core.tools_format_cli"><![CDATA[CLI (php)]]></item>
         <item lang="en" id="travel_core.tools_col_command"><![CDATA[Command]]></item>
@@ -922,8 +922,8 @@
         <item lang="ro" id="travel_core.tools_help_title"><![CDATA[Configurarea cron în cPanel]]></item>
         <item lang="en" id="travel_core.tools_help_step1"><![CDATA[Open cPanel → Cron Jobs.]]></item>
         <item lang="ro" id="travel_core.tools_help_step1"><![CDATA[Deschideți cPanel → Cron Jobs.]]></item>
-        <item lang="en" id="travel_core.tools_help_step2"><![CDATA[Add Travel Core’s job with Copy above, then open each add-on’s commands from Add-on cron jobs and paste them the same way.]]></item>
-        <item lang="ro" id="travel_core.tools_help_step2"><![CDATA[Adăugați jobul Travel Core cu butonul Copiază de mai sus, apoi deschideți comenzile fiecărui addon din Joburi cron ale addon-urilor și lipiți-le la fel.]]></item>
+        <item lang="en" id="travel_core.tools_help_step2"><![CDATA[Switch the commands to CLI (php), add Travel Core’s job with Copy above, then open each add-on’s commands from Add-on cron jobs and paste them the same way. The URL form is for a cron service or the browser.]]></item>
+        <item lang="ro" id="travel_core.tools_help_step2"><![CDATA[Comutați comenzile pe CLI (php), adăugați jobul Travel Core cu butonul Copiază de mai sus, apoi deschideți comenzile fiecărui addon din Joburi cron ale addon-urilor și lipiți-le la fel. Forma URL este pentru un serviciu cron sau pentru browser.]]></item>
         <item lang="en" id="travel_core.tools_help_step3"><![CDATA[Come back after the next runs: every row should be green.]]></item>
         <item lang="ro" id="travel_core.tools_help_step3"><![CDATA[Reveniți după următoarele rulări: fiecare rând ar trebui să fie verde.]]></item>
         <item lang="en" id="travel_core.link_booking_orders"><![CDATA[Reconcile booking–order links]]></item>

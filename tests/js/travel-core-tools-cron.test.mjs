@@ -12,7 +12,7 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 const KEY = '3f7c1a9e5b2d8f406e1c9a7b5d3f2e18';
 const MASK = '••••••••••••';
-const URL_CMD = `curl -fsS "https://shop.example.ro/index.php?dispatch=travel_cron.run&access_key=${KEY}&cron_mode=exchange_rates" >/dev/null`;
+const URL_CMD = `https://shop.example.ro/index.php?dispatch=travel_cron.run&access_key=${KEY}&cron_mode=exchange_rates`;
 const CLI_CMD = `php /var/www/app/addons/travel_core/cron.php access_key=${KEY} mode=exchange_rates`;
 
 let copied = [];
@@ -26,7 +26,7 @@ beforeAll(async () => {
             <button type="button" id="travel-cron-key-reveal">Reveal</button>
             <button type="button" id="travel-cron-key-copy">Copy key</button>
 
-            <button type="button" data-cron-format="url" aria-pressed="true">URL (curl)</button>
+            <button type="button" data-cron-format="url" aria-pressed="true">URL</button>
             <button type="button" data-cron-format="cli" aria-pressed="false">CLI (php)</button>
 
             <code id="travel-cron-cmd-exchange_rates" class="travel-cron-cmd"
@@ -61,7 +61,7 @@ const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 describe('initial paint', () => {
     it('masks the key in the field and in the command', () => {
         expect($('#travel-cron-key').value).toBe(MASK);
-        expect(cmd()).toContain('curl -fsS');
+        expect(cmd()).toContain('https://shop.example.ro/index.php?dispatch=travel_cron.run');
         expect(cmd()).not.toContain(KEY);
         expect(cmd()).toContain(`access_key=${MASK}`);
     });
@@ -101,7 +101,7 @@ describe('format switch', () => {
         expect(copied).toEqual([CLI_CMD]);
 
         $('[data-cron-format="url"]').click();
-        expect(cmd()).toContain('curl -fsS');
+        expect(cmd()).toContain('https://shop.example.ro/index.php?dispatch=travel_cron.run');
     });
 });
 

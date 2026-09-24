@@ -42,7 +42,7 @@ final class CronOverviewTest extends TestCase
         $c = CronOverview::coreCommands('K3Y', 'https://shop.example.ro/', '/var/www/');
 
         self::assertSame(
-            'curl -fsS "https://shop.example.ro/index.php?dispatch=travel_cron.run&access_key=K3Y&cron_mode=exchange_rates" >/dev/null',
+            'https://shop.example.ro/index.php?dispatch=travel_cron.run&access_key=K3Y&cron_mode=exchange_rates',
             $c['url'],
         );
         self::assertSame('php /var/www/app/addons/travel_core/cron.php access_key=K3Y mode=exchange_rates', $c['cli']);

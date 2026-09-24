@@ -57,9 +57,16 @@ final class CronPlanBuilder
 
     private const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+    /**
+     * @param string $dirRoot the store's DIR_ROOT, so CLI lines work from any
+     *                        working directory (a crontab or cPanel job runs
+     *                        from the account's home, not the docroot); ''
+     *                        keeps them relative
+     */
     public function __construct(
         private readonly string $baseUrl,
         private readonly string $accessKey,
+        private readonly string $dirRoot = '',
     ) {
     }
 
@@ -97,7 +104,9 @@ final class CronPlanBuilder
 
     public function cli(string $mode): string
     {
-        return 'php app/addons/eurosite/cron.php access_key=' . $this->accessKey . ' mode=' . $mode;
+        $root = $this->dirRoot === '' ? '' : rtrim($this->dirRoot, '/') . '/';
+
+        return 'php ' . $root . 'app/addons/eurosite/cron.php access_key=' . $this->accessKey . ' mode=' . $mode;
     }
 
     /**
@@ -134,7 +143,8 @@ final class CronPlanBuilder
                 'state_label' => $health['label'],
                 'url' => $this->url($mode),
                 'cli' => $this->cli($mode),
-                'crontab_line' => $schedule['cron'] . '  ' . $this->curl($mode),
+                // A crontab line must be a command; a bare URL is not one.
+                'crontab_line' => $schedule['cron'] . '  ' . $this->cli($mode),
             ];
         }
 
@@ -162,10 +172,24 @@ final class CronPlanBuilder
             $lines[] = '# generated ' . $generatedOn;
         }
 
+        if ($format !== 'cli') {
+            // The URL form is for a cron service or the browser, not for a
+            // crontab: a bare URL does not run there. Each address is listed
+            // under the slot to schedule it at, as a comment, so nothing in
+            // this block can be pasted into a crontab by mistake and fail.
+            $lines[] = '# URLs for a cron service: add each one at the time shown';
+            foreach ($this->plannedModes($plan, $modes) as $mode) {
+                $schedule = self::SCHEDULES[$mode] ?? self::FALLBACK;
+                $lines[] = '# ' . $schedule['cron'] . ' (' . self::humanSchedule($schedule['cron']) . ')';
+                $lines[] = $this->url($mode);
+            }
+
+            return implode("\n", $lines);
+        }
+
         foreach ($this->plannedModes($plan, $modes) as $mode) {
             $schedule = self::SCHEDULES[$mode] ?? self::FALLBACK;
-            $command = $format === 'cli' ? $this->cli($mode) : $this->curl($mode);
-            $lines[] = $schedule['cron'] . '  ' . $command;
+            $lines[] = $schedule['cron'] . '  ' . $this->cli($mode);
         }
 
         return implode("\n", $lines);
@@ -319,11 +343,5 @@ final class CronPlanBuilder
         }
 
         return (int) floor($seconds / 86400) . 'd ago';
-    }
-
-    /** The URL wrapped as a crontab-safe curl line. */
-    private function curl(string $mode): string
-    {
-        return 'curl -fsS "' . $this->url($mode) . '" >/dev/null';
     }
 }

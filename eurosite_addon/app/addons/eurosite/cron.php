@@ -7,7 +7,7 @@ declare(strict_types=1);
  * Usage:
  *   php cron.php access_key=YOUR_KEY mode=full
  *   php cron.php access_key=YOUR_KEY mode=cities country=RO
- *   curl "http://domain.com/app/addons/eurosite/cron.php?access_key=KEY&mode=hotels"
+ *   URL: http://domain.com/index.php?dispatch=eurosite_cron.run&access_key=KEY&cron_mode=hotels
  *
  * Modes: see CronDispatcher::getAvailableModes() (countries, own_cities,
  * cities, hotels, room_types, tags, product_info, full, cleanup).

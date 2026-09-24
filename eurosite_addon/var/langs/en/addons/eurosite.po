@@ -577,8 +577,8 @@ msgid "Set it in Travel Core settings"
 msgstr "Set it in Travel Core settings"
 
 msgctxt "Languages::eurosite.cron_paste_hint"
-msgid "Paste this into the server crontab or cPanel → Cron Jobs."
-msgstr "Paste this into the server crontab or cPanel → Cron Jobs."
+msgid "CLI (php): paste it into the server crontab or cPanel → Cron Jobs. URL: add each address to a cron service at the time shown."
+msgstr "CLI (php): paste it into the server crontab or cPanel → Cron Jobs. URL: add each address to a cron service at the time shown."
 
 msgctxt "Languages::eurosite.cron_plan"
 msgid "Plan"
@@ -601,8 +601,8 @@ msgid "Format"
 msgstr "Format"
 
 msgctxt "Languages::eurosite.cron_format_url"
-msgid "URL (curl)"
-msgstr "URL (curl)"
+msgid "URL"
+msgstr "URL"
 
 msgctxt "Languages::eurosite.cron_format_cli"
 msgid "CLI (php)"
