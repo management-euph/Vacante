@@ -28,7 +28,7 @@ interface SyncLogRepositoryInterface
      */
     public function logSync(string $type, int $total, int $updated, int $failed = 0, int $duration = 0, string $status = 'completed', array $details = []): int;
     public function deleteOld(int $days = 30): int;
-    public function count(string $type = ''): int;
+    public function count(string $type = '', string $status = ''): int;
     /**
      * @return array<string, array<string, mixed>>
      */
@@ -40,6 +40,6 @@ interface SyncLogRepositoryInterface
     /**
      * @return array<string, mixed>
      */
-    public function findPaginated(int $page = 1, int $per_page = 10, string $type = ''): array;
+    public function findPaginated(int $page = 1, int $per_page = 10, string $type = '', string $status = ''): array;
     public function trimToLatest(int $keep = 100): int;
 }

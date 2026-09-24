@@ -471,4 +471,348 @@ return [
         'en' => 'Open scheduled jobs',
         'ro' => 'Deschide joburile programate',
     ],
+    'novoton_holidays.dash_title' => [
+        'en' => 'Novoton Holidays · v[version]',
+        'ro' => 'Novoton Holidays · v[version]',
+    ],
+    'novoton_holidays.dash_tile_hotels' => [
+        'en' => 'Hotels',
+        'ro' => 'Hoteluri',
+    ],
+    'novoton_holidays.dash_tile_hotels_realtime' => [
+        'en' => 'Real-time prices: [n]',
+        'ro' => 'Prețuri în timp real: [n]',
+    ],
+    'novoton_holidays.dash_tile_hotels_season' => [
+        'en' => 'Season prices: [n]',
+        'ro' => 'Prețuri de sezon: [n]',
+    ],
+    'novoton_holidays.dash_tile_products' => [
+        'en' => 'Products',
+        'ro' => 'Produse',
+    ],
+    'novoton_holidays.dash_tile_products_note' => [
+        'en' => 'Hotels made into CS-Cart products',
+        'ro' => 'Hoteluri transformate în produse CS-Cart',
+    ],
+    'novoton_holidays.dash_tile_products_open' => [
+        'en' => 'Open the hotels with products →',
+        'ro' => 'Deschide hotelurile cu produse →',
+    ],
+    'novoton_holidays.dash_tile_bookings' => [
+        'en' => 'Bookings',
+        'ro' => 'Rezervări',
+    ],
+    'novoton_holidays.dash_tile_bookings_pending' => [
+        'en' => '[n] pending',
+        'ro' => '[n] în așteptare',
+    ],
+    'novoton_holidays.dash_tile_bookings_note' => [
+        'en' => 'Confirmed: [confirmed] · cancelled: [cancelled]',
+        'ro' => 'Confirmate: [confirmed] · anulate: [cancelled]',
+    ],
+    'novoton_holidays.dash_tile_bookings_open' => [
+        'en' => 'Open Novoton bookings →',
+        'ro' => 'Deschide rezervările Novoton →',
+    ],
+    'novoton_holidays.dash_tile_jobs_failing' => [
+        'en' => 'Failing: [n]',
+        'ro' => 'Cu erori: [n]',
+    ],
+    'novoton_holidays.dash_tile_jobs_late' => [
+        'en' => 'Late: [n]',
+        'ro' => 'Întârziate: [n]',
+    ],
+    'novoton_holidays.dash_tile_jobs_never' => [
+        'en' => 'Not run yet: [n]',
+        'ro' => 'Nerulate încă: [n]',
+    ],
+    'novoton_holidays.dash_tile_jobs_ok' => [
+        'en' => 'All on time',
+        'ro' => 'Toate la timp',
+    ],
+    'novoton_holidays.dash_tile_jobs_note' => [
+        'en' => 'On time: [ok] · late: [late] · no runs yet: [never]',
+        'ro' => 'La timp: [ok] · întârziate: [late] · nerulate încă: [never]',
+    ],
+    'novoton_holidays.dash_tile_jobs_open' => [
+        'en' => 'See the jobs ↓',
+        'ro' => 'Vezi joburile ↓',
+    ],
+    'novoton_holidays.dash_attention_title' => [
+        'en' => 'Needs attention ([n])',
+        'ro' => 'Necesită atenție ([n])',
+    ],
+    'novoton_holidays.dash_attention_failed' => [
+        'en' => '[job] failed on [date].',
+        'ro' => '[job] a eșuat la [date].',
+    ],
+    'novoton_holidays.dash_attention_stalled' => [
+        'en' => '[job] started on [date] and never finished.',
+        'ro' => '[job] a pornit la [date] și nu s-a terminat.',
+    ],
+    'novoton_holidays.dash_attention_never' => [
+        'en' => '[job] has never run.',
+        'ro' => '[job] nu a rulat niciodată.',
+    ],
+    'novoton_holidays.dash_attention_never_prices' => [
+        'en' => '[job] has never run, so [with] of [total] hotels have season prices.',
+        'ro' => '[job] nu a rulat niciodată, așa că [with] din [total] hoteluri au prețuri de sezon.',
+    ],
+    'novoton_holidays.dash_attention_late' => [
+        'en' => '[job] is late: it last finished on [date].',
+        'ro' => '[job] este întârziat: ultima dată s-a terminat la [date].',
+    ],
+    'novoton_holidays.dash_attention_no_season' => [
+        'en' => 'Only [with] of [total] hotels have season prices.',
+        'ro' => 'Doar [with] din [total] hoteluri au prețuri de sezon.',
+    ],
+    'novoton_holidays.dash_attention_run' => [
+        'en' => 'Run [job] now',
+        'ro' => 'Rulează [job] acum',
+    ],
+    'novoton_holidays.dash_tools_title' => [
+        'en' => 'Tools',
+        'ro' => 'Instrumente',
+    ],
+    'novoton_holidays.dash_tools_check' => [
+        'en' => 'Check',
+        'ro' => 'Verificări',
+    ],
+    'novoton_holidays.dash_tool_check_prices' => [
+        'en' => 'Check prices',
+        'ro' => 'Verifică prețurile',
+    ],
+    'novoton_holidays.dash_tool_check_prices_hotel' => [
+        'en' => 'Check prices per hotel',
+        'ro' => 'Verifică prețurile pe hotel',
+    ],
+    'novoton_holidays.dash_tool_check_packages' => [
+        'en' => 'Check packages',
+        'ro' => 'Verifică pachetele',
+    ],
+    'novoton_holidays.dash_tool_test_api' => [
+        'en' => 'Test API',
+        'ro' => 'Testează API-ul',
+    ],
+    'novoton_holidays.dash_tool_health' => [
+        'en' => 'Health check',
+        'ro' => 'Verificare stare',
+    ],
+    'novoton_holidays.dash_tools_open' => [
+        'en' => 'Open',
+        'ro' => 'Deschide',
+    ],
+    'novoton_holidays.dash_tool_bookings' => [
+        'en' => 'Bookings',
+        'ro' => 'Rezervări',
+    ],
+    'novoton_holidays.dash_tool_alternatives' => [
+        'en' => 'Alternative requests',
+        'ro' => 'Cereri de alternative',
+    ],
+    'novoton_holidays.dash_tool_price_compare' => [
+        'en' => 'Price comparison',
+        'ro' => 'Comparație prețuri',
+    ],
+    'novoton_holidays.dash_tools_export' => [
+        'en' => 'Export',
+        'ro' => 'Export',
+    ],
+    'novoton_holidays.dash_tool_features_csv' => [
+        'en' => 'Hotel features (CSV)',
+        'ro' => 'Caracteristici hoteluri (CSV)',
+    ],
+    'novoton_holidays.dash_tool_features_xml' => [
+        'en' => 'Hotel features (XML)',
+        'ro' => 'Caracteristici hoteluri (XML)',
+    ],
+    'novoton_holidays.dash_tools_maintenance' => [
+        'en' => 'Maintenance',
+        'ro' => 'Întreținere',
+    ],
+    'novoton_holidays.dash_tool_recompute_calendar' => [
+        'en' => 'Recompute calendar prices…',
+        'ro' => 'Recalculează prețurile din calendar…',
+    ],
+    'novoton_holidays.dash_tool_recompute_calendar_confirm' => [
+        'en' => 'Recompute the calendar prices of every hotel now?',
+        'ro' => 'Recalculezi acum prețurile din calendar pentru toate hotelurile?',
+    ],
+    'novoton_holidays.dash_tool_recompute_calendar_hint' => [
+        'en' => 'Asks first; runs as an admin action.',
+        'ro' => 'Cere confirmare; rulează ca acțiune de administrator.',
+    ],
+    'novoton_holidays.dash_countries_title' => [
+        'en' => 'Hotels by country',
+        'ro' => 'Hoteluri pe țări',
+    ],
+    'novoton_holidays.dash_col_country' => [
+        'en' => 'Country',
+        'ro' => 'Țară',
+    ],
+    'novoton_holidays.dash_col_hotels' => [
+        'en' => 'Hotels',
+        'ro' => 'Hoteluri',
+    ],
+    'novoton_holidays.dash_col_realtime' => [
+        'en' => 'Real-time prices',
+        'ro' => 'Prețuri în timp real',
+    ],
+    'novoton_holidays.dash_col_season' => [
+        'en' => 'Season prices',
+        'ro' => 'Prețuri de sezon',
+    ],
+    'novoton_holidays.dash_col_products' => [
+        'en' => 'Products',
+        'ro' => 'Produse',
+    ],
+    'novoton_holidays.dash_resorts_title' => [
+        'en' => 'Excluded resorts',
+        'ro' => 'Stațiuni excluse',
+    ],
+    'novoton_holidays.dash_resorts_summary' => [
+        'en' => '[excluded] of [total] resorts excluded',
+        'ro' => '[excluded] din [total] stațiuni excluse',
+    ],
+    'novoton_holidays.dash_resorts_country_summary' => [
+        'en' => '[country] [excluded] of [total]',
+        'ro' => '[country] [excluded] din [total]',
+    ],
+    'novoton_holidays.dash_resorts_rule' => [
+        'en' => 'Hotels in excluded resorts are never made into products; products already made stay as they are.',
+        'ro' => 'Hotelurile din stațiunile excluse nu devin niciodată produse; produsele deja create rămân cum sunt.',
+    ],
+    'novoton_holidays.dash_resorts_choose' => [
+        'en' => 'Choose resorts…',
+        'ro' => 'Alege stațiunile…',
+    ],
+    'novoton_holidays.dash_resorts_pending' => [
+        'en' => '[changes] not saved: [add] to exclude, [remove] to include again · affects [hotels] hotels ([products] already products; they stay)',
+        'ro' => '[changes] nesalvate: [add] de exclus, [remove] de reinclus · afectează [hotels] hoteluri ([products] sunt deja produse; rămân)',
+    ],
+    'novoton_holidays.dash_resorts_saved' => [
+        'en' => 'All changes saved',
+        'ro' => 'Toate modificările sunt salvate',
+    ],
+    'novoton_holidays.dash_resorts_search' => [
+        'en' => 'Search resorts',
+        'ro' => 'Caută stațiuni',
+    ],
+    'novoton_holidays.dash_resorts_all' => [
+        'en' => 'All [n]',
+        'ro' => 'Toate [n]',
+    ],
+    'novoton_holidays.dash_resorts_only_excluded' => [
+        'en' => 'Show excluded only',
+        'ro' => 'Doar cele excluse',
+    ],
+    'novoton_holidays.dash_resorts_sort' => [
+        'en' => 'Sort',
+        'ro' => 'Sortare',
+    ],
+    'novoton_holidays.dash_resorts_sort_name' => [
+        'en' => 'A–Z',
+        'ro' => 'A–Z',
+    ],
+    'novoton_holidays.dash_resorts_sort_hotels' => [
+        'en' => 'Most hotels',
+        'ro' => 'Cele mai multe hoteluri',
+    ],
+    'novoton_holidays.dash_resorts_group' => [
+        'en' => 'resorts: [resorts] · hotels: [hotels]',
+        'ro' => 'stațiuni: [resorts] · hoteluri: [hotels]',
+    ],
+    'novoton_holidays.dash_resorts_excluded_word' => [
+        'en' => 'excluded',
+        'ro' => 'excluse',
+    ],
+    'novoton_holidays.dash_resorts_exclude_shown' => [
+        'en' => 'Exclude all shown',
+        'ro' => 'Exclude toate cele afișate',
+    ],
+    'novoton_holidays.dash_resorts_include_shown' => [
+        'en' => 'Include all shown',
+        'ro' => 'Include toate cele afișate',
+    ],
+    'novoton_holidays.dash_resorts_not_saved' => [
+        'en' => 'Not saved yet',
+        'ro' => 'Nesalvat încă',
+    ],
+    'novoton_holidays.dash_resorts_excluded_flag' => [
+        'en' => 'Excluded',
+        'ro' => 'Exclusă',
+    ],
+    'novoton_holidays.dash_n_hotels' => [
+        'en' => '[n] hotel|[n] hotels',
+        'ro' => '[n] hotel|[n] hoteluri|[n] de hoteluri',
+    ],
+    'novoton_holidays.dash_n_products' => [
+        'en' => '[n] product|[n] products',
+        'ro' => '[n] produs|[n] produse|[n] de produse',
+    ],
+    'novoton_holidays.dash_no_products' => [
+        'en' => 'no products',
+        'ro' => 'fără produse',
+    ],
+    'novoton_holidays.dash_resorts_no_match' => [
+        'en' => 'No resorts match these filters.',
+        'ro' => 'Nicio stațiune nu corespunde acestor filtre.',
+    ],
+    'novoton_holidays.dash_resorts_undo' => [
+        'en' => 'Undo changes',
+        'ro' => 'Anulează modificările',
+    ],
+    'novoton_holidays.dash_resorts_save' => [
+        'en' => 'Save excluded resorts',
+        'ro' => 'Salvează stațiunile excluse',
+    ],
+    'novoton_holidays.dash_resorts_none' => [
+        'en' => 'No resorts yet: run the Hotel list job to load them.',
+        'ro' => 'Nicio stațiune încă: rulează jobul Lista hotelurilor pentru a le încărca.',
+    ],
+    'novoton_holidays.dash_activity_title' => [
+        'en' => 'Recent sync activity',
+        'ro' => 'Activitate recentă de sincronizare',
+    ],
+    'novoton_holidays.dash_activity_all' => [
+        'en' => 'All ([n])',
+        'ro' => 'Toate ([n])',
+    ],
+    'novoton_holidays.dash_activity_failed' => [
+        'en' => 'Failed ([n])',
+        'ro' => 'Eșuate ([n])',
+    ],
+    'novoton_holidays.dash_activity_ok' => [
+        'en' => 'OK',
+        'ro' => 'OK',
+    ],
+    'novoton_holidays.dash_activity_none' => [
+        'en' => 'No sync runs recorded.',
+        'ro' => 'Nicio sincronizare înregistrată.',
+    ],
+    'novoton_holidays.dash_col_date' => [
+        'en' => 'Date',
+        'ro' => 'Data',
+    ],
+    'novoton_holidays.dash_col_total' => [
+        'en' => 'Total',
+        'ro' => 'Total',
+    ],
+    'novoton_holidays.dash_col_updated' => [
+        'en' => 'Updated',
+        'ro' => 'Actualizate',
+    ],
+    'novoton_holidays.dash_col_failed' => [
+        'en' => 'Failed',
+        'ro' => 'Eșuate',
+    ],
+    'novoton_holidays.dash_col_status' => [
+        'en' => 'Status',
+        'ro' => 'Stare',
+    ],
+    'novoton_holidays.dash_col_duration' => [
+        'en' => 'Duration',
+        'ro' => 'Durată',
+    ],
 ];

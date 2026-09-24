@@ -57,6 +57,35 @@ class HotelReportingRepository implements HotelReportingRepositoryInterface
     }
 
     /**
+     * products counts linked hotels with CASE, not SUM(product_id > 0): that
+     * comparison is NULL for an unlinked hotel, so a resort with no products
+     * summed to NULL instead of 0.
+     *
+     * @return list<array{country: string, city: string, hotels: int, products: int}>
+     */
+    #[\Override]
+    public function getResortCounts(): array
+    {
+        $rows = self::asRowList(db_get_array(
+            "SELECT country, city, COUNT(*) AS hotels,
+                    SUM(CASE WHEN product_id > 0 THEN 1 ELSE 0 END) AS products
+             FROM ?:novoton_hotels
+             WHERE city IS NOT NULL AND city != ''
+             GROUP BY country, city ORDER BY country, city",
+        ));
+        $out = [];
+        foreach ($rows as $row) {
+            $out[] = [
+                'country' => TypeCoerce::toString($row['country'] ?? ''),
+                'city' => TypeCoerce::toString($row['city'] ?? ''),
+                'hotels' => TypeCoerce::toInt($row['hotels'] ?? 0),
+                'products' => TypeCoerce::toInt($row['products'] ?? 0),
+            ];
+        }
+        return $out;
+    }
+
+    /**
      * @return list<array{country: string, city: string}>
      */
     #[\Override]

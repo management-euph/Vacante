@@ -129,6 +129,8 @@ interface HotelRepositoryInterface extends CoreHotelRepositoryInterface
     public function getCountriesWithPriceCounts(): array;
     /** @return list<array{country: string, city: string}> */
     public function getCountryCityPairs(): array;
+    /** @return list<array{country: string, city: string, hotels: int, products: int}> */
+    public function getResortCounts(): array;
     public function getHotelData(string $hotel_id): ?string;
     /** @return list<HotelRow> */
     public function findWithPriceinfoData(int $limit = 200): array;

@@ -42,6 +42,7 @@ final class DashboardJobsTemplateTest extends TestCase
             'manage' => self::code('views/novoton_holidays/manage.tpl'),
             'job_row' => self::code('components/job_row.tpl'),
             'run_job' => self::code('components/run_job.tpl'),
+            'activity' => self::code('components/activity.tpl'),
         ];
     }
 

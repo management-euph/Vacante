@@ -3775,3 +3775,347 @@ msgstr "Joburile programate, cu liniile crontab, URL-urile și ultimele rulări,
 msgctxt "Languages::novoton_holidays.dash_open_jobs"
 msgid "Open scheduled jobs"
 msgstr "Deschide joburile programate"
+
+msgctxt "Languages::novoton_holidays.dash_title"
+msgid "Novoton Holidays · v[version]"
+msgstr "Novoton Holidays · v[version]"
+
+msgctxt "Languages::novoton_holidays.dash_tile_hotels"
+msgid "Hotels"
+msgstr "Hoteluri"
+
+msgctxt "Languages::novoton_holidays.dash_tile_hotels_realtime"
+msgid "Real-time prices: [n]"
+msgstr "Prețuri în timp real: [n]"
+
+msgctxt "Languages::novoton_holidays.dash_tile_hotels_season"
+msgid "Season prices: [n]"
+msgstr "Prețuri de sezon: [n]"
+
+msgctxt "Languages::novoton_holidays.dash_tile_products"
+msgid "Products"
+msgstr "Produse"
+
+msgctxt "Languages::novoton_holidays.dash_tile_products_note"
+msgid "Hotels made into CS-Cart products"
+msgstr "Hoteluri transformate în produse CS-Cart"
+
+msgctxt "Languages::novoton_holidays.dash_tile_products_open"
+msgid "Open the hotels with products →"
+msgstr "Deschide hotelurile cu produse →"
+
+msgctxt "Languages::novoton_holidays.dash_tile_bookings"
+msgid "Bookings"
+msgstr "Rezervări"
+
+msgctxt "Languages::novoton_holidays.dash_tile_bookings_pending"
+msgid "[n] pending"
+msgstr "[n] în așteptare"
+
+msgctxt "Languages::novoton_holidays.dash_tile_bookings_note"
+msgid "Confirmed: [confirmed] · cancelled: [cancelled]"
+msgstr "Confirmate: [confirmed] · anulate: [cancelled]"
+
+msgctxt "Languages::novoton_holidays.dash_tile_bookings_open"
+msgid "Open Novoton bookings →"
+msgstr "Deschide rezervările Novoton →"
+
+msgctxt "Languages::novoton_holidays.dash_tile_jobs_failing"
+msgid "Failing: [n]"
+msgstr "Cu erori: [n]"
+
+msgctxt "Languages::novoton_holidays.dash_tile_jobs_late"
+msgid "Late: [n]"
+msgstr "Întârziate: [n]"
+
+msgctxt "Languages::novoton_holidays.dash_tile_jobs_never"
+msgid "Not run yet: [n]"
+msgstr "Nerulate încă: [n]"
+
+msgctxt "Languages::novoton_holidays.dash_tile_jobs_ok"
+msgid "All on time"
+msgstr "Toate la timp"
+
+msgctxt "Languages::novoton_holidays.dash_tile_jobs_note"
+msgid "On time: [ok] · late: [late] · no runs yet: [never]"
+msgstr "La timp: [ok] · întârziate: [late] · nerulate încă: [never]"
+
+msgctxt "Languages::novoton_holidays.dash_tile_jobs_open"
+msgid "See the jobs ↓"
+msgstr "Vezi joburile ↓"
+
+msgctxt "Languages::novoton_holidays.dash_attention_title"
+msgid "Needs attention ([n])"
+msgstr "Necesită atenție ([n])"
+
+msgctxt "Languages::novoton_holidays.dash_attention_failed"
+msgid "[job] failed on [date]."
+msgstr "[job] a eșuat la [date]."
+
+msgctxt "Languages::novoton_holidays.dash_attention_stalled"
+msgid "[job] started on [date] and never finished."
+msgstr "[job] a pornit la [date] și nu s-a terminat."
+
+msgctxt "Languages::novoton_holidays.dash_attention_never"
+msgid "[job] has never run."
+msgstr "[job] nu a rulat niciodată."
+
+msgctxt "Languages::novoton_holidays.dash_attention_never_prices"
+msgid "[job] has never run, so [with] of [total] hotels have season prices."
+msgstr "[job] nu a rulat niciodată, așa că [with] din [total] hoteluri au prețuri de sezon."
+
+msgctxt "Languages::novoton_holidays.dash_attention_late"
+msgid "[job] is late: it last finished on [date]."
+msgstr "[job] este întârziat: ultima dată s-a terminat la [date]."
+
+msgctxt "Languages::novoton_holidays.dash_attention_no_season"
+msgid "Only [with] of [total] hotels have season prices."
+msgstr "Doar [with] din [total] hoteluri au prețuri de sezon."
+
+msgctxt "Languages::novoton_holidays.dash_attention_run"
+msgid "Run [job] now"
+msgstr "Rulează [job] acum"
+
+msgctxt "Languages::novoton_holidays.dash_tools_title"
+msgid "Tools"
+msgstr "Instrumente"
+
+msgctxt "Languages::novoton_holidays.dash_tools_check"
+msgid "Check"
+msgstr "Verificări"
+
+msgctxt "Languages::novoton_holidays.dash_tool_check_prices"
+msgid "Check prices"
+msgstr "Verifică prețurile"
+
+msgctxt "Languages::novoton_holidays.dash_tool_check_prices_hotel"
+msgid "Check prices per hotel"
+msgstr "Verifică prețurile pe hotel"
+
+msgctxt "Languages::novoton_holidays.dash_tool_check_packages"
+msgid "Check packages"
+msgstr "Verifică pachetele"
+
+msgctxt "Languages::novoton_holidays.dash_tool_test_api"
+msgid "Test API"
+msgstr "Testează API-ul"
+
+msgctxt "Languages::novoton_holidays.dash_tool_health"
+msgid "Health check"
+msgstr "Verificare stare"
+
+msgctxt "Languages::novoton_holidays.dash_tools_open"
+msgid "Open"
+msgstr "Deschide"
+
+msgctxt "Languages::novoton_holidays.dash_tool_bookings"
+msgid "Bookings"
+msgstr "Rezervări"
+
+msgctxt "Languages::novoton_holidays.dash_tool_alternatives"
+msgid "Alternative requests"
+msgstr "Cereri de alternative"
+
+msgctxt "Languages::novoton_holidays.dash_tool_price_compare"
+msgid "Price comparison"
+msgstr "Comparație prețuri"
+
+msgctxt "Languages::novoton_holidays.dash_tools_export"
+msgid "Export"
+msgstr "Export"
+
+msgctxt "Languages::novoton_holidays.dash_tool_features_csv"
+msgid "Hotel features (CSV)"
+msgstr "Caracteristici hoteluri (CSV)"
+
+msgctxt "Languages::novoton_holidays.dash_tool_features_xml"
+msgid "Hotel features (XML)"
+msgstr "Caracteristici hoteluri (XML)"
+
+msgctxt "Languages::novoton_holidays.dash_tools_maintenance"
+msgid "Maintenance"
+msgstr "Întreținere"
+
+msgctxt "Languages::novoton_holidays.dash_tool_recompute_calendar"
+msgid "Recompute calendar prices…"
+msgstr "Recalculează prețurile din calendar…"
+
+msgctxt "Languages::novoton_holidays.dash_tool_recompute_calendar_confirm"
+msgid "Recompute the calendar prices of every hotel now?"
+msgstr "Recalculezi acum prețurile din calendar pentru toate hotelurile?"
+
+msgctxt "Languages::novoton_holidays.dash_tool_recompute_calendar_hint"
+msgid "Asks first; runs as an admin action."
+msgstr "Cere confirmare; rulează ca acțiune de administrator."
+
+msgctxt "Languages::novoton_holidays.dash_countries_title"
+msgid "Hotels by country"
+msgstr "Hoteluri pe țări"
+
+msgctxt "Languages::novoton_holidays.dash_col_country"
+msgid "Country"
+msgstr "Țară"
+
+msgctxt "Languages::novoton_holidays.dash_col_hotels"
+msgid "Hotels"
+msgstr "Hoteluri"
+
+msgctxt "Languages::novoton_holidays.dash_col_realtime"
+msgid "Real-time prices"
+msgstr "Prețuri în timp real"
+
+msgctxt "Languages::novoton_holidays.dash_col_season"
+msgid "Season prices"
+msgstr "Prețuri de sezon"
+
+msgctxt "Languages::novoton_holidays.dash_col_products"
+msgid "Products"
+msgstr "Produse"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_title"
+msgid "Excluded resorts"
+msgstr "Stațiuni excluse"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_summary"
+msgid "[excluded] of [total] resorts excluded"
+msgstr "[excluded] din [total] stațiuni excluse"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_country_summary"
+msgid "[country] [excluded] of [total]"
+msgstr "[country] [excluded] din [total]"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_rule"
+msgid "Hotels in excluded resorts are never made into products; products already made stay as they are."
+msgstr "Hotelurile din stațiunile excluse nu devin niciodată produse; produsele deja create rămân cum sunt."
+
+msgctxt "Languages::novoton_holidays.dash_resorts_choose"
+msgid "Choose resorts…"
+msgstr "Alege stațiunile…"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_pending"
+msgid "[changes] not saved: [add] to exclude, [remove] to include again · affects [hotels] hotels ([products] already products; they stay)"
+msgstr "[changes] nesalvate: [add] de exclus, [remove] de reinclus · afectează [hotels] hoteluri ([products] sunt deja produse; rămân)"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_saved"
+msgid "All changes saved"
+msgstr "Toate modificările sunt salvate"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_search"
+msgid "Search resorts"
+msgstr "Caută stațiuni"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_all"
+msgid "All [n]"
+msgstr "Toate [n]"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_only_excluded"
+msgid "Show excluded only"
+msgstr "Doar cele excluse"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_sort"
+msgid "Sort"
+msgstr "Sortare"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_sort_name"
+msgid "A–Z"
+msgstr "A–Z"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_sort_hotels"
+msgid "Most hotels"
+msgstr "Cele mai multe hoteluri"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_group"
+msgid "resorts: [resorts] · hotels: [hotels]"
+msgstr "stațiuni: [resorts] · hoteluri: [hotels]"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_excluded_word"
+msgid "excluded"
+msgstr "excluse"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_exclude_shown"
+msgid "Exclude all shown"
+msgstr "Exclude toate cele afișate"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_include_shown"
+msgid "Include all shown"
+msgstr "Include toate cele afișate"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_not_saved"
+msgid "Not saved yet"
+msgstr "Nesalvat încă"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_excluded_flag"
+msgid "Excluded"
+msgstr "Exclusă"
+
+msgctxt "Languages::novoton_holidays.dash_n_hotels"
+msgid "[n] hotel|[n] hotels"
+msgstr "[n] hotel|[n] hoteluri|[n] de hoteluri"
+
+msgctxt "Languages::novoton_holidays.dash_n_products"
+msgid "[n] product|[n] products"
+msgstr "[n] produs|[n] produse|[n] de produse"
+
+msgctxt "Languages::novoton_holidays.dash_no_products"
+msgid "no products"
+msgstr "fără produse"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_no_match"
+msgid "No resorts match these filters."
+msgstr "Nicio stațiune nu corespunde acestor filtre."
+
+msgctxt "Languages::novoton_holidays.dash_resorts_undo"
+msgid "Undo changes"
+msgstr "Anulează modificările"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_save"
+msgid "Save excluded resorts"
+msgstr "Salvează stațiunile excluse"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_none"
+msgid "No resorts yet: run the Hotel list job to load them."
+msgstr "Nicio stațiune încă: rulează jobul Lista hotelurilor pentru a le încărca."
+
+msgctxt "Languages::novoton_holidays.dash_activity_title"
+msgid "Recent sync activity"
+msgstr "Activitate recentă de sincronizare"
+
+msgctxt "Languages::novoton_holidays.dash_activity_all"
+msgid "All ([n])"
+msgstr "Toate ([n])"
+
+msgctxt "Languages::novoton_holidays.dash_activity_failed"
+msgid "Failed ([n])"
+msgstr "Eșuate ([n])"
+
+msgctxt "Languages::novoton_holidays.dash_activity_ok"
+msgid "OK"
+msgstr "OK"
+
+msgctxt "Languages::novoton_holidays.dash_activity_none"
+msgid "No sync runs recorded."
+msgstr "Nicio sincronizare înregistrată."
+
+msgctxt "Languages::novoton_holidays.dash_col_date"
+msgid "Date"
+msgstr "Data"
+
+msgctxt "Languages::novoton_holidays.dash_col_total"
+msgid "Total"
+msgstr "Total"
+
+msgctxt "Languages::novoton_holidays.dash_col_updated"
+msgid "Updated"
+msgstr "Actualizate"
+
+msgctxt "Languages::novoton_holidays.dash_col_failed"
+msgid "Failed"
+msgstr "Eșuate"
+
+msgctxt "Languages::novoton_holidays.dash_col_status"
+msgid "Status"
+msgstr "Stare"
+
+msgctxt "Languages::novoton_holidays.dash_col_duration"
+msgid "Duration"
+msgstr "Durată"
