@@ -17,7 +17,9 @@
  *
  * USE:
  *   http://localhost:8080/dev/tools/eurosite-sample.php
- *       → JSON for the 8 destinations with the most hotels, stay +30 days, 7 nights, 2 adults
+ *       → JSON for the WHITELISTED destinations that have hotels (largest first,
+ *         up to 40), stay +30 days, 7 nights, 2 adults — plus the whitelist and,
+ *         per hotel, how many pictures the product-info cache holds
  *   ...?cities=RO0218,RO2M,ROBC   → those destinations instead
  *   ...?check_in=2026-11-02&nights=5&limit=10
  *   ...&download=1                → saved as eurosite-sample.json
@@ -74,7 +76,7 @@ if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $es_check_in)) {
     exit("check_in must be YYYY-MM-DD\n");
 }
 $es_check_out = date('Y-m-d', (int) strtotime($es_check_in . ' +' . $es_nights . ' days'));
-$es_limit = max(1, min(30, (int) es_param('limit', '8')));
+$es_limit = max(1, min(60, (int) es_param('limit', '40')));
 
 // Destination names and hotel counts come from this store's own sync.
 $es_per_city = db_get_array(
@@ -82,11 +84,30 @@ $es_per_city = db_get_array(
     . ' FROM ?:eurosite_hotels h LEFT JOIN ?:eurosite_cities c ON c.city_code = h.city_code'
     . " WHERE h.sync_status = 'active' GROUP BY h.city_code, h.country_code, c.name ORDER BY hotels DESC",
 );
+// The destination whitelist, and which synced destinations it allows.
+$es_whitelist_repo = Container::whitelist();
+$es_allowed = [];
+foreach ($es_whitelist_repo->getCountryCodes() as $es_cc) {
+    foreach ($es_whitelist_repo->getAllowedCityCodes($es_cc) as $es_city) {
+        $es_allowed[$es_city] = true;
+    }
+}
+foreach ($es_per_city as $es_i => $es_r) {
+    $es_per_city[$es_i]['whitelisted'] = isset($es_allowed[(string) $es_r['city_code']]);
+}
+
 $es_wanted = array_values(array_filter(array_map('strtoupper', array_map('trim', explode(',', es_param('cities'))))));
 if ($es_wanted === []) {
-    $es_wanted = array_slice(array_column($es_per_city, 'city_code'), 0, $es_limit);
+    $es_wanted = array_slice(array_column(array_filter($es_per_city, static fn (array $r): bool => $r['whitelisted']), 'city_code'), 0, $es_limit);
 }
 $es_city_meta = array_column($es_per_city, null, 'city_code');
+
+// Pictures per hotel, from the product_info cache (filled by the product_info cron).
+$es_pictures = [];
+foreach (db_get_array('SELECT tourop_code, product_code, pictures_json FROM ?:eurosite_product_info_cache') as $es_pr) {
+    $es_list = json_decode((string) ($es_pr['pictures_json'] ?? ''), true);
+    $es_pictures[$es_pr['tourop_code'] . '|' . $es_pr['product_code']] = is_array($es_list) ? count($es_list) : 0;
+}
 
 $es_api = Container::getApi();
 $es_hotel_repo = Container::hotels();
@@ -101,8 +122,12 @@ $es_out = [
         'destinations' => count($es_per_city),
         'linked_products' => (int) db_get_field('SELECT COUNT(*) FROM ?:eurosite_hotels WHERE product_id IS NOT NULL AND product_id > 0'),
     ],
+    'whitelist' => array_map(static fn (array $r): array => [
+        'country' => (string) ($r['country_code'] ?? ''), 'city' => (string) ($r['city_code'] ?? ''), 'type' => (string) ($r['selection_type'] ?? ''),
+    ], $es_whitelist_repo->findAll()),
     'destinations_by_size' => array_map(static fn (array $r): array => [
-        'code' => (string) $r['city_code'], 'name' => (string) ($r['city_name'] ?? ''), 'country' => (string) $r['country_code'], 'hotels' => (int) $r['hotels'],
+        'code' => (string) $r['city_code'], 'name' => (string) ($r['city_name'] ?? ''), 'country' => (string) $r['country_code'],
+        'hotels' => (int) $r['hotels'], 'whitelisted' => (bool) $r['whitelisted'],
     ], $es_per_city),
     'cities' => [],
     'errors' => [],
@@ -129,6 +154,8 @@ foreach ($es_wanted as $es_code) {
             'image' => '',
             'product_id' => isset($es_row['product_id']) ? (int) $es_row['product_id'] : null,
             'last_synced_at' => (string) ($es_row['last_synced_at'] ?? ''),
+            'info_cached' => array_key_exists(((string) ($es_row['tourop_code'] ?? '')) . '|' . $es_pc, $es_pictures),
+            'pictures' => $es_pictures[((string) ($es_row['tourop_code'] ?? '')) . '|' . $es_pc] ?? 0,
         ];
     }
 
@@ -153,7 +180,8 @@ foreach ($es_wanted as $es_code) {
             if (!isset($es_hotels[$es_pc])) {
                 $es_hotels[$es_pc] = ['code' => $es_pc, 'tourop' => $es_to, 'name' => $es_o->productName, 'stars' => 0, 'class' => '',
                     'availability' => '', 'offers' => 0, 'price' => null, 'gross' => null, 'currency' => '', 'image' => '',
-                    'product_id' => null, 'last_synced_at' => '', 'not_in_local_sync' => true];
+                    'product_id' => null, 'last_synced_at' => '', 'not_in_local_sync' => true,
+                    'info_cached' => array_key_exists($es_to . '|' . $es_pc, $es_pictures), 'pictures' => $es_pictures[$es_to . '|' . $es_pc] ?? 0];
             }
             $es_h = &$es_hotels[$es_pc];
             $es_h['name'] = $es_o->productName !== '' ? $es_o->productName : $es_h['name'];
@@ -178,6 +206,7 @@ foreach ($es_wanted as $es_code) {
         'code' => $es_code,
         'name' => (string) ($es_meta['city_name'] ?? ''),
         'country' => $es_country,
+        'whitelisted' => isset($es_allowed[$es_code]),
         'hotels' => array_values($es_hotels),
     ];
 }

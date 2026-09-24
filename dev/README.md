@@ -32,8 +32,9 @@ and heal the store itself:
   and clears the cache. `http://localhost:8080/dev/tools/sphinx-relink.php`
 - `tools/eurosite-sample.php` — real Eurosite hotel data as JSON, for design
   work: the store's synced hotels and destination names, plus a READ-ONLY live
-  price search per destination (availability IM/OR/ST, from-price). Nothing is
-  booked, written or cached; no credential is printed. `?cities=RO0218,RO2M`,
+  price search per whitelisted destination (availability IM/OR/ST, from-price),
+  the whitelist itself and each hotel's picture count from the product-info
+  cache. Nothing is booked, written or cached; no credential is printed. `?cities=RO0218,RO2M`,
   `?check_in=YYYY-MM-DD&nights=7`, `&download=1` saves the file.
   `http://localhost:8080/dev/tools/eurosite-sample.php`
 
