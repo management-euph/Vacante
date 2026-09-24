@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron;
 
 use Tygh\Addons\TravelCore\Contracts\CronDispatcherInterface;
+use Tygh\Addons\TravelCore\Cron\CronRunLog;
 
 /**
  * Cron Command Dispatcher
@@ -100,7 +101,11 @@ class CronDispatcher implements CronDispatcherInterface
                 $lock?->touch();
             });
 
-            return $command->execute();
+            // Recorded for Travel Core -> Tools (started, finished, ok, error).
+            // Read-only status/reset/debug requests are not runs, so they are not.
+            return $isReadOnly
+                ? $command->execute()
+                : CronRunLog::record('novoton_holidays', $mode, static fn (): array => $command->execute());
         } finally {
             $lock?->release();
         }

@@ -87,6 +87,17 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
         'Novoton Holidays',
         new \Tygh\Addons\NovotonHolidays\Api\NovotonNormalizer()
     );
+    // This add-on's cron, for Travel Core -> Tools: its job types come from
+    // the dispatcher, its runs from the shared CronRunLog, and the row links
+    // to the page below. Declared HERE so Travel Core never hard-codes
+    // another add-on's jobs — disable this add-on and its row disappears.
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setCron(
+        'novoton',
+        'novoton_holidays',
+        \Tygh\Addons\NovotonHolidays\Cron\CronDispatcher::class,
+        'novoton_holidays.manage',
+        'novoton-cron-jobs',
+    );
     \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setBookingAdminProvider(
         'novoton',
         new \Tygh\Addons\NovotonHolidays\Services\BookingAdminProvider()

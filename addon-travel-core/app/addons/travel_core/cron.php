@@ -29,7 +29,8 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 CronRunner::authenticate(
     CronKeyService::getFor('travel_core'),
     $accessKey,
-    'Travel Core'
+    'Travel Core',
+    'travel_core',
 );
 $mode = CronRunner::sanitizeMode($mode);
 
@@ -48,11 +49,16 @@ echo "[" . date('Y-m-d H:i:s') . "] Travel Core Cron - Mode: {$mode}\n\n";
 if ($mode === 'exchange_rates') {
     $commission = TypeCoerce::toFloat(Registry::get('addons.travel_core.currency_risk_commission'));
 
-    $result = fn_travel_core_update_exchange_rates($commission, true);
+    // Recorded for Travel Core -> Tools, like every provider job.
+    $result = \Tygh\Addons\TravelCore\Cron\CronRunLog::record(
+        'travel_core',
+        'exchange_rates',
+        static function () use ($commission): array {
+            $r = fn_travel_core_update_exchange_rates($commission, true);
 
-    if (!is_array($result)) {
-        $result = ['success' => false, 'message' => 'No response from exchange rate service'];
-    }
+            return is_array($r) ? $r : ['success' => false, 'message' => 'No response from exchange rate service'];
+        },
+    );
 
     echo fn_travel_core_format_exchange_rate_output($result) . "\n";
 

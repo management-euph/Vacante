@@ -45,6 +45,11 @@ if (empty($storedKey)) {
 }
 
 if (empty($providedKey) || !hash_equals($storedKey, $providedKey)) {
+    // Noted for Travel Core -> Tools: a WRONG key here is what a crontab
+    // still on an old key sends after a rotation.
+    if (class_exists(\Tygh\Addons\TravelCore\Cron\CronRunLog::class)) {
+        \Tygh\Addons\TravelCore\Cron\CronRunLog::refused('eurosite', !empty($providedKey));
+    }
     http_response_code(403);
     echo "ERROR: Invalid or missing access key.\n";
     exit;
