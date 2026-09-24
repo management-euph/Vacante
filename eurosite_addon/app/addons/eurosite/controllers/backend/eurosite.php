@@ -355,6 +355,8 @@ if ($mode === 'hotels') {
     $view->assign('eurosite_hotel_summary', $summary);
     $view->assign('eurosite_hotel_chips', HotelListView::chips($search, $summary));
     $view->assign('eurosite_hotels_url', HotelListView::listUrl($search));
+    // "Sort by images" starts ascending (no images first), then toggles.
+    $view->assign('eurosite_images_sort_order', ($search['sort_by'] ?? '') === 'images' ? ($search['sort_order_rev'] ?? 'asc') : 'asc');
     $view->assign('eurosite_hotels_query', HotelListView::filterQuery($search));
     $view->assign('eurosite_root_category_set', ConfigProvider::getHotelsCategoryId() > 0);
     $view->assign('eurosite_without_images_allowed', ConfigProvider::allowProductsWithoutImages());

@@ -735,10 +735,6 @@ return [
         'en' => '[n] pictures',
         'ro' => '[n] poze',
     ],
-    'eurosite.no_image_short' => [
-        'en' => 'no image',
-        'ro' => 'fără imagine',
-    ],
     'eurosite.product_yes' => [
         'en' => 'Products',
         'ro' => 'Produse',
@@ -902,5 +898,18 @@ return [
     'eurosite.skip_creation_failed' => [
         'en' => 'product could not be created',
         'ro' => 'produsul nu a putut fi creat',
+    ],
+    // Eurosite → Hotels: mockup layout
+    'eurosite.hotels_sort_by_images_hint' => [
+        'en' => 'Ascending puts hotels without images first.',
+        'ro' => 'Crescător pune întâi hotelurile fără imagini.',
+    ],
+    'eurosite.hotels_summary' => [
+        'en' => 'Summary',
+        'ro' => 'Rezumat',
+    ],
+    'eurosite.hotels_details_hint' => [
+        'en' => 'The hotel details (pictures, description) are fetched by the product_info job, or when a product is created.',
+        'ro' => 'Detaliile hotelului (poze, descriere) sunt aduse de jobul product_info sau la crearea produsului.',
     ],
 ];
