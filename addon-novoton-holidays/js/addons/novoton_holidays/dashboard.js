@@ -55,10 +55,11 @@
     // button: reading it per click would capture "Copied" on a second click
     // inside the window, and the button would say Copied for ever after.
     function copyWithFeedback(btn, text) {
-        if (!text) { return Promise.resolve(); }
+        if (!text) { return; }
         if (btn.__novotonLabel === undefined) { btn.__novotonLabel = btn.textContent; }
         var txt = labels();
-        return copyToClipboard(text).then(function () {
+        // The outcome is shown on the button, never returned: nothing awaits it.
+        copyToClipboard(text).then(function () {
             btn.textContent = txt.copied;
         }, function () {
             btn.textContent = txt.failed;
