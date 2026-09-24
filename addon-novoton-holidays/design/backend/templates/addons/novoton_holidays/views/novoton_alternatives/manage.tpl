@@ -31,6 +31,9 @@
         </div>
     </div>
     
+    {* Opens the pagination container; the include after the table draws the controls. *}
+    {include file="common/pagination.tpl" save_current_url=true}
+
     {if $requests}
     <table class="table table-middle">
         <thead>
@@ -126,17 +129,12 @@
             {/foreach}
         </tbody>
     </table>
-    
-    {* Pagination *}
-    {include file="common/pagination.tpl" 
-        save_current_page=true 
-        save_current_url=true
-        div_id="pagination_contents"
-    }
-    
+
     {else}
     <p class="no-items">{__("no_data")}</p>
     {/if}
+
+    {include file="common/pagination.tpl" save_current_page=true}
     
 </div>
 
