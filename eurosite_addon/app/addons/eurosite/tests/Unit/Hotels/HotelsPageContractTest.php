@@ -157,4 +157,21 @@ final class HotelsPageContractTest extends TestCase
         self::assertStringNotContainsString('"images" => "eurosite.col_images", "price"', $head, 'no separate Images column further right');
         self::assertStringNotContainsString('}?{', $tpl, 'no bare "?" placeholder');
     }
+
+    /**
+     * Like Sphinx's hotel list, the Product column shows the linked product's
+     * id as a link, and a dash when there is none, with why underneath. It
+     * used to say "Ready" for a hotel with no product, which read as if the
+     * product existed.
+     */
+    public function testTheProductColumnShowsTheLinkedProductId(): void
+    {
+        $tpl = self::template();
+
+        self::assertStringContainsString('<a href="{"products.update?product_id=`$h.product_id`"|fn_url}"', $tpl);
+        self::assertStringContainsString('<i class="icon-link"></i> #{$h.product_id}', $tpl);
+        self::assertStringContainsString('<span class="muted">-</span>', $tpl);
+        self::assertStringContainsString('eurosite.product_can_create', $tpl);
+        self::assertStringNotContainsString('eurosite.product_ready', $tpl);
+    }
 }

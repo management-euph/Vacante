@@ -743,10 +743,6 @@ return [
         'en' => 'Not products',
         'ro' => 'Fără produs',
     ],
-    'eurosite.product_active' => [
-        'en' => 'Active',
-        'ro' => 'Activ',
-    ],
     'eurosite.product_hidden_by_check' => [
         'en' => 'Hidden: no Immediate offer',
         'ro' => 'Ascuns: fără ofertă Imediată',
@@ -763,17 +759,9 @@ return [
         'en' => 'Product deleted',
         'ro' => 'Produs șters',
     ],
-    'eurosite.product_ready' => [
-        'en' => 'Ready',
-        'ro' => 'Gata',
-    ],
     'eurosite.product_details_first' => [
         'en' => 'details fetched first',
         'ro' => 'detaliile se aduc întâi',
-    ],
-    'eurosite.product_not_a_product' => [
-        'en' => 'Not a product',
-        'ro' => 'Nu este produs',
     ],
     'eurosite.hotels_selected' => [
         'en' => 'selected',
@@ -911,5 +899,9 @@ return [
     'eurosite.hotels_details_hint' => [
         'en' => 'The hotel details (pictures, description) are fetched by the product_info job, or when a product is created.',
         'ro' => 'Detaliile hotelului (poze, descriere) sunt aduse de jobul product_info sau la crearea produsului.',
+    ],
+    'eurosite.product_can_create' => [
+        'en' => 'Can become a product',
+        'ro' => 'Poate deveni produs',
     ],
 ];
