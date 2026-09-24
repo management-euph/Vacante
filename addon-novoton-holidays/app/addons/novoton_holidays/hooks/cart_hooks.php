@@ -186,14 +186,12 @@ function fn_novoton_holidays_dispatch_before_display(): void
 
     $dispatch = RequestCoerce::string($_REQUEST, 'dispatch');
 
-    // Self-diagnosis for the literal "Array" rendered at the bottom of our
-    // admin pages: every render surface in this repo is proven
-    // array-echo-free (33f15ad + audits), so the emitter lives in the site's
-    // customized CS-Cart kit (core/admin skin — not in this repo). The PHP
-    // "Array to string conversion" warning fired during render names the
-    // exact kit file:line; trap it into var/novoton_tpl_trace.log.
-    // Always on for novoton admin dispatches — log-only, zero output,
-    // zero config: the whole point is diagnosis without touching the kit.
+    // Self-diagnosis for "Array to string conversion" during our admin
+    // renders, logged with file:line to var/novoton_tpl_trace.log. It is how
+    // the literal "Array" under the dashboard was found: core's index.tpl
+    // prints {$stats} at the bottom of every admin page, and the dashboard
+    // had assigned an array under that name (now 'novoton_stats';
+    // CoreSmartyGlobalsTest guards it). Kept: log-only, zero output.
     if (str_starts_with($dispatch, 'novoton_') && defined('AREA') && AREA === 'A') {
         fn_novoton_holidays_install_array_warning_trap();
     }
@@ -232,12 +230,11 @@ function fn_novoton_holidays_dispatch_before_display(): void
  * Install a CHAINING error handler that appends "Array to string conversion"
  * warnings — with the emitting file:line — to var/novoton_tpl_trace.log.
  *
- * Why: admin.php?dispatch=novoton_holidays.manage renders a literal "Array"
- * that no addon in this repo emits (all render surfaces audited clean; the
- * preceding "Inline script moved..." marker is generated at runtime by core's
- * move-JS post-processor). The emitter is in the site's CS-Cart kit; the
- * warning PHP fires during render carries its exact file:line, and this trap
- * pins it without modifying kit code.
+ * Why: admin.php?dispatch=novoton_holidays.manage rendered a literal "Array"
+ * under the page. The trap pinned it to line 205 of the compiled backend
+ * index.tpl — {$stats|default:"" nofilter} — which printed the dashboard's
+ * own 'stats' array. The warning PHP fires during render carries its exact
+ * file:line, so the trap finds such a leak without modifying kit code.
  *
  * Chaining contract: the previously active handler (CS-Cart's) is captured
  * up front and EVERY error is delegated to it unchanged; with no previous

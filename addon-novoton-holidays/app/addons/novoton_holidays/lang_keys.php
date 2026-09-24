@@ -815,4 +815,12 @@ return [
         'en' => 'Duration',
         'ro' => 'Durată',
     ],
+    'novoton_holidays.dash_resorts_saved_n' => [
+        'en' => 'Excluded resorts saved: [n]',
+        'ro' => 'Stațiuni excluse salvate: [n]',
+    ],
+    'novoton_holidays.dash_resorts_save_failed' => [
+        'en' => 'The excluded resorts could not be saved: the add-on setting did not take the new value. Nothing was changed.',
+        'ro' => 'Stațiunile excluse nu au putut fi salvate: setarea add-onului nu a preluat valoarea nouă. Nu s-a modificat nimic.',
+    ],
 ];

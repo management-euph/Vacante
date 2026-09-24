@@ -3,7 +3,9 @@
    A POST form, never a link to the public cron URL — that URL carries the
    shared cron key, which a link leaks into browser history and Referer
    headers, and a GET "Reset" can be fired by any page the admin opens. CS-Cart
-   checks the security_hash. The job's log opens in a new tab, as before.
+   checks the security_hash. The job's log opens in a new window:
+   dashboard.js opens it and posts into it (CS-Cart's admin scripts took the
+   submit over and ignored target="_blank", which stays as the no-JS fallback).
 
    Params: job (mode), label, action (status|force_full|reset, optional),
            class (button classes), confirm (question to ask first, optional),

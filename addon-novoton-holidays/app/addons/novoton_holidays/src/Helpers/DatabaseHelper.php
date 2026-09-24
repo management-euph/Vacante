@@ -280,6 +280,44 @@ class DatabaseHelper implements DatabaseHelperInterface
     }
 
     /**
+     * Hotels for the room_price check, least recently checked first.
+     *
+     * The check used getHotelsForSync(), ordered by hotel_name with a default
+     * limit of 500: every run re-checked the same first 500 hotels of the
+     * alphabet, and the rest were never checked — so they never got
+     * has_room_price = 'Y' and never became products. Never-checked hotels
+     * come first, then the oldest checks, so consecutive runs cover them all.
+     *
+     * @param array<string, mixed> $conditions column => value (whitelisted columns only)
+     * @return list<array<string, mixed>>
+     */
+    public function getHotelsForPriceCheck(array $conditions = [], int $limit = 0): array
+    {
+        $where = [];
+        $params = [];
+        foreach ($conditions as $key => $value) {
+            if (!in_array($key, self::ALLOWED_COLUMNS, true) || is_array($value) || $value === null) {
+                continue;
+            }
+            $where[] = "{$key} = ?s";
+            $params[] = $value;
+        }
+
+        $whereClause = $where !== [] ? 'WHERE ' . implode(' AND ', $where) : '';
+        $limitClause = '';
+        if ($limit > 0) {
+            $limitClause = 'LIMIT ?i';
+            $params[] = $limit;
+        }
+
+        $query = "SELECT hotel_id, hotel_name, country FROM ?:novoton_hotels {$whereClause}"
+            . ' ORDER BY (last_price_check IS NULL) DESC, last_price_check ASC, hotel_name'
+            . " {$limitClause}";
+
+        return TypeCoerce::toRowList(\db_get_array($query, ...$params));
+    }
+
+    /**
      * Get last sync date for a specific sync type
      */
     public function getLastSyncDate(string $syncType, ?string $subType = null): ?string

@@ -4119,3 +4119,11 @@ msgstr "Stare"
 msgctxt "Languages::novoton_holidays.dash_col_duration"
 msgid "Duration"
 msgstr "Durată"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_saved_n"
+msgid "Excluded resorts saved: [n]"
+msgstr "Stațiuni excluse salvate: [n]"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_save_failed"
+msgid "The excluded resorts could not be saved: the add-on setting did not take the new value. Nothing was changed."
+msgstr "Stațiunile excluse nu au putut fi salvate: setarea add-onului nu a preluat valoarea nouă. Nu s-a modificat nimic."

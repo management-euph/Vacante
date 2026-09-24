@@ -89,28 +89,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return [CONTROLLER_STATUS_DENIED];
         }
 
+        // Through the Settings API: CS-Cart 4.x has no ?:addon_options table,
+        // and the raw UPDATE this replaced failed on every Save (1146).
         $excluded = $_POST['excluded_resorts'] ?? [];
+        $value = \Tygh\Addons\NovotonHolidays\Services\ExcludedResortsStore::encode(is_array($excluded) ? $excluded : []);
 
-        $clean_excluded = [];
-        if (is_array($excluded)) {
-            foreach ($excluded as $resort) {
-                $resort = trim(TypeCoerce::toString($resort));
-                if (!empty($resort)) {
-                    $clean_excluded[] = $resort;
-                }
-            }
+        if (\Tygh\Addons\NovotonHolidays\Services\ExcludedResortsStore::save($value)) {
+            Registry::del('addons.novoton_holidays');
+            fn_set_notification('N', __('notice'), __('novoton_holidays.dash_resorts_saved_n', [
+                '[n]' => count(ConfigProvider::parseResortList($value)),
+            ]));
+        } else {
+            fn_set_notification('E', __('error'), __('novoton_holidays.dash_resorts_save_failed'));
         }
-
-        $value = json_encode(array_unique($clean_excluded));
-        db_query(
-            "UPDATE ?:addon_options SET value = ?s WHERE addon = ?s AND option_id = 'excluded_resorts'",
-            $value,
-            \Tygh\Addons\NovotonHolidays\Constants::ADDON_ID
-        );
-
-        Registry::del('addons.novoton_holidays');
-
-        fn_set_notification('N', __('notice'), 'Excluded resorts saved: ' . count($clean_excluded) . ' resorts');
 
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
     }
@@ -485,7 +476,10 @@ if ($mode === 'manage' || empty($mode)) {
     $view->assign('novoton_xml_feed_url', $xml_feed_url);
     $view->assign('novoton_xml_feed_masked', $mask($xml_feed_url));
 
-    $view->assign('stats', $stats);
+    // NOT 'stats': CS-Cart's backend index.tpl prints {$stats|default:"" nofilter}
+    // at the bottom of every admin page (its own timing text), so an array
+    // assigned under that name rendered as a literal "Array" under the page.
+    $view->assign('novoton_stats', $stats);
     // NOTE: deliberately NOT assigned as 'countries' — that is a CS-Cart core
     // Smarty global ([code => name] map) and overwriting it with our numeric
     // list shadows core data on the whole admin page. No template consumed it.

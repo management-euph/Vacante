@@ -3,8 +3,10 @@
 //  - copy buttons: any .novoton-copy[data-copy] copies its REAL value;
 //  - the ⋯ menu on each scheduled job;
 //  - the "All commands" block: CLI / URL switch, masked key, Copy all;
-//  - forms carrying data-novoton-confirm ask before they submit (Reset,
-//    Force full sync): the question comes from the template, no inline JS.
+//  - every job button (Run, Check status, Force full sync, Reset progress,
+//    the "Needs attention" Run buttons) opens the job's log in a NEW window;
+//    the ones carrying data-novoton-confirm ask first (Reset, Force full
+//    sync): the question comes from the template, no inline JS.
 //
 // The cron key is masked in the DISPLAY only. A masked command pasted into a
 // crontab is a refused run at 04:30 that nobody is awake to see, so every
@@ -53,10 +55,11 @@
     // button: reading it per click would capture "Copied" on a second click
     // inside the window, and the button would say Copied for ever after.
     function copyWithFeedback(btn, text) {
-        if (!text) { return Promise.resolve(); }
+        if (!text) { return; }
         if (btn.__novotonLabel === undefined) { btn.__novotonLabel = btn.textContent; }
         var txt = labels();
-        return copyToClipboard(text).then(function () {
+        // The outcome is shown on the button, never returned: nothing awaits it.
+        copyToClipboard(text).then(function () {
             btn.textContent = txt.copied;
         }, function () {
             btn.textContent = txt.failed;
@@ -80,15 +83,52 @@
         });
     }
 
-    function initConfirms() {
-        each('form[data-novoton-confirm]', function (form) {
-            if (form.__novotonConfirm) { return; }
-            form.__novotonConfirm = true;
+    // ── Run / Check status / Force full sync / Reset progress / attention "Run …" ──
+    //
+    // Every one of them is a .novoton-run-form (components/run_job.tpl), and
+    // each must open the job's log in a NEW window, leaving the dashboard where
+    // it was. target="_blank" alone did not do it: CS-Cart's admin scripts take
+    // over form submits on the page and the job replaced the dashboard. So the
+    // submit is handled here, before theirs: ask first where the form says so,
+    // open a named window inside the click (so no popup blocker objects), and
+    // post into it with the native submit(), which fires no submit event for
+    // anything else to intercept.
+    var runSeq = 0;
+
+    function launch(form) {
+        var question = form.getAttribute('data-novoton-confirm');
+        if (question && !window.confirm(question)) {
+            return;
+        }
+
+        var name = 'novoton_job_' + Date.now() + '_' + (++runSeq);
+        var win = window.open('about:blank', name);
+        form.setAttribute('target', win ? name : '_blank');
+        closeMenu();
+        HTMLFormElement.prototype.submit.call(form);
+    }
+
+    function initRunForms() {
+        each('form.novoton-run-form', function (form) {
+            if (form.__novotonRun) { return; }
+            form.__novotonRun = true;
+
+            // The click on the button, in the capture phase: CS-Cart's admin
+            // handlers listen further up and would otherwise take it over.
+            form.addEventListener('click', function (e) {
+                var btn = e.target && e.target.closest ? e.target.closest('button[type="submit"], input[type="submit"]') : null;
+                if (!btn || !form.contains(btn)) { return; }
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                launch(form);
+            }, true);
+
+            // Any other way the form gets submitted (Enter key, requestSubmit).
             form.addEventListener('submit', function (e) {
-                if (!window.confirm(form.getAttribute('data-novoton-confirm') || '')) {
-                    e.preventDefault();
-                }
-            });
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                launch(form);
+            }, true);
         });
     }
 
@@ -225,7 +265,7 @@
 
     function init() {
         initCopyButtons();
-        initConfirms();
+        initRunForms();
         initCrontab();
         initMenus();
     }

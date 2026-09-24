@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
  * Behavioral tests for the Novoton dashboard's scheduled-jobs helpers
@@ -27,8 +27,8 @@ beforeAll(async () => {
                             data-copy="0 1 * * 0  php cron.php access_key=${KEY} mode=resort_list">Copy crontab line</button>
                     <button type="button" role="menuitem" class="novoton-menu__item novoton-copy"
                             data-copy="http://shop.example/?access_key=${KEY}&amp;mode=resort_list">Copy URL</button>
-                    <form class="novoton-run-form" method="post" data-novoton-confirm="Reset the progress of Resort list?">
-                        <button type="submit" role="menuitem" class="novoton-menu__item">Reset progress…</button>
+                    <form class="novoton-run-form" id="form-reset" method="post" data-novoton-confirm="Reset the progress of Resort list?">
+                        <button type="submit" role="menuitem" class="novoton-menu__item" id="btn-reset"><span>Reset progress…</span></button>
                     </form>
                 </div>
             </div>
@@ -40,6 +40,10 @@ beforeAll(async () => {
                 </div>
             </div>
         </td></tr></tbody></table>
+
+        <form class="novoton-run-form" id="form-run" method="post">
+            <button type="submit" class="btn btn-primary" id="btn-run">Run</button>
+        </form>
 
         <section id="novoton-crontab"
                  data-crontab-cli="${CLI.replace(/&/g, '&amp;').replace(/\n/g, '&#10;')}"
@@ -174,22 +178,84 @@ describe('row menus', () => {
     });
 });
 
-describe('confirmations', () => {
-    it('a form with data-novoton-confirm submits only when the admin agrees', () => {
-        const form = document.querySelector('form[data-novoton-confirm]');
-        const ask = vi.spyOn(window, 'confirm');
+describe('job buttons open the job in a new window', () => {
+    let opened;
+    let submitted;
+    let pageHandler;
+    let openSpy;
+    let submitSpy;
 
-        ask.mockReturnValueOnce(false);
-        const refused = new Event('submit', { cancelable: true });
-        form.dispatchEvent(refused);
+    beforeEach(() => {
+        opened = [];
+        submitted = [];
+        openSpy = vi.spyOn(window, 'open').mockImplementation((url, name) => { opened.push([url, name]); return {}; });
+        submitSpy = vi.spyOn(HTMLFormElement.prototype, 'submit').mockImplementation(function () { submitted.push(this); });
+        // Stands in for CS-Cart's admin handlers, which listen on the document.
+        pageHandler = vi.fn();
+        document.addEventListener('click', pageHandler);
+        document.addEventListener('submit', pageHandler);
+    });
+
+    afterEach(() => {
+        openSpy.mockRestore();
+        submitSpy.mockRestore();
+        document.removeEventListener('click', pageHandler);
+        document.removeEventListener('submit', pageHandler);
+    });
+
+    it('Run posts into a freshly opened named window, and the page never sees the click', () => {
+        $('#btn-run').click();
+
+        expect(opened).toHaveLength(1);
+        expect(opened[0][0]).toBe('about:blank');
+        expect(opened[0][1]).toMatch(/^novoton_job_/);
+        expect($('#form-run').getAttribute('target')).toBe(opened[0][1]);
+        expect(submitted).toEqual([$('#form-run')]);
+        expect(pageHandler).not.toHaveBeenCalled();
+    });
+
+    it('each run gets its own window, so two jobs never share one', () => {
+        $('#btn-run').click();
+        $('#btn-run').click();
+        expect(opened[0][1]).not.toBe(opened[1][1]);
+    });
+
+    it('asks first where the form says so, and does nothing on Cancel', () => {
+        const ask = vi.spyOn(window, 'confirm').mockReturnValueOnce(false);
+        $('#btn-reset span').click();
         expect(ask).toHaveBeenCalledWith('Reset the progress of Resort list?');
-        expect(refused.defaultPrevented).toBe(true);
+        expect(opened).toEqual([]);
+        expect(submitted).toEqual([]);
 
         ask.mockReturnValueOnce(true);
-        const agreed = new Event('submit', { cancelable: true });
-        form.dispatchEvent(agreed);
-        expect(agreed.defaultPrevented).toBe(false);
-
+        $('#btn-reset').click();
+        expect(submitted).toEqual([$('#form-reset')]);
+        expect($('#form-reset').getAttribute('target')).toMatch(/^novoton_job_/);
         ask.mockRestore();
+    });
+
+    it('falls back to target _blank when the window could not be opened', () => {
+        openSpy.mockImplementation(() => null);
+        $('#btn-run').click();
+        expect($('#form-run').getAttribute('target')).toBe('_blank');
+        expect(submitted).toEqual([$('#form-run')]);
+    });
+
+    it('a submit by other means (Enter) opens a new window too', () => {
+        const ev = new Event('submit', { cancelable: true, bubbles: true });
+        $('#form-run').dispatchEvent(ev);
+        expect(ev.defaultPrevented).toBe(true);
+        expect(opened).toHaveLength(1);
+        expect(submitted).toEqual([$('#form-run')]);
+        expect(pageHandler).not.toHaveBeenCalled();
+    });
+
+    it('closes the ⋯ menu it was launched from', () => {
+        const toggle = document.querySelectorAll('.novoton-menu-toggle')[0];
+        toggle.click();
+        expect($('#novoton-menu-resort_list').hidden).toBe(false);
+        vi.spyOn(window, 'confirm').mockReturnValueOnce(true);
+        $('#btn-reset').click();
+        expect($('#novoton-menu-resort_list').hidden).toBe(true);
     });
 });
