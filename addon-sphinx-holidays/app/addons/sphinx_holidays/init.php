@@ -92,10 +92,15 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
 // keys. Guarded, because a throw inside fn_init_addons() is a 503 everywhere.
 if (function_exists('fn_travel_core_heal_language_keys')) {
     fn_travel_core_self_heal_guard('sphinx_holidays_langs', static function (): void {
+        // The class, NOT the fn_sphinx_holidays_language_* helpers: those live in
+        // func.php, which init.php never loads, and older CS-Cart cores include
+        // init.php FIRST. There the call hit an undefined function, the guard
+        // swallowed the Error on every request, and no label added after
+        // install ever reached the store.
         fn_travel_core_heal_language_keys(
             'sphinx_holidays',
-            'fn_sphinx_holidays_language_variables',
-            fn_sphinx_holidays_language_seed_hash(),
+            static fn (): array => \Tygh\Addons\SphinxHolidays\Install\LanguageSeeder::variables(),
+            \Tygh\Addons\SphinxHolidays\Install\LanguageSeeder::seedHash(),
             static function (array $vars): void {
                 \Tygh\Addons\SphinxHolidays\Install\LanguageSeeder::mirrorSettingsDescriptions($vars);
             },

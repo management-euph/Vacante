@@ -536,22 +536,12 @@ function fn_travel_core_seed_language_keys(): void
  */
 function fn_travel_core_language_variables(): array
 {
-    /** @var array<string, array<string, string>> $vars */
-    $vars = require __DIR__ . '/lang_keys.php';
+    // Delegates to a class init.php can reach whatever the file load order —
+    // see LanguageSeeder's docblock. Required explicitly because func.php also
+    // runs at install time, before any autoloader is registered.
+    require_once __DIR__ . '/src/Install/LanguageSeeder.php';
 
-    $xml = @simplexml_load_file(__DIR__ . '/addon.xml');
-    if ($xml !== false && isset($xml->language_variables)) {
-        foreach ($xml->language_variables->item as $item) {
-            $name = (string) $item['id'];
-            $lang_code = (string) $item['lang'];
-            if ($name === '' || $lang_code === '') {
-                continue;
-            }
-            $vars[$name][$lang_code] = (string) $item;
-        }
-    }
-
-    return $vars;
+    return \Tygh\Addons\TravelCore\Install\LanguageSeeder::variables();
 }
 
 /**
@@ -565,11 +555,7 @@ function fn_travel_core_language_variables(): array
  */
 function fn_travel_core_language_seed_hash(): string
 {
-    $parts = [];
-    foreach ([__DIR__ . '/addon.xml', __DIR__ . '/lang_keys.php'] as $file) {
-        $stat = @stat($file);
-        $parts[] = $file . '|' . (is_array($stat) ? $stat['size'] . '|' . $stat['mtime'] : 'absent');
-    }
+    require_once __DIR__ . '/src/Install/LanguageSeeder.php';
 
-    return md5(implode(';', $parts));
+    return \Tygh\Addons\TravelCore\Install\LanguageSeeder::seedHash();
 }

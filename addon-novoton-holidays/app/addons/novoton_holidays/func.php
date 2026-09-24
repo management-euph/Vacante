@@ -53,23 +53,9 @@ foreach ($function_files as $file) {
  */
 function fn_novoton_holidays_language_variables(): array
 {
-    $keysFile = __DIR__ . '/lang_keys.php';
-    /** @var array<string, array<string, string>> $vars */
-    $vars = file_exists($keysFile) ? require $keysFile : [];
-
-    $xml = @simplexml_load_file(__DIR__ . '/addon.xml');
-    if ($xml !== false && isset($xml->language_variables)) {
-        foreach ($xml->language_variables->item as $item) {
-            $name = (string) $item['id'];
-            $lang_code = (string) $item['lang'];
-            if ($name === '' || $lang_code === '') {
-                continue;
-            }
-            $vars[$name][$lang_code] = (string) $item;
-        }
-    }
-
-    return $vars;
+    // Delegates to a class init.php can reach whatever the file load order —
+    // see LanguageSeeder's docblock.
+    return \Tygh\Addons\NovotonHolidays\Install\LanguageSeeder::variables();
 }
 
 /**
@@ -81,13 +67,7 @@ function fn_novoton_holidays_language_variables(): array
  */
 function fn_novoton_holidays_language_seed_hash(): string
 {
-    $parts = [];
-    foreach ([__DIR__ . '/addon.xml', __DIR__ . '/lang_keys.php'] as $file) {
-        $stat = @stat($file);
-        $parts[] = $file . '|' . (is_array($stat) ? $stat['size'] . '|' . $stat['mtime'] : 'absent');
-    }
-
-    return md5(implode(';', $parts));
+    return \Tygh\Addons\NovotonHolidays\Install\LanguageSeeder::seedHash();
 }
 
 /**

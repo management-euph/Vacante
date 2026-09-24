@@ -147,10 +147,15 @@ if (defined('AREA') && AREA === 'A') {
 // fn_init_addons() is a 503 on every page.
 if (function_exists('fn_travel_core_heal_language_keys')) {
     fn_travel_core_self_heal_guard('novoton_holidays_langs', static function (): void {
+        // The class, NOT the fn_novoton_holidays_language_* helpers: those live in
+        // func.php, which init.php never loads, and older CS-Cart cores include
+        // init.php FIRST. There the call hit an undefined function, the guard
+        // swallowed the Error on every request, and no label added after
+        // install ever reached the store.
         fn_travel_core_heal_language_keys(
             'novoton_holidays',
-            'fn_novoton_holidays_language_variables',
-            fn_novoton_holidays_language_seed_hash(),
+            static fn (): array => \Tygh\Addons\NovotonHolidays\Install\LanguageSeeder::variables(),
+            \Tygh\Addons\NovotonHolidays\Install\LanguageSeeder::seedHash(),
         );
     });
 }

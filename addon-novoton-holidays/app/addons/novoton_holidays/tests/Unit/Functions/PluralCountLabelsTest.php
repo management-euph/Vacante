@@ -64,6 +64,12 @@ final class PluralCountLabelsTest extends TestCase
         $init = (string) file_get_contents(dirname(__DIR__, 3) . '/init.php');
         self::assertStringContainsString('fn_travel_core_heal_language_keys(', $init);
         self::assertStringContainsString("'novoton_holidays'", $init);
-        self::assertStringContainsString('fn_novoton_holidays_language_seed_hash()', $init);
+        // Through the CLASS, never the func.php helper: older CS-Cart cores
+        // include init.php before func.php, and there the helper did not exist
+        // yet — the heal failed silently on every request and no label added
+        // after install reached the store.
+        self::assertStringContainsString('\\Tygh\\Addons\\NovotonHolidays\\Install\\LanguageSeeder::seedHash()', $init);
+        self::assertStringNotContainsString('fn_novoton_holidays_language_seed_hash()', $init);
+        self::assertStringNotContainsString("'fn_novoton_holidays_language_variables'", $init);
     }
 }
