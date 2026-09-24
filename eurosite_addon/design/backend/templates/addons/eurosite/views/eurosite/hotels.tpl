@@ -180,21 +180,28 @@
                             {if $h.price}{$h.price}<div class="muted">{__("eurosite.hotels_gross", ["[default]" => "gross"])} {$h.gross}</div>{else}&mdash;{/if}
                         </td>
                         <td>
+                            {* Like Sphinx's hotel list: the linked product's id, as a link. *}
                             {if $h.product_id}
-                                <a href="{"products.update&product_id=`$h.product_id`"|fn_url}">{$h.product_code|escape:html}</a>
-                                <div class="muted">
-                                    {if $h.product_status == "A"}{__("eurosite.product_active", ["[default]" => "Active"])}
-                                    {elseif $h.product_status == "H" && $h.gate_hidden}{__("eurosite.product_hidden_by_check", ["[default]" => "Hidden: no Immediate offer"])}
-                                    {elseif $h.product_status == "H"}{__("eurosite.product_hidden", ["[default]" => "Hidden"])}
-                                    {elseif $h.product_status == "D"}{__("eurosite.product_disabled", ["[default]" => "Disabled"])}
-                                    {else}{__("eurosite.product_missing", ["[default]" => "Product deleted"])}{/if}
-                                </div>
-                            {elseif $h.eligible}
-                                <span class="text-success">{__("eurosite.product_ready", ["[default]" => "Ready"])}</span>
-                                {if $h.details_pending}<div class="muted">{__("eurosite.product_details_first", ["[default]" => "details fetched first"])}</div>{/if}
+                                <a href="{"products.update?product_id=`$h.product_id`"|fn_url}" title="{$h.product_code|escape:html}">
+                                    <i class="icon-link"></i> #{$h.product_id}
+                                </a>
+                                {if $h.product_status != "A"}
+                                    <div class="muted">
+                                        {if $h.product_status == "H" && $h.gate_hidden}{__("eurosite.product_hidden_by_check", ["[default]" => "Hidden: no Immediate offer"])}
+                                        {elseif $h.product_status == "H"}{__("eurosite.product_hidden", ["[default]" => "Hidden"])}
+                                        {elseif $h.product_status == "D"}{__("eurosite.product_disabled", ["[default]" => "Disabled"])}
+                                        {else}{__("eurosite.product_missing", ["[default]" => "Product deleted"])}{/if}
+                                    </div>
+                                {/if}
                             {else}
-                                <span class="muted">{__("eurosite.product_not_a_product", ["[default]" => "Not a product"])}</span>
-                                {if $h.skip_reason}<div class="muted">{__("eurosite.skip_`$h.skip_reason`")}</div>{/if}
+                                <span class="muted">-</span>
+                                <div class="muted">
+                                    {if $h.eligible}
+                                        {__("eurosite.product_can_create", ["[default]" => "Can become a product"])}{if $h.details_pending}, {__("eurosite.product_details_first", ["[default]" => "details fetched first"])}{/if}
+                                    {elseif $h.skip_reason}
+                                        {__("eurosite.skip_`$h.skip_reason`")}
+                                    {/if}
+                                </div>
                             {/if}
                         </td>
                     </tr>

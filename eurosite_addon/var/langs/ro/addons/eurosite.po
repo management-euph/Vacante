@@ -880,10 +880,6 @@ msgctxt "Languages::eurosite.product_no"
 msgid "Not products"
 msgstr "Fără produs"
 
-msgctxt "Languages::eurosite.product_active"
-msgid "Active"
-msgstr "Activ"
-
 msgctxt "Languages::eurosite.product_hidden_by_check"
 msgid "Hidden: no Immediate offer"
 msgstr "Ascuns: fără ofertă Imediată"
@@ -900,17 +896,9 @@ msgctxt "Languages::eurosite.product_missing"
 msgid "Product deleted"
 msgstr "Produs șters"
 
-msgctxt "Languages::eurosite.product_ready"
-msgid "Ready"
-msgstr "Gata"
-
 msgctxt "Languages::eurosite.product_details_first"
 msgid "details fetched first"
 msgstr "detaliile se aduc întâi"
-
-msgctxt "Languages::eurosite.product_not_a_product"
-msgid "Not a product"
-msgstr "Nu este produs"
 
 msgctxt "Languages::eurosite.hotels_selected"
 msgid "selected"
@@ -1047,3 +1035,7 @@ msgstr "Rezumat"
 msgctxt "Languages::eurosite.hotels_details_hint"
 msgid "The hotel details (pictures, description) are fetched by the product_info job, or when a product is created."
 msgstr "Detaliile hotelului (poze, descriere) sunt aduse de jobul product_info sau la crearea produsului."
+
+msgctxt "Languages::eurosite.product_can_create"
+msgid "Can become a product"
+msgstr "Poate deveni produs"
