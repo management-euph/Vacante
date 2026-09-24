@@ -11,7 +11,7 @@
 <div class="novoton-dashboard travel-cron">
 
     {** At a glance: each tile says whether its figure is a problem. **}
-    {$_hotels = $stats.hotels}
+    {$_hotels = $novoton_stats.hotels}
     <div class="travel-cron-tiles novoton-tiles">
         <div class="travel-cron-tile{if $_hotels.total > 0 && $_hotels.with_packages == 0} travel-cron-tile--warn{/if}">
             <div class="travel-cron-tile__label">{__("novoton_holidays.dash_tile_hotels")}</div>
@@ -29,11 +29,11 @@
                 <br><a href="{"novoton_holidays.hotels?has_product=1"|fn_url}">{__("novoton_holidays.dash_tile_products_open")}</a>
             </div>
         </div>
-        <div class="travel-cron-tile{if $stats.bookings.pending > 0} travel-cron-tile--warn{/if}">
+        <div class="travel-cron-tile{if $novoton_stats.bookings.pending > 0} travel-cron-tile--warn{/if}">
             <div class="travel-cron-tile__label">{__("novoton_holidays.dash_tile_bookings")}</div>
-            <div class="travel-cron-tile__value">{__("novoton_holidays.dash_tile_bookings_pending", ["[n]" => $stats.bookings.pending|default:0])}</div>
+            <div class="travel-cron-tile__value">{__("novoton_holidays.dash_tile_bookings_pending", ["[n]" => $novoton_stats.bookings.pending|default:0])}</div>
             <div class="travel-cron-tile__note">
-                {__("novoton_holidays.dash_tile_bookings_note", ["[confirmed]" => $stats.bookings.confirmed|default:0, "[cancelled]" => $stats.bookings.cancelled|default:0])}
+                {__("novoton_holidays.dash_tile_bookings_note", ["[confirmed]" => $novoton_stats.bookings.confirmed|default:0, "[cancelled]" => $novoton_stats.bookings.cancelled|default:0])}
                 <br><a href="{"travel_bookings.manage?provider=novoton"|fn_url}">{__("novoton_holidays.dash_tile_bookings_open")}</a>
             </div>
         </div>
@@ -122,7 +122,7 @@
     </section>
 
     {** Hotels by country **}
-    {if $stats.by_country}
+    {if $novoton_stats.by_country}
         <section class="travel-cron-card travel-cron-card--flush novoton-countries" aria-labelledby="novoton-countries-title">
             <div class="travel-cron-card__head travel-cron-card__head--pad">
                 <h3 id="novoton-countries-title">{__("novoton_holidays.dash_countries_title")}</h3>
@@ -138,7 +138,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {foreach from=$stats.by_country key=country item=country_stats}
+                    {foreach from=$novoton_stats.by_country key=country item=country_stats}
                         <tr>
                             <td><strong>{$country|escape:html}</strong></td>
                             <td class="right">{$country_stats.total}</td>

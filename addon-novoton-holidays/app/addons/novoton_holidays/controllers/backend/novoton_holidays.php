@@ -476,7 +476,10 @@ if ($mode === 'manage' || empty($mode)) {
     $view->assign('novoton_xml_feed_url', $xml_feed_url);
     $view->assign('novoton_xml_feed_masked', $mask($xml_feed_url));
 
-    $view->assign('stats', $stats);
+    // NOT 'stats': CS-Cart's backend index.tpl prints {$stats|default:"" nofilter}
+    // at the bottom of every admin page (its own timing text), so an array
+    // assigned under that name rendered as a literal "Array" under the page.
+    $view->assign('novoton_stats', $stats);
     // NOTE: deliberately NOT assigned as 'countries' — that is a CS-Cart core
     // Smarty global ([code => name] map) and overwriting it with our numeric
     // list shadows core data on the whole admin page. No template consumed it.
