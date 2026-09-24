@@ -872,10 +872,6 @@ msgctxt "Languages::eurosite.images_n_pictures"
 msgid "[n] pictures"
 msgstr "[n] poze"
 
-msgctxt "Languages::eurosite.no_image_short"
-msgid "no image"
-msgstr "fără imagine"
-
 msgctxt "Languages::eurosite.product_yes"
 msgid "Products"
 msgstr "Produse"
@@ -1039,3 +1035,15 @@ msgstr "categoria nu a putut fi creată"
 msgctxt "Languages::eurosite.skip_creation_failed"
 msgid "product could not be created"
 msgstr "produsul nu a putut fi creat"
+
+msgctxt "Languages::eurosite.hotels_sort_by_images_hint"
+msgid "Ascending puts hotels without images first."
+msgstr "Crescător pune întâi hotelurile fără imagini."
+
+msgctxt "Languages::eurosite.hotels_summary"
+msgid "Summary"
+msgstr "Rezumat"
+
+msgctxt "Languages::eurosite.hotels_details_hint"
+msgid "The hotel details (pictures, description) are fetched by the product_info job, or when a product is created."
+msgstr "Detaliile hotelului (poze, descriere) sunt aduse de jobul product_info sau la crearea produsului."

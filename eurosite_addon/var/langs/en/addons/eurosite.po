@@ -872,10 +872,6 @@ msgctxt "Languages::eurosite.images_n_pictures"
 msgid "[n] pictures"
 msgstr "[n] pictures"
 
-msgctxt "Languages::eurosite.no_image_short"
-msgid "no image"
-msgstr "no image"
-
 msgctxt "Languages::eurosite.product_yes"
 msgid "Products"
 msgstr "Products"
@@ -1039,3 +1035,15 @@ msgstr "category could not be created"
 msgctxt "Languages::eurosite.skip_creation_failed"
 msgid "product could not be created"
 msgstr "product could not be created"
+
+msgctxt "Languages::eurosite.hotels_sort_by_images_hint"
+msgid "Ascending puts hotels without images first."
+msgstr "Ascending puts hotels without images first."
+
+msgctxt "Languages::eurosite.hotels_summary"
+msgid "Summary"
+msgstr "Summary"
+
+msgctxt "Languages::eurosite.hotels_details_hint"
+msgid "The hotel details (pictures, description) are fetched by the product_info job, or when a product is created."
+msgstr "The hotel details (pictures, description) are fetched by the product_info job, or when a product is created."

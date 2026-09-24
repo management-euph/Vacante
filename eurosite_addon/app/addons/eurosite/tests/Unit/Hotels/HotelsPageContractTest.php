@@ -79,7 +79,10 @@ final class HotelsPageContractTest extends TestCase
             self::assertStringContainsString($hook, $tpl);
         }
         self::assertStringContainsString('{script src="js/addons/eurosite/hotels.js"}', $tpl);
-        self::assertLessThan(strpos($tpl, '{/capture}'), strpos($tpl, '{script src="js/addons/eurosite/hotels.js"}'), 'inside the mainbox capture');
+        $mainbox = (int) strpos($tpl, '{capture name="mainbox"}');
+        $script = (int) strpos($tpl, '{script src="js/addons/eurosite/hotels.js"}');
+        self::assertGreaterThan($mainbox, $script, 'inside the mainbox capture');
+        self::assertLessThan((int) strrpos($tpl, '{/capture}'), $script, 'inside the mainbox capture');
     }
 
     public function testThePageIsReachableFromTheMenuTheTabsAndTheDashboard(): void
@@ -114,16 +117,44 @@ final class HotelsPageContractTest extends TestCase
         }
     }
 
-    public function testThePageStylesShip(): void
+    /**
+     * The page is built from CS-Cart's own admin styles (sidebar search panel,
+     * table, label, btn, alert), like Sphinx's hotel list: an add-on
+     * stylesheet looked unlike the rest of the admin, and on the Docker store
+     * a new css folder is not linked in until the container restarts, so the
+     * page rendered unstyled.
+     */
+    public function testThePageUsesCsCartsOwnStyles(): void
     {
-        $hook = self::read(self::ADDON . '/../../../design/backend/templates/addons/eurosite/hooks/index/styles.post.tpl');
-        self::assertStringContainsString('{style src="addons/eurosite/styles.less"}', $hook);
-        $less = self::read(self::ADDON . '/../../../design/backend/css/addons/eurosite/styles.less');
-        foreach (['.es-tiles', '.es-chip', '.es-selection', '.es-thumb', '.es-pill'] as $class) {
-            self::assertStringContainsString($class, $less);
+        $tpl = self::template();
+
+        self::assertStringContainsString('{capture name="sidebar"}', $tpl);
+        self::assertStringContainsString('sidebar=$smarty.capture.sidebar', $tpl);
+        self::assertStringContainsString('<div class="sidebar-row">', $tpl);
+        self::assertStringContainsString('<table class="table table-middle">', $tpl);
+        foreach (['label label-success', 'label label-warning', 'label label-important', 'btn btn-primary', 'alert alert-info'] as $class) {
+            self::assertStringContainsString($class, $tpl);
         }
-        foreach (['im', 'or', 'st', 'none', 'unchecked'] as $k) {
-            self::assertStringContainsString('&--' . $k, $less, "no pill style for {$k}");
-        }
+        preg_match_all('/class="([^"]*)"/', $tpl, $m);
+        $own = array_filter(
+            preg_split('/\\s+/', implode(' ', $m[1])) ?: [],
+            static fn (string $c): bool => str_starts_with($c, 'es-') && $c !== 'es-row-check', // the script's hook, not a style
+        );
+        self::assertSame([], array_values($own), 'no classes of our own');
+        self::assertStringNotContainsString('style=', $tpl);
+        self::assertDirectoryDoesNotExist(self::ADDON . '/../../../design/backend/css/addons/eurosite');
+        self::assertFileDoesNotExist(self::ADDON . '/../../../design/backend/templates/addons/eurosite/hooks/index/styles.post.tpl');
+    }
+
+    /** The thumbnail sits next to the name, and its column sorts by images. */
+    public function testTheImageIsNextToTheNameAndSortsTheList(): void
+    {
+        $tpl = self::template();
+        $head = substr($tpl, (int) strpos($tpl, '<thead>'), (int) strpos($tpl, '</thead>') - (int) strpos($tpl, '<thead>'));
+
+        self::assertStringContainsString('sort_by=images&sort_order=`$eurosite_images_sort_order`', $head);
+        self::assertLessThan(strpos($head, '"name" => "eurosite.col_hotel"'), strpos($head, 'sort_by=images'), 'the image column comes right before the hotel');
+        self::assertStringNotContainsString('"images" => "eurosite.col_images", "price"', $head, 'no separate Images column further right');
+        self::assertStringNotContainsString('}?{', $tpl, 'no bare "?" placeholder');
     }
 }

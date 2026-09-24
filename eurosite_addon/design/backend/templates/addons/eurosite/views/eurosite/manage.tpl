@@ -49,7 +49,7 @@
                         <code>{$job.mode|escape:html}</code>
                         <div class="muted" style="font-size: 11px;">{$job.description|escape:html}</div>
                         {if $job.mode == 'hotels' || $job.mode == 'availability' || $job.mode == 'add_products'}
-                            <div class="es-sub">
+                            <div class="muted" style="font-size: 11px;">
                                 <a href="{"eurosite.hotels"|fn_url}">{__("eurosite.open_hotel_list", ["[default]" => "Open hotel list"])} &rarr;</a>
                             </div>
                         {/if}
