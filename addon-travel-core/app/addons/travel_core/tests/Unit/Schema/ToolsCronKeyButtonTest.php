@@ -38,6 +38,40 @@ final class ToolsCronKeyButtonTest extends TestCase
         );
     }
 
+    /**
+     * The page's no-key branch: from `{if !$cron_key}` to ITS matching `{/if}`,
+     * found by counting Smarty if-nesting — not "the first {else} in the file",
+     * which a tile added above it silently becomes.
+     */
+    private static function noKeyBlock(string $tpl): string
+    {
+        $open = '{if !$cron_key}';
+        $start = strpos($tpl, $open);
+        self::assertIsInt($start, 'the no-key branch is gone');
+
+        $depth = 0;
+        preg_match_all('/\{if\s|\{\/if\}/', $tpl, $m, PREG_OFFSET_CAPTURE, $start);
+        foreach ($m[0] as [$tag, $pos]) {
+            $depth += $tag === '{/if}' ? -1 : 1;
+            if ($depth === 0) {
+                return substr($tpl, $start, $pos - $start);
+            }
+        }
+        self::fail('the no-key branch never closes');
+    }
+
+    /**
+     * Every `<form method="post" ...>...</form>` in the template.
+     *
+     * @return list<string>
+     */
+    private static function postForms(string $tpl): array
+    {
+        preg_match_all('/<form\s[^>]*method="post"[^>]*>.*?<\/form>/si', $tpl, $m);
+
+        return $m[0];
+    }
+
     public function testTheButtonPostsToAModeThatMintsThroughTheService(): void
     {
         $tpl = self::template();
@@ -126,12 +160,25 @@ final class ToolsCronKeyButtonTest extends TestCase
         // Comments describe the removal; they must not satisfy the assertion.
         $stripped = (string) preg_replace('/\{\*.*?\*\}/s', '', $tpl);
 
-        self::assertStringNotContainsString('href="{$job.url}"', $stripped);
         self::assertStringNotContainsString('target="_blank"', $stripped);
+        // No href is built from a command or the key.
+        self::assertDoesNotMatchRegularExpression('/href="\{\$(core_job\.cmd|cron_key)/', $stripped);
 
-        // The URLs are still PRINTED — they are what the operator pastes into
-        // the crontab. Displaying is not navigating.
-        self::assertStringContainsString('{$job.url}', $stripped);
+        // The command is still PRINTED — it is what the operator pastes into
+        // the crontab. Displaying is not navigating. But what is printed is
+        // the MASKED form; the real one rides only in data-* for Copy.
+        self::assertStringContainsString('>{$core_job.cmd_masked|escape:html}</code>', $stripped);
+        self::assertStringContainsString('data-cmd-url="{$core_job.cmd_url|escape:html}"', $stripped);
+        self::assertStringNotContainsString('>{$core_job.cmd_url', $stripped);
+        self::assertStringContainsString('value="{$cron_key_mask|escape:html}"', $stripped);
+
+        // And the controller masks by replacing the key itself, so the mask
+        // cannot drift from the command it stands for.
+        $manage = SourceCode::body(
+            dirname(__DIR__, 3) . '/controllers/backend/travel_tools.php',
+            "if (\$mode === 'manage')",
+        );
+        self::assertStringContainsString("str_replace(\$cron_key, \$mask, \$commands['url'])", $manage);
     }
 
     /**
@@ -143,11 +190,7 @@ final class ToolsCronKeyButtonTest extends TestCase
      */
     public function testTheNoKeyStateOffersTheButton(): void
     {
-        $tpl = self::template();
-
-        $elsePos = strpos($tpl, '{else}');
-        self::assertIsInt($elsePos);
-        $noKey = substr($tpl, $elsePos, 900);
+        $noKey = self::noKeyBlock(self::template());
 
         self::assertStringContainsString('travel_core.tools_no_cron_key', $noKey);
         self::assertStringContainsString('"travel_tools.generate_cron_key"|fn_url', $noKey);
@@ -195,14 +238,24 @@ final class ToolsCronKeyButtonTest extends TestCase
             'an eurosite form posts generate_cron_key without a CSRF token',
         );
 
-        // Travel Core's own two forms, same rule.
+        // Every POST form on Travel Core's page, same rule — the two that mint
+        // the key and every other one (Run now, the re-copy ticks, dismiss,
+        // maintenance): each is a state change an outside page could forge.
         $tpl = self::template();
-        self::assertSame(
-            substr_count($tpl, '"travel_tools.generate_cron_key"|fn_url'),
-            substr_count($tpl, 'name="security_hash" value="{$security_hash}"')
-                - substr_count($tpl, '"travel_tools.`$job.run_action`"|fn_url'),
-            'a Travel Core generate form posts without a CSRF token',
+        $forms = self::postForms($tpl);
+        self::assertCount(
+            substr_count($tpl, '<form '),
+            $forms,
+            'a Travel Core form is not method="post"',
         );
+        self::assertSame(2, substr_count(implode("\n", $forms), '"travel_tools.generate_cron_key"|fn_url'));
+        foreach ($forms as $form) {
+            self::assertStringContainsString(
+                'name="security_hash" value="{$security_hash}"',
+                $form,
+                "a Travel Core form posts without a CSRF token:\n{$form}",
+            );
+        }
     }
 
     /**
@@ -275,8 +328,6 @@ final class ToolsCronKeyButtonTest extends TestCase
         self::assertStringContainsString('cm-confirm', $rotate);
         self::assertStringContainsString('data-ca-confirm-text', $rotate);
 
-        $elsePos = strpos($tpl, '{else}');
-        self::assertIsInt($elsePos);
-        self::assertStringNotContainsString('cm-confirm', substr($tpl, $elsePos, 900));
+        self::assertStringNotContainsString('cm-confirm', self::noKeyBlock($tpl));
     }
 }

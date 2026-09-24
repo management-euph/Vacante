@@ -776,6 +776,162 @@
         <item lang="ro" id="travel_core.tools_no_cron_key"><![CDATA[Nu este configurată nicio cheie de securitate cron, deci toate joburile programate sunt refuzate. Generați una mai jos sau setați-o pe a dvs. în]]></item>
         <item lang="en" id="travel_core.tools_addon_settings"><![CDATA[addon settings]]></item>
         <item lang="ro" id="travel_core.tools_addon_settings"><![CDATA[setările addon-ului]]></item>
+        <!-- Tools & Cron redesign: one list for Travel Core's own job, the
+             shared key, and one row per provider add-on. -->
+        <item lang="en" id="travel_core.tools_cron_subtitle"><![CDATA[Travel Core’s own jobs, the one key every travel add-on shares, and how each add-on’s cron is doing.]]></item>
+        <item lang="ro" id="travel_core.tools_cron_subtitle"><![CDATA[Joburile proprii Travel Core, cheia unică folosită de toate addon-urile de turism și starea cron-ului fiecărui addon.]]></item>
+        <item lang="en" id="travel_core.tools_tile_key_active"><![CDATA[Active · shared by [n] add-ons]]></item>
+        <item lang="ro" id="travel_core.tools_tile_key_active"><![CDATA[Activă · folosită de [n] addon-uri]]></item>
+        <item lang="en" id="travel_core.tools_tile_key_missing"><![CDATA[Not set — every scheduled job is refused]]></item>
+        <item lang="ro" id="travel_core.tools_tile_key_missing"><![CDATA[Nesetată — toate joburile programate sunt refuzate]]></item>
+        <item lang="en" id="travel_core.tools_key_changed_at"><![CDATA[Last changed [date]]]></item>
+        <item lang="ro" id="travel_core.tools_key_changed_at"><![CDATA[Ultima schimbare: [date]]]></item>
+        <item lang="en" id="travel_core.tools_key_changed_unknown"><![CDATA[Last change not recorded yet]]></item>
+        <item lang="ro" id="travel_core.tools_key_changed_unknown"><![CDATA[Ultima schimbare nu a fost încă înregistrată]]></item>
+        <item lang="en" id="travel_core.tools_tile_addons_title"><![CDATA[Add-ons reporting cron]]></item>
+        <item lang="ro" id="travel_core.tools_tile_addons_title"><![CDATA[Addon-uri care raportează cron]]></item>
+        <item lang="en" id="travel_core.tools_tile_addons_value"><![CDATA[[addons] add-ons · [jobs] job types]]></item>
+        <item lang="ro" id="travel_core.tools_tile_addons_value"><![CDATA[[addons] addon-uri · [jobs] tipuri de joburi]]></item>
+        <item lang="en" id="travel_core.tools_tile_addons_core"><![CDATA[Plus Travel Core’s own job]]></item>
+        <item lang="ro" id="travel_core.tools_tile_addons_core"><![CDATA[Plus jobul propriu Travel Core]]></item>
+        <item lang="en" id="travel_core.tools_tile_attention_title"><![CDATA[Needs attention]]></item>
+        <item lang="ro" id="travel_core.tools_tile_attention_title"><![CDATA[Necesită atenție]]></item>
+        <item lang="en" id="travel_core.tools_tile_attention_none"><![CDATA[Nothing right now]]></item>
+        <item lang="ro" id="travel_core.tools_tile_attention_none"><![CDATA[Nimic în acest moment]]></item>
+        <item lang="en" id="travel_core.tools_tile_attention_some"><![CDATA[[n] of them]]></item>
+        <item lang="ro" id="travel_core.tools_tile_attention_some"><![CDATA[[n] dintre ele]]></item>
+        <item lang="en" id="travel_core.tools_tile_attention_link"><![CDATA[See which below]]></item>
+        <item lang="ro" id="travel_core.tools_tile_attention_link"><![CDATA[Vedeți mai jos care]]></item>
+        <item lang="en" id="travel_core.tools_key_label"><![CDATA[Key]]></item>
+        <item lang="ro" id="travel_core.tools_key_label"><![CDATA[Cheie]]></item>
+        <item lang="en" id="travel_core.tools_reveal"><![CDATA[Reveal]]></item>
+        <item lang="ro" id="travel_core.tools_reveal"><![CDATA[Afișează]]></item>
+        <item lang="en" id="travel_core.tools_hide"><![CDATA[Hide]]></item>
+        <item lang="ro" id="travel_core.tools_hide"><![CDATA[Ascunde]]></item>
+        <item lang="en" id="travel_core.tools_copy_key"><![CDATA[Copy key]]></item>
+        <item lang="ro" id="travel_core.tools_copy_key"><![CDATA[Copiază cheia]]></item>
+        <item lang="en" id="travel_core.tools_copy"><![CDATA[Copy]]></item>
+        <item lang="ro" id="travel_core.tools_copy"><![CDATA[Copiază]]></item>
+        <item lang="en" id="travel_core.tools_copied"><![CDATA[Copied]]></item>
+        <item lang="ro" id="travel_core.tools_copied"><![CDATA[Copiat]]></item>
+        <item lang="en" id="travel_core.tools_copy_failed"><![CDATA[Copy failed]]></item>
+        <item lang="ro" id="travel_core.tools_copy_failed"><![CDATA[Copierea a eșuat]]></item>
+        <item lang="en" id="travel_core.tools_cron_key_used_by"><![CDATA[Used by]]></item>
+        <item lang="ro" id="travel_core.tools_cron_key_used_by"><![CDATA[Folosită de]]></item>
+        <item lang="en" id="travel_core.tools_cron_key_stops"><![CDATA[Generating a new key stops every scheduled job until its command is re-copied.]]></item>
+        <item lang="ro" id="travel_core.tools_cron_key_stops"><![CDATA[Generarea unei chei noi oprește toate joburile programate până când comanda lor este recopiată.]]></item>
+        <item lang="en" id="travel_core.tools_recopy_title"><![CDATA[The key was changed — re-copy the cron commands on these pages]]></item>
+        <item lang="ro" id="travel_core.tools_recopy_title"><![CDATA[Cheia a fost schimbată — recopiați comenzile cron din aceste pagini]]></item>
+        <item lang="en" id="travel_core.tools_recopy_progress"><![CDATA[[done] of [total] updated]]></item>
+        <item lang="ro" id="travel_core.tools_recopy_progress"><![CDATA[[done] din [total] actualizate]]></item>
+        <item lang="en" id="travel_core.tools_recopy_mark_done"><![CDATA[Mark as updated]]></item>
+        <item lang="ro" id="travel_core.tools_recopy_mark_done"><![CDATA[Marchează ca actualizat]]></item>
+        <item lang="en" id="travel_core.tools_recopy_proved"><![CDATA[Done — a scheduled run succeeded with the new key]]></item>
+        <item lang="ro" id="travel_core.tools_recopy_proved"><![CDATA[Gata — un job programat a rulat cu succes cu cheia nouă]]></item>
+        <item lang="en" id="travel_core.tools_recopy_ticked"><![CDATA[Marked as updated]]></item>
+        <item lang="ro" id="travel_core.tools_recopy_ticked"><![CDATA[Marcat ca actualizat]]></item>
+        <item lang="en" id="travel_core.tools_recopy_open"><![CDATA[Open]]></item>
+        <item lang="ro" id="travel_core.tools_recopy_open"><![CDATA[Deschide]]></item>
+        <item lang="en" id="travel_core.tools_recopy_dismiss"><![CDATA[Dismiss this list]]></item>
+        <item lang="ro" id="travel_core.tools_recopy_dismiss"><![CDATA[Închide această listă]]></item>
+        <item lang="en" id="travel_core.tools_recopy_note"><![CDATA[Each add-on keeps its own commands; this list only tells you where to go. An entry ticks itself once that add-on’s scheduled run succeeds with the new key.]]></item>
+        <item lang="ro" id="travel_core.tools_recopy_note"><![CDATA[Fiecare addon își păstrează comenzile proprii; lista doar vă arată unde să mergeți. O intrare se bifează singură când un job programat al acelui addon rulează cu succes cu cheia nouă.]]></item>
+        <item lang="en" id="travel_core.tools_core_jobs_title"><![CDATA[Travel Core jobs]]></item>
+        <item lang="ro" id="travel_core.tools_core_jobs_title"><![CDATA[Joburi Travel Core]]></item>
+        <item lang="en" id="travel_core.tools_core_jobs_desc"><![CDATA[The scheduled work Travel Core itself does. Copy the command into cPanel → Cron Jobs.]]></item>
+        <item lang="ro" id="travel_core.tools_core_jobs_desc"><![CDATA[Lucrul programat pe care îl face Travel Core. Copiați comanda în cPanel → Cron Jobs.]]></item>
+        <item lang="en" id="travel_core.tools_format_label"><![CDATA[Command format]]></item>
+        <item lang="ro" id="travel_core.tools_format_label"><![CDATA[Formatul comenzii]]></item>
+        <item lang="en" id="travel_core.tools_format_url"><![CDATA[URL (curl)]]></item>
+        <item lang="ro" id="travel_core.tools_format_url"><![CDATA[URL (curl)]]></item>
+        <item lang="en" id="travel_core.tools_format_cli"><![CDATA[CLI (php)]]></item>
+        <item lang="ro" id="travel_core.tools_format_cli"><![CDATA[CLI (php)]]></item>
+        <item lang="en" id="travel_core.tools_col_command"><![CDATA[Command]]></item>
+        <item lang="ro" id="travel_core.tools_col_command"><![CDATA[Comandă]]></item>
+        <item lang="en" id="travel_core.tools_col_last_run"><![CDATA[Last run]]></item>
+        <item lang="ro" id="travel_core.tools_col_last_run"><![CDATA[Ultima rulare]]></item>
+        <item lang="en" id="travel_core.tools_col_actions"><![CDATA[Actions]]></item>
+        <item lang="ro" id="travel_core.tools_col_actions"><![CDATA[Acțiuni]]></item>
+        <item lang="en" id="travel_core.tools_schedule_daily_at"><![CDATA[Daily at 13:05]]></item>
+        <item lang="ro" id="travel_core.tools_schedule_daily_at"><![CDATA[Zilnic la 13:05]]></item>
+        <item lang="en" id="travel_core.tools_key_hidden_note"><![CDATA[The key is hidden on screen. Copy always copies the real value — nothing on this page opens a URL that carries it.]]></item>
+        <item lang="ro" id="travel_core.tools_key_hidden_note"><![CDATA[Cheia este ascunsă pe ecran. Copierea copiază întotdeauna valoarea reală — nimic din această pagină nu deschide un URL care o conține.]]></item>
+        <item lang="en" id="travel_core.tools_command_needs_key"><![CDATA[Set a key first — without one every command is refused.]]></item>
+        <item lang="ro" id="travel_core.tools_command_needs_key"><![CDATA[Setați întâi o cheie — fără ea orice comandă este refuzată.]]></item>
+        <item lang="en" id="travel_core.tools_run_ok"><![CDATA[Ran [date]]]></item>
+        <item lang="ro" id="travel_core.tools_run_ok"><![CDATA[Rulat [date]]]></item>
+        <item lang="en" id="travel_core.tools_run_failed"><![CDATA[Failed [date]]]></item>
+        <item lang="ro" id="travel_core.tools_run_failed"><![CDATA[Eșuat [date]]]></item>
+        <item lang="en" id="travel_core.tools_run_running"><![CDATA[Running since [date]]]></item>
+        <item lang="ro" id="travel_core.tools_run_running"><![CDATA[Rulează din [date]]]></item>
+        <item lang="en" id="travel_core.tools_run_never"><![CDATA[No run recorded yet]]></item>
+        <item lang="ro" id="travel_core.tools_run_never"><![CDATA[Nicio rulare înregistrată încă]]></item>
+        <item lang="en" id="travel_core.tools_addons_title"><![CDATA[Add-on cron jobs]]></item>
+        <item lang="ro" id="travel_core.tools_addons_title"><![CDATA[Joburi cron ale addon-urilor]]></item>
+        <item lang="en" id="travel_core.tools_addons_desc"><![CDATA[Each add-on supplies its own row. Its commands, schedules and options stay on its own page — open it from here. Disable an add-on and its row disappears.]]></item>
+        <item lang="ro" id="travel_core.tools_addons_desc"><![CDATA[Fiecare addon își furnizează propriul rând. Comenzile, programările și opțiunile rămân în pagina lui — deschideți-o de aici. Dezactivați un addon și rândul lui dispare.]]></item>
+        <item lang="en" id="travel_core.tools_col_addon"><![CDATA[Add-on]]></item>
+        <item lang="ro" id="travel_core.tools_col_addon"><![CDATA[Addon]]></item>
+        <item lang="en" id="travel_core.tools_col_jobs"><![CDATA[Jobs]]></item>
+        <item lang="ro" id="travel_core.tools_col_jobs"><![CDATA[Joburi]]></item>
+        <item lang="en" id="travel_core.tools_col_health"><![CDATA[Health]]></item>
+        <item lang="ro" id="travel_core.tools_col_health"><![CDATA[Stare]]></item>
+        <item lang="en" id="travel_core.tools_col_last_activity"><![CDATA[Last activity]]></item>
+        <item lang="ro" id="travel_core.tools_col_last_activity"><![CDATA[Ultima activitate]]></item>
+        <item lang="en" id="travel_core.tools_col_commands"><![CDATA[Commands]]></item>
+        <item lang="ro" id="travel_core.tools_col_commands"><![CDATA[Comenzi]]></item>
+        <item lang="en" id="travel_core.tools_jobs_count"><![CDATA[[n] job types]]></item>
+        <item lang="ro" id="travel_core.tools_jobs_count"><![CDATA[[n] tipuri de joburi]]></item>
+        <item lang="en" id="travel_core.tools_open_cron"><![CDATA[Open [addon] cron]]></item>
+        <item lang="ro" id="travel_core.tools_open_cron"><![CDATA[Deschide cron [addon]]]></item>
+        <item lang="en" id="travel_core.tools_addons_none"><![CDATA[No provider add-on has declared its cron yet.]]></item>
+        <item lang="ro" id="travel_core.tools_addons_none"><![CDATA[Niciun addon furnizor nu și-a declarat încă cron-ul.]]></item>
+        <item lang="en" id="travel_core.tools_addons_note"><![CDATA[Health counts scheduled runs only — pressing a Sync button in the admin does not.]]></item>
+        <item lang="ro" id="travel_core.tools_addons_note"><![CDATA[Starea ține cont doar de rulările programate — apăsarea unui buton de sincronizare din admin nu contează.]]></item>
+        <item lang="en" id="travel_core.tools_health_ok"><![CDATA[All recent runs OK]]></item>
+        <item lang="ro" id="travel_core.tools_health_ok"><![CDATA[Toate rulările recente OK]]></item>
+        <item lang="en" id="travel_core.tools_health_refused"><![CDATA[Refused — wrong key]]></item>
+        <item lang="ro" id="travel_core.tools_health_refused"><![CDATA[Refuzat — cheie greșită]]></item>
+        <item lang="en" id="travel_core.tools_health_refused_hint"><![CDATA[Its crontab still uses an old key: re-copy its commands.]]></item>
+        <item lang="ro" id="travel_core.tools_health_refused_hint"><![CDATA[Crontab-ul lui folosește încă o cheie veche: recopiați comenzile.]]></item>
+        <item lang="en" id="travel_core.tools_health_failed"><![CDATA[Latest run failed]]></item>
+        <item lang="ro" id="travel_core.tools_health_failed"><![CDATA[Ultima rulare a eșuat]]></item>
+        <item lang="en" id="travel_core.tools_health_failed_hint"><![CDATA[Failed: [modes]]]></item>
+        <item lang="ro" id="travel_core.tools_health_failed_hint"><![CDATA[Eșuate: [modes]]]></item>
+        <item lang="en" id="travel_core.tools_health_stalled"><![CDATA[A run did not finish]]></item>
+        <item lang="ro" id="travel_core.tools_health_stalled"><![CDATA[O rulare nu s-a terminat]]></item>
+        <item lang="en" id="travel_core.tools_health_stalled_hint"><![CDATA[Started but never finished: [modes]]]></item>
+        <item lang="ro" id="travel_core.tools_health_stalled_hint"><![CDATA[Pornite dar neterminate: [modes]]]></item>
+        <item lang="en" id="travel_core.tools_health_quiet"><![CDATA[No scheduled run in 2 days]]></item>
+        <item lang="ro" id="travel_core.tools_health_quiet"><![CDATA[Nicio rulare programată în 2 zile]]></item>
+        <item lang="en" id="travel_core.tools_health_quiet_hint"><![CDATA[Check that its crontab is set up and reaching the site.]]></item>
+        <item lang="ro" id="travel_core.tools_health_quiet_hint"><![CDATA[Verificați că crontab-ul este configurat și ajunge la site.]]></item>
+        <item lang="en" id="travel_core.tools_health_never"><![CDATA[No runs recorded yet]]></item>
+        <item lang="ro" id="travel_core.tools_health_never"><![CDATA[Nicio rulare înregistrată încă]]></item>
+        <item lang="en" id="travel_core.tools_health_never_hint"><![CDATA[Appears after its next scheduled run.]]></item>
+        <item lang="ro" id="travel_core.tools_health_never_hint"><![CDATA[Apare după următoarea rulare programată.]]></item>
+        <item lang="en" id="travel_core.tools_health_running"><![CDATA[Running now: [modes]]]></item>
+        <item lang="ro" id="travel_core.tools_health_running"><![CDATA[Rulează acum: [modes]]]></item>
+        <item lang="en" id="travel_core.tools_last_activity"><![CDATA[[mode], [date]]]></item>
+        <item lang="ro" id="travel_core.tools_last_activity"><![CDATA[[mode], [date]]]></item>
+        <item lang="en" id="travel_core.tools_maintenance_title"><![CDATA[Maintenance]]></item>
+        <item lang="ro" id="travel_core.tools_maintenance_title"><![CDATA[Mentenanță]]></item>
+        <item lang="en" id="travel_core.tools_maintenance_desc"><![CDATA[One-off repairs. They are not scheduled and have no cron command.]]></item>
+        <item lang="ro" id="travel_core.tools_maintenance_desc"><![CDATA[Reparații punctuale. Nu sunt programate și nu au comandă cron.]]></item>
+        <item lang="en" id="travel_core.tools_help_title"><![CDATA[Setting up cron in cPanel]]></item>
+        <item lang="ro" id="travel_core.tools_help_title"><![CDATA[Configurarea cron în cPanel]]></item>
+        <item lang="en" id="travel_core.tools_help_step1"><![CDATA[Open cPanel → Cron Jobs.]]></item>
+        <item lang="ro" id="travel_core.tools_help_step1"><![CDATA[Deschideți cPanel → Cron Jobs.]]></item>
+        <item lang="en" id="travel_core.tools_help_step2"><![CDATA[Add Travel Core’s job with Copy above, then open each add-on’s commands from Add-on cron jobs and paste them the same way.]]></item>
+        <item lang="ro" id="travel_core.tools_help_step2"><![CDATA[Adăugați jobul Travel Core cu butonul Copiază de mai sus, apoi deschideți comenzile fiecărui addon din Joburi cron ale addon-urilor și lipiți-le la fel.]]></item>
+        <item lang="en" id="travel_core.tools_help_step3"><![CDATA[Come back after the next runs: every row should be green.]]></item>
+        <item lang="ro" id="travel_core.tools_help_step3"><![CDATA[Reveniți după următoarele rulări: fiecare rând ar trebui să fie verde.]]></item>
+        <item lang="en" id="travel_core.link_booking_orders"><![CDATA[Reconcile booking–order links]]></item>
+        <item lang="ro" id="travel_core.link_booking_orders"><![CDATA[Reconciliere legături rezervare–comandă]]></item>
+        <item lang="en" id="travel_core.link_booking_orders_desc"><![CDATA[Links bookings that are missing their CS-Cart order (Order ID shows "-" in Travel Bookings although the order exists). Scans the most recent 500 orders; safe to run repeatedly.]]></item>
+        <item lang="ro" id="travel_core.link_booking_orders_desc"><![CDATA[Leagă rezervările care nu au comanda CS-Cart asociată (Order ID apare "-" în Travel Bookings deși comanda există). Scanează ultimele 500 de comenzi; poate fi rulat oricând.]]></item>
+        <item lang="en" id="travel_core.booking_orders_linked"><![CDATA[Linked [linked] booking(s) to their orders (scanned [orders] recent orders).]]></item>
+        <item lang="ro" id="travel_core.booking_orders_linked"><![CDATA[[linked] rezervări au fost legate de comenzile lor ([orders] comenzi recente scanate).]]></item>
         <item lang="en" id="travel_core.cron_exchange_rates"><![CDATA[Exchange Rates]]></item>
         <item lang="ro" id="travel_core.cron_exchange_rates"><![CDATA[Curs Valutar]]></item>
         <item lang="en" id="travel_core.cron_exchange_rates_desc"><![CDATA[Update BNR rates (RON, USD, GBP coefficients)]]></item>

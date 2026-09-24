@@ -206,3 +206,336 @@
         align-items: flex-start;
     }
 }
+
+/* ─── Tools & Cron (travel_tools.manage) ───
+ * Every status is told by an icon and words as well as colour; the pill
+ * colours differ in lightness too, so they still read in greyscale. */
+
+.travel-cron {
+    max-width: 1200px;
+}
+
+.travel-cron-subtitle {
+    color: #555;
+    margin: 0 0 16px;
+}
+
+.travel-cron-tiles {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.travel-cron-tile {
+    background: #fff;
+    border: 1px solid #dde1e6;
+    border-radius: 6px;
+    padding: 12px 14px;
+}
+
+.travel-cron-tile--warn {
+    border-color: #d99a00;
+    background: #fff8e6;
+}
+
+.travel-cron-tile__label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #666;
+}
+
+.travel-cron-tile__value {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 4px 0;
+}
+
+.travel-cron-tile__note {
+    font-size: 12px;
+    color: #555;
+}
+
+.travel-cron-card {
+    background: #fff;
+    border: 1px solid #dde1e6;
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.travel-cron-card h3 {
+    margin: 0 0 4px;
+    font-size: 16px;
+}
+
+.travel-cron-card--flush {
+    padding: 0;
+    overflow-x: auto;
+}
+
+.travel-cron-card--info {
+    background: #f4f8fc;
+    border-color: #c9dbee;
+}
+
+.travel-cron-card__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.travel-cron-card__head--pad {
+    padding: 16px 16px 0;
+}
+
+.travel-cron-card__head p {
+    margin: 0;
+}
+
+.travel-cron-keyrow {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.travel-cron-keyrow label {
+    margin: 0;
+    font-weight: 600;
+}
+
+.travel-cron-keyrow input[type="text"] {
+    font-family: Menlo, Consolas, monospace;
+    min-width: 280px;
+    flex: 1 1 280px;
+    margin: 0;
+}
+
+.travel-cron-keyrow .btn,
+.travel-cron-table__actions .btn,
+.travel-cron-recopy .btn {
+    min-height: 32px;
+}
+
+.travel-cron-usedby {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+}
+
+.travel-cron-chip {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    background: #eef1f4;
+    border: 1px solid #d5dbe1;
+    font-size: 12px;
+}
+
+.travel-cron-btn--danger {
+    color: #a3161b;
+    border-color: #d8a1a3;
+}
+
+.travel-cron-btn--danger:hover,
+.travel-cron-btn--danger:focus {
+    color: #fff;
+    background: #a3161b;
+    border-color: #a3161b;
+}
+
+.travel-cron-recopy {
+    margin-top: 16px;
+    border: 1px solid #d99a00;
+    background: #fff8e6;
+    border-radius: 6px;
+    padding: 12px 14px;
+}
+
+.travel-cron-recopy__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.travel-cron-recopy__head h4 {
+    margin: 0;
+    font-size: 14px;
+}
+
+.travel-cron-recopy__list {
+    list-style: none;
+    margin: 10px 0;
+    padding: 0;
+}
+
+.travel-cron-recopy__item {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 6px 0;
+    border-top: 1px solid #f0dca8;
+}
+
+.travel-cron-recopy__item form {
+    margin: 0;
+}
+
+.travel-cron-recopy__item.is-done .travel-cron-recopy__name {
+    color: #555;
+}
+
+.travel-cron-recopy__name {
+    flex: 1 1 200px;
+    font-weight: 600;
+}
+
+.travel-cron-recopy__foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+    color: #555;
+}
+
+.travel-cron-recopy__foot p,
+.travel-cron-recopy__foot form {
+    margin: 0;
+}
+
+.travel-cron-table {
+    margin: 0;
+}
+
+.travel-cron-table td {
+    vertical-align: top;
+}
+
+.travel-cron-table__cmd {
+    max-width: 420px;
+}
+
+.travel-cron-table__actions {
+    white-space: nowrap;
+}
+
+.travel-cron-table__actions form {
+    display: inline-block;
+    margin: 0 0 0 4px;
+}
+
+.travel-cron-cmd {
+    display: block;
+    white-space: pre-wrap;
+    word-break: break-all;
+    font-size: 12px;
+    background: #f5f6f8;
+    border: 1px solid #e1e4e8;
+    padding: 6px 8px;
+    color: #222;
+}
+
+.travel-cron-foot {
+    margin: 0;
+    padding: 10px 16px;
+    font-size: 12px;
+    color: #555;
+    border-top: 1px solid #eef0f2;
+}
+
+.travel-cron-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 16px;
+}
+
+.travel-cron-task {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.travel-cron-task form {
+    margin: 0;
+}
+
+.travel-cron-pill {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    border: 1px solid transparent;
+}
+
+.travel-cron-pill--ok {
+    background: #e3f4e8;
+    color: #1d6b34;
+    border-color: #b7dfc2;
+}
+
+.travel-cron-pill--warn {
+    background: #fff1c7;
+    color: #7a5200;
+    border-color: #ebcf7a;
+}
+
+.travel-cron-pill--bad {
+    background: #a3161b;
+    color: #fff;
+    border-color: #a3161b;
+}
+
+.travel-cron-pill--none {
+    background: #eef1f4;
+    color: #444;
+    border-color: #d5dbe1;
+}
+
+.travel-cron-hint {
+    font-size: 12px;
+    color: #555;
+    margin-top: 4px;
+}
+
+.travel-cron-hint--bad,
+.travel-cron-text--bad {
+    color: #a3161b;
+}
+
+.travel-cron-hint--warn {
+    color: #7a5200;
+}
+
+.travel-cron-text--ok {
+    color: #1d6b34;
+}
+
+@media (max-width: 768px) {
+    .travel-cron-tiles,
+    .travel-cron-split {
+        grid-template-columns: 1fr;
+    }
+
+    .travel-cron-card__head,
+    .travel-cron-task {
+        flex-direction: column;
+    }
+
+    .travel-cron-keyrow input[type="text"] {
+        min-width: 0;
+    }
+}
