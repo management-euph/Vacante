@@ -109,12 +109,12 @@ msgid "Hotels and products"
 msgstr "Hoteluri și produse"
 
 msgctxt "SettingsOptions::eurosite::hotels_category_id"
-msgid "Hotels root category ID"
-msgstr "ID categorie rădăcină hoteluri"
+msgid "CS-Cart category ID for Eurosite hotels"
+msgstr "ID categorie CS-Cart pentru hoteluri Eurosite"
 
 msgctxt "SettingsTooltips::eurosite::hotels_category_id"
-msgid "CS-Cart category ID under which Eurosite hotel products are created, then country, then destination (created automatically). 0 = no product is created."
-msgstr "ID-ul categoriei CS-Cart sub care se creează produsele hoteliere Eurosite, apoi țara, apoi destinația (create automat). 0 = nu se creează niciun produs."
+msgid "Root category under which hotel products are created. Country and destination sub-categories are generated automatically."
+msgstr "Categorie rădăcină în care se creează produsele hoteliere. Sub-categoriile pe țări și destinații se generează automat."
 
 msgctxt "SettingsOptions::eurosite::products_without_images"
 msgid "Create products for hotels without images"
@@ -777,8 +777,8 @@ msgid "last hotels sync [when]"
 msgstr "ultima sincronizare a hotelurilor [when]"
 
 msgctxt "Languages::eurosite.hotels_no_root_category"
-msgid "Set \"Hotels root category ID\" in the add-on settings before creating products: products go under it, then country, then destination."
-msgstr "Setați „ID categorie rădăcină hoteluri” în setările addon-ului înainte de a crea produse: produsele se creează sub ea, apoi pe țară, apoi pe destinație."
+msgid "Choose \"CS-Cart category ID for Eurosite hotels\" in the add-on settings before creating products: products go under it, then country, then destination."
+msgstr "Alegeți „ID categorie CS-Cart pentru hoteluri Eurosite” în setările addon-ului înainte de a crea produse: produsele se creează sub ea, apoi pe țară, apoi pe destinație."
 
 msgctxt "Languages::eurosite.destination"
 msgid "Destination"

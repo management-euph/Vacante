@@ -825,8 +825,8 @@ Modes:
                 peak-season dates (add-on settings); hides/shows products
                 (&city=ROMM)
   add_products  products for Immediate, whitelisted hotels with images
-                (&city=, &limit=100, &dry_run=1); needs "Hotels root
-                category ID" set
+                (&city=, &limit=100, &dry_run=1); needs "CS-Cart category ID
+                for Eurosite hotels" set
   update_products  price, description, pictures of existing products
                 (&city=, &limit=200)
   cleanup       sync-log trim + orphaned product-info cache rows

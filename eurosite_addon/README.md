@@ -154,8 +154,9 @@ Three cron jobs take hotels to products, after `product_info` (04:00):
 Products: code `EUS-<tour op>-<hotel code>` (e.g. `EUS-LA-RO0363`; no clash
 with Sphinx `HR59843` or Novoton `NVT123`), category *[Hotels root category
 ID]* › country › destination, price converted to the store currency. Set
-**Hotels root category ID** in the add-on settings first: until it is set, no
-product is created. The product page gets Travel Core's booking form, which
+**CS-Cart category ID for Eurosite hotels** (a category dropdown, like
+Sphinx's) in the add-on settings first: until it is set, no product is
+created. The product page gets Travel Core's booking form, which
 searches `eurosite_booking.search` with the hotel's code (`hotel_id`).
 
 Not in this step: product features (stars, destination filters) and

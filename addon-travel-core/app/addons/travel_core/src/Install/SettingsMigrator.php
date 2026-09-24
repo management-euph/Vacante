@@ -67,6 +67,19 @@ final class SettingsMigrator
     ];
 
     /**
+     * Labels this repo once shipped and has since changed, per addon and
+     * setting. An existing label is replaced only while it still reads
+     * exactly as one of these: an admin's own wording is never touched.
+     *
+     * @var array<string, array<string, list<string>>>
+     */
+    private const array SUPERSEDED_LABELS = [
+        'eurosite' => [
+            'hotels_category_id' => ['Hotels root category ID', 'ID categorie rădăcină hoteluri'],
+        ],
+    ];
+
+    /**
      * Settings deleted from an addon.xml that must also LEAVE the database.
      *
      * Dropping an <item> only stops FUTURE installs from getting it. CS-Cart
@@ -196,6 +209,7 @@ final class SettingsMigrator
                 // anything an admin has actually set.
                 $repaired = self::repairDescriptions($addon, $name, $labels);
                 $repaired = self::repairValue($addon, $name, $item['default']) || $repaired;
+                $repaired = self::repairType($sectionId, $name, $item['type']) || $repaired;
                 if ($repaired) {
                     $created[] = $name;
                 }
@@ -858,6 +872,32 @@ final class SettingsMigrator
     }
 
     /**
+     * Give an existing setting the type its addon.xml now declares.
+     *
+     * A setting that changed type after stores created it (Eurosite's
+     * hotels_category_id went from a text field to a category dropdown)
+     * otherwise keeps rendering the old field forever: CS-Cart draws the
+     * settings page from ?:settings_objects.type, and an existing row is
+     * never re-read from addon.xml. The value is kept; only a declared type
+     * this class knows is applied, never a guess.
+     */
+    private static function repairType(int $sectionId, string $name, string $declaredType): bool
+    {
+        $type = self::TYPE_MAP[strtolower($declaredType)] ?? null;
+        if ($type === null) {
+            return false;
+        }
+
+        return TypeCoerce::toInt(db_query(
+            'UPDATE ?:settings_objects SET type = ?s WHERE section_id = ?i AND name = ?s AND type <> ?s',
+            $type,
+            $sectionId,
+            $name,
+            $type,
+        )) > 0;
+    }
+
+    /**
      * Give an existing setting its label back when it has none.
      *
      * Settings created by a heal that could not read the .po (CRLF) exist but
@@ -895,7 +935,8 @@ final class SettingsMigrator
                 TypeCoerce::toString(Settings::SETTING_DESCRIPTION),
                 $row['lang_code'],
             );
-            if (is_string($existing) && trim($existing) !== '') {
+            if (is_string($existing) && trim($existing) !== ''
+                && !in_array(trim($existing), self::SUPERSEDED_LABELS[$addon][$name] ?? [], true)) {
                 continue; // already labelled — leave admin edits alone
             }
 

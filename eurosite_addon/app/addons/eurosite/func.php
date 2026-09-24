@@ -73,6 +73,18 @@ function fn_eurosite_language_seed_hash(): string
 }
 
 /**
+ * Options of the "CS-Cart category ID for Eurosite hotels" setting: every
+ * category, labelled with its full path. CS-Cart's settings page calls this
+ * by name for the hotels_category_id selectbox.
+ *
+ * @return array<int, string>
+ */
+function fn_settings_variants_addons_eurosite_hotels_category_id(): array
+{
+    return \Tygh\Addons\TravelCore\Helpers\CategoryOptions::build();
+}
+
+/**
  * Built-in SEO templates for the hotel products EurositeProductFactory
  * creates. Travel Core's fn_travel_core_apply_seo_fields() falls back to
  * these (by the fn_<addon>_seo_defaults name) since eurosite has no SEO
