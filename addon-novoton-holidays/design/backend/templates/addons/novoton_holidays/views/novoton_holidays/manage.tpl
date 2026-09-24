@@ -118,8 +118,8 @@
     </div>
     {/if}
 
-    {** Cron URLs **}
-    <div class="novoton-section">
+    {** Cron URLs — id: the target of the "Open Novoton cron" link on Travel Core -> Tools **}
+    <div class="novoton-section" id="novoton-cron-jobs">
         <h3>[C] Cron Job URLs</h3>
         {if $cron_key}
         <p class="novoton-alert novoton-alert-info">Copy these URLs for use in cPanel cron jobs or external cron services:</p>
