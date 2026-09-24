@@ -499,8 +499,8 @@ return [
         'ro' => 'Setează-o în setările Travel Core',
     ],
     'eurosite.cron_paste_hint' => [
-        'en' => 'Paste this into the server crontab or cPanel → Cron Jobs.',
-        'ro' => 'Lipiți acest bloc în crontab-ul serverului sau în cPanel → Cron Jobs.',
+        'en' => 'CLI (php): paste it into the server crontab or cPanel → Cron Jobs. URL: add each address to a cron service at the time shown.',
+        'ro' => 'CLI (php): lipiți-l în crontab-ul serverului sau în cPanel → Cron Jobs. URL: adăugați fiecare adresă într-un serviciu cron la ora indicată.',
     ],
     'eurosite.cron_plan' => [
         'en' => 'Plan',
@@ -523,8 +523,8 @@ return [
         'ro' => 'Format',
     ],
     'eurosite.cron_format_url' => [
-        'en' => 'URL (curl)',
-        'ro' => 'URL (curl)',
+        'en' => 'URL',
+        'ro' => 'URL',
     ],
     'eurosite.cron_format_cli' => [
         'en' => 'CLI (php)',

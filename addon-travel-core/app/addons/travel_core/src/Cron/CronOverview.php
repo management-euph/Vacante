@@ -38,7 +38,9 @@ final class CronOverview
             . '&cron_mode=' . self::CORE_JOB;
 
         return [
-            'url' => 'curl -fsS "' . $url . '" >/dev/null',
+            // The plain address, for a cron service or the browser; the CLI
+            // line is the one a crontab or cPanel job runs.
+            'url' => $url,
             'cli' => 'php ' . rtrim($dirRoot, '/') . '/app/addons/travel_core/cron.php access_key=' . $key
                 . ' mode=' . self::CORE_JOB,
         ];

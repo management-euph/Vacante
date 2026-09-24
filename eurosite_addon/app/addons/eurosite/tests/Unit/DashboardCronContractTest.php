@@ -52,7 +52,7 @@ final class DashboardCronContractTest extends TestCase
         $controller = self::controller();
 
         self::assertStringContainsString('use Tygh\\Addons\\Eurosite\\Services\\CronPlanBuilder;', $controller);
-        self::assertStringContainsString('new CronPlanBuilder($baseUrl, $cronKey)', $controller);
+        self::assertStringContainsString('new CronPlanBuilder($baseUrl, $cronKey, ', $controller);
         self::assertStringContainsString('$plan->rows($syncModes, $counts, $lastSyncs)', $controller);
 
         // The schedule table and the URL shape belong to the service now — a

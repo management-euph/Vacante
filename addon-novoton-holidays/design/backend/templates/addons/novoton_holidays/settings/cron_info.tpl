@@ -10,67 +10,16 @@
             {__("novoton_holidays.cron_info_description")}
         </p>
 
+        {* The commands used to be listed here as "php …/index.php?dispatch=…"
+           lines, which do not run (php cannot execute a URL) and carried a
+           YOUR_KEY placeholder. They live once, correct, on the dashboard:
+           CLI and URL forms, the real key on Copy, and when each job last ran. *}
         <h4>{__("novoton_holidays.cron_commands")}</h4>
-        <p class="muted">{__("novoton_holidays.cron_schedule_hint")}</p>
-        <table class="table table-condensed">
-            <thead><tr><th>{__("novoton_holidays.cron_mode")}</th><th>{__("novoton_holidays.cron_command")}</th><th>{__("novoton_holidays.cron_suggested_schedule")}</th></tr></thead>
-            <tbody>
-                <tr>
-                    <td><strong>hotel_list</strong></td>
-                    <td><code>php {$smarty.const.DIR_ROOT}/index.php?dispatch=novoton_cron.run&amp;access_key=YOUR_KEY&amp;mode=hotel_list</code></td>
-                    <td>Daily (<code>0 2 * * *</code>)</td>
-                </tr>
-                <tr>
-                    <td><strong>hotel_info_batched</strong></td>
-                    <td><code>php {$smarty.const.DIR_ROOT}/index.php?dispatch=novoton_cron.run&amp;access_key=YOUR_KEY&amp;mode=hotel_info_batched</code></td>
-                    <td>Daily (<code>0 3 * * *</code>)</td>
-                </tr>
-                <tr>
-                    <td><strong>sync_priceinfo_batched</strong></td>
-                    <td><code>php {$smarty.const.DIR_ROOT}/index.php?dispatch=novoton_cron.run&amp;access_key=YOUR_KEY&amp;mode=sync_priceinfo_batched</code></td>
-                    <td>Every 30 min (<code>*/30 * * * *</code>)</td>
-                </tr>
-                <tr>
-                    <td><strong>compute_prices</strong></td>
-                    <td><code>php {$smarty.const.DIR_ROOT}/index.php?dispatch=novoton_cron.run&amp;access_key=YOUR_KEY&amp;mode=compute_prices</code></td>
-                    <td>Every 5 min (<code>*/5 * * * *</code>)</td>
-                </tr>
-                <tr>
-                    <td><strong>recompute_calendar_prices</strong></td>
-                    <td><code>php {$smarty.const.DIR_ROOT}/index.php?dispatch=novoton_cron.run&amp;access_key=YOUR_KEY&amp;mode=recompute_calendar_prices</code></td>
-                    <td>After sync or on demand</td>
-                </tr>
-                <tr>
-                    <td><strong>room_price</strong></td>
-                    <td><code>php {$smarty.const.DIR_ROOT}/index.php?dispatch=novoton_cron.run&amp;access_key=YOUR_KEY&amp;mode=room_price&amp;country=ALBANIA</code></td>
-                    <td>Before add_hotels_as_products (sets has_room_price)</td>
-                </tr>
-                <tr>
-                    <td><strong>add_hotels_as_products</strong></td>
-                    <td><code>php {$smarty.const.DIR_ROOT}/index.php?dispatch=novoton_cron.run&amp;access_key=YOUR_KEY&amp;mode=add_hotels_as_products&amp;country=ALBANIA</code></td>
-                    <td>After room_price (adds priced hotels as products)</td>
-                </tr>
-                <tr>
-                    <td><strong>resinfo</strong></td>
-                    <td><code>php {$smarty.const.DIR_ROOT}/index.php?dispatch=novoton_cron.run&amp;access_key=YOUR_KEY&amp;mode=resinfo</code></td>
-                    <td>Every 15 min (<code>*/15 * * * *</code>)</td>
-                </tr>
-                <tr>
-                    <td><strong>cleanup</strong></td>
-                    <td><code>php {$smarty.const.DIR_ROOT}/index.php?dispatch=novoton_cron.run&amp;access_key=YOUR_KEY&amp;mode=cleanup</code></td>
-                    <td>Daily (<code>0 4 * * *</code>)</td>
-                </tr>
-                <tr>
-                    <td><strong>geocode_addresses</strong></td>
-                    <td><code>php {$smarty.const.DIR_ROOT}/index.php?dispatch=novoton_cron.run&amp;access_key=YOUR_KEY&amp;mode=geocode_addresses</code></td>
-                    <td>Hourly until backlog drains (<code>0 * * * *</code>), needs geocoding enabled in Travel Core settings</td>
-                </tr>
-                <tr>
-                    <td><strong>backfill_images</strong></td>
-                    <td><code>php {$smarty.const.DIR_ROOT}/index.php?dispatch=novoton_cron.run&amp;access_key=YOUR_KEY&amp;mode=backfill_images</code></td>
-                    <td>Hourly until backlog drains (<code>0 * * * *</code>); re-attaches images to products that synced without them</td>
-                </tr>
-            </tbody>
-        </table>
+        <p class="muted">{__("novoton_holidays.dash_settings_jobs_moved")}</p>
+        <p>
+            <a href="{"novoton_holidays.manage"|fn_url}#novoton-cron-jobs" class="btn">
+                {__("novoton_holidays.dash_open_jobs")}
+            </a>
+        </p>
     </div>
 </div>

@@ -1,7 +1,7 @@
 // Travel Core — Tools & Cron page helpers.
 //
 // The shared cron key is masked on screen and revealed on request; the
-// command of each Travel Core job switches between URL (curl) and CLI (php)
+// command of each Travel Core job switches between URL and CLI (php)
 // form; Copy buttons put the REAL command on the clipboard.
 //
 // The key is masked in the DISPLAY only. A masked command pasted into a

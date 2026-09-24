@@ -437,6 +437,15 @@ class HotelRepository implements HotelRepositoryInterface
     }
 
     /**
+     * @return list<array{country: string, city: string, hotels: int, products: int}>
+     */
+    #[\Override]
+    public function getResortCounts(): array
+    {
+        return $this->reporting->getResortCounts();
+    }
+
+    /**
      * @return list<array<string, mixed>>
      */
     #[\Override]

@@ -92,7 +92,11 @@
     </div>
     {/if}
 
-    {* Bookings Table *}
+    {* Bookings Table. CS-Cart's pagination is a PAIR of includes: this one
+       opens the pagination container, the one after the table draws the
+       controls and closes it. *}
+    {include file="common/pagination.tpl" save_current_url=true}
+
     {if $bookings}
     <table class="table table-striped table-hover">
         <thead>
@@ -293,11 +297,11 @@
         </tbody>
     </table>
 
-    {include file="common/pagination.tpl"}
-
     {else}
     <p class="no-items">{__("no_data")}</p>
     {/if}
+
+    {include file="common/pagination.tpl"}
 </div>
 
 {/capture}

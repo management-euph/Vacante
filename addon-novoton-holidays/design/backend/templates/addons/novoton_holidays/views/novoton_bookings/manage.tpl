@@ -81,6 +81,8 @@
     </form>
 
     {* Bookings Table *}
+    {include file="common/pagination.tpl" save_current_url=true}
+
     {if $bookings}
     <table class="table table-striped table-hover">
         <thead>
@@ -209,11 +211,11 @@
         </tbody>
     </table>
 
-    {include file="common/pagination.tpl"}
-
     {else}
     <p class="no-items">{__("no_data")}</p>
     {/if}
+
+    {include file="common/pagination.tpl"}
 </div>
 
 {/capture}

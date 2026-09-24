@@ -61,7 +61,7 @@
 
     // ── Crontab block ──
     //
-    // The server ships all four variants (nightly-full vs per-catalog × curl
+    // The server ships all four variants (nightly-full vs per-catalog × URL
     // vs php) in one data attribute, so switching is instant and needs no
     // round trip. The access key is masked in the DISPLAY only — copying
     // always puts the real value on the clipboard, because a masked command

@@ -106,20 +106,17 @@ final class GeocodeSchemaTest extends TestCase
         self::assertStringNotContainsString("settings()['geocoding_", $config);
     }
 
+    /** The settings page points at the dashboard's jobs table, which lists every job once. */
     public function testAdminCronPageListsTheMode(): void
     {
         $tpl = self::read('../../../design/backend/templates/addons/novoton_holidays/settings/cron_info.tpl');
 
-        self::assertStringContainsString('geocode_addresses', $tpl);
+        self::assertStringContainsString('"novoton_holidays.manage"|fn_url}#novoton-cron-jobs', $tpl);
     }
 
-    public function testDashboardCronUrlsIncludeTheMode(): void
+    public function testDashboardSchedulesTheMode(): void
     {
-        $controller = self::read('controllers/backend/novoton_holidays.php');
-        self::assertStringContainsString("'geocode_addresses' =>", $controller);
-        self::assertStringContainsString('mode=geocode_addresses', $controller);
-
-        $dashboard = self::read('../../../design/backend/templates/addons/novoton_holidays/views/novoton_holidays/manage.tpl');
-        self::assertStringContainsString('{$cron_urls.geocode_addresses}', $dashboard);
+        self::assertContains('geocode_addresses', array_merge(...array_values(\Tygh\Addons\NovotonHolidays\Services\CronPlanBuilder::STAGES)));
+        self::assertNotSame('', \Tygh\Addons\NovotonHolidays\Services\CronPlanBuilder::cron('geocode_addresses'));
     }
 }

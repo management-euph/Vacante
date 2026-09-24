@@ -185,8 +185,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // View/manage alternative requests
 if ($mode === 'manage') {
 
-    $items_per_page = TypeCoerce::toInt(Registry::get('settings.Appearance.admin_elements_per_page')) ?: 30;
-    $page = RequestCoerce::int($_REQUEST, 'page', 1);
+    // The pagination menu sends items_per_page; the store setting is only the default.
+    $items_per_page = max(1, RequestCoerce::int(
+        $_REQUEST,
+        'items_per_page',
+        TypeCoerce::toInt(Registry::get('settings.Appearance.admin_elements_per_page')) ?: 30,
+    ));
+    $page = max(1, RequestCoerce::int($_REQUEST, 'page', 1));
 
     // Filters
     $status_filter = htmlspecialchars(RequestCoerce::string($_REQUEST, 'status'), ENT_QUOTES, 'UTF-8');
@@ -242,6 +247,14 @@ if ($mode === 'manage') {
     $view->assign('total_items', $total_items);
     $view->assign('items_per_page', $items_per_page);
     $view->assign('page', $page);
+    // common/pagination.tpl builds its controls from $search (fn_generate_pagination).
+    $view->assign('search', [
+        'page' => $page,
+        'items_per_page' => $items_per_page,
+        'total_items' => $total_items,
+        'status' => $status_filter,
+        'email' => $search_email,
+    ]);
 }
 
 // View single request details

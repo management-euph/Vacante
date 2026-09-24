@@ -133,14 +133,25 @@ class SyncLogRepository implements SyncLogRepositoryInterface
     }
 
     /**
-     * Count logs
+     * Count logs, optionally of one type and/or one status.
      */
-    public function count(string $type = ''): int
+    public function count(string $type = '', string $status = ''): int
     {
-        if (!empty($type)) {
-            return TypeCoerce::toInt(db_get_field('SELECT COUNT(*) FROM ?:novoton_sync_log WHERE sync_type = ?s', $type));
+        return TypeCoerce::toInt(db_get_field('SELECT COUNT(*) FROM ?:novoton_sync_log ?p', self::where($type, $status)));
+    }
+
+    /** WHERE clause for the optional type / status filters ('' when neither is set). */
+    private static function where(string $type, string $status): string
+    {
+        $conditions = [];
+        if ($type !== '') {
+            $conditions[] = db_quote('sync_type = ?s', $type);
         }
-        return TypeCoerce::toInt(db_get_field('SELECT COUNT(*) FROM ?:novoton_sync_log'));
+        if ($status !== '') {
+            $conditions[] = db_quote('status = ?s', $status);
+        }
+
+        return $conditions === [] ? '' : 'WHERE ' . implode(' AND ', $conditions);
     }
 
     /**
@@ -149,18 +160,16 @@ class SyncLogRepository implements SyncLogRepositoryInterface
      * @param int $page Current page (1-based)
      * @param int $per_page Items per page
      * @param string $type Optional sync type filter
+     * @param string $status Optional status filter (completed / failed / running)
      * @return array<string, mixed> ['items' => array, 'total' => int, 'pages' => int]
      */
-    public function findPaginated(int $page = 1, int $per_page = 10, string $type = ''): array
+    public function findPaginated(int $page = 1, int $per_page = 10, string $type = '', string $status = ''): array
     {
         $page = max(1, $page);
         $per_page = max(1, min(100, $per_page));
         $offset = ($page - 1) * $per_page;
 
-        $where = '';
-        if (!empty($type)) {
-            $where = db_quote('WHERE sync_type = ?s', $type);
-        }
+        $where = self::where($type, $status);
 
         $items = self::asRowList(db_get_array(
             "SELECT * FROM ?:novoton_sync_log {$where} ORDER BY sync_date DESC LIMIT ?i OFFSET ?i",
@@ -168,7 +177,7 @@ class SyncLogRepository implements SyncLogRepositoryInterface
             $offset,
         ));
 
-        $total = $this->count($type);
+        $total = $this->count($type, $status);
         $pages = (int) ceil($total / $per_page);
 
         return [

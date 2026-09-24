@@ -5,7 +5,7 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
  * (eurosite_addon/js/addons/eurosite/dashboard.js).
  *
  * The block exists because nobody schedules nine URLs one at a time — they
- * paste a crontab. Two decisions shape it (nightly full vs per-catalog, curl
+ * paste a crontab. Two decisions shape it (nightly full vs per-catalog, URL
  * vs php) and the access key is masked on screen. The rule that must not break:
  * masking is a DISPLAY concern. A crontab pasted with bullets where the key
  * should be is a 403 at 01:00 that nobody is awake to see.
@@ -14,9 +14,9 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 const KEY = 'abc123deadbeef';
 
 const CRONTABS = {
-    full_url: `# Eurosite Touring — nightly full pipeline\n0 1 * * *  curl -fsS "https://shop.example.ro/index.php?dispatch=eurosite_cron.run&access_key=${KEY}&cron_mode=full" >/dev/null`,
+    full_url: `# Eurosite Touring — nightly full pipeline\n# URLs for a cron service: add each one at the time shown\n# 0 1 * * * (Daily 01:00)\nhttps://shop.example.ro/index.php?dispatch=eurosite_cron.run&access_key=${KEY}&cron_mode=full`,
     full_cli: `# Eurosite Touring — nightly full pipeline\n0 1 * * *  php app/addons/eurosite/cron.php access_key=${KEY} mode=full`,
-    per_url: `# Eurosite Touring — per-catalog schedule\n0 1 * * 0  curl -fsS "https://shop.example.ro/index.php?dispatch=eurosite_cron.run&access_key=${KEY}&cron_mode=countries" >/dev/null`,
+    per_url: `# Eurosite Touring — per-catalog schedule\n# URLs for a cron service: add each one at the time shown\n# 0 1 * * 0 (Sun 01:00)\nhttps://shop.example.ro/index.php?dispatch=eurosite_cron.run&access_key=${KEY}&cron_mode=countries`,
     per_cli: `# Eurosite Touring — per-catalog schedule\n0 1 * * 0  php app/addons/eurosite/cron.php access_key=${KEY} mode=countries`,
 };
 
@@ -25,7 +25,7 @@ let copied = [];
 beforeAll(async () => {
     document.body.innerHTML = `
         <button type="button" class="eurosite-copy"
-                data-copy="0 3 * * *  curl -fsS &quot;https://shop.example.ro/x&amp;access_key=${KEY}&quot;"
+                data-copy="0 3 * * *  php app/addons/eurosite/cron.php access_key=${KEY} mode=hotels"
                 data-txt-copied="Copied"
                 data-txt-copy-failed="Copy failed">Copy line</button>
 
@@ -110,9 +110,9 @@ const pick = (name, value) => {
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe('initial paint', () => {
-    it('shows the nightly curl plan with the key masked', () => {
+    it('shows the nightly URL plan with the key masked', () => {
         expect(text()).toContain('nightly full pipeline');
-        expect(text()).toContain('curl -fsS');
+        expect(text()).toContain('https://shop.example.ro/index.php?dispatch=eurosite_cron.run');
         expect(text()).not.toContain(KEY);
         expect(text()).toContain('access_key=••••••••••••');
         expect($('#eurosite-crontab-note').textContent).toContain('copying still copies the real value');
@@ -130,7 +130,7 @@ describe('plan and format toggles', () => {
         pick('eurosite_cron_format', 'cli');
         expect(text()).toContain('per-catalog schedule');
         expect(text()).toContain('php app/addons/eurosite/cron.php');
-        expect(text()).not.toContain('curl');
+        expect(text()).not.toContain('https://');
     });
 
     it('goes back to the nightly CLI variant', () => {

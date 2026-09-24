@@ -44,6 +44,14 @@ interface HotelReportingRepositoryInterface
     public function getCountryCityPairs(): array;
 
     /**
+     * Every resort with its hotel and product counts, for the dashboard's
+     * excluded-resorts list (what excluding a resort would affect).
+     *
+     * @return list<array{country: string, city: string, hotels: int, products: int}>
+     */
+    public function getResortCounts(): array;
+
+    /**
      * Get countries with a count of hotels that have active prices.
      *
      * @return list<array<string, mixed>>

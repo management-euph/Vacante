@@ -147,7 +147,7 @@ class CronHelper
         }
 
         // Fall back to settings
-        return array_values(ConfigProvider::getExcludedResorts());
+        return ConfigProvider::getExcludedResorts();
     }
 
     /**

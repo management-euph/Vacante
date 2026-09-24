@@ -3343,3 +3343,779 @@ msgstr "Top facilities (comma-separated)"
 msgctxt "Languages::novoton_holidays.location_show_map"
 msgid "Location - show map"
 msgstr "Location - show map"
+
+msgctxt "Languages::novoton_holidays.dash_job_unknown"
+msgid "Unknown job: [job]"
+msgstr "Unknown job: [job]"
+
+msgctxt "Languages::novoton_holidays.dash_jobs_title"
+msgid "Scheduled jobs"
+msgstr "Scheduled jobs"
+
+msgctxt "Languages::novoton_holidays.dash_jobs_intro"
+msgid "In the order the jobs run: each stage needs the one before it. Run works as a signed-in admin action, so the cron key never goes into the browser. ⋯ copies a job's crontab line, URL or CLI command with the real key."
+msgstr "In the order the jobs run: each stage needs the one before it. Run works as a signed-in admin action, so the cron key never goes into the browser. ⋯ copies a job's crontab line, URL or CLI command with the real key."
+
+msgctxt "Languages::novoton_holidays.dash_col_job"
+msgid "Job"
+msgstr "Job"
+
+msgctxt "Languages::novoton_holidays.dash_col_schedule"
+msgid "Schedule"
+msgstr "Schedule"
+
+msgctxt "Languages::novoton_holidays.dash_col_last_run"
+msgid "Last run"
+msgstr "Last run"
+
+msgctxt "Languages::novoton_holidays.dash_col_actions"
+msgid "Actions"
+msgstr "Actions"
+
+msgctxt "Languages::novoton_holidays.dash_stage_reference"
+msgid "Reference data"
+msgstr "Reference data"
+
+msgctxt "Languages::novoton_holidays.dash_stage_hotels"
+msgid "Hotels"
+msgstr "Hotels"
+
+msgctxt "Languages::novoton_holidays.dash_stage_prices"
+msgid "Prices"
+msgstr "Prices"
+
+msgctxt "Languages::novoton_holidays.dash_stage_products"
+msgid "Products"
+msgstr "Products"
+
+msgctxt "Languages::novoton_holidays.dash_stage_upkeep"
+msgid "Bookings and upkeep"
+msgstr "Bookings and upkeep"
+
+msgctxt "Languages::novoton_holidays.dash_recommended"
+msgid "Recommended"
+msgstr "Recommended"
+
+msgctxt "Languages::novoton_holidays.dash_job_resort_list"
+msgid "Resort list"
+msgstr "Resort list"
+
+msgctxt "Languages::novoton_holidays.dash_job_resort_list_desc"
+msgid "Resort names"
+msgstr "Resort names"
+
+msgctxt "Languages::novoton_holidays.dash_job_list_facilities"
+msgid "Facilities"
+msgstr "Facilities"
+
+msgctxt "Languages::novoton_holidays.dash_job_list_facilities_desc"
+msgid "The list of facilities"
+msgstr "The list of facilities"
+
+msgctxt "Languages::novoton_holidays.dash_job_hotel_list"
+msgid "Hotel list"
+msgstr "Hotel list"
+
+msgctxt "Languages::novoton_holidays.dash_job_hotel_list_desc"
+msgid "Basic hotel data"
+msgstr "Basic hotel data"
+
+msgctxt "Languages::novoton_holidays.dash_job_hotel_info_batched"
+msgid "Hotel info"
+msgstr "Hotel info"
+
+msgctxt "Languages::novoton_holidays.dash_job_hotel_info_batched_desc"
+msgid "Hotel details, in batches that resume; later runs re-sync changed hotels"
+msgstr "Hotel details, in batches that resume; later runs re-sync changed hotels"
+
+msgctxt "Languages::novoton_holidays.dash_job_hotel_facilities_batched"
+msgid "Hotel facilities"
+msgstr "Hotel facilities"
+
+msgctxt "Languages::novoton_holidays.dash_job_hotel_facilities_batched_desc"
+msgid "Which facilities each hotel has, in batches"
+msgstr "Which facilities each hotel has, in batches"
+
+msgctxt "Languages::novoton_holidays.dash_job_geocode_addresses"
+msgid "Geocode streets"
+msgstr "Geocode streets"
+
+msgctxt "Languages::novoton_holidays.dash_job_geocode_addresses_desc"
+msgid "Street address from coordinates (needs geocoding on in Travel Core)"
+msgstr "Street address from coordinates (needs geocoding on in Travel Core)"
+
+msgctxt "Languages::novoton_holidays.dash_job_sync_priceinfo_batched"
+msgid "Price info"
+msgstr "Price info"
+
+msgctxt "Languages::novoton_holidays.dash_job_sync_priceinfo_batched_desc"
+msgid "Season prices, in batches; a full re-sync every 7 days"
+msgstr "Season prices, in batches; a full re-sync every 7 days"
+
+msgctxt "Languages::novoton_holidays.dash_job_compute_prices"
+msgid "Compute prices"
+msgstr "Compute prices"
+
+msgctxt "Languages::novoton_holidays.dash_job_compute_prices_desc"
+msgid "Lowest price, seasons, early booking (no API calls)"
+msgstr "Lowest price, seasons, early booking (no API calls)"
+
+msgctxt "Languages::novoton_holidays.dash_job_recompute_calendar_prices"
+msgid "Recompute calendar"
+msgstr "Recompute calendar"
+
+msgctxt "Languages::novoton_holidays.dash_job_recompute_calendar_prices_desc"
+msgid "Rebuild the calendar prices (no API calls)"
+msgstr "Rebuild the calendar prices (no API calls)"
+
+msgctxt "Languages::novoton_holidays.dash_job_room_price"
+msgid "Room price"
+msgstr "Room price"
+
+msgctxt "Languages::novoton_holidays.dash_job_room_price_desc"
+msgid "Marks the hotels that have real-time prices"
+msgstr "Marks the hotels that have real-time prices"
+
+msgctxt "Languages::novoton_holidays.dash_job_add_hotels_as_products"
+msgid "Add products"
+msgstr "Add products"
+
+msgctxt "Languages::novoton_holidays.dash_job_add_hotels_as_products_desc"
+msgid "Creates CS-Cart products for priced hotels, except in excluded resorts"
+msgstr "Creates CS-Cart products for priced hotels, except in excluded resorts"
+
+msgctxt "Languages::novoton_holidays.dash_job_reassign_features"
+msgid "Reassign features"
+msgstr "Reassign features"
+
+msgctxt "Languages::novoton_holidays.dash_job_reassign_features_desc"
+msgid "Re-applies stars, resort, boards and facilities to products"
+msgstr "Re-applies stars, resort, boards and facilities to products"
+
+msgctxt "Languages::novoton_holidays.dash_job_backfill_images"
+msgid "Backfill images"
+msgstr "Backfill images"
+
+msgctxt "Languages::novoton_holidays.dash_job_backfill_images_desc"
+msgid "Re-attaches images to products that synced without them"
+msgstr "Re-attaches images to products that synced without them"
+
+msgctxt "Languages::novoton_holidays.dash_job_offers_update"
+msgid "Offers update"
+msgstr "Offers update"
+
+msgctxt "Languages::novoton_holidays.dash_job_offers_update_desc"
+msgid "New and changed offers since the last run"
+msgstr "New and changed offers since the last run"
+
+msgctxt "Languages::novoton_holidays.dash_job_resinfo"
+msgid "Booking status"
+msgstr "Booking status"
+
+msgctxt "Languages::novoton_holidays.dash_job_resinfo_desc"
+msgid "Checks on-request (ASK) bookings"
+msgstr "Checks on-request (ASK) bookings"
+
+msgctxt "Languages::novoton_holidays.dash_job_cleanup"
+msgid "Cleanup"
+msgstr "Cleanup"
+
+msgctxt "Languages::novoton_holidays.dash_job_cleanup_desc"
+msgid "Orphan bookings, old logs, expired cache"
+msgstr "Orphan bookings, old logs, expired cache"
+
+msgctxt "Languages::novoton_holidays.dash_job_full"
+msgid "Full sync"
+msgstr "Full sync"
+
+msgctxt "Languages::novoton_holidays.dash_job_full_desc"
+msgid "Prices, booking status and cleanup in one run"
+msgstr "Prices, booking status and cleanup in one run"
+
+msgctxt "Languages::novoton_holidays.dash_job_alternative_rs"
+msgid "Alternatives check"
+msgstr "Alternatives check"
+
+msgctxt "Languages::novoton_holidays.dash_job_alternative_rs_desc"
+msgid "Checks alternative requests"
+msgstr "Checks alternative requests"
+
+msgctxt "Languages::novoton_holidays.dash_job_alternative_rs_bookings"
+msgid "Alternatives for bookings"
+msgstr "Alternatives for bookings"
+
+msgctxt "Languages::novoton_holidays.dash_job_alternative_rs_bookings_desc"
+msgid "Checks alternatives for pending bookings"
+msgstr "Checks alternatives for pending bookings"
+
+msgctxt "Languages::novoton_holidays.dash_job_notify_alternatives"
+msgid "Notify alternatives"
+msgstr "Notify alternatives"
+
+msgctxt "Languages::novoton_holidays.dash_job_notify_alternatives_desc"
+msgid "Sends alternative offers to customers"
+msgstr "Sends alternative offers to customers"
+
+msgctxt "Languages::novoton_holidays.dash_job_expire_requests"
+msgid "Expire requests"
+msgstr "Expire requests"
+
+msgctxt "Languages::novoton_holidays.dash_job_expire_requests_desc"
+msgid "Closes old alternative requests"
+msgstr "Closes old alternative requests"
+
+msgctxt "Languages::novoton_holidays.dash_sched_every_minutes"
+msgid "Every [n] min"
+msgstr "Every [n] min"
+
+msgctxt "Languages::novoton_holidays.dash_sched_hourly"
+msgid "Hourly at :[minute]"
+msgstr "Hourly at :[minute]"
+
+msgctxt "Languages::novoton_holidays.dash_sched_every_hours"
+msgid "Every [n] hours at :[minute]"
+msgstr "Every [n] hours at :[minute]"
+
+msgctxt "Languages::novoton_holidays.dash_sched_daily"
+msgid "Daily [time]"
+msgstr "Daily [time]"
+
+msgctxt "Languages::novoton_holidays.dash_sched_every_days"
+msgid "Every [n] days, [time]"
+msgstr "Every [n] days, [time]"
+
+msgctxt "Languages::novoton_holidays.dash_sched_weekly_sun"
+msgid "Sundays [time]"
+msgstr "Sundays [time]"
+
+msgctxt "Languages::novoton_holidays.dash_sched_weekly_mon"
+msgid "Mondays [time]"
+msgstr "Mondays [time]"
+
+msgctxt "Languages::novoton_holidays.dash_sched_weekly_tue"
+msgid "Tuesdays [time]"
+msgstr "Tuesdays [time]"
+
+msgctxt "Languages::novoton_holidays.dash_sched_weekly_wed"
+msgid "Wednesdays [time]"
+msgstr "Wednesdays [time]"
+
+msgctxt "Languages::novoton_holidays.dash_sched_weekly_thu"
+msgid "Thursdays [time]"
+msgstr "Thursdays [time]"
+
+msgctxt "Languages::novoton_holidays.dash_sched_weekly_fri"
+msgid "Fridays [time]"
+msgstr "Fridays [time]"
+
+msgctxt "Languages::novoton_holidays.dash_sched_weekly_sat"
+msgid "Saturdays [time]"
+msgstr "Saturdays [time]"
+
+msgctxt "Languages::novoton_holidays.dash_sched_raw"
+msgid "[cron]"
+msgstr "[cron]"
+
+msgctxt "Languages::novoton_holidays.dash_sched_on_demand"
+msgid "On demand"
+msgstr "On demand"
+
+msgctxt "Languages::novoton_holidays.dash_run_ok"
+msgid "On time"
+msgstr "On time"
+
+msgctxt "Languages::novoton_holidays.dash_run_late"
+msgid "Late"
+msgstr "Late"
+
+msgctxt "Languages::novoton_holidays.dash_run_failed"
+msgid "Failed"
+msgstr "Failed"
+
+msgctxt "Languages::novoton_holidays.dash_run_running"
+msgid "Running"
+msgstr "Running"
+
+msgctxt "Languages::novoton_holidays.dash_run_stalled"
+msgid "Stalled"
+msgstr "Stalled"
+
+msgctxt "Languages::novoton_holidays.dash_run_never"
+msgid "No runs yet"
+msgstr "No runs yet"
+
+msgctxt "Languages::novoton_holidays.dash_run_finished_at"
+msgid "Finished [date]"
+msgstr "Finished [date]"
+
+msgctxt "Languages::novoton_holidays.dash_run_started_at"
+msgid "Started [date]"
+msgstr "Started [date]"
+
+msgctxt "Languages::novoton_holidays.dash_run_stalled_hint"
+msgid "Started [date] and never finished"
+msgstr "Started [date] and never finished"
+
+msgctxt "Languages::novoton_holidays.dash_run"
+msgid "Run"
+msgstr "Run"
+
+msgctxt "Languages::novoton_holidays.dash_more_actions"
+msgid "More actions"
+msgstr "More actions"
+
+msgctxt "Languages::novoton_holidays.dash_copy_crontab_line"
+msgid "Copy crontab line"
+msgstr "Copy crontab line"
+
+msgctxt "Languages::novoton_holidays.dash_copy_url"
+msgid "Copy URL"
+msgstr "Copy URL"
+
+msgctxt "Languages::novoton_holidays.dash_copy_cli"
+msgid "Copy CLI command"
+msgstr "Copy CLI command"
+
+msgctxt "Languages::novoton_holidays.dash_copied"
+msgid "Copied"
+msgstr "Copied"
+
+msgctxt "Languages::novoton_holidays.dash_copy_failed"
+msgid "Copy failed"
+msgstr "Copy failed"
+
+msgctxt "Languages::novoton_holidays.dash_check_status"
+msgid "Check status"
+msgstr "Check status"
+
+msgctxt "Languages::novoton_holidays.dash_force_full"
+msgid "Force full sync"
+msgstr "Force full sync"
+
+msgctxt "Languages::novoton_holidays.dash_force_full_confirm"
+msgid "Run a full sync of [job] now? It re-reads every hotel and makes many API calls."
+msgstr "Run a full sync of [job] now? It re-reads every hotel and makes many API calls."
+
+msgctxt "Languages::novoton_holidays.dash_reset_progress"
+msgid "Reset progress…"
+msgstr "Reset progress…"
+
+msgctxt "Languages::novoton_holidays.dash_reset_confirm"
+msgid "Reset the progress of [job]? Its next run starts again from the first hotel."
+msgstr "Reset the progress of [job]? Its next run starts again from the first hotel."
+
+msgctxt "Languages::novoton_holidays.dash_menu_needs_key"
+msgid "Set the cron key in Travel Core to copy commands."
+msgstr "Set the cron key in Travel Core to copy commands."
+
+msgctxt "Languages::novoton_holidays.dash_on_demand_title"
+msgid "Other jobs, run on demand ([n])"
+msgstr "Other jobs, run on demand ([n])"
+
+msgctxt "Languages::novoton_holidays.dash_on_demand_intro"
+msgid "Not part of the schedule: Full sync repeats jobs from the stages above, and the alternative-request jobs follow bookings."
+msgstr "Not part of the schedule: Full sync repeats jobs from the stages above, and the alternative-request jobs follow bookings."
+
+msgctxt "Languages::novoton_holidays.dash_commands_title"
+msgid "All commands"
+msgstr "All commands"
+
+msgctxt "Languages::novoton_holidays.dash_commands_hint"
+msgid "CLI (php): paste into the server crontab or cPanel → Cron Jobs. URL: for a cron service; add each one at the time shown."
+msgstr "CLI (php): paste into the server crontab or cPanel → Cron Jobs. URL: for a cron service; add each one at the time shown."
+
+msgctxt "Languages::novoton_holidays.dash_format_label"
+msgid "Command format"
+msgstr "Command format"
+
+msgctxt "Languages::novoton_holidays.dash_format_cli"
+msgid "CLI (php)"
+msgstr "CLI (php)"
+
+msgctxt "Languages::novoton_holidays.dash_format_url"
+msgid "URL"
+msgstr "URL"
+
+msgctxt "Languages::novoton_holidays.dash_copy_all"
+msgid "Copy all"
+msgstr "Copy all"
+
+msgctxt "Languages::novoton_holidays.dash_key_hidden_note"
+msgid "The key is hidden here; Copy copies the real one. Anyone with the key can start these jobs; rotate it on Travel Core → Tools."
+msgstr "The key is hidden here; Copy copies the real one. Anyone with the key can start these jobs; rotate it on Travel Core → Tools."
+
+msgctxt "Languages::novoton_holidays.dash_open_tools"
+msgid "Open Travel Core → Tools"
+msgstr "Open Travel Core → Tools"
+
+msgctxt "Languages::novoton_holidays.dash_no_key_title"
+msgid "No cron key is set"
+msgstr "No cron key is set"
+
+msgctxt "Languages::novoton_holidays.dash_no_key_body"
+msgid "Scheduled runs are refused until the shared cron key is set in Travel Core. Run still works from here."
+msgstr "Scheduled runs are refused until the shared cron key is set in Travel Core. Run still works from here."
+
+msgctxt "Languages::novoton_holidays.dash_set_key"
+msgid "Set it in Travel Core"
+msgstr "Set it in Travel Core"
+
+msgctxt "Languages::novoton_holidays.dash_xml_feed_title"
+msgid "Hotel features XML feed"
+msgstr "Hotel features XML feed"
+
+msgctxt "Languages::novoton_holidays.dash_xml_feed_hint"
+msgid "For CS-Cart Advanced Import → “Link to file”. The address carries the cron key; Copy copies the real one."
+msgstr "For CS-Cart Advanced Import → “Link to file”. The address carries the cron key; Copy copies the real one."
+
+msgctxt "Languages::novoton_holidays.dash_settings_jobs_moved"
+msgid "Scheduled jobs, with their crontab lines, URLs and last runs, are on the dashboard."
+msgstr "Scheduled jobs, with their crontab lines, URLs and last runs, are on the dashboard."
+
+msgctxt "Languages::novoton_holidays.dash_open_jobs"
+msgid "Open scheduled jobs"
+msgstr "Open scheduled jobs"
+
+msgctxt "Languages::novoton_holidays.dash_title"
+msgid "Novoton Holidays · v[version]"
+msgstr "Novoton Holidays · v[version]"
+
+msgctxt "Languages::novoton_holidays.dash_tile_hotels"
+msgid "Hotels"
+msgstr "Hotels"
+
+msgctxt "Languages::novoton_holidays.dash_tile_hotels_realtime"
+msgid "Real-time prices: [n]"
+msgstr "Real-time prices: [n]"
+
+msgctxt "Languages::novoton_holidays.dash_tile_hotels_season"
+msgid "Season prices: [n]"
+msgstr "Season prices: [n]"
+
+msgctxt "Languages::novoton_holidays.dash_tile_products"
+msgid "Products"
+msgstr "Products"
+
+msgctxt "Languages::novoton_holidays.dash_tile_products_note"
+msgid "Hotels made into CS-Cart products"
+msgstr "Hotels made into CS-Cart products"
+
+msgctxt "Languages::novoton_holidays.dash_tile_products_open"
+msgid "Open the hotels with products →"
+msgstr "Open the hotels with products →"
+
+msgctxt "Languages::novoton_holidays.dash_tile_bookings"
+msgid "Bookings"
+msgstr "Bookings"
+
+msgctxt "Languages::novoton_holidays.dash_tile_bookings_pending"
+msgid "[n] pending"
+msgstr "[n] pending"
+
+msgctxt "Languages::novoton_holidays.dash_tile_bookings_note"
+msgid "Confirmed: [confirmed] · cancelled: [cancelled]"
+msgstr "Confirmed: [confirmed] · cancelled: [cancelled]"
+
+msgctxt "Languages::novoton_holidays.dash_tile_bookings_open"
+msgid "Open Novoton bookings →"
+msgstr "Open Novoton bookings →"
+
+msgctxt "Languages::novoton_holidays.dash_tile_jobs_failing"
+msgid "Failing: [n]"
+msgstr "Failing: [n]"
+
+msgctxt "Languages::novoton_holidays.dash_tile_jobs_late"
+msgid "Late: [n]"
+msgstr "Late: [n]"
+
+msgctxt "Languages::novoton_holidays.dash_tile_jobs_never"
+msgid "Not run yet: [n]"
+msgstr "Not run yet: [n]"
+
+msgctxt "Languages::novoton_holidays.dash_tile_jobs_ok"
+msgid "All on time"
+msgstr "All on time"
+
+msgctxt "Languages::novoton_holidays.dash_tile_jobs_note"
+msgid "On time: [ok] · late: [late] · no runs yet: [never]"
+msgstr "On time: [ok] · late: [late] · no runs yet: [never]"
+
+msgctxt "Languages::novoton_holidays.dash_tile_jobs_open"
+msgid "See the jobs ↓"
+msgstr "See the jobs ↓"
+
+msgctxt "Languages::novoton_holidays.dash_attention_title"
+msgid "Needs attention ([n])"
+msgstr "Needs attention ([n])"
+
+msgctxt "Languages::novoton_holidays.dash_attention_failed"
+msgid "[job] failed on [date]."
+msgstr "[job] failed on [date]."
+
+msgctxt "Languages::novoton_holidays.dash_attention_stalled"
+msgid "[job] started on [date] and never finished."
+msgstr "[job] started on [date] and never finished."
+
+msgctxt "Languages::novoton_holidays.dash_attention_never"
+msgid "[job] has never run."
+msgstr "[job] has never run."
+
+msgctxt "Languages::novoton_holidays.dash_attention_never_prices"
+msgid "[job] has never run, so [with] of [total] hotels have season prices."
+msgstr "[job] has never run, so [with] of [total] hotels have season prices."
+
+msgctxt "Languages::novoton_holidays.dash_attention_late"
+msgid "[job] is late: it last finished on [date]."
+msgstr "[job] is late: it last finished on [date]."
+
+msgctxt "Languages::novoton_holidays.dash_attention_no_season"
+msgid "Only [with] of [total] hotels have season prices."
+msgstr "Only [with] of [total] hotels have season prices."
+
+msgctxt "Languages::novoton_holidays.dash_attention_run"
+msgid "Run [job] now"
+msgstr "Run [job] now"
+
+msgctxt "Languages::novoton_holidays.dash_tools_title"
+msgid "Tools"
+msgstr "Tools"
+
+msgctxt "Languages::novoton_holidays.dash_tools_check"
+msgid "Check"
+msgstr "Check"
+
+msgctxt "Languages::novoton_holidays.dash_tool_check_prices"
+msgid "Check prices"
+msgstr "Check prices"
+
+msgctxt "Languages::novoton_holidays.dash_tool_check_prices_hotel"
+msgid "Check prices per hotel"
+msgstr "Check prices per hotel"
+
+msgctxt "Languages::novoton_holidays.dash_tool_check_packages"
+msgid "Check packages"
+msgstr "Check packages"
+
+msgctxt "Languages::novoton_holidays.dash_tool_test_api"
+msgid "Test API"
+msgstr "Test API"
+
+msgctxt "Languages::novoton_holidays.dash_tool_health"
+msgid "Health check"
+msgstr "Health check"
+
+msgctxt "Languages::novoton_holidays.dash_tools_open"
+msgid "Open"
+msgstr "Open"
+
+msgctxt "Languages::novoton_holidays.dash_tool_bookings"
+msgid "Bookings"
+msgstr "Bookings"
+
+msgctxt "Languages::novoton_holidays.dash_tool_alternatives"
+msgid "Alternative requests"
+msgstr "Alternative requests"
+
+msgctxt "Languages::novoton_holidays.dash_tool_price_compare"
+msgid "Price comparison"
+msgstr "Price comparison"
+
+msgctxt "Languages::novoton_holidays.dash_tools_export"
+msgid "Export"
+msgstr "Export"
+
+msgctxt "Languages::novoton_holidays.dash_tool_features_csv"
+msgid "Hotel features (CSV)"
+msgstr "Hotel features (CSV)"
+
+msgctxt "Languages::novoton_holidays.dash_tool_features_xml"
+msgid "Hotel features (XML)"
+msgstr "Hotel features (XML)"
+
+msgctxt "Languages::novoton_holidays.dash_tools_maintenance"
+msgid "Maintenance"
+msgstr "Maintenance"
+
+msgctxt "Languages::novoton_holidays.dash_tool_recompute_calendar"
+msgid "Recompute calendar prices…"
+msgstr "Recompute calendar prices…"
+
+msgctxt "Languages::novoton_holidays.dash_tool_recompute_calendar_confirm"
+msgid "Recompute the calendar prices of every hotel now?"
+msgstr "Recompute the calendar prices of every hotel now?"
+
+msgctxt "Languages::novoton_holidays.dash_tool_recompute_calendar_hint"
+msgid "Asks first; runs as an admin action."
+msgstr "Asks first; runs as an admin action."
+
+msgctxt "Languages::novoton_holidays.dash_countries_title"
+msgid "Hotels by country"
+msgstr "Hotels by country"
+
+msgctxt "Languages::novoton_holidays.dash_col_country"
+msgid "Country"
+msgstr "Country"
+
+msgctxt "Languages::novoton_holidays.dash_col_hotels"
+msgid "Hotels"
+msgstr "Hotels"
+
+msgctxt "Languages::novoton_holidays.dash_col_realtime"
+msgid "Real-time prices"
+msgstr "Real-time prices"
+
+msgctxt "Languages::novoton_holidays.dash_col_season"
+msgid "Season prices"
+msgstr "Season prices"
+
+msgctxt "Languages::novoton_holidays.dash_col_products"
+msgid "Products"
+msgstr "Products"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_title"
+msgid "Excluded resorts"
+msgstr "Excluded resorts"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_summary"
+msgid "[excluded] of [total] resorts excluded"
+msgstr "[excluded] of [total] resorts excluded"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_country_summary"
+msgid "[country] [excluded] of [total]"
+msgstr "[country] [excluded] of [total]"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_rule"
+msgid "Hotels in excluded resorts are never made into products; products already made stay as they are."
+msgstr "Hotels in excluded resorts are never made into products; products already made stay as they are."
+
+msgctxt "Languages::novoton_holidays.dash_resorts_choose"
+msgid "Choose resorts…"
+msgstr "Choose resorts…"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_pending"
+msgid "[changes] not saved: [add] to exclude, [remove] to include again · affects [hotels] hotels ([products] already products; they stay)"
+msgstr "[changes] not saved: [add] to exclude, [remove] to include again · affects [hotels] hotels ([products] already products; they stay)"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_saved"
+msgid "All changes saved"
+msgstr "All changes saved"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_search"
+msgid "Search resorts"
+msgstr "Search resorts"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_all"
+msgid "All [n]"
+msgstr "All [n]"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_only_excluded"
+msgid "Show excluded only"
+msgstr "Show excluded only"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_sort"
+msgid "Sort"
+msgstr "Sort"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_sort_name"
+msgid "A–Z"
+msgstr "A–Z"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_sort_hotels"
+msgid "Most hotels"
+msgstr "Most hotels"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_group"
+msgid "resorts: [resorts] · hotels: [hotels]"
+msgstr "resorts: [resorts] · hotels: [hotels]"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_excluded_word"
+msgid "excluded"
+msgstr "excluded"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_exclude_shown"
+msgid "Exclude all shown"
+msgstr "Exclude all shown"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_include_shown"
+msgid "Include all shown"
+msgstr "Include all shown"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_not_saved"
+msgid "Not saved yet"
+msgstr "Not saved yet"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_excluded_flag"
+msgid "Excluded"
+msgstr "Excluded"
+
+msgctxt "Languages::novoton_holidays.dash_n_hotels"
+msgid "[n] hotel|[n] hotels"
+msgstr "[n] hotel|[n] hotels"
+
+msgctxt "Languages::novoton_holidays.dash_n_products"
+msgid "[n] product|[n] products"
+msgstr "[n] product|[n] products"
+
+msgctxt "Languages::novoton_holidays.dash_no_products"
+msgid "no products"
+msgstr "no products"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_no_match"
+msgid "No resorts match these filters."
+msgstr "No resorts match these filters."
+
+msgctxt "Languages::novoton_holidays.dash_resorts_undo"
+msgid "Undo changes"
+msgstr "Undo changes"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_save"
+msgid "Save excluded resorts"
+msgstr "Save excluded resorts"
+
+msgctxt "Languages::novoton_holidays.dash_resorts_none"
+msgid "No resorts yet: run the Hotel list job to load them."
+msgstr "No resorts yet: run the Hotel list job to load them."
+
+msgctxt "Languages::novoton_holidays.dash_activity_title"
+msgid "Recent sync activity"
+msgstr "Recent sync activity"
+
+msgctxt "Languages::novoton_holidays.dash_activity_all"
+msgid "All ([n])"
+msgstr "All ([n])"
+
+msgctxt "Languages::novoton_holidays.dash_activity_failed"
+msgid "Failed ([n])"
+msgstr "Failed ([n])"
+
+msgctxt "Languages::novoton_holidays.dash_activity_ok"
+msgid "OK"
+msgstr "OK"
+
+msgctxt "Languages::novoton_holidays.dash_activity_none"
+msgid "No sync runs recorded."
+msgstr "No sync runs recorded."
+
+msgctxt "Languages::novoton_holidays.dash_col_date"
+msgid "Date"
+msgstr "Date"
+
+msgctxt "Languages::novoton_holidays.dash_col_total"
+msgid "Total"
+msgstr "Total"
+
+msgctxt "Languages::novoton_holidays.dash_col_updated"
+msgid "Updated"
+msgstr "Updated"
+
+msgctxt "Languages::novoton_holidays.dash_col_failed"
+msgid "Failed"
+msgstr "Failed"
+
+msgctxt "Languages::novoton_holidays.dash_col_status"
+msgid "Status"
+msgstr "Status"
+
+msgctxt "Languages::novoton_holidays.dash_col_duration"
+msgid "Duration"
+msgstr "Duration"

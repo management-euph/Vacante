@@ -114,6 +114,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
     }
+
+    /**
+     * Mode: run_job — run one cron job from the dashboard, as the signed-in admin.
+     *
+     * The dashboard's Run / Check status / Force full sync / Reset used to be
+     * links to the public cron URL, carrying the shared cron key: the key went
+     * into browser history and Referer headers, and a GET "Reset" could be
+     * fired by any page the admin visited. This is a POST (CS-Cart checks its
+     * security_hash) and needs no key. The dashboard opens it in a new tab, where
+     * the job's log streams as plain text, exactly as the cron URL showed it.
+     */
+    if ($mode === 'run_job') {
+        if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
+            return [CONTROLLER_STATUS_DENIED];
+        }
+
+        $job = TypeCoerce::toString(preg_replace('/[^a-z0-9_]/', '', strtolower(RequestCoerce::string($_REQUEST, 'job'))));
+        if (!array_key_exists($job, \Tygh\Addons\NovotonHolidays\Cron\CronDispatcher::getAvailableModes())) {
+            fn_set_notification('E', __('error'), __('novoton_holidays.job_unknown', ['[job]' => $job]));
+
+            return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
+        }
+
+        // The batched jobs' extra actions, passed on as the flags their
+        // commands already read from the cron URL.
+        $params = [];
+        $action = RequestCoerce::string($_REQUEST, 'job_action');
+        if (in_array($action, ['status', 'force_full', 'reset'], true)) {
+            $params[$action] = '1';
+        }
+
+        header('Content-Type: text/plain; charset=utf-8');
+        $logger = new \Tygh\Addons\NovotonHolidays\Helpers\SyncLogger($job);
+        $logger->outputHeader($job);
+        try {
+            $dispatcher = new \Tygh\Addons\NovotonHolidays\Cron\CronDispatcher(_nvt_api(), $logger);
+            $result = $dispatcher->dispatch($job, $params);
+            $logger->complete(TypeCoerce::toBool($result['success'] ?? true));
+        } catch (\Throwable $e) {
+            $logger->output('ERROR: ' . $e->getMessage());
+        }
+        $logger->outputFooter();
+        exit;
+    }
 }
 
 /**
@@ -141,6 +185,12 @@ if ($mode === 'fix_tab') {
 if ($mode === 'recompute_calendar_prices') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
+    }
+    // It rewrites every hotel's calendar prices: a POST (CS-Cart checks the
+    // security_hash), never a link a page could fire. The dashboard runs it
+    // through run_job; this stays for bookmarked forms.
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
     }
 
     $hotelRepo = Container::getInstance()->hotelRepository();
@@ -373,16 +423,24 @@ if ($mode === 'manage' || empty($mode)) {
         ];
     }
 
-    $recent_syncs = $syncLogRepo->findRecent(10);
-
-    $last_syncs = [
-        'hotellist' => $syncLogRepo->getLastSyncDate('hotel_list'),
-        'hotelinfo' => $syncLogRepo->getLastSyncDate('hotelinfo'),
-        'prices' => $syncLogRepo->getLastSyncDate('sync_priceinfo'),
-        'offers_update' => $syncLogRepo->getLastSyncDate('offers_update'),
-        'facilities' => $syncLogRepo->getLastSyncDate('facilities'),
-        'resort_list' => $syncLogRepo->getLastSyncDate('resort_list'),
-    ];
+    // Recent sync activity, CS-Cart paginated: $search carries page,
+    // items_per_page and total_items for common/pagination.tpl.
+    $activity_status = RequestCoerce::string($_REQUEST, 'activity') === 'failed' ? 'failed' : '';
+    $activity = $syncLogRepo->findPaginated(
+        max(1, RequestCoerce::int($_REQUEST, 'page', 1)),
+        max(1, RequestCoerce::int($_REQUEST, 'items_per_page', 10)),
+        '',
+        $activity_status,
+    );
+    $view->assign('recent_syncs', $activity['items']);
+    $view->assign('search', [
+        'page' => $activity['page'],
+        'items_per_page' => $activity['per_page'],
+        'total_items' => $activity['total'],
+        'activity' => $activity_status,
+    ]);
+    $view->assign('novoton_activity_failed', $syncLogRepo->count('', 'failed'));
+    $view->assign('novoton_activity_all', $activity_status === '' ? $activity['total'] : $syncLogRepo->count());
 
     // Through the ConfigProvider, not the raw settings array: the cron key
     // lives in Travel Core now, so a direct read of novoton's own settings
@@ -391,58 +449,62 @@ if ($mode === 'manage' || empty($mode)) {
     $cron_key = ConfigProvider::getCronAccessKey();
     $base_url = TypeCoerce::toString(Registry::get('config.http_location')) . '/';
 
-    $cron_urls = [
-        'hotel_info_batched' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=hotel_info_batched",
-        'sync_priceinfo_batched' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=sync_priceinfo_batched",
-        'hotel_list' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=hotel_list",
-        'resort_list' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=resort_list",
-        'list_facilities' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=list_facilities",
-        'hotel_facilities_batched' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=hotel_facilities_batched",
-        'resinfo' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=resinfo",
-        'offers_update' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=offers_update",
-        'room_price' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=room_price",
-        'add_products' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=add_hotels_as_products",
-        'reassign_features' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=reassign_features",
-        'compute_prices' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=compute_prices",
-        'recompute_calendar_prices' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=recompute_calendar_prices",
-        'geocode_addresses' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=geocode_addresses",
-        'backfill_images' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=backfill_images",
-        'cleanup' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=cleanup",
-    ];
+    // Scheduled jobs: one row per job, in the order they run, from the plan
+    // builder. The page never prints a command with the key in it — every
+    // command is shown masked, and Copy puts the real one on the clipboard.
+    $planner = new \Tygh\Addons\NovotonHolidays\Services\CronPlanBuilder(
+        $base_url,
+        $cron_key,
+        defined('DIR_ROOT') ? TypeCoerce::toString(DIR_ROOT) : '',
+    );
+    $cron_modes = \Tygh\Addons\NovotonHolidays\Cron\CronDispatcher::getAvailableModes();
+    $cron_records = [];
+    $cron_legacy = [];
+    foreach (array_keys($cron_modes) as $cron_mode) {
+        $cron_records[$cron_mode] = \Tygh\Addons\TravelCore\Cron\CronRunLog::get(\Tygh\Addons\NovotonHolidays\Services\CronPlanBuilder::ADDON, $cron_mode);
+        foreach (\Tygh\Addons\NovotonHolidays\Services\CronPlanBuilder::legacyLogTypes($cron_mode) as $log_type) {
+            $log_row = $syncLogRepo->getLastSync($log_type);
+            $log_at = $log_row === null ? false : strtotime(TypeCoerce::toString($log_row['sync_date'] ?? ''));
+            if ($log_at !== false && $log_at > ($cron_legacy[$cron_mode]['at'] ?? 0)) {
+                $cron_legacy[$cron_mode] = ['at' => $log_at, 'ok' => TypeCoerce::toString($log_row['status'] ?? '') !== 'failed'];
+            }
+        }
+    }
+    $mask = static fn (string $text): string => $cron_key === '' ? $text : str_replace($cron_key, '••••••••', $text);
+    $crontab_cli = $planner->crontab($cron_modes, 'cli', date('Y-m-d'));
+    $xml_feed_url = $base_url . 'index.php?dispatch=novoton_export.hotel_features_xml&access_key=' . rawurlencode($cron_key);
 
-    $xml_feed_url = $base_url . "index.php?dispatch=novoton_export.hotel_features_xml&access_key={$cron_key}";
+    $job_stages = $planner->stages($cron_modes, $cron_records, $cron_legacy, time());
+    $view->assign('novoton_job_stages', $job_stages);
+    $view->assign('novoton_on_demand_jobs', $planner->onDemandRows($cron_modes, $cron_records, time()));
+    $view->assign('novoton_cron_has_key', $planner->hasKey());
+    $view->assign('novoton_cron_key', $cron_key);
+    $view->assign('novoton_crontab_cli', $crontab_cli);
+    $view->assign('novoton_crontab_url', $planner->crontab($cron_modes, 'url', date('Y-m-d')));
+    $view->assign('novoton_crontab_masked', $mask($crontab_cli));
+    $view->assign('novoton_xml_feed_url', $xml_feed_url);
+    $view->assign('novoton_xml_feed_masked', $mask($xml_feed_url));
 
     $view->assign('stats', $stats);
     // NOTE: deliberately NOT assigned as 'countries' — that is a CS-Cart core
     // Smarty global ([code => name] map) and overwriting it with our numeric
     // list shadows core data on the whole admin page. No template consumed it.
-    $view->assign('recent_syncs', $recent_syncs);
-    $view->assign('last_syncs', $last_syncs);
-    $view->assign('cron_urls', $cron_urls);
-    $view->assign('cron_key', $cron_key);
-    $view->assign('xml_feed_url', $xml_feed_url);
     $view->assign('addon_settings', $addon_settings);
     $view->assign('addon_version', ConfigProvider::getVersion());
 
-    $resorts_by_country = [];
-    $hidden_resorts = array_map('strtoupper', ConfigProvider::getHiddenResorts());
-    $resorts = $hotelRepo->getCountryCityPairs();
-    foreach ($resorts as $resort) {
-        if (!empty($hidden_resorts) && in_array(strtoupper($resort['city']), $hidden_resorts, true)) {
-            continue;
-        }
-        $resorts_by_country[$resort['country']][] = $resort['city'];
-    }
-    $view->assign('resorts_by_country', $resorts_by_country);
+    // Excluded resorts, with what excluding each one affects.
+    $view->assign('novoton_resorts', \Tygh\Addons\NovotonHolidays\Services\DashboardSummary::resorts(
+        $hotelRepo->getResortCounts(),
+        ConfigProvider::getHiddenResorts(),
+        ConfigProvider::getExcludedResorts(),
+    ));
 
-    $excluded_resorts = [];
-    if (!empty($addon_settings['excluded_resorts'])) {
-        $excluded_resorts = json_decode(TypeCoerce::toString($addon_settings['excluded_resorts']), true);
-        if (!is_array($excluded_resorts)) {
-            $excluded_resorts = [];
-        }
-    }
-    $view->assign('excluded_resorts', $excluded_resorts);
+    // The top of the page: which figures are a problem, and what fixes them.
+    $view->assign('novoton_job_health', \Tygh\Addons\NovotonHolidays\Services\DashboardSummary::jobHealth($job_stages));
+    $view->assign('novoton_attention', \Tygh\Addons\NovotonHolidays\Services\DashboardSummary::attention($job_stages, [
+        'total' => $stats['hotels']['total'],
+        'with_packages' => $stats['hotels']['with_packages'],
+    ]));
 }
 
 /**

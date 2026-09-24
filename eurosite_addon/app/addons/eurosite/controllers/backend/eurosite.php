@@ -389,12 +389,12 @@ if ($mode === 'manage' || empty($mode)) {
     // describing the same eight jobs in two separate tables.
     $cronKey = ConfigProvider::getCronAccessKey();
     $baseUrl = TypeCoerce::toString(\Tygh\Registry::get('config.http_location'));
-    $plan = new CronPlanBuilder($baseUrl, $cronKey);
+    $plan = new CronPlanBuilder($baseUrl, $cronKey, defined('DIR_ROOT') ? TypeCoerce::toString(constant('DIR_ROOT')) : '');
 
     $cronRows = $plan->rows($syncModes, $counts, $lastSyncs);
 
     // All four crontab variants up front: the page switches plan (nightly full
-    // vs per-catalog) and format (curl vs CLI) client-side, with no round trip.
+    // vs per-catalog) and format (URL vs CLI) client-side, with no round trip.
     $generatedOn = date('j M Y') . ' · server time ' . date_default_timezone_get();
     $crontabs = [];
     foreach (['full', 'per'] as $planKey) {

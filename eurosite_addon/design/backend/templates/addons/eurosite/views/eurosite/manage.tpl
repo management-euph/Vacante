@@ -225,7 +225,7 @@
         </div>
     {else}
         <p class="muted" style="font-size: 12px;">
-            {__("eurosite.cron_paste_hint", ["[default]" => "Paste this into the server crontab or cPanel → Cron Jobs."])}
+            {__("eurosite.cron_paste_hint", ["[default]" => "CLI (php): paste it into the server crontab or cPanel → Cron Jobs. URL: add each address to a cron service at the time shown."])}
         </p>
 
         <div id="eurosite-crontab" data-crontabs="{$eurosite_crontabs_json|escape:html}"
@@ -256,7 +256,7 @@
                 <span class="muted" style="font-size: 12px;">{__("eurosite.cron_format", ["[default]" => "Format"])}</span>
                 <label style="display: inline-flex; align-items: center; gap: 6px; margin: 0; cursor: pointer;">
                     <input type="radio" name="eurosite_cron_format" value="url" checked style="margin: 0;" />
-                    {__("eurosite.cron_format_url", ["[default]" => "URL (curl)"])}
+                    {__("eurosite.cron_format_url", ["[default]" => "URL"])}
                 </label>
                 <label style="display: inline-flex; align-items: center; gap: 6px; margin: 0; cursor: pointer;">
                     <input type="radio" name="eurosite_cron_format" value="cli" style="margin: 0;" />

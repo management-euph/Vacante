@@ -163,11 +163,13 @@ final class CronPlanBuilderTest extends TestCase
         foreach ($this->builder()->rows(self::MODES, [], []) as $row) {
             self::assertNotSame('', $row['schedule_cron'], $row['mode'] . ' has no slot');
             self::assertNotSame('', $row['schedule_human'], $row['mode'] . ' has no wording');
+            // A crontab line must be a runnable command: the CLI one, never a bare URL.
             self::assertSame(
-                $row['schedule_cron'] . '  curl -fsS "' . $row['url'] . '" >/dev/null',
+                $row['schedule_cron'] . '  ' . $row['cli'],
                 $row['crontab_line'],
-                'the per-row crontab line must be the slot plus the command',
+                'the per-row crontab line must be the slot plus the CLI command',
             );
+            self::assertStringNotContainsString('curl', $row['crontab_line']);
         }
     }
 
@@ -296,7 +298,7 @@ final class CronPlanBuilderTest extends TestCase
 
     public function testTheCrontabIsPasteableWithOneCommandPerLine(): void
     {
-        $text = $this->builder()->crontab('full', 'url', self::MODES, '21 Sep 2026');
+        $text = $this->builder()->crontab('full', 'cli', self::MODES, '21 Sep 2026');
         $lines = explode("\n", $text);
 
         self::assertSame('# Eurosite Touring — nightly full pipeline', $lines[0]);
@@ -305,11 +307,44 @@ final class CronPlanBuilderTest extends TestCase
 
         foreach (array_slice($lines, 2) as $line) {
             self::assertMatchesRegularExpression(
-                '/^[\d*\/ ,-]+\s{2}curl -fsS "https:\/\/shop\.example\.ro\/index\.php\?[^"]+" >\/dev\/null$/',
+                '/^[\d*\/ ,-]+\s{2}php app\/addons\/eurosite\/cron\.php access_key=abc123 mode=[a-z_]+$/',
                 $line,
             );
         }
-        self::assertStringContainsString('cron_mode=full', $lines[2]);
+        self::assertStringContainsString('mode=full', $lines[2]);
+    }
+
+    /**
+     * The URL form is the plain address, for a cron service or the browser:
+     * no curl wrapper. It is not a crontab, so every schedule sits in a
+     * comment and the only uncommented lines are the URLs themselves.
+     */
+    public function testTheUrlFormListsPlainUrlsUnderTheirSlot(): void
+    {
+        $text = $this->builder()->crontab('full', 'url', self::MODES, '21 Sep 2026');
+        $lines = explode("\n", $text);
+
+        self::assertStringNotContainsString('curl', $text);
+        self::assertStringNotContainsString('/dev/null', $text);
+        self::assertSame('# URLs for a cron service: add each one at the time shown', $lines[2]);
+        self::assertSame('# 0 1 * * * (' . CronPlanBuilder::humanSchedule('0 1 * * *') . ')', $lines[3]);
+        self::assertSame($this->builder()->url('full'), $lines[4]);
+        foreach ($lines as $line) {
+            self::assertTrue(
+                str_starts_with($line, '#') || str_starts_with($line, 'https://shop.example.ro/index.php?'),
+                "not a comment and not a plain URL: {$line}",
+            );
+        }
+    }
+
+    public function testCliLinesAreAbsoluteWhenTheStoreRootIsKnown(): void
+    {
+        $plan = new CronPlanBuilder('https://shop.example.ro', self::KEY, '/home/shop/public_html/');
+
+        self::assertSame(
+            'php /home/shop/public_html/app/addons/eurosite/cron.php access_key=' . self::KEY . ' mode=hotels',
+            $plan->cli('hotels'),
+        );
     }
 
     public function testTheCliFormatUsesTheAddonsCronScript(): void

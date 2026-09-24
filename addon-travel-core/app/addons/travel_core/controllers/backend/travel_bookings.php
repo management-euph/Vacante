@@ -255,8 +255,8 @@ if ($mode === 'manage') {
         'date_to'        => RequestCoerce::string($_REQUEST, 'date_to'),
         'sort_by'        => RequestCoerce::string($_REQUEST, 'sort_by', 'created_at'),
         'sort_order'     => RequestCoerce::string($_REQUEST, 'sort_order', 'desc') === 'asc' ? 'asc' : 'desc',
-        'page'           => RequestCoerce::int($_REQUEST, 'page', 1),
-        'items_per_page' => RequestCoerce::int($_REQUEST, 'items_per_page', 20),
+        'page'           => max(1, RequestCoerce::int($_REQUEST, 'page', 1)),
+        'items_per_page' => max(1, RequestCoerce::int($_REQUEST, 'items_per_page', 20)),
     ];
 
     $condition = '';
@@ -310,6 +310,9 @@ if ($mode === 'manage') {
         $total = $paginatedResult['total'];
         $bookings = $paginatedResult['items'];
     }
+    // common/pagination.tpl reads the total from $search (fn_generate_pagination),
+    // not from a separate variable: without it the page controls never render.
+    $params['total_items'] = $total;
 
     // Enrich each booking with provider-specific display data and actions.
     // Also pre-format dates in PHP — the list template wraps its rows in
