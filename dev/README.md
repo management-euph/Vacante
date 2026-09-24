@@ -30,6 +30,12 @@ and heal the store itself:
   with no booking form. `?force=1` runs the same repair as the dashboard's
   Relink button (fetch each missing hotel from the API, re-insert it linked)
   and clears the cache. `http://localhost:8080/dev/tools/sphinx-relink.php`
+- `tools/eurosite-sample.php` — real Eurosite hotel data as JSON, for design
+  work: the store's synced hotels and destination names, plus a READ-ONLY live
+  price search per destination (availability IM/OR/ST, from-price). Nothing is
+  booked, written or cached; no credential is printed. `?cities=RO0218,RO2M`,
+  `?check_in=YYYY-MM-DD&nights=7`, `&download=1` saves the file.
+  `http://localhost:8080/dev/tools/eurosite-sample.php`
 
 Each folder has a shared `_*_client.php` (the standalone HTTP client +
 pretty-printer) plus one probe file per API feature. This mirrors the existing

@@ -310,6 +310,14 @@ return [
         'en' => 'The selected offer has expired — please search again.',
         'ro' => 'Oferta selectată a expirat — vă rugăm să căutați din nou.',
     ],
+    'eurosite.offer_stop_sale' => [
+        'en' => 'This offer is on stop sale and cannot be booked — please choose another.',
+        'ro' => 'Această ofertă este în stop sale și nu poate fi rezervată — vă rugăm să alegeți alta.',
+    ],
+    'eurosite.stop_sale' => [
+        'en' => 'Stop sale — not bookable',
+        'ro' => 'Stop sale — nu se poate rezerva',
+    ],
     'eurosite.guests' => [
         'en' => 'Guests',
         'ro' => 'Turiști',

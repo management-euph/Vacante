@@ -40,6 +40,15 @@ if ($snapshot === null) {
 
     return [CONTROLLER_STATUS_REDIRECT, 'eurosite_booking.search'];
 }
+// Stop sale is never bookable (spec). OfferContextStore gives such offers no
+// key, so this only fires on a snapshot stored before that rule existed.
+if (TypeCoerce::toString($snapshot['availability_code'] ?? '') === 'ST') {
+    fn_set_notification('W', __('warning'), __('eurosite.offer_stop_sale', [
+        '[default]' => 'This offer is on stop sale and cannot be booked — please choose another.',
+    ]));
+
+    return [CONTROLLER_STATUS_REDIRECT, 'eurosite_booking.search'];
+}
 
 // ── Guests ──
 $rawGuests = is_array($_POST['guests'] ?? null) ? $_POST['guests'] : [];

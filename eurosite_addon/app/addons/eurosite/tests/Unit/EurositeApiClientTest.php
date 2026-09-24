@@ -187,6 +187,9 @@ final class EurositeApiClientTest extends TestCase
         self::assertSame('0|1065487_1874_2', $o->variantId);
         self::assertSame('Double Room', $o->rooms[0]['name']);
         self::assertSame('Mic dejun', $o->meals[0]['name']);
+        // The spec's Code attribute, not just the text: ST must be recognisable.
+        self::assertSame('OR', $o->availabilityCode);
+        self::assertTrue($o->isBookable());
 
         // The request carried the search criteria + occupancy.
         $req = $t->lastRequest;
@@ -194,6 +197,28 @@ final class EurositeApiClientTest extends TestCase
         self::assertStringContainsString('<CityCode>ROMM</CityCode>', $req);
         self::assertStringContainsString('<Room Code="DB" NoAdults="2" NoChildren="1">', $req);
         self::assertStringContainsString('<Age>8</Age>', $req);
+    }
+
+    /** The Code attribute decides, whatever language the element's text is in. */
+    public function testAStopSaleOfferIsReadFromTheCodeAttribute(): void
+    {
+        $t = new FakeTransport(self::wrap('getHotelPriceResponse',
+            '<Hotel><Product><CountryCode>RO</CountryCode><CityCode>ROMM</CityCode>'
+            . '<ProductCode>RO0099</ProductCode><ProductName>Condor</ProductName></Product>'
+            . '<Offers><Offer CurrencyCode="EUR"><Availability Code="ST">Oprit la vanzare</Availability>'
+            . '<PeriodOfStay><CheckIn>2026-10-24</CheckIn><CheckOut>2026-10-31</CheckOut></PeriodOfStay>'
+            . '<ProductPrice>100</ProductPrice></Offer></Offers></Hotel>'));
+
+        $offers = $this->client($t)->searchHotels([
+            'country_code' => 'RO',
+            'city_code'    => 'ROMM',
+            'check_in'     => '2026-10-24',
+            'check_out'    => '2026-10-31',
+            'rooms'        => [['code' => 'DB', 'adults' => 2, 'children' => []]],
+        ]);
+
+        self::assertSame('ST', $offers[0]->availabilityCode);
+        self::assertFalse($offers[0]->isBookable());
     }
 
     public function testIsProductInfoUpdatableReadsTheFlag(): void

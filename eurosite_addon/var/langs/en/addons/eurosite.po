@@ -388,6 +388,14 @@ msgctxt "Languages::eurosite.offer_expired"
 msgid "The selected offer has expired — please search again."
 msgstr "The selected offer has expired — please search again."
 
+msgctxt "Languages::eurosite.offer_stop_sale"
+msgid "This offer is on stop sale and cannot be booked — please choose another."
+msgstr "This offer is on stop sale and cannot be booked — please choose another."
+
+msgctxt "Languages::eurosite.stop_sale"
+msgid "Stop sale — not bookable"
+msgstr "Stop sale — not bookable"
+
 msgctxt "Languages::eurosite.guests"
 msgid "Guests"
 msgstr "Guests"
