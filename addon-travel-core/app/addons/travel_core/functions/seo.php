@@ -171,6 +171,89 @@ function fn_travel_core_render_seo_slug(string $pattern, array $placeholders): s
 }
 
 // ============================================================================
+// SEO settings store — one per provider add-on
+// ============================================================================
+//
+// The overwrite mode, the six "Apply" ticks and every "<key>__<lang>" template
+// live in CS-Cart's ?:storage_data (key travel_core_seo_<addon>), as JSON.
+// They used to be written only through Settings::updateValue(), but these rows
+// are declared in no addon.xml, and on live stores such writes land in the
+// registry cache at best: a reload showed the built-in defaults again (the
+// same failure the booking colors had, see fn_travel_core_save_appearance_colors).
+// Old Settings rows are still read; a stored value wins over them.
+
+function _travel_core_seo_storage_key(string $addonName): string
+{
+    return 'travel_core_seo_' . $addonName;
+}
+
+/**
+ * The stored JSON map (one ?:storage_data read).
+ *
+ * @return array<string, string>
+ */
+function _travel_core_seo_stored(string $addonName): array
+{
+    $stored = [];
+    if (function_exists('fn_get_storage_data')) {
+        $raw = fn_get_storage_data(_travel_core_seo_storage_key($addonName));
+        $decoded = is_string($raw) && $raw !== '' ? json_decode($raw, true) : null;
+        foreach (is_array($decoded) ? $decoded : [] as $key => $value) {
+            if (is_string($key) && is_scalar($value)) {
+                $stored[$key] = (string) $value;
+            }
+        }
+    }
+
+    return $stored;
+}
+
+/**
+ * A provider's saved SEO settings: its add-on settings (old Settings rows)
+ * overlaid with the SEO store, which wins.
+ *
+ * @return array<string, mixed>
+ */
+function fn_travel_core_seo_settings(string $addonName): array
+{
+    return array_merge(
+        TypeCoerce::toStringMap(\Tygh\Registry::get('addons.' . $addonName)),
+        _travel_core_seo_stored($addonName),
+    );
+}
+
+/**
+ * Merge values into the provider's SEO store. Also mirrors them into the
+ * Registry (this request) and, best effort, into Settings.
+ *
+ * @param array<string, string> $values
+ */
+function _travel_core_seo_store(string $addonName, array $values): void
+{
+    if ($values === []) {
+        return;
+    }
+
+    if (function_exists('fn_set_storage_data')) {
+        $merged = array_merge(_travel_core_seo_stored($addonName), $values);
+        fn_set_storage_data(
+            _travel_core_seo_storage_key($addonName),
+            (string) json_encode($merged, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+        );
+    }
+
+    $settings = class_exists(\Tygh\Settings::class) ? \Tygh\Settings::instance() : null;
+    if (is_object($settings) && method_exists($settings, 'updateValue')) {
+        foreach ($values as $key => $value) {
+            // auto_create: these settings aren't declared in addon.xml.
+            $settings->updateValue($key, $value, $addonName, true);
+        }
+    }
+    $existing = \Tygh\Registry::get('addons.' . $addonName);
+    \Tygh\Registry::set('addons.' . $addonName, array_merge(is_array($existing) ? $existing : [], $values));
+}
+
+// ============================================================================
 // SEO Field Application — shared by all provider addons
 // ============================================================================
 
@@ -238,7 +321,7 @@ function fn_travel_core_apply_seo_fields(string $addonName, array $placeholders,
     if ($langCode === '') {
         $langCode = defined('CART_LANGUAGE') ? TypeCoerce::toString(CART_LANGUAGE) : 'en';
     }
-    $settings = TypeCoerce::toStringMap(\Tygh\Registry::get('addons.' . $addonName));
+    $settings = fn_travel_core_seo_settings($addonName);
 
     // Built-in template defaults exposed by the provider addon's func.php
     // (fn_<addon>_seo_defaults). func.php is loaded in every AREA — including
@@ -379,7 +462,7 @@ function fn_travel_core_seo_lang_form_data(string $addonName, array $defaults): 
         $languages = [$lc => strtoupper($lc)];
     }
 
-    $settings = TypeCoerce::toStringMap(\Tygh\Registry::get('addons.' . $addonName));
+    $settings = fn_travel_core_seo_settings($addonName);
     $values = [];
     foreach (array_keys($languages) as $langKey) {
         foreach (_travel_core_seo_template_keys() as $key) {
@@ -393,19 +476,15 @@ function fn_travel_core_seo_lang_form_data(string $addonName, array $defaults): 
 /**
  * Persist the per-language template fields posted as seo_lang[<lang>][<key>].
  *
- * Writes each value to the "<key>__<lang>" setting (auto-created by
- * Settings::updateValue) and mirrors it into the Registry so the same
- * request renders the fresh values. Unknown languages and keys are ignored.
+ * Writes each value as "<key>__<lang>" into the provider's SEO store
+ * (_travel_core_seo_store: ?:storage_data, mirrored into the Registry so the
+ * same request renders the fresh values). Unknown languages and keys are
+ * ignored.
  *
  * @param array<mixed, mixed> $seoLang
  */
 function fn_travel_core_seo_save_lang_templates(string $addonName, array $seoLang): void
 {
-    $settings = \Tygh\Settings::instance();
-    if (!is_object($settings) || !method_exists($settings, 'updateValue')) {
-        return;
-    }
-
     $validLangs = [];
     if (function_exists('fn_get_translation_languages')) {
         $validLangs = array_map(strval(...), array_keys((array) fn_get_translation_languages()));
@@ -421,15 +500,12 @@ function fn_travel_core_seo_save_lang_templates(string $addonName, array $seoLan
             if (!array_key_exists($key, $fields)) {
                 continue;
             }
-            $value = TypeCoerce::toString($fields[$key]);
-            $settings->updateValue($key . '__' . $lc, $value, $addonName, true);
-            $merged[$key . '__' . $lc] = $value;
+            $merged[$key . '__' . $lc] = TypeCoerce::toString($fields[$key]);
         }
     }
 
     if ($merged !== []) {
-        $existing = \Tygh\Registry::get('addons.' . $addonName);
-        \Tygh\Registry::set('addons.' . $addonName, array_merge(is_array($existing) ? $existing : [], $merged));
+        _travel_core_seo_store($addonName, $merged);
     }
 }
 
@@ -708,15 +784,7 @@ function fn_travel_core_seo_page_save(string $addonName, array $request, bool $n
         $toSave[$toggleKey] = !empty($submitted[$toggleKey]) ? 'Y' : 'N';
     }
 
-    $settings = \Tygh\Settings::instance();
-    if (is_object($settings) && method_exists($settings, 'updateValue')) {
-        foreach ($toSave as $key => $value) {
-            // auto_create: these settings aren't declared in addon.xml.
-            $settings->updateValue($key, $value, $addonName, true);
-        }
-    }
-    $existing = \Tygh\Registry::get('addons.' . $addonName);
-    \Tygh\Registry::set('addons.' . $addonName, array_merge(is_array($existing) ? $existing : [], $toSave));
+    _travel_core_seo_store($addonName, $toSave);
 
     $seoLang = is_array($request['seo_lang'] ?? null) ? $request['seo_lang'] : [];
     fn_travel_core_seo_save_lang_templates($addonName, $seoLang);
@@ -782,7 +850,7 @@ function fn_travel_core_seo_page_bulk_apply(string $addonName, array $request, c
 function fn_travel_core_seo_page_data(string $addonName, ?array $sample, array $dispatch): array
 {
     $defaults = _travel_core_seo_defaults_of($addonName);
-    $current = TypeCoerce::toStringMap(\Tygh\Registry::get('addons.' . $addonName));
+    $current = fn_travel_core_seo_settings($addonName);
 
     $mode = \Tygh\Addons\TravelCore\Enums\SeoOverwriteMode::tryFrom(
         TypeCoerce::toString(($current['seo_overwrite_mode'] ?? '') ?: ($defaults['seo_overwrite_mode'] ?? '')),
@@ -838,6 +906,7 @@ function fn_travel_core_seo_page_data(string $addonName, ?array $sample, array $
     return [
         'addon'          => $addonName,
         'save_dispatch'  => $dispatch['save'],
+        'save_url'       => function_exists('fn_url') ? TypeCoerce::toString(fn_url($dispatch['save'])) : $dispatch['save'],
         'apply_url'      => function_exists('fn_url') ? TypeCoerce::toString(fn_url($dispatch['apply'])) : $dispatch['apply'],
         'title'          => $dispatch['title'] ?? '',
         'providers'      => $providers,
