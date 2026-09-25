@@ -1039,3 +1039,11 @@ msgstr "Detaliile hotelului (poze, descriere) sunt aduse de jobul product_info s
 msgctxt "Languages::eurosite.product_can_create"
 msgid "Can become a product"
 msgstr "Poate deveni produs"
+
+msgctxt "Languages::eurosite.show_own_only"
+msgid "Show only destinations with own hotels"
+msgstr "Arată doar destinațiile cu hoteluri proprii"
+
+msgctxt "Languages::eurosite.own_n"
+msgid "[n] own"
+msgstr "[n] proprii"

@@ -33,9 +33,9 @@ const SEARCH_RESULTS = [
 let fetchCalls = [];
 
 /** The markup whitelist.tpl produces, for two countries. */
-function countryRow(cc, name, checked) {
+function countryRow(cc, name, checked, own = 0) {
     return `
-        <div class="eurosite-country-row" id="eurosite-wl-row-${cc}" data-country="${cc}">
+        <div class="eurosite-country-row" id="eurosite-wl-row-${cc}" data-country="${cc}" data-own="${own}">
             <div>
                 <span class="eurosite-expand" data-country="${cc}">&#9654;</span>
                 <input type="checkbox" class="eurosite-country-all" data-country="${cc}"${checked ? ' checked' : ''} />
@@ -79,12 +79,13 @@ beforeAll(async () => {
             <input type="text" id="eurosite-wl-search" />
             <div id="eurosite-wl-search-results" style="display:none;"></div>
             <input type="checkbox" id="eurosite-wl-filter" />
+            <input type="checkbox" id="eurosite-wl-own-filter" />
             <span id="eurosite-wl-filter-count"></span>
 
             <form id="eurosite-whitelist-form">
                 <input type="hidden" name="whitelist_json" id="eurosite-whitelist-json" value="" />
                 <div id="eurosite-country-list">
-                    ${countryRow('RO', 'Romania', true)}
+                    ${countryRow('RO', 'Romania', true, 1)}
                     ${countryRow('IT', 'Italy', false)}
                 </div>
             </form>
@@ -302,5 +303,55 @@ describe('remove all', () => {
         $('#eurosite-wl-remove-all').click();
 
         expect($('#eurosite-wl-summary-countries').textContent).toBe('1');
+    });
+});
+
+describe('"Show only destinations with own hotels"', () => {
+    const toggle = (id, on) => {
+        const cb = $(id);
+        cb.checked = on;
+        cb.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+    const shown = (el) => el.style.display !== 'none';
+    const cityLabel = (cc, code) => cityBoxes(cc).find((cb) => cb.value === code).closest('label');
+
+    it('keeps only countries and cities with own offers, and says how many', async () => {
+        $('.eurosite-country-name[data-country="RO"]').click();
+        await sleep(0);
+        if (box('RO').style.display !== 'block') {
+            $('.eurosite-country-name[data-country="RO"]').click();
+            await sleep(0);
+        }
+
+        toggle('#eurosite-wl-own-filter', true);
+
+        expect(shown($('#eurosite-wl-row-RO'))).toBe(true);
+        expect(shown($('#eurosite-wl-row-IT'))).toBe(false); // no own-offer city
+        expect(shown(cityLabel('RO', 'CLJ'))).toBe(true);   // is_own
+        expect(shown(cityLabel('RO', 'BUH'))).toBe(false);
+        expect($('#eurosite-wl-filter-count').textContent).toBe('1 / 2 shown');
+
+        toggle('#eurosite-wl-own-filter', false);
+        expect(shown($('#eurosite-wl-row-IT'))).toBe(true);
+        expect(shown(cityLabel('RO', 'BUH'))).toBe(true);
+        expect($('#eurosite-wl-filter-count').textContent).toBe('');
+    });
+
+    it('combines with "Show only whitelisted"', () => {
+        // Earlier cases may have cleared the whitelist: whitelist RO again.
+        const ro = $('.eurosite-country-all[data-country="RO"]');
+        if (!ro.checked) {
+            ro.checked = true;
+            ro.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        toggle('#eurosite-wl-filter', true);
+        toggle('#eurosite-wl-own-filter', true);
+
+        // IT is neither whitelisted nor own; RO is both.
+        expect(shown($('#eurosite-wl-row-IT'))).toBe(false);
+        expect(shown($('#eurosite-wl-row-RO'))).toBe(true);
+
+        toggle('#eurosite-wl-filter', false);
+        toggle('#eurosite-wl-own-filter', false);
     });
 });

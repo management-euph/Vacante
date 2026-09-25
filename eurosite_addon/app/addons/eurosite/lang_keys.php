@@ -904,4 +904,13 @@ return [
         'en' => 'Can become a product',
         'ro' => 'Poate deveni produs',
     ],
+    // Whitelist: own-hotels filter
+    'eurosite.show_own_only' => [
+        'en' => 'Show only destinations with own hotels',
+        'ro' => 'Arată doar destinațiile cu hoteluri proprii',
+    ],
+    'eurosite.own_n' => [
+        'en' => '[n] own',
+        'ro' => '[n] proprii',
+    ],
 ];

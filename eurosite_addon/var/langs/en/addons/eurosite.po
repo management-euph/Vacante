@@ -1039,3 +1039,11 @@ msgstr "The hotel details (pictures, description) are fetched by the product_inf
 msgctxt "Languages::eurosite.product_can_create"
 msgid "Can become a product"
 msgstr "Can become a product"
+
+msgctxt "Languages::eurosite.show_own_only"
+msgid "Show only destinations with own hotels"
+msgstr "Show only destinations with own hotels"
+
+msgctxt "Languages::eurosite.own_n"
+msgid "[n] own"
+msgstr "[n] own"

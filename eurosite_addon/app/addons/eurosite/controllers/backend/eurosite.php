@@ -420,6 +420,13 @@ if ($mode === 'whitelist') {
         }
     }
 
+    // Own-offer cities per country, on the row itself: the "own" badge and
+    // the "Show only destinations with own hotels" filter read it.
+    $ownByCountry = Container::cities()->ownCountsByCountry();
+    foreach ($countries as $i => $row) {
+        $countries[$i]['own_cities'] = $ownByCountry[TypeCoerce::toString($row['country_code'] ?? '')] ?? 0;
+    }
+
     $view->assign('eurosite_countries', $countries);
     $view->assign('eurosite_whitelist_map', $whitelistMap);
     $view->assign('eurosite_whitelist_json', json_encode($whitelistMap));

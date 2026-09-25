@@ -192,4 +192,25 @@ final class WhitelistEditorContractTest extends TestCase
             'a nameless catalog row must still render something',
         );
     }
+
+    /**
+     * "Show only destinations with own hotels": the own-offer cities are the
+     * only ones where the hotels sync finds hotels, so the filter keeps the
+     * countries that have some, and inside them only those cities.
+     */
+    public function testTheOwnHotelsFilterIsWiredEndToEnd(): void
+    {
+        $controller = (string) file_get_contents(dirname(__DIR__, 2) . '/controllers/backend/eurosite.php');
+        $tpl = self::template();
+        $js = self::script();
+
+        self::assertStringContainsString('$ownByCountry = Container::cities()->ownCountsByCountry();', $controller);
+        self::assertStringContainsString("\$countries[\$i]['own_cities'] = ", $controller);
+        self::assertStringContainsString('{assign var="own_n" value=$country.own_cities}', $tpl);
+        self::assertStringContainsString('id="eurosite-wl-own-filter"', $tpl);
+        self::assertStringContainsString('data-own="{$own_n}"', $tpl, 'each country row says how many own-offer cities it has');
+        self::assertStringContainsString("document.getElementById('eurosite-wl-own-filter')", $js);
+        self::assertStringContainsString("r.getAttribute('data-own')", $js);
+        self::assertStringContainsString("data-own=\"' + (city.is_own ? '1' : '0') + '\"", $js, 'each city checkbox carries its own flag');
+    }
 }

@@ -100,6 +100,12 @@
                     <input type="checkbox" id="eurosite-wl-filter" />
                     <span>{__("eurosite.show_whitelisted_only", ["[default]" => "Show only whitelisted"])}</span>
                 </label>
+                {* Own-offer destinations: the only ones where the hotels sync finds
+                   hotels, so the ones worth whitelisting. *}
+                <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; color: #555; user-select: none;">
+                    <input type="checkbox" id="eurosite-wl-own-filter" />
+                    <span>{__("eurosite.show_own_only", ["[default]" => "Show only destinations with own hotels"])}</span>
+                </label>
                 <span id="eurosite-wl-filter-count" style="font-size: 11px; color: #888;"></span>
             </div>
 
@@ -112,7 +118,8 @@
                     {foreach from=$eurosite_countries item=country}
                         {assign var="cc" value=$country.country_code}
                         {assign var="wl" value=$eurosite_whitelist_map.$cc}
-                        <div class="eurosite-country-row" id="eurosite-wl-row-{$cc}" data-country="{$cc}" style="border-bottom: 1px solid #eee;">
+                        {assign var="own_n" value=$country.own_cities}
+                        <div class="eurosite-country-row" id="eurosite-wl-row-{$cc}" data-country="{$cc}" data-own="{$own_n}" style="border-bottom: 1px solid #eee;">
                             <div style="display: flex; align-items: center; gap: 8px; padding: 6px 0;">
                                 <span class="eurosite-expand" data-country="{$cc}" style="cursor: pointer; width: 20px; text-align: center; color: #999; user-select: none;">&#9654;</span>
                                 <input type="checkbox" class="eurosite-country-all" data-country="{$cc}"
@@ -120,6 +127,7 @@
                                 <span class="eurosite-country-name" data-country="{$cc}"
                                       style="font-weight: bold; cursor: pointer;">{$country.name|default:$cc|escape:html}</span>
                                 <code>{$cc}</code>
+                                {if $own_n}<span class="label label-info" title="{__("eurosite.own_offer_cities", ["[default]" => "Own-offer cities"])|escape:html}">{__("eurosite.own_n", ["[n]" => $own_n, "[default]" => "[n] own"])}</span>{/if}
                                 <span class="eurosite-wl-badge" data-country="{$cc}" style="font-size: 11px;">
                                     {if $wl && $wl.all}
                                         <span style="background: #28a745; color: #fff; padding: 2px 8px; border-radius: 3px;">{__("eurosite.all_cities_included", ["[default]" => "ALL CITIES"])}</span>
