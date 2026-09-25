@@ -136,7 +136,7 @@ final class EurositeProductFactoryTest extends TestCase
 
         // Every placeholder the SEO Templates page offers is one this fills.
         $src = (string) file_get_contents(dirname(__DIR__, 3) . '/func.php');
-        preg_match('/function fn_eurosite_seo_placeholders\(\): array\s*\{(.*?)\n\}/s', $src, $m);
+        preg_match('/function fn_eurosite_seo_placeholders\(\): array\s*\{(.*?)\n}/s', $src, $m);
         preg_match_all("/'([a-z_]+)'(?!\s*=>)/", $m[1] ?? '', $keys);
         self::assertNotEmpty($keys[1]);
         foreach ($keys[1] as $key) {

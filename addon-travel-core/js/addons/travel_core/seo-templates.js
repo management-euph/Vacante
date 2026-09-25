@@ -20,7 +20,7 @@
 (function () {
     'use strict';
 
-    var TOKEN = /\{\{([a-z_][a-z0-9_]*)(?:\|([a-z_]+))?\}\}/g;
+    var TOKEN = /\{\{([a-z_][a-z0-9_]*)(?:\|([a-z_]+))?}}/g;
 
     function slugify(value) {
         return String(value).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
@@ -31,7 +31,7 @@
         switch (modifier) {
             case 'lower': return value.toLowerCase();
             case 'upper': return value.toUpperCase();
-            case 'title': return value.toLowerCase().replace(/(^|[\s\-])(\S)/g, function (all, sep, ch) { return sep + ch.toUpperCase(); });
+            case 'title': return value.toLowerCase().replace(/(^|[\s-])(\S)/g, function (all, sep, ch) { return sep + ch.toUpperCase(); });
             case 'capitalize': return value.charAt(0).toUpperCase() + value.slice(1);
             case 'trim': return value.trim();
             case 'slug': return slugify(value);
@@ -86,10 +86,10 @@
                 list.push(fill(labels.unknown_modifier, '|' + match[2]));
             }
         }
-        if (/\{\{[^{}]*\|[^{}]*\|[^{}]*\}\}/.test(text)) {
+        if (/\{\{[^{}]*\|[^{}]*\|[^{}]*}}/.test(text)) {
             list.push(labels.one_modifier);
         }
-        if ((text.match(/\{\{/g) || []).length !== (text.match(/\}\}/g) || []).length) {
+        if ((text.match(/\{\{/g) || []).length !== (text.match(/}}/g) || []).length) {
             list.push(labels.unbalanced);
         }
         return list;
@@ -316,7 +316,7 @@
                 return;
             }
             var caret = field.selectionStart;
-            var re = /\{\{([a-z_][a-z0-9_]*)(\|[a-z_]+)?\}\}/g;
+            var re = /\{\{([a-z_][a-z0-9_]*)(\|[a-z_]+)?}}/g;
             var hit = null;
             var match;
             while ((match = re.exec(field.value)) !== null) {
