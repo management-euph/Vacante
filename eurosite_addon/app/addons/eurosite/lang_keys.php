@@ -904,4 +904,19 @@ return [
         'en' => 'Can become a product',
         'ro' => 'Poate deveni produs',
     ],
+    // Whitelist: own-hotels filter
+    'eurosite.show_own_only' => [
+        'en' => 'Show only countries with own hotels',
+        'ro' => 'Arată doar țările cu hoteluri proprii',
+    ],
+    'eurosite.own_n' => [
+        'en' => '[n] own',
+        'ro' => '[n] proprii',
+    ],
+    // Whitelist: own cities per country
+    // Whitelist: select all own cities
+    'eurosite.select_all_own_cities' => [
+        'en' => 'Select all own cities',
+        'ro' => 'Selectează toate orașele proprii',
+    ],
 ];

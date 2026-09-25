@@ -101,6 +101,25 @@ class CityRepository
     }
 
     /**
+     * Own-offer cities per country: the whitelist's "own" count and its
+     * "Show only destinations with own hotels" filter.
+     *
+     * @return array<string, int> country_code => own-offer cities
+     */
+    public function ownCountsByCountry(): array
+    {
+        $out = [];
+        foreach (self::asRowList(db_get_array(
+            "SELECT country_code, COUNT(*) AS n FROM ?:eurosite_cities
+             WHERE is_own = 'Y' AND country_code <> '' GROUP BY country_code",
+        )) as $row) {
+            $out[TypeCoerce::toString($row['country_code'] ?? '')] = TypeCoerce::toInt($row['n'] ?? 0);
+        }
+
+        return $out;
+    }
+
+    /**
      * Name/code lookup for the whitelist search box; carries the country name
      * so the result line can read "Mamaia — Romania".
      *
