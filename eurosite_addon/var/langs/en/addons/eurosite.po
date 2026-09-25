@@ -1051,3 +1051,7 @@ msgstr "[n] own"
 msgctxt "Languages::eurosite.show_own_cities_only"
 msgid "Show only own cities"
 msgstr "Show only own cities"
+
+msgctxt "Languages::eurosite.select_all_own_cities"
+msgid "Select all own cities"
+msgstr "Select all own cities"

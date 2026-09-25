@@ -1051,3 +1051,7 @@ msgstr "[n] proprii"
 msgctxt "Languages::eurosite.show_own_cities_only"
 msgid "Show only own cities"
 msgstr "Arată doar orașele proprii"
+
+msgctxt "Languages::eurosite.select_all_own_cities"
+msgid "Select all own cities"
+msgstr "Selectează toate orașele proprii"

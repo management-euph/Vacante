@@ -65,6 +65,10 @@
         function qa(sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); }
         function countryCb(cc) { return q('.eurosite-country-all[data-country="' + cc + '"]'); }
         function selectAllCb(cc) { return q('.eurosite-select-all[data-country="' + cc + '"]'); }
+        function selectOwnCb(cc) { return q('.eurosite-select-own[data-country="' + cc + '"]'); }
+        function ownCodes(cc) {
+            return (cityLists[cc] || []).filter(function (c) { return !!c.is_own; }).map(function (c) { return c.code; });
+        }
         function cityBox(cc) { return q('.eurosite-city-box[data-country="' + cc + '"]'); }
         function cityGrid(cc) { return q('.eurosite-city-grid[data-country="' + cc + '"]'); }
         function arrow(cc) { return q('.eurosite-expand[data-country="' + cc + '"]'); }
@@ -78,7 +82,18 @@
         }
 
         // ── Badges / summary / filter ──
+        // Ticked exactly when every own-offer city of the country is selected
+        // (by "Select all cities", the country tick, or one by one).
+        function syncSelectOwn(cc) {
+            var cb = selectOwnCb(cc);
+            if (!cb) { return; }
+            var own = ownCodes(cc);
+            cb.checked = own.length > 0 && !!state[cc]
+                && own.every(function (code) { return state[cc].all || state[cc].cities.has(code); });
+        }
+
         function updateBadge(cc) {
+            syncSelectOwn(cc);
             var badge = q('.eurosite-wl-badge[data-country="' + cc + '"]');
             if (!badge) { return; }
             if (!state[cc]) {
@@ -157,6 +172,7 @@
             qa('.eurosite-city[data-country="' + cc + '"]').forEach(function (cb) {
                 cb.addEventListener('change', function () { onCityToggle(cc, cb); });
             });
+            syncSelectOwn(cc);
             applyFilter();
         }
 
@@ -226,6 +242,36 @@
             applyFilter();
         }
 
+        // "Select all own cities": adds (or removes) every own-offer city of the
+        // country to the selection, leaving its other cities as they are.
+        function onSelectOwnToggle(cc, cb) {
+            var own = ownCodes(cc);
+            if (own.length === 0) { cb.checked = false; return; }
+            var list = cityLists[cc] || [];
+            if (!state[cc]) {
+                state[cc] = { all: false, cities: new Set() };
+            } else if (state[cc].all) {
+                // "all" becomes the explicit list, so own cities can leave it
+                state[cc] = { all: false, cities: new Set(list.map(function (c) { return c.code; })) };
+            }
+            own.forEach(function (code) {
+                if (cb.checked) { state[cc].cities.add(code); } else { state[cc].cities.delete(code); }
+            });
+            if (list.length > 0 && state[cc].cities.size >= list.length) {
+                state[cc] = { all: true, cities: new Set() };
+            } else if (state[cc].cities.size === 0) {
+                delete state[cc];
+            }
+            qa('.eurosite-city[data-country="' + cc + '"]').forEach(function (c) {
+                c.checked = !!state[cc] && (state[cc].all || state[cc].cities.has(c.value));
+            });
+            if (selectAllCb(cc)) { selectAllCb(cc).checked = !!state[cc] && state[cc].all; }
+            if (countryCb(cc)) { countryCb(cc).checked = !!state[cc]; }
+            updateBadge(cc);
+            updateSummary();
+            applyFilter();
+        }
+
         function onCityToggle(cc, cb) {
             if (!state[cc]) {
                 state[cc] = { all: false, cities: new Set() };
@@ -279,6 +325,9 @@
             cb.addEventListener('change', function () { onSelectAllToggle(cb.getAttribute('data-country'), cb); });
         });
 
+        qa('.eurosite-select-own').forEach(function (cb) {
+            cb.addEventListener('change', function () { onSelectOwnToggle(cb.getAttribute('data-country'), cb); });
+        });
         qa('.eurosite-own-cities').forEach(function (cb) {
             cb.addEventListener('change', function () {
                 ownCitiesOnly[cb.getAttribute('data-country')] = cb.checked;
@@ -326,7 +375,7 @@
             removeBtn.addEventListener('click', function () {
                 if (!window.confirm(txt.confirmRemove)) { return; }
                 state = {};
-                qa('.eurosite-country-all, .eurosite-select-all, .eurosite-city').forEach(function (cb) { cb.checked = false; });
+                qa('.eurosite-country-all, .eurosite-select-all, .eurosite-select-own, .eurosite-city').forEach(function (cb) { cb.checked = false; });
                 qa('.eurosite-wl-badge').forEach(function (b) { b.innerHTML = ''; });
                 updateSummary();
                 applyFilter();

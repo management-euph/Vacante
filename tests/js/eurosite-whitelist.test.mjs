@@ -49,6 +49,7 @@ function countryRow(cc, name, checked, own = 0) {
                         <input type="checkbox" class="eurosite-select-all" data-country="${cc}"${checked ? ' checked' : ''} />
                     </label>
                 </div>
+                ${own ? `<label><input type="checkbox" class="eurosite-select-own" data-country="${cc}" /></label>` : ''}
                 ${own ? `<label><input type="checkbox" class="eurosite-own-cities" data-country="${cc}" /></label>` : ''}
                 <div class="eurosite-city-grid" data-country="${cc}"></div>
             </div>
@@ -368,5 +369,55 @@ describe('own hotels: countries on the page, cities inside each country', () => 
 
         toggle('#eurosite-wl-filter', false);
         toggle('#eurosite-wl-own-filter', false);
+    });
+});
+
+describe('"Select all own cities"', () => {
+    const tick = (sel, on) => {
+        const cb = $(sel);
+        cb.checked = on;
+        cb.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+    const checkedCodes = (cc) => cityBoxes(cc).filter((cb) => cb.checked).map((cb) => cb.value);
+    const openRo = async () => {
+        if (box('RO').style.display !== 'block') {
+            $('.eurosite-country-name[data-country="RO"]').click();
+            await sleep(0);
+        }
+    };
+    const ownCb = '.eurosite-select-own[data-country="RO"]';
+    const roAll = '.eurosite-country-all[data-country="RO"]';
+
+    it('selects every own city and nothing else', async () => {
+        await openRo();
+        tick(roAll, false); // start from nothing
+        tick(ownCb, true);
+
+        expect(checkedCodes('RO')).toEqual(['CLJ']); // CLJ is own, BUH is not
+        expect($(roAll).checked).toBe(true); // the country is on the whitelist now
+        expect($('.eurosite-select-all[data-country="RO"]').checked).toBe(false);
+    });
+
+    it('unticking removes only the own cities', () => {
+        tick('.eurosite-select-all[data-country="RO"]', true); // whole country
+        expect($(ownCb).checked).toBe(true); // every own city is in it
+
+        tick(ownCb, false);
+        expect(checkedCodes('RO')).toEqual(['BUH']);
+        expect($('.eurosite-select-all[data-country="RO"]').checked).toBe(false);
+
+        tick('.eurosite-city[data-country="RO"][value="BUH"]', false);
+        expect($(roAll).checked).toBe(false); // nothing left: off the whitelist
+    });
+
+    it('follows the selection when own cities are ticked one by one', () => {
+        tick('.eurosite-city[data-country="RO"][value="CLJ"]', true);
+        expect($(ownCb).checked).toBe(true);
+        tick('.eurosite-city[data-country="RO"][value="CLJ"]', false);
+        expect($(ownCb).checked).toBe(false);
+    });
+
+    it('is offered only where the country has own cities', () => {
+        expect($('.eurosite-select-own[data-country="IT"]')).toBeNull();
     });
 });

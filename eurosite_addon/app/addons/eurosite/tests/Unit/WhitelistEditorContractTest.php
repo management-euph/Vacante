@@ -221,5 +221,11 @@ final class WhitelistEditorContractTest extends TestCase
         self::assertStringContainsString("qa('.eurosite-own-cities')", $js);
         self::assertStringContainsString("(!ownCitiesOnly[cc] || cb.getAttribute('data-own') === '1')", $js);
         self::assertStringNotContainsString("(!ownOn || cb.getAttribute('data-own')", $js, 'the page filter must not hide cities');
+
+        // "Select all own cities" next to "Select all cities", same condition.
+        self::assertStringContainsString('class="eurosite-select-own" data-country="{$cc}"', $tpl);
+        self::assertStringContainsString('eurosite.select_all_own_cities', $tpl);
+        self::assertStringContainsString("qa('.eurosite-select-own')", $js);
+        self::assertStringContainsString('function onSelectOwnToggle(cc, cb)', $js);
     }
 }

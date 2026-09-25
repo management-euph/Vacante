@@ -918,4 +918,9 @@ return [
         'en' => 'Show only own cities',
         'ro' => 'Arată doar orașele proprii',
     ],
+    // Whitelist: select all own cities
+    'eurosite.select_all_own_cities' => [
+        'en' => 'Select all own cities',
+        'ro' => 'Selectează toate orașele proprii',
+    ],
 ];

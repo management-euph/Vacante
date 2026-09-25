@@ -147,6 +147,12 @@
                                     {* This country only: all its cities show by default; tick to keep
                                        the own-offer ones, where the hotels sync finds hotels. *}
                                     {if $own_n}
+                                        {* Adds every own-offer city to the selection (the whole country
+                                           stays "Select all cities"). *}
+                                        <label style="cursor: pointer; font-size: 12px; color: #555; margin-left: 16px;">
+                                            <input type="checkbox" class="eurosite-select-own" data-country="{$cc}" />
+                                            <strong>{__("eurosite.select_all_own_cities", ["[default]" => "Select all own cities"])}</strong>
+                                        </label>
                                         <label style="cursor: pointer; font-size: 12px; color: #555; margin-left: 16px;">
                                             <input type="checkbox" class="eurosite-own-cities" data-country="{$cc}" />
                                             {__("eurosite.show_own_cities_only", ["[default]" => "Show only own cities"])}
