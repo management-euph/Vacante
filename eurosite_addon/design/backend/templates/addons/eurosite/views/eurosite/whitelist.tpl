@@ -95,16 +95,16 @@
             </div>
 
             {* Whitelisted-only filter *}
-            <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
-                <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; color: #555; user-select: none;">
-                    <input type="checkbox" id="eurosite-wl-filter" />
+            <div style="margin-bottom: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 20px;">
+                <label style="display: inline-flex; align-items: center; gap: 6px; margin: 0; cursor: pointer; font-size: 13px; color: #555; user-select: none;">
+                    <input type="checkbox" id="eurosite-wl-filter" style="margin: 0;" />
                     <span>{__("eurosite.show_whitelisted_only", ["[default]" => "Show only whitelisted"])}</span>
                 </label>
                 {* Countries with own-offer cities: the only ones where the hotels sync
                    finds hotels. Filters countries only; inside a country the own
                    cities are listed first, and "Select all own cities" ticks them. *}
-                <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; color: #555; user-select: none;">
-                    <input type="checkbox" id="eurosite-wl-own-filter" />
+                <label style="display: inline-flex; align-items: center; gap: 6px; margin: 0; cursor: pointer; font-size: 13px; color: #555; user-select: none;">
+                    <input type="checkbox" id="eurosite-wl-own-filter" style="margin: 0;" />
                     <span>{__("eurosite.show_own_only", ["[default]" => "Show only countries with own hotels"])}</span>
                 </label>
                 <span id="eurosite-wl-filter-count" style="font-size: 11px; color: #888;"></span>
@@ -123,7 +123,7 @@
                         <div class="eurosite-country-row" id="eurosite-wl-row-{$cc}" data-country="{$cc}" data-own="{$own_n}" style="border-bottom: 1px solid #eee;">
                             <div style="display: flex; align-items: center; gap: 8px; padding: 6px 0;">
                                 <span class="eurosite-expand" data-country="{$cc}" style="cursor: pointer; width: 20px; text-align: center; color: #999; user-select: none;">&#9654;</span>
-                                <input type="checkbox" class="eurosite-country-all" data-country="{$cc}"
+                                <input type="checkbox" class="eurosite-country-all" data-country="{$cc}" style="margin: 0;"
                                        {if $wl && ($wl.all || $wl.cities)}checked{/if} />
                                 <span class="eurosite-country-name" data-country="{$cc}"
                                       style="font-weight: bold; cursor: pointer;">{$country.name|default:$cc|escape:html}</span>
@@ -138,22 +138,28 @@
                                 </span>
                             </div>
                             <div class="eurosite-city-box" data-country="{$cc}" style="display: none; padding: 8px 0 8px 28px; background: #fafafa; border-top: 1px solid #eee;">
-                                <div style="margin-bottom: 8px;">
-                                    <label style="cursor: pointer; font-size: 12px; color: #555;">
-                                        <input type="checkbox" class="eurosite-select-all" data-country="{$cc}"
+                                {* One row, both ticks on the same line and baseline. CS-Cart's
+                                   admin CSS makes a label a block and gives checkboxes a top
+                                   margin, which put "Select all own cities" on its own,
+                                   indented line; hence the explicit flex and margin: 0. *}
+                                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px 24px; margin-bottom: 10px;">
+                                    <label style="display: inline-flex; align-items: center; gap: 6px; margin: 0; cursor: pointer; font-size: 12px; color: #555;">
+                                        <input type="checkbox" class="eurosite-select-all" data-country="{$cc}" style="margin: 0;"
                                                {if $wl && $wl.all}checked{/if} />
                                         <strong>{__("eurosite.select_all_cities", ["[default]" => "Select all cities"])}</strong>
                                     </label>
                                     {if $own_n}
                                         {* Adds every own-offer city to the selection (the whole country
                                            stays "Select all cities"). *}
-                                        <label style="cursor: pointer; font-size: 12px; color: #555; margin-left: 16px;">
-                                            <input type="checkbox" class="eurosite-select-own" data-country="{$cc}" />
+                                        <label style="display: inline-flex; align-items: center; gap: 6px; margin: 0; cursor: pointer; font-size: 12px; color: #555;">
+                                            <input type="checkbox" class="eurosite-select-own" data-country="{$cc}" style="margin: 0;" />
                                             <strong>{__("eurosite.select_all_own_cities", ["[default]" => "Select all own cities"])}</strong>
                                         </label>
                                     {/if}
                                 </div>
-                                <div class="eurosite-city-grid" data-country="{$cc}" style="display: flex; flex-wrap: wrap; gap: 3px 14px;"></div>
+                                {* Equal columns, so every city checkbox sits in a straight column; a long
+                                   name wraps inside its cell instead of pushing the next city right. *}
+                                <div class="eurosite-city-grid" data-country="{$cc}" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 4px 16px;"></div>
                             </div>
                         </div>
                     {/foreach}

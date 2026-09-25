@@ -229,4 +229,28 @@ final class WhitelistEditorContractTest extends TestCase
         self::assertStringContainsString("qa('.eurosite-select-own')", $js);
         self::assertStringContainsString('function onSelectOwnToggle(cc, cb)', $js);
     }
+
+    /**
+     * The checkboxes line up: "Select all cities" and "Select all own cities"
+     * share one line (CS-Cart's admin CSS makes a label a block, which put the
+     * second one on its own, indented line), and the cities sit in equal grid
+     * columns instead of a ragged wrapping row.
+     */
+    public function testTheCheckboxesLineUp(): void
+    {
+        $tpl = self::template();
+        $js = self::script();
+
+        self::assertStringContainsString('class="eurosite-city-grid" data-country="{$cc}" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));', $tpl);
+        self::assertStringNotContainsString('margin-left: 16px', $tpl, 'no indented second tick');
+        foreach (['eurosite-select-all', 'eurosite-select-own', 'eurosite-country-all'] as $class) {
+            self::assertMatchesRegularExpression('/class="' . $class . '" data-country="\{\$cc\}" style="margin: 0;"/', $tpl, $class . ' keeps no top margin');
+        }
+
+        self::assertStringContainsString("var CITY_LABEL_STYLE = 'display:flex; align-items:flex-start; gap:6px; margin:0;", $js);
+        self::assertStringNotContainsString('min-width:200px', $js, 'the grid sizes the cells');
+        // Hiding and showing a city must not wipe the label's own display:flex.
+        self::assertStringContainsString("cb.closest('label').style.display = !visible || cityVisible ? 'flex' : 'none';", $js);
+        self::assertStringNotContainsString("cb.closest('label').style.display = ''", $js);
+    }
 }

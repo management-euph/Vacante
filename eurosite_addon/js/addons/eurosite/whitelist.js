@@ -38,6 +38,8 @@
             cities: dataEl.getAttribute('data-txt-cities') || 'Cities'
         };
 
+        var CITY_LABEL_STYLE = 'display:flex; align-items:flex-start; gap:6px; margin:0; font-size:12px; line-height:1.4; color:#444; cursor:pointer;';
+
         // ── State ──
         var state = {};          // cc -> { all: bool, cities: Set }
         var cityLists = {};      // cc -> [ { code, name, is_own } ] once loaded
@@ -142,7 +144,10 @@
                 if (visible) { shown++; }
                 qa('.eurosite-city[data-country="' + cc + '"]').forEach(function (cb) {
                     var cityVisible = !filterOn || cb.checked;
-                    cb.closest('label').style.display = !visible || cityVisible ? '' : 'none';
+                    // 'flex', not '': clearing the property would also drop the
+                    // label's own display:flex, and CS-Cart's CSS would make it a
+                    // block again.
+                    cb.closest('label').style.display = !visible || cityVisible ? 'flex' : 'none';
                 });
             });
             var countEl = document.getElementById('eurosite-wl-filter-count');
@@ -168,8 +173,11 @@
                 var own = city.is_own ? ' <span class="label label-info" title="own offers">own</span>' : '';
                 // Synced hotels in this destination: what whitelisting it brings in.
                 var hotels = city.hotels > 0 ? ' <span class="muted">· ' + esc(String(city.hotels)) + ' ' + esc(txt.hotels) + '</span>' : '';
-                html += '<label style="display:inline-flex; align-items:center; gap:3px; min-width:200px; font-size:12px; color:#444; cursor:pointer;">'
-                    + '<input type="checkbox" class="eurosite-city" data-country="' + esc(cc) + '" data-own="' + (city.is_own ? '1' : '0') + '" value="' + esc(city.code) + '"' + checked + '> '
+                // A grid cell (the grid sizes it): the box stays at the top left
+                // while a long name wraps beside it. margin overrides the top
+                // margin CS-Cart's admin CSS gives checkboxes.
+                html += '<label class="eurosite-city-label" style="' + CITY_LABEL_STYLE + '">'
+                    + '<input type="checkbox" class="eurosite-city" data-country="' + esc(cc) + '" data-own="' + (city.is_own ? '1' : '0') + '" value="' + esc(city.code) + '"' + checked + ' style="margin:2px 0 0; flex:none;"> '
                     + '<span>' + esc(city.name || city.code) + ' <code>' + esc(city.code) + '</code>' + own + hotels + '</span></label>';
             });
             grid.innerHTML = html || '<span class="muted" style="font-size:12px;">' + esc(txt.noCities) + '</span>';
