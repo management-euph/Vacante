@@ -47,6 +47,22 @@ namespace {
         }
     }
 
+    // CS-Cart's ?:storage_data, in memory: the SEO store's canonical home.
+    if (!function_exists('fn_get_storage_data')) {
+        /** @var array<string, string> $GLOBALS['unit_storage_data'] */
+        $GLOBALS['unit_storage_data'] = [];
+
+        function fn_get_storage_data(string $key): string
+        {
+            return $GLOBALS['unit_storage_data'][$key] ?? '';
+        }
+
+        function fn_set_storage_data(string $key, string $value): void
+        {
+            $GLOBALS['unit_storage_data'][$key] = $value;
+        }
+    }
+
     require_once dirname(__DIR__, 3) . '/functions/seo.php';
 }
 
@@ -67,6 +83,7 @@ namespace Tygh\Addons\TravelCore\Tests\Unit\Functions {
         {
             Registry::set('addons', ['unitpage' => [], 'otherpage' => [], 'no_seo_page' => []]);
             Registry::set('addons.unitpage', []);
+            unset($GLOBALS['unit_storage_data']['travel_core_seo_unitpage']);
         }
 
         public function testEveryListedModifierIsOneTheEngineApplies(): void
@@ -163,6 +180,55 @@ namespace Tygh\Addons\TravelCore\Tests\Unit\Functions {
             self::assertSame('', $data['sample_name']);
             self::assertIsArray($config);
             self::assertNull($config['sample']);
+        }
+
+        public function testSavedTemplatesSurviveACacheClear(): void
+        {
+            // The bug: templates saved on the page came back as the built-in
+            // defaults after a reload — the Settings API dropped the rows.
+            fn_travel_core_seo_save_lang_templates('unitpage', [
+                'en' => ['seo_product_name' => '{{name}}{{classification}}'],
+                'ro' => ['seo_product_name' => '{{name}} RO'],
+            ]);
+
+            // A reload on a real store: the Registry no longer has the values.
+            Registry::set('addons.unitpage', []);
+
+            $settings = fn_travel_core_seo_settings('unitpage');
+            self::assertSame('{{name}}{{classification}}', $settings['seo_product_name__en']);
+            self::assertSame('{{name}} RO', $settings['seo_product_name__ro']);
+
+            $form = fn_travel_core_seo_lang_form_data('unitpage', fn_unitpage_seo_defaults());
+            self::assertSame('{{name}}{{classification}}', $form['values']['en']['seo_product_name']);
+
+            // …and the engine renders with them, not the default.
+            $fields = fn_travel_core_apply_seo_fields('unitpage', ['name' => 'Parc CM', 'classification' => '3'], 0, null, 'en');
+            self::assertSame('Parc CM3', $fields['product']);
+        }
+
+        public function testTheStoredValueWinsOverAnOldSettingsRow(): void
+        {
+            fn_travel_core_seo_save_lang_templates('unitpage', ['en' => ['seo_page_title' => 'Stored {{name}}']]);
+            Registry::set('addons.unitpage', ['seo_page_title__en' => 'Old settings row']);
+
+            self::assertSame('Stored {{name}}', fn_travel_core_seo_settings('unitpage')['seo_page_title__en']);
+        }
+
+        public function testModeAndTicksRoundTripThroughTheStore(): void
+        {
+            fn_travel_core_seo_page_save('unitpage', [
+                'seo' => ['seo_overwrite_mode' => 'fill_if_empty', 'seo_field_product_name' => 'Y'],
+                'seo_lang' => [],
+            ], false);
+            Registry::set('addons.unitpage', []);
+
+            $data = fn_travel_core_seo_page_data('unitpage', null, ['save' => 'unitpage.save', 'apply' => 'unitpage.apply']);
+            self::assertSame('fill_if_empty', $data['values']['seo_overwrite_mode']);
+            self::assertSame('Y', $data['values']['seo_field_product_name']);
+            // Unticked on the page = N, whatever the provider default.
+            self::assertSame('N', $data['values']['seo_field_page_title']);
+            // The form posts to the save URL itself.
+            self::assertSame('unitpage.save', $data['save_url']);
         }
     }
 }

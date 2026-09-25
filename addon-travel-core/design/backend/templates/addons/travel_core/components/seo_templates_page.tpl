@@ -7,7 +7,7 @@
  *   $seo_page.groups         the provider's placeholders, grouped
  *   $seo_page.modifiers      the modifiers the engine knows
  *   $seo_page.config_json    data for seo-templates.js (keys, sample, labels)
- *   $seo_page.save_dispatch  e.g. sphinx_seo_templates.save
+ *   $seo_page.save_dispatch  e.g. sphinx_seo_templates.save (the form posts to save_url)
  *   $seo_page.apply_url      "Apply templates now" (saves first, then applies)
  *
  * CS-Cart admin styles only: nav-tabs, well, btn, label, alert, sidebar-row.
@@ -72,8 +72,10 @@
     </ul>
 {/if}
 
+{* The form posts to the save URL itself: CS-Cart's form handling may drop
+   the name of the Save button, which sits outside the form (mainbox buttons). *}
 <form method="post"
-      action="{""|fn_url}"
+      action="{$seo_page.save_url}"
       name="{$seo_form_id}"
       id="{$seo_form_id}"
       class="form-horizontal form-edit cm-check-changes seo-templates-form"

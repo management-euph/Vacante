@@ -126,6 +126,8 @@ final class SeoTemplatesPerLanguageTest extends TestCase
             . '/addon-travel-core/design/backend/templates/addons/travel_core/components/seo_templates_page.tpl',
         );
         self::assertStringContainsString('{include file="addons/travel_core/components/seo_lang_fields.tpl"}', $page);
+        // The form posts to the save URL: the Save button sits outside it.
+        self::assertStringContainsString('action="{$seo_page.save_url}"', $page);
 
         foreach (self::providerPages() as $name => $files) {
             $tpl = (string) file_get_contents(self::repoRoot() . $files['view']);
@@ -149,6 +151,11 @@ final class SeoTemplatesPerLanguageTest extends TestCase
         self::assertStringContainsString('foreach (array_keys(_travel_core_seo_field_map()) as $toggleKey) {
         $toSave[$toggleKey] = !empty($submitted[$toggleKey]) ? \'Y\' : \'N\';', $seo);
         self::assertStringContainsString('fn_travel_core_seo_save_lang_templates($addonName, $seoLang);', $seo);
+        // …persisted in ?:storage_data: Settings rows no addon.xml declares
+        // don't survive a reload on live stores.
+        self::assertStringContainsString("return 'travel_core_seo_' . \$addonName;", $seo);
+        self::assertStringContainsString('fn_set_storage_data(', $seo);
+        self::assertStringContainsString('$settings = fn_travel_core_seo_settings($addonName);', $seo);
         self::assertStringContainsString('$langData = fn_travel_core_seo_lang_form_data($addonName, $defaults);', $seo);
     }
 }
