@@ -162,25 +162,41 @@ final class EurositeProductFactory
     }
 
     /**
-     * SEO template placeholders ({{name}}, {{city}}, …).
+     * SEO template placeholders ({{name}}, {{city}}, …); the SEO Templates
+     * page lists the same keys (fn_eurosite_seo_placeholders()).
      *
-     * @param array<string, mixed> $hotel
+     * @param array<string, mixed> $hotel a HotelRepository details row
      *
-     * @return array<string, string>
+     * @return array<string, string|list<string>>
      */
     public static function placeholders(array $hotel): array
     {
         $stars = TypeCoerce::toInt($hotel['category'] ?? 0);
+        $rooms = json_decode(TypeCoerce::toString($hotel['rooms_json'] ?? ''), true);
+        $payload = json_decode(TypeCoerce::toString($hotel['payload_json'] ?? ''), true);
+        $payload = is_array($payload) ? $payload : [];
+        $minPrice = TypeCoerce::toFloat($hotel['min_price'] ?? 0);
 
         return [
             'name' => self::displayName(TypeCoerce::toString($hotel['name'] ?? '')),
             'classification' => $stars > 0 ? (string) $stars : '',
             'stars_emoji' => $stars > 0 ? str_repeat('★', min(5, $stars)) : '',
-            'city' => TypeCoerce::toString($hotel['city_name'] ?? '') ?: TypeCoerce::toString($hotel['city_code'] ?? ''),
-            'country' => TypeCoerce::toString($hotel['country_name'] ?? '') ?: TypeCoerce::toString($hotel['country_code'] ?? ''),
             'property_type' => 'hotel',
+            'rooms' => array_values(array_filter(array_map(
+                static fn ($room): string => self::displayName(TypeCoerce::toString($room)),
+                is_array($rooms) ? array_values($rooms) : [],
+            ))),
+            'code' => TypeCoerce::toString($hotel['product_code'] ?? ''),
             'description' => TypeCoerce::toString($hotel['description'] ?? ''),
             'image_url' => self::pictures($hotel)[0] ?? '',
+            'city' => TypeCoerce::toString($hotel['city_name'] ?? '') ?: TypeCoerce::toString($hotel['city_code'] ?? ''),
+            'country' => TypeCoerce::toString($hotel['country_name'] ?? '') ?: TypeCoerce::toString($hotel['country_code'] ?? ''),
+            'city_code' => TypeCoerce::toString($hotel['city_code'] ?? ''),
+            'country_code' => TypeCoerce::toString($hotel['country_code'] ?? ''),
+            'latitude' => TypeCoerce::toString($payload['latitude'] ?? ''),
+            'longitude' => TypeCoerce::toString($payload['longitude'] ?? ''),
+            'min_price' => $minPrice > 0 ? (string) round($minPrice) : '',
+            'currency' => $minPrice > 0 ? TypeCoerce::toString($hotel['price_currency'] ?? '') : '',
             'year' => date('Y'),
         ];
     }
@@ -214,7 +230,7 @@ final class EurositeProductFactory
             return ['status' => 'skipped', 'product_id' => 0, 'reason' => 'no_root_category'];
         }
         $placeholders = self::placeholders($hotel);
-        $categoryId = $this->category($root, $placeholders['country'], $placeholders['city']);
+        $categoryId = $this->category($root, TypeCoerce::toString($placeholders['country']), TypeCoerce::toString($placeholders['city']));
         if ($categoryId <= 0) {
             $this->hotels->setSkipReason($tourop, $code, 'category_failed');
 

@@ -90,7 +90,7 @@ final class HotelsPageContractTest extends TestCase
         self::assertStringContainsString("'href' => 'eurosite.hotels'", self::read(self::ADDON . '/schemas/menu/menu.post.php'));
         $actions = self::read(self::ADDON . '/schemas/menu/actions.post.php');
         self::assertStringContainsString("'href'     => 'eurosite.hotels'", $actions);
-        self::assertStringContainsString("foreach (['eurosite.manage', 'eurosite.hotels', 'eurosite.whitelist'] as \$page)", $actions);
+        self::assertStringContainsString("foreach (['eurosite.manage', 'eurosite.hotels', 'eurosite.whitelist', 'eurosite.seo_templates'] as \$page)", $actions);
         self::assertStringContainsString('{"eurosite.hotels"|fn_url}', self::read(self::ADDON . '/../../../design/backend/templates/addons/eurosite/views/eurosite/manage.tpl'));
     }
 

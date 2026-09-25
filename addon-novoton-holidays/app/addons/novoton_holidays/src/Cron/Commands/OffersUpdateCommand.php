@@ -151,14 +151,12 @@ class OffersUpdateCommand extends AbstractCronCommand
             ]);
             $placeholders = $this->buildPlaceholders($hotel_data_for_seo, $display_name, $description);
 
-            // Resolve full description
-            $descTemplate = ConfigProvider::getSeoFullDescription();
-            $full_description = $descTemplate !== ''
-                ? fn_travel_core_render_seo_template($descTemplate, $placeholders)
-                : $description;
+            // SEO fields through the shared engine, like AddProductsCommand:
+            // the per-language templates, the "Apply" ticks and the overwrite
+            // mode all apply (the old direct render ignored all three).
+            $seoFields = fn_travel_core_apply_seo_fields('novoton_holidays', $placeholders, 0, $hotel_id);
 
-            $product_data = [
-                'product' => fn_travel_core_render_seo_template(ConfigProvider::getSeoProductName(), $placeholders),
+            $product_data = array_merge([
                 'product_code' => $product_code,
                 'price' => 0,
                 'amount' => ConfigProvider::getDefaultProductQuantity(),
@@ -166,16 +164,24 @@ class OffersUpdateCommand extends AbstractCronCommand
                 'company_id' => ConfigProvider::getCompanyId(),
                 'main_category' => $category_id,
                 'category_ids' => [$category_id],
-                'full_description' => $full_description,
-                'page_title' => fn_travel_core_render_seo_template(ConfigProvider::getSeoPageTitle(), $placeholders),
-                'meta_description' => fn_travel_core_render_seo_template(ConfigProvider::getSeoMetaDescription(), $placeholders),
-                'meta_keywords' => fn_travel_core_render_seo_template(ConfigProvider::getSeoMetaKeywords(), $placeholders),
-                'seo_name' => fn_travel_core_render_seo_slug(ConfigProvider::getSeoNameSlug(), $placeholders),
-            ];
+            ], $seoFields);
+            // fn_update_product() needs a name even with the name field unticked.
+            $productName = $product_data['product'] ?? '';
+            if (!is_string($productName) || trim($productName) === '') {
+                $product_data['product'] = $display_name;
+            }
 
             $product_id = fn_update_product($product_data, 0, CART_LANGUAGE);
             if ($product_id) {
                 $productId = TypeCoerce::toInt($product_id);
+                // The create wrote CART_LANGUAGE; the other languages get their own templates.
+                fn_travel_core_seo_localize(
+                    'novoton_holidays',
+                    $placeholders,
+                    $productId,
+                    $hotel_id,
+                    \Tygh\Addons\NovotonHolidays\Helpers\ProductFactory::otherStorefrontLanguages(TypeCoerce::toString(CART_LANGUAGE)),
+                );
                 $hotelRepo->linkToProduct($hotel_id, $productId);
                 $this->attachImages($hotel_id, $productId, $image_base_url);
                 $added_to_cart++;

@@ -19,6 +19,9 @@ declare(strict_types=1);
  *   - save_whitelist (POST): replace the whitelist (whitelist_json field)
  *   - test_connection (POST): cheap auth probe (getRoomTypes)
  *   - generate_cron_key (POST): mint the SHARED Travel Core cron key
+ *   - seo_templates: SEO Templates (Travel Core's shared page)
+ *   - save_seo_templates (POST): mode, "Apply" ticks, per-language templates
+ *   - apply_seo_templates (POST): save, then re-apply to every linked product
  */
 
 use Tygh\Addons\Eurosite\Cron\CronDispatcher;
@@ -187,6 +190,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         return [CONTROLLER_STATUS_REDIRECT, 'eurosite.manage'];
     }
 
+    if ($mode === 'save_seo_templates') {
+        fn_travel_core_seo_page_save('eurosite', $_REQUEST);
+
+        return [CONTROLLER_STATUS_REDIRECT, 'eurosite.seo_templates'];
+    }
+
+    if ($mode === 'apply_seo_templates') {
+        $hotelRepo = Container::hotels();
+
+        return fn_travel_core_seo_page_bulk_apply(
+            'eurosite',
+            $_REQUEST,
+            static fn (int $offset, int $batch): array => $hotelRepo->linkedBatchForSeo($offset, $batch),
+            static fn (array $hotel): array => \Tygh\Addons\Eurosite\Services\EurositeProductFactory::placeholders(TypeCoerce::toStringMap($hotel)),
+            'eurosite.seo_templates',
+        );
+    }
+
     if ($mode === 'create_products' || $mode === 'check_availability') {
         $keys = [];
         foreach ((array) ($_REQUEST['hotel_keys'] ?? []) as $key) {
@@ -324,6 +345,20 @@ if ($mode === 'search_destinations') {
     header('Content-Type: application/json');
     echo json_encode(['success' => true, 'results' => $results]);
     exit;
+}
+
+if ($mode === 'seo_templates') {
+    // The preview uses a hotel that is a product, else any listed hotel.
+    $sampleRow = Container::hotels()->sampleForSeo();
+    fn_travel_core_seo_page_assign(
+        'eurosite',
+        $sampleRow === null ? null : \Tygh\Addons\Eurosite\Services\EurositeProductFactory::placeholders($sampleRow),
+        [
+            'save'  => 'eurosite.save_seo_templates',
+            'apply' => 'eurosite.apply_seo_templates',
+            'title' => TypeCoerce::toString(__('eurosite.seo_templates_title', ['[default]' => 'Eurosite — SEO Templates'])),
+        ],
+    );
 }
 
 if ($mode === 'hotels') {

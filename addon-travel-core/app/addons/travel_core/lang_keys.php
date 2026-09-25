@@ -100,6 +100,252 @@ return [
         'en' => 'Each storefront language has its own template set. A language whose template was never saved uses the built-in default.',
         'ro' => 'Fiecare limbă a magazinului are propriul set de șabloane. O limbă fără șablon salvat folosește valoarea implicită.',
     ],
+    // SEO Templates page (components/seo_templates_page.tpl + seo-templates.js).
+    'travel_core.seo_templates_hint' => [
+        'en' => 'Build each product\'s name, page title, description and URL from the hotel\'s data. Click in a field, then click a placeholder on the right to insert it.',
+        'ro' => 'Construiți numele, titlul paginii, descrierea și URL-ul fiecărui produs din datele hotelului. Dați clic într-un câmp, apoi pe un placeholder din dreapta pentru a-l insera.',
+    ],
+    'travel_core.seo_bulk_apply_desc' => [
+        'en' => 'Saves this page, then re-applies the templates to every linked product, in every language. Only the ticked fields change.',
+        'ro' => 'Salvează pagina, apoi re-aplică șabloanele pe toate produsele legate, în toate limbile. Se schimbă doar câmpurile bifate.',
+    ],
+    'travel_core.seo_bulk_apply_confirm' => [
+        'en' => 'Save this page and re-apply the templates to every linked product, in all languages?',
+        'ro' => 'Salvați pagina și re-aplicați șabloanele pe toate produsele legate, în toate limbile?',
+    ],
+    'travel_core.seo_click_to_insert' => [
+        'en' => 'Insert at the cursor',
+        'ro' => 'Inserează la poziția cursorului',
+    ],
+    'travel_core.seo_click_to_insert_modifier' => [
+        'en' => 'Add to the placeholder at the cursor',
+        'ro' => 'Adaugă la placeholder-ul de la cursor',
+    ],
+    'travel_core.seo_tip_1' => [
+        'en' => 'Lists (facilities, meal plans, rooms) show their first 3 items, separated by commas.',
+        'ro' => 'Listele (facilități, tipuri de masă, camere) arată primele 3 elemente, separate prin virgulă.',
+    ],
+    'travel_core.seo_tip_2' => [
+        'en' => 'A placeholder without a value is removed, and so is a separator left dangling.',
+        'ro' => 'Un placeholder fără valoare este eliminat, la fel și separatorul rămas în plus.',
+    ],
+    'travel_core.seo_tip_3' => [
+        'en' => 'New products get these templates when they are created. "Apply templates now" updates the existing ones.',
+        'ro' => 'Produsele noi primesc aceste șabloane la creare. „Aplică șabloanele acum” actualizează produsele existente.',
+    ],
+    'travel_core.seo_tip_4' => [
+        'en' => 'A placeholder takes one modifier. The title modifier turns "GRAND HOTEL VARNA" into "Grand Hotel Varna".',
+        'ro' => 'Un placeholder primește un singur modificator. Modificatorul title transformă „GRAND HOTEL VARNA” în „Grand Hotel Varna”.',
+    ],
+    'travel_core.seo_modifiers_hint' => [
+        'en' => 'Put the cursor on a placeholder in a field, then click a modifier.',
+        'ro' => 'Puneți cursorul pe un placeholder dintr-un câmp, apoi dați clic pe un modificator.',
+    ],
+    'travel_core.seo_group_hotel' => [
+        'en' => 'Hotel',
+        'ro' => 'Hotel',
+    ],
+    'travel_core.seo_group_location' => [
+        'en' => 'Location',
+        'ro' => 'Locație',
+    ],
+    'travel_core.seo_group_contact' => [
+        'en' => 'Contact',
+        'ro' => 'Contact',
+    ],
+    'travel_core.seo_group_price' => [
+        'en' => 'Price',
+        'ro' => 'Preț',
+    ],
+    'travel_core.seo_group_other' => [
+        'en' => 'Other',
+        'ro' => 'Altele',
+    ],
+    'travel_core.seo_target_none' => [
+        'en' => 'Click in a field, then click a placeholder to insert it at the cursor.',
+        'ro' => 'Dați clic într-un câmp, apoi pe un placeholder pentru a-l insera la cursor.',
+    ],
+    'travel_core.seo_target_into' => [
+        'en' => 'Inserting into [value]',
+        'ro' => 'Se inserează în [value]',
+    ],
+    'travel_core.seo_target_fallback' => [
+        'en' => 'No field was selected, so it went into [value]. Click in a field first to choose.',
+        'ro' => 'Niciun câmp nu era selectat, așa că a fost inserat în [value]. Dați clic mai întâi în câmpul dorit.',
+    ],
+    'travel_core.seo_modifier_needs_field' => [
+        'en' => 'Click inside a placeholder in a field first, then choose a modifier.',
+        'ro' => 'Dați clic mai întâi într-un placeholder dintr-un câmp, apoi alegeți modificatorul.',
+    ],
+    'travel_core.seo_modifier_needs_token' => [
+        'en' => 'Put the cursor inside or right after a placeholder, e.g. {{name}}, then click the modifier.',
+        'ro' => 'Puneți cursorul în interiorul sau imediat după un placeholder, de ex. {{name}}, apoi dați clic pe modificator.',
+    ],
+    'travel_core.seo_modifier_replaced' => [
+        'en' => 'Replaced [value]: a placeholder takes one modifier.',
+        'ro' => 'A fost înlocuit [value]: un placeholder primește un singur modificator.',
+    ],
+    'travel_core.seo_restored' => [
+        'en' => '[value]: the built-in default is back. Save to keep it.',
+        'ro' => '[value]: s-a revenit la valoarea implicită. Salvați pentru a o păstra.',
+    ],
+    'travel_core.seo_counter_title' => [
+        'en' => 'Length for the sample hotel. Aim for [value] characters or fewer.',
+        'ro' => 'Lungimea pentru hotelul exemplu. Țintiți [value] caractere sau mai puțin.',
+    ],
+    'travel_core.seo_preview_kept' => [
+        'en' => '(left as it is)',
+        'ro' => '(rămâne neschimbat)',
+    ],
+    'travel_core.seo_problem_unknown_placeholder' => [
+        'en' => 'Unknown placeholder [value]',
+        'ro' => 'Placeholder necunoscut [value]',
+    ],
+    'travel_core.seo_problem_unknown_modifier' => [
+        'en' => 'Unknown modifier [value]',
+        'ro' => 'Modificator necunoscut [value]',
+    ],
+    'travel_core.seo_problem_one_modifier' => [
+        'en' => 'A placeholder takes one modifier only',
+        'ro' => 'Un placeholder primește un singur modificator',
+    ],
+    'travel_core.seo_problem_unbalanced' => [
+        'en' => 'A placeholder is missing {{ or }}',
+        'ro' => 'Unui placeholder îi lipsește {{ sau }}',
+    ],
+    'travel_core.seo_apply_field' => [
+        'en' => 'Apply this field',
+        'ro' => 'Aplică acest câmp',
+    ],
+    'travel_core.seo_apply_field_hint' => [
+        'en' => 'Unticked fields are left as they are, in every language.',
+        'ro' => 'Câmpurile debifate rămân neschimbate, în toate limbile.',
+    ],
+    'travel_core.seo_restore_default' => [
+        'en' => 'Restore default',
+        'ro' => 'Revino la implicit',
+    ],
+    'travel_core.seo_preview_sample' => [
+        'en' => 'Sample hotel: [name]',
+        'ro' => 'Hotel exemplu: [name]',
+    ],
+    'travel_core.seo_preview_none' => [
+        'en' => 'The preview appears once there is a hotel to show.',
+        'ro' => 'Previzualizarea apare când există un hotel de afișat.',
+    ],
+    // Placeholder descriptions on the SEO Templates page (fn_<addon>_seo_placeholders()).
+    'travel_core.seo_ph_name' => [
+        'en' => 'Hotel name',
+        'ro' => 'Numele hotelului',
+    ],
+    'travel_core.seo_ph_raw_name' => [
+        'en' => 'Name as sent by the API',
+        'ro' => 'Numele din API',
+    ],
+    'travel_core.seo_ph_classification' => [
+        'en' => 'Star rating',
+        'ro' => 'Număr de stele',
+    ],
+    'travel_core.seo_ph_star_rating' => [
+        'en' => 'Star rating',
+        'ro' => 'Număr de stele',
+    ],
+    'travel_core.seo_ph_stars_emoji' => [
+        'en' => 'Stars, e.g. ★★★★',
+        'ro' => 'Stele, ex. ★★★★',
+    ],
+    'travel_core.seo_ph_hotel_type' => [
+        'en' => 'Hotel type',
+        'ro' => 'Tip hotel',
+    ],
+    'travel_core.seo_ph_property_type' => [
+        'en' => 'Hotel / villa / apartment',
+        'ro' => 'Hotel / vilă / apartament',
+    ],
+    'travel_core.seo_ph_rating' => [
+        'en' => 'Guest rating',
+        'ro' => 'Nota oaspeților',
+    ],
+    'travel_core.seo_ph_facilities' => [
+        'en' => 'Top 3 facilities',
+        'ro' => 'Primele 3 facilități',
+    ],
+    'travel_core.seo_ph_boards' => [
+        'en' => 'Meal plans',
+        'ro' => 'Tipuri de masă',
+    ],
+    'travel_core.seo_ph_rooms' => [
+        'en' => 'Room types (first 3)',
+        'ro' => 'Tipuri de cameră (primele 3)',
+    ],
+    'travel_core.seo_ph_code' => [
+        'en' => 'Hotel code',
+        'ro' => 'Codul hotelului',
+    ],
+    'travel_core.seo_ph_description' => [
+        'en' => 'Description from the API',
+        'ro' => 'Descrierea din API',
+    ],
+    'travel_core.seo_ph_image_url' => [
+        'en' => 'Main image URL',
+        'ro' => 'URL imagine principală',
+    ],
+    'travel_core.seo_ph_city' => [
+        'en' => 'City / resort',
+        'ro' => 'Oraș / stațiune',
+    ],
+    'travel_core.seo_ph_country' => [
+        'en' => 'Country',
+        'ro' => 'Țară',
+    ],
+    'travel_core.seo_ph_region' => [
+        'en' => 'Region',
+        'ro' => 'Regiune',
+    ],
+    'travel_core.seo_ph_city_code' => [
+        'en' => 'Destination code',
+        'ro' => 'Codul destinației',
+    ],
+    'travel_core.seo_ph_country_code' => [
+        'en' => 'Country code',
+        'ro' => 'Codul țării',
+    ],
+    'travel_core.seo_ph_address' => [
+        'en' => 'Street address',
+        'ro' => 'Adresa',
+    ],
+    'travel_core.seo_ph_latitude' => [
+        'en' => 'Latitude',
+        'ro' => 'Latitudine',
+    ],
+    'travel_core.seo_ph_longitude' => [
+        'en' => 'Longitude',
+        'ro' => 'Longitudine',
+    ],
+    'travel_core.seo_ph_phone' => [
+        'en' => 'Phone number',
+        'ro' => 'Număr de telefon',
+    ],
+    'travel_core.seo_ph_email' => [
+        'en' => 'Email address',
+        'ro' => 'Adresă de email',
+    ],
+    'travel_core.seo_ph_website' => [
+        'en' => 'Website',
+        'ro' => 'Site web',
+    ],
+    'travel_core.seo_ph_min_price' => [
+        'en' => 'Lowest price found',
+        'ro' => 'Cel mai mic preț găsit',
+    ],
+    'travel_core.seo_ph_currency' => [
+        'en' => 'Price currency',
+        'ro' => 'Moneda prețului',
+    ],
+    'travel_core.seo_ph_year' => [
+        'en' => 'Current year',
+        'ro' => 'Anul curent',
+    ],
 
     // Shared hotel-identity header (components/hotel_header.tpl) — one key
     // pair for all four consuming surfaces instead of per-provider copies.

@@ -159,6 +159,19 @@ Sphinx's) in the add-on settings first: until it is set, no product is
 created. The product page gets Travel Core's booking form, which
 searches `eurosite_booking.search` with the hotel's code (`hotel_id`).
 
+**Eurosite → SEO Templates** (`eurosite.seo_templates`) sets each product's
+name, page title, meta description, keywords, URL and (optionally) full
+description from the hotel's data, per storefront language. It is Travel
+Core's shared SEO Templates page, the same one Sphinx and Novoton use (a tab
+row links the three): click in a field, then click a placeholder to insert
+it at the cursor, or a modifier to add it to the placeholder under the
+cursor; each field shows its length and a preview for a sample hotel.
+Placeholders: name, classification, stars_emoji, property_type, rooms, code,
+description, image_url, city, country, city_code, country_code, latitude,
+longitude, min_price, currency, year. **Apply templates now** saves the page
+and re-applies it to every Eurosite product. Until a template is saved, the
+built-in one in `fn_eurosite_seo_defaults()` applies.
+
 Not in this step: product features (stars, destination filters) and
 matching the same hotel across providers.
 

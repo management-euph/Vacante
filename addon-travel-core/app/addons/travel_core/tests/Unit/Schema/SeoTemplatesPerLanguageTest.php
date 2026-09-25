@@ -66,6 +66,8 @@ final class SeoTemplatesPerLanguageTest extends TestCase
             '/addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php',
             '/addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php',
             '/addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/UpdateProductsCommand.php',
+            '/addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/OffersUpdateCommand.php',
+            '/eurosite_addon/app/addons/eurosite/src/Services/EurositeProductFactory.php',
         ];
         foreach ($sites as $rel) {
             self::assertStringContainsString(
@@ -80,7 +82,7 @@ final class SeoTemplatesPerLanguageTest extends TestCase
     {
         foreach ([
             '/addon-novoton-holidays/app/addons/novoton_holidays/func.php',
-            '/addon-sphinx-holidays/app/addons/sphinx_holidays/func.php',
+            '/addon-sphinx-holidays/app/addons/sphinx_holidays/src/Seo/SeoTemplateDefinitions.php',
         ] as $rel) {
             $src = (string) file_get_contents(self::repoRoot() . $rel);
             self::assertStringContainsString("'seo_meta_description__ro'", $src, $rel);
@@ -88,7 +90,26 @@ final class SeoTemplatesPerLanguageTest extends TestCase
         }
     }
 
-    public function testBothAdminPagesEditPerLanguageThroughTheSharedComponent(): void
+    /** @return array<string, array{controller: string, view: string}> */
+    private static function providerPages(): array
+    {
+        return [
+            'novoton' => [
+                'controller' => '/addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_seo_templates.php',
+                'view'       => '/addon-novoton-holidays/design/backend/templates/addons/novoton_holidays/views/novoton_seo_templates/manage.tpl',
+            ],
+            'sphinx' => [
+                'controller' => '/addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_seo_templates.php',
+                'view'       => '/addon-sphinx-holidays/design/backend/templates/addons/sphinx_holidays/views/sphinx_seo_templates/manage.tpl',
+            ],
+            'eurosite' => [
+                'controller' => '/eurosite_addon/app/addons/eurosite/controllers/backend/eurosite.php',
+                'view'       => '/eurosite_addon/design/backend/templates/addons/eurosite/views/eurosite/seo_templates.tpl',
+            ],
+        ];
+    }
+
+    public function testEveryProviderPageIsTheSharedPage(): void
     {
         $component = (string) file_get_contents(
             self::repoRoot()
@@ -96,33 +117,38 @@ final class SeoTemplatesPerLanguageTest extends TestCase
         );
         self::assertStringContainsString('name="seo_lang[{$seo_lc}][{$f.key}]"', $component);
         self::assertStringContainsString('{foreach $seo_languages as $seo_lc => $seo_lang_name}', $component);
-        // The toggles stay GLOBAL — one set gating every language.
-        self::assertStringContainsString('name="seo[{$toggle_key}]"', $component);
+        // The ticks stay GLOBAL — one named set gating every language; the
+        // copies in the other language tabs carry no name.
+        self::assertStringContainsString('{if $seo_first_lang}name="seo[{$toggle_key}]" value="Y"{/if}', $component);
 
-        foreach ([
-            '/addon-novoton-holidays/design/backend/templates/addons/novoton_holidays/views/novoton_seo_templates/manage.tpl',
-            '/addon-sphinx-holidays/design/backend/templates/addons/sphinx_holidays/views/sphinx_seo_templates/manage.tpl',
-        ] as $rel) {
-            $tpl = (string) file_get_contents(self::repoRoot() . $rel);
+        $page = (string) file_get_contents(
+            self::repoRoot()
+            . '/addon-travel-core/design/backend/templates/addons/travel_core/components/seo_templates_page.tpl',
+        );
+        self::assertStringContainsString('{include file="addons/travel_core/components/seo_lang_fields.tpl"}', $page);
+
+        foreach (self::providerPages() as $name => $files) {
+            $tpl = (string) file_get_contents(self::repoRoot() . $files['view']);
             self::assertStringContainsString(
-                '{include file="addons/travel_core/components/seo_lang_fields.tpl"}',
+                '{include file="addons/travel_core/components/seo_templates_page.tpl"',
                 $tpl,
-                $rel,
+                $name,
             );
             // The language-less template fields must not return.
-            self::assertStringNotContainsString('name="seo[seo_page_title]"', $tpl, $rel);
+            self::assertStringNotContainsString('name="seo[seo_page_title]"', $tpl, $name);
+
+            $controller = (string) file_get_contents(self::repoRoot() . $files['controller']);
+            foreach (['fn_travel_core_seo_page_save(', 'fn_travel_core_seo_page_bulk_apply(', 'fn_travel_core_seo_page_assign('] as $call) {
+                self::assertStringContainsString($call, $controller, $name . ': ' . $call);
+            }
         }
 
-        foreach ([
-            '/addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_seo_templates.php',
-            '/addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_seo_templates.php',
-        ] as $rel) {
-            $controller = (string) file_get_contents(self::repoRoot() . $rel);
-            self::assertStringContainsString('fn_travel_core_seo_save_lang_templates(', $controller, $rel);
-            self::assertStringContainsString('fn_travel_core_seo_lang_form_data(', $controller, $rel);
-            // The global save loop must skip the six template keys — writing
-            // '' there would erase the legacy/shared fallback values.
-            self::assertStringContainsString('in_array($key, $templateKeys, true)', $controller, $rel);
-        }
+        // The shared save writes the mode and the ticks globally and the six
+        // templates per language only — never '' into the language-less keys.
+        $seo = (string) file_get_contents(self::addonRoot() . '/functions/seo.php');
+        self::assertStringContainsString('foreach (array_keys(_travel_core_seo_field_map()) as $toggleKey) {
+        $toSave[$toggleKey] = !empty($submitted[$toggleKey]) ? \'Y\' : \'N\';', $seo);
+        self::assertStringContainsString('fn_travel_core_seo_save_lang_templates($addonName, $seoLang);', $seo);
+        self::assertStringContainsString('$langData = fn_travel_core_seo_lang_form_data($addonName, $defaults);', $seo);
     }
 }

@@ -919,4 +919,17 @@ return [
         'en' => 'Select all own cities',
         'ro' => 'Selectează toate orașele proprii',
     ],
+    // SEO Templates page (Travel Core's shared page)
+    'eurosite.seo_templates' => [
+        'en' => 'SEO Templates',
+        'ro' => 'Șabloane SEO',
+    ],
+    'eurosite.seo_templates_title' => [
+        'en' => 'Eurosite — SEO Templates',
+        'ro' => 'Eurosite — Șabloane SEO',
+    ],
+    'eurosite.seo_placeholders_title' => [
+        'en' => 'Eurosite placeholders',
+        'ro' => 'Placeholder-e Eurosite',
+    ],
 ];

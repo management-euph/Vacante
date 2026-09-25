@@ -85,11 +85,37 @@ function fn_settings_variants_addons_eurosite_hotels_category_id(): array
 }
 
 /**
+ * The placeholders EurositeProductFactory::placeholders() fills, as the SEO
+ * Templates page lists them (travel_core labels each bare key).
+ *
+ * @return array<string, list<string>>
+ */
+function fn_eurosite_seo_placeholders(): array
+{
+    return [
+        'hotel'    => ['name', 'classification', 'stars_emoji', 'property_type', 'rooms', 'code', 'description', 'image_url'],
+        'location' => ['city', 'country', 'city_code', 'country_code', 'latitude', 'longitude'],
+        'price'    => ['min_price', 'currency'],
+        'other'    => ['year'],
+    ];
+}
+
+/**
+ * This add-on's tab in the SEO Templates provider row.
+ *
+ * @return array{name: string, dispatch: string}
+ */
+function fn_eurosite_seo_page(): array
+{
+    return ['name' => 'Eurosite', 'dispatch' => 'eurosite.seo_templates'];
+}
+
+/**
  * Built-in SEO templates for the hotel products EurositeProductFactory
  * creates. Travel Core's fn_travel_core_apply_seo_fields() falls back to
- * these (by the fn_<addon>_seo_defaults name) since eurosite has no SEO
- * settings page of its own; without them a product would get no page title,
- * meta description or readable URL.
+ * these (by the fn_<addon>_seo_defaults name) for every template not saved
+ * on Eurosite → SEO Templates; they are also what "Restore default" puts
+ * back.
  *
  * @return array<string, string>
  */

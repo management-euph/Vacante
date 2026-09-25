@@ -216,36 +216,27 @@ function fn_sphinx_holidays_language_seed_hash(): string
 }
 
 /**
- * Canonical default SEO template strings + field toggles for Sphinx products.
- *
- * Single source of truth shared by the seed routine and the travel_core
- * runtime renderer (which uses these as a fallback when no admin-configured
- * template is stored). Defined in func.php so it is loaded in every AREA,
- * including the storefront cron context that creates products — this is what
- * lets cron-created products get rendered metadata even when the settings
- * were never persisted to the DB.
+ * The SEO Templates page's Sphinx pieces: built-in templates (also the
+ * runtime fallback, so they must load in every AREA — func.php does), the
+ * placeholder list and the tab entry. Data in Seo\SeoTemplateDefinitions.
  *
  * @return array<string, string>
  */
 function fn_sphinx_holidays_seo_defaults(): array
 {
-    return [
-        'seo_overwrite_mode'         => 'override_all',
-        'seo_product_name'           => '{{name}}',
-        'seo_page_title'             => '{{name}} {{classification}}* - {{city}}, {{country}}',
-        'seo_meta_description'       => 'Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}} with {{facilities}}.',
-        'seo_meta_keywords'          => '{{name}}, {{city}}, {{country}}, {{property_type}}, {{classification}} star',
-        'seo_name_slug'              => '{{name}}-{{city}}-{{country}}',
-        'seo_full_description'       => '',
-        'seo_meta_description__ro'   => 'Rezervă {{name}} în {{city}}, {{country}}. {{property_type}} de {{classification}} stele cu {{facilities}}.', // "__<lang>" = per-language default (_travel_core_seo_template_for)
-        'seo_meta_keywords__ro'      => '{{name}}, {{city}}, {{country}}, {{property_type}}, {{classification}} stele',
-        'seo_field_product_name'     => 'Y',
-        'seo_field_page_title'       => 'Y',
-        'seo_field_meta_description' => 'Y',
-        'seo_field_meta_keywords'    => 'Y',
-        'seo_field_name_slug'        => 'Y',
-        'seo_field_full_description' => 'Y',
-    ];
+    return \Tygh\Addons\SphinxHolidays\Seo\SeoTemplateDefinitions::defaults();
+}
+
+/** @return array<string, list<string>> */
+function fn_sphinx_holidays_seo_placeholders(): array
+{
+    return \Tygh\Addons\SphinxHolidays\Seo\SeoTemplateDefinitions::placeholders();
+}
+
+/** @return array{name: string, dispatch: string} */
+function fn_sphinx_holidays_seo_page(): array
+{
+    return \Tygh\Addons\SphinxHolidays\Seo\SeoTemplateDefinitions::page();
 }
 
 /**

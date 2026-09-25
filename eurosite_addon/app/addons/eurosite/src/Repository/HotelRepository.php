@@ -395,6 +395,38 @@ class HotelRepository
     }
 
     /**
+     * Hotels that are products, for "Apply templates now" on the SEO
+     * Templates page: fn_travel_core_seo_bulk_apply() pages through them and
+     * reads product_id, hotel_id (the product code, for a unique URL) and name.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function linkedBatchForSeo(int $offset, int $batch): array
+    {
+        return self::asRowList(db_get_array(
+            self::SEO_SELECT . ' WHERE h.product_id > 0 ORDER BY h.tourop_code, h.product_code LIMIT ?i, ?i',
+            max(0, $offset),
+            max(1, $batch),
+        ));
+    }
+
+    /**
+     * One hotel for the SEO Templates preview: a product if there is one,
+     * else any listed hotel.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function sampleForSeo(): ?array
+    {
+        $row = self::asRow(db_get_row(
+            self::SEO_SELECT . " WHERE h.sync_status = 'active'
+              ORDER BY (h.product_id > 0) DESC, (c.description IS NULL), h.name LIMIT 1",
+        ));
+
+        return $row === [] ? null : $row;
+    }
+
+    /**
      * Selected hotels by "TOUROP:CODE" key (the hotel list's checkboxes).
      *
      * @param list<string> $keys
@@ -465,9 +497,19 @@ class HotelRepository
         return $row === [] ? null : $row;
     }
 
-    /** Hotel row + its cached details (pictures, description) + names. */
+    /** Hotel row + its cached details (pictures, description, payload for the coordinates) + names. */
     private const DETAILS_SELECT = "SELECT h.*,
-            c.pictures_json, c.description, c.fetched_at AS info_fetched_at,
+            c.pictures_json, c.description, c.payload_json, c.fetched_at AS info_fetched_at,
+            COALESCE(ci.name, '') AS city_name, COALESCE(co.name, '') AS country_name
+        FROM ?:eurosite_hotels h
+        LEFT JOIN ?:eurosite_product_info_cache c ON c.tourop_code = h.tourop_code AND c.product_code = h.product_code
+        LEFT JOIN ?:eurosite_cities ci ON ci.city_code = h.city_code
+        LEFT JOIN ?:eurosite_countries co ON co.country_code = h.country_code";
+
+    /** DETAILS_SELECT plus the product code as hotel_id (a unique URL suffix when two slugs clash). */
+    private const SEO_SELECT = "SELECT h.*,
+            c.pictures_json, c.description, c.payload_json,
+            CONCAT('EUS-', h.tourop_code, '-', h.product_code) AS hotel_id,
             COALESCE(ci.name, '') AS city_name, COALESCE(co.name, '') AS country_name
         FROM ?:eurosite_hotels h
         LEFT JOIN ?:eurosite_product_info_cache c ON c.tourop_code = h.tourop_code AND c.product_code = h.product_code
