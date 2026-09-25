@@ -906,11 +906,16 @@ return [
     ],
     // Whitelist: own-hotels filter
     'eurosite.show_own_only' => [
-        'en' => 'Show only destinations with own hotels',
-        'ro' => 'Arată doar destinațiile cu hoteluri proprii',
+        'en' => 'Show only countries with own hotels',
+        'ro' => 'Arată doar țările cu hoteluri proprii',
     ],
     'eurosite.own_n' => [
         'en' => '[n] own',
         'ro' => '[n] proprii',
+    ],
+    // Whitelist: own cities per country
+    'eurosite.show_own_cities_only' => [
+        'en' => 'Show only own cities',
+        'ro' => 'Arată doar orașele proprii',
     ],
 ];

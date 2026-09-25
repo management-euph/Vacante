@@ -42,7 +42,8 @@
         var state = {};          // cc -> { all: bool, cities: Set }
         var cityLists = {};      // cc -> [ { code, name, is_own } ] once loaded
         var filterOn = false;    // "Show only whitelisted"
-        var ownOn = false;       // "Show only destinations with own hotels"
+        var ownOn = false;       // "Show only countries with own hotels" (countries only)
+        var ownCitiesOnly = {};  // cc -> true: that country's "Show only own cities"
 
         var saved = {};
         try { saved = JSON.parse(dataEl.getAttribute('data-whitelist') || '{}'); } catch (e) { saved = {}; }
@@ -114,9 +115,9 @@
             if (elD) { elD.innerHTML = detail; }
         }
 
-        // Both filters combine: a country shows when it passes every filter
-        // that is on, and inside an open country so does each city (ticked
-        // for "whitelisted", own offers for "own hotels").
+        // The two page filters combine on countries. Inside an open country,
+        // every city shows unless "Show only whitelisted" is on (ticked ones
+        // only) or that country's own "Show only own cities" is ticked.
         function applyFilter() {
             var rows = qa('.eurosite-country-row');
             var shown = 0;
@@ -127,7 +128,7 @@
                 r.style.display = visible ? '' : 'none';
                 if (visible) { shown++; }
                 qa('.eurosite-city[data-country="' + cc + '"]').forEach(function (cb) {
-                    var cityVisible = (!filterOn || cb.checked) && (!ownOn || cb.getAttribute('data-own') === '1');
+                    var cityVisible = (!filterOn || cb.checked) && (!ownCitiesOnly[cc] || cb.getAttribute('data-own') === '1');
                     cb.closest('label').style.display = !visible || cityVisible ? '' : 'none';
                 });
             });
@@ -156,7 +157,7 @@
             qa('.eurosite-city[data-country="' + cc + '"]').forEach(function (cb) {
                 cb.addEventListener('change', function () { onCityToggle(cc, cb); });
             });
-            if (filterOn || ownOn) { applyFilter(); }
+            applyFilter();
         }
 
         function loadCities(cc, done) {
@@ -276,6 +277,13 @@
         });
         qa('.eurosite-select-all').forEach(function (cb) {
             cb.addEventListener('change', function () { onSelectAllToggle(cb.getAttribute('data-country'), cb); });
+        });
+
+        qa('.eurosite-own-cities').forEach(function (cb) {
+            cb.addEventListener('change', function () {
+                ownCitiesOnly[cb.getAttribute('data-country')] = cb.checked;
+                applyFilter();
+            });
         });
 
         var ownCb = document.getElementById('eurosite-wl-own-filter');

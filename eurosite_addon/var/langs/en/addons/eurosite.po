@@ -1041,9 +1041,13 @@ msgid "Can become a product"
 msgstr "Can become a product"
 
 msgctxt "Languages::eurosite.show_own_only"
-msgid "Show only destinations with own hotels"
-msgstr "Show only destinations with own hotels"
+msgid "Show only countries with own hotels"
+msgstr "Show only countries with own hotels"
 
 msgctxt "Languages::eurosite.own_n"
 msgid "[n] own"
 msgstr "[n] own"
+
+msgctxt "Languages::eurosite.show_own_cities_only"
+msgid "Show only own cities"
+msgstr "Show only own cities"

@@ -100,11 +100,12 @@
                     <input type="checkbox" id="eurosite-wl-filter" />
                     <span>{__("eurosite.show_whitelisted_only", ["[default]" => "Show only whitelisted"])}</span>
                 </label>
-                {* Own-offer destinations: the only ones where the hotels sync finds
-                   hotels, so the ones worth whitelisting. *}
+                {* Countries with own-offer cities: the only ones where the hotels sync
+                   finds hotels. Filters countries only; inside a country each box has
+                   its own "Show only own cities". *}
                 <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; color: #555; user-select: none;">
                     <input type="checkbox" id="eurosite-wl-own-filter" />
-                    <span>{__("eurosite.show_own_only", ["[default]" => "Show only destinations with own hotels"])}</span>
+                    <span>{__("eurosite.show_own_only", ["[default]" => "Show only countries with own hotels"])}</span>
                 </label>
                 <span id="eurosite-wl-filter-count" style="font-size: 11px; color: #888;"></span>
             </div>
@@ -143,6 +144,14 @@
                                                {if $wl && $wl.all}checked{/if} />
                                         <strong>{__("eurosite.select_all_cities", ["[default]" => "Select all cities"])}</strong>
                                     </label>
+                                    {* This country only: all its cities show by default; tick to keep
+                                       the own-offer ones, where the hotels sync finds hotels. *}
+                                    {if $own_n}
+                                        <label style="cursor: pointer; font-size: 12px; color: #555; margin-left: 16px;">
+                                            <input type="checkbox" class="eurosite-own-cities" data-country="{$cc}" />
+                                            {__("eurosite.show_own_cities_only", ["[default]" => "Show only own cities"])}
+                                        </label>
+                                    {/if}
                                 </div>
                                 <div class="eurosite-city-grid" data-country="{$cc}" style="display: flex; flex-wrap: wrap; gap: 3px 14px;"></div>
                             </div>

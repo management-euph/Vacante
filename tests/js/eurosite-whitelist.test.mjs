@@ -49,6 +49,7 @@ function countryRow(cc, name, checked, own = 0) {
                         <input type="checkbox" class="eurosite-select-all" data-country="${cc}"${checked ? ' checked' : ''} />
                     </label>
                 </div>
+                ${own ? `<label><input type="checkbox" class="eurosite-own-cities" data-country="${cc}" /></label>` : ''}
                 <div class="eurosite-city-grid" data-country="${cc}"></div>
             </div>
         </div>`;
@@ -306,38 +307,53 @@ describe('remove all', () => {
     });
 });
 
-describe('"Show only destinations with own hotels"', () => {
-    const toggle = (id, on) => {
-        const cb = $(id);
+describe('own hotels: countries on the page, cities inside each country', () => {
+    const toggle = (sel, on) => {
+        const cb = $(sel);
         cb.checked = on;
         cb.dispatchEvent(new Event('change', { bubbles: true }));
     };
     const shown = (el) => el.style.display !== 'none';
     const cityLabel = (cc, code) => cityBoxes(cc).find((cb) => cb.value === code).closest('label');
-
-    it('keeps only countries and cities with own offers, and says how many', async () => {
-        $('.eurosite-country-name[data-country="RO"]').click();
-        await sleep(0);
+    const openRo = async () => {
         if (box('RO').style.display !== 'block') {
             $('.eurosite-country-name[data-country="RO"]').click();
             await sleep(0);
         }
+    };
 
+    it('the page filter keeps countries with own cities, and an open country still shows all its cities', async () => {
+        await openRo();
         toggle('#eurosite-wl-own-filter', true);
 
         expect(shown($('#eurosite-wl-row-RO'))).toBe(true);
         expect(shown($('#eurosite-wl-row-IT'))).toBe(false); // no own-offer city
-        expect(shown(cityLabel('RO', 'CLJ'))).toBe(true);   // is_own
-        expect(shown(cityLabel('RO', 'BUH'))).toBe(false);
+        expect(shown(cityLabel('RO', 'CLJ'))).toBe(true);
+        expect(shown(cityLabel('RO', 'BUH'))).toBe(true); // cities are not filtered by it
         expect($('#eurosite-wl-filter-count').textContent).toBe('1 / 2 shown');
 
         toggle('#eurosite-wl-own-filter', false);
         expect(shown($('#eurosite-wl-row-IT'))).toBe(true);
-        expect(shown(cityLabel('RO', 'BUH'))).toBe(true);
         expect($('#eurosite-wl-filter-count').textContent).toBe('');
     });
 
-    it('combines with "Show only whitelisted"', () => {
+    it('"Show only own cities" inside a country keeps its own-offer cities, for that country only', async () => {
+        await openRo();
+        toggle('.eurosite-own-cities[data-country="RO"]', true);
+
+        expect(shown(cityLabel('RO', 'CLJ'))).toBe(true);  // is_own
+        expect(shown(cityLabel('RO', 'BUH'))).toBe(false);
+        expect(shown($('#eurosite-wl-row-IT'))).toBe(true); // other countries untouched
+
+        toggle('.eurosite-own-cities[data-country="RO"]', false);
+        expect(shown(cityLabel('RO', 'BUH'))).toBe(true);
+    });
+
+    it('a country without own cities has no such option', () => {
+        expect($('.eurosite-own-cities[data-country="IT"]')).toBeNull();
+    });
+
+    it('the page filters combine', () => {
         // Earlier cases may have cleared the whitelist: whitelist RO again.
         const ro = $('.eurosite-country-all[data-country="RO"]');
         if (!ro.checked) {
@@ -347,7 +363,6 @@ describe('"Show only destinations with own hotels"', () => {
         toggle('#eurosite-wl-filter', true);
         toggle('#eurosite-wl-own-filter', true);
 
-        // IT is neither whitelisted nor own; RO is both.
         expect(shown($('#eurosite-wl-row-IT'))).toBe(false);
         expect(shown($('#eurosite-wl-row-RO'))).toBe(true);
 

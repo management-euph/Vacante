@@ -194,9 +194,10 @@ final class WhitelistEditorContractTest extends TestCase
     }
 
     /**
-     * "Show only destinations with own hotels": the own-offer cities are the
-     * only ones where the hotels sync finds hotels, so the filter keeps the
-     * countries that have some, and inside them only those cities.
+     * Own hotels: "Show only countries with own hotels" keeps the countries
+     * that have own-offer cities (the only ones where the hotels sync finds
+     * hotels); inside an open country all cities show, and its own "Show
+     * only own cities" narrows them.
      */
     public function testTheOwnHotelsFilterIsWiredEndToEnd(): void
     {
@@ -212,5 +213,13 @@ final class WhitelistEditorContractTest extends TestCase
         self::assertStringContainsString("document.getElementById('eurosite-wl-own-filter')", $js);
         self::assertStringContainsString("r.getAttribute('data-own')", $js);
         self::assertStringContainsString("data-own=\"' + (city.is_own ? '1' : '0') + '\"", $js, 'each city checkbox carries its own flag');
+
+        // The page filter hides countries only; each open country has its own
+        // "Show only own cities", offered only where there are some.
+        self::assertStringContainsString('{if $own_n}', $tpl);
+        self::assertStringContainsString('class="eurosite-own-cities" data-country="{$cc}"', $tpl);
+        self::assertStringContainsString("qa('.eurosite-own-cities')", $js);
+        self::assertStringContainsString("(!ownCitiesOnly[cc] || cb.getAttribute('data-own') === '1')", $js);
+        self::assertStringNotContainsString("(!ownOn || cb.getAttribute('data-own')", $js, 'the page filter must not hide cities');
     }
 }
