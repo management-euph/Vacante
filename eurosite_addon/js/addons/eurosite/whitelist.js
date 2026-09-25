@@ -43,7 +43,6 @@
         var cityLists = {};      // cc -> [ { code, name, is_own } ] once loaded
         var filterOn = false;    // "Show only whitelisted"
         var ownOn = false;       // "Show only countries with own hotels" (countries only)
-        var ownCitiesOnly = {};  // cc -> true: that country's "Show only own cities"
 
         var saved = {};
         try { saved = JSON.parse(dataEl.getAttribute('data-whitelist') || '{}'); } catch (e) { saved = {}; }
@@ -131,8 +130,7 @@
         }
 
         // The two page filters combine on countries. Inside an open country,
-        // every city shows unless "Show only whitelisted" is on (ticked ones
-        // only) or that country's own "Show only own cities" is ticked.
+        // every city shows unless "Show only whitelisted" is on (ticked ones only).
         function applyFilter() {
             var rows = qa('.eurosite-country-row');
             var shown = 0;
@@ -143,7 +141,7 @@
                 r.style.display = visible ? '' : 'none';
                 if (visible) { shown++; }
                 qa('.eurosite-city[data-country="' + cc + '"]').forEach(function (cb) {
-                    var cityVisible = (!filterOn || cb.checked) && (!ownCitiesOnly[cc] || cb.getAttribute('data-own') === '1');
+                    var cityVisible = !filterOn || cb.checked;
                     cb.closest('label').style.display = !visible || cityVisible ? '' : 'none';
                 });
             });
@@ -159,7 +157,13 @@
             if (!grid) { return; }
             var st = state[cc];
             var html = '';
-            (cityLists[cc] || []).forEach(function (city) {
+            // Own-offer cities first (where the hotels sync finds hotels), each
+            // group in the order the server sent (by name). A stable split, not
+            // a sort, so the live getCityRequest fallback is ordered the same way.
+            var list = cityLists[cc] || [];
+            var ordered = list.filter(function (c) { return !!c.is_own; })
+                .concat(list.filter(function (c) { return !c.is_own; }));
+            ordered.forEach(function (city) {
                 var checked = st && (st.all || st.cities.has(city.code)) ? ' checked' : '';
                 var own = city.is_own ? ' <span class="label label-info" title="own offers">own</span>' : '';
                 // Synced hotels in this destination: what whitelisting it brings in.
@@ -328,13 +332,6 @@
         qa('.eurosite-select-own').forEach(function (cb) {
             cb.addEventListener('change', function () { onSelectOwnToggle(cb.getAttribute('data-country'), cb); });
         });
-        qa('.eurosite-own-cities').forEach(function (cb) {
-            cb.addEventListener('change', function () {
-                ownCitiesOnly[cb.getAttribute('data-country')] = cb.checked;
-                applyFilter();
-            });
-        });
-
         var ownCb = document.getElementById('eurosite-wl-own-filter');
         if (ownCb) {
             ownCb.addEventListener('change', function () {

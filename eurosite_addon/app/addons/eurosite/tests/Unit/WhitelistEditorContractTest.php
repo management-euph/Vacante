@@ -196,8 +196,8 @@ final class WhitelistEditorContractTest extends TestCase
     /**
      * Own hotels: "Show only countries with own hotels" keeps the countries
      * that have own-offer cities (the only ones where the hotels sync finds
-     * hotels); inside an open country all cities show, and its own "Show
-     * only own cities" narrows them.
+     * hotels); inside an open country all cities show, own ones first, and
+     * "Select all own cities" ticks them.
      */
     public function testTheOwnHotelsFilterIsWiredEndToEnd(): void
     {
@@ -214,13 +214,14 @@ final class WhitelistEditorContractTest extends TestCase
         self::assertStringContainsString("r.getAttribute('data-own')", $js);
         self::assertStringContainsString("data-own=\"' + (city.is_own ? '1' : '0') + '\"", $js, 'each city checkbox carries its own flag');
 
-        // The page filter hides countries only; each open country has its own
-        // "Show only own cities", offered only where there are some.
+        // The page filter hides countries only. Inside an open country the own
+        // cities come first; there is no separate "Show only own cities" (it
+        // overlapped "Select all own cities").
         self::assertStringContainsString('{if $own_n}', $tpl);
-        self::assertStringContainsString('class="eurosite-own-cities" data-country="{$cc}"', $tpl);
-        self::assertStringContainsString("qa('.eurosite-own-cities')", $js);
-        self::assertStringContainsString("(!ownCitiesOnly[cc] || cb.getAttribute('data-own') === '1')", $js);
-        self::assertStringNotContainsString("(!ownOn || cb.getAttribute('data-own')", $js, 'the page filter must not hide cities');
+        self::assertStringNotContainsString('eurosite-own-cities', $tpl);
+        self::assertStringNotContainsString('eurosite-own-cities', $js);
+        self::assertStringContainsString('var cityVisible = !filterOn || cb.checked;', $js, 'the page filter must not hide cities');
+        self::assertStringContainsString(".concat(list.filter(function (c) { return !c.is_own; }))", $js, 'own cities are listed first');
 
         // "Select all own cities" next to "Select all cities", same condition.
         self::assertStringContainsString('class="eurosite-select-own" data-country="{$cc}"', $tpl);

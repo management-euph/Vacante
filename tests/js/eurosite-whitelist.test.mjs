@@ -50,7 +50,6 @@ function countryRow(cc, name, checked, own = 0) {
                     </label>
                 </div>
                 ${own ? `<label><input type="checkbox" class="eurosite-select-own" data-country="${cc}" /></label>` : ''}
-                ${own ? `<label><input type="checkbox" class="eurosite-own-cities" data-country="${cc}" /></label>` : ''}
                 <div class="eurosite-city-grid" data-country="${cc}"></div>
             </div>
         </div>`;
@@ -338,20 +337,11 @@ describe('own hotels: countries on the page, cities inside each country', () => 
         expect($('#eurosite-wl-filter-count').textContent).toBe('');
     });
 
-    it('"Show only own cities" inside a country keeps its own-offer cities, for that country only', async () => {
+    it('an open country lists its own cities first', async () => {
         await openRo();
-        toggle('.eurosite-own-cities[data-country="RO"]', true);
 
-        expect(shown(cityLabel('RO', 'CLJ'))).toBe(true);  // is_own
-        expect(shown(cityLabel('RO', 'BUH'))).toBe(false);
-        expect(shown($('#eurosite-wl-row-IT'))).toBe(true); // other countries untouched
-
-        toggle('.eurosite-own-cities[data-country="RO"]', false);
-        expect(shown(cityLabel('RO', 'BUH'))).toBe(true);
-    });
-
-    it('a country without own cities has no such option', () => {
-        expect($('.eurosite-own-cities[data-country="IT"]')).toBeNull();
+        // The server sends BUH (not own) before CLJ (own); the grid puts CLJ first.
+        expect(cityBoxes('RO').map((cb) => cb.value)).toEqual(['CLJ', 'BUH']);
     });
 
     it('the page filters combine', () => {

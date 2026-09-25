@@ -914,10 +914,6 @@ return [
         'ro' => '[n] proprii',
     ],
     // Whitelist: own cities per country
-    'eurosite.show_own_cities_only' => [
-        'en' => 'Show only own cities',
-        'ro' => 'Arată doar orașele proprii',
-    ],
     // Whitelist: select all own cities
     'eurosite.select_all_own_cities' => [
         'en' => 'Select all own cities',

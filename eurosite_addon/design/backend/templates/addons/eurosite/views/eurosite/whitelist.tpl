@@ -101,8 +101,8 @@
                     <span>{__("eurosite.show_whitelisted_only", ["[default]" => "Show only whitelisted"])}</span>
                 </label>
                 {* Countries with own-offer cities: the only ones where the hotels sync
-                   finds hotels. Filters countries only; inside a country each box has
-                   its own "Show only own cities". *}
+                   finds hotels. Filters countries only; inside a country the own
+                   cities are listed first, and "Select all own cities" ticks them. *}
                 <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; color: #555; user-select: none;">
                     <input type="checkbox" id="eurosite-wl-own-filter" />
                     <span>{__("eurosite.show_own_only", ["[default]" => "Show only countries with own hotels"])}</span>
@@ -144,18 +144,12 @@
                                                {if $wl && $wl.all}checked{/if} />
                                         <strong>{__("eurosite.select_all_cities", ["[default]" => "Select all cities"])}</strong>
                                     </label>
-                                    {* This country only: all its cities show by default; tick to keep
-                                       the own-offer ones, where the hotels sync finds hotels. *}
                                     {if $own_n}
                                         {* Adds every own-offer city to the selection (the whole country
                                            stays "Select all cities"). *}
                                         <label style="cursor: pointer; font-size: 12px; color: #555; margin-left: 16px;">
                                             <input type="checkbox" class="eurosite-select-own" data-country="{$cc}" />
                                             <strong>{__("eurosite.select_all_own_cities", ["[default]" => "Select all own cities"])}</strong>
-                                        </label>
-                                        <label style="cursor: pointer; font-size: 12px; color: #555; margin-left: 16px;">
-                                            <input type="checkbox" class="eurosite-own-cities" data-country="{$cc}" />
-                                            {__("eurosite.show_own_cities_only", ["[default]" => "Show only own cities"])}
                                         </label>
                                     {/if}
                                 </div>
