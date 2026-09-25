@@ -1277,3 +1277,7 @@ msgstr "Închide"
 msgctxt "Languages::travel_core.free_cancellation_until"
 msgid "Free cancellation until"
 msgstr "Anulare gratuită până la"
+
+msgctxt "Languages::travel_core.gender"
+msgid "Gender"
+msgstr "Gen"

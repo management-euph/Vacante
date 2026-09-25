@@ -40,6 +40,12 @@ class BookingSubmissionService
             if (TypeCoerce::toInt($booking['order_id'] ?? 0) === 0) {
                 $this->repo->linkToOrder($bookingId, $orderId, $userId);
             }
+            // The booking form no longer collects contact — checkout does
+            // (as for sphinx/novoton), so the booking row takes it from the order.
+            $contact = self::contactBackfill($booking, $orderInfo);
+            if ($contact !== []) {
+                $this->repo->update($bookingId, $contact);
+            }
             if (TypeCoerce::toString($booking['api_ref'] ?? '') !== '') {
                 continue; // already submitted (idempotent re-run)
             }
@@ -52,6 +58,30 @@ class BookingSubmissionService
         }
 
         return ['submitted' => $submitted, 'failed' => $failed];
+    }
+
+    /**
+     * The contact columns a booking row still lacks, filled from the order
+     * (e-mail / phone the guest gave at checkout). Never overwrites a value
+     * the booking already has; [] when there is nothing to fill.
+     *
+     * @param array<string, mixed> $booking
+     * @param array<string, mixed> $orderInfo
+     * @return array<string, string>
+     */
+    public static function contactBackfill(array $booking, array $orderInfo): array
+    {
+        $fill = [];
+        $email = trim(TypeCoerce::toString($orderInfo['email'] ?? ''));
+        $phone = trim(TypeCoerce::toString($orderInfo['phone'] ?? $orderInfo['b_phone'] ?? ''));
+        if (trim(TypeCoerce::toString($booking['guest_email'] ?? '')) === '' && $email !== '') {
+            $fill['guest_email'] = $email;
+        }
+        if (trim(TypeCoerce::toString($booking['guest_phone'] ?? '')) === '' && $phone !== '') {
+            $fill['guest_phone'] = $phone;
+        }
+
+        return $fill;
     }
 
     /**

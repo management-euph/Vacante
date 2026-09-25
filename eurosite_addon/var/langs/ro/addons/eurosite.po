@@ -1063,3 +1063,19 @@ msgstr "Eurosite — Șabloane SEO"
 msgctxt "Languages::eurosite.seo_placeholders_title"
 msgid "Eurosite placeholders"
 msgstr "Placeholder-e Eurosite"
+
+msgctxt "Languages::eurosite.complete_booking"
+msgid "Complete Your Booking"
+msgstr "Finalizează rezervarea"
+
+msgctxt "Languages::eurosite.cancel_fee_line"
+msgid "Between [from] - [to]: [value] penalty"
+msgstr "Între [from] - [to]: penalizare [value]"
+
+msgctxt "Languages::eurosite.back_to_results"
+msgid "Back to Results"
+msgstr "Înapoi la rezultate"
+
+msgctxt "Languages::eurosite.add_to_cart"
+msgid "Add to Cart"
+msgstr "Adaugă în coș"
