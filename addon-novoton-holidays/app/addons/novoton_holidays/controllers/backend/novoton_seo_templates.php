@@ -3,28 +3,27 @@ declare(strict_types=1);
 /**
  * Novoton Holidays — SEO Templates Admin Page
  *
- * Dedicated admin page for managing SEO template strings that are applied
- * to Novoton hotel products when they are created or bulk-updated.
+ * The template strings applied to Novoton hotel products when they are
+ * created, or all at once with "Apply templates now". The page itself is
+ * Travel Core's shared one (components/seo_templates_page.tpl); this
+ * controller only supplies what is Novoton's: the linked-hotel fetcher and
+ * the placeholder builder.
  *
  * Modes:
- *   - manage    (GET):  Render the form with current settings
- *   - save      (POST): Persist via CS-Cart Settings API (handles cache)
- *   - bulk_apply (POST): Re-apply templates to all existing Novoton products
+ *   - manage     (GET):  the page
+ *   - save       (POST): mode, "Apply" ticks, per-language templates
+ *   - bulk_apply (POST): save, then re-apply to every linked Novoton product
  *
- * Settings are stored under addons.novoton_holidays.seo_* keys. The runtime
- * template engine (fn_travel_core_apply_seo_fields) reads them directly
- * from the Registry — no DB schema changes.
+ * Settings are stored under addons.novoton_holidays.seo_* keys; the engine
+ * (fn_travel_core_apply_seo_fields) reads them from the Registry.
  *
  * @package NovotonHolidays
  * @since   3.4.0
  */
 
+use Tygh\Addons\NovotonHolidays\Helpers\ProductFactory;
 use Tygh\Addons\NovotonHolidays\Services\Container;
-use Tygh\Registry;
-use Tygh\Settings;
-use Tygh\Tygh;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
-use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -33,125 +32,54 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
 }
 
 /**
- * Canonical list of SEO setting keys + their defaults.
- * Single source of truth for both read and save paths.
+ * Placeholders for one novoton_hotels row. The name goes through the same
+ * formatter as at product creation; the description is left out (a bulk run
+ * doesn't call the API per hotel), and the engine then keeps the product's
+ * own description.
  *
- * @return array<string, string>
+ * @param array<mixed> $hotel
+ * @return array<string, mixed>
  */
-function _novoton_seo_setting_defaults(): array
+function _novoton_seo_placeholders_for(array $hotel): array
 {
-    return [
-        'seo_overwrite_mode'          => 'override_all',
-        'seo_product_name'            => '{{name}}',
-        'seo_page_title'              => '{{name}} - {{city}}, {{country}} {{year}}',
-        'seo_meta_description'        => 'Book {{name}} in {{city}}, {{country}}. {{star_rating}}-star hotel with {{facilities}}.',
-        'seo_meta_keywords'           => '{{name}}, {{city}}, {{country}}, {{property_type}}, {{star_rating}} star',
-        'seo_name_slug'               => '{{name}}-{{city}}-{{country}}',
-        'seo_full_description'        => '',
-        'seo_field_product_name'      => 'Y',
-        'seo_field_page_title'        => 'Y',
-        'seo_field_meta_description'  => 'Y',
-        'seo_field_meta_keywords'     => 'Y',
-        'seo_field_name_slug'         => 'Y',
-        'seo_field_full_description'  => 'Y',
-    ];
-}
+    $hotelMap = TypeCoerce::toStringMap($hotel);
+    $rawName = TypeCoerce::toString($hotelMap['hotel_name'] ?? '');
+    $displayName = function_exists('fn_novoton_holidays_format_hotel_display_name')
+        ? TypeCoerce::toString(fn_novoton_holidays_format_hotel_display_name($rawName))
+        : $rawName;
 
-// ── POST handlers ───────────────────────────────────────────────────────────
+    return ProductFactory::buildNovotonPlaceholders($hotelMap, $displayName);
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($mode === 'save') {
-        $submitted = RequestCoerce::stringMap($_REQUEST, 'seo');
-        $defaults  = _novoton_seo_setting_defaults();
-        $settings  = Settings::instance();
-
-        // Global keys only: overwrite mode + field toggles. The six template
-        // strings are PER-LANGUAGE now (seo_lang[<lang>][<key>] below) — the
-        // language-less keys stay untouched as the legacy/shared fallback.
-        $templateKeys = _travel_core_seo_template_keys();
-        $toSave = [];
-        foreach ($defaults as $key => $default) {
-            if (in_array($key, $templateKeys, true)) {
-                continue;
-            }
-            if (str_starts_with($key, 'seo_field_')) {
-                $toSave[$key] = !empty($submitted[$key]) ? 'Y' : 'N';
-            } else {
-                $toSave[$key] = TypeCoerce::toString($submitted[$key] ?? '');
-            }
-        }
-
-        if ($settings instanceof Settings) {
-            foreach ($toSave as $key => $value) {
-                $settings->updateValue($key, $value, 'novoton_holidays', true);
-            }
-        }
-
-        $existing = \Tygh\Registry::get('addons.novoton_holidays');
-        \Tygh\Registry::set('addons.novoton_holidays', array_merge(is_array($existing) ? $existing : [], $toSave));
-
-        $seoLang = $_REQUEST['seo_lang'] ?? [];
-        fn_travel_core_seo_save_lang_templates('novoton_holidays', is_array($seoLang) ? $seoLang : []);
-
-        fn_set_notification('N', __('notice'),
-            __('travel_core.seo_templates_saved',
-                ['[default]' => 'SEO templates saved.']));
+        fn_travel_core_seo_page_save('novoton_holidays', $_REQUEST);
 
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_seo_templates.manage'];
     }
 
     if ($mode === 'bulk_apply') {
         $hotelRepo = Container::getInstance()->hotelRepository();
-        $fetcher = static fn(int $offset, int $batch): array =>
-            $hotelRepo->findLinkedForSeo($offset, $batch);
 
-        $builder = static fn(array $hotel): array =>
-            \Tygh\Addons\NovotonHolidays\Helpers\ProductFactory::buildNovotonPlaceholders(
-                TypeCoerce::toStringMap($hotel), TypeCoerce::toString($hotel['hotel_name'] ?? '')
-            );
-
-        return fn_travel_core_run_long_task(
-            TypeCoerce::toString(__('travel_core.seo_bulk_apply_progress')),
-            static fn() => fn_travel_core_seo_bulk_apply('novoton_holidays', $fetcher, $builder),
+        return fn_travel_core_seo_page_bulk_apply(
+            'novoton_holidays',
+            $_REQUEST,
+            static fn (int $offset, int $batch): array => $hotelRepo->findLinkedForSeo($offset, $batch),
+            static fn (array $hotel): array => _novoton_seo_placeholders_for($hotel),
             'novoton_seo_templates.manage',
-            static function (array $result) {
-                fn_set_notification('N', __('notice'),
-                    str_replace(
-                        ['[updated]', '[total]'],
-                        [TypeCoerce::toString($result['updated'] ?? ''), TypeCoerce::toString($result['total'] ?? '')],
-                        TypeCoerce::toString(__('travel_core.seo_bulk_apply_done'))
-                    ));
-            }
         );
     }
 }
 
-// ── GET handlers ────────────────────────────────────────────────────────────
-
 if ($mode === 'manage' || $mode === '') {
-    $defaults = _novoton_seo_setting_defaults();
-    $current  = TypeCoerce::toStringMap(Registry::get('addons.novoton_holidays'));
+    // The preview uses the first linked hotel.
+    $sampleRows = Container::getInstance()->hotelRepository()->findLinkedForSeo(0, 1);
+    $sample = $sampleRows === [] ? null : _novoton_seo_placeholders_for($sampleRows[0]);
 
-    $values = [];
-    foreach ($defaults as $key => $default) {
-        $stored = $current[$key] ?? null;
-        $values[$key] = ($stored === null || $stored === '') && !str_starts_with($key, 'seo_field_')
-            ? $default
-            : ($stored ?? $default);
-    }
-
-    // Per-language template values: one section per storefront language,
-    // each showing that language's EFFECTIVE template (override → shared
-    // legacy value → built-in default, incl. the addon's __<lang> defaults).
-    $langData = fn_travel_core_seo_lang_form_data(
-        'novoton_holidays',
-        array_merge(fn_novoton_holidays_seo_defaults(), $defaults),
-    );
-
-    /** @var \Smarty $view */
-    $view = Tygh::$app['view'];
-    $view->assign('seo_values', $values);
-    $view->assign('seo_languages', $langData['languages']);
-    $view->assign('seo_lang_values', $langData['values']);
+    fn_travel_core_seo_page_assign('novoton_holidays', $sample, [
+        'save'  => 'novoton_seo_templates.save',
+        'apply' => 'novoton_seo_templates.bulk_apply',
+        'title' => TypeCoerce::toString(__('travel_core.seo_templates')),
+    ]);
 }

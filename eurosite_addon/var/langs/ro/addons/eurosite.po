@@ -1051,3 +1051,15 @@ msgstr "[n] proprii"
 msgctxt "Languages::eurosite.select_all_own_cities"
 msgid "Select all own cities"
 msgstr "Selectează toate orașele proprii"
+
+msgctxt "Languages::eurosite.seo_templates"
+msgid "SEO Templates"
+msgstr "Șabloane SEO"
+
+msgctxt "Languages::eurosite.seo_templates_title"
+msgid "Eurosite — SEO Templates"
+msgstr "Eurosite — Șabloane SEO"
+
+msgctxt "Languages::eurosite.seo_placeholders_title"
+msgid "Eurosite placeholders"
+msgstr "Placeholder-e Eurosite"

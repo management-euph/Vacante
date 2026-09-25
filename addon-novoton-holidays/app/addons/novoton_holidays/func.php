@@ -112,6 +112,31 @@ function fn_settings_variants_addons_novoton_holidays_api_currency(): array
 }
 
 /**
+ * The placeholders ProductFactory::buildNovotonPlaceholders() fills, as the
+ * SEO Templates page lists them (travel_core labels each bare key).
+ *
+ * @return array<string, list<string>>
+ */
+function fn_novoton_holidays_seo_placeholders(): array
+{
+    return [
+        'hotel'    => ['name', 'raw_name', 'star_rating', 'stars_emoji', 'hotel_type', 'property_type', 'facilities', 'description'],
+        'location' => ['city', 'country', 'region', 'latitude', 'longitude'],
+        'other'    => ['year'],
+    ];
+}
+
+/**
+ * This add-on's tab in the SEO Templates provider row.
+ *
+ * @return array{name: string, dispatch: string}
+ */
+function fn_novoton_holidays_seo_page(): array
+{
+    return ['name' => 'Novoton', 'dispatch' => 'novoton_seo_templates.manage'];
+}
+
+/**
  * Canonical default SEO template strings + field toggles for Novoton products.
  *
  * Single source of truth shared by the seed routine, the SEO Templates admin

@@ -318,12 +318,16 @@ function fn_travel_core_apply_seo_fields(string $addonName, array $placeholders,
             }
             $result[$productKey] = $rendered;
         } elseif ($productKey === 'full_description') {
-            // Special: if template is empty, fall back to raw description placeholder
-            if ($template !== '') {
-                $result[$productKey] = fn_travel_core_render_seo_template($template, $placeholders);
-            } else {
-                $result[$productKey] = TypeCoerce::toString($placeholders['description'] ?? '');
+            // An empty template means "the API description as it is". With no
+            // description at hand either (e.g. a bulk apply that doesn't fetch
+            // it), write nothing: an empty string would wipe the product's.
+            $rendered = $template !== ''
+                ? fn_travel_core_render_seo_template($template, $placeholders)
+                : TypeCoerce::toString($placeholders['description'] ?? '');
+            if (trim($rendered) === '') {
+                continue;
             }
+            $result[$productKey] = $rendered;
         } else {
             // Skip empty templates — don't write blank strings that would erase
             // values an admin or a previous run already populated.
@@ -529,4 +533,340 @@ function fn_travel_core_seo_bulk_apply(string $addonName, callable $hotelFetcher
     }
 
     return ['updated' => $updated, 'skipped' => $skipped, 'total' => $total];
+}
+
+// ============================================================================
+// SEO Templates admin page — shared by every provider add-on
+// ============================================================================
+//
+// Each provider keeps its own page (and its own stored templates); this is
+// the code they share. A provider supplies, in its func.php:
+//   fn_<addon>_seo_defaults()      built-in templates (already required above)
+//   fn_<addon>_seo_placeholders()  group => [placeholder, …] (or [placeholder => label key])
+//   fn_<addon>_seo_page()          ['name' => 'Sphinx', 'dispatch' => '...']
+// and a thin controller calling fn_travel_core_seo_page_save(),
+// fn_travel_core_seo_page_bulk_apply() and fn_travel_core_seo_page_assign().
+// The page itself is components/seo_templates_page.tpl + seo-templates.js.
+
+/**
+ * The modifiers fn_travel_core_apply_modifier() understands, in the order the
+ * page lists them.
+ *
+ * @return list<string>
+ */
+function fn_travel_core_seo_modifiers(): array
+{
+    return ['lower', 'upper', 'title', 'capitalize', 'trim', 'slug', 'strip_tags', 'first', 'last', 'abs', 'round'];
+}
+
+/**
+ * A provider's placeholders, grouped: group => [placeholder => label lang key].
+ * Providers list bare keys (labelled travel_core.seo_ph_<key>) or key => label.
+ *
+ * @return array<string, array<string, string>>
+ */
+function fn_travel_core_seo_placeholder_groups(string $addonName): array
+{
+    $fn = 'fn_' . $addonName . '_seo_placeholders';
+    if (!function_exists($fn)) {
+        return [];
+    }
+    $groups = [];
+    foreach ((array) $fn() as $group => $items) {
+        if (!is_array($items)) {
+            continue;
+        }
+        foreach ($items as $key => $label) {
+            // A bare key uses the shared label travel_core.seo_ph_<key>.
+            if (is_int($key)) {
+                $key = TypeCoerce::toString($label);
+                $label = 'travel_core.seo_ph_' . $key;
+            }
+            $groups[TypeCoerce::toString($group)][TypeCoerce::toString($key)] = TypeCoerce::toString($label);
+        }
+    }
+
+    return $groups;
+}
+
+/**
+ * Every placeholder key a provider offers.
+ *
+ * @return list<string>
+ */
+function fn_travel_core_seo_placeholder_keys(string $addonName): array
+{
+    $keys = [];
+    foreach (fn_travel_core_seo_placeholder_groups($addonName) as $items) {
+        foreach (array_keys($items) as $key) {
+            $keys[] = $key;
+        }
+    }
+
+    return array_values(array_unique($keys));
+}
+
+/**
+ * What in a template the engine would silently swallow: a placeholder the
+ * provider doesn't offer (renders empty), an unknown modifier (ignored), a
+ * second modifier or unbalanced braces (the token isn't recognised at all).
+ * Each entry is [lang key, value]; seo-templates.js runs the same checks.
+ *
+ * @param list<string> $keys
+ * @return list<array{0: string, 1: string}>
+ */
+function fn_travel_core_seo_template_problems(string $template, array $keys): array
+{
+    $problems = [];
+    $modifiers = fn_travel_core_seo_modifiers();
+    preg_match_all('/\{\{([a-z_][a-z0-9_]*)(?:\|([a-z_]+))?}}/', $template, $matches, PREG_SET_ORDER);
+    foreach ($matches as $m) {
+        if (!in_array($m[1], $keys, true)) {
+            $problems['p' . $m[1]] = ['travel_core.seo_problem_unknown_placeholder', '{{' . $m[1] . '}}'];
+        }
+        if (isset($m[2]) && !in_array($m[2], $modifiers, true)) {
+            $problems['m' . $m[2]] = ['travel_core.seo_problem_unknown_modifier', '|' . $m[2]];
+        }
+    }
+    if (preg_match('/\{\{[^{}]*\|[^{}]*\|[^{}]*}}/', $template) === 1) {
+        $problems['one'] = ['travel_core.seo_problem_one_modifier', ''];
+    }
+    if (substr_count($template, '{{') !== substr_count($template, '}}')) {
+        $problems['braces'] = ['travel_core.seo_problem_unbalanced', ''];
+    }
+
+    return array_values($problems);
+}
+
+/**
+ * The add-ons that have an SEO Templates page, for the tab row at the top of
+ * each page. Only active add-ons load their func.php, so an add-on that is
+ * off simply has no fn_<addon>_seo_page() and no tab.
+ *
+ * @return list<array{addon: string, name: string, url: string, current: bool}>
+ */
+function fn_travel_core_seo_page_providers(string $currentAddon): array
+{
+    $addons = \Tygh\Registry::get('addons');
+    $providers = [];
+    foreach (array_keys(is_array($addons) ? $addons : []) as $id) {
+        $id = TypeCoerce::toString($id);
+        $fn = 'fn_' . $id . '_seo_page';
+        if ($id === '' || !function_exists($fn)) {
+            continue;
+        }
+        $page = TypeCoerce::toStringMap($fn());
+        $dispatch = TypeCoerce::toString($page['dispatch'] ?? '');
+        if ($dispatch === '') {
+            continue;
+        }
+        $providers[] = [
+            'addon'   => $id,
+            'name'    => TypeCoerce::toString($page['name'] ?? $id),
+            'url'     => function_exists('fn_url') ? TypeCoerce::toString(fn_url($dispatch)) : $dispatch,
+            'current' => $id === $currentAddon,
+        ];
+    }
+    usort($providers, static fn (array $a, array $b): int => strcmp($a['name'], $b['name']));
+
+    return $providers;
+}
+
+/**
+ * The provider's built-in templates (fn_<addon>_seo_defaults()).
+ *
+ * @return array<string, string>
+ */
+function _travel_core_seo_defaults_of(string $addonName): array
+{
+    $fn = 'fn_' . $addonName . '_seo_defaults';
+
+    $defaults = [];
+    foreach (function_exists($fn) ? TypeCoerce::toStringMap($fn()) : [] as $key => $value) {
+        $defaults[$key] = TypeCoerce::toString($value);
+    }
+
+    return $defaults;
+}
+
+/**
+ * Save the page: the overwrite mode, the six "Apply" ticks and every
+ * language's templates. Warns (without refusing) about placeholders the
+ * engine would drop.
+ *
+ * @param array<mixed> $request $_REQUEST
+ */
+function fn_travel_core_seo_page_save(string $addonName, array $request, bool $notify = true): void
+{
+    $submitted = TypeCoerce::toStringMap($request['seo'] ?? []);
+    $toSave = [];
+    $mode = \Tygh\Addons\TravelCore\Enums\SeoOverwriteMode::tryFrom(TypeCoerce::toString($submitted['seo_overwrite_mode'] ?? ''));
+    $toSave['seo_overwrite_mode'] = ($mode ?? \Tygh\Addons\TravelCore\Enums\SeoOverwriteMode::OverrideAll)->value;
+    // The six templates are per language (seo_lang below); only the ticks are
+    // global. A tick missing from the POST is an unticked box.
+    foreach (array_keys(_travel_core_seo_field_map()) as $toggleKey) {
+        $toSave[$toggleKey] = !empty($submitted[$toggleKey]) ? 'Y' : 'N';
+    }
+
+    $settings = \Tygh\Settings::instance();
+    if (is_object($settings) && method_exists($settings, 'updateValue')) {
+        foreach ($toSave as $key => $value) {
+            // auto_create: these settings aren't declared in addon.xml.
+            $settings->updateValue($key, $value, $addonName, true);
+        }
+    }
+    $existing = \Tygh\Registry::get('addons.' . $addonName);
+    \Tygh\Registry::set('addons.' . $addonName, array_merge(is_array($existing) ? $existing : [], $toSave));
+
+    $seoLang = is_array($request['seo_lang'] ?? null) ? $request['seo_lang'] : [];
+    fn_travel_core_seo_save_lang_templates($addonName, $seoLang);
+
+    if (!$notify || !function_exists('fn_set_notification')) {
+        return;
+    }
+    fn_set_notification('N', __('notice'), __('travel_core.seo_templates_saved'));
+
+    $keys = fn_travel_core_seo_placeholder_keys($addonName);
+    if ($keys === []) {
+        return;
+    }
+    foreach ($seoLang as $lc => $fields) {
+        if (!is_array($fields)) {
+            continue;
+        }
+        foreach ($fields as $key => $template) {
+            foreach (fn_travel_core_seo_template_problems(TypeCoerce::toString($template), $keys) as [$langKey, $value]) {
+                fn_set_notification('W', __('warning'), strtoupper(TypeCoerce::toString($lc)) . ' · '
+                    . TypeCoerce::toString(__('travel_core.' . TypeCoerce::toString($key))) . ': '
+                    . str_replace('[value]', $value, TypeCoerce::toString(__($langKey))));
+            }
+        }
+    }
+}
+
+/**
+ * "Apply templates now": saves what is on the page first (so what the admin
+ * sees is what gets applied), then re-renders every linked product in every
+ * language, with CS-Cart's progress bar.
+ *
+ * @param array<mixed> $request $_REQUEST
+ * @param callable(int, int): array<mixed> $fetcher
+ * @param callable(array<mixed>): array<mixed> $builder
+ * @return array<mixed> the controller's return value
+ */
+function fn_travel_core_seo_page_bulk_apply(string $addonName, array $request, callable $fetcher, callable $builder, string $redirect): array
+{
+    fn_travel_core_seo_page_save($addonName, $request, false);
+
+    return fn_travel_core_run_long_task(
+        TypeCoerce::toString(__('travel_core.seo_bulk_apply_progress')),
+        static fn (): array => fn_travel_core_seo_bulk_apply($addonName, $fetcher, $builder),
+        $redirect,
+        static function (array $result): void {
+            fn_set_notification('N', __('notice'), str_replace(
+                ['[updated]', '[total]'],
+                [TypeCoerce::toString($result['updated'] ?? 0), TypeCoerce::toString($result['total'] ?? 0)],
+                TypeCoerce::toString(__('travel_core.seo_bulk_apply_done')),
+            ));
+        },
+    );
+}
+
+/**
+ * Everything components/seo_templates_page.tpl shows, as one array.
+ *
+ * @param array<string, mixed>|null $sample Placeholders of one real hotel, for the preview
+ * @param array{save: string, apply: string, title?: string} $dispatch
+ * @return array<string, mixed>
+ */
+function fn_travel_core_seo_page_data(string $addonName, ?array $sample, array $dispatch): array
+{
+    $defaults = _travel_core_seo_defaults_of($addonName);
+    $current = TypeCoerce::toStringMap(\Tygh\Registry::get('addons.' . $addonName));
+
+    $mode = \Tygh\Addons\TravelCore\Enums\SeoOverwriteMode::tryFrom(
+        TypeCoerce::toString(($current['seo_overwrite_mode'] ?? '') ?: ($defaults['seo_overwrite_mode'] ?? '')),
+    ) ?? \Tygh\Addons\TravelCore\Enums\SeoOverwriteMode::OverrideAll;
+    $values = ['seo_overwrite_mode' => $mode->value];
+    foreach (array_keys(_travel_core_seo_field_map()) as $toggleKey) {
+        $values[$toggleKey] = (($current[$toggleKey] ?? '') ?: (($defaults[$toggleKey] ?? '') ?: 'Y')) === 'N' ? 'N' : 'Y';
+    }
+
+    $langData = fn_travel_core_seo_lang_form_data($addonName, $defaults);
+    $builtIn = [];
+    foreach (array_keys($langData['languages']) as $lc) {
+        foreach (_travel_core_seo_template_keys() as $key) {
+            $builtIn[$lc][$key] = _travel_core_seo_template_for([], $defaults, $key, $lc);
+        }
+    }
+
+    $groups = [];
+    foreach (fn_travel_core_seo_placeholder_groups($addonName) as $group => $items) {
+        $rows = [];
+        foreach ($items as $key => $labelKey) {
+            $rows[] = ['key' => $key, 'label' => TypeCoerce::toString(__($labelKey))];
+        }
+        $groups[] = ['label' => TypeCoerce::toString(__('travel_core.seo_group_' . $group)), 'items' => $rows];
+    }
+
+    $label = static fn (string $key): string => TypeCoerce::toString(__('travel_core.' . $key));
+    $storeUrl = TypeCoerce::toString(\Tygh\Registry::get('config.http_host'));
+    $config = [
+        'keys'      => fn_travel_core_seo_placeholder_keys($addonName),
+        'modifiers' => fn_travel_core_seo_modifiers(),
+        'sample'    => $sample === null || $sample === [] ? null : $sample,
+        'store_url' => $storeUrl,
+        'labels'    => [
+            'target_none'          => $label('seo_target_none'),
+            'target_into'          => $label('seo_target_into'),
+            'target_fallback'      => $label('seo_target_fallback'),
+            'modifier_needs_field' => $label('seo_modifier_needs_field'),
+            'modifier_needs_token' => $label('seo_modifier_needs_token'),
+            'modifier_replaced'    => $label('seo_modifier_replaced'),
+            'restored'             => $label('seo_restored'),
+            'counter_title'        => $label('seo_counter_title'),
+            'preview_kept'         => $label('seo_preview_kept'),
+            'unknown_placeholder'  => $label('seo_problem_unknown_placeholder'),
+            'unknown_modifier'     => $label('seo_problem_unknown_modifier'),
+            'one_modifier'         => $label('seo_problem_one_modifier'),
+            'unbalanced'           => $label('seo_problem_unbalanced'),
+        ],
+    ];
+
+    $providers = fn_travel_core_seo_page_providers($addonName);
+
+    return [
+        'addon'          => $addonName,
+        'save_dispatch'  => $dispatch['save'],
+        'apply_url'      => function_exists('fn_url') ? TypeCoerce::toString(fn_url($dispatch['apply'])) : $dispatch['apply'],
+        'title'          => $dispatch['title'] ?? '',
+        'providers'      => $providers,
+        'show_providers' => count($providers) > 1,
+        'groups'         => $groups,
+        'modifiers'      => fn_travel_core_seo_modifiers(),
+        'defaults'       => $builtIn,
+        'sample_name'    => $sample === null ? '' : TypeCoerce::toString($sample['name'] ?? ''),
+        'config_json'    => (string) json_encode($config, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+        'values'         => $values,
+        'languages'      => $langData['languages'],
+        'lang_values'    => $langData['values'],
+    ];
+}
+
+/**
+ * Assign the page data to the view (manage mode of a provider's controller).
+ *
+ * @param array<string, mixed>|null $sample
+ * @param array{save: string, apply: string, title?: string} $dispatch
+ */
+function fn_travel_core_seo_page_assign(string $addonName, ?array $sample, array $dispatch): void
+{
+    $data = fn_travel_core_seo_page_data($addonName, $sample, $dispatch);
+    $view = \Tygh\Tygh::$app['view'] ?? null;
+    if (is_object($view) && method_exists($view, 'assign')) {
+        $view->assign('seo_page', $data);
+        $view->assign('seo_values', $data['values']);
+        $view->assign('seo_languages', $data['languages']);
+        $view->assign('seo_lang_values', $data['lang_values']);
+    }
 }

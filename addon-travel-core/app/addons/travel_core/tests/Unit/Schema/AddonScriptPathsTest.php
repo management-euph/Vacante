@@ -26,7 +26,7 @@ use PHPUnit\Framework\TestCase;
  *                                for a storefront one.
  *
  * All of these are in use here (novoton's func.js takes the first form,
- * travel_core's seo-click-insert.js and every theme stylesheet the second), and
+ * the providers' SEO pages loading travel_core assets and every theme stylesheet the second), and
  * all are deployed by docker/fullstore/link-addons.sh and
  * scripts/package-addons.php — so either is fine as long as the file is where
  * the template says.
@@ -103,8 +103,8 @@ final class AddonScriptPathsTest extends TestCase
             // Area-relative form: "addons/<id>/…" resolves under the js/ or
             // css/ directory of the area this template belongs to. Every addon
             // merges into ONE docroot, so a backend page may legitimately load
-            // a sibling addon's asset (the SEO editor pages load travel_core's
-            // seo-click-insert.js) — accept the file from any addon that ships
+            // a sibling addon's asset (the providers' SEO pages load
+            // travel_core's seo-templates.css) — accept the file from any addon that ships
             // it at the same area-relative path.
             if (str_starts_with($src, 'addons/' . $id . '/')) {
                 $area = self::areaSuffix($file);

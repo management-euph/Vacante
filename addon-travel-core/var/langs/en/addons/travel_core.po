@@ -898,6 +898,250 @@ msgctxt "Languages::travel_core.seo_per_language_hint"
 msgid "Each storefront language has its own template set. A language whose template was never saved uses the built-in default."
 msgstr "Each storefront language has its own template set. A language whose template was never saved uses the built-in default."
 
+msgctxt "Languages::travel_core.seo_templates_hint"
+msgid "Build each product's name, page title, description and URL from the hotel's data. Click in a field, then click a placeholder on the right to insert it."
+msgstr "Build each product's name, page title, description and URL from the hotel's data. Click in a field, then click a placeholder on the right to insert it."
+
+msgctxt "Languages::travel_core.seo_bulk_apply_desc"
+msgid "Saves this page, then re-applies the templates to every linked product, in every language. Only the ticked fields change."
+msgstr "Saves this page, then re-applies the templates to every linked product, in every language. Only the ticked fields change."
+
+msgctxt "Languages::travel_core.seo_bulk_apply_confirm"
+msgid "Save this page and re-apply the templates to every linked product, in all languages?"
+msgstr "Save this page and re-apply the templates to every linked product, in all languages?"
+
+msgctxt "Languages::travel_core.seo_click_to_insert"
+msgid "Insert at the cursor"
+msgstr "Insert at the cursor"
+
+msgctxt "Languages::travel_core.seo_click_to_insert_modifier"
+msgid "Add to the placeholder at the cursor"
+msgstr "Add to the placeholder at the cursor"
+
+msgctxt "Languages::travel_core.seo_tip_1"
+msgid "Lists (facilities, meal plans, rooms) show their first 3 items, separated by commas."
+msgstr "Lists (facilities, meal plans, rooms) show their first 3 items, separated by commas."
+
+msgctxt "Languages::travel_core.seo_tip_2"
+msgid "A placeholder without a value is removed, and so is a separator left dangling."
+msgstr "A placeholder without a value is removed, and so is a separator left dangling."
+
+msgctxt "Languages::travel_core.seo_tip_3"
+msgid "New products get these templates when they are created. \"Apply templates now\" updates the existing ones."
+msgstr "New products get these templates when they are created. \"Apply templates now\" updates the existing ones."
+
+msgctxt "Languages::travel_core.seo_tip_4"
+msgid "A placeholder takes one modifier. The title modifier turns \"GRAND HOTEL VARNA\" into \"Grand Hotel Varna\"."
+msgstr "A placeholder takes one modifier. The title modifier turns \"GRAND HOTEL VARNA\" into \"Grand Hotel Varna\"."
+
+msgctxt "Languages::travel_core.seo_modifiers_hint"
+msgid "Put the cursor on a placeholder in a field, then click a modifier."
+msgstr "Put the cursor on a placeholder in a field, then click a modifier."
+
+msgctxt "Languages::travel_core.seo_group_hotel"
+msgid "Hotel"
+msgstr "Hotel"
+
+msgctxt "Languages::travel_core.seo_group_location"
+msgid "Location"
+msgstr "Location"
+
+msgctxt "Languages::travel_core.seo_group_contact"
+msgid "Contact"
+msgstr "Contact"
+
+msgctxt "Languages::travel_core.seo_group_price"
+msgid "Price"
+msgstr "Price"
+
+msgctxt "Languages::travel_core.seo_group_other"
+msgid "Other"
+msgstr "Other"
+
+msgctxt "Languages::travel_core.seo_target_none"
+msgid "Click in a field, then click a placeholder to insert it at the cursor."
+msgstr "Click in a field, then click a placeholder to insert it at the cursor."
+
+msgctxt "Languages::travel_core.seo_target_into"
+msgid "Inserting into [value]"
+msgstr "Inserting into [value]"
+
+msgctxt "Languages::travel_core.seo_target_fallback"
+msgid "No field was selected, so it went into [value]. Click in a field first to choose."
+msgstr "No field was selected, so it went into [value]. Click in a field first to choose."
+
+msgctxt "Languages::travel_core.seo_modifier_needs_field"
+msgid "Click inside a placeholder in a field first, then choose a modifier."
+msgstr "Click inside a placeholder in a field first, then choose a modifier."
+
+msgctxt "Languages::travel_core.seo_modifier_needs_token"
+msgid "Put the cursor inside or right after a placeholder, e.g. {{name}}, then click the modifier."
+msgstr "Put the cursor inside or right after a placeholder, e.g. {{name}}, then click the modifier."
+
+msgctxt "Languages::travel_core.seo_modifier_replaced"
+msgid "Replaced [value]: a placeholder takes one modifier."
+msgstr "Replaced [value]: a placeholder takes one modifier."
+
+msgctxt "Languages::travel_core.seo_restored"
+msgid "[value]: the built-in default is back. Save to keep it."
+msgstr "[value]: the built-in default is back. Save to keep it."
+
+msgctxt "Languages::travel_core.seo_counter_title"
+msgid "Length for the sample hotel. Aim for [value] characters or fewer."
+msgstr "Length for the sample hotel. Aim for [value] characters or fewer."
+
+msgctxt "Languages::travel_core.seo_preview_kept"
+msgid "(left as it is)"
+msgstr "(left as it is)"
+
+msgctxt "Languages::travel_core.seo_problem_unknown_placeholder"
+msgid "Unknown placeholder [value]"
+msgstr "Unknown placeholder [value]"
+
+msgctxt "Languages::travel_core.seo_problem_unknown_modifier"
+msgid "Unknown modifier [value]"
+msgstr "Unknown modifier [value]"
+
+msgctxt "Languages::travel_core.seo_problem_one_modifier"
+msgid "A placeholder takes one modifier only"
+msgstr "A placeholder takes one modifier only"
+
+msgctxt "Languages::travel_core.seo_problem_unbalanced"
+msgid "A placeholder is missing {{ or }}"
+msgstr "A placeholder is missing {{ or }}"
+
+msgctxt "Languages::travel_core.seo_apply_field"
+msgid "Apply this field"
+msgstr "Apply this field"
+
+msgctxt "Languages::travel_core.seo_apply_field_hint"
+msgid "Unticked fields are left as they are, in every language."
+msgstr "Unticked fields are left as they are, in every language."
+
+msgctxt "Languages::travel_core.seo_restore_default"
+msgid "Restore default"
+msgstr "Restore default"
+
+msgctxt "Languages::travel_core.seo_preview_sample"
+msgid "Sample hotel: [name]"
+msgstr "Sample hotel: [name]"
+
+msgctxt "Languages::travel_core.seo_preview_none"
+msgid "The preview appears once there is a hotel to show."
+msgstr "The preview appears once there is a hotel to show."
+
+msgctxt "Languages::travel_core.seo_ph_name"
+msgid "Hotel name"
+msgstr "Hotel name"
+
+msgctxt "Languages::travel_core.seo_ph_raw_name"
+msgid "Name as sent by the API"
+msgstr "Name as sent by the API"
+
+msgctxt "Languages::travel_core.seo_ph_classification"
+msgid "Star rating"
+msgstr "Star rating"
+
+msgctxt "Languages::travel_core.seo_ph_star_rating"
+msgid "Star rating"
+msgstr "Star rating"
+
+msgctxt "Languages::travel_core.seo_ph_stars_emoji"
+msgid "Stars, e.g. ★★★★"
+msgstr "Stars, e.g. ★★★★"
+
+msgctxt "Languages::travel_core.seo_ph_hotel_type"
+msgid "Hotel type"
+msgstr "Hotel type"
+
+msgctxt "Languages::travel_core.seo_ph_property_type"
+msgid "Hotel / villa / apartment"
+msgstr "Hotel / villa / apartment"
+
+msgctxt "Languages::travel_core.seo_ph_rating"
+msgid "Guest rating"
+msgstr "Guest rating"
+
+msgctxt "Languages::travel_core.seo_ph_facilities"
+msgid "Top 3 facilities"
+msgstr "Top 3 facilities"
+
+msgctxt "Languages::travel_core.seo_ph_boards"
+msgid "Meal plans"
+msgstr "Meal plans"
+
+msgctxt "Languages::travel_core.seo_ph_rooms"
+msgid "Room types (first 3)"
+msgstr "Room types (first 3)"
+
+msgctxt "Languages::travel_core.seo_ph_code"
+msgid "Hotel code"
+msgstr "Hotel code"
+
+msgctxt "Languages::travel_core.seo_ph_description"
+msgid "Description from the API"
+msgstr "Description from the API"
+
+msgctxt "Languages::travel_core.seo_ph_image_url"
+msgid "Main image URL"
+msgstr "Main image URL"
+
+msgctxt "Languages::travel_core.seo_ph_city"
+msgid "City / resort"
+msgstr "City / resort"
+
+msgctxt "Languages::travel_core.seo_ph_country"
+msgid "Country"
+msgstr "Country"
+
+msgctxt "Languages::travel_core.seo_ph_region"
+msgid "Region"
+msgstr "Region"
+
+msgctxt "Languages::travel_core.seo_ph_city_code"
+msgid "Destination code"
+msgstr "Destination code"
+
+msgctxt "Languages::travel_core.seo_ph_country_code"
+msgid "Country code"
+msgstr "Country code"
+
+msgctxt "Languages::travel_core.seo_ph_address"
+msgid "Street address"
+msgstr "Street address"
+
+msgctxt "Languages::travel_core.seo_ph_latitude"
+msgid "Latitude"
+msgstr "Latitude"
+
+msgctxt "Languages::travel_core.seo_ph_longitude"
+msgid "Longitude"
+msgstr "Longitude"
+
+msgctxt "Languages::travel_core.seo_ph_phone"
+msgid "Phone number"
+msgstr "Phone number"
+
+msgctxt "Languages::travel_core.seo_ph_email"
+msgid "Email address"
+msgstr "Email address"
+
+msgctxt "Languages::travel_core.seo_ph_website"
+msgid "Website"
+msgstr "Website"
+
+msgctxt "Languages::travel_core.seo_ph_min_price"
+msgid "Lowest price found"
+msgstr "Lowest price found"
+
+msgctxt "Languages::travel_core.seo_ph_currency"
+msgid "Price currency"
+msgstr "Price currency"
+
+msgctxt "Languages::travel_core.seo_ph_year"
+msgid "Current year"
+msgstr "Current year"
+
 msgctxt "Languages::travel_core.location_show_map"
 msgid "Location - show map"
 msgstr "Location - show map"

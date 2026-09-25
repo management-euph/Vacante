@@ -227,6 +227,7 @@ class ProductFactory implements ProductFactoryInterface
             'country' => TypeCoerce::toString($hotel['country'] ?? ''),
             'region' => TypeCoerce::toString($hotel['region'] ?? ''),
             'star_rating' => TypeCoerce::toString($hotel['star_rating'] ?? ''),
+            'stars_emoji' => fn_travel_core_build_star_emoji(TypeCoerce::toInt($hotel['star_rating'] ?? 0)),
             'hotel_type' => TypeCoerce::toString($hotel['hotel_type'] ?? ''),
             'property_type' => TypeCoerce::toString($hotel['property_type'] ?? 'hotel'),
             'year' => date('Y'),

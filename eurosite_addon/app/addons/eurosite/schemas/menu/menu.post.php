@@ -36,6 +36,12 @@ $schema['central']['eurosite'] = [
             'position' => 200,
             'title' => __('eurosite.destination_whitelist', ['[default]' => 'Destination whitelist']),
         ],
+        'eurosite_seo_templates' => [
+            'attrs' => ['class' => 'is-addon'],
+            'href' => 'eurosite.seo_templates',
+            'position' => 250,
+            'title' => __('eurosite.seo_templates', ['[default]' => 'SEO Templates']),
+        ],
         'eurosite_bookings' => [
             'attrs' => ['class' => 'is-addon'],
             'href' => 'travel_bookings.manage?provider=eurosite',

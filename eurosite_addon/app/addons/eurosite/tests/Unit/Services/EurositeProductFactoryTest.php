@@ -108,4 +108,39 @@ final class EurositeProductFactoryTest extends TestCase
         self::assertSame('RO0101', $bare['city'], 'no synced name: the code');
         self::assertSame('', $bare['classification']);
     }
+
+    public function testSeoPlaceholdersCoverEveryKeyTheSeoPageLists(): void
+    {
+        $p = F::placeholders(self::hotel([
+            'category' => 3, 'city_name' => 'Mamaia', 'country_name' => 'Romania',
+            'city_code' => 'ROMM', 'country_code' => 'RO',
+            'rooms_json' => '{"DB":"Double room","TW":"Twin room","AP":"Apartment","SG":"Single room"}',
+            'payload_json' => '{"latitude":"44.2560","longitude":"28.6240"}',
+            'min_price' => '461.40', 'price_currency' => 'EUR',
+        ]));
+
+        self::assertSame(['Double room', 'Twin room', 'Apartment', 'Single room'], $p['rooms']);
+        self::assertSame('RO0363', $p['code']);
+        self::assertSame('ROMM', $p['city_code']);
+        self::assertSame('RO', $p['country_code']);
+        self::assertSame('44.2560', $p['latitude']);
+        self::assertSame('28.6240', $p['longitude']);
+        self::assertSame('461', $p['min_price']);
+        self::assertSame('EUR', $p['currency']);
+
+        // No price yet: neither the price nor a lone currency.
+        $none = F::placeholders(self::hotel());
+        self::assertSame('', $none['min_price']);
+        self::assertSame('', $none['currency']);
+        self::assertSame('', $none['latitude']);
+
+        // Every placeholder the SEO Templates page offers is one this fills.
+        $src = (string) file_get_contents(dirname(__DIR__, 3) . '/func.php');
+        preg_match('/function fn_eurosite_seo_placeholders\(\): array\s*\{(.*?)\n}/s', $src, $m);
+        preg_match_all("/'([a-z_]+)'(?!\s*=>)/", $m[1] ?? '', $keys);
+        self::assertNotEmpty($keys[1]);
+        foreach ($keys[1] as $key) {
+            self::assertArrayHasKey($key, $p, $key);
+        }
+    }
 }

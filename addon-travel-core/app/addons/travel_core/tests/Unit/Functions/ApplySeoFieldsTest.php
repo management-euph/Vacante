@@ -171,5 +171,22 @@ namespace Tygh\Addons\TravelCore\Tests\Unit\Functions {
             // Other defaulted fields remain present.
             $this->assertSame('Book Edart Hotel in Durres, Albania.', $result['meta_description'] ?? null);
         }
+
+        public function testNoDescriptionAtHandLeavesTheProductsDescriptionAlone(): void
+        {
+            // Empty full-description template + no description placeholder (a
+            // bulk apply that doesn't fetch it): writing '' would wipe the
+            // product's description, so the field is left out.
+            $result = fn_travel_core_apply_seo_fields('unitseo', $this->placeholders, 0, null);
+            $this->assertArrayNotHasKey('full_description', $result);
+
+            $result = fn_travel_core_apply_seo_fields(
+                'unitseo',
+                $this->placeholders + ['description' => 'Seafront hotel.'],
+                0,
+                null,
+            );
+            $this->assertSame('Seafront hotel.', $result['full_description'] ?? null);
+        }
     }
 }
