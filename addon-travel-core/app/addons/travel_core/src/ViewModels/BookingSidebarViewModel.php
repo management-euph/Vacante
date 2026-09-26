@@ -27,6 +27,16 @@ namespace Tygh\Addons\TravelCore\ViewModels;
  */
 final class BookingSidebarViewModel
 {
+    /** Confirmed as soon as it is booked (sphinx immediate, eurosite IM). */
+    public const STATUS_INSTANT = 'instant';
+    /** Bookable, the API gives no confirmation promise (novoton quota > 0). */
+    public const STATUS_AVAILABLE = 'available';
+    /** The supplier confirms later (sphinx on_request, novoton RQ, eurosite OR). */
+    public const STATUS_ON_REQUEST = 'on_request';
+    /** Not bookable (eurosite ST). */
+    public const STATUS_STOP_SALE = 'stop_sale';
+    public const STATUSES = [self::STATUS_INSTANT, self::STATUS_AVAILABLE, self::STATUS_ON_REQUEST, self::STATUS_STOP_SALE];
+
     /**
      * @param array<string, mixed> $imagePair CS-Cart image pair (main_pair) —
      *                                        rendered through common/image.tpl so the store's
@@ -42,6 +52,17 @@ final class BookingSidebarViewModel
      * @param string $cancelFreeUntil Already-formatted date up to which
      *                                cancelling is free — rendered in green, the same
      *                                treatment the search-results card gives it.
+     * @param string $availabilityStatus one of self::STATUSES, from what the
+     *                                   provider API states ('' = derive from $available)
+     * @param string $availabilityNote short API-backed note under the badge
+     *                                 (novoton "Only 2 left")
+     * @param string $discountLabel the provider's own offer text ("Early Booking 10%")
+     * @param string $perNight formatted total / nights
+     * @param list<array<string, mixed>> $cancelSteps TermsTimelineFactory::cancellation() steps
+     * @param list<array<string, mixed>> $paymentSteps TermsTimelineFactory::payment() rows
+     * @param int $featuresMax chips shown before "+N more" (admin setting)
+     * @param bool $showWeekday false when the store date format already
+     *                          prints the weekday
      */
     public function __construct(
         public readonly array $imagePair = [],
@@ -72,7 +93,28 @@ final class BookingSidebarViewModel
         public readonly string $cancelFreeUntil = '',
         public readonly array $paymentLines = [],
         public readonly string $roomLabel = '',
+        public readonly string $availabilityStatus = '',
+        public readonly string $availabilityNote = '',
+        public readonly string $discountLabel = '',
+        public readonly string $perNight = '',
+        public readonly array $cancelSteps = [],
+        public readonly array $paymentSteps = [],
+        public readonly int $featuresMax = 6,
+        public readonly bool $showWeekday = true,
     ) {
+    }
+
+    /**
+     * The badge status, whatever the provider supplied: an explicit status
+     * wins; otherwise the legacy bool maps to available / on_request.
+     */
+    public function status(): string
+    {
+        if (in_array($this->availabilityStatus, self::STATUSES, true)) {
+            return $this->availabilityStatus;
+        }
+
+        return $this->available ? self::STATUS_AVAILABLE : self::STATUS_ON_REQUEST;
     }
 
     /**
@@ -110,7 +152,17 @@ final class BookingSidebarViewModel
             'cancel_full_amount' => $this->cancelFullAmount,
             'cancel_free_until' => $this->cancelFreeUntil,
             'payment_lines' => $this->paymentLines,
+            'payment_lines_html' => array_map([BookingSidebarFactory::class, 'emphasizePercentages'], $this->paymentLines),
             'room_label' => $this->roomLabel,
+            'status' => $this->status(),
+            'availability_note' => $this->availabilityNote,
+            'discount_label' => $this->discountLabel,
+            'per_night' => $this->perNight,
+            'cancel_steps' => $this->cancelSteps,
+            'payment_steps' => $this->paymentSteps,
+            'features_max' => max(1, $this->featuresMax),
+            'features_extra' => max(0, count($this->features) - max(1, $this->featuresMax)),
+            'show_weekday' => $this->showWeekday,
         ];
     }
 }

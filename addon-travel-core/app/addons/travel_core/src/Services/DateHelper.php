@@ -218,6 +218,16 @@ class DateHelper
         return self::formatWith($date, '%A');
     }
 
+    /**
+     * Whether a CS-Cart date format already prints the weekday (%a / %A).
+     * The booking sidebar shows the weekday on its own line under each
+     * date; with a format like "%a, %d %b %Y" that line would repeat it.
+     */
+    public static function formatHasWeekday(string $csFormat): bool
+    {
+        return preg_match('/%[aAu]/', $csFormat) === 1;
+    }
+
     /** Format with an explicit CS-Cart strftime-style pattern. */
     public static function formatWith(string|int|null $date, string $csFormat): string
     {

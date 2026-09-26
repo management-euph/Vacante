@@ -734,6 +734,14 @@ msgctxt "SettingsVariants::travel_core::booking_form_position::after_description
 msgid "After Description"
 msgstr "După Descriere"
 
+msgctxt "SettingsOptions::travel_core::booking_sidebar_max_features"
+msgid "Facilities shown on the booking page"
+msgstr "Facilități afișate pe pagina de rezervare"
+
+msgctxt "SettingsTooltips::travel_core::booking_sidebar_max_features"
+msgid "How many facility chips the booking page sidebar shows before \"+N more\" (all providers)"
+msgstr "Câte facilități afișează coloana paginii de rezervare înainte de „+N în plus” (toți furnizorii)"
+
 msgctxt "SettingsOptions::travel_core::checkout_guard_header"
 msgid "Checkout price guard (all providers)"
 msgstr "Verificare preț la checkout (toți furnizorii)"

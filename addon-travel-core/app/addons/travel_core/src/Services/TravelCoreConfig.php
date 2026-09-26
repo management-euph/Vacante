@@ -89,6 +89,23 @@ final class TravelCoreConfig
         return Registry::get('addons.travel_core.show_booking_form') !== 'N';
     }
 
+    /** Settings -> Travel Core -> "Round prices": whole currency units only. */
+    public static function isRoundPrices(): bool
+    {
+        return Registry::get('addons.travel_core.round_prices') === 'Y';
+    }
+
+    /**
+     * How many facility chips the booking sidebar shows before "+N more".
+     * Falls back to 6 (the old hard cap) when unset or not a positive number.
+     */
+    public static function getBookingSidebarMaxFeatures(): int
+    {
+        $value = Registry::get('addons.travel_core.booking_sidebar_max_features');
+
+        return is_numeric($value) && (int) $value > 0 ? (int) $value : 6;
+    }
+
     // ── Reverse geocoding (OSM Nominatim) ──
     //
     // One switch, one contact, one endpoint for every provider addon: the

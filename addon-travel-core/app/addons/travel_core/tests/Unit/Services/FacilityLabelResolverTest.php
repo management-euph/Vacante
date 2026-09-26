@@ -115,4 +115,29 @@ final class FacilityLabelResolverTest extends TestCase
         self::assertSame('display_name_en', FacilityLabelResolver::column('en-US'));
         self::assertSame('display_name_en', FacilityLabelResolver::column('de'));
     }
+
+    /**
+     * "✓ 27" on the booking sidebar: an unmapped novoton facility got an
+     * auto-created mapping row named after its code, which beat the real
+     * provider name. A code-only label now yields to the provider's name.
+     */
+    public function testCodeOnlyMappingNameYieldsToTheProviderName(): void
+    {
+        DbStub::$getRow = static function (string $sql, ...$params): array {
+            foreach ($params as $param) {
+                if ((string) $param === '27') {
+                    return ['map_id' => 9, 'display_name_en' => '27', 'display_name_ro' => '27'];
+                }
+            }
+
+            return [];
+        };
+
+        self::assertSame(
+            ['Outdoor pool'],
+            FacilityLabelResolver::labels('novoton', [['id' => 27, 'name' => 'Outdoor pool']], 'ro'),
+        );
+        // No real name anywhere: a bare number names nothing, so no chip.
+        self::assertSame([], FacilityLabelResolver::labels('novoton', [['id' => 27, 'name' => '']], 'en'));
+    }
 }

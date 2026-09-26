@@ -52,16 +52,25 @@ final class FacilityLabelResolver
                 $mapping = FeatureMapper::resolveFacility($apiSource, $id);
                 if (is_array($mapping)) {
                     $label = trim(TypeCoerce::toString($mapping[$column] ?? ''));
-                    if ($label === '') {
+                    if ($label === '' || self::isCodeOnly($label, $id)) {
                         // A mapping row exists but this language is blank —
                         // English is a better chip than nothing.
                         $label = trim(TypeCoerce::toString($mapping['display_name_en'] ?? ''));
+                    }
+                    if (self::isCodeOnly($label, $id)) {
+                        // Auto-registered unmapped facility: FeatureMapper
+                        // named it after its numeric code ("27"). The
+                        // provider's own name below is the real one.
+                        $label = '';
                     }
                 }
             }
 
             if ($label === '') {
                 $label = trim(TypeCoerce::toString($facility['name'] ?? ''));
+                if (self::isCodeOnly($label, $id)) {
+                    $label = '';
+                }
             }
 
             if ($label !== '' && !in_array($label, $labels, true)) {
@@ -73,6 +82,15 @@ final class FacilityLabelResolver
         }
 
         return $labels;
+    }
+
+    /**
+     * A label that is only the facility's code (or any bare number) names
+     * nothing for a guest — "✓ 27" was one on the booking sidebar.
+     */
+    private static function isCodeOnly(string $label, string $id): bool
+    {
+        return $label !== '' && ($label === $id || ctype_digit($label));
     }
 
     /** Romanian is the only translated column today; everything else is EN. */
