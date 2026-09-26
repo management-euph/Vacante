@@ -1277,3 +1277,7 @@ msgstr "Close"
 msgctxt "Languages::travel_core.free_cancellation_until"
 msgid "Free cancellation until"
 msgstr "Free cancellation until"
+
+msgctxt "Languages::travel_core.gender"
+msgid "Gender"
+msgstr "Gender"

@@ -43,6 +43,12 @@
  *                          ("3. Adult") offset by guests in earlier rooms.
  *   gb_adult_sublabel      (string, default '') note under each adult label
  *                          (novoton: bed type).
+ *   gb_gender_options      (map, default []) value => label; when set, each
+ *                          adult gets a guests[...][gender] select (eurosite:
+ *                          TGender B/F). Empty — no field, markup unchanged.
+ *   gb_child_gender        (string, default '') when set, a hidden
+ *                          guests[...][gender] with this value per child
+ *                          (eurosite: C).
  *
  * @package TravelCore
  *}
@@ -58,6 +64,8 @@
 {$_dob_onblur = $gb_child_dob_onblur|default:''}
 {$_seq_off = $gb_seq_offset|default:-1}
 {$_adult_sublabel = $gb_adult_sublabel|default:''}
+{$_gender_options = $gb_gender_options|default:[]}
+{$_child_gender = $gb_child_gender|default:''}
 {* Field-name prefix: '' in roomless (participant) mode, room{N}_ otherwise *}
 {if $_roomless}{$_npfx = ''}{else}{$_npfx = "room`$_room_num`_"}{/if}
 
@@ -98,6 +106,16 @@
                        value="{$_prefill.$_pf_key.first_name|default:''|escape:html}"
                        class="ty-input-text" required aria-required="true" placeholder="{__("`$_gp`.first_name")|default:"First Name"}">
             </div>
+            {if $_gender_options}
+            <div class="travel-guest-field travel-guest-field--gender">
+                <label for="guest_r{$_room_num}_a{$_i}_gender">{__("`$_gp`.gender")|default:"Gender"}</label>
+                <select id="guest_r{$_room_num}_a{$_i}_gender" name="guests[{$_npfx}adult_{$_i}][gender]">
+                    {foreach $_gender_options as $_g_val => $_g_label}
+                        <option value="{$_g_val|escape:html}"{if $_prefill.$_pf_key.gender|default:'' == $_g_val} selected{/if}>{$_g_label|escape:html}</option>
+                    {/foreach}
+                </select>
+            </div>
+            {/if}
             {if $_show_adult_dob}
             <div class="travel-guest-field travel-guest-field--dob">
                 <label for="guest_r{$_room_num}_a{$_i}_dob">{__("`$_gp`.date_of_birth")|default:"Date of Birth"} <span class="travel-muted-note">(ex: 27/05/1990)</span></label>
@@ -145,6 +163,9 @@
                            class="ty-input-text" required aria-required="true" placeholder="{__("`$_gp`.last_name")|default:"Last Name"}">
                     <input type="hidden" name="guests[{$_npfx}child_{$_i}][type]" id="child_type_r{$_room_num}_c{$_i}" value="child">
                     <input type="hidden" name="guests[{$_npfx}child_{$_i}][age]" id="child_age_r{$_room_num}_c{$_i}" value="{$child_age}">
+                    {if $_child_gender != ''}
+                    <input type="hidden" name="guests[{$_npfx}child_{$_i}][gender]" value="{$_child_gender|escape:html}">
+                    {/if}
                     {if !$_roomless}
                     <input type="hidden" name="guests[{$_npfx}child_{$_i}][room]" value="{$_room_num}">
                     {/if}

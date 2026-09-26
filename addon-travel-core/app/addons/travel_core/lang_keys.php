@@ -487,4 +487,8 @@ return [
         'en' => 'Free cancellation until',
         'ro' => 'Anulare gratuită până la',
     ],
+    'travel_core.gender' => [
+        'en' => 'Gender',
+        'ro' => 'Gen',
+    ],
 ];

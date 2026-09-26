@@ -20,6 +20,7 @@ use Tygh\Addons\Eurosite\Services\Container;
 use Tygh\Addons\Eurosite\Services\OfferContextStore;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Services\DateHelper;
 use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Tygh;
 
@@ -62,8 +63,10 @@ foreach ($rawGuests as $key => $guest) {
     $first = trim(TypeCoerce::toString($guest['first_name'] ?? ''));
     $last = trim(TypeCoerce::toString($guest['last_name'] ?? ''));
     $type = TypeCoerce::toString($guest['type'] ?? 'adult') === 'child' ? 'child' : 'adult';
-    $dob = trim(TypeCoerce::toString($guest['dob'] ?? ''));
-    if ($first === '' || $last === '' || ($type === 'child' && $dob === '')) {
+    // The shared guest cards mask DOB as DD/MM/YYYY; the API wants Y-m-d.
+    $rawDob = trim(TypeCoerce::toString($guest['dob'] ?? ''));
+    $dob = $rawDob !== '' ? (DateHelper::parseDate($rawDob) ?? '') : '';
+    if ($first === '' || $last === '' || ($rawDob !== '' && $dob === '') || ($type === 'child' && $dob === '')) {
         $invalid = true;
         break;
     }
@@ -95,14 +98,50 @@ if ($invalid || count($guests) !== $expectedGuests) {
     return [CONTROLLER_STATUS_REDIRECT, 'eurosite_booking.booking_form?offer_key=' . $offerKey];
 }
 
-$guestEmail = trim(RequestCoerce::string($_REQUEST, 'guest_email'));
-$guestPhone = trim(RequestCoerce::string($_REQUEST, 'guest_phone'));
-if (filter_var($guestEmail, FILTER_VALIDATE_EMAIL) === false || $guestPhone === '') {
-    fn_set_notification('E', __('error'), __('eurosite.contact_invalid', [
-        '[default]' => 'Please provide a valid e-mail address and phone number.',
+// Price guard (as sphinx): the offer is priced for the searched child ages,
+// so a DOB implying another age at check-in re-runs the search with the
+// corrected ages instead of booking a wrong-price stay.
+// Calendar dates compared in one timezone, so a birthday on the check-in
+// day counts (no DST hour between two local midnights).
+$checkInDate = DateHelper::parseDate(TypeCoerce::toString($snapshot['check_in']));
+$ageMismatch = null;
+$correctedAges = [];
+foreach ($guests as $g) {
+    if ($g['type'] !== 'child') {
+        continue;
+    }
+    $atCheckIn = $checkInDate !== null
+        ? (new \DateTimeImmutable($g['dob']))->diff(new \DateTimeImmutable($checkInDate))->y
+        : TypeCoerce::toInt($g['age'] ?? 0);
+    $correctedAges[] = $atCheckIn;
+    if ($ageMismatch === null && $atCheckIn !== TypeCoerce::toInt($g['age'] ?? 0)) {
+        $ageMismatch = ['name' => $g['name'], 'declared' => TypeCoerce::toInt($g['age'] ?? 0), 'actual' => $atCheckIn];
+    }
+}
+if ($ageMismatch !== null) {
+    fn_set_notification('E', __('error'), __('travel_core.child_age_mismatch', [
+        '[guest]' => $ageMismatch['name'],
+        '[declared]' => $ageMismatch['declared'],
+        '[actual]' => $ageMismatch['actual'],
+        '[default]' => 'The child [guest] will be [actual] years old at check-in, but the offer was priced for age [declared]. The search was re-run with the correct ages — please choose an offer again.',
     ]));
 
-    return [CONTROLLER_STATUS_REDIRECT, 'eurosite_booking.booking_form?offer_key=' . $offerKey];
+    return [CONTROLLER_STATUS_REDIRECT, 'eurosite_booking.search?' . http_build_query([
+        'country'       => TypeCoerce::toString($snapshot['country_code']),
+        'city'          => TypeCoerce::toString($snapshot['city_code']),
+        'check_in'      => TypeCoerce::toString($snapshot['check_in']),
+        'check_out'     => TypeCoerce::toString($snapshot['check_out']),
+        'adults'        => TypeCoerce::toInt($snapshot['adults'] ?? 2),
+        'children_ages' => implode(',', $correctedAges),
+    ])];
+}
+
+// Contact comes from CS-Cart checkout (as for sphinx/novoton): the booking
+// form no longer asks for it; place_order_post backfills it from the order.
+$guestEmail = trim(RequestCoerce::string($_REQUEST, 'guest_email'));
+$guestPhone = trim(RequestCoerce::string($_REQUEST, 'guest_phone'));
+if (filter_var($guestEmail, FILTER_VALIDATE_EMAIL) === false) {
+    $guestEmail = '';
 }
 
 // ── Carrier product ──

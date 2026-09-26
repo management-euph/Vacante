@@ -1063,3 +1063,19 @@ msgstr "Eurosite — SEO Templates"
 msgctxt "Languages::eurosite.seo_placeholders_title"
 msgid "Eurosite placeholders"
 msgstr "Eurosite placeholders"
+
+msgctxt "Languages::eurosite.complete_booking"
+msgid "Complete Your Booking"
+msgstr "Complete Your Booking"
+
+msgctxt "Languages::eurosite.cancel_fee_line"
+msgid "Between [from] - [to]: [value] penalty"
+msgstr "Between [from] - [to]: [value] penalty"
+
+msgctxt "Languages::eurosite.back_to_results"
+msgid "Back to Results"
+msgstr "Back to Results"
+
+msgctxt "Languages::eurosite.add_to_cart"
+msgid "Add to Cart"
+msgstr "Add to Cart"

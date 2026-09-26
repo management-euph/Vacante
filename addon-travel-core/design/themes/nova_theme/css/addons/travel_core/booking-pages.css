@@ -633,6 +633,10 @@
 .travel-booking-page .travel-guest-field--dob {
     flex: 0 0 150px;
 }
+.travel-booking-page .travel-guest-field--gender {
+    flex: 0 0 110px;
+    min-width: 110px;
+}
 
 /* ── Form controls (inputs, selects, textareas) ───────────────────────── */
 /* The booking forms previously fell back to bare CS-Cart .ty-input-text with
