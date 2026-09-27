@@ -4415,3 +4415,55 @@ msgstr "Backfill descriptions"
 msgctxt "Languages::novoton_holidays.dash_job_backfill_descriptions_desc"
 msgid "Fills in the description of products created without one"
 msgstr "Fills in the description of products created without one"
+
+msgctxt "Languages::novoton_holidays.mr_room"
+msgid "Room [num]"
+msgstr "Room [num]"
+
+msgctxt "Languages::novoton_holidays.mr_prices_note"
+msgid "Prices are for the whole stay, per room."
+msgstr "Prices are for the whole stay, per room."
+
+msgctxt "Languages::novoton_holidays.mr_not_chosen"
+msgid "Not chosen yet"
+msgstr "Not chosen yet"
+
+msgctxt "Languages::novoton_holidays.mr_progress"
+msgid "[chosen] of [total] rooms chosen"
+msgstr "[chosen] of [total] rooms chosen"
+
+msgctxt "Languages::novoton_holidays.mr_rooms_left"
+msgid "Rooms left to choose: [count]"
+msgstr "Rooms left to choose: [count]"
+
+msgctxt "Languages::novoton_holidays.mr_book_all"
+msgid "Book all rooms ([count])"
+msgstr "Book all rooms ([count])"
+
+msgctxt "Languages::novoton_holidays.mr_same_guests"
+msgid "Apply to the other rooms with the same guests ([count])"
+msgstr "Apply to the other rooms with the same guests ([count])"
+
+msgctxt "Languages::novoton_holidays.mr_next_room"
+msgid "Next room"
+msgstr "Next room"
+
+msgctxt "Languages::novoton_holidays.mr_your_selection"
+msgid "Your selection"
+msgstr "Your selection"
+
+msgctxt "Languages::novoton_holidays.mr_savings"
+msgid "You save [amount]"
+msgstr "You save [amount]"
+
+msgctxt "Languages::novoton_holidays.mr_guest_details_next"
+msgid "You will add the guest details on the next step."
+msgstr "You will add the guest details on the next step."
+
+msgctxt "Languages::novoton_holidays.mr_room_unnamed"
+msgid "Room"
+msgstr "Room"
+
+msgctxt "Languages::novoton_holidays.mr_whole_stay"
+msgid "whole stay"
+msgstr "whole stay"

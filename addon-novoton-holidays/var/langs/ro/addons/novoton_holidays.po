@@ -4415,3 +4415,55 @@ msgstr "Completare descrieri"
 msgctxt "Languages::novoton_holidays.dash_job_backfill_descriptions_desc"
 msgid "Fills in the description of products created without one"
 msgstr "Completează descrierea produselor create fără ea"
+
+msgctxt "Languages::novoton_holidays.mr_room"
+msgid "Room [num]"
+msgstr "Camera [num]"
+
+msgctxt "Languages::novoton_holidays.mr_prices_note"
+msgid "Prices are for the whole stay, per room."
+msgstr "Prețurile sunt pentru întregul sejur, per cameră."
+
+msgctxt "Languages::novoton_holidays.mr_not_chosen"
+msgid "Not chosen yet"
+msgstr "Încă nealeasă"
+
+msgctxt "Languages::novoton_holidays.mr_progress"
+msgid "[chosen] of [total] rooms chosen"
+msgstr "Camere alese: [chosen] din [total]"
+
+msgctxt "Languages::novoton_holidays.mr_rooms_left"
+msgid "Rooms left to choose: [count]"
+msgstr "Camere rămase de ales: [count]"
+
+msgctxt "Languages::novoton_holidays.mr_book_all"
+msgid "Book all rooms ([count])"
+msgstr "Rezervă toate camerele ([count])"
+
+msgctxt "Languages::novoton_holidays.mr_same_guests"
+msgid "Apply to the other rooms with the same guests ([count])"
+msgstr "Aplică la celelalte camere cu aceiași oaspeți ([count])"
+
+msgctxt "Languages::novoton_holidays.mr_next_room"
+msgid "Next room"
+msgstr "Camera următoare"
+
+msgctxt "Languages::novoton_holidays.mr_your_selection"
+msgid "Your selection"
+msgstr "Selecția ta"
+
+msgctxt "Languages::novoton_holidays.mr_savings"
+msgid "You save [amount]"
+msgstr "Economisești [amount]"
+
+msgctxt "Languages::novoton_holidays.mr_guest_details_next"
+msgid "You will add the guest details on the next step."
+msgstr "Datele oaspeților le completezi la pasul următor."
+
+msgctxt "Languages::novoton_holidays.mr_room_unnamed"
+msgid "Room"
+msgstr "Cameră"
+
+msgctxt "Languages::novoton_holidays.mr_whole_stay"
+msgid "whole stay"
+msgstr "tot sejurul"

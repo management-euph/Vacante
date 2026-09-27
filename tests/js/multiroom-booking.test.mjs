@@ -130,3 +130,147 @@ describe('booking submission', () => {
         expect(submitSpy).not.toHaveBeenCalled();
     });
 });
+
+/**
+ * The redesigned block (novoton search.tpl): room headers, summary list,
+ * progress, labels, and — from 4 rooms — one room open at a time.
+ */
+function renderRooms({ rooms, stepper = false, quota = '' }) {
+    const sections = rooms.map((occ, i) => {
+        const n = i + 1;
+        const open = !stepper || n === 1;
+        return `
+            <section class="room-type-selection novoton-mr-room${open ? ' is-open' : ''}" data-room="${n}" data-occupancy="${occ}">
+                <h4><button type="button" class="novoton-mr-room__toggle" aria-expanded="${open}"></button></h4>
+                <span id="room-${n}-choice"></span><span id="room-${n}-price">Not chosen yet</span>
+                <div class="novoton-mr-options"${open ? '' : ' hidden'}>
+                    <label class="room-option"><input type="radio" name="room_${n}_selection"
+                        data-room-num="${n}" data-room-id="DBL" data-board-id="HB" data-price="100"
+                        data-was-price="120" data-quota="${quota}" data-room-display="Double" data-board-name="Half board"></label>
+                    <label class="room-option"><input type="radio" name="room_${n}_selection"
+                        data-room-num="${n}" data-room-id="APT" data-board-id="HB" data-price="150"
+                        data-was-price="" data-quota="" data-room-display="Apartment" data-board-name="Half board"></label>
+                    <div class="novoton-mr-next" hidden>
+                        <button type="button" class="novoton-mr-next__same" data-same-from="${n}" hidden></button>
+                        <button type="button" class="novoton-mr-next__go" data-next-from="${n}">Next room</button>
+                    </div>
+                </div>
+            </section>`;
+    }).join('');
+    const list = rooms.map((_, i) => `<button type="button" class="novoton-mr__list-item is-pending" data-goto-room="${i + 1}"><span id="mr-sum-${i + 1}">Not chosen yet</span></button>`).join('');
+    document.body.innerHTML = `
+        <div id="multi-room-selection" data-num-rooms="${rooms.length}" data-rooms-data="[]"
+             data-currency="EUR" data-coefficient="1" data-round-prices="false" data-stepper="${stepper}"
+             data-label-progress="[chosen] of [total] rooms chosen"
+             data-label-left="Rooms left to choose: [count]"
+             data-label-book="Book all rooms ([count])"
+             data-label-same="Apply to the other rooms with the same guests ([count])"
+             data-label-savings="You save [amount]">
+            ${sections}
+            <span id="mr-progress-text"></span><span id="mr-progress-bar"></span>
+            ${list}
+            <div id="total-combined-price">-- EUR</div>
+            <div id="mr-savings" hidden></div>
+            <button id="book-multi-room-btn" disabled>Rooms left to choose: ${rooms.length}</button>
+        </div>
+        <form id="multi-room-booking-form">
+            <input type="hidden" id="hidden_rooms_data" value="">
+            <input type="hidden" id="hidden_total_price" value="">
+        </form>`;
+}
+
+function pick(room, index = 0) {
+    const radio = document.querySelectorAll(`input[name="room_${room}_selection"]`)[index];
+    radio.checked = true;
+    radio.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+function click(selector) {
+    document.querySelector(selector).dispatchEvent(new MouseEvent('click', { bubbles: true }));
+}
+
+const isOpen = (n) => document.querySelector(`[data-room="${n}"]`).classList.contains('is-open');
+
+describe('selection summary and labels', () => {
+    it('counts progress, names the rooms left and only then offers to book', () => {
+        renderRooms({ rooms: ['2a0c', '3a0c', '2a1c-7'] });
+        const btn = document.getElementById('book-multi-room-btn');
+
+        pick(1);
+        expect(document.getElementById('mr-progress-text').textContent).toBe('1 of 3 rooms chosen');
+        expect(document.getElementById('mr-progress-bar').style.width).toBe('33%');
+        expect(btn.textContent).toBe('Rooms left to choose: 2');
+        expect(btn.disabled).toBe(true);
+        expect(document.getElementById('room-1-choice').textContent).toBe('Double');
+        expect(document.querySelector('[data-goto-room="1"]').classList.contains('is-pending')).toBe(false);
+        expect(document.querySelector('[data-room="1"] .room-option').classList.contains('is-selected')).toBe(true);
+
+        pick(2, 1);
+        pick(3);
+        expect(btn.disabled).toBe(false);
+        expect(btn.textContent).toBe('Book all rooms (3)');
+        // (120 - 100) × 2 rooms that show a "was" price
+        expect(document.getElementById('mr-savings').hidden).toBe(false);
+        expect(document.getElementById('mr-savings').textContent).toBe('You save 40 EUR');
+    });
+
+    it('never submits a partial booking, even when the button is forced on', () => {
+        renderRooms({ rooms: ['2a0c', '2a0c'] });
+        const submitSpy = vi.fn();
+        document.getElementById('multi-room-booking-form').submit = submitSpy;
+
+        pick(1, 1);
+        document.getElementById('book-multi-room-btn').disabled = false;
+        click('#book-multi-room-btn');
+
+        expect(submitSpy).not.toHaveBeenCalled();
+        expect(isOpen(2)).toBe(true);
+    });
+});
+
+describe('4+ rooms: one room open at a time', () => {
+    it('closes the chosen room and opens the next one still to choose', () => {
+        renderRooms({ rooms: ['2a0c', '3a0c', '1a0c', '2a1c-5'], stepper: true });
+
+        pick(1);
+        expect(isOpen(1)).toBe(false);
+        expect(isOpen(2)).toBe(true);
+        expect(document.querySelector('[data-room="2"] .novoton-mr-options').hidden).toBe(false);
+    });
+
+    it('reopens a room from its header or from the summary list', () => {
+        renderRooms({ rooms: ['2a0c', '3a0c', '1a0c', '2a1c-5'], stepper: true });
+        pick(1);
+
+        click('[data-goto-room="1"]');
+        expect(isOpen(1)).toBe(true);
+        expect(isOpen(2)).toBe(false);
+
+        click('[data-room="1"] .novoton-mr-room__toggle');
+        expect(isOpen(1)).toBe(false);
+    });
+
+    it('applies a choice to the other rooms with the same guests', () => {
+        renderRooms({ rooms: ['2a0c', '2a0c', '3a0c', '2a0c', '2a1c-5'], stepper: true });
+
+        pick(1);
+        const same = document.querySelector('[data-room="1"] .novoton-mr-next__same');
+        expect(same.hidden).toBe(false);
+        expect(same.textContent).toBe('Apply to the other rooms with the same guests (2)');
+        expect(isOpen(1)).toBe(true); // stays open while the offer is shown
+
+        click('[data-room="1"] .novoton-mr-next__same');
+        expect(document.getElementById('mr-progress-text').textContent).toBe('3 of 5 rooms chosen');
+        expect(document.querySelector('input[name="room_4_selection"]').checked).toBe(true);
+        expect(document.querySelector('input[name="room_3_selection"]').checked).toBe(false);
+        expect(isOpen(3)).toBe(true);
+    });
+
+    it('never applies a room type to more rooms than the hotel has left', () => {
+        renderRooms({ rooms: ['2a0c', '2a0c', '2a0c', '2a0c'], stepper: true, quota: '2' });
+
+        pick(1);
+        expect(document.querySelector('[data-room="1"] .novoton-mr-next__same').textContent)
+            .toBe('Apply to the other rooms with the same guests (1)');
+    });
+});

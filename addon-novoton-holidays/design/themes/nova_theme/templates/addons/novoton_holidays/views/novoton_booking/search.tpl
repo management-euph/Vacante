@@ -145,25 +145,33 @@
                 </div>
 
             {else}
-            {* All rooms have options - show selection grid *}
-            <div class="multi-room-selection novoton-mr-panel" id="multi-room-selection"
+            {* All rooms have options - show the room-by-room selection.
+               Up to 3 rooms: every room is open. 4+ rooms (the guest picker
+               allows 12): one room open at a time — choosing a room closes it
+               and opens the next one still to choose (data-stepper). Booking
+               stays blocked until EVERY room has a choice. *}
+            {$mr_currency = $novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY}
+            {$mr_stepper = $novoton_params.num_rooms > 3}
+            <div class="multi-room-selection novoton-mr" id="multi-room-selection"
                  data-num-rooms="{$novoton_params.num_rooms}"
                  data-rooms-data='{$novoton_params.rooms_data_json|default:"[]"|escape:"html"}'
                  data-currency="{$novoton_display_symbol|default:$smarty.const.CART_PRIMARY_CURRENCY|escape:"html"}"
                  data-coefficient="{$novoton_display_coefficient|default:1}"
-                 data-round-prices="{if $novoton_round_prices}true{else}false{/if}">
+                 data-round-prices="{if $novoton_round_prices}true{else}false{/if}"
+                 data-stepper="{if $mr_stepper}true{else}false{/if}"
+                 data-label-progress="{__("novoton_holidays.mr_progress")|escape:"html"}"
+                 data-label-left="{__("novoton_holidays.mr_rooms_left")|escape:"html"}"
+                 data-label-book="{__("novoton_holidays.mr_book_all")|escape:"html"}"
+                 data-label-same="{__("novoton_holidays.mr_same_guests")|escape:"html"}"
+                 data-label-savings="{__("novoton_holidays.mr_savings")|escape:"html"}"
+                 data-label-not-chosen="{__("novoton_holidays.mr_not_chosen")|escape:"html"}">
 
-                <div class="novoton-mr-header">
-                    <h3>
-                         {__("novoton_holidays.select_room_types")}
-                    </h3>
-                    <p>
-                        {__("novoton_holidays.select_room_type_for_each")}
-                    </p>
-                </div>
-
-                {* HORIZONTAL ROOM SELECTION GRID *}
-                <div class="novoton-mr-grid">
+                <div class="novoton-mr__layout">
+                <div class="novoton-mr__rooms">
+                    <div class="novoton-mr-header">
+                        <h3>{__("novoton_holidays.select_room_types")}</h3>
+                        <p>{__("novoton_holidays.select_room_type_for_each")} {__("novoton_holidays.mr_prices_note")}</p>
+                    </div>
 
                 {foreach from=$novoton_params.rooms_data item=room key=room_idx}
                     {$room_num = $room_idx + 1}
@@ -173,25 +181,41 @@
                     {else}
                         {$room_specific_results = []}
                     {/if}
+                    {$room_open = !$mr_stepper || $room_num == 1}
+                    {capture name="mr_party"}{$room.adults} {if $room.adults == 1}{__("novoton_holidays.adult")}{else}{__("novoton_holidays.adults")}{/if}{if $room.children > 0} + {$room.children} {if $room.children == 1}{__("novoton_holidays.child")}{else}{__("novoton_holidays.children")}{/if}{/if}{/capture}
 
-                    <div class="room-type-selection" data-room="{$room_num}">
-                        <div class="novoton-mr-room-head">
-                            <div>
-                                <strong>#{$room_num}</strong>
-                                <span class="novoton-mr-room-occupancy">
-                                    {$room.adults} {if $room.adults == 1}{__("novoton_holidays.adult")}{else}{__("novoton_holidays.adults")}{/if}{if $room.children > 0} + {$room.children} {if $room.children == 1}{__("novoton_holidays.child")}{else}{__("novoton_holidays.children")}{/if}{/if}
+                    <section class="room-type-selection novoton-mr-room{if $room_open} is-open{/if}"
+                             data-room="{$room_num}"
+                             data-occupancy="{$room.adults}a{$room.children|default:0}c{if $room.childrenAges}{foreach from=$room.childrenAges item=mr_age}-{$mr_age}{/foreach}{/if}">
+                        <h4 class="novoton-mr-room__heading">
+                            <button type="button" class="novoton-mr-room__toggle"
+                                    aria-expanded="{if $room_open}true{else}false{/if}"
+                                    aria-controls="mr-room-{$room_num}-options">
+                                <span class="novoton-mr-room__num" aria-hidden="true">{$room_num}</span>
+                                <span class="novoton-mr-room__title">
+                                    <span class="novoton-mr-room__label">{__("novoton_holidays.mr_room", ["[num]" => $room_num])}</span>
+                                    <span class="novoton-mr-room-occupancy">{$smarty.capture.mr_party}</span>
                                 </span>
-                            </div>
-                            <div id="room-{$room_num}-price" class="novoton-mr-room-price">-- {$novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY}</div>
-                        </div>
+                                <span class="novoton-mr-room__status">
+                                    <span class="novoton-mr-room__choice" id="room-{$room_num}-choice"></span>
+                                    <span id="room-{$room_num}-price" class="novoton-mr-room-price">{__("novoton_holidays.mr_not_chosen")}</span>
+                                </span>
+                                <svg class="novoton-mr-room__chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                            </button>
+                        </h4>
 
-                        <div class="novoton-mr-options">
+                        <div class="novoton-mr-options" id="mr-room-{$room_num}-options" role="radiogroup"
+                             aria-label="{__("novoton_holidays.mr_room", ["[num]" => $room_num])}"{if !$room_open} hidden{/if}>
                             {if $room_specific_results && $room_specific_results|count > 0}
                                 {foreach from=$room_specific_results item=result}
                                     {if $result.room_type_display}
                                         {$room_display = $result.room_type_display}
                                     {else}
                                         {$room_display = $result.room_name|default:$result.room_id}
+                                    {/if}
+                                    {* Novoton sends "* No name *" for some room types *}
+                                    {if $room_display|trim == '* No name *' || $room_display|trim == ''}
+                                        {$room_display = {__("novoton_holidays.mr_room_unnamed")}}
                                     {/if}
 
                                     {* Normalize the provider code (trim/upper/strip spaces) so
@@ -215,6 +239,16 @@
                                         {$board_display = $result.board_name|default:$result.board_id}
                                     {/if}
 
+                                    {* The struck-through "was" price shown on the option (sent as
+                                       data-was-price so the summary can add up the savings) *}
+                                    {$mr_was_price = ''}
+                                    {if $result.extras_price}
+                                        {$mr_was_price = $result.total_price}
+                                    {elseif $result.early_booking_discount > 0}
+                                        {math equation="price / (1 - discount / 100)" price=$result.total_price discount=$result.early_booking_discount assign="mr_was_price"}
+                                    {/if}
+                                    {$mr_is_on_request = $result.is_on_request || $result.rooms_available === 0 || $result.rooms_available === '0'}
+
                                     <label class="room-option">
                                         <input type="radio"
                                                name="room_{$room_num}_selection"
@@ -224,107 +258,126 @@
                                                data-board-id="{$result.board_id}"
                                                data-price="{$result.extras_price|default:$result.total_price}"
                                                data-standard-price="{$result.total_price}"
+                                               data-was-price="{$mr_was_price}"
+                                               data-quota="{if $mr_is_on_request}{else}{$result.rooms_available}{/if}"
                                                data-early-booking="{$result.early_booking_discount|default:0}"
                                                data-extras="{$result.extras_label|default:''|escape:'html'}"
                                                data-room-display="{$room_display}"
                                                data-board-name="{$board_display}"
                                                data-package-name="{$result.package_name|escape:'htmlall'}" />
 
-                                        <div class="novoton-mr-option-body">
-                                            <div class="novoton-mr-option-main">
-                                                <div class="novoton-mr-option-name">{$room_display}</div>
-                                                <div class="novoton-mr-option-board">
-                                                     {$board_display}
+                                        <span class="novoton-mr-option-body">
+                                            <span class="novoton-mr-option-main">
+                                                <span class="novoton-mr-option-name">{$room_display}</span>
+                                                <span class="novoton-mr-option-board">
+                                                    {$board_display}
                                                     {if $result.package_name}
-                                                        <span class="novoton-mr-package">- {$result.package_name}</span>
+                                                        <span class="novoton-mr-package">{$result.package_name}</span>
                                                     {/if}
-                                                </div>
+                                                </span>
                                                 {* Room availability - Quota display *}
-                                                {if $result.is_on_request || $result.rooms_available === 0 || $result.rooms_available === '0'}
-                                                    <div class="novoton-mr-quota--onrequest">
+                                                {if $mr_is_on_request}
+                                                    <span class="novoton-mr-quota--onrequest">
                                                         <strong>{__("novoton_holidays.reservation_on_request")}</strong> <span>- {__("novoton_holidays.confirmation_48h")|default:"confirmation within max 48 hours"}</span>
-                                                    </div>
+                                                    </span>
                                                     {if $result.nearby_availability && $result.nearby_availability|count > 0}
-                                                        <div class="novoton-nearby">
+                                                        <span class="novoton-nearby">
                                                             <strong>{__("novoton_holidays.nearby_dates_available")|default:"Available on nearby dates"}:</strong>
                                                             {foreach from=$result.nearby_availability item=nearby name=nearby_loop}
                                                                 <a href="{fn_url("novoton_booking.search?hotel_id=`$novoton_params.hotel_id`&check_in=`$nearby.check_in`&check_out=`$nearby.check_out`&adults=`$novoton_params.adults`&children=`$novoton_params.children_count`&rooms=`$novoton_params.num_rooms`")}">
                                                                     {$nearby.check_in|date_format:"%b %d"} - {$nearby.check_out|date_format:"%b %d"} ({$nearby.quota} {__("novoton_holidays.rooms_short")|default:"rooms"})
                                                                 </a>{if !$smarty.foreach.nearby_loop.last}, {/if}
                                                             {/foreach}
-                                                        </div>
+                                                        </span>
                                                     {/if}
                                                 {elseif $result.rooms_available !== null && $result.rooms_available !== ''}
                                                     {if $result.rooms_available > 5}
-                                                        <div class="novoton-mr-quota--ok">{$result.rooms_available} {__("novoton_holidays.available_rooms")}</div>
+                                                        <span class="novoton-mr-quota--ok">{$result.rooms_available} {__("novoton_holidays.available_rooms")}</span>
                                                     {elseif $result.rooms_available >= 1}
-                                                        <div class="novoton-mr-quota--low">{__("novoton_holidays.we_have_left", ["[count]" => $result.rooms_available])}</div>
+                                                        <span class="novoton-mr-quota--low">{__("novoton_holidays.we_have_left", ["[count]" => $result.rooms_available])}</span>
                                                     {/if}
-                                                {/if}
-                                            </div>
-
-                                            <div class="novoton-mr-option-price">
-                                                {if $result.extras_price}
-                                                    <div class="novoton-price-strike">{fn_novoton_holidays_format_price($result.total_price, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY) nofilter}</div>
-                                                    <div class="novoton-mr-price-amount">{fn_novoton_holidays_format_price($result.extras_price, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY) nofilter}</div>
-                                                {else}
-                                                    {if $result.early_booking_discount > 0}
-                                                        {math equation="price / (1 - discount / 100)" price=$result.total_price discount=$result.early_booking_discount assign="original_price"}
-                                                        <div class="novoton-price-strike">{fn_novoton_holidays_format_price($original_price, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY) nofilter}</div>
-                                                    {/if}
-                                                    <div class="novoton-mr-price-amount">{fn_novoton_holidays_format_price($result.total_price|default:0, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY) nofilter}</div>
                                                 {/if}
                                                 {if $result.terms_of_payment || $result.terms_of_cancellation || $result.remark || $result.more_info || $result.important}
                                                     <a href="#" onclick="openInfoModal('mr-{$room_num}-{$result@index}'); return false;" class="novoton-info-link">{__("novoton_holidays.cancellation_and_payment_terms")}</a>
-                                                    <div id="modal-content-mr-{$room_num}-{$result@index}" style="display: none;">
-                                                        {if $result.terms_of_payment}
-                                                            {$mr_payment_terms = fn_novoton_holidays_format_payment_terms_with_amounts($result.terms_of_payment, $result.total_price, $novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:'')}
-                                                            {if $mr_payment_terms}
-                                                                <div class="novoton-modal-section"><strong>{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}:</strong><br>{$mr_payment_terms|escape:'html'|nl2br nofilter}</div>
-                                                            {/if}
-                                                        {/if}
-                                                        {if $result.terms_of_cancellation}
-                                                            {$mr_cancel_terms = fn_novoton_holidays_format_cancellation_terms($result.terms_of_cancellation, $check_in_date)}
-                                                            {if $mr_cancel_terms}
-                                                                <div class="novoton-modal-section"><strong>{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}:</strong><br>{$mr_cancel_terms|escape:'html'|nl2br nofilter}</div>
-                                                            {/if}
-                                                        {/if}
-                                                        {if $result.remark}<div class="novoton-modal-section"><strong>{__("novoton_holidays.note")|default:"Note"}:</strong><br>{$result.remark|escape:'html'|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|regex_replace:'/(\s*[\r\n]){2,}/':"\n"|trim|nl2br nofilter}</div>{/if}
-                                                        {if $result.more_info}<div class="novoton-modal-section"><strong>{__("novoton_holidays.additional_information")|default:"Additional Information"}:</strong><br>{$result.more_info|escape:'html'|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|nl2br nofilter}</div>{/if}
-                                                        {if $result.important}<div class="novoton-modal-section novoton-modal-section--important"><strong>{__("novoton_holidays.important")|default:"Important"}:</strong><br>{$result.important|escape:'html'|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|nl2br nofilter}</div>{/if}
-                                                    </div>
                                                 {/if}
-                                            </div>
-                                        </div>
+                                            </span>
+
+                                            <span class="novoton-mr-option-price">
+                                                {if $mr_was_price}
+                                                    <span class="novoton-price-strike">{fn_novoton_holidays_format_price($mr_was_price, $novoton_display_coefficient|default:1, $mr_currency) nofilter}</span>
+                                                {/if}
+                                                <span class="novoton-mr-price-amount">{fn_novoton_holidays_format_price($result.extras_price|default:$result.total_price|default:0, $novoton_display_coefficient|default:1, $mr_currency) nofilter}</span>
+                                                <span class="novoton-mr-price-note">{__("novoton_holidays.mr_whole_stay")}</span>
+                                            </span>
+                                        </span>
                                     </label>
+                                    {if $result.terms_of_payment || $result.terms_of_cancellation || $result.remark || $result.more_info || $result.important}
+                                        <div id="modal-content-mr-{$room_num}-{$result@index}" style="display: none;">
+                                            {if $result.terms_of_payment}
+                                                {$mr_payment_terms = fn_novoton_holidays_format_payment_terms_with_amounts($result.terms_of_payment, $result.total_price, $novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:'')}
+                                                {if $mr_payment_terms}
+                                                    <div class="novoton-modal-section"><strong>{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}:</strong><br>{$mr_payment_terms|escape:'html'|nl2br nofilter}</div>
+                                                {/if}
+                                            {/if}
+                                            {if $result.terms_of_cancellation}
+                                                {$mr_cancel_terms = fn_novoton_holidays_format_cancellation_terms($result.terms_of_cancellation, $check_in_date)}
+                                                {if $mr_cancel_terms}
+                                                    <div class="novoton-modal-section"><strong>{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}:</strong><br>{$mr_cancel_terms|escape:'html'|nl2br nofilter}</div>
+                                                {/if}
+                                            {/if}
+                                            {if $result.remark}<div class="novoton-modal-section"><strong>{__("novoton_holidays.note")|default:"Note"}:</strong><br>{$result.remark|escape:'html'|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|regex_replace:'/(\s*[\r\n]){2,}/':"\n"|trim|nl2br nofilter}</div>{/if}
+                                            {if $result.more_info}<div class="novoton-modal-section"><strong>{__("novoton_holidays.additional_information")|default:"Additional Information"}:</strong><br>{$result.more_info|escape:'html'|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|nl2br nofilter}</div>{/if}
+                                            {if $result.important}<div class="novoton-modal-section novoton-modal-section--important"><strong>{__("novoton_holidays.important")|default:"Important"}:</strong><br>{$result.important|escape:'html'|replace:'lt;pgt;':'<p>'|replace:'lt;/pgt;':'</p>'|replace:'lt;br /gt;':'<br>'|replace:'lt;br/gt;':'<br>'|replace:'amp;':'&'|nl2br nofilter}</div>{/if}
+                                        </div>
+                                    {/if}
                                 {/foreach}
+
+                                {* Filled by multiroom-booking.js after a choice: apply it to the
+                                   other rooms with the same guests, or go on to the next room *}
+                                <div class="novoton-mr-next" hidden>
+                                    <button type="button" class="novoton-mr-next__same" data-same-from="{$room_num}" hidden></button>
+                                    <button type="button" class="novoton-mr-next__go" data-next-from="{$room_num}">{__("novoton_holidays.mr_next_room")} &rarr;</button>
+                                </div>
                             {else}
                                 <div class="novoton-mr-empty">
                                     <strong>{__("novoton_holidays.no_rooms_available")|default:"No rooms available for this configuration"}</strong>
                                 </div>
                             {/if}
                         </div>
-                    </div>
+                    </section>
                 {/foreach}
-
                 </div>
 
-                {* Total Price & Book Button *}
-                <div class="novoton-mr-total-bar">
-                    <div class="novoton-mr-total-row">
-                        <div>
-                            <div class="novoton-mr-total-label">{__("novoton_holidays.total_for_all_rooms")}</div>
-                            <div class="novoton-mr-total" id="total-combined-price">-- {$novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY}</div>
-                        </div>
-                        <div>
-                            <button type="button"
-                                    id="book-multi-room-btn"
-                                    class="travel-offer-book-btn"
-                                    disabled>
-                                {__("novoton_holidays.book_now")}
-                            </button>
-                        </div>
+                {* Selection summary: sticky beside the rooms on desktop, a bar
+                   fixed to the bottom of the screen on phones *}
+                <aside class="novoton-mr__summary novoton-mr-total-bar" aria-label="{__("novoton_holidays.mr_your_selection")}">
+                    <div class="novoton-mr__summary-title">{__("novoton_holidays.mr_your_selection")}</div>
+                    <div class="novoton-mr__progress">
+                        <span id="mr-progress-text" class="novoton-mr__progress-text" aria-live="polite">{__("novoton_holidays.mr_progress", ["[chosen]" => 0, "[total]" => $novoton_params.num_rooms])}</span>
+                        <span class="novoton-mr__bar" aria-hidden="true"><span id="mr-progress-bar" class="novoton-mr__bar-fill"></span></span>
                     </div>
+                    <ol class="novoton-mr__list">
+                        {foreach from=$novoton_params.rooms_data item=room key=room_idx}
+                            {$room_num = $room_idx + 1}
+                            <li>
+                                <button type="button" class="novoton-mr__list-item is-pending" data-goto-room="{$room_num}">
+                                    <span class="novoton-mr__list-room">{__("novoton_holidays.mr_room", ["[num]" => $room_num])}</span>
+                                    <span class="novoton-mr__list-price" id="mr-sum-{$room_num}">{__("novoton_holidays.mr_not_chosen")}</span>
+                                </button>
+                            </li>
+                        {/foreach}
+                    </ol>
+                    <div class="novoton-mr-total-row">
+                        <span class="novoton-mr-total-label">{__("novoton_holidays.total_for_all_rooms")}</span>
+                        <span class="novoton-mr-total" id="total-combined-price">-- {$mr_currency}</span>
+                    </div>
+                    <div class="novoton-mr__savings" id="mr-savings" hidden></div>
+                    <button type="button"
+                            id="book-multi-room-btn"
+                            class="travel-offer-book-btn novoton-mr__book"
+                            disabled>{__("novoton_holidays.mr_rooms_left", ["[count]" => $novoton_params.num_rooms])}</button>
+                    <p class="novoton-mr__hint">{__("novoton_holidays.mr_guest_details_next")}</p>
+                </aside>
                 </div>
 
                 <form id="multi-room-booking-form" method="get" action="{$config.current_location|fn_url}" style="display: none;">

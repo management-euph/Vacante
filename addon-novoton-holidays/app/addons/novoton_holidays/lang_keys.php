@@ -1113,4 +1113,57 @@ return [
         'en' => 'Review destinations',
         'ro' => 'Verifică destinațiile',
     ],
+    // Multi-room selection (search results and the product page)
+    'novoton_holidays.mr_room' => [
+        'en' => 'Room [num]',
+        'ro' => 'Camera [num]',
+    ],
+    'novoton_holidays.mr_prices_note' => [
+        'en' => 'Prices are for the whole stay, per room.',
+        'ro' => 'Prețurile sunt pentru întregul sejur, per cameră.',
+    ],
+    'novoton_holidays.mr_not_chosen' => [
+        'en' => 'Not chosen yet',
+        'ro' => 'Încă nealeasă',
+    ],
+    'novoton_holidays.mr_progress' => [
+        'en' => '[chosen] of [total] rooms chosen',
+        'ro' => 'Camere alese: [chosen] din [total]',
+    ],
+    'novoton_holidays.mr_rooms_left' => [
+        'en' => 'Rooms left to choose: [count]',
+        'ro' => 'Camere rămase de ales: [count]',
+    ],
+    'novoton_holidays.mr_book_all' => [
+        'en' => 'Book all rooms ([count])',
+        'ro' => 'Rezervă toate camerele ([count])',
+    ],
+    'novoton_holidays.mr_same_guests' => [
+        'en' => 'Apply to the other rooms with the same guests ([count])',
+        'ro' => 'Aplică la celelalte camere cu aceiași oaspeți ([count])',
+    ],
+    'novoton_holidays.mr_next_room' => [
+        'en' => 'Next room',
+        'ro' => 'Camera următoare',
+    ],
+    'novoton_holidays.mr_your_selection' => [
+        'en' => 'Your selection',
+        'ro' => 'Selecția ta',
+    ],
+    'novoton_holidays.mr_savings' => [
+        'en' => 'You save [amount]',
+        'ro' => 'Economisești [amount]',
+    ],
+    'novoton_holidays.mr_guest_details_next' => [
+        'en' => 'You will add the guest details on the next step.',
+        'ro' => 'Datele oaspeților le completezi la pasul următor.',
+    ],
+    'novoton_holidays.mr_room_unnamed' => [
+        'en' => 'Room',
+        'ro' => 'Cameră',
+    ],
+    'novoton_holidays.mr_whole_stay' => [
+        'en' => 'whole stay',
+        'ro' => 'tot sejurul',
+    ],
 ];
