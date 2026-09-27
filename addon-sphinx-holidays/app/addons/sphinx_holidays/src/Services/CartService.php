@@ -7,6 +7,7 @@ namespace Tygh\Addons\SphinxHolidays\Services;
 use Tygh\Addons\SphinxHolidays\Contracts\CartServiceInterface;
 use Tygh\Addons\TravelCore\Helpers\SessionAccessor;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Services\CartSkipPolicy;
 use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
 use Tygh\Addons\TravelCore\Services\GuestDataService;
@@ -114,7 +115,7 @@ final class CartService implements CartServiceInterface
      * @return array<int, mixed>|null
      */
     #[\Override]
-    public function checkDuplicate(string $offerId, string $redirectUrl = 'checkout.cart'): ?array
+    public function checkDuplicate(string $offerId, ?string $redirectUrl = null): ?array
     {
         $repo = Container::getBookingRepository();
         $pending = $repo->findPendingDuplicateByOffer($offerId, TravelConstants::STATUS_PENDING);
@@ -128,7 +129,7 @@ final class CartService implements CartServiceInterface
                     ['[default]' => 'A booking for this offer is already pending.'],
                 ),
             );
-            return [CONTROLLER_STATUS_REDIRECT, $redirectUrl];
+            return [CONTROLLER_STATUS_REDIRECT, $redirectUrl ?? self::afterCartUrl()];
         }
 
         return null;
@@ -246,7 +247,7 @@ final class CartService implements CartServiceInterface
         string $apiCurrency,
         array $productExtra,
         string $successMessage,
-        string $redirectUrl = 'checkout.cart',
+        ?string $redirectUrl = null,
     ): array {
         $primaryCurrency = defined('CART_PRIMARY_CURRENCY') ? CART_PRIMARY_CURRENCY : 'EUR';
         $currencyService = new CurrencyService($apiCurrency);
@@ -268,7 +269,7 @@ final class CartService implements CartServiceInterface
 
         fn_set_notification('N', __('notice'), $successMessage);
 
-        return [CONTROLLER_STATUS_REDIRECT, $redirectUrl];
+        return [CONTROLLER_STATUS_REDIRECT, $redirectUrl ?? self::afterCartUrl()];
     }
 
     /**
@@ -314,5 +315,14 @@ final class CartService implements CartServiceInterface
             'status' => TravelConstants::STATUS_PENDING,
             'api_response' => json_encode($apiResponse, JSON_UNESCAPED_UNICODE),
         ];
+    }
+
+    /**
+     * checkout.cart, or checkout.checkout when Settings -> Travel Core ->
+     * "Skip the cart page for" ticks Sphinx (hotels, circuits and packages).
+     */
+    private static function afterCartUrl(): string
+    {
+        return CartSkipPolicy::current()->afterAddToCart('sphinx_holidays');
     }
 }

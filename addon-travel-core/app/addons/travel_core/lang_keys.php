@@ -601,6 +601,11 @@ return [
         'en' => 'Continue to checkout',
         'ro' => 'Continuă spre finalizare',
     ],
+    // Booking button when Settings -> "Skip the cart page for" ticks the add-on.
+    'travel_core.continue_booking' => [
+        'en' => 'Continue booking',
+        'ro' => 'Continuă rezervarea',
+    ],
     'travel_core.field_required' => [
         'en' => 'Please fill in this field.',
         'ro' => 'Vă rugăm să completați acest câmp.',

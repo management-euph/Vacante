@@ -245,4 +245,6 @@ fn_set_notification('N', __('notice'), __('eurosite.added_to_cart', [
     '[default]' => 'Your stay was added to the cart — complete checkout to confirm the reservation.',
 ]));
 
-return [CONTROLLER_STATUS_REDIRECT, 'checkout.cart'];
+// Straight to checkout when Settings -> Travel Core -> "Skip the cart page
+// for" ticks Eurosite; else the cart, as before.
+return [CONTROLLER_STATUS_REDIRECT, fn_travel_core_after_add_to_cart_url('eurosite')];

@@ -55,7 +55,7 @@
                 <a href="{$eurosite_back_url|fn_url}" class="travel-btn-back">&larr; {__("eurosite.back_to_results")}</a>
             {/if}
             <button type="submit" class="travel-btn--primary eurosite-submit-btn">
-                {__("travel_core.continue_to_checkout")} &rarr;
+                {fn_travel_core_booking_cta_label("eurosite")} &rarr;
             </button>
         </div>
         <p class="travel-cta-note">{__("travel_core.cta_note")}</p>
@@ -66,6 +66,6 @@
         </div>{* /travel-booking-col-main *}
     </div>{* /travel-booking-layout *}
 
-    {include file="addons/travel_core/components/booking_mobile_bar.tpl" mb_form_id="eurosite-booking-form" mb_label=__("travel_core.continue_to_checkout")}
+    {include file="addons/travel_core/components/booking_mobile_bar.tpl" mb_form_id="eurosite-booking-form" mb_label=fn_travel_core_booking_cta_label("eurosite")}
 
 </div>

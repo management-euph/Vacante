@@ -83,7 +83,7 @@
         <div class="travel-form-actions travel-form-actions--cta sphinx-booking-submit">
             <span></span>
             <button type="submit" class="travel-btn--primary sphinx-offer-book-btn">
-                {if $is_edit_mode}{__("travel_core.save_changes")|default:"Save changes"}{else}{__("travel_core.continue_to_checkout")} &rarr;{/if}
+                {if $is_edit_mode}{__("travel_core.save_changes")|default:"Save changes"}{else}{fn_travel_core_booking_cta_label("sphinx_holidays")} &rarr;{/if}
             </button>
         </div>
         {if !$is_edit_mode}<p class="travel-cta-note">{__("travel_core.cta_note")}</p>{/if}
@@ -98,7 +98,7 @@
         </div>{* /travel-booking-col-main *}
     </div>{* /travel-booking-layout *}
 
-    {if $is_edit_mode}{$sphinx_cta_label = __("travel_core.save_changes")}{else}{$sphinx_cta_label = __("travel_core.continue_to_checkout")}{/if}
+    {if $is_edit_mode}{$sphinx_cta_label = __("travel_core.save_changes")}{else}{$sphinx_cta_label = fn_travel_core_booking_cta_label("sphinx_holidays")}{/if}
     {include file="addons/travel_core/components/booking_mobile_bar.tpl" mb_form_id="sphinx-booking-form" mb_label=$sphinx_cta_label}
 
 </div>

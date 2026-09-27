@@ -178,4 +178,5 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 
     fn_set_notification('N', __('success'), __('novoton_holidays.booking_updated'));
 
-    return [CONTROLLER_STATUS_REDIRECT, 'checkout.cart'];
+    // Back where the customer started: checkout when the cart is skipped.
+    return [CONTROLLER_STATUS_REDIRECT, fn_travel_core_after_add_to_cart_url('novoton_holidays')];

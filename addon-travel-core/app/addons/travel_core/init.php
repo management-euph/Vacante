@@ -45,6 +45,7 @@ spl_autoload_register(function ($class): void {
 
 // Load shared function libraries
 require_once __DIR__ . '/functions/cart_guests.php';
+require_once __DIR__ . '/functions/cart_skip.php';
 require_once __DIR__ . '/functions/exchange_rates.php';
 require_once __DIR__ . '/functions/geocoding.php';
 require_once __DIR__ . '/functions/hotels.php';

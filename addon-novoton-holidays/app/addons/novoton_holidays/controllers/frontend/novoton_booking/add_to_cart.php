@@ -705,4 +705,4 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 
     fn_set_notification('N', __('notice'), __('novoton_holidays.added_to_cart'));
 
-    return [CONTROLLER_STATUS_REDIRECT, 'checkout.cart'];
+    return [CONTROLLER_STATUS_REDIRECT, fn_travel_core_after_add_to_cart_url('novoton_holidays')];

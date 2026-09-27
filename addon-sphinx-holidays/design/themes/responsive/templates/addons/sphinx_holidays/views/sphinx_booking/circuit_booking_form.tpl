@@ -143,7 +143,7 @@
         {* Submit *}
         <div class="travel-booking-submit sphinx-booking-submit">
             <button type="submit" class="travel-offer-book-btn sphinx-offer-book-btn">
-                {__("sphinx_holidays.add_to_cart_btn")|default:"Add to Cart"}
+                {fn_travel_core_booking_cta_label("sphinx_holidays", "sphinx_holidays.add_to_cart_btn")}
             </button>
         </div>
     </form>
