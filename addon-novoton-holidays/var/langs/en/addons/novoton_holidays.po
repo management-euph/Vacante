@@ -4177,8 +4177,8 @@ msgid "[n] ticked resorts are no longer in the Novoton feed (shown crossed out).
 msgstr "[n] ticked resorts are no longer in the Novoton feed (shown crossed out). They stay ticked until you untick them."
 
 msgctxt "Languages::novoton_holidays.dest_intro"
-msgid "Choose what we sell from Novoton. Only hotels in these destinations are made into products. \"All resorts\" includes resorts Novoton adds later; \"Only selected\" waits for you to tick them."
-msgstr "Choose what we sell from Novoton. Only hotels in these destinations are made into products. \"All resorts\" includes resorts Novoton adds later; \"Only selected\" waits for you to tick them."
+msgid "Choose what we sell from Novoton. Only hotels in these destinations are synced and made into products (hotels with live products keep syncing until you disable them). \"All resorts\" includes resorts Novoton adds later; \"Only selected\" waits for you to tick them."
+msgstr "Choose what we sell from Novoton. Only hotels in these destinations are synced and made into products (hotels with live products keep syncing until you disable them). \"All resorts\" includes resorts Novoton adds later; \"Only selected\" waits for you to tick them."
 
 msgctxt "Languages::novoton_holidays.dest_pending"
 msgid "[n] changes not saved"

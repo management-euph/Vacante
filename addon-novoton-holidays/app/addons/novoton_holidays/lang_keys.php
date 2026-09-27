@@ -874,8 +874,8 @@ return [
         'ro' => '[n] stațiuni bifate nu mai apar în fluxul Novoton (tăiate). Rămân bifate până le debifați.',
     ],
     'novoton_holidays.dest_intro' => [
-        'en' => 'Choose what we sell from Novoton. Only hotels in these destinations are made into products. "All resorts" includes resorts Novoton adds later; "Only selected" waits for you to tick them.',
-        'ro' => 'Alegeți ce vindem de la Novoton. Doar hotelurile din aceste destinații devin produse. „Toate stațiunile” include și stațiunile adăugate ulterior de Novoton; „Doar cele alese” așteaptă să le bifați.',
+        'en' => 'Choose what we sell from Novoton. Only hotels in these destinations are synced and made into products (hotels with live products keep syncing until you disable them). "All resorts" includes resorts Novoton adds later; "Only selected" waits for you to tick them.',
+        'ro' => 'Alegeți ce vindem de la Novoton. Doar hotelurile din aceste destinații se sincronizează și devin produse (hotelurile cu produse active se sincronizează în continuare până le dezactivați). „Toate stațiunile” include și stațiunile adăugate ulterior de Novoton; „Doar cele alese” așteaptă să le bifați.',
     ],
     'novoton_holidays.dest_pending' => [
         'en' => '[n] changes not saved',

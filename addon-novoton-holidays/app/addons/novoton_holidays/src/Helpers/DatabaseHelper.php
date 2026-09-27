@@ -289,9 +289,10 @@ class DatabaseHelper implements DatabaseHelperInterface
      * come first, then the oldest checks, so consecutive runs cover them all.
      *
      * @param array<string, mixed> $conditions column => value (whitelisted columns only)
+     * @param string $scopeWhere an already-quoted WHERE fragment (DestinationScope::syncWhere())
      * @return list<array<string, mixed>>
      */
-    public function getHotelsForPriceCheck(array $conditions = [], int $limit = 0): array
+    public function getHotelsForPriceCheck(array $conditions = [], int $limit = 0, string $scopeWhere = ''): array
     {
         $where = [];
         $params = [];
@@ -301,6 +302,9 @@ class DatabaseHelper implements DatabaseHelperInterface
             }
             $where[] = "{$key} = ?s";
             $params[] = $value;
+        }
+        if ($scopeWhere !== '') {
+            $where[] = $scopeWhere;
         }
 
         $whereClause = $where !== [] ? 'WHERE ' . implode(' AND ', $where) : '';

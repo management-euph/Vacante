@@ -7,6 +7,7 @@ namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\NovotonHolidays\Services\DestinationScope;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class RoomPriceCheckCommand extends AbstractCronCommand
@@ -68,7 +69,10 @@ class RoomPriceCheckCommand extends AbstractCronCommand
         $this->output('');
 
         $conditions = ($country !== '' && $country !== '0') ? ['country' => $country] : [];
-        $hotels = $dbHelper->getHotelsForPriceCheck($conditions, $limit);
+        // Only the destinations we sell (+ hotels with live products); the
+        // selected countries until a whitelist is saved. It used to check
+        // every hotel of every country: one API call each.
+        $hotels = $dbHelper->getHotelsForPriceCheck($conditions, $limit, DestinationScope::current()->syncWhere());
 
         $withPricesIds = [];
         $withoutPricesIds = [];
