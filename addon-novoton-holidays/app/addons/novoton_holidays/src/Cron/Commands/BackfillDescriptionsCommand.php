@@ -57,7 +57,7 @@ class BackfillDescriptionsCommand extends AbstractCronCommand
         return 'Fill in the description of products created without one (&force=1 rewrites all, &hotel_id=X one)';
     }
 
-    /** @param callable(string): mixed $fetcher */
+    /** @param callable(string): \SimpleXMLElement $fetcher */
     public function setDescriptionFetcher(callable $fetcher): void
     {
         $this->descriptionFetcher = $fetcher(...);
@@ -102,7 +102,7 @@ class BackfillDescriptionsCommand extends AbstractCronCommand
         $this->output('Backfilling descriptions for ' . count($candidates) . ' products...');
         $this->output('');
 
-        $fetch = $this->descriptionFetcher ?? fn (string $hid): mixed => $this->api->hotels()->getHotelDescription($hid, 'UK');
+        $fetch = $this->descriptionFetcher ?? fn (string $hid): \SimpleXMLElement => $this->api->hotels()->getHotelDescription($hid, 'UK');
         $sleeper = $this->sleeper ?? static function (int $us): void {
             usleep($us);
         };
