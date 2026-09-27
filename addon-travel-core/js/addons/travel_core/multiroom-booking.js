@@ -15,6 +15,10 @@
  *                       choice closes the room and opens the next one
  *   data-label-*        Translated labels with [chosen]/[total]/[count]/
  *                       [amount] placeholders (optional)
+ *   data-search-key     Identifies the search (hotel, dates, rooms). The
+ *                       chosen rooms are kept per key in sessionStorage and
+ *                       restored when the same results render again — e.g.
+ *                       after switching language, which reloads the page.
  *
  * Booking is blocked until EVERY room has a choice: the button stays
  * disabled, and a click that still gets through opens the first room left.
@@ -61,6 +65,7 @@
             coefficient: parseFloat(container.dataset.coefficient) || 1,
             roundPrices: container.dataset.roundPrices === 'true',
             stepper:     container.dataset.stepper === 'true',
+            searchKey:   container.dataset.searchKey || '',
             labels: {
                 progress:  container.dataset.labelProgress || '',
                 left:      container.dataset.labelLeft || '',
@@ -116,6 +121,64 @@
             el.appendChild(sup);
         }
         el.appendChild(document.createTextNode(' ' + cfg.currency));
+    }
+
+    // -----------------------------------------------------------------------
+    // Chosen rooms survive a reload of the same search (sessionStorage)
+    // -----------------------------------------------------------------------
+
+    var STORE_PREFIX = 'travel_mr_selection:';
+
+    function saveSelections(cfg) {
+        if (!cfg.searchKey) return;
+        var values = {};
+        for (var n in selectedRooms) {
+            var radio = cfg.container.querySelector('input[name="room_' + n + '_selection"]:checked');
+            if (radio) values[n] = radio.value;
+        }
+        try {
+            window.sessionStorage.setItem(STORE_PREFIX + cfg.searchKey, JSON.stringify(values));
+        } catch (e) { /* storage unavailable: choices just are not kept */ }
+    }
+
+    /**
+     * Re-selects the saved rooms of this search. A saved choice whose option
+     * no longer renders with the same value (room, meal plan AND price) is
+     * dropped: the customer chooses that room again at the current price.
+     */
+    function restoreSelections() {
+        var cfg = getConfig();
+        if (!cfg || !cfg.searchKey || cfg.container.dataset.mrRestored === '1') return;
+        cfg.container.dataset.mrRestored = '1';
+
+        var values;
+        try {
+            values = JSON.parse(window.sessionStorage.getItem(STORE_PREFIX + cfg.searchKey) || '{}');
+        } catch (e) {
+            return;
+        }
+        if (!values || typeof values !== 'object') return;
+
+        var restored = 0;
+        Object.keys(values).forEach(function(n) {
+            var match = null;
+            cfg.container.querySelectorAll('input[name="room_' + n + '_selection"]').forEach(function(r) {
+                if (!match && r.value === values[n]) match = r;
+            });
+            if (match) {
+                match.checked = true;
+                handleRoomSelection(match, true);
+                restored++;
+            }
+        });
+        if (restored === 0) return;
+
+        if (cfg.stepper) {
+            var pending = firstPendingRoom(cfg);
+            cfg.container.querySelectorAll('[data-room]').forEach(function(section) {
+                setRoomOpen(section, parseInt(section.getAttribute('data-room'), 10) === pending);
+            });
+        }
     }
 
     // -----------------------------------------------------------------------
@@ -294,6 +357,7 @@
         }
 
         updateTotalPrice(cfg);
+        saveSelections(cfg);
 
         if (!quiet) afterChoice(cfg, roomNum, radio);
     }
@@ -487,5 +551,14 @@
             goToRoom(cfg, parseInt(gotoBtn.getAttribute('data-goto-room'), 10));
         }
     });
+
+    // Restore on first render and whenever the booking engine swaps fresh
+    // results into the product page.
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', restoreSelections);
+    } else {
+        restoreSelections();
+    }
+    document.addEventListener('travel:results-swapped', restoreSelections);
 
 })();
