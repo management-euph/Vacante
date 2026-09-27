@@ -141,7 +141,7 @@
                     &larr; {__("novoton_holidays.back_to_results")}
                 </a>
                 <button type="submit" class="travel-btn--primary" id="booking-submit-btn">
-                    {if $is_edit_mode}{__("novoton_holidays.update_booking")}{else}{__("travel_core.continue_to_checkout")} &rarr;{/if}
+                    {if $is_edit_mode}{__("novoton_holidays.update_booking")}{else}{fn_travel_core_booking_cta_label("novoton_holidays")} &rarr;{/if}
                 </button>
             </div>
             {if !$is_edit_mode}<p class="travel-cta-note">{__("travel_core.cta_note")}</p>{/if}
@@ -156,7 +156,7 @@
         </div>{* /travel-booking-layout *}
     </form>
 
-    {if $is_edit_mode}{$nvt_cta_label = __("novoton_holidays.update_booking")}{else}{$nvt_cta_label = __("travel_core.continue_to_checkout")}{/if}
+    {if $is_edit_mode}{$nvt_cta_label = __("novoton_holidays.update_booking")}{else}{$nvt_cta_label = fn_travel_core_booking_cta_label("novoton_holidays")}{/if}
     {include file="addons/travel_core/components/booking_mobile_bar.tpl" mb_form_id="novoton-booking-form" mb_label=$nvt_cta_label}
 </div>
 

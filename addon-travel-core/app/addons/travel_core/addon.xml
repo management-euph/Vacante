@@ -180,6 +180,24 @@
                         <variants/>
                     </item>
 
+                    <!-- Skip the cart page: whose booking buttons go straight to
+                         checkout.checkout (the one checkout page for every
+                         add-on) and say "Continue booking". Nothing ticked =
+                         the cart step stays for everyone. CartSkipPolicy. -->
+                    <item id="cart_skip_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="skip_cart_for">
+                        <type>multiple checkboxes</type>
+                        <default_value></default_value>
+                        <variants>
+                            <item id="novoton_holidays"></item>
+                            <item id="sphinx_holidays"></item>
+                            <item id="eurosite"></item>
+                        </variants>
+                    </item>
+
                     <!-- Product-page booking form display: ONE policy for all
                          provider addons (novoton + sphinx) — consumed by the
                          shared dispatch_before_display injection -->

@@ -762,6 +762,30 @@ msgctxt "SettingsOptions::travel_core::checkout_absorb_increase"
 msgid "Absorb price increases up to (EUR) — customer pays the shown price; 0 = always ask the customer to re-confirm"
 msgstr "Absoarbe creșteri de preț până la (EUR) — clientul plătește prețul afișat; 0 = cere mereu reconfirmare"
 
+msgctxt "SettingsOptions::travel_core::cart_skip_header"
+msgid "Skip the cart page"
+msgstr "Sari peste pagina coșului"
+
+msgctxt "SettingsOptions::travel_core::skip_cart_for"
+msgid "Skip the cart page for"
+msgstr "Sari peste pagina coșului pentru"
+
+msgctxt "SettingsTooltips::travel_core::skip_cart_for"
+msgid "The booking button of each ticked add-on says \"Continue booking\" and goes straight to checkout (the same checkout page for every add-on), skipping the cart page. Nothing ticked keeps the cart step for everyone."
+msgstr "Butonul de rezervare al fiecărui add-on bifat afișează „Continuă rezervarea” și duce direct la finalizarea comenzii (aceeași pagină pentru toate add-on-urile), fără pagina coșului. Dacă nu bifați nimic, pasul coșului rămâne pentru toți."
+
+msgctxt "SettingsVariants::travel_core::skip_cart_for::novoton_holidays"
+msgid "Novoton Holidays"
+msgstr "Novoton Holidays"
+
+msgctxt "SettingsVariants::travel_core::skip_cart_for::sphinx_holidays"
+msgid "Sphinx Holidays"
+msgstr "Sphinx Holidays"
+
+msgctxt "SettingsVariants::travel_core::skip_cart_for::eurosite"
+msgid "Eurosite"
+msgstr "Eurosite"
+
 msgctxt "Languages::theme_editor.travel_primary_color"
 msgid "Travel: Primary color"
 msgstr "Travel: Culoare primară"
@@ -1397,6 +1421,10 @@ msgstr "Feminin"
 msgctxt "Languages::travel_core.continue_to_checkout"
 msgid "Continue to checkout"
 msgstr "Continuă spre finalizare"
+
+msgctxt "Languages::travel_core.continue_booking"
+msgid "Continue booking"
+msgstr "Continuă rezervarea"
 
 msgctxt "Languages::travel_core.field_required"
 msgid "Please fill in this field."

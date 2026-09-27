@@ -25,10 +25,12 @@ interface CartServiceInterface
     /**
      * Check for an existing pending booking with the same offer_id.
      * Returns a redirect array if a duplicate is found, null otherwise.
+     * $redirectUrl null = the cart, or checkout when the cart is skipped
+     * (Settings -> Travel Core -> "Skip the cart page for").
      *
      * @return array<int, mixed>|null
      */
-    public function checkDuplicate(string $offerId, string $redirectUrl = 'checkout.cart'): ?array;
+    public function checkDuplicate(string $offerId, ?string $redirectUrl = null): ?array;
 
     /**
      * Apply configured commission (if any) to a price.
@@ -74,7 +76,7 @@ interface CartServiceInterface
         string $apiCurrency,
         array $productExtra,
         string $successMessage,
-        string $redirectUrl = 'checkout.cart',
+        ?string $redirectUrl = null,
     ): array;
 
     /**

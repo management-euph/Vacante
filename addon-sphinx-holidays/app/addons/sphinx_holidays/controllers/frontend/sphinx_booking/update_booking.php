@@ -77,4 +77,5 @@ fn_travel_core_update_cart_guest_extras($cart_id, $booking_id, 'travel_booking_i
 
 fn_set_notification('N', __('notice'), __('sphinx_holidays.booking_updated', ['[default]' => 'Booking details updated.']));
 
-return [CONTROLLER_STATUS_REDIRECT, 'checkout.cart'];
+// Back where the customer started: checkout when the cart is skipped.
+return [CONTROLLER_STATUS_REDIRECT, fn_travel_core_after_add_to_cart_url('sphinx_holidays')];
