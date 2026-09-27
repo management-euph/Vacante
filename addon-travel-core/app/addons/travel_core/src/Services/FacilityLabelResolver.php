@@ -34,13 +34,20 @@ final class FacilityLabelResolver
      * @param list<array{id: int|string, name?: string}> $facilities provider
      *                                                               facility ids with their raw provider names
      * @param string $lang storefront language code ('ro' selects the Romanian column)
-     * @param int $limit the sidebar shows an at-a-glance strip, not the full
-     *                   inventory — that belongs on the product page
+     * @param int $limit how many labels to return (the booking sidebar asks for
+     *                   all of them and caps the chips itself, with "+N more")
+     * @param string $unnamed label for a facility nobody named — "[code]" is
+     *                        replaced by its code ("Facility #27")
      *
      * @return list<string>
      */
-    public static function labels(string $apiSource, array $facilities, string $lang = 'en', int $limit = 6): array
-    {
+    public static function labels(
+        string $apiSource,
+        array $facilities,
+        string $lang = 'en',
+        int $limit = 6,
+        string $unnamed = 'Facility #[code]',
+    ): array {
         $column = self::column($lang);
         $labels = [];
 
@@ -59,8 +66,8 @@ final class FacilityLabelResolver
                     }
                     if (self::isCodeOnly($label, $id)) {
                         // Auto-registered unmapped facility: FeatureMapper
-                        // named it after its numeric code ("27"). The
-                        // provider's own name below is the real one.
+                        // named it after its code ("27"). The provider's own
+                        // name below is the real one, when it has one.
                         $label = '';
                     }
                 }
@@ -71,6 +78,13 @@ final class FacilityLabelResolver
                 if (self::isCodeOnly($label, $id)) {
                     $label = '';
                 }
+            }
+
+            // Every facility keeps its chip (user ruling: facilities are
+            // never dropped). Nobody named it → "Facility #27", which at least
+            // says what the bare "✓ 27" meant.
+            if ($label === '' && $id !== '') {
+                $label = strtr($unnamed, ['[code]' => $id]);
             }
 
             if ($label !== '' && !in_array($label, $labels, true)) {
@@ -85,12 +99,13 @@ final class FacilityLabelResolver
     }
 
     /**
-     * A label that is only the facility's code (or any bare number) names
-     * nothing for a guest — "✓ 27" was one on the booking sidebar.
+     * A label that is just the facility's own code names nothing for a
+     * guest — "✓ 27" was one on the booking sidebar. Only the exact code
+     * counts: a real name may contain digits ("24h reception").
      */
     private static function isCodeOnly(string $label, string $id): bool
     {
-        return $label !== '' && ($label === $id || ctype_digit($label));
+        return $label !== '' && $label === $id;
     }
 
     /** Romanian is the only translated column today; everything else is EN. */

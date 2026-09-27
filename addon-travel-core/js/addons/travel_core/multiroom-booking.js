@@ -109,6 +109,14 @@
             children:     occupancy.children || 0,
             childrenAges: occupancy.childrenAges || []
         };
+        // Novoton's offer behind the price (the booking page shows the "was"
+        // price the search card struck through). Only providers that render
+        // these attributes send them.
+        if (radio.hasAttribute('data-standard-price')) {
+            selectedRooms[roomNum].standard_price = parseFloat(radio.getAttribute('data-standard-price')) || 0;
+            selectedRooms[roomNum].early_booking = parseFloat(radio.getAttribute('data-early-booking')) || 0;
+            selectedRooms[roomNum].extras = radio.getAttribute('data-extras') || '';
+        }
 
         // Update per-room price header
         var priceEl = document.getElementById('room-' + roomNum + '-price');
@@ -186,7 +194,7 @@
 
         for (var i = 1; i <= cfg.numRooms; i++) {
             if (selectedRooms[i]) {
-                roomsData.push({
+                var roomEntry = {
                     room_num:     i,
                     room_id:      selectedRooms[i].room_id,
                     board_id:     selectedRooms[i].board_id,
@@ -197,7 +205,13 @@
                     adults:       selectedRooms[i].adults,
                     children:     selectedRooms[i].children,
                     childrenAges: selectedRooms[i].childrenAges
-                });
+                };
+                if ('standard_price' in selectedRooms[i]) {
+                    roomEntry.standard_price = selectedRooms[i].standard_price;
+                    roomEntry.early_booking = selectedRooms[i].early_booking;
+                    roomEntry.extras = selectedRooms[i].extras;
+                }
+                roomsData.push(roomEntry);
                 total += selectedRooms[i].price;
             }
         }

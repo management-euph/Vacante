@@ -177,17 +177,15 @@
         <div class="travel-bcard__body booking-price-box travel-price-box">
             <div id="price-error-message" class="travel-price-error travel-is-hidden"></div>
 
-            {* The provider's own offer text ("Early Booking 10%"). *}
-            {if $tbs.discount_label}
-                <div class="travel-bsidebar-pricetop"><span class="travel-bsidebar-deal">{$tbs.discount_label|escape:html}</span></div>
-            {/if}
+            {* The provider's own offer text ("Early Booking 10%") and the
+               struck-through "was" price. Always rendered, hidden while
+               empty: novoton's on-load re-price fills or clears them. *}
+            <div class="travel-bsidebar-pricetop{if !$tbs.discount_label} travel-is-hidden{/if}" id="travel-price-deal-row"><span class="travel-bsidebar-deal" id="travel-price-deal">{$tbs.discount_label|escape:html}</span></div>
 
-            {if $tbs.old_total}
-                <div class="travel-bsidebar-pricerow">
-                    <span>{__("travel_core.original_price")}</span>
-                    <span class="travel-bsidebar-oldprice">{$tbs.old_total nofilter}</span>
-                </div>
-            {/if}
+            <div class="travel-bsidebar-pricerow{if !$tbs.old_total} travel-is-hidden{/if}" id="travel-price-old-row">
+                <span>{__("travel_core.original_price")}</span>
+                <span class="travel-bsidebar-oldprice" id="travel-price-old">{$tbs.old_total nofilter}</span>
+            </div>
 
             <div class="travel-bsidebar-total">
                 <span class="travel-price-label">{__("travel_core.total_price")|default:"Total"}</span>

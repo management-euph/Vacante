@@ -1409,3 +1409,19 @@ msgstr "Vă rugăm să alegeți o opțiune."
 msgctxt "Languages::travel_core.cta_note"
 msgid "You won't be charged yet — you'll review everything at checkout."
 msgstr "Nu plătiți încă — veți verifica totul la finalizarea comenzii."
+
+msgctxt "Languages::travel_core.field_required_named"
+msgid "Please fill in the [field] field."
+msgstr "Vă rugăm să completați câmpul [field]."
+
+msgctxt "Languages::travel_core.choose_between"
+msgid "Please choose [a] or [b]."
+msgstr "Vă rugăm să alegeți [a] sau [b]."
+
+msgctxt "Languages::travel_core.facility_unnamed"
+msgid "Facility #[code]"
+msgstr "Facilitate #[code]"
+
+msgctxt "Languages::travel_core.who_is_staying"
+msgid "Who is staying?"
+msgstr "Cine se cazează?"

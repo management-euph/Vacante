@@ -72,6 +72,53 @@ describe('inline required-field messages', () => {
     });
 });
 
+describe('named messages and a red state that follows the messages', () => {
+    function page(inner) {
+        document.body.innerHTML = '<div class="travel-booking-page"><form id="f">' + inner + '</form></div>';
+        return document.getElementById('f');
+    }
+
+    it('names the field from its label, without the required asterisk', () => {
+        page('<div class="travel-guest-field"><label for="ln">Last Name<span class="travel-guest-required">*</span></label>'
+            + '<input id="ln" required></div>');
+        document.getElementById('ln').dispatchEvent(new Event('invalid', { cancelable: true }));
+
+        expect(document.querySelector('.js-required-msg').textContent).toBe('Please fill in the Last Name field.');
+    });
+
+    it('names both radio options ("Please choose Male or Female.")', () => {
+        page('<div class="travel-guest-field"><div class="travel-guest-radios">'
+            + '<label class="travel-guest-radio"><input type="radio" name="g" value="B" required> Male</label>'
+            + '<label class="travel-guest-radio"><input type="radio" name="g" value="F" required> Female</label></div></div>');
+        document.querySelector('input[value="B"]').dispatchEvent(new Event('invalid', { cancelable: true }));
+
+        expect(document.querySelector('.js-required-msg').textContent).toBe('Please choose Male or Female.');
+    });
+
+    it('keeps the red state while another message still stands for the field', () => {
+        page('<div class="travel-guest-field"><input id="d" required>'
+            + '<span class="travel-field-error-message js-dob-basics-msg">Format invalid</span></div>');
+        const input = document.getElementById('d');
+        input.dispatchEvent(new Event('invalid', { cancelable: true }));
+        input.value = '12';
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+
+        expect(document.querySelector('.js-required-msg')).toBeNull();
+        expect(input.getAttribute('aria-invalid')).toBe('true');
+    });
+
+    it('blocks a submit with a half-typed date of birth', () => {
+        const form = page('<div class="travel-guest-field"><input class="js-dob-basics" '
+            + 'name="guests[room1_adult_1][dob]" value="12/05"></div>');
+        const ev = new Event('submit', { cancelable: true, bubbles: true });
+        form.dispatchEvent(ev);
+
+        expect(ev.defaultPrevented).toBe(true);
+        expect(form.querySelector('.js-dob-basics-msg')).not.toBeNull();
+        expect(form.querySelector('input').getAttribute('aria-invalid')).toBe('true');
+    });
+});
+
 describe('facility chips "+N more"', () => {
     function chips() {
         document.body.innerHTML = '<ul class="travel-bsidebar-features" data-travel-features>'

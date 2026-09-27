@@ -613,4 +613,20 @@ return [
         'en' => 'You won\'t be charged yet — you\'ll review everything at checkout.',
         'ro' => 'Nu plătiți încă — veți verifica totul la finalizarea comenzii.',
     ],
+    'travel_core.field_required_named' => [
+        'en' => 'Please fill in the [field] field.',
+        'ro' => 'Vă rugăm să completați câmpul [field].',
+    ],
+    'travel_core.choose_between' => [
+        'en' => 'Please choose [a] or [b].',
+        'ro' => 'Vă rugăm să alegeți [a] sau [b].',
+    ],
+    'travel_core.facility_unnamed' => [
+        'en' => 'Facility #[code]',
+        'ro' => 'Facilitate #[code]',
+    ],
+    'travel_core.who_is_staying' => [
+        'en' => 'Who is staying?',
+        'ro' => 'Cine se cazează?',
+    ],
 ];

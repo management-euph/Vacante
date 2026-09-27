@@ -104,7 +104,8 @@ final class FacilityLabelResolverTest extends TestCase
         ];
 
         self::assertSame(['Pool', 'Spa'], FacilityLabelResolver::labels('sphinx', $facilities, 'en', 2));
-        self::assertSame(['Pool', 'Spa', 'Bar'], FacilityLabelResolver::labels('sphinx', $facilities, 'en'));
+        // A facility without a name is kept, not dropped (user ruling).
+        self::assertSame(['Pool', 'Spa', 'Bar', 'Facility #5'], FacilityLabelResolver::labels('sphinx', $facilities, 'en'));
     }
 
     /** Regional spellings pick the Romanian column too. */
@@ -119,7 +120,8 @@ final class FacilityLabelResolverTest extends TestCase
     /**
      * "✓ 27" on the booking sidebar: an unmapped novoton facility got an
      * auto-created mapping row named after its code, which beat the real
-     * provider name. A code-only label now yields to the provider's name.
+     * provider name. A code-only label now yields to the provider's name,
+     * and a facility nobody named keeps its chip as "Facility #27".
      */
     public function testCodeOnlyMappingNameYieldsToTheProviderName(): void
     {
@@ -137,7 +139,12 @@ final class FacilityLabelResolverTest extends TestCase
             ['Outdoor pool'],
             FacilityLabelResolver::labels('novoton', [['id' => 27, 'name' => 'Outdoor pool']], 'ro'),
         );
-        // No real name anywhere: a bare number names nothing, so no chip.
-        self::assertSame([], FacilityLabelResolver::labels('novoton', [['id' => 27, 'name' => '']], 'en'));
+        // No real name anywhere: the chip stays (facilities are never
+        // dropped), named after its code instead of a bare number.
+        self::assertSame(['Facility #27'], FacilityLabelResolver::labels('novoton', [['id' => 27, 'name' => '']], 'en'));
+        self::assertSame(
+            ['Facilitate #27'],
+            FacilityLabelResolver::labels('novoton', [['id' => 27, 'name' => '']], 'ro', 6, 'Facilitate #[code]'),
+        );
     }
 }

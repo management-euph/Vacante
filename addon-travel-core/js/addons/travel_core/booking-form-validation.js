@@ -570,8 +570,10 @@
 
         var msgEl = input.parentElement ? input.parentElement.querySelector('.js-age-mismatch-msg') : null;
         var clear = function () {
-            input.removeAttribute('aria-invalid');
+            // Remove only OUR message; the red state stays while any other
+            // message (required, DOB format) still stands for this field.
             if (msgEl) msgEl.remove();
+            _syncInvalid(input);
         };
 
         var dob = parseDobMasked(input.value);
@@ -626,6 +628,15 @@
                 firstBad = guarded[i];
             }
         }
+        // Every shared DOB field is re-checked too: a half-typed "12/05"
+        // passed `required` and reached the server (the on-blur check only
+        // runs if the guest leaves the field).
+        var dobs = form.querySelectorAll('input.js-dob-basics');
+        for (var j = 0; j < dobs.length; j++) {
+            if (!validateDobBasics(dobs[j]) && !firstBad) {
+                firstBad = dobs[j];
+            }
+        }
         if (firstBad) {
             e.preventDefault();
             try { firstBad.focus(); } catch (err) {}
@@ -635,21 +646,20 @@
     // =========================================================================
     // BASIC DOB VALIDATION (shared guest cards)
     // =========================================================================
-    // Inputs carrying .js-dob-basics (rendered ONLY by the shared
-    // booking_guest_cards.tpl — i.e. the sphinx forms) get the same on-blur
-    // checks novoton's inline validateAndCheckAge performs: complete mask,
-    // real calendar date, plausible year range, not in the future, and for
-    // CHILD inputs an under-18-at-check-in rule (the rule the server enforces
-    // authoritatively via GuestDataService). Novoton's own form does not
-    // render .js-dob-basics, so this path is inert there — no double
-    // messages next to its inline handler.
+    // Inputs carrying .js-dob-basics (every DOB rendered by the shared
+    // booking_guest_room_body.tpl — sphinx, novoton and eurosite) get the
+    // on-blur checks: complete mask, real calendar date, plausible year
+    // range, not in the future, and for CHILD inputs an under-18-at-check-in
+    // rule (the rule the server enforces authoritatively via
+    // GuestDataService). Novoton's own validateAndCheckAge only re-prices on
+    // child age now; the messages are these.
 
     function validateDobBasics(input) {
         var t = _getTranslations();
         var msgEl = input.parentElement ? input.parentElement.querySelector('.js-dob-basics-msg') : null;
         var clear = function () {
-            input.removeAttribute('aria-invalid');
             if (msgEl) msgEl.remove();
+            _syncInvalid(input);
         };
         var fail = function (text) {
             input.setAttribute('aria-invalid', 'true');
@@ -798,12 +808,71 @@
         }
     }
 
-    function _requiredMessage(el) {
-        var t = _getTranslations();
-        if (el.type === 'radio') {
-            return t.chooseOption || 'Please choose one option.';
+    /** A translation, or the fallback when it is missing / unseeded ("_key"). */
+    function _t(key, fallback) {
+        var v = _getTranslations()[key];
+        return (typeof v === 'string' && v !== '' && v.charAt(0) !== '_') ? v : fallback;
+    }
+
+    /** The field's visible label text, without the required asterisk. */
+    function _labelText(node) {
+        if (!node) return '';
+        var copy = node.cloneNode(true);
+        var marks = copy.querySelectorAll('.travel-guest-required, .travel-muted-note');
+        for (var i = 0; i < marks.length; i++) marks[i].remove();
+        return String(copy.textContent || '').replace(/\s+/g, ' ').replace(/[\s*:]+$/, '').trim();
+    }
+
+    function _fieldLabel(el) {
+        if (el.labels && el.labels.length) return _labelText(el.labels[0]);
+        if (el.id && el.form) {
+            var byFor = el.form.querySelector('label[for="' + el.id.replace(/"/g, '\\"') + '"]');
+            if (byFor) return _labelText(byFor);
         }
-        return t.fieldRequired || 'Please fill in this field.';
+        return '';
+    }
+
+    /**
+     * "Please fill in the Last Name field." / "Please choose Male or
+     * Female." — the message names what is missing, so the guest does not
+     * have to work out which of eight fields it meant.
+     */
+    function _requiredMessage(el) {
+        if (el.type === 'radio') {
+            var options = [];
+            var group = el.form && el.name
+                ? el.form.querySelectorAll('input[type="radio"][name="' + el.name.replace(/"/g, '\\"') + '"]')
+                : [el];
+            for (var i = 0; i < group.length; i++) {
+                var text = _labelText(group[i].closest ? group[i].closest('label') : null);
+                if (text) options.push(text);
+            }
+            if (options.length === 2) {
+                return _t('chooseBetween', 'Please choose [a] or [b].')
+                    .replace('[a]', options[0]).replace('[b]', options[1]);
+            }
+            return _t('chooseOption', 'Please choose one option.');
+        }
+        var label = _fieldLabel(el);
+        if (label) {
+            return _t('fieldRequiredNamed', 'Please fill in the [field] field.').replace('[field]', label);
+        }
+        return _t('fieldRequired', 'Please fill in this field.');
+    }
+
+    /**
+     * aria-invalid follows the messages actually shown for a field: several
+     * validators (required, DOB format, age at check-in) can speak about the
+     * same input, and one clearing its own message must not wipe the red
+     * state while another still stands.
+     */
+    function _syncInvalid(input) {
+        var host = _fieldHost(input);
+        if (host && host.querySelector('.travel-field-error-message')) {
+            input.setAttribute('aria-invalid', 'true');
+        } else {
+            input.removeAttribute('aria-invalid');
+        }
     }
 
     document.addEventListener('invalid', function (e) {
@@ -841,7 +910,11 @@
         var filled = el.type === 'radio' ? el.checked : String(el.value || '').trim() !== '';
         if (filled) {
             msg.remove();
-            _setGroupInvalid(el, false);
+            if (el.type === 'radio') {
+                _setGroupInvalid(el, false);
+            } else {
+                _syncInvalid(el);
+            }
         }
     }
 
@@ -849,5 +922,6 @@
     document.addEventListener('change', _clearRequired);
 
     window.TravelBooking.requiredMessage = _requiredMessage;
+    window.TravelBooking.syncInvalid = _syncInvalid;
 
 })();
