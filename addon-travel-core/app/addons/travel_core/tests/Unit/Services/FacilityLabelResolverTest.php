@@ -146,5 +146,11 @@ final class FacilityLabelResolverTest extends TestCase
             ['Facilitate #27'],
             FacilityLabelResolver::labels('novoton', [['id' => 27, 'name' => '']], 'ro', 6, 'Facilitate #[code]'),
         );
+        // Lang key not seeded yet: __() gives "_travel_core.facility_unnamed"
+        // (no [code]) — the chips still name their codes, not one raw key.
+        self::assertSame(
+            ['Facility #27', 'Facility #28'],
+            FacilityLabelResolver::labels('novoton', [['id' => 27, 'name' => ''], ['id' => 28, 'name' => '']], 'en', 6, '_travel_core.facility_unnamed'),
+        );
     }
 }

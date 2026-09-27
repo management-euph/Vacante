@@ -119,6 +119,24 @@ describe('named messages and a red state that follows the messages', () => {
     });
 });
 
+describe('child age at check-in', () => {
+    it('uses the page\'s ISO check-in when the form field is not ISO', () => {
+        window.bookingData = { checkIn: '2026-10-05' };
+        document.body.innerHTML = '<div class="travel-booking-page"><form id="f">'
+            + '<input type="hidden" name="check_in" value="05.10.2026">'
+            + '<div class="travel-guest-field"><input class="js-dob-basics" '
+            + 'name="guests[room1_child_1][dob]" value="01/01/2000"></div></form></div>';
+        const form = document.getElementById('f');
+        const ev = new Event('submit', { cancelable: true, bubbles: true });
+        form.dispatchEvent(ev);
+
+        // 26 at check-in: not a child — blocked with the shared message.
+        expect(ev.defaultPrevented).toBe(true);
+        expect(form.querySelector('.js-dob-basics-msg')).not.toBeNull();
+        delete window.bookingData;
+    });
+});
+
 describe('facility chips "+N more"', () => {
     function chips() {
         document.body.innerHTML = '<ul class="travel-bsidebar-features" data-travel-features>'

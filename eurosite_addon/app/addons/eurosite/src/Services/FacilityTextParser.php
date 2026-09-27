@@ -21,18 +21,35 @@ namespace Tygh\Addons\Eurosite\Services;
 final class FacilityTextParser
 {
     /** "Facilitati:", "Facilități hotel:", "Facilities:" — at the start of a line. */
-    private const HEADING = '/^\s*(?:facilit(?:a|ă)(?:t|ț|ţ)i|facilities)(?:\s+hotel)?\s*:\s*(.+)$/iu';
+    private const HEADING = '/^\s*(?:facilit(?:a|ă)(?:t|ț|ţ)i|facilities)(?:\s+hotel)?\s*:\s*(.*)$/iu';
 
     /**
      * @return list<string> chip labels, first letter capitalised, de-duplicated
      */
     public static function facilities(string $descriptionDet): array
     {
-        $text = self::plainText($descriptionDet);
-        foreach (preg_split('/\R/u', $text) ?: [] as $line) {
-            if (preg_match(self::HEADING, $line, $m) === 1) {
-                return self::items($m[1]);
+        $lines = preg_split('/\R/u', self::plainText($descriptionDet)) ?: [];
+        foreach ($lines as $i => $line) {
+            if (preg_match(self::HEADING, $line, $m) !== 1) {
+                continue;
             }
+            $list = trim($m[1]);
+            if ($list !== '') {
+                // The list is one sentence: "…, bar. Hotelul are 3 etaje…"
+                // must not turn the next sentence into chips.
+                return self::items((string) preg_replace('/\.\s+\p{Lu}.*$/su', '', $list));
+            }
+            // "Facilitati:" alone, the items as "- piscina" lines below it.
+            $bullets = [];
+            foreach (array_slice($lines, $i + 1) as $next) {
+                if (preg_match('/^\s*[-•*·]\s*(.+)$/u', $next, $b) === 1) {
+                    $bullets[] = $b[1];
+                } elseif (trim($next) !== '' || $bullets !== []) {
+                    break;
+                }
+            }
+
+            return self::items(implode(', ', $bullets));
         }
 
         return [];

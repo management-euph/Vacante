@@ -33,6 +33,24 @@ final class FacilityTextParserTest extends TestCase
         self::assertSame(['Pool', 'Gym'], FacilityTextParser::facilities('<p>Facilities: pool, gym, pool</p>'));
     }
 
+    /** The list is one sentence: the next one on the same line is not a chip. */
+    public function testTheListEndsWithItsSentence(): void
+    {
+        self::assertSame(
+            ['Aer conditionat', 'Bar'],
+            FacilityTextParser::facilities('Facilitati: aer conditionat, bar. Hotelul are 3 etaje, lift si parcare.'),
+        );
+    }
+
+    /** "Facilitati:" alone, the items as bullet lines under it. */
+    public function testBulletListUnderTheHeading(): void
+    {
+        self::assertSame(
+            ['Piscina', 'Bar', 'Wi-fi'],
+            FacilityTextParser::facilities('Facilitati:<br><br>- piscina<br>- bar<br>• Wi-fi<br><br>Camere: 40'),
+        );
+    }
+
     public function testNoFacilityLineGivesNoChips(): void
     {
         self::assertSame([], FacilityTextParser::facilities('Hotel situat in centru. Camere spatioase.'));

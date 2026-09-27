@@ -542,6 +542,13 @@
     // does not use data-expected-age (it re-prices on DOB change instead), so
     // this path is inert there.
 
+    // The form's check-in, or the page's normalised copy when the hidden
+    // field is not ISO (novoton passes the URL value through as-is).
+    function _checkInDate(checkInEl) {
+        return _parseIsoDate(checkInEl ? checkInEl.value : '')
+            || _parseIsoDate((window.bookingData && window.bookingData.checkIn) || '');
+    }
+
     function _parseIsoDate(iso) {
         if (!iso) return null;
         var p = String(iso).split('-');
@@ -566,7 +573,7 @@
 
         var form = input.form || input.closest('form');
         var checkInEl = form ? form.querySelector('input[name="check_in"]') : null;
-        var checkIn = _parseIsoDate(checkInEl ? checkInEl.value : '');
+        var checkIn = _checkInDate(checkInEl);
 
         var msgEl = input.parentElement ? input.parentElement.querySelector('.js-age-mismatch-msg') : null;
         var clear = function () {
@@ -709,7 +716,7 @@
         if (/child_\d+\]/.test(input.name || '')) {
             var form = input.form || input.closest('form');
             var checkInEl = form ? form.querySelector('input[name="check_in"]') : null;
-            var checkIn = _parseIsoDate(checkInEl ? checkInEl.value : '');
+            var checkIn = _checkInDate(checkInEl);
             if (checkIn) {
                 var age = calculateAgeAtDate(birth, checkIn);
                 if (age >= 18) {

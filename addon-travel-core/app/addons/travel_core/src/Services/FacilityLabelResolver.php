@@ -84,7 +84,9 @@ final class FacilityLabelResolver
             // never dropped). Nobody named it → "Facility #27", which at least
             // says what the bare "✓ 27" meant.
             if ($label === '' && $id !== '') {
-                $label = strtr($unnamed, ['[code]' => $id]);
+                // An unseeded lang key ("_travel_core.facility_unnamed") has
+                // no [code]: every chip would read the same and collapse.
+                $label = strtr(str_contains($unnamed, '[code]') ? $unnamed : 'Facility #[code]', ['[code]' => $id]);
             }
 
             if ($label !== '' && !in_array($label, $labels, true)) {
