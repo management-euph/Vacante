@@ -308,9 +308,32 @@ class PriceComputeCommand extends AbstractCronCommand
         $price = PriceInfoFormatter::toFloat($row['lowest_price']) * (1 + ($commission / 100));
         $price = ConfigProvider::isRoundPrices() ? round($price) : round($price, 2);
 
-        db_query('UPDATE ?:products SET price = ?d WHERE product_id = ?i', $price, PriceInfoFormatter::toInt($row['product_id']));
+        self::writeBasePrice(PriceInfoFormatter::toInt($row['product_id']), $price);
 
         return true;
+    }
+
+    /**
+     * Set a product's catalog price: its base row in ?:product_prices
+     * (quantity 1, all customer groups), created when the product has none.
+     *
+     * CS-Cart 4 keeps prices there: ?:products has no price column, so
+     * writing one there failed every compute_prices run with "Unknown
+     * column 'price' in 'SET' (1054)", one error per hotel.
+     */
+    public static function writeBasePrice(int $productId, float $price): void
+    {
+        if ($productId <= 0) {
+            return;
+        }
+
+        db_query(
+            'INSERT INTO ?:product_prices (product_id, price, lower_limit, usergroup_id)
+             VALUES (?i, ?d, 1, 0)
+             ON DUPLICATE KEY UPDATE price = VALUES(price)',
+            $productId,
+            $price,
+        );
     }
 
     /**

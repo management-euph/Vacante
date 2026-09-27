@@ -335,7 +335,7 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
             $commission = ConfigProvider::getCommission();
             $withComm = $lowestPrice * (1 + ($commission / 100));
             $withComm = ConfigProvider::isRoundPrices() ? round($withComm) : round($withComm, 2);
-            db_query("UPDATE ?:products SET price = ?d WHERE product_id = ?i", $withComm, $product_id);
+            \Tygh\Addons\NovotonHolidays\Cron\Commands\PriceComputeCommand::writeBasePrice(TypeCoerce::toInt($product_id), $withComm);
         }
 
         return $packagesUpdated > 0 ? true : 'no_data';
