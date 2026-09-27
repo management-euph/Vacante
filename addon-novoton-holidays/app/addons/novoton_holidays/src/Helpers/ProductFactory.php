@@ -70,9 +70,7 @@ class ProductFactory implements ProductFactoryInterface
         $description = '';
         try {
             $descResponse = $api->getHotelDescription($hotelId, 'UK');
-            if (isset($descResponse->Description)) {
-                $description = (string)$descResponse->Description;
-            }
+            $description = HotelDescription::fromResponse($descResponse);
         } catch (ApiException) {
             // Ignore description fetch errors
         }

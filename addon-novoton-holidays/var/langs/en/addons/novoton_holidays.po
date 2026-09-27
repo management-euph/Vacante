@@ -4407,3 +4407,11 @@ msgstr "[n] live products are outside the destination whitelist."
 msgctxt "Languages::novoton_holidays.dash_dest_review"
 msgid "Review destinations"
 msgstr "Review destinations"
+
+msgctxt "Languages::novoton_holidays.dash_job_backfill_descriptions"
+msgid "Backfill descriptions"
+msgstr "Backfill descriptions"
+
+msgctxt "Languages::novoton_holidays.dash_job_backfill_descriptions_desc"
+msgid "Fills in the description of products created without one"
+msgstr "Fills in the description of products created without one"

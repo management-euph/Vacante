@@ -195,6 +195,14 @@ return [
         'en' => 'Re-attaches images to products that synced without them',
         'ro' => 'Reatașează imaginile produselor sincronizate fără ele',
     ],
+    'novoton_holidays.dash_job_backfill_descriptions' => [
+        'en' => 'Backfill descriptions',
+        'ro' => 'Completare descrieri',
+    ],
+    'novoton_holidays.dash_job_backfill_descriptions_desc' => [
+        'en' => 'Fills in the description of products created without one',
+        'ro' => 'Completează descrierea produselor create fără ea',
+    ],
     'novoton_holidays.dash_job_offers_update' => [
         'en' => 'Offers update',
         'ro' => 'Actualizare oferte',

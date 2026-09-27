@@ -48,9 +48,6 @@ class ConfigProvider extends AbstractConfigProvider
     /** @var self|null Instance-based singleton. */
     private static ?self $instance = null;
 
-    /** @var string|null Cached addon version, loaded once per request. */
-    private static ?string $version = null;
-
     /** @var array<string, mixed>|null Instance-level settings (for injected/test instances). */
     private ?array $instanceSettings;
 
@@ -110,7 +107,6 @@ class ConfigProvider extends AbstractConfigProvider
     {
         static::resetSettingsCache();
         DestinationScope::setCurrent(null);
-        self::$version = null;
         self::$instance = null;
     }
 
@@ -274,16 +270,17 @@ class ConfigProvider extends AbstractConfigProvider
         ) ?: '');
     }
 
+    /**
+     * The version of the code that is running (Constants::VERSION, kept
+     * equal to addon.xml's <version>).
+     *
+     * Not ?:addons.version: CS-Cart writes that only on install or upgrade,
+     * and these stores update by pulling code, so it kept showing the
+     * version the store was first installed with.
+     */
     public static function getVersion(): string
     {
-        if (self::$version === null) {
-            self::$version = TypeCoerce::toString(db_get_field(
-                'SELECT version FROM ?:addons WHERE addon = ?s',
-                self::ADDON_ID,
-            )) ?: 'unknown';
-        }
-
-        return self::$version;
+        return Constants::VERSION;
     }
 
     // ── Array Settings ──

@@ -89,12 +89,19 @@ final class DestinationSyncScopeTest extends TestCase
         self::assertStringContainsString($needle, $src);
     }
 
-    /** Incremental hotelinfo drops known out-of-scope hotels; unknown new ones stay. */
-    public function testIncrementalHotelInfoDropsOnlyKnownOutOfScopeHotels(): void
+    /**
+     * Incremental hotelinfo keeps only known, in-scope hotels. An ID offers_update
+     * reports before hotel_list brought the hotel in is dropped too: processItem()
+     * only UPDATEs the hotel row, so that API call changed nothing.
+     */
+    public function testIncrementalHotelInfoKeepsOnlyKnownInScopeHotels(): void
     {
         $src = (string) file_get_contents(self::root() . '/src/Helpers/BatchedHotelInfoSyncV2.php');
 
-        self::assertStringContainsString("'SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id IN (?a) AND NOT ' . \$scope", $src);
-        self::assertStringContainsString('array_diff($changed, $outside)', $src);
+        self::assertStringContainsString("'SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id IN (?a) AND ' . \$scope", $src);
+        self::assertStringContainsString('array_intersect($changed, $inScope)', $src);
+        self::assertStringNotContainsString('array_diff($changed, $outside)', $src);
+        self::assertStringContainsString("db_query('UPDATE ?:novoton_hotels SET ?u WHERE hotel_id = ?s'", $src);
+        self::assertStringNotContainsString('INSERT INTO ?:novoton_hotels', $src, 'if hotelinfo ever inserts hotels, unknown IDs are worth a call again');
     }
 }

@@ -1,5 +1,14 @@
 # Novoton Holidays - Changelog
 
+## 4.1.0 — Destination whitelist
+
+- **NEW:** Novoton → Destinations: per country Not sold / All resorts / Only selected, replacing the dashboard's Excluded resorts and the "Selected countries" setting once saved. New and vanished resorts are flagged; "Disable products outside the whitelist" is its own confirmed step.
+- **CHANGED:** every product creator (add_hotels_as_products, offers_update, admin run_cron) and the per-hotel API syncs (hotelinfo, priceinfo, facilities, room_price) follow the whitelist, plus hotels with live products.
+- **FIXED:** compute_prices and the per-hotel price update wrote `?:products.price`, a column CS-Cart 4 does not have ("Unknown column 'price' (1054)" per hotel); catalog prices now go to the base row of `?:product_prices`.
+- **FIXED:** offers_update and incremental hotelinfo read only the first `<Offer>`.
+- **FIXED:** products were created without a description: Novoton sends it as HTML elements inside `<Description>`, and `(string) $response->Description` read only the whitespace around them. `HotelDescription` reads the HTML and drops the Word-pasted inline styles. New on-demand job `backfill_descriptions` fills in the products already created.
+- **FIXED:** the admin title and diagnostics showed the version the store was installed with; they now show the running code's version.
+
 ## A96 — Refactor: CS-Cart Special CSS Classes in Admin Templates
 
 - **REFACTORED:** Backend admin templates to use CS-Cart special utility classes instead of inline styles

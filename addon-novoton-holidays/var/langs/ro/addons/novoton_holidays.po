@@ -4407,3 +4407,11 @@ msgstr "[n] produse active sunt în afara listei de destinații."
 msgctxt "Languages::novoton_holidays.dash_dest_review"
 msgid "Review destinations"
 msgstr "Verifică destinațiile"
+
+msgctxt "Languages::novoton_holidays.dash_job_backfill_descriptions"
+msgid "Backfill descriptions"
+msgstr "Completare descrieri"
+
+msgctxt "Languages::novoton_holidays.dash_job_backfill_descriptions_desc"
+msgid "Fills in the description of products created without one"
+msgstr "Completează descrierea produselor create fără ea"

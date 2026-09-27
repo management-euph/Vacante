@@ -220,19 +220,29 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
         }
 
         // Incremental: changed hotels from offers_update API, unioned
-        // with hotels that never had hotelinfo synced yet — minus the known
-        // hotels outside the scope. A hotel not in ?:novoton_hotels yet has
-        // no resort to judge by, so it stays.
+        // with hotels that never had hotelinfo synced yet — kept only when
+        // the hotel is in ?:novoton_hotels AND in the scope.
+        //
+        // An ID offers_update reports before hotel_list has brought the
+        // hotel in is dropped too: processItem() only UPDATEs the hotel row,
+        // so its hotelinfo call changed nothing. The weekly hotel_list adds
+        // the hotel, and the next incremental run fetches it as never-synced,
+        // with its resort known.
         $changed = $this->changedHotelDetector->detect($this->getApi(), $countries);
         if ($changed === []) {
             return [];
         }
-        $outside = TypeCoerce::toStringList(db_get_fields(
-            'SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id IN (?a) AND NOT ' . $scope,
+        $inScope = TypeCoerce::toStringList(db_get_fields(
+            'SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id IN (?a) AND ' . $scope,
             $changed,
         ));
+        $kept = array_values(array_intersect($changed, $inScope));
+        $skipped = count($changed) - count($kept);
+        if ($skipped > 0) {
+            $this->logger->output("Skipping {$skipped} changed hotels outside the destinations we sell or not in hotel_list yet.");
+        }
 
-        return array_values(array_diff($changed, $outside));
+        return $kept;
     }
 
     /**

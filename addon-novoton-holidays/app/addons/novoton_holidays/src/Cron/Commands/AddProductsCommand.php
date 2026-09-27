@@ -191,9 +191,7 @@ class AddProductsCommand extends AbstractCronCommand
                 $description = '';
                 try {
                     $desc = $this->api->hotels()->getHotelDescription($hotel_id, 'UK');
-                    if (isset($desc->Description)) {
-                        $description = (string) $desc->Description;
-                    }
+                    $description = \Tygh\Addons\NovotonHolidays\Helpers\HotelDescription::fromResponse($desc);
                 } catch (\Exception $e) {
                     fn_log_event('general', 'runtime', ['message' => "Novoton: Failed to get description for hotel {$hotel_id}", 'error' => $e->getMessage()]);
                 }

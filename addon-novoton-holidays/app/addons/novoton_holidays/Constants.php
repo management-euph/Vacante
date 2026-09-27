@@ -20,7 +20,7 @@ final class Constants
 {
     // Addon info
     public const string ADDON_ID = 'novoton_holidays';
-    public const string VERSION = '3.2.0';
+    public const string VERSION = '4.1.0';
 
     // ========== Booking Status ==========
     // Shared statuses are in TravelConstants (STATUS_PENDING, STATUS_CONFIRMED, etc.)
