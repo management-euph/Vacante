@@ -107,7 +107,6 @@ final class SphinxBookingSidebarBuilder
             name: $header->name,
             stars: $header->stars,
             available: $available,
-            availabilityStatus: self::status($confirmation, $available),
             locationLine: $header->locationLine,
             mapUrl: $header->mapUrl,
             features: $hotelRow !== null
@@ -146,6 +145,7 @@ final class SphinxBookingSidebarBuilder
             cancelFreeUntil: $timeline['free_until'],
             paymentLines: $paymentLines,
             roomLabel: $roomName,
+            availabilityStatus: self::status($confirmation, $available),
             discountLabel: $money !== null && $primaryOld > $primaryTotal ? $discountLabel : '',
             perNight: $perNight,
             cancelSteps: $timeline['steps'],

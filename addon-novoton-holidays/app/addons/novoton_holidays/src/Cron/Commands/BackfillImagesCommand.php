@@ -59,19 +59,19 @@ class BackfillImagesCommand extends AbstractCronCommand
     /** @param callable(string): \SimpleXMLElement $fetcher */
     public function setImageFetcher(callable $fetcher): void
     {
-        $this->imageFetcher = \Closure::fromCallable($fetcher);
+        $this->imageFetcher = $fetcher(...);
     }
 
     /** @param callable(int, list<string>, bool): int $attacher */
     public function setAttacher(callable $attacher): void
     {
-        $this->attacher = \Closure::fromCallable($attacher);
+        $this->attacher = $attacher(...);
     }
 
     /** @param callable(int): void $sleeper */
     public function setSleeper(callable $sleeper): void
     {
-        $this->sleeper = \Closure::fromCallable($sleeper);
+        $this->sleeper = $sleeper(...);
     }
 
     /**

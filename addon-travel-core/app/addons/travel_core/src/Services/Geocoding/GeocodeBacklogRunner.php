@@ -49,7 +49,7 @@ final class GeocodeBacklogRunner
 
     /**
      * @param list<array<string, mixed>> $candidates Rows of {id, lat, lng, label}
-     * @param callable(string, ?ReverseGeocodeResult): void $persist
+     * @param callable(string, ReverseGeocodeResult|null): void $persist
      * @return array{found: int, empty: int, aborted: bool, error: string}
      */
     public function run(array $candidates, callable $persist): array

@@ -562,10 +562,6 @@ return [
         'en' => 'Date',
         'ro' => 'Data',
     ],
-    'sphinx_holidays.departure' => [
-        'en' => 'Departure',
-        'ro' => 'Plecare',
-    ],
     'sphinx_holidays.departure_from' => [
         'en' => 'Departure from',
         'ro' => 'Plecare din',

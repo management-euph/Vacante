@@ -270,9 +270,7 @@ if ($failSample !== null) {
         . "timestamp-urile de mai sus; (c) un exemplu de cautare functionala pentru\n"
         . "acest cont (oras + date care ar trebui sa returneze oferte).\n\n";
 }
-$report .= ""
-
-    . 'VERDICT: controls ' . ($controlsOk ? 'OK' : 'FAILING (!)') . ' / searches '
+$report .= 'VERDICT: controls ' . ($controlsOk ? 'OK' : 'FAILING (!)') . ' / searches '
     . ($searchesFail ? 'ALL FAILING' : ($failSample !== null ? 'MIXED (intermittent)' : 'ALL WORKING')) . "\n";
 
 echo $report;

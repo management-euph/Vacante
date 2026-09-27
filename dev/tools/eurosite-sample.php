@@ -44,8 +44,8 @@ if (!is_file($es_docroot . '/init.php')) {
         . "container, where dev/ is mounted inside the CS-Cart docroot (see docker/fullstore).\n");
 }
 
-define('AREA', 'A');
-define('ACCOUNT_TYPE', 'admin');
+const AREA = 'A';
+const ACCOUNT_TYPE = 'admin';
 require $es_docroot . '/init.php';
 
 /** @return string request/CLI parameter */

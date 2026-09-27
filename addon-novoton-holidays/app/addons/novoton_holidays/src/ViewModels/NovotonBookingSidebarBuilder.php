@@ -135,8 +135,6 @@ final class NovotonBookingSidebarBuilder
             name: $header->name,
             stars: $header->stars,
             available: $available,
-            availabilityStatus: $availabilityStatus,
-            availabilityNote: $availabilityNote,
             locationLine: $header->locationLine,
             mapUrl: $header->mapUrl,
             // The full list: the template shows featuresMax chips + "+N more".
@@ -171,6 +169,8 @@ final class NovotonBookingSidebarBuilder
             productId: $productId,
             total: $total,
             oldTotal: $oldTotal,
+            availabilityStatus: $availabilityStatus,
+            availabilityNote: $availabilityNote,
             discountLabel: $oldTotal !== '' ? $discountLabel : '',
             perNight: $perNight !== null && $money !== null ? $money->formatDisplay($perNight) : '',
             featuresMax: $featuresMax,
@@ -239,7 +239,7 @@ final class NovotonBookingSidebarBuilder
         $labels = [];
         foreach ($rooms as $room) {
             $total += $room['price'];
-            $old += $room['old'] > $room['price'] ? $room['old'] : $room['price'];
+            $old += max($room['old'], $room['price']);
             if ($room['label'] !== '' && !in_array($room['label'], $labels, true)) {
                 $labels[] = $room['label'];
             }
