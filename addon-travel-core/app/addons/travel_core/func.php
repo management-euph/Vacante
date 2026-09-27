@@ -303,6 +303,26 @@ function fn_settings_variants_addons_travel_core_default_currency(): array
 }
 
 /**
+ * Options of "Skip the cart page for" (a multiple-checkboxes setting).
+ *
+ * Supplied here, not only by addon.xml, because a store that got the setting
+ * through SettingsMigrator's self-heal has no ?:settings_variants labels, and
+ * CS-Cart lists no option without one ("No items defined"). The keys are the
+ * add-on ids CartSkipPolicy checks; the names are brands, the same in every
+ * language.
+ *
+ * @return array<string, string>
+ */
+function fn_settings_variants_addons_travel_core_skip_cart_for(): array
+{
+    return [
+        'novoton_holidays' => 'Novoton Holidays',
+        'sphinx_holidays' => 'Sphinx Holidays',
+        'eurosite' => 'Eurosite',
+    ];
+}
+
+/**
  * Seed the travel_feature_map table with canonical codes.
  * Idempotent — uses INSERT IGNORE to skip existing entries.
  */

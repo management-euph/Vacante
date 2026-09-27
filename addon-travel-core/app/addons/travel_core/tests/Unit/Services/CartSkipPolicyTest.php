@@ -92,6 +92,21 @@ final class CartSkipPolicyTest extends TestCase
         self::assertStringContainsString('msgstr "Continuă rezervarea"', self::src('addon-travel-core/var/langs/ro/addons/travel_core.po'));
     }
 
+    /**
+     * A store that got the setting from the self-heal has no variant labels in
+     * the database, and CS-Cart then shows "No items defined". The func.php
+     * callback supplies the options on every store, with the addon.xml ids.
+     */
+    public function testTheOptionsComeFromTheVariantsCallback(): void
+    {
+        $fixture = dirname(__DIR__, 2) . '/Fixtures/install_environment_sim.php';
+        $funcPhp = dirname(__DIR__, 3) . '/func.php';
+        exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($fixture) . ' ' . escapeshellarg($funcPhp) . ' 2>&1', $out, $code);
+
+        self::assertSame(0, $code, implode("\n", $out));
+        self::assertStringContainsString('skip_cart_for=novoton_holidays,sphinx_holidays,eurosite', implode("\n", $out));
+    }
+
     /** @return iterable<string, array{string, string}> */
     public static function redirects(): iterable
     {

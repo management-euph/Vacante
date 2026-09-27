@@ -16,4 +16,5 @@ eval('namespace Tygh; class Registry { public static function get($k){ return $k
 require $argv[1]; // the func.php under test
 $v1 = fn_settings_variants_addons_travel_core_default_currency();
 $v2 = fn_settings_variants_addons_travel_core_feature_id_property_rating();
-echo "OK variants: currency=" . count($v1) . " features=" . count($v2) . "\n";
+$v3 = fn_settings_variants_addons_travel_core_skip_cart_for();
+echo "OK variants: currency=" . count($v1) . " features=" . count($v2) . " skip_cart_for=" . implode(',', array_keys($v3)) . "\n";
