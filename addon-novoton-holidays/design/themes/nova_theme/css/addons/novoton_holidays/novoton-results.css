@@ -11,17 +11,22 @@
  * JS apparatus of search.tpl v2.7.x (every offer used to be rendered TWICE —
  * a mobile card and a desktop table row — glued together with !important).
  * Colors come from the design-token bridge (travel_core styles.less).
+ *
+ * Rules are scoped to .travel-search-results-page, the wrapper shared by the
+ * standalone results page AND the product page's inline results shell (the
+ * product page has no .novoton-search-results-page, so rules scoped to it
+ * never applied there: the multi-room block rendered unstyled).
  */
 
 .novoton-search-results-page {
     padding: 0 10px;
 }
-.novoton-search-results-page .novoton-search-form-wrapper {
+.travel-search-results-page .novoton-search-form-wrapper {
     margin-bottom: 20px;
 }
 
 /* ── Debug panel ──────────────────────────────────────────────────────── */
-.novoton-search-results-page .novoton-debug-panel {
+.travel-search-results-page .novoton-debug-panel {
     background: #f8f8f8;
     border: 2px solid var(--nvt-danger, #e74c3c);
     padding: 15px;
@@ -33,27 +38,27 @@
     overflow-y: auto;
     border-radius: 8px;
 }
-.novoton-search-results-page .novoton-debug-panel h4 {
+.travel-search-results-page .novoton-debug-panel h4 {
     color: var(--nvt-danger, #e74c3c);
     margin-top: 0;
 }
 
 /* ── Hotel header extras ──────────────────────────────────────────────── */
-.novoton-search-results-page .novoton-hotel-header-row {
+.travel-search-results-page .novoton-hotel-header-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
     gap: 15px;
 }
-.novoton-search-results-page .novoton-season-note {
+.travel-search-results-page .novoton-season-note {
     margin: 4px 0 0;
     font-size: 13px;
     color: var(--nvt-info, #0071c2);
 }
 
 /* ── Early-booking banner + chips ─────────────────────────────────────── */
-.novoton-search-results-page .novoton-early-banner {
+.travel-search-results-page .novoton-early-banner {
     background: #ff6b35;
     color: #fff;
     padding: 10px 20px;
@@ -62,7 +67,7 @@
     font-weight: 700;
     font-size: 15px;
 }
-.novoton-search-results-page .novoton-early-chip {
+.travel-search-results-page .novoton-early-chip {
     display: inline-block;
     background: #ff6b35;
     color: #fff;
@@ -72,7 +77,7 @@
     font-weight: 600;
     margin-top: 5px;
 }
-.novoton-search-results-page .novoton-extras-chip {
+.travel-search-results-page .novoton-extras-chip {
     display: inline-block;
     background: var(--nvt-discount-light, #e8f5e9);
     color: var(--nvt-discount, #2e7d32);
@@ -84,21 +89,21 @@
 }
 
 /* ── Offer card: novoton-specific content ─────────────────────────────── */
-.novoton-search-results-page .travel-offer-card--on-request {
+.travel-search-results-page .travel-offer-card--on-request {
     background: #fff8e1;
 }
-.novoton-search-results-page .novoton-offer-package {
+.travel-search-results-page .novoton-offer-package {
     font-size: 13px;
     color: var(--nvt-text, #333);
     margin-top: 3px;
 }
-.novoton-search-results-page .novoton-facilities {
+.travel-search-results-page .novoton-facilities {
     display: flex;
     flex-wrap: wrap;
     gap: 2px 12px;
     margin-top: 6px;
 }
-.novoton-search-results-page .novoton-facility {
+.travel-search-results-page .novoton-facility {
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -106,16 +111,16 @@
     font-size: 12px;
     line-height: 20px;
 }
-.novoton-search-results-page .novoton-facility .icon-ok {
+.travel-search-results-page .novoton-facility .icon-ok {
     color: var(--nvt-success, #28a745);
     font-size: 10px;
 }
-.novoton-search-results-page .novoton-goodinfo {
+.travel-search-results-page .novoton-goodinfo {
     font-size: 13px;
     color: var(--nvt-success-strong, #008009);
     margin-top: 6px;
 }
-.novoton-search-results-page .novoton-important-note {
+.travel-search-results-page .novoton-important-note {
     font-size: 12px;
     color: #856404;
     background: #fff3cd;
@@ -123,16 +128,16 @@
     border-radius: 4px;
     margin-top: 6px;
 }
-.novoton-search-results-page .novoton-board {
+.travel-search-results-page .novoton-board {
     font-weight: 600;
     color: var(--nvt-success-strong, #008009);
 }
-.novoton-search-results-page .novoton-perk {
+.travel-search-results-page .novoton-perk {
     font-size: 13px;
     color: var(--nvt-success-strong, #008009);
     margin-top: 5px;
 }
-.novoton-search-results-page .novoton-info-link {
+.travel-search-results-page .novoton-info-link {
     font-size: 12px;
     color: var(--nvt-info, #0071c2);
     text-decoration: none;
@@ -140,24 +145,24 @@
 }
 
 /* Quota / availability states */
-.novoton-search-results-page .novoton-quota--ok {
+.travel-search-results-page .novoton-quota--ok {
     color: var(--nvt-success-strong, #008009);
     font-size: 13px;
     font-weight: 600;
     margin-top: 8px;
 }
-.novoton-search-results-page .novoton-quota--low {
+.travel-search-results-page .novoton-quota--low {
     color: var(--nvt-danger, #dc3545);
     font-size: 13px;
     font-weight: 600;
     margin-top: 8px;
 }
-.novoton-search-results-page .novoton-quota--onrequest {
+.travel-search-results-page .novoton-quota--onrequest {
     color: var(--nvt-danger, #dc3545);
     font-size: 13px;
     margin-top: 8px;
 }
-.novoton-search-results-page .novoton-nearby {
+.travel-search-results-page .novoton-nearby {
     background: #fff8e1;
     border: 1px solid #ffe082;
     border-radius: 4px;
@@ -165,215 +170,558 @@
     margin-top: 6px;
     font-size: 12px;
 }
-.novoton-search-results-page .novoton-nearby strong {
+.travel-search-results-page .novoton-nearby strong {
     color: #f57f17;
 }
-.novoton-search-results-page .novoton-nearby a {
+.travel-search-results-page .novoton-nearby a {
     color: #e65100;
     text-decoration: underline;
     white-space: nowrap;
 }
 
 /* Price zone extras */
-.novoton-search-results-page .novoton-price-strike {
+.travel-search-results-page .novoton-price-strike {
     font-size: 14px;
     color: var(--nvt-text-light, #999);
     text-decoration: line-through;
 }
 
-/* ── Multi-room selection ─────────────────────────────────────────────── */
-.novoton-search-results-page .novoton-mr-panel {
-    background: var(--nvt-bg, #fff);
-    border: 1px solid var(--nvt-border, #e0e0e0);
-    border-radius: 8px;
-    overflow: hidden;
+/* ── Multi-room selection ─────────────────────────────────────────────────
+   Scoped to .novoton-mr (the #multi-room-selection block itself), not to
+   the page wrapper: the same markup renders on the standalone search page
+   AND inside the product page's results shell, whose wrapper differs.
+   Up to 3 rooms every room is open; 4-12 rooms open one at a time
+   (data-stepper, driven by multiroom-booking.js). */
+.novoton-mr {
+    --mr-accent: var(--nvt-primary, #1b62b8);
+    --mr-accent-tint: var(--nvt-primary-tint, #eef5fd);
+    --mr-text: var(--nvt-text, #1c2430);
+    --mr-muted: var(--nvt-text-light, #5b6573);
+    --mr-line: var(--nvt-border, #dfe4ea);
+    --mr-ok: var(--nvt-success-strong, #177245);
+    --mr-ok-tint: #e7f5ed;
+    --mr-warn: #8a4b08;
+    --mr-warn-tint: #fdf1e2;
+    color: var(--mr-text);
 }
-.novoton-search-results-page .novoton-mr-header {
-    background: var(--nvt-bg-light, #f8f9fa);
-    padding: 15px 20px;
-    border-bottom: 1px solid var(--nvt-border, #e0e0e0);
-}
-.novoton-search-results-page .novoton-mr-header h3 {
-    margin: 0 0 5px;
-    color: var(--nvt-price-color, #003580);
-    font-size: 18px;
-}
-.novoton-search-results-page .novoton-mr-header p {
-    margin: 0;
-    color: var(--nvt-text-light, #666);
-    font-size: 14px;
-}
-.novoton-search-results-page .novoton-mr-grid {
+.novoton-mr__layout {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 20px;
-    padding: 20px;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 24px;
+    align-items: start;
 }
-.novoton-search-results-page .room-type-selection {
-    background: var(--nvt-bg, #fff);
-    border: 2px solid var(--nvt-border, #e0e0e0);
-    border-radius: 8px;
+.novoton-mr__rooms {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+}
+.novoton-mr .novoton-mr-header h3 {
+    margin: 0 0 4px;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--mr-text);
+}
+.novoton-mr .novoton-mr-header p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--mr-muted);
+}
+
+/* One room */
+.novoton-mr-room {
+    background: #fff;
+    border: 1px solid var(--mr-line);
+    border-radius: 12px;
     overflow: hidden;
 }
-.novoton-search-results-page .novoton-mr-room-head {
-    background: var(--nvt-bg-light, #f8f9fa);
-    padding: 12px 20px;
+.novoton-mr-room.is-chosen {
+    border-color: #b9d3f0;
+}
+.novoton-mr-room__heading {
+    margin: 0;
+    font: inherit;
+}
+.novoton-mr-room__toggle {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid var(--nvt-price-color, #003580);
+    gap: 12px;
+    width: 100%;
+    min-height: 60px;
+    padding: 12px 16px;
+    border: 0;
+    background: #fafbfc;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
 }
-.novoton-search-results-page .novoton-mr-room-head strong {
-    font-size: 16px;
-    color: var(--nvt-price-color, #003580);
+.novoton-mr-room.is-open .novoton-mr-room__toggle {
+    border-bottom: 1px solid #eceff3;
 }
-.novoton-search-results-page .novoton-mr-room-occupancy {
-    color: var(--nvt-text, #333);
-    margin-left: 8px;
+.novoton-mr-room__toggle:hover {
+    background: #f3f6fa;
+}
+.novoton-mr-room__toggle:focus-visible {
+    outline: 3px solid var(--mr-accent);
+    outline-offset: -3px;
+}
+.novoton-mr-room__num {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--mr-accent);
+    color: #fff;
+    font-weight: 700;
     font-size: 14px;
 }
-.novoton-search-results-page .novoton-mr-room-price {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--nvt-price-color, #003580);
+.novoton-mr-room.is-chosen .novoton-mr-room__num {
+    background: var(--mr-ok);
 }
-.novoton-search-results-page .novoton-mr-options {
-    padding: 10px;
-    max-height: 400px;
-    overflow-y: auto;
-}
-.novoton-search-results-page .room-option {
+.novoton-mr-room__title {
     display: flex;
-    align-items: flex-start;
-    padding: 12px 15px;
-    border: 2px solid var(--nvt-border, #e0e0e0);
-    border-radius: 8px;
-    margin-bottom: 8px;
+    flex-direction: column;
+    gap: 2px;
+    flex-grow: 1;
+    min-width: 0;
+}
+.novoton-mr-room__label {
+    font-size: 16px;
+    font-weight: 700;
+}
+.novoton-mr .novoton-mr-room-occupancy {
+    font-size: 13px;
+    color: var(--mr-muted);
+}
+.novoton-mr-room__status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    font-size: 14px;
+    text-align: right;
+}
+.novoton-mr-room__choice {
+    color: var(--mr-ok);
+    font-weight: 600;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.novoton-mr-room__choice:empty {
+    display: none;
+}
+.novoton-mr .novoton-mr-room-price {
+    font-weight: 700;
+    white-space: nowrap;
+}
+.novoton-mr-room:not(.is-chosen) .novoton-mr-room-price {
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--mr-warn-tint);
+    color: var(--mr-warn);
+    font-size: 13px;
+    font-weight: 600;
+}
+.novoton-mr-room__chevron {
+    flex-shrink: 0;
+    color: var(--mr-muted);
+    transition: transform 0.15s;
+}
+.novoton-mr-room.is-open .novoton-mr-room__chevron {
+    transform: rotate(180deg);
+}
+
+/* Options of one room */
+.novoton-mr .novoton-mr-options {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px;
+}
+.novoton-mr .novoton-mr-options[hidden] {
+    display: none;
+}
+.novoton-mr .room-option {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 0;
+    padding: 14px;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    background: #fff;
     cursor: pointer;
-    transition: all 0.2s;
-    background: var(--nvt-bg, #fff);
-    gap: 12px;
 }
-.novoton-search-results-page .room-option:hover {
-    border-color: var(--nvt-primary-light, #4a6fa5);
+.novoton-mr .room-option:hover {
+    background: #f7f9fc;
 }
-.novoton-search-results-page .room-option input[type="radio"] {
+.novoton-mr .room-option.is-selected {
+    border-color: var(--mr-accent);
+    background: var(--mr-accent-tint);
+}
+.novoton-mr .room-option input[type="radio"] {
+    flex-shrink: 0;
     width: 20px;
     height: 20px;
-    margin-top: 2px;
-    flex-shrink: 0;
+    margin: 0;
+    accent-color: var(--mr-accent);
 }
-.novoton-search-results-page .novoton-mr-option-body {
-    flex: 1;
+.novoton-mr .novoton-mr-option-body {
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    align-items: flex-start;
-    gap: 10px;
+    gap: 16px;
+    flex-grow: 1;
     min-width: 0;
 }
-.novoton-search-results-page .novoton-mr-option-main {
-    flex: 1;
+.novoton-mr .novoton-mr-option-main {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     min-width: 0;
 }
-.novoton-search-results-page .novoton-mr-option-name {
+.novoton-mr .novoton-mr-option-name {
+    font-size: 15px;
     font-weight: 600;
-    color: var(--nvt-text, #333);
 }
-.novoton-search-results-page .novoton-mr-option-board {
+.novoton-mr .novoton-mr-option-board {
+    font-size: 14px;
+    color: #3d4652;
+}
+.novoton-mr .novoton-mr-package {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #e8f0fb;
+    color: #1b4f8f;
+    font-size: 12px;
+    font-weight: 600;
+}
+.novoton-mr .novoton-info-link {
+    width: fit-content;
     font-size: 13px;
-    color: var(--nvt-text-light, #666);
 }
-.novoton-search-results-page .novoton-mr-option-board .novoton-mr-package {
-    color: var(--nvt-price-color, #003580);
-    font-size: 11px;
-    margin-left: 5px;
-}
-.novoton-search-results-page .novoton-mr-option-price {
-    text-align: right;
+.novoton-mr .novoton-mr-option-price {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
     flex-shrink: 0;
+    min-width: 120px;
+    text-align: right;
 }
-.novoton-search-results-page .novoton-mr-option-price .novoton-price-strike {
+.novoton-mr .novoton-mr-option-price .novoton-price-strike {
+    font-size: 13px;
+    color: var(--mr-muted);
+    text-decoration: line-through;
+}
+.novoton-mr .novoton-mr-price-amount {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--mr-text);
+}
+.novoton-mr .novoton-mr-price-note {
+    font-size: 12px;
+    color: var(--mr-muted);
+}
+.novoton-mr .novoton-mr-quota--onrequest,
+.novoton-mr .novoton-mr-quota--low,
+.novoton-mr .novoton-mr-quota--ok {
     font-size: 12px;
 }
-.novoton-search-results-page .novoton-mr-price-amount {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--nvt-price-color, #003580);
-}
-.novoton-search-results-page .novoton-mr-quota--onrequest,
-.novoton-search-results-page .novoton-mr-quota--low,
-.novoton-search-results-page .novoton-mr-quota--ok {
-    font-size: 11px;
-    margin-top: 2px;
-}
-.novoton-search-results-page .novoton-mr-quota--onrequest {
-    color: var(--nvt-danger, #dc3545);
-}
-.novoton-search-results-page .novoton-mr-quota--low {
-    color: var(--nvt-danger, #dc3545);
+.novoton-mr .novoton-mr-quota--onrequest,
+.novoton-mr .novoton-mr-quota--low {
+    color: var(--nvt-danger, #b42318);
     font-weight: 600;
 }
-.novoton-search-results-page .novoton-mr-quota--ok {
-    color: var(--nvt-success-strong, #008009);
+.novoton-mr .novoton-mr-quota--ok {
+    color: var(--mr-ok);
     font-weight: 600;
 }
-.novoton-search-results-page .novoton-mr-empty {
+.novoton-mr .novoton-mr-empty {
     padding: 20px;
-    text-align: center;
-    color: var(--nvt-danger, #dc3545);
+    border-radius: 8px;
     background: #fff5f5;
-    border-radius: 6px;
+    color: var(--nvt-danger, #b42318);
+    text-align: center;
 }
-.novoton-search-results-page .novoton-mr-total-bar {
-    background: var(--nvt-bg-light, #f8f9fa);
-    border-top: 3px solid var(--nvt-price-color, #003580);
-    color: var(--nvt-text, #333);
-    padding: 25px;
+
+/* After a choice: apply it to rooms with the same guests / next room */
+.novoton-mr-next {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 8px 6px 4px;
 }
-.novoton-search-results-page .novoton-mr-total-row {
+.novoton-mr-next[hidden],
+.novoton-mr-next button[hidden] {
+    display: none;
+}
+.novoton-mr-next button {
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.novoton-mr-next__same {
+    border: 1px solid var(--mr-accent);
+    background: #fff;
+    color: var(--mr-accent);
+}
+.novoton-mr-next__go {
+    border: 0;
+    background: var(--mr-accent);
+    color: #fff;
+}
+
+/* Summary */
+.novoton-mr__summary {
+    position: sticky;
+    top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 20px;
+    border: 1px solid var(--mr-line);
+    border-radius: 12px;
+    background: #fff;
+    box-sizing: border-box;
+}
+.novoton-mr__summary-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--mr-muted);
+}
+.novoton-mr__progress {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 600;
+}
+.novoton-mr__bar {
+    display: block;
+    height: 6px;
+    border-radius: 999px;
+    background: #e3e7ec;
+    overflow: hidden;
+}
+.novoton-mr__bar-fill {
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--mr-ok);
+    transition: width 0.2s;
+}
+.novoton-mr__list {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid #eceff3;
+    border-bottom: 1px solid #eceff3;
+}
+.novoton-mr__list-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 20px;
-}
-.novoton-search-results-page .novoton-mr-total-label {
+    gap: 10px;
+    width: 100%;
+    min-height: 36px;
+    padding: 6px 4px;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
     font-size: 14px;
-    color: var(--nvt-text-light, #666);
+    text-align: left;
+    cursor: pointer;
 }
-.novoton-search-results-page .novoton-mr-total {
-    font-size: 32px;
+.novoton-mr__list-item:hover {
+    background: #f7f9fc;
+}
+.novoton-mr__list-price {
+    font-weight: 600;
+    white-space: nowrap;
+}
+.novoton-mr__list-item.is-pending .novoton-mr__list-price {
+    color: var(--mr-warn);
+    font-weight: 500;
+}
+.novoton-mr .novoton-mr-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+}
+.novoton-mr .novoton-mr-total-label {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--mr-text);
+}
+.novoton-mr .novoton-mr-total {
+    font-size: 26px;
     font-weight: 700;
-    color: var(--nvt-price-color, #003580);
+    color: var(--mr-text);
+    white-space: nowrap;
 }
-.novoton-search-results-page .novoton-mr-total-bar .travel-offer-book-btn[disabled] {
-    opacity: 0.5;
+.novoton-mr__savings {
+    margin-top: -8px;
+    color: var(--mr-ok);
+    font-size: 14px;
+    font-weight: 600;
+    text-align: right;
+}
+.novoton-mr__savings[hidden] {
+    display: none;
+}
+.novoton-mr .travel-offer-book-btn.novoton-mr__book {
+    width: 100%;
+    min-height: 50px;
+    justify-content: center;
+}
+.novoton-mr .travel-offer-book-btn.novoton-mr__book[disabled] {
+    background: #e3e7ec;
+    border-color: #e3e7ec;
+    color: #4a5361;
+    opacity: 1;
     cursor: not-allowed;
+}
+.novoton-mr__hint {
+    margin: 0;
+    font-size: 13px;
+    color: var(--mr-muted);
+    text-align: center;
+}
+
+/* Tablet and phone: rooms full width, the summary becomes a bar fixed to
+   the bottom of the screen (progress, total and the book button) */
+@media (max-width: 991px) {
+    .novoton-mr__layout {
+        grid-template-columns: minmax(0, 1fr);
+        padding-bottom: 150px;
+    }
+    .novoton-mr__summary {
+        position: fixed;
+        top: auto;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1000;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 6px 12px;
+        padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+        border-width: 1px 0 0;
+        border-radius: 0;
+        box-shadow: 0 -4px 16px rgba(20, 30, 45, 0.1);
+    }
+    .novoton-mr__summary-title,
+    .novoton-mr__list,
+    .novoton-mr__hint {
+        display: none;
+    }
+    .novoton-mr__progress {
+        grid-column: 1 / -1;
+        font-size: 13px;
+    }
+    .novoton-mr .novoton-mr-total-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0;
+    }
+    .novoton-mr .novoton-mr-total-label {
+        font-size: 12px;
+        color: var(--mr-muted);
+    }
+    .novoton-mr .novoton-mr-total {
+        font-size: 22px;
+    }
+    .novoton-mr__savings {
+        grid-column: 1;
+        margin: 0;
+        font-size: 12px;
+        text-align: left;
+    }
+    .novoton-mr .travel-offer-book-btn.novoton-mr__book {
+        grid-column: 2;
+        grid-row: 2 / span 2;
+        width: auto;
+        align-self: center;
+        padding: 0 18px;
+    }
+}
+@media (max-width: 600px) {
+    .novoton-mr .room-option {
+        align-items: flex-start;
+        padding: 12px 10px;
+    }
+    .novoton-mr .novoton-mr-option-body {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    .novoton-mr .novoton-mr-option-price {
+        flex-direction: row;
+        align-items: baseline;
+        justify-content: flex-start;
+        gap: 8px;
+        min-width: 0;
+    }
+    .novoton-mr-room__choice {
+        display: none;
+    }
+    .novoton-mr .travel-offer-book-btn.novoton-mr__book {
+        max-width: 55vw;
+        font-size: 14px;
+        white-space: normal;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .novoton-mr-room__chevron,
+    .novoton-mr__bar-fill {
+        transition: none;
+    }
 }
 
 /* ── Multi-room configuration-not-available error ─────────────────────── */
-.novoton-search-results-page .novoton-config-error {
+.travel-search-results-page .novoton-config-error {
     background: var(--nvt-bg, #fff);
     border: 1px solid var(--nvt-border, #e0e0e0);
     border-radius: 8px;
     padding: 30px;
 }
-.novoton-search-results-page .novoton-config-error-inner {
+.travel-search-results-page .novoton-config-error-inner {
     text-align: center;
     max-width: 600px;
     margin: 0 auto;
 }
-.novoton-search-results-page .novoton-config-error h3 {
+.travel-search-results-page .novoton-config-error h3 {
     color: var(--nvt-danger, #dc3545);
     margin: 0 0 15px;
     font-size: 20px;
 }
-.novoton-search-results-page .novoton-config-error > .novoton-config-error-inner > p {
+.travel-search-results-page .novoton-config-error > .novoton-config-error-inner > p {
     color: var(--nvt-text-light, #666);
     margin: 0 0 20px;
     font-size: 15px;
 }
-.novoton-search-results-page .novoton-config-problems {
+.travel-search-results-page .novoton-config-problems {
     background: #fff5f5;
     border: 1px solid #f5c6cb;
     border-radius: 8px;
@@ -381,22 +729,22 @@
     margin-bottom: 20px;
     text-align: left;
 }
-.novoton-search-results-page .novoton-config-problem {
+.travel-search-results-page .novoton-config-problem {
     padding: 8px 12px;
     margin-bottom: 8px;
     background: var(--nvt-bg, #fff);
     border-radius: 4px;
     border-left: 4px solid var(--nvt-danger, #dc3545);
 }
-.novoton-search-results-page .novoton-config-problem strong {
+.travel-search-results-page .novoton-config-problem strong {
     color: var(--nvt-danger, #dc3545);
 }
-.novoton-search-results-page .novoton-config-problem-note {
+.travel-search-results-page .novoton-config-problem-note {
     font-size: 12px;
     color: var(--nvt-text-light, #666);
     margin-top: 4px;
 }
-.novoton-search-results-page .novoton-capacity-box {
+.travel-search-results-page .novoton-capacity-box {
     background: #fff3cd;
     border: 1px solid #ffc107;
     border-radius: 8px;
@@ -404,51 +752,51 @@
     margin-bottom: 20px;
     text-align: center;
 }
-.novoton-search-results-page .novoton-capacity-box strong {
+.travel-search-results-page .novoton-capacity-box strong {
     color: #856404;
     display: block;
     margin-bottom: 8px;
     font-size: 15px;
 }
-.novoton-search-results-page .novoton-capacity-value {
+.travel-search-results-page .novoton-capacity-value {
     font-size: 24px;
     font-weight: 700;
     color: var(--nvt-text, #333);
 }
-.novoton-search-results-page .novoton-capacity-note {
+.travel-search-results-page .novoton-capacity-note {
     font-size: 13px;
     color: var(--nvt-text-light, #666);
     margin-top: 5px;
 }
-.novoton-search-results-page .novoton-suggestions-box {
+.travel-search-results-page .novoton-suggestions-box {
     background: #e7f3ff;
     border: 1px solid #b6d4fe;
     border-radius: 8px;
     padding: 15px;
     text-align: left;
 }
-.novoton-search-results-page .novoton-suggestions-box strong {
+.travel-search-results-page .novoton-suggestions-box strong {
     color: var(--nvt-info, #0056b3);
     display: block;
     margin-bottom: 8px;
 }
-.novoton-search-results-page .novoton-suggestions-box ul {
+.travel-search-results-page .novoton-suggestions-box ul {
     margin: 0;
     padding-left: 20px;
     color: var(--nvt-text, #333);
     font-size: 14px;
 }
-.novoton-search-results-page .novoton-suggestions-box li {
+.travel-search-results-page .novoton-suggestions-box li {
     margin-bottom: 6px;
 }
-.novoton-search-results-page .novoton-config-error-actions {
+.travel-search-results-page .novoton-config-error-actions {
     margin-top: 25px;
     display: flex;
     gap: 10px;
     justify-content: center;
     flex-wrap: wrap;
 }
-.novoton-search-results-page .novoton-btn-back {
+.travel-search-results-page .novoton-btn-back {
     background: #6c757d;
     color: #fff;
     border: none;
@@ -459,46 +807,46 @@
 }
 
 /* ── Terms panels content ─────────────────────────────────────────────── */
-.novoton-search-results-page .novoton-terms-title {
+.travel-search-results-page .novoton-terms-title {
     margin: 0 0 15px;
     font-size: 16px;
     color: var(--nvt-text, #333);
 }
-.novoton-search-results-page .novoton-terms-list {
+.travel-search-results-page .novoton-terms-list {
     margin: 0;
     padding-left: 0;
     list-style: none;
 }
-.novoton-search-results-page .novoton-terms-list li {
+.travel-search-results-page .novoton-terms-list li {
     padding: 8px 0;
     border-bottom: 1px solid #f0f0f0;
     font-size: 14px;
     color: var(--nvt-text-light, #555);
 }
-.novoton-search-results-page .novoton-terms-text {
+.travel-search-results-page .novoton-terms-text {
     font-size: 14px;
     color: var(--nvt-text-light, #555);
     line-height: 1.8;
 }
 
 /* ── Alternative dates / no availability / request form ───────────────── */
-.novoton-search-results-page .novoton-alt-banner {
+.travel-search-results-page .novoton-alt-banner {
     background: #fff3cd;
     border: 1px solid #ffc107;
     border-radius: 8px;
     padding: 20px;
     margin-bottom: 20px;
 }
-.novoton-search-results-page .novoton-alt-banner h3 {
+.travel-search-results-page .novoton-alt-banner h3 {
     margin: 0;
     color: #856404;
     font-size: 18px;
 }
-.novoton-search-results-page .novoton-alt-banner p {
+.travel-search-results-page .novoton-alt-banner p {
     margin: 5px 0 15px;
     color: #856404;
 }
-.novoton-search-results-page .novoton-alt-cta {
+.travel-search-results-page .novoton-alt-cta {
     display: inline-block;
     background: #ffc107;
     color: var(--nvt-text, #333);
@@ -507,22 +855,22 @@
     text-decoration: none;
     font-weight: 600;
 }
-.novoton-search-results-page .novoton-empty-box {
+.travel-search-results-page .novoton-empty-box {
     background: var(--nvt-bg, #fff);
     border: 1px solid var(--nvt-border, #e0e0e0);
     border-radius: 8px;
     padding: 40px;
     text-align: center;
 }
-.novoton-search-results-page .novoton-empty-box h3 {
+.travel-search-results-page .novoton-empty-box h3 {
     margin: 20px 0 10px;
     color: var(--nvt-text, #333);
 }
-.novoton-search-results-page .novoton-empty-box > p {
+.travel-search-results-page .novoton-empty-box > p {
     color: var(--nvt-text-light, #666);
     margin-bottom: 20px;
 }
-.novoton-search-results-page .novoton-request-box {
+.travel-search-results-page .novoton-request-box {
     background: #f0f7ff;
     border: 1px solid var(--nvt-info, #0071c2);
     border-radius: 8px;
@@ -531,39 +879,39 @@
     text-align: left;
     max-width: 500px;
 }
-.novoton-search-results-page .novoton-request-box h4 {
+.travel-search-results-page .novoton-request-box h4 {
     margin: 0 0 15px;
     color: var(--nvt-price-color, #003580);
     font-size: 16px;
 }
-.novoton-search-results-page .novoton-request-box p {
+.travel-search-results-page .novoton-request-box p {
     color: var(--nvt-text-light, #555);
     font-size: 14px;
     margin-bottom: 15px;
 }
-.novoton-search-results-page .novoton-form-grid {
+.travel-search-results-page .novoton-form-grid {
     display: flex;
     gap: 10px;
     margin-bottom: 15px;
     flex-wrap: wrap;
 }
-.novoton-search-results-page .novoton-form-field {
+.travel-search-results-page .novoton-form-field {
     flex: 1;
     min-width: 150px;
 }
-.novoton-search-results-page .novoton-form-field label,
-.novoton-search-results-page .novoton-form-label {
+.travel-search-results-page .novoton-form-field label,
+.travel-search-results-page .novoton-form-label {
     display: block;
     font-size: 12px;
     color: var(--nvt-text-light, #666);
     margin-bottom: 4px;
 }
-.novoton-search-results-page .novoton-form-required {
+.travel-search-results-page .novoton-form-required {
     color: var(--nvt-danger, #e74c3c);
 }
-.novoton-search-results-page .novoton-request-box input[type="email"],
-.novoton-search-results-page .novoton-request-box input[type="tel"],
-.novoton-search-results-page .novoton-request-box textarea {
+.travel-search-results-page .novoton-request-box input[type="email"],
+.travel-search-results-page .novoton-request-box input[type="tel"],
+.travel-search-results-page .novoton-request-box textarea {
     width: 100%;
     padding: 10px 12px;
     border: 1px solid #ccc;
@@ -571,15 +919,15 @@
     font-size: 14px;
     box-sizing: border-box;
 }
-.novoton-search-results-page .novoton-request-box textarea {
+.travel-search-results-page .novoton-request-box textarea {
     resize: vertical;
 }
-.novoton-search-results-page .novoton-request-box .travel-offer-book-btn {
+.travel-search-results-page .novoton-request-box .travel-offer-book-btn {
     display: block;
     width: 100%;
     border: none;
 }
-.novoton-search-results-page .novoton-request-privacy {
+.travel-search-results-page .novoton-request-privacy {
     font-size: 11px;
     color: var(--nvt-text-light, #888);
     margin: 10px 0 0;
