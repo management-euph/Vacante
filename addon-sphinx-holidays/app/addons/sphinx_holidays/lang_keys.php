@@ -866,4 +866,8 @@ return [
         'en' => 'Booking details updated.',
         'ro' => 'Detaliile rezervării au fost actualizate.',
     ],
+    'sphinx_holidays.complete_booking' => [
+        'en' => 'Complete Your Booking',
+        'ro' => 'Finalizează rezervarea',
+    ],
 ];

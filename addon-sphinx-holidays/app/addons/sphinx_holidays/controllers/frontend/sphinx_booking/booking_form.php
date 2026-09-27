@@ -283,6 +283,25 @@ try {
     // date can only be derived from the rules, not from the formatted lines.
     $bfCurrency = ConfigProvider::getDefaultCurrency();
     $bfFormattedTotal = number_format($verifiedPrice, 2, ',', '.') . ' ' . ($bfCurrency === 'EUR' ? '€' : $bfCurrency);
+
+    // Money on the cart-line scale: the SAME conversion CartService applies
+    // when it stores the line (API currency → store primary), so the booking
+    // page, the mobile bar and the cart all show one amount — in the
+    // shopper's selected currency (MoneyFormatter).
+    $bfToPrimary = static fn (float $amount): float => (new \Tygh\Addons\TravelCore\Services\CurrencyService($bfCurrency))
+        ->convertFromApiCurrency($amount, defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : $bfCurrency);
+    $bfPricing = TypeCoerce::toStringMap($verifiedOffer['pricing'] ?? null);
+    $bfMarketing = TypeCoerce::toFloat($bfPricing['marketing_price'] ?? 0);
+    $bfOld = $bfMarketing > $basePrice ? Container::getCartService()->applyCommission($bfMarketing) : 0.0;
+    // The offer's own labels ("Early Booking") name the reduction.
+    $bfLabels = [];
+    foreach (TypeCoerce::toRowList($verifiedOffer['labels'] ?? null) as $bfLabel) {
+        $bfName = trim(TypeCoerce::toString($bfLabel['name'] ?? ''));
+        if ($bfName !== '') {
+            $bfLabels[] = $bfName;
+        }
+    }
+
     $bfSidebar = SphinxBookingSidebarBuilder::build(
         $bfBookingData,
         $bfHeaderVm ?? HotelHeaderFactory::bare($hotelName, 0, TypeCoerce::toInt($product_id)),
@@ -291,8 +310,23 @@ try {
         $verifiedOffer['cancellation_fees'] ?? null,
         true,
         defined('CART_LANGUAGE') ? TypeCoerce::toString(CART_LANGUAGE) : 'en',
+        \Tygh\Addons\TravelCore\Services\MoneyFormatter::forStore(),
+        $bfToPrimary($verifiedPrice),
+        $bfOld > 0 ? $bfToPrimary($bfOld) : 0.0,
+        implode(' · ', $bfLabels),
+        TypeCoerce::toString($verifiedOffer['confirmation'] ?? ''),
+        $verifiedOffer['payment_terms'] ?? null,
+        date('Y-m-d'),
+        \Tygh\Addons\TravelCore\Services\TravelCoreConfig::getDateFormat(),
+        \Tygh\Addons\TravelCore\Services\TravelCoreConfig::getBookingSidebarMaxFeatures(),
     );
     $view->assign('travel_booking_sidebar', $bfSidebar->toViewArray());
+
+    // Same page title + breadcrumb as the other providers' booking pages.
+    $bfTitle = TypeCoerce::toString(__('sphinx_holidays.complete_booking', ['[default]' => 'Complete Your Booking']));
+    $view->assign('page_title', $bfTitle);
+    \Tygh\Registry::set('navigation.dynamic.page_title', $bfTitle);
+    fn_add_breadcrumb($bfTitle);
 
 } catch (\Throwable $e) {
     fn_log_event('general', 'runtime', [

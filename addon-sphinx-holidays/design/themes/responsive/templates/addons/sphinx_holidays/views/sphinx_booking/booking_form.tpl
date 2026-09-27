@@ -14,7 +14,13 @@
 
 {if $sphinx_booking_data}
 
+{* Client strings for the shared booking JS (inline field messages, DOB
+   checks) — without it they fell back to hard-coded Romanian. *}
+{include file="addons/travel_core/components/travel_i18n.tpl"}
+
 <div class="travel-booking-page sphinx-booking-form">
+
+    {include file="addons/travel_core/components/booking_steps.tpl" bs_edit_mode=$is_edit_mode|default:false}
 
     {* 2-column layout (travel_core booking-pages.css): the shared summary
        sidebar on the left, the guest form on the right. The sidebar renders
@@ -54,6 +60,7 @@
 
         <div class="guest-names-section">
             <h3 class="travel-section-title"><i class="icon-user"></i> {__("travel_core.guest_details")|default:"Guest Details"}</h3>
+            {include file="addons/travel_core/components/booking_guest_hint.tpl"}
 
             {* Guest name + DOB cards — shared travel_core component (same markup
                contract both providers post: guests[room{N}_{type}_{i}][...]). *}
@@ -71,21 +78,28 @@
            collects it, and the booking submission reads it from the order. *}
 
         {* Submit *}
-        <div class="travel-booking-submit sphinx-booking-submit">
-            <button type="submit" class="travel-offer-book-btn sphinx-offer-book-btn">
-                {if $is_edit_mode}{__("travel_core.save_changes")|default:"Save changes"}{else}<i class="icon-shopping-cart"></i> {__("sphinx_holidays.add_to_cart_btn")|default:"Add to Cart"}{/if}
+        {* Right-aligned with the guest cards, taller, more air around it —
+           the same CTA row the other providers' booking pages use. *}
+        <div class="travel-form-actions travel-form-actions--cta sphinx-booking-submit">
+            <span></span>
+            <button type="submit" class="travel-btn--primary sphinx-offer-book-btn">
+                {if $is_edit_mode}{__("travel_core.save_changes")|default:"Save changes"}{else}{__("travel_core.continue_to_checkout")} &rarr;{/if}
             </button>
         </div>
+        {if !$is_edit_mode}<p class="travel-cta-note">{__("travel_core.cta_note")}</p>{/if}
 
-        {* "What are my booking conditions?" — link + modal (shared). Sphinx
-           knows its terms from the verified offer, so the modal body is
-           rendered server-side. *}
+        {* "What are my booking conditions?" modal (shared; its link sits in
+           the sidebar's cancellation & payment card). Sphinx knows its terms
+           from the verified offer, so the modal body is rendered server-side. *}
         {include file="addons/travel_core/components/booking_conditions_modal.tpl"}
 
     </form>
 
         </div>{* /travel-booking-col-main *}
     </div>{* /travel-booking-layout *}
+
+    {if $is_edit_mode}{$sphinx_cta_label = __("travel_core.save_changes")}{else}{$sphinx_cta_label = __("travel_core.continue_to_checkout")}{/if}
+    {include file="addons/travel_core/components/booking_mobile_bar.tpl" mb_form_id="sphinx-booking-form" mb_label=$sphinx_cta_label}
 
 </div>
 

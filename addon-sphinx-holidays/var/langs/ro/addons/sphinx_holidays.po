@@ -1355,3 +1355,7 @@ msgstr "Editează rezervarea"
 msgctxt "Languages::sphinx_holidays.booking_updated"
 msgid "Booking details updated."
 msgstr "Detaliile rezervării au fost actualizate."
+
+msgctxt "Languages::sphinx_holidays.complete_booking"
+msgid "Complete Your Booking"
+msgstr "Finalizează rezervarea"
