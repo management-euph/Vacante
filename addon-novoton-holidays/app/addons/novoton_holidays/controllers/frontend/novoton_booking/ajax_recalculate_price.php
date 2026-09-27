@@ -309,7 +309,8 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
         }
 
         // Apply commission so displayed price matches customer-facing price
-        $new_price = $pricing->applyCommission(TypeCoerce::toFloat($new_price));
+        $raw_price = TypeCoerce::toFloat($new_price);
+        $new_price = $pricing->applyCommission($raw_price);
 
         // Price stays in API currency (EUR); formatter applies display coefficient for rendering
 
@@ -448,6 +449,45 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
             $free_cancellation_until = $timeline['free_until'];
         }
         $per_night = \Tygh\Addons\TravelCore\ViewModels\BookingSidebarFactory::perNight($money->toDisplay($primary_new_price), $nights);
+
+        // ── The "was" price, as the search card strikes it through ──
+        // From the quoted row itself (its early-booking %, its "7 = 6" extras)
+        // and the same room's standard row. Unreadable offer: the keys stay
+        // out and the page keeps what it rendered — unless the price moved,
+        // when a "was" figure from the search would no longer match it.
+        $offer_payload = [];
+        $offer = $response instanceof \SimpleXMLElement
+            ? \Tygh\Addons\NovotonHolidays\Services\QuoteOfferReader::fromXml(
+                $response,
+                TypeCoerce::toString($matched_room ?: $room_id_decoded),
+                TypeCoerce::toString($matched_board ?: $board_id),
+                $raw_price,
+            )
+            : null;
+        if ($offer !== null) {
+            $discount = \Tygh\Addons\NovotonHolidays\ViewModels\NovotonBookingSidebarBuilder::discount(
+                $new_price,
+                $offer['standard'] > 0 ? $pricing->applyCommission($offer['standard']) : 0.0,
+                $offer['extras'],
+                $offer['early_booking'],
+                TypeCoerce::toString(__('novoton_holidays.book_x_pay_y')),
+                TypeCoerce::toString(__('novoton_holidays.early_booking')),
+            );
+            $primary_old = $discount['old'] > 0
+                ? _nvt_currency_service()->convertFromApiCurrency(
+                    $discount['old'],
+                    defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : 'EUR',
+                )
+                : 0.0;
+            $shows_old = $primary_new_price > 0 && $primary_old > $primary_new_price;
+            $offer_payload = [
+                'old_price' => $shows_old ? $discount['old'] : 0.0,
+                'formatted_old_price' => $shows_old ? $money->format($primary_old) : '',
+                'discount_label' => $shows_old ? $discount['label'] : '',
+            ];
+        } elseif (abs($new_price - $original_price) > 0.01) {
+            $offer_payload = ['old_price' => 0.0, 'formatted_old_price' => '', 'discount_label' => ''];
+        }
         $terms_view = [
             'cancel_steps' => $timeline['steps'],
             'payment_steps' => $payment_steps,
@@ -504,7 +544,7 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
             'new_room' => $matched_room ?: $original_room,
             'new_board' => $matched_board ?: $board_id,
             'price_change' => $price_change
-        ]);
+        ] + $offer_payload);
 
     } catch (\Exception $e) {
         $debug_log('EXCEPTION', $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());

@@ -110,6 +110,71 @@ describe('applyRecalculatedPrice price display', () => {
     });
 });
 
+describe('the "was" price after a re-price (shared sidebar hooks)', () => {
+    function card(oldHtml, label) {
+        document.querySelectorAll('#offer-card').forEach((el) => el.remove());
+        document.body.insertAdjacentHTML('beforeend', `<div id="offer-card">
+            <div id="travel-price-deal-row" class="${label ? '' : 'travel-is-hidden'}"><span id="travel-price-deal">${label}</span></div>
+            <div id="travel-price-old-row" class="${oldHtml ? '' : 'travel-is-hidden'}"><span id="travel-price-old">${oldHtml}</span></div>
+            <div class="price-total"></div><input type="hidden" name="total_price" value="0"></div>`);
+    }
+    const hidden = (id) => document.getElementById(id).classList.contains('travel-is-hidden');
+
+    beforeEach(() => {
+        window.NovotonTranslations = { currency: '€', currencyCoeff: 1, roundPrices: true };
+        window.bookingData.numRooms = 1;
+        window.bookingData.roomsData = [];
+    });
+
+    it('shows the quote\'s own offer on a single room', () => {
+        card('', '');
+        window.applyRecalculatedPrice({
+            new_price: 900, formatted_price: '900 €', old_price: 1000,
+            formatted_old_price: '1.000 €', discount_label: '-10% Early Booking',
+        }, 1, false, true);
+
+        expect(hidden('travel-price-old-row')).toBe(false);
+        expect(document.getElementById('travel-price-old').innerHTML).toBe('1.000 €');
+        expect(document.getElementById('travel-price-deal').textContent).toBe('-10% Early Booking');
+    });
+
+    it('hides a search-time offer the quote no longer has', () => {
+        card('1.000 €', '-10% Early Booking');
+        window.applyRecalculatedPrice({
+            new_price: 950, formatted_price: '950 €', old_price: 0, formatted_old_price: '', discount_label: '',
+        }, 1, false, true);
+
+        expect(hidden('travel-price-old-row')).toBe(true);
+        expect(hidden('travel-price-deal-row')).toBe(true);
+    });
+
+    it('keeps what the page rendered when the quote says nothing about the offer', () => {
+        card('1.000 €', 'Book 7 nights, pay for 6');
+        window.applyRecalculatedPrice({ new_price: 900, formatted_price: '900 €' }, 1, false, true);
+
+        expect(hidden('travel-price-old-row')).toBe(false);
+        expect(document.getElementById('travel-price-deal').textContent).toBe('Book 7 nights, pay for 6');
+    });
+
+    it('re-sums the booking figure over every room', () => {
+        card('', '');
+        window.bookingData.numRooms = 2;
+        window.bookingData.currentPrice = 1500;
+        window.bookingData.roomsData = [
+            { price: 600, old_price: 700, discount_label: 'Book 7 nights, pay for 6' },
+            { price: 900, old_price: 0, discount_label: '' },
+        ];
+        window.applyRecalculatedPrice({
+            new_price: 900, old_price: 1000, formatted_old_price: '1.000 €', discount_label: '-10% Early Booking',
+        }, 2, true, true);
+
+        // 700 + 1000 was vs 600 + 900 now
+        expect(document.getElementById('travel-price-old').innerHTML).toBe('1700 €');
+        expect(document.getElementById('travel-price-deal').textContent)
+            .toBe('Book 7 nights, pay for 6 · -10% Early Booking');
+    });
+});
+
 describe('submit validation', () => {
     it('blocks submit and shows an inline message on the empty field (no alert)', () => {
         const form = document.getElementById('novoton-booking-form');
@@ -133,10 +198,12 @@ describe('submit validation', () => {
         form.dispatchEvent(ev);
         expect(ev.defaultPrevented).toBe(true);
 
+        // Picking one clears the group's message and red state on the next try.
         form.querySelector('input[value="F"]').checked = true;
-        form.querySelector('.js-required-msg').remove();
         const ok = new Event('submit', { cancelable: true });
         form.dispatchEvent(ok);
         expect(ok.defaultPrevented).toBe(false);
+        expect(form.querySelector('.js-required-msg')).toBeNull();
+        expect(form.querySelector('[aria-invalid="true"]')).toBeNull();
     });
 });

@@ -217,6 +217,43 @@ use Tygh\Addons\NovotonHolidays\ViewModels\NovotonBookingSidebarBuilder;
     $booking['age_categories'] = $limits['age_categories'];
     $booking['current_room_limits'] = $limits['current_room_limits'];
 
+    // The "was" price the search card struck through, from the offer the
+    // Book link / multi-room radios carried: standard price, "7 = 6" extras
+    // label and early-booking %. Several rooms: each room's own offer (kept on
+    // the room, so the per-room re-price can re-sum them), summed.
+    $nvtBookPay = TypeCoerce::toString(__('novoton_holidays.book_x_pay_y'));
+    $nvtEarlyWord = TypeCoerce::toString(__('novoton_holidays.early_booking'));
+    if (count($booking['rooms_data']) > 1) {
+        $nvtRoomOffers = [];
+        foreach ($booking['rooms_data'] as $nvtIdx => $nvtRoom) {
+            if (!is_array($nvtRoom)) {
+                continue;
+            }
+            $nvtRoomPrice = PriceInfoFormatter::toFloat($nvtRoom['price'] ?? 0);
+            $nvtRoomOffer = NovotonBookingSidebarBuilder::discount(
+                $nvtRoomPrice,
+                PriceInfoFormatter::toFloat($nvtRoom['standard_price'] ?? 0),
+                PriceInfoFormatter::toScalar($nvtRoom['extras'] ?? ''),
+                PriceInfoFormatter::toFloat($nvtRoom['early_booking'] ?? 0),
+                $nvtBookPay,
+                $nvtEarlyWord,
+            );
+            $booking['rooms_data'][$nvtIdx]['old_price'] = $nvtRoomOffer['old'];
+            $booking['rooms_data'][$nvtIdx]['discount_label'] = $nvtRoomOffer['label'];
+            $nvtRoomOffers[] = ['price' => $nvtRoomPrice] + $nvtRoomOffer;
+        }
+        $nvtOffer = NovotonBookingSidebarBuilder::combinedDiscount($nvtRoomOffers);
+    } else {
+        $nvtOffer = NovotonBookingSidebarBuilder::discount(
+            PriceInfoFormatter::toFloat($booking['total_price']),
+            PriceInfoFormatter::toFloat($bookingData['standard_price'] ?? 0),
+            PriceInfoFormatter::toScalar($bookingData['extras'] ?? ''),
+            PriceInfoFormatter::toFloat($bookingData['early_booking'] ?? 0),
+            $nvtBookPay,
+            $nvtEarlyWord,
+        );
+    }
+
     // Canonical rooms_data JSON for the template's inline JS. Prepared here
     // because {json_decode(...)} in a template is a Smarty 5 CompilerException
     // — rooms_data is already normalized to an array above.
@@ -314,6 +351,13 @@ use Tygh\Addons\NovotonHolidays\ViewModels\NovotonBookingSidebarBuilder;
         $nvtRoomsLeft > 0 ? TypeCoerce::toString(__('novoton_holidays.we_have_left', ['[count]' => $nvtRoomsLeft])) : '',
         \Tygh\Addons\TravelCore\Services\TravelCoreConfig::getDateFormat(),
         \Tygh\Addons\TravelCore\Services\TravelCoreConfig::getBookingSidebarMaxFeatures(),
+        $nvtOffer['old'] > 0
+            ? _nvt_currency_service()->convertFromApiCurrency(
+                $nvtOffer['old'],
+                defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : 'EUR',
+            )
+            : 0.0,
+        $nvtOffer['label'],
     );
     $view->assign('travel_booking_sidebar', $sidebarVm->toViewArray());
 

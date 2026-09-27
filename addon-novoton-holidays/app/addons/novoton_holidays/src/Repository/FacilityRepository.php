@@ -129,11 +129,13 @@ class FacilityRepository implements FacilityRepositoryInterface
         $col = self::nameField($lang);
 
         return self::asRowList(db_get_array(
-            "SELECT f.facility_id, f.{$col} as facility_name
+            // The language column, then English, then the raw name: an RO
+            // column left blank by the sync must not leave a nameless chip.
+            "SELECT hf.facility_id, COALESCE(NULLIF(f.{$col}, ''), NULLIF(f.facility_name_en, ''), f.facility_name) as facility_name
              FROM ?:novoton_hotel_facilities hf
              LEFT JOIN ?:novoton_facilities f ON hf.facility_id = f.facility_id
              WHERE hf.hotel_id = ?s
-             ORDER BY f.{$col}",
+             ORDER BY facility_name",
             $hotel_id,
         ));
     }
@@ -142,9 +144,8 @@ class FacilityRepository implements FacilityRepositoryInterface
      * Localized facility labels for one hotel, for the booking-form summary
      * sidebar.
      *
-     * Capped: the sidebar shows an at-a-glance reassurance strip ("Free WiFi,
-     * Pool, Restaurant..."), not the full inventory — that belongs on the
-     * product page.
+     * The booking sidebar asks for all of them and shows the first few as
+     * chips with "+N more" (Travel Core -> Display setting).
      *
      * @return list<string>
      */
@@ -169,7 +170,14 @@ class FacilityRepository implements FacilityRepositoryInterface
             ];
         }
 
-        return FacilityLabelResolver::labels(self::API_SOURCE, $facilities, $lang, $limit);
+        return FacilityLabelResolver::labels(
+            self::API_SOURCE,
+            $facilities,
+            $lang,
+            $limit,
+            // Never drop a facility: one nobody named reads "Facility #27".
+            function_exists('__') ? TypeCoerce::toString(__('travel_core.facility_unnamed')) : 'Facility #[code]',
+        );
     }
 
     /**

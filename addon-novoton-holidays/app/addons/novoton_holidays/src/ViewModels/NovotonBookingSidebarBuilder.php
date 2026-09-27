@@ -100,6 +100,8 @@ final class NovotonBookingSidebarBuilder
         string $availabilityNote = '',
         string $dateFormat = '',
         int $featuresMax = 6,
+        float $primaryOld = 0.0,
+        string $discountLabel = '',
     ): BookingSidebarViewModel {
         $roomsData = TypeCoerce::toRowList($booking['rooms_data'] ?? []);
         $occupancy = BookingSidebarFactory::occupancy($roomsData);
@@ -121,6 +123,8 @@ final class NovotonBookingSidebarBuilder
         if ($money !== null && $primaryTotal > 0) {
             $perNight = BookingSidebarFactory::perNight($money->toDisplay($primaryTotal), $nights);
         }
+        // discount() already priced the offer; shown only above the total.
+        $hasOld = $money !== null && $primaryTotal > 0 && $primaryOld > $primaryTotal;
 
         return new BookingSidebarViewModel(
             imagePair: function_exists('fn_travel_core_product_main_pair')
@@ -164,10 +168,84 @@ final class NovotonBookingSidebarBuilder
             ]),
             productId: $productId,
             total: $total,
+            oldTotal: $hasOld && $money !== null ? $money->format($primaryOld) : '',
+            discountLabel: $hasOld ? $discountLabel : '',
             perNight: $perNight !== null && $money !== null ? $money->formatDisplay($perNight) : '',
             featuresMax: $featuresMax,
             showWeekday: $dateFormat === '' || !DateHelper::formatHasWeekday($dateFormat),
         );
+    }
+
+    /**
+     * The struck-through "was" price and its offer label, by the SAME rules
+     * the novoton search card uses (search.tpl), from novoton's own fields.
+     * All amounts are API EUR with commission.
+     *
+     *  - an extras promotion ("7 = 6") priced below the standard row: was =
+     *    the standard price, label "Book 7 nights, pay for 6";
+     *  - otherwise an early-booking reduction E %: was = charged / (1 − E/100),
+     *    label "-E% Early Booking";
+     *  - otherwise nothing. "Was" is only ever shown ABOVE the charged price.
+     *
+     * @param string $bookPayTemplate "Book [book] nights, pay for [pay]"
+     * @param string $earlyBookingWord "Early Booking"
+     * @return array{old: float, label: string} old = 0.0 when there is none
+     */
+    public static function discount(
+        float $charged,
+        float $standard,
+        string $extras,
+        float $earlyBookingPercent,
+        string $bookPayTemplate,
+        string $earlyBookingWord,
+    ): array {
+        $none = ['old' => 0.0, 'label' => ''];
+        if ($charged <= 0) {
+            return $none;
+        }
+        $extras = trim($extras);
+        if ($extras !== '' && $standard > $charged + 0.005) {
+            $parts = array_map('trim', explode('=', $extras, 2));
+            $label = count($parts) === 2 && $parts[0] !== '' && $parts[1] !== ''
+                ? strtr($bookPayTemplate, ['[book]' => $parts[0], '[pay]' => $parts[1]])
+                : $extras;
+
+            return ['old' => round($standard, 2), 'label' => $label];
+        }
+        if ($earlyBookingPercent > 0 && $earlyBookingPercent < 100) {
+            $old = round($charged / (1 - $earlyBookingPercent / 100), 2);
+            if ($old > $charged + 0.005) {
+                return ['old' => $old, 'label' => sprintf('-%.0f%% %s', $earlyBookingPercent, $earlyBookingWord)];
+            }
+        }
+
+        return $none;
+    }
+
+    /**
+     * Booking-level "was" total for several rooms: each room's own was price,
+     * or its charged price when that room has no offer. Labels are the
+     * distinct offer texts, in room order.
+     *
+     * @param list<array{price: float, old: float, label: string}> $rooms
+     * @return array{old: float, label: string} old = 0.0 when no room has an offer
+     */
+    public static function combinedDiscount(array $rooms): array
+    {
+        $total = 0.0;
+        $old = 0.0;
+        $labels = [];
+        foreach ($rooms as $room) {
+            $total += $room['price'];
+            $old += $room['old'] > $room['price'] ? $room['old'] : $room['price'];
+            if ($room['label'] !== '' && !in_array($room['label'], $labels, true)) {
+                $labels[] = $room['label'];
+            }
+        }
+
+        return $old > $total + 0.005
+            ? ['old' => round($old, 2), 'label' => implode(' · ', $labels)]
+            : ['old' => 0.0, 'label' => ''];
     }
 
     /**

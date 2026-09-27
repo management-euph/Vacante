@@ -77,7 +77,7 @@
 
             {* Guest Names Section - Multi-Room Support with Split Fields *}
             <div class="travel-form-section guest-names-section">
-                <h3>{__("novoton_holidays.enter_booking_details")}</h3>
+                <h3>{__("travel_core.who_is_staying")}</h3>
                 {include file="addons/travel_core/components/booking_guest_hint.tpl"}
                 
                 {* Booking-wide sequential guest numbering ("3. Adult") — the
