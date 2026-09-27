@@ -207,29 +207,55 @@ final class EurositeApiClient
             . '<ProductCode>' . EurositeXmlBuilder::esc($productCode) . '</ProductCode>'
             . '</getProductInfoRequest>';
         $details = $this->call('getProductInfoRequest', $payload);
+        // The live response nests the product under <Product>; a flat
+        // response (older shape, tests) is read the same way.
+        $p = isset($details->Product) ? $details->Product : $details;
 
         $pictures = [];
-        foreach ($details->Pictures->Picture ?? $details->Picture ?? [] as $p) {
-            $pictures[] = trim((string) $p);
+        $pictureList = isset($p->Pictures->Picture) ? $p->Pictures->Picture : (isset($p->Picture) ? $p->Picture : []);
+        foreach ($pictureList as $picture) {
+            $url = trim((string) $picture);
+            if ($url !== '') {
+                $pictures[] = $url;
+            }
         }
 
+        // <Description> is often just an encoded "<br>"; the operator's text
+        // is in <DescriptionDet>. Both arrive double-encoded.
+        $description = FacilityTextParser::decode(self::childText($p, 'Description'));
+        if (trim(strip_tags($description)) === '') {
+            $description = FacilityTextParser::decode(self::childText($p, 'DescriptionDet'));
+        }
+        $code = self::childText($p, 'ProductCode');
+
         return [
-            'product_code' => trim((string) ($details->ProductCode ?? $productCode)),
-            'name' => trim((string) ($details->ProductName ?? $details->Name ?? '')),
-            'description' => trim((string) ($details->Description ?? '')),
-            'category' => (int) (string) ($details->ProductCategory ?? 0),
-            'latitude' => trim((string) ($details->Latitude ?? '')),
-            'longitude' => trim((string) ($details->Longitude ?? '')),
+            'product_code' => $code !== '' ? $code : $productCode,
+            'name' => self::childText($p, 'ProductName', 'Name'),
+            'description' => trim(strip_tags($description)) !== '' ? trim($description) : '',
+            'category' => (int) self::childText($p, 'ProductCategory'),
+            'latitude' => self::childText($p, 'Latitude'),
+            'longitude' => self::childText($p, 'Longitude'),
             'pictures' => $pictures,
             // Facility chips for the booking page: the operator lists them in
             // the free text of <DescriptionDet> (there is no structured list).
-            // The live response nests the product under <Product>.
-            // (SimpleXML gives an EMPTY element, never null, for a missing
-            // child — hence isset(), not ??.)
-            'facilities' => FacilityTextParser::facilities(
-                (string) ((isset($details->Product) ? $details->Product : $details)->DescriptionDet ?? ''),
-            ),
+            'facilities' => FacilityTextParser::facilities(self::childText($p, 'DescriptionDet')),
         ];
+    }
+
+    /**
+     * First non-empty child text among $names. isset(), not ??: SimpleXML
+     * gives an EMPTY element, never null, for a missing child.
+     */
+    private static function childText(\SimpleXMLElement $node, string ...$names): string
+    {
+        foreach ($names as $name) {
+            $value = isset($node->{$name}) ? trim((string) $node->{$name}) : '';
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return '';
     }
 
     /**

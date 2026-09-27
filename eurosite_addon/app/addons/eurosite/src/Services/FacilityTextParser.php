@@ -55,8 +55,11 @@ final class FacilityTextParser
         return [];
     }
 
-    /** Double-decoded, <br>/<p> as line breaks, tags stripped. */
-    private static function plainText(string $raw): string
+    /**
+     * Eurosite's text fields arrive encoded twice ("&amp;lt;br&amp;gt;"):
+     * decode until stable (at most 3 passes) — real HTML comes out.
+     */
+    public static function decode(string $raw): string
     {
         $text = $raw;
         for ($i = 0; $i < 3 && str_contains($text, '&'); $i++) {
@@ -66,6 +69,14 @@ final class FacilityTextParser
             }
             $text = $decoded;
         }
+
+        return $text;
+    }
+
+    /** Decoded, <br>/<p> as line breaks, tags stripped. */
+    private static function plainText(string $raw): string
+    {
+        $text = self::decode($raw);
         $text = (string) preg_replace('~<\s*(br|/p|p|/li|li|/div|div)\b[^>]*>~iu', "\n", $text);
         $text = strip_tags($text);
         $text = str_replace(["\u{00A0}", "\r"], [' ', "\n"], $text);
