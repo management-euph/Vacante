@@ -496,8 +496,8 @@ return [
         'ro' => 'Hoteluri transformate în produse CS-Cart',
     ],
     'novoton_holidays.dash_tile_products_open' => [
-        'en' => 'Open the hotels with products →',
-        'ro' => 'Deschide hotelurile cu produse →',
+        'en' => 'Open these products →',
+        'ro' => 'Deschide aceste produse →',
     ],
     'novoton_holidays.dash_tile_bookings' => [
         'en' => 'Bookings',

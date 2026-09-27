@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 /**
@@ -147,5 +149,37 @@ describe('sorting', () => {
         expect(order()).toEqual(['Sunny Beach', 'Bansko', 'Albena', 'Varna']);
         $('[data-resort-sort="name"]').click();
         expect(order()).toEqual(['Albena', 'Bansko', 'Sunny Beach', 'Varna']);
+    });
+});
+
+describe('saving only on purpose', () => {
+    it('Enter in the search box does not submit the form', () => {
+        const e = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
+        $('#resort-search').dispatchEvent(e);
+        expect(e.defaultPrevented).toBe(true);
+    });
+
+    it('asks before leaving with unsaved ticks, and not when nothing changed', () => {
+        const leave = () => {
+            const e = new Event('beforeunload', { cancelable: true });
+            window.dispatchEvent(e);
+            return e.defaultPrevented;
+        };
+        expect(leave()).toBe(false);
+        const cb = $('input[value="ALBENA"]');
+        cb.checked = true;
+        cb.dispatchEvent(new Event('change', { bubbles: true }));
+        expect(leave()).toBe(true);
+        $('#resort-undo').click();
+        expect(leave()).toBe(false);
+    });
+});
+
+describe('stylesheet', () => {
+    // .novoton-resort is display:flex; without this rule the hidden attribute
+    // the filters set is overridden and every resort stays on screen.
+    it('lets the hidden attribute win inside the resort form', () => {
+        const less = readFileSync(resolve(process.cwd(), 'addon-novoton-holidays/design/backend/css/addons/novoton_holidays/styles.less'), 'utf8');
+        expect(less).toMatch(/\.novoton-resorts__form \[hidden\]\s*\{\s*display:\s*none !important;/);
     });
 });

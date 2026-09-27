@@ -57,9 +57,12 @@ class ChangedHotelDetector
                 $response = $api->destinations()->getOffersUpdate($datetimeParam, $country);
 
                 if (isset($response->Offer)) {
-                    // SimpleXML: wrap the Offer node set so the loop matches the
-                    // legacy single-pass behaviour exactly.
-                    $offers = [$response->Offer];
+                    // Every <Offer>: wrapping the node set as [$response->Offer]
+                    // kept only the first, so other changed hotels were missed.
+                    $offers = [];
+                    foreach ($response->Offer as $offerNode) {
+                        $offers[] = $offerNode;
+                    }
                     foreach ($offers as $offer) {
                         $hid = (string) ($offer->IdHotel ?? '');
                         if ($hid !== '') {

@@ -26,7 +26,7 @@
             <div class="travel-cron-tile__value">{$_hotels.with_products|default:0}</div>
             <div class="travel-cron-tile__note">
                 {__("novoton_holidays.dash_tile_products_note")}
-                <br><a href="{"novoton_holidays.hotels?has_product=1"|fn_url}">{__("novoton_holidays.dash_tile_products_open")}</a>
+                <br><a href="{"products.manage?pcode=NVT"|fn_url}">{__("novoton_holidays.dash_tile_products_open")}</a>
             </div>
         </div>
         <div class="travel-cron-tile{if $novoton_stats.bookings.pending > 0} travel-cron-tile--warn{/if}">

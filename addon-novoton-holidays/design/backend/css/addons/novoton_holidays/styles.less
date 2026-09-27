@@ -1432,6 +1432,13 @@
     vertical-align: middle;
 }
 
+/* .novoton-resort is flex and the dot inline-block: both beat the hidden
+   attribute, so search / "Excluded only" left every resort on screen and
+   every resort showed the "not saved" dot. */
+.novoton-resorts__form [hidden] {
+    display: none !important;
+}
+
 .novoton-resort.is-excluded {
     border-color: #e8b4b6;
     background: #fdf0f0;

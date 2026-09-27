@@ -30,6 +30,7 @@ $tabs = [
 ];
 
 $pages = [
+    'novoton_holidays.manage',
     'novoton_holidays.list_facilities',
     'novoton_seo_templates.manage',
 ];

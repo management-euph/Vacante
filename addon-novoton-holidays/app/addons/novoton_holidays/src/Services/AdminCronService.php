@@ -181,7 +181,8 @@ class AdminCronService implements AdminCronServiceInterface
         foreach ($countries as $country) {
             $this->output("=== {$country} ===");
 
-            $hotels = $hotelRepo->findUnlinkedWithPrices($country, array_values(ConfigProvider::getHiddenResorts()), $limit);
+            // The dashboard's excluded resorts too, not only the hidden ones.
+            $hotels = $hotelRepo->findUnlinkedWithPrices($country, ConfigProvider::getProductExclusions(), $limit);
 
             if (empty($hotels)) {
                 $this->output("No hotels to add.\n");

@@ -67,7 +67,7 @@ class AddProductsCommand extends AbstractCronCommand
         // an empty run is never mistaken for "nothing to do". Only priced
         // (has_room_price='Y'), not-yet-linked hotels are added.
         $this->output('Prerequisite: run mode=room_price first — it sets has_room_price=Y (the flag this mode requires).');
-        $this->output('Options: &country=XX  &limit=N  &exclude_resorts=a,b   |   already-linked hotels are skipped (no force re-add).');
+        $this->output('Options: &country=XX  &limit=N  &exclude_resorts=a,b (added to the dashboard list)   |   already-linked hotels are skipped (no force re-add).');
         $this->output('');
 
         $hotelRepo = Container::getInstance()->hotelRepository();
@@ -387,18 +387,16 @@ class AddProductsCommand extends AbstractCronCommand
      */
     private function getExcludedResorts(): array
     {
+        // &exclude_resorts=a,b adds to the dashboard's list; it used to
+        // replace it, so a one-off run could make products the dashboard excludes.
         $paramVal = $this->getParam('exclude_resorts');
+        $extra = [];
         if (!empty($paramVal)) {
-            if (is_array($paramVal)) {
-                $excluded = array_filter(TypeCoerce::toStringList($paramVal));
-            } else {
-                $excluded = array_filter(array_map('trim', explode(',', PriceInfoFormatter::toScalar($paramVal))));
-            }
-        } else {
-            $excluded = ConfigProvider::getExcludedResorts();
+            $extra = is_array($paramVal)
+                ? TypeCoerce::toStringList($paramVal)
+                : explode(',', PriceInfoFormatter::toScalar($paramVal));
         }
 
-        // Always include hidden/internal resorts in the exclusion list
-        return array_values(array_unique(array_merge($excluded, ConfigProvider::getHiddenResorts())));
+        return ConfigProvider::getProductExclusions(array_values($extra));
     }
 }

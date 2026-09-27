@@ -370,6 +370,52 @@ class ConfigProvider extends AbstractConfigProvider
     }
 
     /**
+     * Resorts no product may be created for: the dashboard's excluded
+     * resorts, any extra names a run passes (&exclude_resorts=a,b adds to
+     * the saved list, never replaces it), and the internal HIDDEN_RESORTS.
+     *
+     * Every product-creation path reads this one list. add_hotels_as_products
+     * used to be the only one that honoured the dashboard; offers_update and
+     * the legacy admin run_cron path created products in excluded resorts.
+     *
+     * @param list<string> $extra
+     * @return list<string>
+     */
+    public static function getProductExclusions(array $extra = []): array
+    {
+        $out = [];
+        foreach ([...self::getExcludedResorts(), ...$extra, ...self::getHiddenResorts()] as $name) {
+            $name = trim($name);
+            if ($name !== '' && !in_array($name, $out, true)) {
+                $out[] = $name;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * TRUE when a hotel's resort (novoton_hotels.city) is in the list,
+     * compared trimmed and case-insensitively, as the dashboard groups them.
+     *
+     * @param list<string> $exclusions
+     */
+    public static function isResortExcluded(?string $city, array $exclusions): bool
+    {
+        $city = mb_strtoupper(trim((string) $city));
+        if ($city === '') {
+            return false;
+        }
+        foreach ($exclusions as $name) {
+            if (mb_strtoupper(trim($name)) === $city) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * The stored excluded-resorts value as a list of resort names.
      *
      * The dashboard saves it as a JSON array (`["ALBENA","VARNA"]`, default

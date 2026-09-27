@@ -57,9 +57,13 @@ class OffersUpdateCommand extends AbstractCronCommand
             return ['success' => true, 'stats' => ['new_hotels' => 0, 'added_to_cart' => 0]];
         }
 
-        // SimpleXMLElement::__get always yields a SimpleXMLElement (never a PHP
-        // array), so the offers are always wrapped in a single-element list.
-        $offers = [$response->Offer];
+        // $response->Offer is the node set of every <Offer>: iterate it.
+        // Wrapping it as [$response->Offer] kept only the first offer.
+        $offers = [];
+        foreach ($response->Offer as $offerNode) {
+            $offers[] = $offerNode;
+        }
+        $exclusions = ConfigProvider::getProductExclusions();
         $this->output('Found ' . count($offers) . ' offers to check.');
         $this->output('');
 
@@ -108,6 +112,13 @@ class OffersUpdateCommand extends AbstractCronCommand
 
             if ($existingDto === null) {
                 $this->output('skip');
+                continue;
+            }
+
+            // Same rule as add_hotels_as_products: no product in an excluded
+            // (or hidden) resort. The hotel row above is still kept current.
+            if (ConfigProvider::isResortExcluded($existingDto->city, $exclusions)) {
+                $this->output('excluded resort');
                 continue;
             }
 

@@ -151,7 +151,25 @@
 
         if (search) {
             search.addEventListener('input', render);
+            // Enter in the search box would submit the form and save every tick.
+            search.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                }
+            });
         }
+
+        // Unsaved ticks are lost on any link away; ask first. Saving is not leaving.
+        var submitting = false;
+        form.addEventListener('submit', function () {
+            submitting = true;
+        });
+        window.addEventListener('beforeunload', function (e) {
+            if (!submitting && document.body.contains(form) && form.classList.contains('is-dirty')) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
         if (onlyBtn) {
             onlyBtn.addEventListener('click', function () {
                 state.only = !state.only;

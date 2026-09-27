@@ -130,27 +130,6 @@ class CronHelper
     }
 
     /**
-     * Parse excluded resorts from request or settings
-     *
-     * @param array<string, mixed> $params
-     * @return list<string>
-     */
-    public static function getExcludedResorts(array $params = []): array
-    {
-        $excludeResorts = $params['exclude_resorts'] ?? $_REQUEST['exclude_resorts'] ?? null;
-
-        if (!empty($excludeResorts)) {
-            if (is_array($excludeResorts)) {
-                return TypeCoerce::toStringList(array_values(array_filter($excludeResorts)));
-            }
-            return TypeCoerce::toStringList(array_values(array_filter(array_map('trim', explode(',', TypeCoerce::toString($excludeResorts))))));
-        }
-
-        // Fall back to settings
-        return ConfigProvider::getExcludedResorts();
-    }
-
-    /**
      * Print available modes help
      */
     public static function printAvailableModes(SyncLogger $logger): void

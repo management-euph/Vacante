@@ -3801,8 +3801,8 @@ msgid "Hotels made into CS-Cart products"
 msgstr "Hoteluri transformate în produse CS-Cart"
 
 msgctxt "Languages::novoton_holidays.dash_tile_products_open"
-msgid "Open the hotels with products →"
-msgstr "Deschide hotelurile cu produse →"
+msgid "Open these products →"
+msgstr "Deschide aceste produse →"
 
 msgctxt "Languages::novoton_holidays.dash_tile_bookings"
 msgid "Bookings"
