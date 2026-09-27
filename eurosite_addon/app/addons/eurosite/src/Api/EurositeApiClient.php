@@ -769,6 +769,8 @@ final class EurositeApiClient
                 (string) ($offer->Availability['Code'] ?? ''),
                 (string) ($offer->Availability ?? ''),
             ),
+            priceNoRedd: (float) (string) ($offer->PriceNoRedd ?? 0),
+            offerDescription: trim((string) ($offer->OfferDescription ?? '')),
         );
     }
 
