@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\Eurosite\Services;
 
+use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\DateHelper;
+use Tygh\Addons\TravelCore\Services\HotelMapUrl;
 use Tygh\Addons\TravelCore\Services\MoneyFormatter;
 use Tygh\Addons\TravelCore\ViewModels\BookingSidebarFactory;
 use Tygh\Addons\TravelCore\ViewModels\BookingSidebarViewModel;
@@ -102,16 +104,29 @@ final class BookingSidebarBuilder
         $timeline = (new TermsTimelineFactory($money, $today, $dateFormat))->cancellation($windows, $totalPrimary, $nights);
         $productId = $hotelRow !== null ? TypeCoerce::toInt($hotelRow['product_id'] ?? 0) : 0;
         $roomLines = BookingSidebarFactory::roomLines($roomNames);
+        // "Location - show map", as on sphinx / novoton. Eurosite gives no
+        // coordinates, so the link is a Maps search for "hotel, city, country".
+        $name = TypeCoerce::toString($snapshot['product_name'] ?? '');
+        $location = $locationLine !== '' ? $locationLine : TypeCoerce::toString($snapshot['city_name'] ?? '');
+        $mapUrl = HotelMapUrl::build(
+            new HotelSeoData(
+                hotelId: TypeCoerce::toString($snapshot['product_code'] ?? ''),
+                providerName: 'eurosite',
+                name: $name,
+            ),
+            $location,
+        ) ?? '';
 
         return new BookingSidebarViewModel(
             imagePair: $imagePair,
             imageUrl: $hotelRow !== null ? TypeCoerce::toString($hotelRow['first_image'] ?? '') : '',
-            name: TypeCoerce::toString($snapshot['product_name'] ?? ''),
+            name: $name,
             stars: $hotelRow !== null ? TypeCoerce::toInt($hotelRow['category'] ?? 0) : TypeCoerce::toInt($snapshot['category'] ?? 0),
             // IM = Immediate; OR (On request) shows the "on request" badge.
             available: TypeCoerce::toString($snapshot['availability_code'] ?? '') !== 'OR',
             availabilityStatus: self::status(TypeCoerce::toString($snapshot['availability_code'] ?? '')),
-            locationLine: $locationLine !== '' ? $locationLine : TypeCoerce::toString($snapshot['city_name'] ?? ''),
+            locationLine: $location,
+            mapUrl: $mapUrl,
             features: array_values(array_filter($features, static fn (string $f): bool => trim($f) !== '')),
             checkIn: $checkInTs > 0 ? DateHelper::formatWith($checkInTs, $dateFormat) : $checkIn,
             checkInWeekday: $checkInTs > 0 ? DateHelper::formatWith($checkInTs, '%A') : '',

@@ -79,6 +79,18 @@ final class BookingSidebarBuilderTest extends TestCase
         self::assertSame('', $vm['change_url']);
     }
 
+    /** "Location - show map" like sphinx / novoton: no coordinates, so a Maps search. */
+    public function testLocationLineCarriesAMapLink(): void
+    {
+        $vm = BookingSidebarBuilder::build(self::snapshot(), self::hotel(), [], [], 'Bucharest, Romania')->toViewArray();
+
+        self::assertSame('Bucharest, Romania', $vm['location_line']);
+        self::assertSame(
+            'https://www.google.com/maps/search/?api=1&query=' . rawurlencode('Villa Ecletico CM, Bucharest, Romania'),
+            $vm['map_url'],
+        );
+    }
+
     public function testOnRequestOfferShowsTheOnRequestBadge(): void
     {
         $vm = BookingSidebarBuilder::build(self::snapshot(['availability_code' => 'OR']), self::hotel(), [], [])->toViewArray();

@@ -243,7 +243,7 @@
 .travel-booking-page .travel-bsidebar-features li {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
     background: var(--nvt-bg-light, #f2f5f8);
     border: 1px solid var(--nvt-field-border, #e0e7ef);
     border-radius: 14px;
@@ -692,7 +692,9 @@
    base (0,2,1) and :focus / :focus-visible rules above — and novoton's
    .guest-entry input:focus — instead of losing to them (a focused invalid
    field used to turn blue with a pink fill). */
-.travel-booking-page input[aria-invalid="true"],
+/* Radios/checkboxes are outlined through their option box below, never on
+   the 16px control itself (no padding jump, no second ring). */
+.travel-booking-page input[aria-invalid="true"]:not([type="radio"]):not([type="checkbox"]),
 .travel-booking-page select[aria-invalid="true"],
 .travel-booking-page textarea[aria-invalid="true"],
 .travel-booking-page input.travel-field-error,
@@ -701,7 +703,7 @@
     padding: 9px 11px; /* same outer size as the 1px + 10/12px field */
     background: #fff;
 }
-.travel-booking-page input[aria-invalid="true"]:focus,
+.travel-booking-page input[aria-invalid="true"]:not([type="radio"]):not([type="checkbox"]):focus,
 .travel-booking-page select[aria-invalid="true"]:focus,
 .travel-booking-page textarea[aria-invalid="true"]:focus,
 .travel-booking-page input.travel-field-error:focus,
@@ -733,6 +735,7 @@
     content: "!";
     flex: 0 0 16px;
     height: 16px;
+    margin-top: 1px; /* centred on a one-line message, top-aligned when it wraps */
     border-radius: 50%;
     background: #d32f2f;
     color: #fff;
