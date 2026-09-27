@@ -144,10 +144,10 @@ function renderRooms({ rooms, stepper = false, quota = '' }) {
                 <h4><button type="button" class="novoton-mr-room__toggle" aria-expanded="${open}"></button></h4>
                 <span id="room-${n}-choice"></span><span id="room-${n}-price">Not chosen yet</span>
                 <div class="novoton-mr-options"${open ? '' : ' hidden'}>
-                    <label class="room-option"><input type="radio" name="room_${n}_selection"
+                    <label class="room-option"><input type="radio" name="room_${n}_selection" value="DBL|HB|100"
                         data-room-num="${n}" data-room-id="DBL" data-board-id="HB" data-price="100"
                         data-was-price="120" data-quota="${quota}" data-room-display="Double" data-board-name="Half board"></label>
-                    <label class="room-option"><input type="radio" name="room_${n}_selection"
+                    <label class="room-option"><input type="radio" name="room_${n}_selection" value="APT|HB|150"
                         data-room-num="${n}" data-room-id="APT" data-board-id="HB" data-price="150"
                         data-was-price="" data-quota="" data-room-display="Apartment" data-board-name="Half board"></label>
                     <div class="novoton-mr-next" hidden>
@@ -272,5 +272,55 @@ describe('4+ rooms: one room open at a time', () => {
         pick(1);
         expect(document.querySelector('[data-room="1"] .novoton-mr-next__same').textContent)
             .toBe('Apply to the other rooms with the same guests (1)');
+    });
+});
+
+describe('chosen rooms survive a reload of the same search (language switch)', () => {
+    const withKey = (key) => {
+        document.getElementById('multi-room-selection').setAttribute('data-search-key', key);
+    };
+    const reload = (key) => {
+        // A reload renders a NEW container; the engine announces the swap.
+        renderRooms({ rooms: ['2a0c', '3a0c', '1a0c', '2a1c-5'], stepper: true });
+        withKey(key);
+        document.dispatchEvent(new CustomEvent('travel:results-swapped'));
+    };
+
+    beforeEach(() => {
+        window.sessionStorage.clear();
+        renderRooms({ rooms: ['2a0c', '3a0c', '1a0c', '2a1c-5'], stepper: true });
+        withKey('4535|2026-10-05|2026-10-11|[rooms]');
+    });
+
+    it('re-selects the saved rooms and opens the first room still to choose', () => {
+        pick(1, 1);
+        pick(2);
+        reload('4535|2026-10-05|2026-10-11|[rooms]');
+
+        expect(document.querySelectorAll('input[name="room_1_selection"]')[1].checked).toBe(true);
+        expect(document.querySelector('input[name="room_2_selection"]').checked).toBe(true);
+        expect(document.getElementById('mr-progress-text').textContent).toBe('2 of 4 rooms chosen');
+        expect(document.getElementById('room-1-choice').textContent).toBe('Apartment');
+        expect(isOpen(3)).toBe(true);
+        expect(isOpen(1)).toBe(false);
+    });
+
+    it('keeps nothing for a different search', () => {
+        pick(1);
+        reload('4535|2026-10-06|2026-10-11|[rooms]');
+
+        expect(document.querySelector('input[name="room_1_selection"]').checked).toBe(false);
+        expect(document.getElementById('mr-progress-text').textContent).toBe('');
+    });
+
+    it('drops a choice whose price changed since it was made', () => {
+        pick(1);
+        renderRooms({ rooms: ['2a0c', '3a0c', '1a0c', '2a1c-5'], stepper: true });
+        withKey('4535|2026-10-05|2026-10-11|[rooms]');
+        // Same room and meal plan, new price: the radio value differs.
+        document.querySelector('input[name="room_1_selection"]').value = 'DBL|HB|110';
+        document.dispatchEvent(new CustomEvent('travel:results-swapped'));
+
+        expect(document.querySelector('input[name="room_1_selection"]').checked).toBe(false);
     });
 });

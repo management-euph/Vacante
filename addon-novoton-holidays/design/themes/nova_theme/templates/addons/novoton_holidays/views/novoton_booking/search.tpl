@@ -159,6 +159,7 @@
                  data-coefficient="{$novoton_display_coefficient|default:1}"
                  data-round-prices="{if $novoton_round_prices}true{else}false{/if}"
                  data-stepper="{if $mr_stepper}true{else}false{/if}"
+                 data-search-key="{$novoton_params.hotel_id}|{$novoton_params.check_in}|{$novoton_params.check_out}|{$novoton_params.rooms_data_json|default:"[]"|escape:"html"}"
                  data-label-progress="{__("novoton_holidays.mr_progress")|escape:"html"}"
                  data-label-left="{__("novoton_holidays.mr_rooms_left")|escape:"html"}"
                  data-label-book="{__("novoton_holidays.mr_book_all")|escape:"html"}"

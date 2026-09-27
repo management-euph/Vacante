@@ -51,3 +51,13 @@ describe.each(Object.entries(BUDGETS))('%s', (name, budget) => {
         expect(lines.length).toBeLessThan(50);
     });
 });
+
+describe('react19-bundle.js is built from the current source', () => {
+    it('restores the last inline search after a reload without dates (language switch)', () => {
+        const src = bundle('react19-bundle.js');
+        const engine = readFileSync(resolve(process.cwd(), 'addon-travel-core/react-src/src/BookingEngine.jsx'), 'utf8');
+
+        expect(engine).toContain("'travel_inline_search:'");
+        expect(src).toContain('travel_inline_search:');
+    });
+});

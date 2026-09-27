@@ -22,6 +22,45 @@ import { CalendarIcon, GuestIcon, ChevronDown } from './icons';
 import { parseDate, toDateString, formatDateShort, nightsBetween, t, tPlural } from './utils';
 import { injectStyles } from './styles';
 
+// The booking params an inline (product-page) search writes onto the URL.
+const INLINE_SEARCH_KEYS = ['check_in', 'check_out', 'adults', 'children', 'rooms', 'rooms_data', 'children_ages'];
+const INLINE_SEARCH_STORE = 'travel_inline_search:';
+const INLINE_SEARCH_TTL_MS = 60 * 60 * 1000;
+
+/** Keeps the product's last inline search for this tab (see the restore effect). */
+function rememberInlineSearch(productId, url) {
+    if (!productId) return;
+    try {
+        const params = new URL(url, window.location.origin).searchParams;
+        const saved = {};
+        INLINE_SEARCH_KEYS.forEach((k) => {
+            const v = params.get(k);
+            if (v !== null) saved[k] = v;
+        });
+        window.sessionStorage.setItem(INLINE_SEARCH_STORE + productId, JSON.stringify({ params: saved, at: Date.now() }));
+    } catch (_) { /* storage unavailable: reloads just show the form */ }
+}
+
+/** The product's last inline search as URLSearchParams, or null when none, stale or past. */
+function recallInlineSearch(productId) {
+    if (!productId) return null;
+    try {
+        const raw = window.sessionStorage.getItem(INLINE_SEARCH_STORE + productId);
+        if (!raw) return null;
+        const entry = JSON.parse(raw);
+        if (!entry || !entry.params || Date.now() - entry.at > INLINE_SEARCH_TTL_MS) return null;
+        const params = new URLSearchParams(entry.params);
+        const checkIn = parseDate(params.get('check_in'));
+        const checkOut = parseDate(params.get('check_out'));
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (!checkIn || !checkOut || checkIn < today) return null;
+        return params;
+    } catch (_) {
+        return null;
+    }
+}
+
 export default function BookingEngine({ config }) {
     // Inject CSS once on first render
     useEffect(() => { injectStyles(); }, []);
@@ -327,7 +366,7 @@ export default function BookingEngine({ config }) {
                     if (inlineResults) {
                         const cur = new URL(window.location.href);
                         const next = new URL(url, window.location.origin);
-                        ['check_in', 'check_out', 'adults', 'children', 'rooms', 'rooms_data', 'children_ages'].forEach((k) => {
+                        INLINE_SEARCH_KEYS.forEach((k) => {
                             const v = next.searchParams.get(k);
                             if (v === null) {
                                 cur.searchParams.delete(k);
@@ -342,6 +381,7 @@ export default function BookingEngine({ config }) {
                         historyUrl = cur.toString();
                     }
                     window.history.pushState({}, '', historyUrl);
+                    if (inlineResults) rememberInlineSearch(productId, url);
 
                     // Swapped-in provider markup may need re-arming (sphinx
                     // polling reads its fresh search-id from the new nodes).
@@ -368,7 +408,7 @@ export default function BookingEngine({ config }) {
         };
 
         attemptFetch(0);
-    }, [inlineResults]);
+    }, [inlineResults, productId]);
 
     const handleSearch = useCallback(() => {
         setFetchError('');
@@ -419,10 +459,38 @@ export default function BookingEngine({ config }) {
     // search once on mount so a reload shows the results again instead of
     // just the prefilled form. Bypasses handleSearch validation on purpose:
     // the params already passed it when the URL was created.
+    //
+    // A product URL WITHOUT dates can still be a reload of a search: the
+    // language and currency switchers link to the URL the server rendered,
+    // from before the search was pushed into the address bar. The last
+    // inline search of this product (this tab, recent, not in the past) is
+    // then restored from sessionStorage, so switching language keeps the
+    // results — and the rooms chosen in them (multiroom-booking.js).
     const didAutoSearchRef = useRef(false);
     useEffect(() => {
         if (!inlineResults || didAutoSearchRef.current) return;
-        if (!checkIn || !checkOut) return;
+        if (!checkIn || !checkOut) {
+            const saved = recallInlineSearch(productId);
+            if (!saved) return;
+            didAutoSearchRef.current = true;
+            setCheckIn(parseDate(saved.get('check_in')));
+            setCheckOut(parseDate(saved.get('check_out')));
+            try {
+                const savedRooms = JSON.parse(saved.get('rooms_data') || '[]');
+                if (Array.isArray(savedRooms) && savedRooms.length > 0) setRooms(savedRooms);
+            } catch (_) { /* keep the default rooms */ }
+            const restoreUrl = new URL(buildSearchUrl());
+            INLINE_SEARCH_KEYS.forEach((k) => {
+                const v = saved.get(k);
+                if (v === null) {
+                    restoreUrl.searchParams.delete(k);
+                } else {
+                    restoreUrl.searchParams.set(k, v);
+                }
+            });
+            performAjaxSearch(restoreUrl.toString());
+            return;
+        }
         didAutoSearchRef.current = true;
         // refresh=1 arrives on expired-offer redirects from the booking form:
         // forward it once so the provider search evicts its cached result set
