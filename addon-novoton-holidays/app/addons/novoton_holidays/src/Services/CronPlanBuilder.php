@@ -59,14 +59,16 @@ final class CronPlanBuilder
     public const array BATCHED = ['hotel_info_batched', 'sync_priceinfo_batched', 'hotel_facilities_batched'];
 
     /** Jobs that answer status=1 without being batched (they drain a backlog). */
-    public const array HAS_STATUS = ['geocode_addresses', 'backfill_images'];
+    public const array HAS_STATUS = ['geocode_addresses', 'backfill_images', 'backfill_descriptions'];
 
     /**
      * Jobs that are real but not part of the schedule: `full` repeats jobs the
      * stages already run, and the alternative-request jobs are driven by
-     * bookings. Listed separately, with Run and the commands, no schedule.
+     * bookings. backfill_descriptions is a one-off recovery for products
+     * created before descriptions were read correctly. Listed separately,
+     * with Run and the commands, no schedule.
      */
-    public const array ON_DEMAND = ['full', 'alternative_rs', 'alternative_rs_bookings', 'notify_alternatives', 'expire_requests'];
+    public const array ON_DEMAND = ['full', 'alternative_rs', 'alternative_rs_bookings', 'notify_alternatives', 'expire_requests', 'backfill_descriptions'];
 
     /** One-hotel diagnostics (they need hotel_id=…): never on the dashboard. */
     public const array DIAGNOSTIC = ['diagnose_features', 'diagnose_image_urls'];
