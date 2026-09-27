@@ -1,6 +1,6 @@
 {
   "addon": "novoton_holidays",
-  "version": "3.2.0",
+  "version": "4.1.0",
   "generated": "2026-03-14T12:59:43Z",
   "files": {
     "Constants.php": "sha256:4a289ae4160212a453207225846c1ffc2c77af814c94365538295e50feb0c967",

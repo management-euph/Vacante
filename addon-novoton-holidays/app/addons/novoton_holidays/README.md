@@ -1,6 +1,6 @@
 # Novoton Holidays - CS-Cart Addon
 
-**Version:** 3.2.0
+**Version:** 4.1.0
 **Last Updated:** February 20, 2026
 **Compatibility:** CS-Cart 4.9.3 - 4.19.1 (ULTIMATE edition)
 **PHP:** 7.4 - 8.4

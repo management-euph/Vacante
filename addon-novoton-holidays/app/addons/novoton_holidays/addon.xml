@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <addon scheme="3.0">
     <id>novoton_holidays</id>
-    <version>3.2.0</version>
+    <version>4.1.0</version>
     <priority>111</priority>
     <position>1</position>
     <status>active</status>
