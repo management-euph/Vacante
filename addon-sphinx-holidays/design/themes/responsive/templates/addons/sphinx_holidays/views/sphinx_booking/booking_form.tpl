@@ -59,7 +59,7 @@
         <input type="hidden" name="rooms_data" value="{$sphinx_booking_data.rooms_data|json_encode|escape:html}">
 
         <div class="guest-names-section">
-            <h3 class="travel-section-title"><i class="icon-user"></i> {__("travel_core.guest_details")|default:"Guest Details"}</h3>
+            <h3 class="travel-section-title"><i class="icon-user"></i> {__("travel_core.who_is_staying")}</h3>
             {include file="addons/travel_core/components/booking_guest_hint.tpl"}
 
             {* Guest name + DOB cards — shared travel_core component (same markup

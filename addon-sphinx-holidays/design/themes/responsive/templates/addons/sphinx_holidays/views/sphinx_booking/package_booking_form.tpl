@@ -195,7 +195,7 @@
 
         {* Guest details per room *}
         <div class="guest-names-section">
-            <h3 class="travel-section-title"><i class="icon-user"></i> {__("travel_core.guest_details")|default:"Guest Details"}</h3>
+            <h3 class="travel-section-title"><i class="icon-user"></i> {__("travel_core.who_is_staying")}</h3>
 
             {* Guest name + DOB cards — shared travel_core component (same markup
                contract all sphinx forms post: guests[room{N}_{type}_{i}][...]).

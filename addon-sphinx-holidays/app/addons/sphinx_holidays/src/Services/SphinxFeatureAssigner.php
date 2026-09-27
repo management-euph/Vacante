@@ -237,12 +237,22 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
             // it rather than re-resolving through FacilityLabelResolver — the
             // language rules are shared, the lookup is not.
             $mapping = TypeCoerce::toStringMap($facility['mapping'] ?? []);
+            $id = trim(TypeCoerce::toString($facility['id'] ?? ''));
             $label = trim(TypeCoerce::toString($mapping[$column] ?? ''));
-            if ($label === '') {
+            if ($label === '' || $label === $id) {
                 $label = trim(TypeCoerce::toString($mapping['display_name_en'] ?? ''));
             }
-            if ($label === '') {
+            // Same rules as travel_core FacilityLabelResolver: a label that
+            // is only the facility's code yields to the provider's name, and
+            // a facility nobody named still keeps its chip.
+            if ($label === '' || $label === $id) {
                 $label = trim(TypeCoerce::toString($facility['name']));
+            }
+            if (($label === '' || $label === $id) && $id !== '') {
+                $label = strtr(
+                    function_exists('__') ? TypeCoerce::toString(__('travel_core.facility_unnamed')) : 'Facility #[code]',
+                    ['[code]' => $id],
+                );
             }
             if ($label !== '' && !in_array($label, $labels, true)) {
                 $labels[] = $label;
