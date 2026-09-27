@@ -82,9 +82,10 @@ interface HotelRepositoryInterface extends CoreHotelRepositoryInterface
     public function savePackage(string $hotel_id, string $package_id, array $data): bool;
     /**
      * @param list<string> $excludeResorts
+     * @param list<string>|null $onlyResorts null = every resort; a list = only these (the destination whitelist)
      * @return list<HotelRow>
      */
-    public function findUnlinkedWithPrices(string $country, array $excludeResorts = [], int $limit = 0): array;
+    public function findUnlinkedWithPrices(string $country, array $excludeResorts = [], int $limit = 0, ?array $onlyResorts = null): array;
     /**
      * @param list<string> $hotel_ids
      * @return array<string, array<string, mixed>>

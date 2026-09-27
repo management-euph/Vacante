@@ -653,6 +653,24 @@
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Resort names synced from Novoton API'
         </item>
 
+        <!-- Destination whitelist: what we sell from Novoton (Novoton -> Destinations).
+             One country row (resort = '') per country sold, carrying the mode:
+             'all' = every resort, including ones Novoton adds later;
+             'specific' = only the resort rows below it. No rows at all = not
+             configured (the older selected_countries + excluded_resorts apply).
+             Resort names are the API's City string: Novoton has no resort ID. -->
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:novoton_destination_whitelist` (
+                `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                `country` varchar(100) NOT NULL,
+                `resort` varchar(100) NOT NULL DEFAULT '',
+                `selection_type` enum('all','specific') NOT NULL DEFAULT 'specific',
+                `reviewed_at` datetime DEFAULT NULL COMMENT 'Last Save: resorts first seen after this are new',
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `uk_country_resort` (`country`, `resort`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Novoton destinations we sell'
+        </item>
+
         <!-- Feature mapping hub: maps provider codes to CS-Cart feature variants -->
         <item for="install">
             CREATE TABLE IF NOT EXISTS `?:hotel_feature_mappings` (
@@ -694,6 +712,7 @@
         <item for="uninstall">DELETE FROM ?:language_values WHERE name LIKE 'novoton_holidays.%'</item>
         <!-- Drop all addon tables -->
         <item for="uninstall">DROP TABLE IF EXISTS `?:hotel_feature_mappings`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_destination_whitelist`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_resorts`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_hotel_facilities`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_facilities`</item>

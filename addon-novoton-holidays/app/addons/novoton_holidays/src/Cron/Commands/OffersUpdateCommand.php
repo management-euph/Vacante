@@ -8,6 +8,7 @@ use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\NovotonHolidays\Services\DestinationScope;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class OffersUpdateCommand extends AbstractCronCommand
@@ -63,7 +64,7 @@ class OffersUpdateCommand extends AbstractCronCommand
         foreach ($response->Offer as $offerNode) {
             $offers[] = $offerNode;
         }
-        $exclusions = ConfigProvider::getProductExclusions();
+        $scope = DestinationScope::current();
         $this->output('Found ' . count($offers) . ' offers to check.');
         $this->output('');
 
@@ -115,10 +116,11 @@ class OffersUpdateCommand extends AbstractCronCommand
                 continue;
             }
 
-            // Same rule as add_hotels_as_products: no product in an excluded
-            // (or hidden) resort. The hotel row above is still kept current.
-            if (ConfigProvider::isResortExcluded($existingDto->city, $exclusions)) {
-                $this->output('excluded resort');
+            // Same rule as add_hotels_as_products: only destinations we sell
+            // (the whitelist, or not an excluded/hidden resort until one is
+            // saved). The hotel row above is still kept current.
+            if (!$scope->allowsProduct($existingDto->country ?? $country, $existingDto->city)) {
+                $this->output('not in the destinations we sell');
                 continue;
             }
 

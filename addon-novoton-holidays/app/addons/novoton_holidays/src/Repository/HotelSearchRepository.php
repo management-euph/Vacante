@@ -130,10 +130,11 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
 
     /**
      * @param list<string> $excludeResorts
+     * @param list<string>|null $onlyResorts null = every resort; a list = only these (the destination whitelist)
      * @return list<array<string, mixed>>
      */
     #[\Override]
-    public function findUnlinkedWithPrices(string $country, array $excludeResorts = [], int $limit = 0): array
+    public function findUnlinkedWithPrices(string $country, array $excludeResorts = [], int $limit = 0, ?array $onlyResorts = null): array
     {
         $query = 'SELECT ' . self::LISTING_COLUMNS . " FROM ?:novoton_hotels
                   WHERE has_room_price = 'Y' AND country = ?s
@@ -143,6 +144,14 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
         if (!empty($excludeResorts)) {
             $query .= ' AND (city NOT IN (?a) OR city IS NULL)';
             $params[] = $excludeResorts;
+        }
+
+        if ($onlyResorts !== null) {
+            if ($onlyResorts === []) {
+                return [];
+            }
+            $query .= ' AND city IN (?a)';
+            $params[] = $onlyResorts;
         }
 
         $query .= ' ORDER BY hotel_name';

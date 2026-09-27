@@ -1306,176 +1306,6 @@
     margin: 0 4px 6px 0;
 }
 
-.novoton-resorts {
-    padding: 0;
-}
-
-.novoton-resorts__summary {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-    padding: 14px 16px;
-    cursor: pointer;
-    list-style: none;
-}
-
-.novoton-resorts__summary::-webkit-details-marker {
-    display: none;
-}
-
-.novoton-resorts__heading strong {
-    display: block;
-    font-size: 16px;
-}
-
-.novoton-resorts__counts {
-    color: #3d4652;
-}
-
-.novoton-resorts[open] .novoton-resorts__open {
-    display: none;
-}
-
-.novoton-resorts__toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 16px;
-    border-top: 1px solid #eceff3;
-    border-bottom: 1px solid #eceff3;
-    background: #fafbfc;
-}
-
-.novoton-resorts__toolbar input[type="search"] {
-    margin: 0;
-    min-width: 240px;
-}
-
-.novoton-resorts__toolbar .btn-group {
-    margin: 0;
-}
-
-.novoton-resorts__toolbar [aria-pressed="true"] {
-    background: #2457c5;
-    border-color: #2457c5;
-    color: #fff;
-}
-
-.novoton-resorts__group {
-    padding: 12px 16px 14px;
-    border-bottom: 1px solid #eceff3;
-}
-
-.novoton-resorts__grouphead {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 8px;
-}
-
-.novoton-resorts__grouphead h4 {
-    margin: 0;
-    font-size: 15px;
-}
-
-.novoton-resorts__grid {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 8px;
-}
-
-.novoton-resort {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-height: 46px;
-    margin: 0;
-    padding: 4px 10px;
-    border: 1px solid #dde1e6;
-    border-radius: 6px;
-    background: #fff;
-    cursor: pointer;
-}
-
-.novoton-resort input[type="checkbox"] {
-    margin: 0;
-    flex-shrink: 0;
-    accent-color: #a3161b;
-}
-
-.novoton-resort__text {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-}
-
-.novoton-resort__meta {
-    font-size: 11.5px;
-    color: #4a5360;
-}
-
-.novoton-resort__flag {
-    display: none;
-    color: #a3161b;
-}
-
-.novoton-resort__dot {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    margin-left: 6px;
-    border-radius: 4px;
-    background: #c77700;
-    vertical-align: middle;
-}
-
-/* .novoton-resort is flex and the dot inline-block: both beat the hidden
-   attribute, so search / "Excluded only" left every resort on screen and
-   every resort showed the "not saved" dot. */
-.novoton-resorts__form [hidden] {
-    display: none !important;
-}
-
-.novoton-resort.is-excluded {
-    border-color: #e8b4b6;
-    background: #fdf0f0;
-}
-
-.novoton-resort.is-excluded .novoton-resort__name {
-    font-weight: 600;
-}
-
-.novoton-resort.is-excluded .novoton-resort__flag {
-    display: inline;
-}
-
-.novoton-resorts__empty {
-    padding: 24px 16px;
-    text-align: center;
-}
-
-/* Stays in view while the list scrolls, so what is unsaved is always visible. */
-.novoton-resorts__bar {
-    position: sticky;
-    bottom: 0;
-    z-index: 5;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-    padding: 12px 16px;
-    background: #1c2330;
-    color: #fff;
-    border-radius: 0 0 6px 6px;
-}
-
-.novoton-resorts__form.is-dirty .novoton-resorts__pending {
-    font-weight: 600;
-}
-
 .novoton-activity__empty {
     padding: 0 16px 16px;
 }
@@ -1485,23 +1315,447 @@
     .novoton-tools__groups {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-
-    .novoton-resorts__grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
 }
 
 @media (max-width: 768px) {
     .novoton-tiles,
-    .novoton-tools__groups,
-    .novoton-resorts__grid {
+    .novoton-tools__groups {
         grid-template-columns: 1fr;
     }
 
-    .novoton-attention__item,
-    .novoton-resorts__summary,
-    .novoton-resorts__bar {
+    .novoton-attention__item {
         flex-direction: column;
         align-items: flex-start;
+    }
+}
+
+/* ─── Destinations (novoton_destinations.manage) ───
+   The Sphinx whitelist's layout: countries on the left, summary on the right.
+   Badges read in words and colour: green ALL, amber "n of m", grey NOT SOLD,
+   violet NEW. */
+
+.novoton-dest [hidden] {
+    display: none !important;
+}
+
+.novoton-dest__notice {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    align-items: center;
+}
+
+.novoton-dest__intro {
+    max-width: 75ch;
+    margin: 0 0 14px;
+}
+
+.novoton-dest__cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 24px;
+    align-items: start;
+}
+
+.novoton-dest__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.novoton-dest__search {
+    position: relative;
+    flex: 1 1 260px;
+}
+
+.novoton-dest__search input[type="search"] {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+}
+
+.novoton-dest__results {
+    position: absolute;
+    z-index: 100;
+    left: 0;
+    right: 0;
+    top: 100%;
+    max-height: 400px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-top: 0;
+    border-radius: 0 0 6px 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.novoton-dest__hit {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    width: 100%;
+    padding: 6px 12px 6px 24px;
+    border: 0;
+    border-bottom: 1px solid #f2f2f2;
+    background: none;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+}
+
+.novoton-dest__hit:hover,
+.novoton-dest__hit:focus {
+    background: #f0f7ff;
+    outline: none;
+}
+
+.novoton-dest__hit--country {
+    padding-left: 12px;
+    background: #f4f5f7;
+    font-weight: 600;
+}
+
+.novoton-dest__hit .muted {
+    margin-left: auto;
+    font-size: 11px;
+}
+
+.novoton-dest__nohit {
+    padding: 12px;
+    color: #777;
+}
+
+.novoton-dest__check {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    margin: 0;
+    cursor: pointer;
+}
+
+.novoton-dest__check input {
+    margin: 0;
+}
+
+.novoton-dest-country {
+    border-bottom: 1px solid #eceff2;
+}
+
+.novoton-dest-country__head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    align-items: center;
+    padding: 8px 2px;
+}
+
+.novoton-dest-country__toggle {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    min-width: 150px;
+    padding: 2px 4px;
+    border: 0;
+    background: none;
+    font: inherit;
+    cursor: pointer;
+    text-align: left;
+}
+
+.novoton-dest-country__arrow {
+    width: 14px;
+    color: #888;
+    font-size: 10px;
+}
+
+.novoton-dest-country__meta {
+    font-size: 12px;
+}
+
+.novoton-dest-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+.novoton-dest-badge--all {
+    background: #28a745;
+    color: #fff;
+}
+
+.novoton-dest-badge--specific {
+    background: #e67e22;
+    color: #fff;
+}
+
+.novoton-dest-badge--off {
+    background: #e4e7eb;
+    color: #555;
+}
+
+.novoton-dest-badge--new {
+    background: #ece7fa;
+    color: #5b3fb0;
+}
+
+.novoton-dest-badge--country {
+    background: #2196f3;
+    color: #fff;
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+.novoton-dest-badge--resort {
+    background: #8bc34a;
+    color: #fff;
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+.novoton-dest-mode {
+    display: inline-flex;
+    margin: 0 0 0 auto;
+    padding: 0;
+    border: 1px solid #cfd5dc;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.novoton-dest-mode__opt {
+    position: relative;
+    margin: 0;
+    cursor: pointer;
+}
+
+.novoton-dest-mode__opt input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+}
+
+.novoton-dest-mode__opt span {
+    display: block;
+    padding: 4px 10px;
+    border-right: 1px solid #cfd5dc;
+    font-size: 12px;
+    color: #555;
+    background: #fff;
+}
+
+.novoton-dest-mode__opt:last-child span {
+    border-right: 0;
+}
+
+.novoton-dest-mode__opt input:checked + span {
+    background: #0b7fc7;
+    color: #fff;
+    font-weight: 600;
+}
+
+.novoton-dest-mode__opt input:focus-visible + span {
+    outline: 2px solid #0b7fc7;
+    outline-offset: -2px;
+}
+
+.novoton-dest-country__body {
+    padding: 10px 12px 14px 26px;
+    background: #fafbfc;
+    border-top: 1px solid #eceff2;
+}
+
+.novoton-dest-country__hint {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 12px;
+}
+
+.novoton-dest-country__bulk {
+    display: inline-flex;
+    gap: 6px;
+}
+
+.novoton-dest-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 6px;
+}
+
+.novoton-dest-resort {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin: 0;
+    padding: 6px 9px;
+    border: 1px solid #dde1e6;
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.novoton-dest-resort input {
+    margin: 3px 0 0;
+    flex-shrink: 0;
+}
+
+.novoton-dest-resort.is-sold {
+    border-color: #9fd3ad;
+    background: #eef8f1;
+}
+
+.novoton-dest-resort.is-gone .novoton-dest-resort__name {
+    color: #888;
+    text-decoration: line-through;
+}
+
+.novoton-dest-resort.is-flash {
+    box-shadow: 0 0 0 3px #f5c542;
+}
+
+.novoton-dest-country.is-locked .novoton-dest-resort {
+    cursor: default;
+}
+
+.novoton-dest-country.is-locked .novoton-dest-resort input {
+    visibility: hidden;
+}
+
+.novoton-dest-resort__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.novoton-dest-resort__name {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 6px;
+    align-items: center;
+    font-weight: 600;
+}
+
+.novoton-dest-resort__meta {
+    font-size: 11.5px;
+    color: #4a5360;
+}
+
+.novoton-dest-resort__dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 4px;
+    background: #c77700;
+}
+
+.novoton-dest__empty {
+    padding: 16px;
+    color: #777;
+}
+
+.novoton-dest__summary {
+    position: sticky;
+    top: 80px;
+    display: grid;
+    gap: 8px;
+    padding: 16px;
+    border: 1px solid #dde1e6;
+    border-radius: 6px;
+    background: #fafbfc;
+}
+
+.novoton-dest__summary h4 {
+    margin: 0 0 4px;
+}
+
+.novoton-dest__srow,
+.novoton-dest__slist > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.novoton-dest__slist {
+    display: grid;
+    gap: 4px;
+    padding-top: 8px;
+    border-top: 1px solid #e4e7eb;
+    font-size: 12px;
+}
+
+.novoton-dest__slist:empty {
+    display: none;
+}
+
+.novoton-dest__pending {
+    min-height: 1.4em;
+    font-size: 12px;
+    color: #a45f00;
+}
+
+.novoton-dest__wide {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.novoton-dest__outside {
+    display: grid;
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px solid #e4e7eb;
+}
+
+.novoton-dest__confirm {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+}
+
+.novoton-dest__confirm p {
+    margin: 0;
+}
+
+.novoton-dest__outlist {
+    max-height: 220px;
+    overflow-y: auto;
+    margin: 0;
+    padding-left: 18px;
+    font-size: 12px;
+}
+
+.novoton-dest__note {
+    margin: 0;
+    font-size: 12px;
+}
+
+/* Dashboard: the Destinations card */
+.novoton-dest-card__table td,
+.novoton-dest-card__table th {
+    white-space: nowrap;
+}
+
+@media (max-width: 1100px) {
+    .novoton-dest__cols {
+        grid-template-columns: 1fr;
+    }
+
+    .novoton-dest__summary {
+        position: static;
+    }
+}
+
+@media (max-width: 768px) {
+    .novoton-dest-mode {
+        margin-left: 0;
     }
 }

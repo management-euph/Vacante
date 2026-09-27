@@ -111,31 +111,22 @@ final class DashboardSummaryTest extends TestCase
         self::assertSame('bad', DashboardSummary::jobHealth($stages)['tone']);
     }
 
-    public function testResortsCarryTheirCountsAndExclusion(): void
+    public function testDestinationAlertsPointAtWhatNeedsALook(): void
     {
-        $counts = [
-            ['country' => 'ALBANIA', 'city' => 'DURRES', 'hotels' => 8, 'products' => 3],
-            ['country' => 'BULGARIA', 'city' => 'ALBENA', 'hotels' => 38, 'products' => 0],
-            ['country' => 'BULGARIA', 'city' => 'GIFT VOUCHER', 'hotels' => 1, 'products' => 0],
-            ['country' => 'BULGARIA', 'city' => 'VARNA', 'hotels' => 12, 'products' => 3],
-        ];
+        $alerts = DashboardSummary::destinationAlerts([
+            'countries' => [
+                ['label' => 'Bulgaria', 'new' => 3],
+                ['label' => 'Albania', 'new' => 0],
+            ],
+            'totals' => ['gone' => 1, 'outside' => 4],
+        ]);
 
-        $r = DashboardSummary::resorts($counts, ['GIFT VOUCHER'], ['varna']);
-
-        self::assertSame(3, $r['resorts'], 'the hidden resort is left out');
-        self::assertSame(1, $r['excluded'], 'exclusion matches regardless of case');
-        self::assertSame(['BULGARIA', 'ALBANIA'], array_column($r['countries'], 'country'), 'the larger country first');
-
-        $bg = $r['countries'][0];
-        self::assertSame('Bulgaria', $bg['label']);
-        self::assertSame(2, $bg['total']);
-        self::assertSame(50, $bg['hotels']);
-        self::assertSame(1, $bg['excluded']);
-        self::assertSame(
-            [['name' => 'ALBENA', 'label' => 'Albena', 'hotels' => 38, 'products' => 0, 'excluded' => false],
-             ['name' => 'VARNA', 'label' => 'Varna', 'hotels' => 12, 'products' => 3, 'excluded' => true]],
-            $bg['resorts'],
-        );
+        self::assertSame([
+            ['kind' => 'new', 'country' => 'Bulgaria', 'n' => 3],
+            ['kind' => 'gone', 'country' => '', 'n' => 1],
+            ['kind' => 'outside', 'country' => '', 'n' => 4],
+        ], $alerts);
+        self::assertSame([], DashboardSummary::destinationAlerts(['countries' => [], 'totals' => ['gone' => 0, 'outside' => 0]]));
     }
 
     public function testResortNamesReadAsNames(): void

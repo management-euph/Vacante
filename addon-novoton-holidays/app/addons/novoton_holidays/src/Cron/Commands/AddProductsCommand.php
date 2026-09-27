@@ -9,6 +9,7 @@ use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\NovotonHolidays\Services\DestinationScope;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\TravelGroupResolver;
@@ -35,7 +36,10 @@ class AddProductsCommand extends AbstractCronCommand
     public function execute(): array
     {
         $limit = PriceInfoFormatter::toInt($this->getParam('limit', 0));
-        $exclude_resorts = $this->getExcludedResorts();
+        $extra_excluded = $this->getExtraExcludedResorts();
+        // What may be sold: the destination whitelist once saved, else the
+        // dashboard's excluded resorts. One rule for every product creator.
+        $scope = DestinationScope::current();
 
         // Determine countries: explicit &country= param, or all selected in addon settings
         $countryParam = PriceInfoFormatter::toScalar($this->getParam('country', ''));
@@ -60,14 +64,14 @@ class AddProductsCommand extends AbstractCronCommand
         $this->output('Adding hotels as products...');
         $this->output('Countries: ' . implode(', ', $countries));
         $this->output('Limit per country: ' . ($limit > 0 ? $limit : 'No limit'));
-        if (!empty($exclude_resorts)) {
-            $this->output('Excluding resorts (' . count($exclude_resorts) . '): ' . implode(', ', $exclude_resorts));
-        }
+        $this->output($scope->isConfigured()
+            ? 'Scope: the destination whitelist (Novoton -> Destinations).'
+            : 'Scope: selected countries minus the excluded resorts (no destination whitelist saved yet).');
         // Make the hard prerequisite + available knobs explicit in the output, so
         // an empty run is never mistaken for "nothing to do". Only priced
         // (has_room_price='Y'), not-yet-linked hotels are added.
         $this->output('Prerequisite: run mode=room_price first — it sets has_room_price=Y (the flag this mode requires).');
-        $this->output('Options: &country=XX  &limit=N  &exclude_resorts=a,b (added to the dashboard list)   |   already-linked hotels are skipped (no force re-add).');
+        $this->output('Options: &country=XX  &limit=N  &exclude_resorts=a,b (added to the saved scope)   |   already-linked hotels are skipped (no force re-add).');
         $this->output('');
 
         $hotelRepo = Container::getInstance()->hotelRepository();
@@ -78,7 +82,20 @@ class AddProductsCommand extends AbstractCronCommand
         foreach ($countries as $country) {
             $this->output("=== {$country} ===");
 
-            $hotels = $hotelRepo->findUnlinkedWithPrices($country, $exclude_resorts, $limit);
+            $query = $scope->productQuery($country, $extra_excluded);
+            if ($query['skip']) {
+                $this->output("  → {$country} is not in the destination whitelist — skipped.");
+                $this->output('');
+                continue;
+            }
+            if ($query['only'] !== null) {
+                $this->output('Only the ' . count($query['only']) . ' whitelisted resorts.');
+            }
+            if ($query['exclude'] !== []) {
+                $this->output('Excluding resorts (' . count($query['exclude']) . '): ' . implode(', ', $query['exclude']));
+            }
+
+            $hotels = $hotelRepo->findUnlinkedWithPrices($country, $query['exclude'], $limit, $query['only']);
             $this->output('Found ' . count($hotels) . ' hotels to add.');
 
             if (empty($hotels)) {
@@ -385,10 +402,11 @@ class AddProductsCommand extends AbstractCronCommand
     /**
      * @return list<string>
      */
-    private function getExcludedResorts(): array
+    private function getExtraExcludedResorts(): array
     {
-        // &exclude_resorts=a,b adds to the dashboard's list; it used to
-        // replace it, so a one-off run could make products the dashboard excludes.
+        // &exclude_resorts=a,b narrows this run on top of the saved scope; it
+        // used to replace the dashboard's list, so a one-off run could make
+        // products the dashboard excludes.
         $paramVal = $this->getParam('exclude_resorts');
         $extra = [];
         if (!empty($paramVal)) {
@@ -397,6 +415,6 @@ class AddProductsCommand extends AbstractCronCommand
                 : explode(',', PriceInfoFormatter::toScalar($paramVal));
         }
 
-        return ConfigProvider::getProductExclusions(array_values($extra));
+        return array_values(array_filter(array_map('trim', $extra), static fn (string $n): bool => $n !== ''));
     }
 }

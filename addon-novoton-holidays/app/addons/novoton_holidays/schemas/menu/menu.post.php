@@ -20,6 +20,12 @@ $schema['central']['novoton_holidays'] = [
             'position' => 100,
             'title' => __('novoton_holidays.actions.novoton_dashboard', ['[default]' => 'Dashboard']),
         ],
+        'novoton_destinations' => [
+            'attrs' => ['class' => 'is-addon'],
+            'href' => 'novoton_destinations.manage',
+            'position' => 150,
+            'title' => __('novoton_holidays.dest_title', ['[default]' => 'Destinations']),
+        ],
         'novoton_list_facilities' => [
             'attrs' => ['class' => 'is-addon'],
             'href' => 'novoton_holidays.list_facilities',

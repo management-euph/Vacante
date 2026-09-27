@@ -109,6 +109,7 @@ class ConfigProvider extends AbstractConfigProvider
     public static function reset(): void
     {
         static::resetSettingsCache();
+        DestinationScope::setCurrent(null);
         self::$version = null;
         self::$instance = null;
     }
@@ -287,8 +288,29 @@ class ConfigProvider extends AbstractConfigProvider
 
     // ── Array Settings ──
 
-    /** @return string[] */
+    /**
+     * The countries Novoton syncs and sells: the destination whitelist's
+     * countries once it has been saved (Novoton -> Destinations); until then
+     * the older "Selected countries" setting, all countries when none is ticked.
+     *
+     * @return string[]
+     */
     public static function getSelectedCountries(): array
+    {
+        $scope = DestinationScope::current();
+        if ($scope->isConfigured()) {
+            return $scope->countries();
+        }
+
+        return self::getSettingCountries();
+    }
+
+    /**
+     * The "Selected countries" setting alone, whatever the whitelist says.
+     *
+     * @return string[]
+     */
+    public static function getSettingCountries(): array
     {
         $val = self::settings()['selected_countries'] ?? '';
         $countries = [];
@@ -357,7 +379,7 @@ class ConfigProvider extends AbstractConfigProvider
         return 0;
     }
 
-    /** @return string[] Resorts that are internal-only and hidden from all UI listings. */
+    /** @return list<string> Resorts that are internal-only and hidden from all UI listings. */
     public static function getHiddenResorts(): array
     {
         return Constants::HIDDEN_RESORTS;

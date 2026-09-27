@@ -18,7 +18,6 @@ declare(strict_types=1);
  */
 
 use Tygh\Addons\NovotonHolidays\NovotonApi;
-use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
@@ -162,7 +161,7 @@ if ($mode === 'check_packages') {
     echo '<div class="log">';
 
     // Get all countries from settings
-    $countries = fn_novoton_holidays_parse_countries(ConfigProvider::get('selected_countries', ''));
+    $countries = fn_novoton_holidays_parse_countries();
 
     echo "Countries: " . implode(', ', $countries) . "<br>";
     echo "Limit per country: {$limit}<br>";

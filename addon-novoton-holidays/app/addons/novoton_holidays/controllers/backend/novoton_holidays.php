@@ -84,28 +84,6 @@ $view = Tygh::$app['view'];
 // ============================================================================
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if ($mode === 'save_excluded_resorts') {
-        if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
-            return [CONTROLLER_STATUS_DENIED];
-        }
-
-        // Through the Settings API: CS-Cart 4.x has no ?:addon_options table,
-        // and the raw UPDATE this replaced failed on every Save (1146).
-        $excluded = $_POST['excluded_resorts'] ?? [];
-        $value = \Tygh\Addons\NovotonHolidays\Services\ExcludedResortsStore::encode(is_array($excluded) ? $excluded : []);
-
-        if (\Tygh\Addons\NovotonHolidays\Services\ExcludedResortsStore::save($value)) {
-            Registry::del('addons.novoton_holidays');
-            fn_set_notification('N', __('notice'), __('novoton_holidays.dash_resorts_saved_n', [
-                '[n]' => count(ConfigProvider::parseResortList($value)),
-            ]));
-        } else {
-            fn_set_notification('E', __('error'), __('novoton_holidays.dash_resorts_save_failed'));
-        }
-
-        return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
-    }
-
     /**
      * Mode: run_job — run one cron job from the dashboard, as the signed-in admin.
      *
@@ -391,8 +369,6 @@ if ($mode === 'manage' || empty($mode)) {
 
     $addon_settings = ConfigProvider::all();
 
-    $countries = fn_novoton_holidays_parse_countries();
-
     $stats = [
         'hotels' => [
             'total' => $hotelRepo->count(),
@@ -402,17 +378,7 @@ if ($mode === 'manage' || empty($mode)) {
             'without_packages' => $hotelRepo->count(['no_packages' => true]),
         ],
         'bookings' => (new \Tygh\Addons\NovotonHolidays\Services\BookingQueryService($bookingReporting))->getStats(),
-        'by_country' => []
     ];
-
-    foreach ($countries as $country) {
-        $stats['by_country'][$country] = [
-            'total' => $hotelRepo->count(['country' => $country]),
-            'with_prices' => $hotelRepo->count(['country' => $country, 'has_verified_room_price' => true]),
-            'with_packages' => $hotelRepo->count(['country' => $country, 'has_packages' => true]),
-            'with_products' => $hotelRepo->count(['country' => $country, 'has_product' => true]),
-        ];
-    }
 
     // Recent sync activity, CS-Cart paginated: $search carries page,
     // items_per_page and total_items for common/pagination.tpl.
@@ -486,12 +452,21 @@ if ($mode === 'manage' || empty($mode)) {
     $view->assign('addon_settings', $addon_settings);
     $view->assign('addon_version', ConfigProvider::getVersion());
 
-    // Excluded resorts, with what excluding each one affects.
-    $view->assign('novoton_resorts', \Tygh\Addons\NovotonHolidays\Services\DashboardSummary::resorts(
-        $hotelRepo->getResortCounts(),
-        ConfigProvider::getHiddenResorts(),
+    // Destinations: what we sell per country (the card), and what needs a
+    // look (new resorts, resorts gone from the feed, live products outside
+    // the whitelist) for Needs attention. One GROUP BY and one join.
+    $destRepo = new \Tygh\Addons\NovotonHolidays\Repository\DestinationWhitelistRepository();
+    $destinations = \Tygh\Addons\NovotonHolidays\Services\DestinationsPage::build(
+        \Tygh\Addons\NovotonHolidays\Services\DestinationScope::current(),
+        $destRepo->catalog(),
+        \Tygh\Addons\NovotonHolidays\Constants::COUNTRIES,
+        array_values(ConfigProvider::getSettingCountries()),
         ConfigProvider::getExcludedResorts(),
-    ));
+        ConfigProvider::getHiddenResorts(),
+        $destRepo->liveProducts(),
+    );
+    $view->assign('novoton_destinations', $destinations);
+    $view->assign('novoton_dest_alerts', \Tygh\Addons\NovotonHolidays\Services\DashboardSummary::destinationAlerts($destinations));
 
     // The top of the page: which figures are a problem, and what fixes them.
     $view->assign('novoton_job_health', \Tygh\Addons\NovotonHolidays\Services\DashboardSummary::jobHealth($job_stages));

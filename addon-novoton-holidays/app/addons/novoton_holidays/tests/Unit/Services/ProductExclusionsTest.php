@@ -62,13 +62,14 @@ final class ProductExclusionsTest extends TestCase
     /** @return iterable<string, array{string, string}> */
     public static function creators(): iterable
     {
-        yield 'add_hotels_as_products' => ['src/Cron/Commands/AddProductsCommand.php', 'ConfigProvider::getProductExclusions('];
-        yield 'legacy admin run_cron' => ['src/Services/AdminCronService.php', 'ConfigProvider::getProductExclusions()'];
-        yield 'offers_update' => ['src/Cron/Commands/OffersUpdateCommand.php', 'ConfigProvider::isResortExcluded($existingDto->city, $exclusions)'];
+        yield 'add_hotels_as_products' => ['src/Cron/Commands/AddProductsCommand.php', '$scope->productQuery($country, $extra_excluded)'];
+        yield 'legacy admin run_cron' => ['src/Services/AdminCronService.php', 'DestinationScope::current()->productQuery($country)'];
+        yield 'offers_update' => ['src/Cron/Commands/OffersUpdateCommand.php', '$scope->allowsProduct('];
     }
 
+    /** Every creator asks DestinationScope, which falls back to the list above. */
     #[\PHPUnit\Framework\Attributes\DataProvider('creators')]
-    public function testEveryProductCreatorReadsTheOneList(string $file, string $needle): void
+    public function testEveryProductCreatorReadsTheOneScope(string $file, string $needle): void
     {
         $src = (string) file_get_contents(self::root() . '/' . $file);
 
@@ -77,11 +78,11 @@ final class ProductExclusionsTest extends TestCase
     }
 
     /** The resort check comes before the product is built, not after. */
-    public function testOffersUpdateSkipsExcludedResortsBeforeCreatingTheProduct(): void
+    public function testOffersUpdateSkipsOutOfScopeHotelsBeforeCreatingTheProduct(): void
     {
         $src = (string) file_get_contents(self::root() . '/src/Cron/Commands/OffersUpdateCommand.php');
 
-        $check = strpos($src, 'ConfigProvider::isResortExcluded(');
+        $check = strpos($src, '$scope->allowsProduct(');
         $create = strpos($src, 'fn_update_product(');
         self::assertIsInt($check);
         self::assertIsInt($create);
