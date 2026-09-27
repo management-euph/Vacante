@@ -420,6 +420,60 @@ final class EurositeApiClientTest extends TestCase
         self::assertStringContainsString('RequestType="CancelBookingRequest"', $t->lastRequest);
     }
 
+    /**
+     * The live getProductInfoResponse nests the product under <Product>;
+     * the facility chips come from its <DescriptionDet> free text.
+     */
+    public function testGetProductInfoParsesFacilitiesFromTheProductDescription(): void
+    {
+        $t = new FakeTransport(self::wrap('getProductInfoResponse',
+            '<Product><ProductCode>RO0451</ProductCode><ProductName>SCANDINAVIA CM</ProductName>'
+            . '<DescriptionDet>Hotel.&amp;lt;br&amp;gt;Facilitati: aer conditionat, bar, Wi-fi.&amp;lt;br&amp;gt;Camere</DescriptionDet>'
+            . '</Product>'));
+        $info = $this->client($t)->getProductInfo('RO', 'ROMM', 'RO0451', 'hotel', 'LA');
+
+        self::assertSame(['Aer conditionat', 'Bar', 'Wi-fi'], $info['facilities']);
+    }
+
+    /**
+     * The live shape (SCANDINAVIA CM, 27.09.2026): everything under
+     * <Product>, <Description> only an encoded "<br>", the operator's text
+     * double-encoded in <DescriptionDet>. Every field used to come back empty.
+     */
+    public function testGetProductInfoReadsTheLiveNestedProduct(): void
+    {
+        $t = new FakeTransport(self::wrap('getProductInfoResponse',
+            '<Product><TourOpCode>LA</TourOpCode><ProductCode>RO0451</ProductCode><ProductName>SCANDINAVIA CM</ProductName>'
+            . '<Latitude>44.25</Latitude><Longitude>28.62</Longitude><ProductCategory>4</ProductCategory>'
+            . '<Description>&amp;lt;br&amp;gt;</Description>'
+            . '<DescriptionDet>Hotel Scandinavia, situat pe malul lacului Siutghiol.&amp;lt;br&amp;gt;&amp;lt;br&amp;gt;Facilitati: bar, terasa.</DescriptionDet>'
+            . '<Pictures><Picture Name="Unitate" Description="">https://img/a.jpg</Picture>'
+            . '<Picture Name="Unitate" Description="">https://img/b.jpg</Picture></Pictures>'
+            . '</Product>'));
+        $info = $this->client($t)->getProductInfo('RO', 'ROMM', 'RO0451', 'hotel', 'LA');
+
+        self::assertSame('RO0451', $info['product_code']);
+        self::assertSame('SCANDINAVIA CM', $info['name']);
+        self::assertSame(4, $info['category']);
+        self::assertSame(['44.25', '28.62'], [$info['latitude'], $info['longitude']]);
+        self::assertSame(['https://img/a.jpg', 'https://img/b.jpg'], $info['pictures']);
+        self::assertStringStartsWith('Hotel Scandinavia, situat pe malul lacului Siutghiol.<br><br>', $info['description']);
+        self::assertStringNotContainsString('&lt;', $info['description']);
+        self::assertSame(['Bar', 'Terasa'], $info['facilities']);
+    }
+
+    /** No <ProductCode> in the answer: the requested code, never ''. */
+    public function testGetProductInfoKeepsTheRequestedCode(): void
+    {
+        $t = new FakeTransport(self::wrap('getProductInfoResponse', '<Product><Name>Vila</Name></Product>'));
+        $info = $this->client($t)->getProductInfo('RO', 'ROMM', 'RO0999', 'hotel', 'LA');
+
+        self::assertSame('RO0999', $info['product_code']);
+        self::assertSame('Vila', $info['name']);
+        self::assertSame('', $info['description']);
+        self::assertSame([], $info['pictures']);
+    }
+
     private static function wrap(string $responseType, string $inner): string
     {
         return '<?xml version="1.0" encoding="utf-8"?>'

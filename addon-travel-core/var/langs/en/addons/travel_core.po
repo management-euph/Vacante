@@ -734,6 +734,14 @@ msgctxt "SettingsVariants::travel_core::booking_form_position::after_description
 msgid "After Description"
 msgstr "After Description"
 
+msgctxt "SettingsOptions::travel_core::booking_sidebar_max_features"
+msgid "Facilities shown on the booking page"
+msgstr "Facilities shown on the booking page"
+
+msgctxt "SettingsTooltips::travel_core::booking_sidebar_max_features"
+msgid "How many facility chips the booking page sidebar shows before \"+N more\" (all providers)"
+msgstr "How many facility chips the booking page sidebar shows before \"+N more\" (all providers)"
+
 msgctxt "SettingsOptions::travel_core::checkout_guard_header"
 msgid "Checkout price guard (all providers)"
 msgstr "Checkout price guard (all providers)"
@@ -1281,3 +1289,139 @@ msgstr "Free cancellation until"
 msgctxt "Languages::travel_core.gender"
 msgid "Gender"
 msgstr "Gender"
+
+msgctxt "Languages::travel_core.status_instant"
+msgid "Instant confirmation"
+msgstr "Instant confirmation"
+
+msgctxt "Languages::travel_core.status_stop_sale"
+msgid "Not bookable (stop sale)"
+msgstr "Not bookable (stop sale)"
+
+msgctxt "Languages::travel_core.show_less"
+msgid "Show less"
+msgstr "Show less"
+
+msgctxt "Languages::travel_core.n_more"
+msgid "+[n] more"
+msgstr "+[n] more"
+
+msgctxt "Languages::travel_core.per_night_line"
+msgid "[nights] · ≈ [price] / night"
+msgstr "[nights] · ≈ [price] / night"
+
+msgctxt "Languages::travel_core.cancel_payment_title"
+msgid "Cancellation & payment"
+msgstr "Cancellation & payment"
+
+msgctxt "Languages::travel_core.no_show"
+msgid "No-show"
+msgstr "No-show"
+
+msgctxt "Languages::travel_core.until_date"
+msgid "Until [date]"
+msgstr "Until [date]"
+
+msgctxt "Languages::travel_core.from_date"
+msgid "From [date]"
+msgstr "From [date]"
+
+msgctxt "Languages::travel_core.until_check_in"
+msgid "Until check-in"
+msgstr "Until check-in"
+
+msgctxt "Languages::travel_core.today"
+msgid "Today"
+msgstr "Today"
+
+msgctxt "Languages::travel_core.timeline_free"
+msgid "Free cancellation"
+msgstr "Free cancellation"
+
+msgctxt "Languages::travel_core.you_pay"
+msgid "You pay"
+msgstr "You pay"
+
+msgctxt "Languages::travel_core.due_now"
+msgid "now"
+msgstr "now"
+
+msgctxt "Languages::travel_core.due_by"
+msgid "by [date]"
+msgstr "by [date]"
+
+msgctxt "Languages::travel_core.booking_progress"
+msgid "Booking progress"
+msgstr "Booking progress"
+
+msgctxt "Languages::travel_core.step_search"
+msgid "Search"
+msgstr "Search"
+
+msgctxt "Languages::travel_core.step_guest_details"
+msgid "Guest details"
+msgstr "Guest details"
+
+msgctxt "Languages::travel_core.step_checkout"
+msgid "Checkout"
+msgstr "Checkout"
+
+msgctxt "Languages::travel_core.step_confirmation"
+msgid "Confirmation"
+msgstr "Confirmation"
+
+msgctxt "Languages::travel_core.guest_names_hint"
+msgid "Enter each name exactly as it appears on the guest's ID card or passport."
+msgstr "Enter each name exactly as it appears on the guest's ID card or passport."
+
+msgctxt "Languages::travel_core.guest_adult"
+msgid "Adult"
+msgstr "Adult"
+
+msgctxt "Languages::travel_core.guest_child"
+msgid "Child"
+msgstr "Child"
+
+msgctxt "Languages::travel_core.dob_placeholder"
+msgid "DD/MM/YYYY"
+msgstr "DD/MM/YYYY"
+
+msgctxt "Languages::travel_core.gender_male"
+msgid "Male"
+msgstr "Male"
+
+msgctxt "Languages::travel_core.gender_female"
+msgid "Female"
+msgstr "Female"
+
+msgctxt "Languages::travel_core.continue_to_checkout"
+msgid "Continue to checkout"
+msgstr "Continue to checkout"
+
+msgctxt "Languages::travel_core.field_required"
+msgid "Please fill in this field."
+msgstr "Please fill in this field."
+
+msgctxt "Languages::travel_core.choose_option"
+msgid "Please choose one option."
+msgstr "Please choose one option."
+
+msgctxt "Languages::travel_core.cta_note"
+msgid "You won't be charged yet — you'll review everything at checkout."
+msgstr "You won't be charged yet — you'll review everything at checkout."
+
+msgctxt "Languages::travel_core.field_required_named"
+msgid "Please fill in the [field] field."
+msgstr "Please fill in the [field] field."
+
+msgctxt "Languages::travel_core.choose_between"
+msgid "Please choose [a] or [b]."
+msgstr "Please choose [a] or [b]."
+
+msgctxt "Languages::travel_core.facility_unnamed"
+msgid "Facility #[code]"
+msgstr "Facility #[code]"
+
+msgctxt "Languages::travel_core.who_is_staying"
+msgid "Who is staying?"
+msgstr "Who is staying?"

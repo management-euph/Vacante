@@ -1355,3 +1355,7 @@ msgstr "Edit booking"
 msgctxt "Languages::sphinx_holidays.booking_updated"
 msgid "Booking details updated."
 msgstr "Booking details updated."
+
+msgctxt "Languages::sphinx_holidays.complete_booking"
+msgid "Complete Your Booking"
+msgstr "Complete Your Booking"

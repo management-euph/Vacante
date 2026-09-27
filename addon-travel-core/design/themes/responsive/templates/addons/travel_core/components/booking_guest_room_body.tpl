@@ -44,7 +44,8 @@
  *   gb_adult_sublabel      (string, default '') note under each adult label
  *                          (novoton: bed type).
  *   gb_gender_options      (map, default []) value => label; when set, each
- *                          adult gets a guests[...][gender] select (eurosite:
+ *                          adult gets REQUIRED guests[...][gender] radios with
+ *                          explicit labels and nothing preselected (eurosite:
  *                          TGender B/F). Empty — no field, markup unchanged.
  *   gb_child_gender        (string, default '') when set, a hidden
  *                          guests[...][gender] with this value per child
@@ -75,19 +76,22 @@
     {$_i = $smarty.section.adult.index}
     <div class="guest-entry guest-entry-adult">
         <div class="travel-guest-label">
-            {if $_seq_off >= 0}{$_seq_n = $_seq_off+$_i}{$_seq_n}. {__("`$_gp`.adult")|default:"Adult"}{else}{__("`$_gp`.adult")|default:"Adult"} {$_i}{/if}
+            {* "Adult 1" — travel_core.guest_adult is the capitalised card
+               label; travel_core.adult stays the lowercase word used
+               mid-sentence elsewhere ("2 adult"). *}
+            {if $_seq_off >= 0}{$_seq_n = $_seq_off+$_i}{__("`$_gp`.guest_adult")} {$_seq_n}{else}{__("`$_gp`.guest_adult")} {$_i}{/if}
             {if $_room_idx == 0 && $_i == 1} <span class="travel-holder-tag">{__("`$_gp`.main_guest")|default:"Main Guest"}</span>{/if}
         </div>
         {if $_adult_sublabel}<div class="travel-guest-sublabel">{$_adult_sublabel}</div>{/if}
         <div class="travel-guest-grid">
             {* Nume (last name) FIRST, Prenume second — novoton field order *}
             <div class="travel-guest-field">
-                <label for="guest_r{$_room_num}_a{$_i}_last">{__("`$_gp`.last_name")|default:"Last Name"}</label>
+                <label for="guest_r{$_room_num}_a{$_i}_last">{__("`$_gp`.last_name")|default:"Last Name"}<span class="travel-guest-required" aria-hidden="true">*</span></label>
                 {$_pf_key = "`$_npfx`adult_`$_i`"}
                 <input type="text" id="guest_r{$_room_num}_a{$_i}_last"
                        name="guests[{$_npfx}adult_{$_i}][last_name]"
                        value="{$_prefill.$_pf_key.last_name|default:''|escape:html}"
-                       class="ty-input-text" required aria-required="true" placeholder="{__("`$_gp`.last_name")|default:"Last Name"}">
+                       class="ty-input-text" required aria-required="true" pattern=".*\S.*" autocomplete="family-name">
                 <input type="hidden" name="guests[{$_npfx}adult_{$_i}][type]" value="adult">
                 {if $_adult_age_value != ''}
                 <input type="hidden" name="guests[{$_npfx}adult_{$_i}][age]" value="{$_adult_age_value}">
@@ -100,29 +104,29 @@
                 {/if}
             </div>
             <div class="travel-guest-field">
-                <label for="guest_r{$_room_num}_a{$_i}_first">{__("`$_gp`.first_name")|default:"First Name"}</label>
+                <label for="guest_r{$_room_num}_a{$_i}_first">{__("`$_gp`.first_name")|default:"First Name"}<span class="travel-guest-required" aria-hidden="true">*</span></label>
                 <input type="text" id="guest_r{$_room_num}_a{$_i}_first"
                        name="guests[{$_npfx}adult_{$_i}][first_name]"
                        value="{$_prefill.$_pf_key.first_name|default:''|escape:html}"
-                       class="ty-input-text" required aria-required="true" placeholder="{__("`$_gp`.first_name")|default:"First Name"}">
+                       class="ty-input-text" required aria-required="true" pattern=".*\S.*" autocomplete="given-name">
             </div>
             {if $_gender_options}
             <div class="travel-guest-field travel-guest-field--gender">
-                <label for="guest_r{$_room_num}_a{$_i}_gender">{__("`$_gp`.gender")|default:"Gender"}</label>
-                <select id="guest_r{$_room_num}_a{$_i}_gender" name="guests[{$_npfx}adult_{$_i}][gender]">
+                <span class="travel-guest-field-label" id="guest_r{$_room_num}_a{$_i}_gender">{__("`$_gp`.gender")|default:"Gender"}<span class="travel-guest-required" aria-hidden="true">*</span></span>
+                <div class="travel-guest-radios" role="radiogroup" aria-labelledby="guest_r{$_room_num}_a{$_i}_gender">
                     {foreach $_gender_options as $_g_val => $_g_label}
-                        <option value="{$_g_val|escape:html}"{if $_prefill.$_pf_key.gender|default:'' == $_g_val} selected{/if}>{$_g_label|escape:html}</option>
+                        <label class="travel-guest-radio"><input type="radio" name="guests[{$_npfx}adult_{$_i}][gender]" value="{$_g_val|escape:html}" required{if $_prefill.$_pf_key.gender|default:'' == $_g_val} checked{/if}> {$_g_label|escape:html}</label>
                     {/foreach}
-                </select>
+                </div>
             </div>
             {/if}
             {if $_show_adult_dob}
             <div class="travel-guest-field travel-guest-field--dob">
-                <label for="guest_r{$_room_num}_a{$_i}_dob">{__("`$_gp`.date_of_birth")|default:"Date of Birth"} <span class="travel-muted-note">(ex: 27/05/1990)</span></label>
+                <label for="guest_r{$_room_num}_a{$_i}_dob">{__("`$_gp`.date_of_birth")|default:"Date of Birth"}{if $gb_adult_dob_required|default:false}<span class="travel-guest-required" aria-hidden="true">*</span>{/if}</label>
                 <input type="tel" id="guest_r{$_room_num}_a{$_i}_dob"
                        name="guests[{$_npfx}adult_{$_i}][dob]"
                        value="{$_prefill.$_pf_key.dob|default:''|escape:html}"
-                       class="ty-input-text dob-masked-input js-dob-basics" placeholder="ZZ/LL/AAAA" maxlength="10"
+                       class="ty-input-text dob-masked-input js-dob-basics" placeholder="{__("`$_gp`.dob_placeholder")|escape:html}" maxlength="10"
                        inputmode="numeric" autocomplete="off"
                        {if $gb_adult_dob_required|default:false}required aria-required="true"{/if}
                        onkeydown="TravelBooking.handleDobKeydown(event)"
@@ -142,7 +146,7 @@
         {assign var="child_age" value=$room_child_ages[$_i-1]|default:0}
         <div class="guest-entry guest-entry-child" data-original-age="{$child_age}">
             <div class="travel-guest-label travel-guest-label--child">
-                {if $_seq_off >= 0}{$_seq_n = $_seq_off+$room_adults}{$_seq_n = $_seq_n+$_i}{$_seq_n}. {__("`$_gp`.child")|default:"Child"} {$_i}{else}{__("`$_gp`.child")|default:"Child"} {$_i}{/if}
+                {__("`$_gp`.guest_child")} {$_i}
                 {* The shared DOB JS (dob-validation.js / provider re-price
                    modules) rewrites this span by id when a DOB implies a
                    different age at check-in. *}
@@ -155,12 +159,12 @@
             <div class="travel-guest-grid">
                 {* Nume (last name) FIRST, Prenume second — novoton field order *}
                 <div class="travel-guest-field">
-                    <label for="guest_r{$_room_num}_c{$_i}_last">{__("`$_gp`.last_name")|default:"Last Name"}</label>
+                    <label for="guest_r{$_room_num}_c{$_i}_last">{__("`$_gp`.last_name")|default:"Last Name"}<span class="travel-guest-required" aria-hidden="true">*</span></label>
                     {$_pf_key = "`$_npfx`child_`$_i`"}
                     <input type="text" id="guest_r{$_room_num}_c{$_i}_last"
                            name="guests[{$_npfx}child_{$_i}][last_name]"
                            value="{$_prefill.$_pf_key.last_name|default:''|escape:html}"
-                           class="ty-input-text" required aria-required="true" placeholder="{__("`$_gp`.last_name")|default:"Last Name"}">
+                           class="ty-input-text" required aria-required="true" pattern=".*\S.*" autocomplete="off">
                     <input type="hidden" name="guests[{$_npfx}child_{$_i}][type]" id="child_type_r{$_room_num}_c{$_i}" value="child">
                     <input type="hidden" name="guests[{$_npfx}child_{$_i}][age]" id="child_age_r{$_room_num}_c{$_i}" value="{$child_age}">
                     {if $_child_gender != ''}
@@ -171,14 +175,14 @@
                     {/if}
                 </div>
                 <div class="travel-guest-field">
-                    <label for="guest_r{$_room_num}_c{$_i}_first">{__("`$_gp`.first_name")|default:"First Name"}</label>
+                    <label for="guest_r{$_room_num}_c{$_i}_first">{__("`$_gp`.first_name")|default:"First Name"}<span class="travel-guest-required" aria-hidden="true">*</span></label>
                     <input type="text" id="guest_r{$_room_num}_c{$_i}_first"
                            name="guests[{$_npfx}child_{$_i}][first_name]"
                            value="{$_prefill.$_pf_key.first_name|default:''|escape:html}"
-                           class="ty-input-text" required aria-required="true" placeholder="{__("`$_gp`.first_name")|default:"First Name"}">
+                           class="ty-input-text" required aria-required="true" pattern=".*\S.*" autocomplete="off">
                 </div>
                 <div class="travel-guest-field travel-guest-field--dob">
-                    <label for="dob_r{$_room_num}_c{$_i}">{__("`$_gp`.date_of_birth")|default:"Date of Birth"} <span class="travel-muted-note">(ex: 27/05/2020)</span></label>
+                    <label for="dob_r{$_room_num}_c{$_i}">{__("`$_gp`.date_of_birth")|default:"Date of Birth"}{if $_child_dob_required}<span class="travel-guest-required" aria-hidden="true">*</span>{/if}</label>
                     {* data-expected-age arms the shared JS + server guard: the DOB
                        must imply THIS age at check-in (the age the offer was priced
                        for). Fixed-price providers only — novoton re-prices instead
@@ -186,7 +190,7 @@
                     <input type="tel" id="dob_r{$_room_num}_c{$_i}"
                            name="guests[{$_npfx}child_{$_i}][dob]"
                            value="{$_prefill.$_pf_key.dob|default:''|escape:html}"
-                           class="ty-input-text dob-masked-input js-dob-basics" placeholder="ZZ/LL/AAAA" maxlength="10"
+                           class="ty-input-text dob-masked-input js-dob-basics" placeholder="{__("`$_gp`.dob_placeholder")|escape:html}" maxlength="10"
                            inputmode="numeric" autocomplete="off"
                            {if $_child_dob_required}required aria-required="true"{/if}
                            {if $gb_guard_expected_ages|default:false}data-expected-age="{$child_age}"{/if}

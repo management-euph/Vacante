@@ -104,7 +104,8 @@ final class FacilityLabelResolverTest extends TestCase
         ];
 
         self::assertSame(['Pool', 'Spa'], FacilityLabelResolver::labels('sphinx', $facilities, 'en', 2));
-        self::assertSame(['Pool', 'Spa', 'Bar'], FacilityLabelResolver::labels('sphinx', $facilities, 'en'));
+        // A facility without a name is kept, not dropped (user ruling).
+        self::assertSame(['Pool', 'Spa', 'Bar', 'Facility #5'], FacilityLabelResolver::labels('sphinx', $facilities, 'en'));
     }
 
     /** Regional spellings pick the Romanian column too. */
@@ -114,5 +115,42 @@ final class FacilityLabelResolverTest extends TestCase
         self::assertSame('display_name_ro', FacilityLabelResolver::column('RO'));
         self::assertSame('display_name_en', FacilityLabelResolver::column('en-US'));
         self::assertSame('display_name_en', FacilityLabelResolver::column('de'));
+    }
+
+    /**
+     * "✓ 27" on the booking sidebar: an unmapped novoton facility got an
+     * auto-created mapping row named after its code, which beat the real
+     * provider name. A code-only label now yields to the provider's name,
+     * and a facility nobody named keeps its chip as "Facility #27".
+     */
+    public function testCodeOnlyMappingNameYieldsToTheProviderName(): void
+    {
+        DbStub::$getRow = static function (string $sql, ...$params): array {
+            foreach ($params as $param) {
+                if ((string) $param === '27') {
+                    return ['map_id' => 9, 'display_name_en' => '27', 'display_name_ro' => '27'];
+                }
+            }
+
+            return [];
+        };
+
+        self::assertSame(
+            ['Outdoor pool'],
+            FacilityLabelResolver::labels('novoton', [['id' => 27, 'name' => 'Outdoor pool']], 'ro'),
+        );
+        // No real name anywhere: the chip stays (facilities are never
+        // dropped), named after its code instead of a bare number.
+        self::assertSame(['Facility #27'], FacilityLabelResolver::labels('novoton', [['id' => 27, 'name' => '']], 'en'));
+        self::assertSame(
+            ['Facilitate #27'],
+            FacilityLabelResolver::labels('novoton', [['id' => 27, 'name' => '']], 'ro', 6, 'Facilitate #[code]'),
+        );
+        // Lang key not seeded yet: __() gives "_travel_core.facility_unnamed"
+        // (no [code]) — the chips still name their codes, not one raw key.
+        self::assertSame(
+            ['Facility #27', 'Facility #28'],
+            FacilityLabelResolver::labels('novoton', [['id' => 27, 'name' => ''], ['id' => 28, 'name' => '']], 'en', 6, '_travel_core.facility_unnamed'),
+        );
     }
 }

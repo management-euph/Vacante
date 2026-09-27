@@ -223,6 +223,9 @@
                                                data-room-id="{$result.room_id}"
                                                data-board-id="{$result.board_id}"
                                                data-price="{$result.extras_price|default:$result.total_price}"
+                                               data-standard-price="{$result.total_price}"
+                                               data-early-booking="{$result.early_booking_discount|default:0}"
+                                               data-extras="{$result.extras_label|default:''|escape:'html'}"
                                                data-room-display="{$room_display}"
                                                data-board-name="{$board_display}"
                                                data-package-name="{$result.package_name|escape:'htmlall'}" />
@@ -537,7 +540,7 @@
                                 </div>
                             {/if}
                         </div>
-                        <a href="{fn_url("novoton_booking.booking_form?hotel_id=`$novoton_params.hotel_id`&room_id=`$result.room_id|escape:'url'`&board_id=`$result.board_id|escape:'url'`&check_in=`$check_in_date`&check_out=`$check_out_date`&nights=`$novoton_params.nights`&adults=`$novoton_params.adults`&children=`$novoton_params.children_count`&children_ages=`$novoton_params.children_ages|default:''`&price=`$result.extras_price|default:$result.total_price`&package_name=`$result_package_name|escape:'url'`&room_name=`$room_display|escape:'url'`&board_name=`$board_display|escape:'url'`&rooms_data=`$single_room_data|json_encode|escape:'url'`&extras=`$result.extras_label|default:''|escape:'url'`&extras_price=`$result.extras_price|default:''`")}"
+                        <a href="{fn_url("novoton_booking.booking_form?hotel_id=`$novoton_params.hotel_id`&room_id=`$result.room_id|escape:'url'`&board_id=`$result.board_id|escape:'url'`&check_in=`$check_in_date`&check_out=`$check_out_date`&nights=`$novoton_params.nights`&adults=`$novoton_params.adults`&children=`$novoton_params.children_count`&children_ages=`$novoton_params.children_ages|default:''`&price=`$result.extras_price|default:$result.total_price`&package_name=`$result_package_name|escape:'url'`&room_name=`$room_display|escape:'url'`&board_name=`$board_display|escape:'url'`&rooms_data=`$single_room_data|json_encode|escape:'url'`&extras=`$result.extras_label|default:''|escape:'url'`&extras_price=`$result.extras_price|default:''`&standard_price=`$result.total_price`&early_booking=`$result.early_booking_discount|default:0`&is_on_request=`$result.is_on_request|default:0`&rooms_available=`$result.rooms_available|default:0`")}"
                            class="travel-offer-book-btn">
                             {__("novoton_holidays.book")}
                         </a>

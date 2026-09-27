@@ -9,6 +9,7 @@ use Tygh\Addons\Eurosite\EurositeTransportInterface;
 use Tygh\Addons\Eurosite\EurositeXmlBuilder;
 use Tygh\Addons\Eurosite\EurositeXmlParser;
 use Tygh\Addons\Eurosite\Exception\EurositeApiException;
+use Tygh\Addons\Eurosite\Services\FacilityTextParser;
 
 /**
  * Eurosite API facade — the MVP surface of the "individual accommodations"
@@ -206,21 +207,56 @@ final class EurositeApiClient
             . '<ProductCode>' . EurositeXmlBuilder::esc($productCode) . '</ProductCode>'
             . '</getProductInfoRequest>';
         $details = $this->call('getProductInfoRequest', $payload);
+        // The live response nests the product under <Product>; a flat
+        // response (older shape, tests) is read the same way.
+        $p = $details->Product ?? $details;
 
         $pictures = [];
-        foreach ($details->Pictures->Picture ?? $details->Picture ?? [] as $p) {
-            $pictures[] = trim((string) $p);
+        $pictureList = $p->Pictures->Picture ?? ($p->Picture ?? []);
+        foreach ($pictureList as $picture) {
+            $url = trim((string) $picture);
+            if ($url !== '') {
+                $pictures[] = $url;
+            }
         }
 
+        // <Description> is often just an encoded "<br>"; the operator's text
+        // is in <DescriptionDet>. Both arrive double-encoded.
+        $description = FacilityTextParser::decode(self::childText($p, 'Description'));
+        if (trim(strip_tags($description)) === '') {
+            $description = FacilityTextParser::decode(self::childText($p, 'DescriptionDet'));
+        }
+        $code = self::childText($p, 'ProductCode');
+
         return [
-            'product_code' => trim((string) ($details->ProductCode ?? $productCode)),
-            'name' => trim((string) ($details->ProductName ?? $details->Name ?? '')),
-            'description' => trim((string) ($details->Description ?? '')),
-            'category' => (int) (string) ($details->ProductCategory ?? 0),
-            'latitude' => trim((string) ($details->Latitude ?? '')),
-            'longitude' => trim((string) ($details->Longitude ?? '')),
+            'product_code' => $code !== '' ? $code : $productCode,
+            'name' => self::childText($p, 'ProductName', 'Name'),
+            'description' => trim(strip_tags($description)) !== '' ? trim($description) : '',
+            'category' => (int) self::childText($p, 'ProductCategory'),
+            'latitude' => self::childText($p, 'Latitude'),
+            'longitude' => self::childText($p, 'Longitude'),
             'pictures' => $pictures,
+            // Facility chips for the booking page: the operator lists them in
+            // the free text of <DescriptionDet> (there is no structured list).
+            'facilities' => FacilityTextParser::facilities(self::childText($p, 'DescriptionDet')),
         ];
+    }
+
+    /**
+     * First non-empty child text among $names. isset(), not ??: SimpleXML
+     * gives an EMPTY element, never null, for a missing child.
+     */
+    private static function childText(\SimpleXMLElement $node, string ...$names): string
+    {
+        foreach ($names as $name) {
+            $el = $node->{$name} ?? null;
+            $value = $el instanceof \SimpleXMLElement ? trim((string) $el) : '';
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return '';
     }
 
     /**
@@ -769,6 +805,8 @@ final class EurositeApiClient
                 (string) ($offer->Availability['Code'] ?? ''),
                 (string) ($offer->Availability ?? ''),
             ),
+            priceNoRedd: (float) (string) ($offer->PriceNoRedd ?? 0),
+            offerDescription: trim((string) ($offer->OfferDescription ?? '')),
         );
     }
 

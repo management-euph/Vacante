@@ -29,7 +29,8 @@ function renderFixture({ numRooms = 2, coefficient = 1, roundPrices = false, cur
                     <input type="radio" name="room_1_selection" value="R1|BB|500"
                            data-room-num="1" data-room-id="R1" data-board-id="BB"
                            data-price="500" data-room-display="DBL" data-board-name="Bed &amp; Breakfast"
-                           data-package-name="Summer">
+                           data-package-name="Summer"
+                           data-standard-price="560" data-early-booking="10" data-extras="7 = 6">
                 </label>
             </div>
             <div data-room="2">
@@ -112,6 +113,10 @@ describe('booking submission', () => {
         expect(roomsData[0]).toMatchObject({ room_num: 1, room_id: 'R1', board_id: 'BB', price: 500, adults: 2 });
         // Occupancy comes from data-rooms-data (room 2 carries the child)
         expect(roomsData[1]).toMatchObject({ room_num: 2, children: 1, childrenAges: [7] });
+        // The offer behind room 1's price rides along (the booking page's
+        // "was" price); room 2's radio renders none, so it sends none.
+        expect(roomsData[0]).toMatchObject({ standard_price: 560, early_booking: 10, extras: '7 = 6' });
+        expect(roomsData[1]).not.toHaveProperty('standard_price');
     });
 
     it('does not submit while the button is disabled', () => {

@@ -10,4 +10,12 @@ class Smarty
      * @return void
      */
     public function assign($tpl_var, $value = null) {}
+
+    /**
+     * Render a template to a string.
+     *
+     * @param string $template
+     * @return string
+     */
+    public function fetch($template) { return ''; }
 }

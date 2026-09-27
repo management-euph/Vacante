@@ -57,38 +57,86 @@ function novotonLog(message, data) {
 
 // Form submit validation. Inline, this ran right after the form markup; as
 // an external module the binding waits for DOM-ready.
+//
+// Errors show INLINE under each field (the shared booking-page pattern:
+// .travel-field-error-message + aria-invalid) instead of an alert() that
+// never said which guest was missing what.
+function novotonFieldHost(el) {
+    return (el.closest && el.closest('.travel-guest-field')) || el.parentElement;
+}
+
+function novotonMarkMissing(el) {
+    el.setAttribute('aria-invalid', 'true');
+    var host = novotonFieldHost(el);
+    if (!host || host.querySelector('.js-required-msg')) return;
+    var msg = document.createElement('span');
+    msg.className = 'travel-field-error-message js-required-msg';
+    msg.setAttribute('role', 'alert');
+    // Same named message as the shared validator ("Please fill in the Last
+    // Name field.") when it is loaded.
+    if (window.TravelBooking && typeof window.TravelBooking.requiredMessage === 'function') {
+        msg.textContent = window.TravelBooking.requiredMessage(el);
+    } else {
+        msg.textContent = el.type === 'radio'
+            ? nvtLabel('chooseOption', 'Vă rugăm să alegeți o opțiune.')
+            : nvtLabel('fillAllFields', 'Vă rugăm completați toate câmpurile obligatorii');
+    }
+    host.appendChild(msg);
+}
+
+// A field filled since the last attempt drops its required message; the red
+// state stays only while another message (DOB format …) still stands.
+function novotonClearMissing(el, form) {
+    var host = novotonFieldHost(el);
+    var msg = host ? host.querySelector('.js-required-msg') : null;
+    if (msg) msg.remove();
+    var targets = el.type === 'radio'
+        ? form.querySelectorAll('input[type="radio"][name="' + el.name + '"]')
+        : [el];
+    for (var i = 0; i < targets.length; i++) {
+        if (window.TravelBooking && typeof window.TravelBooking.syncInvalid === 'function' && el.type !== 'radio') {
+            window.TravelBooking.syncInvalid(targets[i]);
+        } else if (!host || !host.querySelector('.travel-field-error-message')) {
+            targets[i].removeAttribute('aria-invalid');
+        }
+    }
+}
+
 function novotonBindSubmitValidation() {
     var bookingForm = document.getElementById('novoton-booking-form');
     if (!bookingForm) return;
     bookingForm.addEventListener('submit', function(e) {
-    var allFilled = true;
+    var firstBad = null;
+    var form = this;
     this.querySelectorAll('input[required], select[required]').forEach(function(el) {
-        if (!el.value.trim()) {
-            allFilled = false;
-            el.style.borderColor = '#dc3545';
+        var missing = el.type === 'radio'
+            ? !form.querySelector('input[type="radio"][name="' + el.name + '"]:checked')
+            : !String(el.value || '').trim();
+        if (missing) {
+            novotonMarkMissing(el);
+            if (!firstBad) firstBad = el;
         } else {
-            el.style.borderColor = '#ccc';
+            novotonClearMissing(el, form);
         }
     });
 
-    if (!allFilled) {
+    if (firstBad) {
         e.preventDefault();
-        alert(nvtLabel('fillAllFields', 'Vă rugăm completați toate câmpurile obligatorii'));
+        try { firstBad.focus(); } catch (err) {}
         return;
     }
 
-    // Check for DOB validation errors
-    var dobErrors = document.querySelectorAll('.dob-validation-error');
-    var hasError = false;
-    dobErrors.forEach(function(el) {
-        if (el.style.display !== 'none' && el.textContent !== '') {
-            hasError = true;
-        }
-    });
-
-    if (hasError) {
+    // A field flagged (DOB format, age at check-in …) blocks the submit;
+    // take the guest to it. Re-judge every DOB first, as the shared guard
+    // does — a flag left from a value since cleared must not block.
+    var tb = window.TravelBooking || {};
+    if (typeof tb.validateDobBasics === 'function') {
+        form.querySelectorAll('input.js-dob-basics').forEach(function (dob) { tb.validateDobBasics(dob); });
+    }
+    var flagged = form.querySelector('[aria-invalid="true"]');
+    if (flagged) {
         e.preventDefault();
-        alert(nvtLabel('dobValidationError', 'Verificati datele de nastere introduse.'));
+        try { flagged.focus(); } catch (err) {}
     }
     });
 }
@@ -120,9 +168,10 @@ function validateAndCheckAge(id, originalAge) {
     var dobValue = dobInput.value;
     novotonLog('DOB value', dobValue);
 
-    // Clear previous states
-    dobInput.style.borderColor = '';
-    dobInput.style.backgroundColor = '';
+    // Format / range / future / under-18 MESSAGES are the shared validator's
+    // (booking-form-validation.js validateDobBasics, same markup on every
+    // provider) — this function only keeps the age + re-price in step, so a
+    // bad date no longer gets two differently-worded messages.
     if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
     if (infoDiv) { infoDiv.style.display = 'none'; infoDiv.textContent = ''; }
     // Clear previous price error when user re-enters DOB
@@ -139,23 +188,19 @@ function validateAndCheckAge(id, originalAge) {
     var parsed = parseDobMasked(dobValue);
     if (!parsed) {
         novotonLog('DOB parse failed');
-        showDobError(dobInput, errorDiv, 'Format invalid');
         return;
     }
     novotonLog('DOB parsed', parsed);
 
     // Validate ranges
     if (parsed.day < 1 || parsed.day > 31) {
-        showDobError(dobInput, errorDiv, 'Ziua invalida (1-31)');
         return;
     }
     if (parsed.month < 1 || parsed.month > 12) {
-        showDobError(dobInput, errorDiv, 'Luna invalida (1-12)');
         return;
     }
     var currentYear = new Date().getFullYear();
     if (parsed.year < 1925 || parsed.year > currentYear) {
-        showDobError(dobInput, errorDiv, 'Anul invalid');
         return;
     }
 
@@ -164,7 +209,6 @@ function validateAndCheckAge(id, originalAge) {
     today.setHours(0, 0, 0, 0);
     var birthDate = new Date(parsed.year, parsed.month - 1, parsed.day);
     if (birthDate > today) {
-        showDobError(dobInput, errorDiv, 'Data nasterii nu poate fi in viitor');
         return;
     }
 
@@ -197,18 +241,14 @@ function validateAndCheckAge(id, originalAge) {
     }
 
     if (calculatedAge >= 18) {
+        // The field message comes from the shared validator; here only the
+        // price is held back (no child price exists for an adult).
         var t = window.NovotonTranslations || {};
-        var notChildMsg = t.notChild || 'La check-in, copilul va avea';
-        var yearsLabel = t.ageLabel || 'ani';
-        var mustBeUnder18 = t.mustBeUnder18 || 'Trebuie sa fie sub 18 ani.';
-        showDobError(dobInput, errorDiv, notChildMsg + ' ' + calculatedAge + ' ' + yearsLabel + '. ' + mustBeUnder18);
         showPriceError(t.childAgeNotAllowed || 'Vârsta copilului depășește limita');
         return;
     }
 
-    // Valid child age — show green, let API determine price
-    dobInput.style.borderColor = '#28a745';
-    dobInput.style.backgroundColor = '#f0fff0';
+    // Valid child age — let the API determine the price.
 
     // Extract room number from id (format: rX_cY where X=room, Y=child)
     var roomMatch = id.match(/r(\d+)_c\d+/);
@@ -217,15 +257,6 @@ function validateAndCheckAge(id, originalAge) {
     // Trigger price recalculation for this specific room
     novotonLog('Triggering price recalculation for room ' + roomNum);
     collectAndRecalculate(roomNum);
-}
-
-function showDobError(input, errorDiv, message) {
-    input.style.borderColor = '#dc3545';
-    input.style.backgroundColor = '#fff5f5';
-    if (errorDiv) {
-        errorDiv.textContent = message;
-        errorDiv.style.display = 'block';
-    }
 }
 
 // Per-room debounce timers for price recalculation
@@ -409,7 +440,57 @@ function triggerPriceRecalculationInline(childrenAges, roomNum, isInitialLoad) {
 // input and bookingData. Called directly when the room is unchanged; when the
 // server proposed a DIFFERENT room it runs only from acceptRoomChangeInline,
 // so an undecided (or declined) room change never overwrites the form price.
+// The struck-through "was" price + offer label (shared sidebar hooks),
+// after a re-price. Single room: the server-formatted amount. Several rooms:
+// each room keeps its own was price (EUR) and the booking figure is re-summed,
+// as the total below it is. A response without the keys leaves both alone.
+function novotonSetOfferRows(oldHtml, label) {
+    var oldRow = document.getElementById('travel-price-old-row');
+    var oldEl = document.getElementById('travel-price-old');
+    if (oldRow && oldEl) {
+        oldEl.innerHTML = oldHtml || '';
+        oldRow.classList.toggle('travel-is-hidden', !oldHtml);
+    }
+    var dealRow = document.getElementById('travel-price-deal-row');
+    var dealEl = document.getElementById('travel-price-deal');
+    if (dealRow && dealEl) {
+        dealEl.textContent = (oldHtml && label) || '';
+        dealRow.classList.toggle('travel-is-hidden', !(oldHtml && label));
+    }
+}
+
+function novotonApplyOffer(data, roomIdx, isMultiRoom) {
+    if (!data || !('old_price' in data)) return;
+    var rooms = window.bookingData && window.bookingData.roomsData;
+    if (!isMultiRoom || !rooms || !rooms[roomIdx]) {
+        novotonSetOfferRows(data.formatted_old_price, data.discount_label);
+        return;
+    }
+    rooms[roomIdx].old_price = parseFloat(data.old_price) || 0;
+    rooms[roomIdx].discount_label = data.discount_label || '';
+    var total = 0;
+    var old = 0;
+    var labels = [];
+    rooms.forEach(function (room) {
+        var price = parseFloat(room.price) || 0;
+        var was = parseFloat(room.old_price) || 0;
+        total += price;
+        old += was > price ? was : price;
+        if (room.discount_label && labels.indexOf(room.discount_label) === -1) {
+            labels.push(room.discount_label);
+        }
+    });
+    novotonSetOfferRows(old > total + 0.005 ? escapeHtml(formatDisplayPrice(old)) : '', labels.join(' · '));
+}
+
 function applyRecalculatedPrice(data, roomNum, isMultiRoom, isInitialLoad) {
+    // Per-night line (shared sidebar) follows the re-price too — single room
+    // only: a multi-room quote is ONE room's price, not the booking total.
+    var perNightEl = document.querySelector('#travel-price-pernight .travel-price-pernight__value');
+    if (perNightEl && !isMultiRoom && data && data.formatted_per_night) {
+        perNightEl.textContent = data.formatted_per_night;
+    }
+
     var roomIdx = roomNum - 1;
     var newPrice = parseFloat(data.new_price) || 0;
     var coeff = window.NovotonTranslations.currencyCoeff || 1;
@@ -419,6 +500,7 @@ function applyRecalculatedPrice(data, roomNum, isMultiRoom, isInitialLoad) {
     if (isMultiRoom && window.bookingData.roomsData && window.bookingData.roomsData[roomIdx]) {
         // Multi-room: Update only this room's price (EUR for form submission)
         window.bookingData.roomsData[roomIdx].price = newPrice;
+        novotonApplyOffer(data, roomIdx, true);
 
         // Update the room card price display (converted to display currency)
         var roomPriceEl = document.querySelector('.room-card[data-room-num="' + roomNum + '"] .room-price');
@@ -484,6 +566,7 @@ function applyRecalculatedPrice(data, roomNum, isMultiRoom, isInitialLoad) {
 
         // Update bookingData (EUR)
         window.bookingData.currentPrice = newPrice;
+        novotonApplyOffer(data, roomIdx, false);
     }
 }
 
@@ -494,6 +577,11 @@ function showPriceError(message) {
     var unverifiedBadge = document.getElementById('price-unverified-badge');
     var submitBtn = document.getElementById('booking-submit-btn');
     var availBadge = document.getElementById('availability-badge');
+    // Keep the server-rendered badge (what the API said: on request / only
+    // N left) so hidePriceError can put it back instead of inventing one.
+    if (availBadge && availBadge.getAttribute('data-original-html') === null) {
+        availBadge.setAttribute('data-original-html', availBadge.innerHTML);
+    }
 
     if (errorEl) {
         errorEl.textContent = message;
@@ -518,58 +606,43 @@ function showPriceError(message) {
 }
 
 /**
- * Fill the sidebar's cancellation card from the price re-verification.
+ * Fill the sidebar's cancellation & payment card from the price re-check.
  *
- * Novoton returns cancellation terms only with a price quote, so the card is
- * rendered empty by the server and filled here off the recalc the booking form
- * already performs on load — no extra API call. Stays hidden while there is
- * nothing to say, so the guest never sees an empty policy box.
+ * Novoton returns its terms only with a price quote, so the card is rendered
+ * empty by the server and filled here off the recalc the booking form already
+ * performs on load — no extra API call. The recalc endpoint renders the SAME
+ * shared partial sphinx and eurosite render server-side
+ * (travel_core booking_terms_timeline.tpl) and returns it as terms_html, so
+ * this only swaps it in. Stays hidden while there is nothing to say.
  */
 function renderCancellationPolicy(data) {
     var card = document.getElementById('travel-cancel-card');
-    var list = document.getElementById('travel-cancel-lines');
-    if (!card || !list) return;
+    var body = document.getElementById('travel-cancel-body');
+    if (!card || !body) return;
 
-    // "Free cancellation until <date>" — the green line the search card
-    // already promises. Rendered even when there are no fee lines: a
-    // free-until date is the most reassuring thing the card can say.
-    var freeRow = document.getElementById('travel-cancel-free');
-    var freeDate = document.getElementById('travel-cancel-free-date');
-    var freeUntil = (data && data.free_cancellation_until) || '';
-    if (freeRow && freeDate) {
-        freeDate.textContent = freeUntil;
-        freeRow.classList.toggle('travel-is-hidden', !freeUntil);
-    }
-
-    var lines = (data && data.cancellation_lines) || [];
-    if (!lines.length) {
-        card.classList.toggle('travel-is-hidden', !freeUntil);
+    var html = (data && data.terms_html) || '';
+    if (html) {
+        // Trusted server markup (Smarty-escaped partial).
+        body.innerHTML = html;
+        card.classList.remove('travel-is-hidden');
         return;
     }
 
-    list.textContent = '';
+    // Older server without terms_html: plain lines.
+    var lines = (data && data.cancellation_lines) || [];
+    if (!lines.length) {
+        card.classList.add('travel-is-hidden');
+        return;
+    }
+    var list = document.createElement('ul');
+    list.className = 'travel-bsidebar-cancel';
     lines.forEach(function (line) {
         var li = document.createElement('li');
         li.textContent = line;
         list.appendChild(li);
     });
-
-    // A 100% penalty gets the headline row; anything else is just a list.
-    var existingRow = card.querySelector('.travel-bsidebar-cancelrow');
-    if (existingRow) existingRow.remove();
-    if (data.cancellation_full_amount) {
-        var row = document.createElement('div');
-        row.className = 'travel-bsidebar-cancelrow';
-        var mark = document.createElement('mark');
-        mark.className = 'travel-bsidebar-cancelhl';
-        mark.textContent = nvtLabel('cancelYouWillPay', 'If you cancel, you’ll pay');
-        var amount = document.createElement('strong');
-        amount.innerHTML = data.cancellation_full_amount;
-        row.appendChild(mark);
-        row.appendChild(amount);
-        list.parentNode.insertBefore(row, list);
-    }
-
+    body.textContent = '';
+    body.appendChild(list);
     card.classList.remove('travel-is-hidden');
 }
 
@@ -588,6 +661,11 @@ function renderBookingConditions(data, roomNum, isMultiRoom) {
     var title = isMultiRoom
         ? nvtLabel('roomNumber', 'Camera') + ' ' + num
         : '';
+
+    if (data && data.conditions_html && window.TravelConditions.setRoomHtml) {
+        window.TravelConditions.setRoomHtml(num, title, data.conditions_html);
+        return;
+    }
 
     window.TravelConditions.setRoomSection(num, {
         title: title,
@@ -615,9 +693,13 @@ function hidePriceError() {
         submitBtn.style.cursor = 'pointer';
         submitBtn.title = '';
     }
-    if (availBadge) {
-        availBadge.style.setProperty('background', '#28a745', 'important');
-        availBadge.innerHTML = '✓ ' + nvtLabel('available', 'Disponibil');
+    // Restore the server-rendered badge only if an error replaced it — a
+    // successful re-price never turns "On request" into "Available".
+    var originalBadge = availBadge ? availBadge.getAttribute('data-original-html') : null;
+    if (availBadge && originalBadge !== null) {
+        availBadge.style.removeProperty('background');
+        availBadge.innerHTML = originalBadge;
+        availBadge.removeAttribute('data-original-html');
     }
 }
 
@@ -877,6 +959,7 @@ window.validateAndCheckAge = validateAndCheckAge;
 window.collectChildrenAges = collectChildrenAges;
 window.triggerPriceRecalculationInline = triggerPriceRecalculationInline;
 window.applyRecalculatedPrice = applyRecalculatedPrice;
+window.novotonApplyOffer = novotonApplyOffer;
 window.refreshPrice = refreshPrice;
 window.showRoomChangeModal = showRoomChangeModal;
 window.closeRoomModal = closeRoomModal;

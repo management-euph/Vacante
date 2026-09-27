@@ -245,6 +245,15 @@ use Tygh\Addons\NovotonHolidays\ViewModels\NovotonBookingSidebarBuilder;
         $novoton_display_symbol,
         true,
         defined('CART_LANGUAGE') ? TypeCoerce::toString(CART_LANGUAGE) : 'en',
+        \Tygh\Addons\TravelCore\Services\MoneyFormatter::forStore(),
+        _nvt_currency_service()->convertFromApiCurrency(
+            TypeCoerce::toFloat($booking['total_price']),
+            defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : 'EUR',
+        ),
+        '',
+        '',
+        \Tygh\Addons\TravelCore\Services\TravelCoreConfig::getDateFormat(),
+        \Tygh\Addons\TravelCore\Services\TravelCoreConfig::getBookingSidebarMaxFeatures(),
     );
     $view->assign('travel_booking_sidebar', $editSidebarVm->toViewArray());
 

@@ -217,6 +217,47 @@ use Tygh\Addons\NovotonHolidays\ViewModels\NovotonBookingSidebarBuilder;
     $booking['age_categories'] = $limits['age_categories'];
     $booking['current_room_limits'] = $limits['current_room_limits'];
 
+    // The "was" price the search card struck through, from the offer the
+    // Book link / multi-room radios carried: standard price, "7 = 6" extras
+    // label and early-booking %. Several rooms: each room's own offer (kept on
+    // the room, so the per-room re-price can re-sum them), summed.
+    $nvtBookPay = TypeCoerce::toString(__('novoton_holidays.book_x_pay_y'));
+    $nvtEarlyWord = TypeCoerce::toString(__('novoton_holidays.early_booking'));
+    if (count($booking['rooms_data']) > 1) {
+        $nvtRoomOffers = [];
+        $nvtRooms = [];
+        foreach ($booking['rooms_data'] as $nvtRoom) {
+            if (!is_array($nvtRoom)) {
+                $nvtRooms[] = $nvtRoom;
+                continue;
+            }
+            $nvtRoomPrice = PriceInfoFormatter::toFloat($nvtRoom['price'] ?? 0);
+            $nvtRoomOffer = NovotonBookingSidebarBuilder::discount(
+                $nvtRoomPrice,
+                PriceInfoFormatter::toFloat($nvtRoom['standard_price'] ?? 0),
+                PriceInfoFormatter::toScalar($nvtRoom['extras'] ?? ''),
+                PriceInfoFormatter::toFloat($nvtRoom['early_booking'] ?? 0),
+                $nvtBookPay,
+                $nvtEarlyWord,
+            );
+            $nvtRoom['old_price'] = $nvtRoomOffer['old'];
+            $nvtRoom['discount_label'] = $nvtRoomOffer['label'];
+            $nvtRooms[] = $nvtRoom;
+            $nvtRoomOffers[] = ['price' => $nvtRoomPrice] + $nvtRoomOffer;
+        }
+        $booking['rooms_data'] = $nvtRooms;
+        $nvtOffer = NovotonBookingSidebarBuilder::combinedDiscount($nvtRoomOffers);
+    } else {
+        $nvtOffer = NovotonBookingSidebarBuilder::discount(
+            PriceInfoFormatter::toFloat($booking['total_price']),
+            PriceInfoFormatter::toFloat($bookingData['standard_price'] ?? 0),
+            PriceInfoFormatter::toScalar($bookingData['extras'] ?? ''),
+            PriceInfoFormatter::toFloat($bookingData['early_booking'] ?? 0),
+            $nvtBookPay,
+            $nvtEarlyWord,
+        );
+    }
+
     // Canonical rooms_data JSON for the template's inline JS. Prepared here
     // because {json_decode(...)} in a template is a Smarty 5 CompilerException
     // — rooms_data is already normalized to an array above.
@@ -287,6 +328,18 @@ use Tygh\Addons\NovotonHolidays\ViewModels\NovotonBookingSidebarBuilder;
     // ── Shared 2-column summary sidebar (travel_core component) ───────────
     // Same builder as edit_booking: one page, one summary, whichever mode
     // rendered it.
+    // Availability as the search result stated it (the Book link carries
+    // the API quota): on request, or bookable with "only N left".
+    [$nvtStatus, $nvtRoomsLeft] = NovotonBookingSidebarBuilder::availability(
+        !empty($bookingData['is_on_request']),
+        TypeCoerce::toInt($bookingData['rooms_available'] ?? 0),
+    );
+    // The cart-line amount (API EUR → store primary), shown in the shopper's
+    // selected currency — the same number add_to_cart stores.
+    $nvtPrimaryTotal = _nvt_currency_service()->convertFromApiCurrency(
+        PriceInfoFormatter::toFloat($booking['total_price']),
+        defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : 'EUR',
+    );
     $sidebarVm = NovotonBookingSidebarBuilder::sidebar(
         $bookingData,
         $headerVm,
@@ -294,8 +347,21 @@ use Tygh\Addons\NovotonHolidays\ViewModels\NovotonBookingSidebarBuilder;
         TypeCoerce::toString($package_name),
         $novoton_display_coefficient,
         $novoton_display_symbol,
-        empty($bookingData['is_on_request']),
+        $nvtStatus !== \Tygh\Addons\TravelCore\ViewModels\BookingSidebarViewModel::STATUS_ON_REQUEST,
         defined('CART_LANGUAGE') ? TypeCoerce::toString(CART_LANGUAGE) : 'en',
+        \Tygh\Addons\TravelCore\Services\MoneyFormatter::forStore(),
+        $nvtPrimaryTotal,
+        $nvtStatus,
+        $nvtRoomsLeft > 0 ? TypeCoerce::toString(__('novoton_holidays.we_have_left', ['[count]' => $nvtRoomsLeft])) : '',
+        \Tygh\Addons\TravelCore\Services\TravelCoreConfig::getDateFormat(),
+        \Tygh\Addons\TravelCore\Services\TravelCoreConfig::getBookingSidebarMaxFeatures(),
+        $nvtOffer['old'] > 0
+            ? _nvt_currency_service()->convertFromApiCurrency(
+                $nvtOffer['old'],
+                defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : 'EUR',
+            )
+            : 0.0,
+        $nvtOffer['label'],
     );
     $view->assign('travel_booking_sidebar', $sidebarVm->toViewArray());
 

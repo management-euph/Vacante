@@ -491,4 +491,142 @@ return [
         'en' => 'Gender',
         'ro' => 'Gen',
     ],
+    // Shared booking page: progress bar, availability, facilities, price,
+    // cancellation & payment timeline, guest form and CTA.
+    'travel_core.status_instant' => [
+        'en' => 'Instant confirmation',
+        'ro' => 'Confirmare instantă',
+    ],
+    'travel_core.status_stop_sale' => [
+        'en' => 'Not bookable (stop sale)',
+        'ro' => 'Nu se poate rezerva (stop vânzare)',
+    ],
+    'travel_core.show_less' => [
+        'en' => 'Show less',
+        'ro' => 'Mai puțin',
+    ],
+    'travel_core.n_more' => [
+        'en' => '+[n] more',
+        'ro' => '+[n] în plus',
+    ],
+    'travel_core.per_night_line' => [
+        'en' => '[nights] · ≈ [price] / night',
+        'ro' => '[nights] · ≈ [price] / noapte',
+    ],
+    'travel_core.cancel_payment_title' => [
+        'en' => 'Cancellation & payment',
+        'ro' => 'Anulare și plată',
+    ],
+    'travel_core.no_show' => [
+        'en' => 'No-show',
+        'ro' => 'Neprezentare',
+    ],
+    'travel_core.until_date' => [
+        'en' => 'Until [date]',
+        'ro' => 'Până la [date]',
+    ],
+    'travel_core.from_date' => [
+        'en' => 'From [date]',
+        'ro' => 'De la [date]',
+    ],
+    'travel_core.until_check_in' => [
+        'en' => 'Until check-in',
+        'ro' => 'Până la check-in',
+    ],
+    'travel_core.today' => [
+        'en' => 'Today',
+        'ro' => 'Azi',
+    ],
+    'travel_core.timeline_free' => [
+        'en' => 'Free cancellation',
+        'ro' => 'Anulare gratuită',
+    ],
+    'travel_core.you_pay' => [
+        'en' => 'You pay',
+        'ro' => 'Plătiți',
+    ],
+    'travel_core.due_now' => [
+        'en' => 'now',
+        'ro' => 'acum',
+    ],
+    'travel_core.due_by' => [
+        'en' => 'by [date]',
+        'ro' => 'până la [date]',
+    ],
+    'travel_core.booking_progress' => [
+        'en' => 'Booking progress',
+        'ro' => 'Etapele rezervării',
+    ],
+    'travel_core.step_search' => [
+        'en' => 'Search',
+        'ro' => 'Căutare',
+    ],
+    'travel_core.step_guest_details' => [
+        'en' => 'Guest details',
+        'ro' => 'Datele turiștilor',
+    ],
+    'travel_core.step_checkout' => [
+        'en' => 'Checkout',
+        'ro' => 'Finalizare comandă',
+    ],
+    'travel_core.step_confirmation' => [
+        'en' => 'Confirmation',
+        'ro' => 'Confirmare',
+    ],
+    'travel_core.guest_names_hint' => [
+        'en' => 'Enter each name exactly as it appears on the guest\'s ID card or passport.',
+        'ro' => 'Introduceți fiecare nume exact ca în actul de identitate sau pașaportul turistului.',
+    ],
+    'travel_core.guest_adult' => [
+        'en' => 'Adult',
+        'ro' => 'Adult',
+    ],
+    'travel_core.guest_child' => [
+        'en' => 'Child',
+        'ro' => 'Copil',
+    ],
+    'travel_core.dob_placeholder' => [
+        'en' => 'DD/MM/YYYY',
+        'ro' => 'ZZ/LL/AAAA',
+    ],
+    'travel_core.gender_male' => [
+        'en' => 'Male',
+        'ro' => 'Masculin',
+    ],
+    'travel_core.gender_female' => [
+        'en' => 'Female',
+        'ro' => 'Feminin',
+    ],
+    'travel_core.continue_to_checkout' => [
+        'en' => 'Continue to checkout',
+        'ro' => 'Continuă spre finalizare',
+    ],
+    'travel_core.field_required' => [
+        'en' => 'Please fill in this field.',
+        'ro' => 'Vă rugăm să completați acest câmp.',
+    ],
+    'travel_core.choose_option' => [
+        'en' => 'Please choose one option.',
+        'ro' => 'Vă rugăm să alegeți o opțiune.',
+    ],
+    'travel_core.cta_note' => [
+        'en' => 'You won\'t be charged yet — you\'ll review everything at checkout.',
+        'ro' => 'Nu plătiți încă — veți verifica totul la finalizarea comenzii.',
+    ],
+    'travel_core.field_required_named' => [
+        'en' => 'Please fill in the [field] field.',
+        'ro' => 'Vă rugăm să completați câmpul [field].',
+    ],
+    'travel_core.choose_between' => [
+        'en' => 'Please choose [a] or [b].',
+        'ro' => 'Vă rugăm să alegeți [a] sau [b].',
+    ],
+    'travel_core.facility_unnamed' => [
+        'en' => 'Facility #[code]',
+        'ro' => 'Facilitate #[code]',
+    ],
+    'travel_core.who_is_staying' => [
+        'en' => 'Who is staying?',
+        'ro' => 'Cine se cazează?',
+    ],
 ];

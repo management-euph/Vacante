@@ -113,6 +113,15 @@
         var today = new Date().toISOString().split('T')[0];
 
         dobFields.forEach(function(field) {
+            // The shared booking-page guest cards (.js-dob-basics) are
+            // validated by booking-form-validation.js — future dates
+            // included, with the inline message + red state. Checking them
+            // here too duplicated the message and EMPTIED the field, so the
+            // next submit also said "Please fill in …".
+            if (field.classList && field.classList.contains('js-dob-basics')) {
+                return;
+            }
+
             // Set max date to today
             if (field.type === 'date') {
                 field.setAttribute('max', today);
@@ -179,8 +188,9 @@
         var tr = _getTranslations();
         var errorMessage = tr.dobCannotBeFuture || 'Date of birth cannot be in the future';
 
-        // Mark field as invalid (CSS class handles border + background)
+        // Mark field as invalid (the shared error style keys on both)
         field.classList.add('novoton-dob-error');
+        field.setAttribute('aria-invalid', 'true');
 
         // Find or create error message element
         var fieldId = field.id || field.name || ('dob-field-' + Math.random().toString(36).substr(2, 9));
@@ -220,6 +230,7 @@
      */
     function clearDOBError(field) {
         field.classList.remove('novoton-dob-error');
+        field.removeAttribute('aria-invalid');
 
         // Hide error message if exists
         var errorId = (field.id || field.name);
@@ -704,6 +715,9 @@
         var allValid = true;
 
         dobFields.forEach(function(field) {
+            // Shared guest cards: booking-form-validation.js owns them (as in
+            // initDOBValidation) — no emptying, no second message.
+            if (field.classList && field.classList.contains('js-dob-basics')) return;
             if (!validateDOBField(field)) {
                 allValid = false;
             }

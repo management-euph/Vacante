@@ -152,15 +152,32 @@ $view->assign('sphinx_provider', 'sphinx');
 // re-verify the offer (pinned by SphinxEditBookingTest), and a guest fixing a
 // misspelled name must not have the price move under them.
 $editCurrency = TypeCoerce::toString($editBookingData['currency']);
+// The stored terms (raw since add_to_cart keeps them) rebuild the same
+// timeline the booking form showed; the amount is the stored cart price.
+$editTerms = json_decode(TypeCoerce::toString($cart_extra['terms_raw'] ?? ''), true);
+$editTerms = is_array($editTerms) ? $editTerms : [];
+$editPrimary = (new \Tygh\Addons\TravelCore\Services\CurrencyService($editCurrency))->convertFromApiCurrency(
+    TypeCoerce::toFloat($editBookingData['total_price']),
+    defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : $editCurrency,
+);
 $editSidebar = SphinxBookingSidebarBuilder::build(
     $editBookingData,
     $header,
     $hotelRow,
     number_format(TypeCoerce::toFloat($editBookingData['total_price']), 2, ',', '.')
         . ' ' . ($editCurrency === 'EUR' ? '€' : $editCurrency),
-    $cart_extra['cancellation_fees'] ?? null,
+    $editTerms['cancellation'] ?? $cart_extra['cancellation_fees'] ?? null,
     true,
     defined('CART_LANGUAGE') ? TypeCoerce::toString(CART_LANGUAGE) : 'en',
+    \Tygh\Addons\TravelCore\Services\MoneyFormatter::forStore(),
+    $editPrimary,
+    0.0,
+    '',
+    TypeCoerce::toString($cart_extra['confirmation'] ?? ''),
+    $editTerms['payment'] ?? null,
+    date('Y-m-d'),
+    \Tygh\Addons\TravelCore\Services\TravelCoreConfig::getDateFormat(),
+    \Tygh\Addons\TravelCore\Services\TravelCoreConfig::getBookingSidebarMaxFeatures(),
 );
 $view->assign('travel_booking_sidebar', $editSidebar->toViewArray());
 

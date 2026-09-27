@@ -79,6 +79,18 @@ final class BookingSidebarBuilderTest extends TestCase
         self::assertSame('', $vm['change_url']);
     }
 
+    /** "Location - show map" like sphinx / novoton: no coordinates, so a Maps search. */
+    public function testLocationLineCarriesAMapLink(): void
+    {
+        $vm = BookingSidebarBuilder::build(self::snapshot(), self::hotel(), [], [], 'Bucharest, Romania')->toViewArray();
+
+        self::assertSame('Bucharest, Romania', $vm['location_line']);
+        self::assertSame(
+            'https://www.google.com/maps/search/?api=1&query=' . rawurlencode('Villa Ecletico CM, Bucharest, Romania'),
+            $vm['map_url'],
+        );
+    }
+
     public function testOnRequestOfferShowsTheOnRequestBadge(): void
     {
         $vm = BookingSidebarBuilder::build(self::snapshot(['availability_code' => 'OR']), self::hotel(), [], [])->toViewArray();
@@ -162,5 +174,72 @@ final class BookingSidebarBuilderTest extends TestCase
             [],
             BookingSubmissionService::contactBackfill(['guest_email' => 'kept@example.com', 'guest_phone' => '123'], $order),
         );
+    }
+
+    public function testStatusFollowsTheApiAvailabilityCode(): void
+    {
+        self::assertSame('instant', BookingSidebarBuilder::status('IM'));
+        self::assertSame('on_request', BookingSidebarBuilder::status('OR'));
+        self::assertSame('stop_sale', BookingSidebarBuilder::status('ST'));
+        self::assertSame('available', BookingSidebarBuilder::status(''));
+
+        $vm = BookingSidebarBuilder::build(self::snapshot(), self::hotel(), [], [])->toViewArray();
+        self::assertSame('instant', $vm['status']);
+    }
+
+    /**
+     * Live SCANDINAVIA CM, 26.09.2026: ProductPrice 299, Gross 324,
+     * PriceNoRedd 381 (Gross scale) → old price 351,60 on the charged scale,
+     * the offer's own text as the discount label, and the fee windows as a
+     * timeline whose current step is the 80% one.
+     */
+    public function testOldPriceDiscountAndTimelineFromTheOffer(): void
+    {
+        $offer = new \Tygh\Addons\Eurosite\Dto\HotelOffer(
+            'RO0451', 'SCANDINAVIA CM', 'RO', 'ROMM', 'Mamaia', 4, '', '', '0', '0', 'EUR', 'Normal', 'Immediate',
+            '2026-10-05', '2026-10-11', 299.0, 324.0, 0.0, 0.0, 'v', 'Nerambursabil MD', [], [], '', 'IM', 381.0,
+            'Reducere Oferta Speciala 15% pana la 31.12.2026',
+        );
+        self::assertSame(351.6, $offer->oldPrice());
+
+        $vm = BookingSidebarBuilder::build(
+            self::snapshot(['price' => 299.0, 'old_price' => $offer->oldPrice(), 'offer_description' => $offer->offerDescription]),
+            self::hotel(),
+            [self::fee('2026-09-26', '2026-09-28', 80.0), self::fee('2026-09-29', '2026-10-05', 100.0)],
+            ['Avans 30% la confirmarea rezervării.'],
+            '',
+            [],
+            self::LINE,
+            '2026-09-26',
+        )->toViewArray();
+
+        self::assertSame('299,00 €', $vm['total']);
+        self::assertSame('351,60 €', $vm['old_total']);
+        self::assertSame('Reducere Oferta Speciala 15% pana la 31.12.2026', $vm['discount_label']);
+        self::assertSame('49,83 €', $vm['per_night']);
+        self::assertCount(2, $vm['cancel_steps']);
+        self::assertTrue($vm['cancel_steps'][0]['is_current']);
+        self::assertSame('239,20 €', $vm['cancel_steps'][0]['amount_label']);
+        self::assertSame('', $vm['cancel_free_until']);
+        self::assertSame(['Avans <strong>30%</strong> la confirmarea rezervării.'], $vm['payment_lines_html']);
+    }
+
+    public function testNoReductionMeansNoOldPrice(): void
+    {
+        $vm = BookingSidebarBuilder::build(self::snapshot(['old_price' => 0.0, 'offer_description' => 'x']), self::hotel(), [], [])->toViewArray();
+
+        self::assertSame('', $vm['old_total']);
+        self::assertSame('', $vm['discount_label']);
+    }
+
+    public function testAmountsFollowTheCartScaleAndTheShoppersCurrency(): void
+    {
+        $usd = new \Tygh\Addons\TravelCore\Services\MoneyFormatter(
+            ['symbol' => '$', 'after' => 'N', 'decimals' => 2, 'decimals_separator' => '.', 'thousands_separator' => ','],
+            static fn (float $primary): float => $primary * 2,
+        );
+        $vm = BookingSidebarBuilder::build(self::snapshot(), self::hotel(), [], [], '', [], self::LINE, '2026-09-25', '%d.%m.%Y', $usd, 1.0)->toViewArray();
+
+        self::assertSame('$3,596.00', $vm['total']);
     }
 }

@@ -54,7 +54,27 @@ final class HotelOffer
         public readonly array $meals = [],
         public readonly string $seriesId = '',
         public readonly string $availabilityCode = '',
+        public readonly float $priceNoRedd = 0.0,
+        public readonly string $offerDescription = '',
     ) {
+    }
+
+    /**
+     * The price before the offer's reduction, on the ProductPrice scale the
+     * shop charges — or 0 when the offer is not reduced.
+     *
+     * The spec sends <PriceNoRedd> ("shown struck through") on the GROSS
+     * (recommended selling price) scale, so it is scaled by
+     * ProductPrice / Gross to stay comparable with what the guest pays.
+     */
+    public function oldPrice(): float
+    {
+        if ($this->priceNoRedd <= 0 || $this->price <= 0) {
+            return 0.0;
+        }
+        $old = $this->gross > 0 ? $this->price * $this->priceNoRedd / $this->gross : $this->priceNoRedd;
+
+        return $old > $this->price + 0.005 ? round($old, 2) : 0.0;
     }
 
     /**

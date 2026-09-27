@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\Eurosite\Services;
 
+use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\DateHelper;
+use Tygh\Addons\TravelCore\Services\HotelMapUrl;
+use Tygh\Addons\TravelCore\Services\MoneyFormatter;
 use Tygh\Addons\TravelCore\ViewModels\BookingSidebarFactory;
 use Tygh\Addons\TravelCore\ViewModels\BookingSidebarViewModel;
+use Tygh\Addons\TravelCore\ViewModels\TermsTimelineFactory;
 
 /**
  * Builds the booking page's summary sidebar for eurosite — the same shared
@@ -30,6 +34,13 @@ final class BookingSidebarBuilder
      * @param array<string, mixed> $imagePair CS-Cart main pair of the linked product
      * @param string $feeLineTemplate localized "[from] … [to] … [value]" line
      * @param string $dateFormat store date format (TravelCoreConfig::getDateFormat())
+     * @param MoneyFormatter|null $money the storefront formatter (shopper's currency);
+     *                                   null = the offer currency as "1.798,00 €"
+     * @param float $coefficient offer currency → store primary, exactly as the
+     *                           cart line computes it (EurositeProductFactory::toStorePrice)
+     * @param list<string> $features facility chips (FacilityTextParser, from the
+     *                               cached product info)
+     * @param int $featuresMax chips shown before "+N more" (admin setting)
      */
     public static function build(
         array $snapshot,
@@ -41,13 +52,27 @@ final class BookingSidebarBuilder
         string $feeLineTemplate = '[from] - [to]: [value]',
         string $today = '',
         string $dateFormat = '%d.%m.%Y',
+        ?MoneyFormatter $money = null,
+        float $coefficient = 1.0,
+        array $features = [],
+        int $featuresMax = 6,
     ): BookingSidebarViewModel {
         $checkIn = TypeCoerce::toString($snapshot['check_in'] ?? '');
         $checkOut = TypeCoerce::toString($snapshot['check_out'] ?? '');
         $checkInTs = (int) strtotime($checkIn);
         $checkOutTs = (int) strtotime($checkOut);
         $currency = TypeCoerce::toString($snapshot['currency'] ?? '');
-        $total = self::money(TypeCoerce::toFloat($snapshot['price'] ?? 0), $currency);
+        $money ??= new MoneyFormatter([
+            'symbol' => $currency === 'EUR' ? '€' : $currency, 'after' => 'Y',
+            'decimals' => 2, 'decimals_separator' => ',', 'thousands_separator' => '.',
+        ]);
+        $today = $today !== '' ? $today : date('Y-m-d');
+        // Everything the page shows is on the cart-line scale (store primary).
+        $totalPrimary = EurositeProductFactory::toStorePrice(TypeCoerce::toFloat($snapshot['price'] ?? 0), $coefficient);
+        $oldPrimary = EurositeProductFactory::toStorePrice(TypeCoerce::toFloat($snapshot['old_price'] ?? 0), $coefficient);
+        $total = $money->format($totalPrimary);
+        $nights = DateHelper::calculateNights($checkIn, $checkOut);
+        $perNight = BookingSidebarFactory::perNight($money->toDisplay($totalPrimary), $nights);
         $childrenAges = TypeCoerce::toIntList($snapshot['children_ages'] ?? []);
         $adults = max(1, TypeCoerce::toInt($snapshot['adults'] ?? 2));
 
@@ -64,22 +89,50 @@ final class BookingSidebarBuilder
         }
 
         $cancelLines = self::cancelLines($fees, $currency, $feeLineTemplate, $dateFormat);
+
+        // getItemFees windows → the shared timeline (each window a percent of
+        // the stay, or an absolute amount in the offer currency).
+        $windows = [];
+        foreach ($fees as $fee) {
+            $windows[] = [
+                'from' => $fee['from_date'],
+                'to' => $fee['to_date'],
+                'percent' => $fee['is_percent'] ? $fee['value'] : null,
+                'amount' => $fee['is_percent'] ? null : EurositeProductFactory::toStorePrice($fee['value'], $coefficient),
+            ];
+        }
+        $timeline = (new TermsTimelineFactory($money, $today, $dateFormat))->cancellation($windows, $totalPrimary, $nights);
         $productId = $hotelRow !== null ? TypeCoerce::toInt($hotelRow['product_id'] ?? 0) : 0;
         $roomLines = BookingSidebarFactory::roomLines($roomNames);
+        // "Location - show map", as on sphinx / novoton. Eurosite gives no
+        // coordinates, so the link is a Maps search for "hotel, city, country".
+        $name = TypeCoerce::toString($snapshot['product_name'] ?? '');
+        $location = $locationLine !== '' ? $locationLine : TypeCoerce::toString($snapshot['city_name'] ?? '');
+        $mapUrl = HotelMapUrl::build(
+            new HotelSeoData(
+                hotelId: TypeCoerce::toString($snapshot['product_code'] ?? ''),
+                providerName: 'eurosite',
+                name: $name,
+            ),
+            $location,
+        ) ?? '';
 
         return new BookingSidebarViewModel(
             imagePair: $imagePair,
             imageUrl: $hotelRow !== null ? TypeCoerce::toString($hotelRow['first_image'] ?? '') : '',
-            name: TypeCoerce::toString($snapshot['product_name'] ?? ''),
-            stars: $hotelRow !== null ? TypeCoerce::toInt($hotelRow['category'] ?? 0) : 0,
+            name: $name,
+            stars: $hotelRow !== null ? TypeCoerce::toInt($hotelRow['category'] ?? 0) : TypeCoerce::toInt($snapshot['category'] ?? 0),
             // IM = Immediate; OR (On request) shows the "on request" badge.
             available: TypeCoerce::toString($snapshot['availability_code'] ?? '') !== 'OR',
-            locationLine: $locationLine !== '' ? $locationLine : TypeCoerce::toString($snapshot['city_name'] ?? ''),
+            availabilityStatus: self::status(TypeCoerce::toString($snapshot['availability_code'] ?? '')),
+            locationLine: $location,
+            mapUrl: $mapUrl,
+            features: array_values(array_filter($features, static fn (string $f): bool => trim($f) !== '')),
             checkIn: $checkInTs > 0 ? DateHelper::formatWith($checkInTs, $dateFormat) : $checkIn,
             checkInWeekday: $checkInTs > 0 ? DateHelper::formatWith($checkInTs, '%A') : '',
             checkOut: $checkOutTs > 0 ? DateHelper::formatWith($checkOutTs, $dateFormat) : $checkOut,
             checkOutWeekday: $checkOutTs > 0 ? DateHelper::formatWith($checkOutTs, '%A') : '',
-            nights: DateHelper::calculateNights($checkIn, $checkOut),
+            nights: $nights,
             rooms: 1,
             adults: $adults,
             children: count($childrenAges),
@@ -95,11 +148,19 @@ final class BookingSidebarBuilder
             ]),
             productId: $productId,
             total: $total,
+            // The price before the offer's reduction + the offer's own text
+            // ("Reducere Oferta Speciala 15% pana la 31.12.2026").
+            oldTotal: $oldPrimary > $totalPrimary ? $money->format($oldPrimary) : '',
             cancelLines: $cancelLines,
-            cancelFullAmount: BookingSidebarFactory::fullChargeAmount($cancelLines, $total),
-            cancelFreeUntil: self::freeUntil($fees, $today !== '' ? $today : date('Y-m-d'), $dateFormat),
+            cancelFullAmount: $timeline['full_charge_now'] ? $total : '',
+            cancelFreeUntil: $timeline['free_until'],
             paymentLines: $paymentLines,
             roomLabel: $roomLines !== [] ? $roomLines[0]['name'] : '',
+            discountLabel: $oldPrimary > $totalPrimary ? TypeCoerce::toString($snapshot['offer_description'] ?? '') : '',
+            perNight: $perNight !== null ? $money->formatDisplay($perNight) : '',
+            cancelSteps: $timeline['steps'],
+            showWeekday: !DateHelper::formatHasWeekday($dateFormat),
+            featuresMax: $featuresMax,
         );
     }
 
@@ -147,6 +208,20 @@ final class BookingSidebarBuilder
         }
 
         return DateHelper::formatWith((int) strtotime($earliest . ' -1 day'), $dateFormat);
+    }
+
+    /**
+     * The badge status from what the API says: IM Immediate → instant
+     * confirmation, OR → on request, ST → stop sale.
+     */
+    public static function status(string $availabilityCode): string
+    {
+        return match ($availabilityCode) {
+            'IM' => BookingSidebarViewModel::STATUS_INSTANT,
+            'OR' => BookingSidebarViewModel::STATUS_ON_REQUEST,
+            'ST' => BookingSidebarViewModel::STATUS_STOP_SALE,
+            default => BookingSidebarViewModel::STATUS_AVAILABLE,
+        };
     }
 
     /** Same money shape sphinx's sidebar uses ("1.798,00 €"). */

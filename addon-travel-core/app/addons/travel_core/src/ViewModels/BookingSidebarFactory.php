@@ -139,4 +139,25 @@ final class BookingSidebarFactory
 
         return '';
     }
+
+    /**
+     * One payment-terms line as safe HTML with its percentages in bold
+     * ("Avans <strong>30%</strong> la confirmare"). The line is escaped
+     * FIRST — it is store-written or API text — and only then marked up.
+     */
+    public static function emphasizePercentages(string $line): string
+    {
+        $safe = htmlspecialchars($line, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+
+        return (string) preg_replace('/(\d+(?:[.,]\d+)?\s?%)/u', '<strong>$1</strong>', $safe);
+    }
+
+    /**
+     * The per-night share of a total already in the display currency;
+     * null when the nights are unknown.
+     */
+    public static function perNight(float $displayTotal, int $nights): ?float
+    {
+        return $nights > 0 && $displayTotal > 0 ? $displayTotal / $nights : null;
+    }
 }

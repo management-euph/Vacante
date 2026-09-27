@@ -200,6 +200,12 @@
                             <item id="after_description"></item>
                         </variants>
                     </item>
+                    <!-- Booking page sidebar: facility chips shown before "+N more" -->
+                    <item id="booking_sidebar_max_features">
+                        <type>input</type>
+                        <default_value>6</default_value>
+                        <variants/>
+                    </item>
 
                     <!-- Reverse geocoding (OSM Nominatim): ONE policy for all
                          provider addons. The usage policy caps requests per

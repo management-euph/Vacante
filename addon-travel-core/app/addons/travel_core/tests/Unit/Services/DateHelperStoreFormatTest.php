@@ -104,4 +104,16 @@ final class DateHelperStoreFormatTest extends TestCase
         self::assertSame('j F Y, l', DateHelper::strftimeToPhp('%e %B %Y, %A'));
         self::assertSame('D d M y H:i', DateHelper::strftimeToPhp('%a %d %b %y %H:%M'));
     }
+
+    /**
+     * The sidebar prints the weekday on its own line; a store format that
+     * already carries it ("Mon, 5 Oct 2026") must not print it twice.
+     */
+    public function testDetectsAWeekdayInTheStoreFormat(): void
+    {
+        self::assertTrue(DateHelper::formatHasWeekday('%a, %e %b %Y'));
+        self::assertTrue(DateHelper::formatHasWeekday('%A %d.%m.%Y'));
+        self::assertFalse(DateHelper::formatHasWeekday('%m/%d/%Y'));
+        self::assertFalse(DateHelper::formatHasWeekday('%d.%m.%Y'));
+    }
 }

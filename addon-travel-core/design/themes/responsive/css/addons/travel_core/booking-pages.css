@@ -232,23 +232,24 @@
 .travel-booking-page .travel-bsidebar-features {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px 8px;
+    gap: 5px 6px;
     margin: 0;
     padding: 0;
     list-style: none;
-    font-size: 12.5px;
+    font-size: 11.5px;
 }
 /* Scannable chips, not a run-on sentence: each amenity is its own bordered
    badge led by a green check, so the eye can skim the list. */
 .travel-booking-page .travel-bsidebar-features li {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
     background: var(--nvt-bg-light, #f2f5f8);
     border: 1px solid var(--nvt-field-border, #e0e7ef);
     border-radius: 14px;
-    padding: 4px 10px;
-    line-height: 1.3;
+    padding: 3px 8px;
+    line-height: 1.25;
+    max-width: 100%;
 }
 .travel-booking-page .travel-bsidebar-features li::before {
     content: "\2713";
@@ -396,11 +397,8 @@
     border-radius: 4px;
     font-size: 13px;
 }
-.travel-booking-page .dob-validation-error {
-    color: var(--nvt-danger, #dc3545);
-    font-size: 12px;
-    margin-top: 5px;
-}
+/* .dob-validation-error (novoton's child-DOB message) shares the field
+   error look — see the invalid-state block below. */
 
 /* ── Booking summary (flat box) ───────────────────────────────────────── */
 .travel-booking-page .travel-booking-summary,
@@ -634,8 +632,8 @@
     flex: 0 0 150px;
 }
 .travel-booking-page .travel-guest-field--gender {
-    flex: 0 0 110px;
-    min-width: 110px;
+    flex: 0 0 auto;
+    min-width: 180px;
 }
 
 /* ── Form controls (inputs, selects, textareas) ───────────────────────── */
@@ -686,16 +684,66 @@
     color: var(--nvt-text-light, #666);
     margin-bottom: 4px;
 }
-/* Invalid / error state (set aria-invalid="true" or add .travel-field-error) */
-.travel-booking-page .travel-field-error,
-.travel-booking-page [aria-invalid="true"] {
-    border-color: var(--nvt-danger, #dc3545);
-    background: var(--nvt-danger-light, #fdecea);
+/* Invalid / error state — one multi-signal pattern for every provider:
+   (1) a 2px red border on a WHITE field (a red fill hurts readability once
+       the guest starts typing), (2) the message in red directly under the
+       field, (3) a red ring while the guest is in the field fixing it.
+   Selectors carry the element (input/select/textarea) so they outrank the
+   base (0,2,1) and :focus / :focus-visible rules above — and novoton's
+   .guest-entry input:focus — instead of losing to them (a focused invalid
+   field used to turn blue with a pink fill). */
+/* Radios/checkboxes are outlined through their option box below, never on
+   the 16px control itself (no padding jump, no second ring). */
+.travel-booking-page input[aria-invalid="true"]:not([type="radio"]):not([type="checkbox"]),
+.travel-booking-page select[aria-invalid="true"],
+.travel-booking-page textarea[aria-invalid="true"],
+.travel-booking-page input.travel-field-error,
+.travel-booking-page input.novoton-dob-error {
+    border: 2px solid #d32f2f;
+    padding: 9px 11px; /* same outer size as the 1px + 10/12px field */
+    background: #fff;
 }
-.travel-booking-page .travel-field-error-message {
-    color: var(--nvt-danger, #dc3545);
-    font-size: 12px;
-    margin-top: 4px;
+.travel-booking-page input[aria-invalid="true"]:not([type="radio"]):not([type="checkbox"]):focus,
+.travel-booking-page select[aria-invalid="true"]:focus,
+.travel-booking-page textarea[aria-invalid="true"]:focus,
+.travel-booking-page input.travel-field-error:focus,
+.travel-booking-page input.novoton-dob-error:focus {
+    outline: none;
+    border-color: #d32f2f;
+    box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.22);
+}
+/* Radio group (gender): the visible box is the label, so outline each one */
+.travel-booking-page .travel-guest-radio:has(input[aria-invalid="true"]) {
+    border: 2px solid #d32f2f;
+    padding: 0 13px;
+    background: #fff;
+}
+.travel-booking-page .travel-guest-radio:has(input[aria-invalid="true"]:focus-visible) {
+    box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.22);
+}
+.travel-booking-page .travel-field-error-message,
+.travel-booking-page .dob-validation-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 5px;
+    color: #d32f2f;
+    font-size: 13px;
+    line-height: 1.35;
+    margin-top: 5px;
+}
+.travel-booking-page .travel-field-error-message::before {
+    content: "!";
+    flex: 0 0 16px;
+    height: 16px;
+    margin-top: 1px; /* centred on a one-line message, top-aligned when it wraps */
+    border-radius: 50%;
+    background: #d32f2f;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 /* Required-field asterisk */
 .travel-booking-page .required {
@@ -858,15 +906,18 @@
     }
 }
 
-/* Desktop: keep the summary sidebar in view while a long guest list scrolls
-   beside it. Targets the sidebar as a whole, not the price card inside it —
-   sticking a child of a sticky-eligible grid item does nothing useful, and
-   the guest wants the dates and total visible together. */
+/* Desktop: keep the summary sidebar in view while the guest fills the form
+   beside it. The aside is taller than a viewport (hotel, details, price,
+   cancellation), so it is capped at the viewport and scrolls on its own —
+   otherwise the lower cards could never be reached while it is stuck. The
+   modal is NOT inside it (it would be trapped in this stacking context). */
 @media (min-width: 901px) {
     .travel-booking-page .travel-bsidebar {
         position: sticky;
-        top: 10px;
+        top: 16px;
         z-index: 1;
+        max-height: calc(100vh - 32px);
+        overflow-y: auto;
     }
 }
 
@@ -1269,4 +1320,143 @@
 /* Freeze the page behind an open modal. */
 body.travel-conditions-open {
     overflow: hidden;
+}
+
+/* ═════ Shared booking page: progress bar, availability states, facility
+   "+N more", price detail, cancellation & payment timeline, guest form,
+   CTA and mobile bottom bar (one set for sphinx, novoton, eurosite) ═════ */
+
+/* Step bar (item 8): full width above both columns */
+.travel-booking-page .travel-steps {
+    display: flex; justify-content: center; align-items: center; gap: 0;
+    list-style: none; margin: 4px 0 26px; padding: 14px 16px;
+    border-bottom: 1px solid var(--nvt-border, #e8edf3);
+}
+.travel-booking-page .travel-steps__item {
+    display: flex; align-items: center; gap: 10px; white-space: nowrap;
+    font-size: 14px; color: var(--nvt-text-muted, #8a94a3);
+}
+.travel-booking-page .travel-steps__item + .travel-steps__item::before {
+    content: ""; width: 56px; height: 2px; margin: 0 16px;
+    background: var(--nvt-border, #dfe5ec);
+}
+.travel-booking-page .travel-steps__badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%; font-size: 13px; font-weight: 600;
+    background: var(--nvt-bg-light, #eef1f5); color: var(--nvt-text-muted, #8a94a3);
+    border: 1px solid var(--nvt-border, #dfe5ec);
+}
+.travel-booking-page .travel-steps__item--done { color: #14532d; font-weight: 600; }
+.travel-booking-page .travel-steps__item--done .travel-steps__badge { background: #15803d; border-color: #15803d; color: #fff; }
+.travel-booking-page .travel-steps__item--done + .travel-steps__item::before { background: #15803d; }
+.travel-booking-page .travel-steps__item--active { color: var(--nvt-primary, #003580); font-weight: 700; font-size: 16px; }
+.travel-booking-page .travel-steps__item--active .travel-steps__badge {
+    width: 32px; height: 32px; font-size: 15px; background: var(--nvt-primary, #003580);
+    border-color: var(--nvt-primary, #003580); color: #fff; box-shadow: 0 0 0 4px rgba(0, 53, 128, 0.12);
+}
+
+/* Availability badge states (item 4) */
+.travel-booking-page .travel-hero-badge--on-request { background: var(--nvt-warning-light, #fff4e0); color: var(--nvt-warning-dark, #92400e); }
+.travel-booking-page .travel-hero-badge--stop-sale { background: #f1f3f5; color: #5b6573; }
+.travel-booking-page .travel-bsidebar-availnote { font-size: 12px; color: var(--nvt-warning-dark, #92400e); margin: 4px 0 0; }
+
+/* Facilities "+N more" (item 5) */
+.travel-booking-page .travel-bsidebar-features.is-collapsible:not(.is-expanded) .travel-feature--extra { display: none; }
+/* Without JS every chip shows, so the toggle is pointless there. */
+.travel-booking-page .travel-bsidebar-features:not(.is-collapsible) .travel-features-more-item { display: none; }
+.travel-booking-page .travel-features-more {
+    border: 1px dashed var(--nvt-primary, #003580); background: #fff; color: var(--nvt-primary, #003580);
+    border-radius: 999px; padding: 3px 9px; font: inherit; font-size: 11.5px; font-weight: 600; cursor: pointer;
+}
+.travel-booking-page .travel-bsidebar-features li.travel-features-more-item { background: none; border: 0; padding: 0; }
+.travel-booking-page .travel-bsidebar-features li.travel-features-more-item::before { content: none; }
+
+/* Booking details polish (item 14) */
+.travel-booking-page .travel-bcard__title { font-size: 16px; font-weight: 700; color: #1f2937; letter-spacing: -0.01em; }
+.travel-booking-page .travel-bsidebar-date span { font-size: 12px; color: #6b7280; }
+.travel-booking-page .travel-bsidebar-date strong { font-size: 16px; color: #111827; }
+.travel-booking-page .travel-bsidebar-date em { font-style: normal; font-size: 13px; color: #4b5563; }
+.travel-booking-page .travel-bsidebar-selected__label { font-size: 12px; color: #6b7280; }
+.travel-booking-page .travel-bsidebar-selected__value { font-size: 15px; color: #111827; }
+.travel-booking-page .travel-bsidebar-rooms, .travel-booking-page .travel-bsidebar-board { font-size: 14px; color: #374151; }
+
+/* Price clarity (item 3) */
+.travel-booking-page .travel-bsidebar-pricetop { margin-bottom: 8px; text-align: left; }
+.travel-booking-page .travel-bsidebar-deal {
+    display: inline-block; font-size: 12px; line-height: 1.35; font-weight: 600; color: #9a3412; background: #ffedd5; border-radius: 4px; padding: 3px 8px; text-align: left;
+}
+.travel-booking-page .travel-bsidebar-oldprice { color: #6b7280; text-decoration: line-through; font-size: 14px; }
+.travel-booking-page .travel-bsidebar-pernight { font-size: 13px; color: #4b5563; margin-top: 6px; }
+
+/* Cancellation & payment timeline (items 1, 7, 11) */
+.travel-booking-page .travel-timeline { list-style: none; margin: 2px 0 14px; padding: 0 0 0 20px; border-left: 2px solid #e5e7eb; }
+.travel-booking-page .travel-timeline__step { position: relative; padding: 0 0 14px 12px; }
+.travel-booking-page .travel-timeline__step:last-child { padding-bottom: 2px; }
+.travel-booking-page .travel-timeline__step::before {
+    content: ""; position: absolute; left: -29px; top: 3px; width: 12px; height: 12px; border-radius: 50%;
+    background: #fff; border: 2px solid #cbd5e1;
+}
+.travel-booking-page .travel-timeline__step--free::before { border-color: #16a34a; }
+.travel-booking-page .travel-timeline__step--current::before { background: #f59e0b; border-color: #f59e0b; box-shadow: 0 0 0 4px #fef3c7; }
+.travel-booking-page .travel-timeline__step--current.travel-timeline__step--free::before { background: #16a34a; border-color: #16a34a; box-shadow: 0 0 0 4px #dcfce7; }
+.travel-booking-page .travel-timeline__when { display: block; font-size: 12px; color: #6b7280; }
+.travel-booking-page .travel-timeline__what { display: block; font-size: 14px; color: #1f2937; margin-top: 1px; }
+.travel-booking-page .travel-timeline__what strong { font-weight: 700; }
+.travel-booking-page .travel-timeline__step--free .travel-timeline__what { color: #15803d; font-weight: 600; }
+.travel-booking-page .travel-timeline__tag {
+    display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 600; vertical-align: 1px;
+    color: #92400e; background: #fef3c7; border-radius: 3px; padding: 1px 6px;
+}
+.travel-booking-page .travel-timeline__step--free .travel-timeline__tag { color: #166534; background: #dcfce7; }
+.travel-booking-page .travel-bsidebar-payment { background: #f8fafc; border: 1px solid #eef2f6; border-radius: 8px; padding: 10px 12px; }
+.travel-booking-page .travel-bsidebar-payment__title { display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 4px; }
+.travel-booking-page .travel-bsidebar-payment ul { margin: 0; padding-left: 16px; font-size: 14px; color: #1f2937; }
+.travel-booking-page .travel-bsidebar-payment li + li { margin-top: 3px; }
+.travel-booking-page .travel-bcard--cancel .travel-conditions-link { display: inline-block; margin-top: 12px; font-size: 13px; }
+
+/* Guest form (items 6, 12) */
+.travel-booking-page .travel-guest-hint {
+    display: flex; gap: 8px; align-items: center; margin: 0 0 14px; padding: 10px 12px; border-radius: 8px;
+    background: #eff6ff; color: #1e3a8a; font-size: 13px;
+}
+/* Information icon (inline SVG, currentColor) — not an emoji, which renders
+   differently on every platform. */
+.travel-booking-page .travel-guest-hint__icon { flex: 0 0 18px; color: var(--nvt-primary, #003580); }
+.travel-booking-page .travel-guest-required { color: #b91c1c; margin-left: 2px; }
+.travel-booking-page .travel-guest-field-label { display: block; font-size: 13px; font-weight: 500; color: var(--nvt-text-light, #666); margin-bottom: 4px; }
+.travel-booking-page .travel-guest-radios { display: flex; gap: 8px; height: 44px; align-items: stretch; }
+.travel-booking-page .travel-guest-radio {
+    display: flex; align-items: center; gap: 7px; padding: 0 14px; border: 1px solid var(--nvt-field-border, #e0e7ef);
+    border-radius: 4px; font-size: 14px; color: #1f2937; cursor: pointer; margin: 0 !important; font-weight: 400 !important;
+}
+.travel-booking-page .travel-guest-radio input { width: 16px; height: 16px; min-height: 0; margin: 0; accent-color: var(--nvt-primary, #003580); }
+.travel-booking-page .travel-guest-radio:has(input:checked) { border-color: var(--nvt-primary, #003580); background: #eff6ff; }
+
+/* CTA (items 10, 13) */
+.travel-booking-page .travel-form-actions.travel-form-actions--cta {
+    background: none; padding: 0 16px; margin: 28px 0 8px; display: flex; justify-content: space-between; align-items: center; gap: 16px;
+}
+.travel-booking-page .travel-form-actions--cta .travel-btn--primary { min-height: 54px; padding: 14px 40px; font-size: 17px; font-weight: 700; border-radius: 6px; }
+.travel-booking-page .travel-cta-note { text-align: right; font-size: 12px; color: #6b7280; margin: 8px 16px 0 0; }
+
+/* Mobile bottom bar (item 2) */
+.travel-booking-page .travel-mobile-bar { display: none; }
+@media (max-width: 900px) {
+    .travel-booking-page .travel-mobile-bar {
+        display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 1030; align-items: center; justify-content: space-between;
+        gap: 12px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); background: #fff;
+        border-top: 1px solid #e5e7eb; box-shadow: 0 -6px 18px rgba(15, 23, 42, 0.08);
+    }
+    .travel-booking-page .travel-mobile-bar__total span { display: block; font-size: 12px; color: #6b7280; }
+    .travel-booking-page .travel-mobile-bar__total strong { font-size: 20px; color: var(--nvt-primary, #003580); }
+    .travel-booking-page .travel-mobile-bar .travel-btn--primary { min-height: 48px; padding: 12px 18px; font-size: 15px; font-weight: 700; }
+    .travel-booking-page { padding-bottom: 84px; }
+    .travel-booking-page .travel-steps { gap: 0; padding: 10px 0; overflow-x: auto; justify-content: flex-start; }
+    .travel-booking-page .travel-steps__item + .travel-steps__item::before { width: 18px; margin: 0 8px; }
+    .travel-booking-page .travel-steps__item { font-size: 12px; }
+    .travel-booking-page .travel-steps__item--active { font-size: 13px; }
+    .travel-booking-page .travel-steps__item--upcoming .travel-steps__label { display: none; }
+    .travel-booking-page .travel-form-actions.travel-form-actions--cta { flex-direction: column-reverse; padding: 0; }
+    .travel-booking-page .travel-form-actions--cta .travel-btn--primary { width: 100%; }
+    .travel-booking-page .travel-cta-note { text-align: center; margin-right: 0; }
 }

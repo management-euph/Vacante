@@ -210,8 +210,12 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
     // Payment & cancellation terms from the verify response: raw JSON on the
     // booking row (the orders sync later overwrites with authoritative data)
     // and formatted display lines in the cart extras for order pages.
-    $payment_terms_raw = TypeCoerce::toList($verifyResult['payment_terms'] ?? []);
-    $cancellation_fees_raw = TypeCoerce::toList($verifyResult['cancellation_fees'] ?? []);
+    // Kept as the API sent them: the live shape is an OBJECT
+    // {is_loaded, is_free, text, rules}, which TypeCoerce::toList() flattened
+    // to [true, false, null, [...]] — every cart/email terms line came out
+    // empty and the stored JSON lost its keys.
+    $payment_terms_raw = is_array($verifyResult['payment_terms'] ?? null) ? $verifyResult['payment_terms'] : [];
+    $cancellation_fees_raw = is_array($verifyResult['cancellation_fees'] ?? null) ? $verifyResult['cancellation_fees'] : [];
     if ($payment_terms_raw !== []) {
         $booking_record['payment_terms_json'] = json_encode($payment_terms_raw, JSON_UNESCAPED_UNICODE);
     }
@@ -247,6 +251,10 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         'total_price' => $total_price, 'currency' => $currency,
         'payment_terms' => \Tygh\Addons\SphinxHolidays\Services\TermsFormatter::lines($payment_terms_raw),
         'cancellation_fees' => \Tygh\Addons\SphinxHolidays\Services\TermsFormatter::lines($cancellation_fees_raw),
+        // Raw terms + confirmation, so edit mode rebuilds the same timeline
+        // and badge without re-verifying the offer.
+        'terms_raw' => (string) json_encode(['payment' => $payment_terms_raw, 'cancellation' => $cancellation_fees_raw], JSON_UNESCAPED_UNICODE),
+        'confirmation' => TypeCoerce::toString($verifyResult['confirmation'] ?? ''),
     ];
 
     return $cartService->addToCartAndRedirect(
