@@ -33,6 +33,7 @@
 {/function}
 
 <div class="travel-booking-page novoton-reservation-form">
+    {include file="addons/travel_core/components/booking_steps.tpl" bs_edit_mode=$is_edit_mode|default:false}
     <form action="{if $is_edit_mode}{fn_url("novoton_booking.update_booking")}{else}{fn_url("novoton_booking.add_to_cart")}{/if}" method="post" id="novoton-booking-form">
         <input type="hidden" name="security_hash" value="{$security_hash}" />
         {if $is_edit_mode}
@@ -77,6 +78,7 @@
             {* Guest Names Section - Multi-Room Support with Split Fields *}
             <div class="travel-form-section guest-names-section">
                 <h3>{__("novoton_holidays.enter_booking_details")}</h3>
+                {include file="addons/travel_core/components/booking_guest_hint.tpl"}
                 
                 {* Booking-wide sequential guest numbering ("3. Adult") — the
                    shared room body offsets its labels by the guests rendered
@@ -126,8 +128,8 @@
             </div>
             
             {* Form Actions *}
-            <div class="travel-form-actions">
-                                {* Build rooms_data JSON for URL *}
+            <div class="travel-form-actions travel-form-actions--cta">
+                {* Build rooms_data JSON for URL *}
                 {if $booking_data.rooms_data && is_array($booking_data.rooms_data)}
                     {$rooms_data_url = $booking_data.rooms_data|json_encode|escape:'url'}
                 {elseif $booking_data.rooms_data && is_string($booking_data.rooms_data)}
@@ -136,21 +138,26 @@
                     {$rooms_data_url = ''}
                 {/if}
                 <a href="{fn_url("novoton_booking.search?hotel_id=`$booking_data.hotel_id`&product_id=`$product_id`&check_in=`$booking_data.check_in`&check_out=`$booking_data.check_out`&nights=`$booking_data.nights`&adults=`$booking_data.adults`&children=`$booking_data.children`&children_ages=`$booking_data.children_ages`&rooms=`$booking_data.num_rooms|default:1`&rooms_data=`$rooms_data_url`")}" class="travel-btn-back">
-                    <- {__("novoton_holidays.back_to_results")}
+                    &larr; {__("novoton_holidays.back_to_results")}
                 </a>
                 <button type="submit" class="travel-btn--primary" id="booking-submit-btn">
-                    {if $is_edit_mode}{__("novoton_holidays.update_booking")}{else}{__("novoton_holidays.add_to_cart")}{/if}
+                    {if $is_edit_mode}{__("novoton_holidays.update_booking")}{else}{__("travel_core.continue_to_checkout")} &rarr;{/if}
                 </button>
             </div>
+            {if !$is_edit_mode}<p class="travel-cta-note">{__("travel_core.cta_note")}</p>{/if}
 
-            {* "What are my booking conditions?" — link + modal (shared). Its
-               body is filled per room by booking-form.js from the same price
-               re-verification that fills the cancellation card. *}
+            {* "What are my booking conditions?" modal (shared; its link sits in
+               the sidebar's cancellation & payment card). Its body is filled
+               per room by booking-form.js from the same price re-verification
+               that fills the cancellation card. *}
             {include file="addons/travel_core/components/booking_conditions_modal.tpl"}
 
             </div>{* /travel-booking-col-main *}
         </div>{* /travel-booking-layout *}
     </form>
+
+    {if $is_edit_mode}{$nvt_cta_label = __("novoton_holidays.update_booking")}{else}{$nvt_cta_label = __("travel_core.continue_to_checkout")}{/if}
+    {include file="addons/travel_core/components/booking_mobile_bar.tpl" mb_form_id="novoton-booking-form" mb_label=$nvt_cta_label}
 </div>
 
 {* A73: Include DOB validation script with price recalculation *}
@@ -200,6 +207,7 @@ window.bookingData = {ldelim}
 // stores).
 window.NovotonBookingI18n = {ldelim}
     fillAllFields: '{__("novoton_holidays.fill_all_fields")|escape:"javascript"}',
+    chooseOption: '{__("travel_core.choose_option")|escape:"javascript"}',
     dobValidationError: '{__("novoton_holidays.dob_validation_error")|default:"Verificati datele de nastere introduse."|escape:"javascript"}',
     priceVerifiedAtCheckout: '{__("novoton_holidays.price_verified_at_checkout")|default:"Prețul va fi verificat la finalizare"|escape:"javascript"}',
     priceMustBeVerified: '{__("novoton_holidays.price_must_be_verified")|default:"Prețul trebuie verificat înainte de a continua"|escape:"javascript"}',

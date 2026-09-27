@@ -287,6 +287,18 @@ use Tygh\Addons\NovotonHolidays\ViewModels\NovotonBookingSidebarBuilder;
     // ── Shared 2-column summary sidebar (travel_core component) ───────────
     // Same builder as edit_booking: one page, one summary, whichever mode
     // rendered it.
+    // Availability as the search result stated it (the Book link carries
+    // the API quota): on request, or bookable with "only N left".
+    [$nvtStatus, $nvtRoomsLeft] = NovotonBookingSidebarBuilder::availability(
+        !empty($bookingData['is_on_request']),
+        TypeCoerce::toInt($bookingData['rooms_available'] ?? 0),
+    );
+    // The cart-line amount (API EUR → store primary), shown in the shopper's
+    // selected currency — the same number add_to_cart stores.
+    $nvtPrimaryTotal = _nvt_currency_service()->convertFromApiCurrency(
+        PriceInfoFormatter::toFloat($booking['total_price'] ?? 0),
+        defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : 'EUR',
+    );
     $sidebarVm = NovotonBookingSidebarBuilder::sidebar(
         $bookingData,
         $headerVm,
@@ -294,8 +306,14 @@ use Tygh\Addons\NovotonHolidays\ViewModels\NovotonBookingSidebarBuilder;
         TypeCoerce::toString($package_name),
         $novoton_display_coefficient,
         $novoton_display_symbol,
-        empty($bookingData['is_on_request']),
+        $nvtStatus !== \Tygh\Addons\TravelCore\ViewModels\BookingSidebarViewModel::STATUS_ON_REQUEST,
         defined('CART_LANGUAGE') ? TypeCoerce::toString(CART_LANGUAGE) : 'en',
+        \Tygh\Addons\TravelCore\Services\MoneyFormatter::forStore(),
+        $nvtPrimaryTotal,
+        $nvtStatus,
+        $nvtRoomsLeft > 0 ? TypeCoerce::toString(__('novoton_holidays.we_have_left', ['[count]' => $nvtRoomsLeft])) : '',
+        \Tygh\Addons\TravelCore\Services\TravelCoreConfig::getDateFormat(),
+        \Tygh\Addons\TravelCore\Services\TravelCoreConfig::getBookingSidebarMaxFeatures(),
     );
     $view->assign('travel_booking_sidebar', $sidebarVm->toViewArray());
 

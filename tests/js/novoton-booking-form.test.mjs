@@ -111,14 +111,32 @@ describe('applyRecalculatedPrice price display', () => {
 });
 
 describe('submit validation', () => {
-    it('blocks submit and alerts when a required field is empty', () => {
+    it('blocks submit and shows an inline message on the empty field (no alert)', () => {
         const form = document.getElementById('novoton-booking-form');
-        form.innerHTML = '<input required value="">';
+        form.innerHTML = '<div class="travel-guest-field"><input required value=""></div>';
         const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
         const ev = new Event('submit', { cancelable: true });
         form.dispatchEvent(ev);
         expect(ev.defaultPrevented).toBe(true);
-        expect(alertSpy).toHaveBeenCalledWith('Completați câmpurile');
+        expect(alertSpy).not.toHaveBeenCalled();
+        const input = form.querySelector('input');
+        expect(input.getAttribute('aria-invalid')).toBe('true');
+        expect(form.querySelector('.travel-guest-field .js-required-msg').textContent).toBe('Completați câmpurile');
         alertSpy.mockRestore();
+    });
+
+    it('treats an unchecked required radio group as missing', () => {
+        const form = document.getElementById('novoton-booking-form');
+        form.innerHTML = '<div class="travel-guest-field"><label><input type="radio" name="g" value="B" required></label>'
+            + '<label><input type="radio" name="g" value="F" required></label></div>';
+        const ev = new Event('submit', { cancelable: true });
+        form.dispatchEvent(ev);
+        expect(ev.defaultPrevented).toBe(true);
+
+        form.querySelector('input[value="F"]').checked = true;
+        form.querySelector('.js-required-msg').remove();
+        const ok = new Event('submit', { cancelable: true });
+        form.dispatchEvent(ok);
+        expect(ok.defaultPrevented).toBe(false);
     });
 });

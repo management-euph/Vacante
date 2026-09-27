@@ -387,12 +387,15 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
         $cancellation_lines = [];
         $payment_lines = [];
         $free_cancellation_until = '';
+        $cancellation_parsed = [];
+        $payment_parsed = [];
         if ($response instanceof \SimpleXMLElement) {
             $termsPayment = $response->xpath('//TermsOfPayment');
             if (!empty($termsPayment[0])) {
                 $payment_lines = \Tygh\Addons\TravelCore\ViewModels\BookingSidebarFactory::termLines(
                     fn_novoton_holidays_format_payment_terms((string) $termsPayment[0]->asXML()),
                 );
+                $payment_parsed = \Tygh\Addons\NovotonHolidays\Services\TermsFormatter::parsePaymentTerms((string) $termsPayment[0]->asXML());
             }
             $termsCancellation = $response->xpath('//TermsOfCancellation');
             if (!empty($termsCancellation[0])) {
@@ -407,12 +410,81 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
                 $free_cancellation_until = \Tygh\Addons\TravelCore\Services\DateHelper::formatStoreDate(
                     fn_novoton_holidays_get_free_cancellation_date((string) $termsCancellation[0]->asXML()),
                 );
+                $cancellation_parsed = \Tygh\Addons\NovotonHolidays\Services\TermsFormatter::parseCancellationTerms(
+                    (string) $termsCancellation[0]->asXML(),
+                    $check_in,
+                );
             }
+        }
+
+        // ── The shared cancellation & payment timeline ──
+        // Same rules and markup as sphinx / eurosite (TermsTimelineFactory +
+        // booking_terms_timeline.tpl): amounts on the cart-line scale in the
+        // shopper's currency, the step in force today marked, "free until"
+        // only while it is still ahead. The partial is rendered HERE and the
+        // JS only swaps it in, so the markup lives in one place.
+        $money = \Tygh\Addons\TravelCore\Services\MoneyFormatter::forStore();
+        $primary_new_price = _nvt_currency_service()->convertFromApiCurrency(
+            TypeCoerce::toFloat($new_price),
+            defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : 'EUR',
+        );
+        if ($primary_new_price > 0) {
+            $formatted_price = $money->format($primary_new_price);
+        }
+        [$timelineWindows, $timelineInstallments] = \Tygh\Addons\NovotonHolidays\ViewModels\NovotonBookingSidebarBuilder::terms(
+            $cancellation_parsed,
+            $payment_parsed,
+        );
+        $timelineFactory = new \Tygh\Addons\TravelCore\ViewModels\TermsTimelineFactory(
+            $money,
+            date('Y-m-d'),
+            \Tygh\Addons\TravelCore\Services\TravelCoreConfig::getDateFormat(),
+        );
+        $timeline = $timelineFactory->cancellation($timelineWindows, $primary_new_price, $nights);
+        $payment_steps = $timelineFactory->payment($timelineInstallments, $primary_new_price);
+        if ($timeline['steps'] !== []) {
+            // The old value was the FIRST PENALTY day, never checked
+            // against today — the "free until 09/25 + you'll pay" card.
+            $free_cancellation_until = $timeline['free_until'];
+        }
+        $per_night = \Tygh\Addons\TravelCore\ViewModels\BookingSidebarFactory::perNight($money->toDisplay($primary_new_price), $nights);
+        $terms_view = [
+            'cancel_steps' => $timeline['steps'],
+            'payment_steps' => $payment_steps,
+            'cancel_lines' => $cancellation_lines,
+            'cancel_free_until' => $timeline['steps'] !== [] ? '' : $free_cancellation_until,
+            'cancel_full_amount' => $timeline['steps'] !== []
+                ? ($timeline['full_charge_now'] ? $formatted_price : '')
+                : \Tygh\Addons\TravelCore\ViewModels\BookingSidebarFactory::fullChargeAmount($cancellation_lines, $formatted_price),
+            'payment_lines' => $payment_lines,
+            'payment_lines_html' => array_map(
+                [\Tygh\Addons\TravelCore\ViewModels\BookingSidebarFactory::class, 'emphasizePercentages'],
+                $payment_lines,
+            ),
+        ];
+        $terms_html = '';
+        $conditions_html = '';
+        $has_terms = $timeline['steps'] !== [] || $payment_steps !== [] || $cancellation_lines !== [] || $payment_lines !== [];
+        if ($has_terms) {
+            /** @var \Smarty $terms_smarty */
+            $terms_smarty = \Tygh\Tygh::$app['view'];
+            $terms_smarty->assign('tt', $terms_view);
+            $terms_smarty->assign('tt_show_link', true);
+            $terms_smarty->assign('tt_ids', true);
+            $terms_html = (string) $terms_smarty->fetch('addons/travel_core/components/booking_terms_timeline.tpl');
+            $terms_smarty->assign('tt_show_link', false);
+            $terms_smarty->assign('tt_ids', false);
+            $conditions_html = (string) $terms_smarty->fetch('addons/travel_core/components/booking_terms_timeline.tpl');
         }
 
         // Return success response with room change info and price change analysis
         $sendJson([
             'success' => true,
+            // Server-rendered shared timeline: the sidebar card body and the
+            // conditions-modal section (booking-form.js swaps them in).
+            'terms_html' => $terms_html,
+            'conditions_html' => $conditions_html,
+            'formatted_per_night' => $per_night !== null ? $money->formatDisplay($per_night) : '',
             'cancellation_lines' => $cancellation_lines,
             'free_cancellation_until' => $free_cancellation_until,
             'payment_lines' => $payment_lines,

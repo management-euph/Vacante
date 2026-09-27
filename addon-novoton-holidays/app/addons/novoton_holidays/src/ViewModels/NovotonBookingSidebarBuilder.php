@@ -9,6 +9,7 @@ use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\DateHelper;
+use Tygh\Addons\TravelCore\Services\MoneyFormatter;
 use Tygh\Addons\TravelCore\ViewModels\BookingSidebarFactory;
 use Tygh\Addons\TravelCore\ViewModels\BookingSidebarViewModel;
 use Tygh\Addons\TravelCore\ViewModels\HotelHeaderFactory;
@@ -93,6 +94,12 @@ final class NovotonBookingSidebarBuilder
         string $displaySymbol,
         bool $available = true,
         string $lang = 'en',
+        ?MoneyFormatter $money = null,
+        float $primaryTotal = 0.0,
+        string $availabilityStatus = '',
+        string $availabilityNote = '',
+        string $dateFormat = '',
+        int $featuresMax = 6,
     ): BookingSidebarViewModel {
         $roomsData = TypeCoerce::toRowList($booking['rooms_data'] ?? []);
         $occupancy = BookingSidebarFactory::occupancy($roomsData);
@@ -102,6 +109,18 @@ final class NovotonBookingSidebarBuilder
         $checkOutTs = (int) strtotime($checkOut);
 
         $package = $packageName !== '' ? $packageName : TypeCoerce::toString($booking['package_name'] ?? '');
+        $nights = TypeCoerce::toInt($booking['nights'] ?? 0);
+        $total = $money !== null && $primaryTotal > 0
+            ? $money->format($primaryTotal)
+            : fn_novoton_holidays_format_price(
+                PriceInfoFormatter::toFloat($booking['total_price'] ?? 0),
+                $displayCoefficient,
+                $displaySymbol,
+            );
+        $perNight = null;
+        if ($money !== null && $primaryTotal > 0) {
+            $perNight = BookingSidebarFactory::perNight($money->toDisplay($primaryTotal), $nights);
+        }
 
         return new BookingSidebarViewModel(
             imagePair: function_exists('fn_travel_core_product_main_pair')
@@ -110,11 +129,15 @@ final class NovotonBookingSidebarBuilder
             name: $header->name,
             stars: $header->stars,
             available: $available,
+            availabilityStatus: $availabilityStatus,
+            availabilityNote: $availabilityNote,
             locationLine: $header->locationLine,
             mapUrl: $header->mapUrl,
+            // The full list: the template shows featuresMax chips + "+N more".
             features: Container::getInstance()->facilityRepository()->getLabelsForHotel(
                 TypeCoerce::toString($booking['hotel_id'] ?? ''),
                 $lang,
+                100,
             ),
             packageName: $package !== $header->name ? $package : '',
             // Store-configured format (Settings -> Appearance), NOT a hardcoded
@@ -125,7 +148,7 @@ final class NovotonBookingSidebarBuilder
             checkInWeekday: $checkInTs > 0 ? DateHelper::formatStoreWeekday($checkInTs) : '',
             checkOut: $checkOutTs > 0 ? DateHelper::formatStoreDate($checkOutTs) : $checkOut,
             checkOutWeekday: $checkOutTs > 0 ? DateHelper::formatStoreWeekday($checkOutTs) : '',
-            nights: TypeCoerce::toInt($booking['nights'] ?? 0),
+            nights: $nights,
             rooms: max(1, TypeCoerce::toInt($booking['num_rooms'] ?? 1)),
             adults: $occupancy['adults'] > 0 ? $occupancy['adults'] : TypeCoerce::toInt($booking['adults'] ?? 0),
             children: $occupancy['children'] > 0 ? $occupancy['children'] : TypeCoerce::toInt($booking['children'] ?? 0),
@@ -140,11 +163,65 @@ final class NovotonBookingSidebarBuilder
                 'rooms' => TypeCoerce::toInt($booking['num_rooms'] ?? 1),
             ]),
             productId: $productId,
-            total: fn_novoton_holidays_format_price(
-                PriceInfoFormatter::toFloat($booking['total_price'] ?? 0),
-                $displayCoefficient,
-                $displaySymbol,
-            ),
+            total: $total,
+            perNight: $perNight !== null && $money !== null ? $money->formatDisplay($perNight) : '',
+            featuresMax: $featuresMax,
+            showWeekday: $dateFormat === '' || !DateHelper::formatHasWeekday($dateFormat),
         );
+    }
+
+    /**
+     * Novoton's API availability (the quota on the search result) → badge
+     * status + note: a number of rooms is "available" (with "only N left"
+     * at 5 or fewer, as the search card says), RQ / 0 / blank is on request.
+     *
+     * @return array{0: string, 1: int} [status, rooms left to mention (0 = none)]
+     */
+    public static function availability(bool $isOnRequest, int $roomsAvailable): array
+    {
+        if ($isOnRequest) {
+            return [BookingSidebarViewModel::STATUS_ON_REQUEST, 0];
+        }
+
+        return [BookingSidebarViewModel::STATUS_AVAILABLE, $roomsAvailable > 0 && $roomsAvailable <= 5 ? $roomsAvailable : 0];
+    }
+
+    /**
+     * Novoton price-quote terms → the shared timeline's windows and
+     * installments.
+     *
+     * Cancellation: <Penalty tillDate Type="Percent|Over Nights">value</Penalty>,
+     * only the END of each window is known (the factory fills the starts);
+     * FREE = 0%; a row without a date is the no-show rule. Payment:
+     * <Percent tillDate>n</Percent>, no date = on booking.
+     *
+     * @param list<array<string, mixed>> $cancellation TermsFormatter::parseCancellationTerms()
+     * @param list<array<string, mixed>> $payment TermsFormatter::parsePaymentTerms()
+     * @return array{0: list<array<string, mixed>>, 1: list<array<string, mixed>>}
+     */
+    public static function terms(array $cancellation, array $payment): array
+    {
+        $windows = [];
+        foreach ($cancellation as $row) {
+            $till = TypeCoerce::toString($row['till_date'] ?? '');
+            $value = $row['value'] ?? 0;
+            $isNights = stripos(TypeCoerce::toString($row['type'] ?? ''), 'night') !== false;
+            $n = $value === 'FREE' ? 0.0 : TypeCoerce::toFloat($value);
+            $windows[] = [
+                'to' => $till !== '' ? $till : null,
+                'percent' => $isNights ? null : $n,
+                'nights' => $isNights ? (int) $n : null,
+                'no_show' => $till === '',
+            ];
+        }
+        $installments = [];
+        foreach ($payment as $row) {
+            $installments[] = [
+                'due' => !empty($row['is_on_booking']) ? null : TypeCoerce::toString($row['date'] ?? ''),
+                'percent' => TypeCoerce::toFloat($row['percent'] ?? 0),
+            ];
+        }
+
+        return [$windows, $installments];
     }
 }
