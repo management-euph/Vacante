@@ -4177,8 +4177,8 @@ msgid "[n] ticked resorts are no longer in the Novoton feed (shown crossed out).
 msgstr "[n] stațiuni bifate nu mai apar în fluxul Novoton (tăiate). Rămân bifate până le debifați."
 
 msgctxt "Languages::novoton_holidays.dest_intro"
-msgid "Choose what we sell from Novoton. Only hotels in these destinations are made into products. \"All resorts\" includes resorts Novoton adds later; \"Only selected\" waits for you to tick them."
-msgstr "Alegeți ce vindem de la Novoton. Doar hotelurile din aceste destinații devin produse. „Toate stațiunile” include și stațiunile adăugate ulterior de Novoton; „Doar cele alese” așteaptă să le bifați."
+msgid "Choose what we sell from Novoton. Only hotels in these destinations are synced and made into products (hotels with live products keep syncing until you disable them). \"All resorts\" includes resorts Novoton adds later; \"Only selected\" waits for you to tick them."
+msgstr "Alegeți ce vindem de la Novoton. Doar hotelurile din aceste destinații se sincronizează și devin produse (hotelurile cu produse active se sincronizează în continuare până le dezactivați). „Toate stațiunile” include și stațiunile adăugate ulterior de Novoton; „Doar cele alese” așteaptă să le bifați."
 
 msgctxt "Languages::novoton_holidays.dest_pending"
 msgid "[n] changes not saved"

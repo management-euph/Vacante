@@ -174,6 +174,51 @@ final class DestinationScope
         ];
     }
 
+    /**
+     * The WHERE fragment every per-hotel API sync uses to pick its hotels
+     * (hotelinfo, priceinfo, facilities, room_price), already quoted.
+     *
+     * Not configured: the selected countries, as the syncs always did (and
+     * room_price now too — it checked every hotel of every country).
+     * Configured: the whitelisted hotels, OR any hotel still linked to an
+     * active product — a live product keeps its prices and facilities fresh
+     * until someone disables it, whatever the whitelist now says. Hidden
+     * resorts are never synced for the whitelist's sake.
+     *
+     * @param string $alias the hotels table alias ('h'), or '' when unaliased
+     */
+    public function syncWhere(string $alias = ''): string
+    {
+        $col = static fn (string $name): string => ($alias === '' ? '' : $alias . '.') . $name;
+
+        if (!$this->isConfigured()) {
+            $countries = array_values(ConfigProvider::getSelectedCountries());
+
+            return $countries === [] ? '1 = 0' : db_quote($col('country') . ' IN (?a)', $countries);
+        }
+
+        $parts = [];
+        foreach ($this->countries as $country => $c) {
+            if ($c['mode'] === self::MODE_ALL) {
+                $parts[] = db_quote($col('country') . ' = ?s', $country);
+            } elseif ($c['resorts'] !== []) {
+                $parts[] = db_quote(
+                    '(' . $col('country') . ' = ?s AND TRIM(' . $col('city') . ') IN (?a))',
+                    $country,
+                    array_values($c['resorts']),
+                );
+            }
+        }
+        $inScope = $parts === [] ? '1 = 0' : '(' . implode(' OR ', $parts) . ')';
+        $hidden = ConfigProvider::getHiddenResorts();
+        if ($hidden !== []) {
+            $inScope = '(' . $inScope . db_quote(' AND (' . $col('city') . ' IS NULL OR ' . $col('city') . ' NOT IN (?a)))', $hidden);
+        }
+
+        return '(' . $inScope . ' OR ' . $col('product_id')
+            . " IN (SELECT product_id FROM ?:products WHERE status = 'A'))";
+    }
+
     /** One hotel (offers_update): may it become a product? */
     public function allowsProduct(string $country, ?string $resort): bool
     {

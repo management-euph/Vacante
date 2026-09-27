@@ -25,6 +25,7 @@ namespace Tygh\Addons\NovotonHolidays\Helpers;
 
 use Tygh\Addons\NovotonHolidays\Api\NovotonNormalizer;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Services\DestinationScope;
 use Tygh\Addons\NovotonHolidays\Services\FeatureMapper as NovotonFeatureMapper;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\FeatureMapper as CoreFeatureMapper;
@@ -96,12 +97,10 @@ class BatchedHotelFacilitiesSyncV2 extends AbstractBatchedSync
         }
 
         // Check for hotels that never had facilities synced
-        $countries = ConfigProvider::getSelectedCountries();
         $unsynced = TypeCoerce::toInt(db_get_field(
             'SELECT COUNT(*) FROM ?:novoton_hotels h
              LEFT JOIN ?:novoton_hotel_facilities hf ON h.hotel_id = hf.hotel_id
-             WHERE h.country IN (?a) AND hf.hotel_id IS NULL',
-            $countries,
+             WHERE ' . DestinationScope::current()->syncWhere('h') . ' AND hf.hotel_id IS NULL',
         ));
 
         if ($unsynced > 0) {
@@ -119,14 +118,15 @@ class BatchedHotelFacilitiesSyncV2 extends AbstractBatchedSync
     #[\Override]
     protected function getItemsToSync(string $syncType, array $options): array
     {
-        $countries = ConfigProvider::getSelectedCountries();
+        // The destinations we sell (+ hotels with live products); the selected
+        // countries until a whitelist is saved.
+        $scope = DestinationScope::current();
 
         if ($syncType === 'full') {
             return TypeCoerce::toStringList(db_get_fields(
                 'SELECT hotel_id FROM ?:novoton_hotels
-                 WHERE country IN (?a)
+                 WHERE ' . $scope->syncWhere() . '
                  ORDER BY hotel_name',
-                $countries,
             ));
         }
 
@@ -134,9 +134,8 @@ class BatchedHotelFacilitiesSyncV2 extends AbstractBatchedSync
         return TypeCoerce::toStringList(db_get_fields(
             'SELECT h.hotel_id FROM ?:novoton_hotels h
              LEFT JOIN ?:novoton_hotel_facilities hf ON h.hotel_id = hf.hotel_id
-             WHERE h.country IN (?a) AND hf.hotel_id IS NULL
+             WHERE ' . $scope->syncWhere('h') . ' AND hf.hotel_id IS NULL
              ORDER BY h.hotel_name',
-            $countries,
         ));
     }
 

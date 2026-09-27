@@ -57,6 +57,7 @@ namespace Tygh\Addons\NovotonHolidays\Helpers;
 use Tygh\Addons\NovotonHolidays\Api\AdultOnlyDetector;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Services\DestinationScope;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
@@ -204,19 +205,34 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
     protected function getItemsToSync(string $syncType, array $options): array
     {
         $countries = TypeCoerce::toStringList($options['countries'] ?? ConfigProvider::getSelectedCountries());
+        // The destinations we sell (+ hotels with live products); the selected
+        // countries until a whitelist is saved. One hotelinfo call per hotel.
+        $scope = DestinationScope::current()->syncWhere();
 
         if ($syncType === 'full') {
+            // &country= narrows the run; otherwise the scope alone decides,
+            // so a live product in a country no longer sold stays fresh too.
             return TypeCoerce::toStringList(db_get_fields(
                 'SELECT hotel_id FROM ?:novoton_hotels
-                 WHERE country IN (?a)
+                 WHERE ' . (isset($options['countries']) ? db_quote('country IN (?a) AND ', $countries) : '') . $scope . '
                  ORDER BY hotel_name',
-                $countries,
             ));
         }
 
         // Incremental: changed hotels from offers_update API, unioned
-        // with hotels that never had hotelinfo synced yet.
-        return $this->changedHotelDetector->detect($this->getApi(), $countries);
+        // with hotels that never had hotelinfo synced yet — minus the known
+        // hotels outside the scope. A hotel not in ?:novoton_hotels yet has
+        // no resort to judge by, so it stays.
+        $changed = $this->changedHotelDetector->detect($this->getApi(), $countries);
+        if ($changed === []) {
+            return [];
+        }
+        $outside = TypeCoerce::toStringList(db_get_fields(
+            'SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id IN (?a) AND NOT ' . $scope,
+            $changed,
+        ));
+
+        return array_values(array_diff($changed, $outside));
     }
 
     /**

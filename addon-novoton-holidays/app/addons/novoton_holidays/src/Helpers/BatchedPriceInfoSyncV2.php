@@ -34,6 +34,7 @@ namespace Tygh\Addons\NovotonHolidays\Helpers;
 
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Services\DestinationScope;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
@@ -150,26 +151,26 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
     #[\Override]
     protected function getItemsToSync(string $syncType, array $options): array
     {
-        $countries = ConfigProvider::getSelectedCountries();
+        // The destinations we sell (+ hotels with live products); the selected
+        // countries until a whitelist is saved. One priceinfo call per package.
+        $scope = DestinationScope::current()->syncWhere('h');
 
         if ($syncType === 'full') {
             $rows = db_get_array(
                 'SELECT p.hotel_id, p.package_id
                  FROM ?:novoton_hotel_packages p
                  JOIN ?:novoton_hotels h ON p.hotel_id = h.hotel_id
-                 WHERE h.country IN (?a)
+                 WHERE ' . $scope . '
                  ORDER BY h.hotel_name, p.package_name',
-                $countries,
             );
         } else {
             $rows = db_get_array(
                 'SELECT p.hotel_id, p.package_id
                  FROM ?:novoton_hotel_packages p
                  JOIN ?:novoton_hotels h ON p.hotel_id = h.hotel_id
-                 WHERE h.country IN (?a)
+                 WHERE ' . $scope . '
                  AND (p.synced_at IS NULL OR p.synced_at < DATE_SUB(NOW(), INTERVAL ?i HOUR))
                  ORDER BY p.synced_at ASC, h.hotel_name',
-                $countries,
                 $this->staleHours,
             );
         }
