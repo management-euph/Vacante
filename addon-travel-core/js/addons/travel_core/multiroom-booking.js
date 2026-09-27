@@ -78,7 +78,7 @@
     }
 
     function label(template, values) {
-        return template.replace(/\[(\w+)\]/g, function(match, key) {
+        return template.replace(/\[(\w+)]/g, function(match, key) {
             return key in values ? String(values[key]) : match;
         });
     }
