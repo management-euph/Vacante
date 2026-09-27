@@ -44,7 +44,7 @@ final class CartSkipPolicyTest extends TestCase
             $policy = CartSkipPolicy::fromSetting($value);
             foreach (['novoton_holidays', 'sphinx_holidays', 'eurosite'] as $addon) {
                 self::assertSame('checkout.cart', $policy->afterAddToCart($addon));
-                self::assertSame('travel_core.continue_to_checkout', $policy->ctaLabelKey($addon));
+                self::assertSame('travel_core.continue_to_payment', $policy->ctaLabelKey($addon));
             }
         }
     }

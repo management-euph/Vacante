@@ -1473,3 +1473,7 @@ msgstr "Completați mai întâi datele oaspeților"
 msgctxt "Languages::travel_core.step_current"
 msgid "current step"
 msgstr "pasul curent"
+
+msgctxt "Languages::travel_core.continue_to_payment"
+msgid "Continue to payment"
+msgstr "Continuă spre plată"

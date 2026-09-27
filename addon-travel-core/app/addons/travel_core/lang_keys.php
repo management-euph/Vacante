@@ -601,6 +601,11 @@ return [
         'en' => 'Continue to checkout',
         'ro' => 'Continuă spre finalizare',
     ],
+    // Booking button (default): the next step on the progress bar is Payment.
+    'travel_core.continue_to_payment' => [
+        'en' => 'Continue to payment',
+        'ro' => 'Continuă spre plată',
+    ],
     // Booking button when Settings -> "Skip the cart page for" ticks the add-on.
     'travel_core.continue_booking' => [
         'en' => 'Continue booking',

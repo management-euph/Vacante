@@ -1473,3 +1473,7 @@ msgstr "Enter the guest details first"
 msgctxt "Languages::travel_core.step_current"
 msgid "current step"
 msgstr "current step"
+
+msgctxt "Languages::travel_core.continue_to_payment"
+msgid "Continue to payment"
+msgstr "Continue to payment"
