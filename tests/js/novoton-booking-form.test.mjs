@@ -206,4 +206,23 @@ describe('submit validation', () => {
         expect(form.querySelector('.js-required-msg')).toBeNull();
         expect(form.querySelector('[aria-invalid="true"]')).toBeNull();
     });
+
+    it('re-judges a DOB before blocking — a flag left from a cleared value does not block', () => {
+        const form = document.getElementById('novoton-booking-form');
+        form.innerHTML = '<div class="travel-guest-field"><input class="js-dob-basics" value="" aria-invalid="true">'
+            + '<span class="travel-field-error-message js-dob-basics-msg">Format invalid</span></div>';
+        // The shared validator clears its own message for an empty optional DOB.
+        window.TravelBooking = window.TravelBooking || {};
+        const prev = window.TravelBooking.validateDobBasics;
+        window.TravelBooking.validateDobBasics = (el) => {
+            el.parentElement.querySelector('.js-dob-basics-msg')?.remove();
+            el.removeAttribute('aria-invalid');
+            return true;
+        };
+        const ev = new Event('submit', { cancelable: true });
+        form.dispatchEvent(ev);
+        window.TravelBooking.validateDobBasics = prev;
+
+        expect(ev.defaultPrevented).toBe(false);
+    });
 });

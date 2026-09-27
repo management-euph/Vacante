@@ -23,11 +23,14 @@ final class QuoteOfferReader
 {
     /**
      * @param float $chargedRaw the matched row's API price (before commission)
+     * @param string $packageName the booked package: the search card pairs a
+     *                            promo row with the standard row of the SAME
+     *                            room + board + package; '' = any package
      * @return array{early_booking: float, extras: string, standard: float}|null
      *         null when no row of that room + board carries that price;
      *         standard = 0.0 when every matching row has extras
      */
-    public static function fromXml(\SimpleXMLElement $xml, string $roomId, string $boardId, float $chargedRaw): ?array
+    public static function fromXml(\SimpleXMLElement $xml, string $roomId, string $boardId, float $chargedRaw, string $packageName = ''): ?array
     {
         $charged = null;
         $standard = 0.0;
@@ -45,7 +48,8 @@ final class QuoteOfferReader
             }
             if ($price <= 0
                 || ($roomId !== '' && strcasecmp($room, $roomId) !== 0)
-                || ($boardId !== '' && strcasecmp($board, $boardId) !== 0)) {
+                || ($boardId !== '' && strcasecmp($board, $boardId) !== 0)
+                || !self::samePackage($row, $packageName)) {
                 continue;
             }
             $extras = trim(self::child($row, 'extras'));
@@ -61,6 +65,15 @@ final class QuoteOfferReader
         }
 
         return $charged === null ? null : $charged + ['standard' => $standard];
+    }
+
+    /** A row without a PackageName, or no package asked for, matches any. */
+    private static function samePackage(\SimpleXMLElement $row, string $packageName): bool
+    {
+        $rowPackage = trim(rawurldecode(self::child($row, 'PackageName')));
+        $packageName = trim(rawurldecode($packageName));
+
+        return $rowPackage === '' || $packageName === '' || strcasecmp($rowPackage, $packageName) === 0;
     }
 
     /** A child's text; '' when the row has no such element (isset, not ??). */

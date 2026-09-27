@@ -126,9 +126,13 @@ function novotonBindSubmitValidation() {
         return;
     }
 
-    // A field already flagged (DOB format, age at check-in …) blocks the
-    // submit; take the guest to it. The shared submit guard re-checks every
-    // DOB as well.
+    // A field flagged (DOB format, age at check-in …) blocks the submit;
+    // take the guest to it. Re-judge every DOB first, as the shared guard
+    // does — a flag left from a value since cleared must not block.
+    var tb = window.TravelBooking || {};
+    if (typeof tb.validateDobBasics === 'function') {
+        form.querySelectorAll('input.js-dob-basics').forEach(function (dob) { tb.validateDobBasics(dob); });
+    }
     var flagged = form.querySelector('[aria-invalid="true"]');
     if (flagged) {
         e.preventDefault();

@@ -50,6 +50,21 @@ final class QuoteOfferReaderTest extends TestCase
         );
     }
 
+    /** Promo and standard pair within ONE package, as on the search card. */
+    public function testTheStandardPriceComesFromTheSamePackage(): void
+    {
+        $xml = new \SimpleXMLElement('<r>'
+            . '<room_price><IdRoom>DBL</IdRoom><Board>AI</Board><Price>1030</Price><extras>7 = 6</extras><PackageName>Summer%20A</PackageName></room_price>'
+            . '<room_price><IdRoom>DBL</IdRoom><Board>AI</Board><Price>1100</Price><PackageName>Summer%20B</PackageName></room_price>'
+            . '</r>');
+
+        self::assertSame(
+            ['early_booking' => 0.0, 'extras' => '7 = 6', 'standard' => 0.0],
+            QuoteOfferReader::fromXml($xml, 'DBL', 'AI', 1030.0, 'Summer A'),
+        );
+        self::assertSame(1100.0, QuoteOfferReader::fromXml($xml, 'DBL', 'AI', 1030.0)['standard'] ?? null);
+    }
+
     public function testUnknownPriceOrFlatListsGiveNothing(): void
     {
         self::assertNull(QuoteOfferReader::fromXml(new \SimpleXMLElement(self::QUOTE), 'DBL+SEA', 'AI', 999.0));

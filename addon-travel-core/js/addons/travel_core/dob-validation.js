@@ -715,6 +715,9 @@
         var allValid = true;
 
         dobFields.forEach(function(field) {
+            // Shared guest cards: booking-form-validation.js owns them (as in
+            // initDOBValidation) — no emptying, no second message.
+            if (field.classList && field.classList.contains('js-dob-basics')) return;
             if (!validateDOBField(field)) {
                 allValid = false;
             }

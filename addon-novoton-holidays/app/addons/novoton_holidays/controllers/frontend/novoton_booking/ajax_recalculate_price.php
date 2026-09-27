@@ -462,6 +462,7 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
                 TypeCoerce::toString($matched_room ?: $room_id_decoded),
                 TypeCoerce::toString($matched_board ?: $board_id),
                 $raw_price,
+                TypeCoerce::toString($package_name),
             )
             : null;
         if ($offer !== null) {
