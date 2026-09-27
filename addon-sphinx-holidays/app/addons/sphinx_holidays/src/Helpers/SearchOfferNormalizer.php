@@ -30,6 +30,9 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  *
  * Each source also falls back to the legacy flat key, so already-flat
  * payloads (e.g. cached results) pass through unchanged and idempotently.
+ *
+ * `room_lines` lists every room of the offer (name + guests), so a
+ * multi-room offer shows all its rooms, not just the first one's name.
  */
 class SearchOfferNormalizer
 {
@@ -77,8 +80,35 @@ class SearchOfferNormalizer
         );
         $flat['price'] = $price;
         $flat['currency'] = $currency;
+        // Only offers that carry rooms get lines: an already-flat payload
+        // (cached, re-flattened) passes through unchanged.
+        if (TypeCoerce::toRowList($offer['rooms'] ?? null) !== []) {
+            $flat['room_lines'] = self::roomLines($offer);
+        }
 
         return $flat;
+    }
+
+    /**
+     * One line per room of the offer — a multi-room search returns ONE offer
+     * for the whole party, its `rooms` array holding a room per occupancy.
+     *
+     * @param array<string, mixed> $offer
+     * @return list<array{name: string, adults: int, children: int}>
+     */
+    private static function roomLines(array $offer): array
+    {
+        $lines = [];
+        foreach (TypeCoerce::toRowList($offer['rooms'] ?? null) as $room) {
+            $ages = $room['children_ages'] ?? [];
+            $lines[] = [
+                'name' => TypeCoerce::toString($room['room_name'] ?? $room['name'] ?? $room['room_type'] ?? ''),
+                'adults' => TypeCoerce::toInt($room['adults'] ?? 0),
+                'children' => is_array($ages) ? count($ages) : 0,
+            ];
+        }
+
+        return $lines;
     }
 
     /**

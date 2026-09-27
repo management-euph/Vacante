@@ -866,4 +866,29 @@ return [
         'en' => 'Complete Your Booking',
         'ro' => 'Finalizează rezervarea',
     ],
+    // Multi-room offers: one line per room on the search result card
+    'sphinx_holidays.sx_room' => [
+        'en' => 'Room [num]',
+        'ro' => 'Camera [num]',
+    ],
+    'sphinx_holidays.sx_adults_one' => [
+        'en' => '1 adult',
+        'ro' => '1 adult',
+    ],
+    'sphinx_holidays.sx_adults_many' => [
+        'en' => '[count] adults',
+        'ro' => '[count] adulți',
+    ],
+    'sphinx_holidays.sx_children_one' => [
+        'en' => '1 child',
+        'ro' => '1 copil',
+    ],
+    'sphinx_holidays.sx_children_many' => [
+        'en' => '[count] children',
+        'ro' => '[count] copii',
+    ],
+    'sphinx_holidays.sx_total_for_rooms' => [
+        'en' => 'Total for [count] rooms',
+        'ro' => 'Total pentru [count] camere',
+    ],
 ];
