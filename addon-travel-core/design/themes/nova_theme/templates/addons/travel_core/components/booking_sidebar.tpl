@@ -14,7 +14,7 @@
       1. Hotel      hero image + stars/badge row + name + location + features
       2. Summary    package, dates, "you selected", rooms, board, change link
       3. Price      optional strikethrough + reduction, then the total
-      4. Cancel     policy lines + the full-charge headline when it applies
+      4. Cancel     cancellation & payment timeline + booking-conditions link
 
     The hero is rendered through common/image.tpl so its size follows the
     store's Settings -> Thumbnails -> "Products list thumbnail width/height",
@@ -62,10 +62,17 @@
                 {else}
                     <span class="travel-hotel-stars"></span>
                 {/if}
-                <span class="travel-hero-badge{if !$tbs.available} travel-hero-badge--on-request{/if}" id="availability-badge">
-                    {if $tbs.available}&#10003; {__("travel_core.available")}{else}{__("travel_core.on_request")}{/if}
+                {* Status from what the provider API states (view model
+                   status(): instant | available | on_request | stop_sale). *}
+                {$tbs_status = $tbs.status|default:""}
+                {if !$tbs_status}{if $tbs.available}{$tbs_status = "available"}{else}{$tbs_status = "on_request"}{/if}{/if}
+                <span class="travel-hero-badge{if $tbs_status == "instant"} travel-hero-badge--instant{elseif $tbs_status == "on_request"} travel-hero-badge--on-request{elseif $tbs_status == "stop_sale"} travel-hero-badge--stop-sale{/if}" id="availability-badge" data-status="{$tbs_status}">
+                    {if $tbs_status == "instant"}&#10003; {__("travel_core.status_instant")}{elseif $tbs_status == "available"}&#10003; {__("travel_core.available")}{elseif $tbs_status == "stop_sale"}{__("travel_core.status_stop_sale")}{else}{__("travel_core.on_request")}{/if}
                 </span>
             </div>
+            {if $tbs.availability_note}
+                <p class="travel-bsidebar-availnote">{$tbs.availability_note|escape:html}</p>
+            {/if}
 
             <h1 class="travel-bsidebar-name">
                 {if $tbs.product_id}
@@ -79,11 +86,17 @@
                 <p class="travel-hotel-location travel-bsidebar-location">{$tbs.location_line|escape:html}{if $tbs.map_url}{if $tbs.location_line} - {/if}<a href="{$tbs.map_url|escape:html}" target="_blank" rel="noopener" class="travel-hotel-map-link">{__("travel_core.location_show_map")}</a>{/if}</p>
             {/if}
 
+            {* First features_max chips, the rest behind "+N more" (admin
+               setting Travel Core -> Display). Without JS every chip shows:
+               booking-conditions.js arms the collapse. *}
             {if $tbs.features}
-                <ul class="travel-bsidebar-features">
-                    {foreach from=$tbs.features item="tbs_feature"}
-                        <li>{$tbs_feature|escape:html}</li>
+                <ul class="travel-bsidebar-features" data-travel-features>
+                    {foreach from=$tbs.features item="tbs_feature" name="tbs_features"}
+                        <li{if $smarty.foreach.tbs_features.iteration > $tbs.features_max|default:6} class="travel-feature--extra"{/if}>{$tbs_feature|escape:html}</li>
                     {/foreach}
+                    {if $tbs.features_extra > 0}
+                        <li class="travel-features-more-item"><button type="button" class="travel-features-more" data-travel-features-more aria-expanded="false" data-label-less="{__("travel_core.show_less")|escape:html}">{__("travel_core.n_more", ["[n]" => $tbs.features_extra])}</button></li>
+                    {/if}
                 </ul>
             {/if}
         </div>
@@ -105,12 +118,12 @@
                 <div class="travel-bsidebar-date">
                     <span>{__("travel_core.check_in")}</span>
                     <strong>{$tbs.check_in|escape:html}</strong>
-                    {if $tbs.check_in_weekday}<em>{$tbs.check_in_weekday|escape:html}</em>{/if}
+                    {if $tbs.check_in_weekday && $tbs.show_weekday|default:true}<em>{$tbs.check_in_weekday|escape:html}</em>{/if}
                 </div>
                 <div class="travel-bsidebar-date">
                     <span>{__("travel_core.check_out")}</span>
                     <strong>{$tbs.check_out|escape:html}</strong>
-                    {if $tbs.check_out_weekday}<em>{$tbs.check_out_weekday|escape:html}</em>{/if}
+                    {if $tbs.check_out_weekday && $tbs.show_weekday|default:true}<em>{$tbs.check_out_weekday|escape:html}</em>{/if}
                 </div>
             </div>
 
@@ -164,6 +177,11 @@
         <div class="travel-bcard__body booking-price-box travel-price-box">
             <div id="price-error-message" class="travel-price-error travel-is-hidden"></div>
 
+            {* The provider's own offer text ("Early Booking 10%"). *}
+            {if $tbs.discount_label}
+                <div class="travel-bsidebar-pricetop"><span class="travel-bsidebar-deal">{$tbs.discount_label|escape:html}</span></div>
+            {/if}
+
             {if $tbs.old_total}
                 <div class="travel-bsidebar-pricerow">
                     <span>{__("travel_core.original_price")}</span>
@@ -176,35 +194,25 @@
                 <span class="price-total" id="novoton-total-price">{$tbs.total nofilter}</span>
             </div>
 
+            {if $tbs.per_night && $tbs.nights > 0}
+                {capture assign="tbs_pn_nights"}{__("travel_core.n_nights", [$tbs.nights])}{/capture}
+                <div class="travel-bsidebar-pernight" id="travel-price-pernight">{capture assign="tbs_pn_price"}<span class="travel-price-pernight__value">{$tbs.per_night|escape:html}</span>{/capture}{__("travel_core.per_night_line", ["[nights]" => $tbs_pn_nights, "[price]" => $tbs_pn_price])}</div>
+            {/if}
+
             <span id="price-unverified-badge" class="travel-price-unverified travel-is-hidden"></span>
             <a href="#" id="refresh-price-link" class="travel-price-refresh travel-is-hidden" onclick="if (window.refreshPrice) { refreshPrice(); } return false;"></a>
         </div>
     </section>
 
-    {* ── 4. Cancellation ──────────────────────────────────────────────── *}
-    {* Hidden until it has content: novoton fills it from the price
-       re-verification that already runs on page load (no extra API call), so
-       an empty card must not flash an empty policy at the guest. *}
-    <section class="travel-bcard travel-bcard--cancel{if !$tbs.cancel_lines && !$tbs.cancel_full_amount && !$tbs.cancel_free_until} travel-is-hidden{/if}" id="travel-cancel-card">
-        <h3 class="travel-bcard__title">{__("travel_core.cancel_cost_title")}</h3>
-        <div class="travel-bcard__body">
-            {* Free-cancellation deadline first and in green — the same
-               treatment (and wording) the search-results card gives it, so the
-               guest sees one consistent promise from search to checkout. *}
-            <div class="travel-bsidebar-freecancel{if !$tbs.cancel_free_until} travel-is-hidden{/if}" id="travel-cancel-free">
-                &#10003; {__("travel_core.free_cancellation_until")} <strong id="travel-cancel-free-date">{$tbs.cancel_free_until|escape:html}</strong>
-            </div>
-            {if $tbs.cancel_full_amount}
-                <div class="travel-bsidebar-cancelrow">
-                    <mark class="travel-bsidebar-cancelhl">{__("travel_core.cancel_you_will_pay")}</mark>
-                    <strong>{$tbs.cancel_full_amount nofilter}</strong>
-                </div>
-            {/if}
-            <ul class="travel-bsidebar-cancel" id="travel-cancel-lines">
-                {foreach from=$tbs.cancel_lines item="tbs_cancel"}
-                    <li>{$tbs_cancel|escape:html}</li>
-                {/foreach}
-            </ul>
+    {* ── 4. Cancellation & payment ─────────────────────────────────────── *}
+    {* One timeline for every provider, each from its own API terms
+       (TermsTimelineFactory). Hidden until it has content: novoton fills
+       #travel-cancel-body with the same partial, server-rendered, after the
+       price re-check that already runs on page load. *}
+    <section class="travel-bcard travel-bcard--cancel{if !$tbs.cancel_steps && !$tbs.cancel_lines && !$tbs.cancel_full_amount && !$tbs.cancel_free_until && !$tbs.payment_steps && !$tbs.payment_lines} travel-is-hidden{/if}" id="travel-cancel-card">
+        <h3 class="travel-bcard__title">{__("travel_core.cancel_payment_title")}</h3>
+        <div class="travel-bcard__body" id="travel-cancel-body">
+            {include file="addons/travel_core/components/booking_terms_timeline.tpl" tt=$tbs tt_show_link=true tt_ids=true}
         </div>
     </section>
 

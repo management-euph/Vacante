@@ -1289,3 +1289,123 @@ msgstr "Anulare gratuită până la"
 msgctxt "Languages::travel_core.gender"
 msgid "Gender"
 msgstr "Gen"
+
+msgctxt "Languages::travel_core.status_instant"
+msgid "Instant confirmation"
+msgstr "Confirmare instantă"
+
+msgctxt "Languages::travel_core.status_stop_sale"
+msgid "Not bookable (stop sale)"
+msgstr "Nu se poate rezerva (stop vânzare)"
+
+msgctxt "Languages::travel_core.show_less"
+msgid "Show less"
+msgstr "Mai puțin"
+
+msgctxt "Languages::travel_core.n_more"
+msgid "+[n] more"
+msgstr "+[n] în plus"
+
+msgctxt "Languages::travel_core.per_night_line"
+msgid "[nights] · ≈ [price] / night"
+msgstr "[nights] · ≈ [price] / noapte"
+
+msgctxt "Languages::travel_core.cancel_payment_title"
+msgid "Cancellation & payment"
+msgstr "Anulare și plată"
+
+msgctxt "Languages::travel_core.no_show"
+msgid "No-show"
+msgstr "Neprezentare"
+
+msgctxt "Languages::travel_core.until_date"
+msgid "Until [date]"
+msgstr "Până la [date]"
+
+msgctxt "Languages::travel_core.from_date"
+msgid "From [date]"
+msgstr "De la [date]"
+
+msgctxt "Languages::travel_core.until_check_in"
+msgid "Until check-in"
+msgstr "Până la check-in"
+
+msgctxt "Languages::travel_core.today"
+msgid "Today"
+msgstr "Azi"
+
+msgctxt "Languages::travel_core.timeline_free"
+msgid "Free cancellation"
+msgstr "Anulare gratuită"
+
+msgctxt "Languages::travel_core.you_pay"
+msgid "You pay"
+msgstr "Plătiți"
+
+msgctxt "Languages::travel_core.due_now"
+msgid "now"
+msgstr "acum"
+
+msgctxt "Languages::travel_core.due_by"
+msgid "by [date]"
+msgstr "până la [date]"
+
+msgctxt "Languages::travel_core.booking_progress"
+msgid "Booking progress"
+msgstr "Etapele rezervării"
+
+msgctxt "Languages::travel_core.step_search"
+msgid "Search"
+msgstr "Căutare"
+
+msgctxt "Languages::travel_core.step_guest_details"
+msgid "Guest details"
+msgstr "Datele turiștilor"
+
+msgctxt "Languages::travel_core.step_checkout"
+msgid "Checkout"
+msgstr "Finalizare comandă"
+
+msgctxt "Languages::travel_core.step_confirmation"
+msgid "Confirmation"
+msgstr "Confirmare"
+
+msgctxt "Languages::travel_core.guest_names_hint"
+msgid "Enter each name exactly as it appears on the guest's ID card or passport."
+msgstr "Introduceți fiecare nume exact ca în actul de identitate sau pașaportul turistului."
+
+msgctxt "Languages::travel_core.guest_adult"
+msgid "Adult"
+msgstr "Adult"
+
+msgctxt "Languages::travel_core.guest_child"
+msgid "Child"
+msgstr "Copil"
+
+msgctxt "Languages::travel_core.dob_placeholder"
+msgid "DD/MM/YYYY"
+msgstr "ZZ/LL/AAAA"
+
+msgctxt "Languages::travel_core.gender_male"
+msgid "Male"
+msgstr "Masculin"
+
+msgctxt "Languages::travel_core.gender_female"
+msgid "Female"
+msgstr "Feminin"
+
+msgctxt "Languages::travel_core.continue_to_checkout"
+msgid "Continue to checkout"
+msgstr "Continuă spre finalizare"
+
+msgctxt "Languages::travel_core.field_required"
+msgid "Please fill in this field."
+msgstr "Vă rugăm să completați acest câmp."
+
+msgctxt "Languages::travel_core.choose_option"
+msgid "Please choose one option."
+msgstr "Vă rugăm să alegeți o opțiune."
+
+msgctxt "Languages::travel_core.cta_note"
+msgid "You won't be charged yet — you'll review everything at checkout."
+msgstr "Nu plătiți încă — veți verifica totul la finalizarea comenzii."

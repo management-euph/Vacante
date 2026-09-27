@@ -25,6 +25,14 @@ final class BookingSidebarTest extends TestCase
         return dirname(__DIR__, 7);
     }
 
+    private static function timelinePartial(): string
+    {
+        return (string) file_get_contents(
+            self::repoRoot()
+            . '/addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/booking_terms_timeline.tpl',
+        );
+    }
+
     private static function tpl(string $theme = 'responsive'): string
     {
         return (string) file_get_contents(
@@ -368,57 +376,66 @@ final class BookingSidebarTest extends TestCase
         $tpl = self::tpl();
 
         self::assertStringContainsString('id="travel-cancel-card"', $tpl);
-        self::assertStringContainsString('id="travel-cancel-lines"', $tpl);
-        self::assertStringContainsString('travel_core.cancel_cost_title', $tpl);
-        self::assertStringContainsString('travel_core.cancel_you_will_pay', $tpl);
-        // Empty policy => hidden card (novoton fills it from the price
-        // re-verification that already runs on load). A free-until date on its
-        // own is reason enough to show the card.
+        // Novoton swaps the server-rendered partial into this body after its
+        // price re-check, so the id is a JS contract.
+        self::assertStringContainsString('id="travel-cancel-body"', $tpl);
+        self::assertStringContainsString('travel_core.cancel_payment_title', $tpl);
         self::assertStringContainsString(
-            '{if !$tbs.cancel_lines && !$tbs.cancel_full_amount && !$tbs.cancel_free_until} travel-is-hidden{/if}',
+            '{include file="addons/travel_core/components/booking_terms_timeline.tpl" tt=$tbs tt_show_link=true tt_ids=true}',
             $tpl,
         );
+        // Empty policy => hidden card. Timeline steps, prose lines, a
+        // free-until date or payment terms are each reason enough to show it.
+        self::assertStringContainsString(
+            '{if !$tbs.cancel_steps && !$tbs.cancel_lines && !$tbs.cancel_full_amount && !$tbs.cancel_free_until && !$tbs.payment_steps && !$tbs.payment_lines} travel-is-hidden{/if}',
+            $tpl,
+        );
+
+        $partial = self::timelinePartial();
+        self::assertStringContainsString('{foreach from=$tt.cancel_steps item="tt_step"}', $partial);
+        // Prose terms keep the old lines + full-charge headline.
+        self::assertStringContainsString('travel_core.cancel_you_will_pay', $partial);
+        self::assertStringContainsString('{if $_tt_ids} id="travel-cancel-lines"{/if}', $partial);
     }
 
     /**
-     * "Free cancellation until <date>" is the line guests look for first, and
-     * the search-results card already shows it in green — the booking form
-     * must make the same promise the same way.
+     * The step in force today is policy, not an error: amber with a neutral
+     * "Today" tag, never the danger red. A free step is green, the same
+     * promise the search-results card makes.
      */
-    public function testFreeCancellationIsGreenAndMatchesTheSearchCard(): void
+    public function testTimelineColoursCurrentStepAmberAndFreeGreen(): void
     {
-        $tpl = self::tpl();
-        self::assertStringContainsString('id="travel-cancel-free"', $tpl);
-        self::assertStringContainsString('id="travel-cancel-free-date"', $tpl);
-        self::assertStringContainsString('travel_core.free_cancellation_until', $tpl);
-
         $css = self::css();
+        $start = strpos($css, '.travel-booking-page .travel-timeline__step--current::before {');
+        self::assertNotFalse($start);
+        $rule = substr($css, $start, (int) strpos($css, '}', $start) - $start);
+        self::assertStringContainsString('#f59e0b', $rule);
+        self::assertStringNotContainsString('danger', $rule);
+        self::assertStringContainsString('.travel-booking-page .travel-timeline__step--free .travel-timeline__what { color: #15803d;', $css);
+
+        // Legacy prose fallback keeps its green free-until line.
         $start = strpos($css, '.travel-booking-page .travel-bsidebar-freecancel {');
         self::assertNotFalse($start);
         $rule = substr($css, $start, (int) strpos($css, '}', $start) - $start);
-        // Same token the search card uses (--nvt-success is too light for AA).
         self::assertStringContainsString('--nvt-success-strong', $rule);
 
-        // Sphinx knows the date server-side; novoton only learns it from the
-        // price re-verification, so its JS fills the same two nodes.
-        $sphinx = (string) file_get_contents(
-            self::repoRoot()
-            . '/addon-sphinx-holidays/app/addons/sphinx_holidays/src/ViewModels/SphinxBookingSidebarBuilder.php',
-        );
-        self::assertStringContainsString('cancelFreeUntil:', $sphinx);
-        self::assertStringContainsString('freeCancellationUntil(', $sphinx);
+        $partial = self::timelinePartial();
+        self::assertStringContainsString('travel_core.today', $partial);
+        self::assertStringContainsString('travel_core.timeline_free', $partial);
 
-        $js = (string) file_get_contents(
-            self::repoRoot() . '/addon-novoton-holidays/js/addons/novoton_holidays/booking-form.js',
-        );
-        self::assertStringContainsString("getElementById('travel-cancel-free-date')", $js);
-        self::assertStringContainsString('data.free_cancellation_until', $js);
-
+        // Novoton only learns its terms from the price re-check: the endpoint
+        // builds the same timeline and returns this partial rendered.
         $recalc = (string) file_get_contents(
             self::repoRoot()
             . '/addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/ajax_recalculate_price.php',
         );
-        self::assertStringContainsString("'free_cancellation_until' => \$free_cancellation_until", $recalc);
+        self::assertStringContainsString('TermsTimelineFactory', $recalc);
+        self::assertStringContainsString("'terms_html'", $recalc);
+        $js = (string) file_get_contents(
+            self::repoRoot() . '/addon-novoton-holidays/js/addons/novoton_holidays/booking-form.js',
+        );
+        self::assertStringContainsString("getElementById('travel-cancel-body')", $js);
+        self::assertStringContainsString('data.terms_html', $js);
     }
 
     /**
@@ -515,10 +532,14 @@ final class BookingSidebarTest extends TestCase
         self::assertSame($modal, $novaModal);
 
         self::assertStringContainsString('travel_core.booking_conditions_link', $modal);
-        self::assertStringContainsString('data-travel-conditions-open', $modal);
         self::assertStringContainsString('id="travel-conditions-rooms"', $modal);
-        self::assertStringContainsString('travel_core.payment_terms', $modal);
         self::assertStringContainsString('travel_core.cancellation_policy', $modal);
+        // Each room section shows the same timeline as the sidebar card.
+        self::assertStringContainsString('components/booking_terms_timeline.tpl" tt=$tbc}', $modal);
+        // The link moved into the cancellation & payment card.
+        $partial = self::timelinePartial();
+        self::assertStringContainsString('data-travel-conditions-open', $partial);
+        self::assertStringContainsString('travel_core.payment_terms', $partial);
 
         // Behaviour lives in a real JS file (no inline script), and keys each
         // section by room so a multi-room booking accumulates rather than
@@ -529,6 +550,7 @@ final class BookingSidebarTest extends TestCase
         self::assertStringContainsString('function setRoomSection(roomNum, data)', $js);
         self::assertStringContainsString("host.querySelector('[data-room=\"' + key + '\"]')", $js);
         self::assertStringContainsString('window.TravelConditions', $js);
+        self::assertStringContainsString('function setRoomHtml(roomNum, title, html)', $js);
 
         // Loaded site-wide with the other travel_core booking scripts.
         $scripts = (string) file_get_contents(

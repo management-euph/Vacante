@@ -769,4 +769,85 @@
 
     log('Travel booking form validation loaded');
 
+
+    // =========================================================================
+    // INLINE REQUIRED-FIELD MESSAGES (shared booking page)
+    // =========================================================================
+    // The browser's own "Please fill in this field" bubble vanishes on the
+    // next click and never says which guest it meant; novoton used alert().
+    // On the shared booking page every missing name / gender / DOB gets an
+    // inline message under its field instead, cleared as soon as it is filled.
+    // Format errors stay with the DOB validators above.
+
+    var _invalidFocused = false;
+
+    function _fieldHost(el) {
+        return (el.closest && el.closest('.travel-guest-field')) || el.parentElement;
+    }
+
+    function _setGroupInvalid(el, on) {
+        var targets = el.type === 'radio' && el.name && el.form
+            ? el.form.querySelectorAll('input[type="radio"][name="' + el.name.replace(/"/g, '\\"') + '"]')
+            : [el];
+        for (var i = 0; i < targets.length; i++) {
+            if (on) {
+                targets[i].setAttribute('aria-invalid', 'true');
+            } else {
+                targets[i].removeAttribute('aria-invalid');
+            }
+        }
+    }
+
+    function _requiredMessage(el) {
+        var t = _getTranslations();
+        if (el.type === 'radio') {
+            return t.chooseOption || 'Please choose one option.';
+        }
+        return t.fieldRequired || 'Please fill in this field.';
+    }
+
+    document.addEventListener('invalid', function (e) {
+        var el = e.target;
+        if (!el || !el.closest || !el.closest('.travel-booking-page')) return;
+        var v = el.validity || {};
+        // Missing value, or only spaces (pattern on the name inputs).
+        if (!v.valueMissing && !v.patternMismatch) return;
+        e.preventDefault(); // inline message instead of the browser bubble
+        var host = _fieldHost(el);
+        if (!host) return;
+        var msg = host.querySelector('.js-required-msg');
+        if (!msg) {
+            msg = document.createElement('span');
+            msg.className = 'travel-field-error-message js-required-msg';
+            msg.setAttribute('role', 'alert');
+            host.appendChild(msg);
+        }
+        msg.textContent = _requiredMessage(el);
+        _setGroupInvalid(el, true);
+        if (!_invalidFocused) {
+            // `invalid` fires once per bad field; focus only the first.
+            _invalidFocused = true;
+            try { el.focus(); } catch (err) {}
+            setTimeout(function () { _invalidFocused = false; }, 0);
+        }
+    }, true);
+
+    function _clearRequired(e) {
+        var el = e.target;
+        if (!el || !el.closest || !el.closest('.travel-booking-page')) return;
+        var host = _fieldHost(el);
+        var msg = host ? host.querySelector('.js-required-msg') : null;
+        if (!msg) return;
+        var filled = el.type === 'radio' ? el.checked : String(el.value || '').trim() !== '';
+        if (filled) {
+            msg.remove();
+            _setGroupInvalid(el, false);
+        }
+    }
+
+    document.addEventListener('input', _clearRequired);
+    document.addEventListener('change', _clearRequired);
+
+    window.TravelBooking.requiredMessage = _requiredMessage;
+
 })();
