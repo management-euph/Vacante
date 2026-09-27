@@ -1453,3 +1453,23 @@ msgstr "Facilitate #[code]"
 msgctxt "Languages::travel_core.who_is_staying"
 msgid "Who is staying?"
 msgstr "Cine se cazează?"
+
+msgctxt "Languages::travel_core.step_guests"
+msgid "Guests"
+msgstr "Oaspeți"
+
+msgctxt "Languages::travel_core.step_payment"
+msgid "Payment"
+msgstr "Plată"
+
+msgctxt "Languages::travel_core.step_search_back"
+msgid "Back to your search results"
+msgstr "Înapoi la rezultatele căutării"
+
+msgctxt "Languages::travel_core.step_locked_hint"
+msgid "Enter the guest details first"
+msgstr "Completați mai întâi datele oaspeților"
+
+msgctxt "Languages::travel_core.step_current"
+msgid "current step"
+msgstr "pasul curent"

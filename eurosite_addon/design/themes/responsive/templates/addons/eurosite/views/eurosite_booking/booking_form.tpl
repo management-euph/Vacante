@@ -21,7 +21,7 @@
 
 <div class="travel-booking-page eurosite-booking-form">
 
-    {include file="addons/travel_core/components/booking_steps.tpl"}
+    {include file="addons/travel_core/components/booking_steps.tpl" bs_search_url=$eurosite_back_url}
 
     <div class="travel-booking-layout">
         {include file="addons/travel_core/components/booking_sidebar.tpl"}

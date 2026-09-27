@@ -634,4 +634,24 @@ return [
         'en' => 'Who is staying?',
         'ro' => 'Cine se cazează?',
     ],
+    'travel_core.step_guests' => [
+        'en' => 'Guests',
+        'ro' => 'Oaspeți',
+    ],
+    'travel_core.step_payment' => [
+        'en' => 'Payment',
+        'ro' => 'Plată',
+    ],
+    'travel_core.step_search_back' => [
+        'en' => 'Back to your search results',
+        'ro' => 'Înapoi la rezultatele căutării',
+    ],
+    'travel_core.step_locked_hint' => [
+        'en' => 'Enter the guest details first',
+        'ro' => 'Completați mai întâi datele oaspeților',
+    ],
+    'travel_core.step_current' => [
+        'en' => 'current step',
+        'ro' => 'pasul curent',
+    ],
 ];

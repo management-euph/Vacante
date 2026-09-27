@@ -33,7 +33,17 @@
 {/function}
 
 <div class="travel-booking-page novoton-reservation-form">
-    {include file="addons/travel_core/components/booking_steps.tpl" bs_edit_mode=$is_edit_mode|default:false}
+    {* The guest's own results (same dates, guests and rooms): the header's
+       "Search" step and the "Back to Results" link both lead there. *}
+    {if $booking_data.rooms_data && is_array($booking_data.rooms_data)}
+        {$rooms_data_url = $booking_data.rooms_data|json_encode|escape:'url'}
+    {elseif $booking_data.rooms_data && is_string($booking_data.rooms_data)}
+        {$rooms_data_url = $booking_data.rooms_data|escape:'url'}
+    {else}
+        {$rooms_data_url = ''}
+    {/if}
+    {$nvt_results_url = "novoton_booking.search?hotel_id=`$booking_data.hotel_id`&product_id=`$product_id`&check_in=`$booking_data.check_in`&check_out=`$booking_data.check_out`&nights=`$booking_data.nights`&adults=`$booking_data.adults`&children=`$booking_data.children`&children_ages=`$booking_data.children_ages`&rooms=`$booking_data.num_rooms|default:1`&rooms_data=`$rooms_data_url`"}
+    {include file="addons/travel_core/components/booking_steps.tpl" bs_edit_mode=$is_edit_mode|default:false bs_search_url=$nvt_results_url}
     <form action="{if $is_edit_mode}{fn_url("novoton_booking.update_booking")}{else}{fn_url("novoton_booking.add_to_cart")}{/if}" method="post" id="novoton-booking-form">
         <input type="hidden" name="security_hash" value="{$security_hash}" />
         {if $is_edit_mode}
@@ -129,15 +139,7 @@
             
             {* Form Actions *}
             <div class="travel-form-actions travel-form-actions--cta">
-                {* Build rooms_data JSON for URL *}
-                {if $booking_data.rooms_data && is_array($booking_data.rooms_data)}
-                    {$rooms_data_url = $booking_data.rooms_data|json_encode|escape:'url'}
-                {elseif $booking_data.rooms_data && is_string($booking_data.rooms_data)}
-                    {$rooms_data_url = $booking_data.rooms_data|escape:'url'}
-                {else}
-                    {$rooms_data_url = ''}
-                {/if}
-                <a href="{fn_url("novoton_booking.search?hotel_id=`$booking_data.hotel_id`&product_id=`$product_id`&check_in=`$booking_data.check_in`&check_out=`$booking_data.check_out`&nights=`$booking_data.nights`&adults=`$booking_data.adults`&children=`$booking_data.children`&children_ages=`$booking_data.children_ages`&rooms=`$booking_data.num_rooms|default:1`&rooms_data=`$rooms_data_url`")}" class="travel-btn-back">
+                <a href="{$nvt_results_url|fn_url}" class="travel-btn-back">
                     &larr; {__("novoton_holidays.back_to_results")}
                 </a>
                 <button type="submit" class="travel-btn--primary" id="booking-submit-btn">

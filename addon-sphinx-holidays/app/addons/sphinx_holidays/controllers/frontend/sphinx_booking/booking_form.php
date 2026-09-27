@@ -326,7 +326,8 @@ try {
     $bfTitle = TypeCoerce::toString(__('sphinx_holidays.complete_booking', ['[default]' => 'Complete Your Booking']));
     $view->assign('page_title', $bfTitle);
     \Tygh\Registry::set('navigation.dynamic.page_title', $bfTitle);
-    fn_add_breadcrumb($bfTitle);
+    // No breadcrumb: the page title and the progress bar share one row
+    // (booking_steps.tpl), so the form starts higher. <title> still uses page_title.
 
 } catch (\Throwable $e) {
     fn_log_event('general', 'runtime', [

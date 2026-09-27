@@ -1453,3 +1453,23 @@ msgstr "Facility #[code]"
 msgctxt "Languages::travel_core.who_is_staying"
 msgid "Who is staying?"
 msgstr "Who is staying?"
+
+msgctxt "Languages::travel_core.step_guests"
+msgid "Guests"
+msgstr "Guests"
+
+msgctxt "Languages::travel_core.step_payment"
+msgid "Payment"
+msgstr "Payment"
+
+msgctxt "Languages::travel_core.step_search_back"
+msgid "Back to your search results"
+msgstr "Back to your search results"
+
+msgctxt "Languages::travel_core.step_locked_hint"
+msgid "Enter the guest details first"
+msgstr "Enter the guest details first"
+
+msgctxt "Languages::travel_core.step_current"
+msgid "current step"
+msgstr "current step"

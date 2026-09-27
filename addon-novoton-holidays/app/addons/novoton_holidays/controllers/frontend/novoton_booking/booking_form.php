@@ -369,4 +369,5 @@ use Tygh\Addons\NovotonHolidays\ViewModels\NovotonBookingSidebarBuilder;
     $page_title = __('novoton_holidays.complete_booking');
     $view->assign('page_title', $page_title);
     Registry::set('navigation.dynamic.page_title', $page_title);
-    fn_add_breadcrumb($page_title);
+    // No breadcrumb: the page title and the progress bar share one row
+    // (booking_steps.tpl), so the form starts higher. <title> still uses page_title.

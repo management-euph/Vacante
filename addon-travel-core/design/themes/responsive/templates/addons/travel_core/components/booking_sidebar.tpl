@@ -74,13 +74,14 @@
                 <p class="travel-bsidebar-availnote">{$tbs.availability_note|escape:html}</p>
             {/if}
 
-            <h1 class="travel-bsidebar-name">
+            {* h2: the page title (booking_steps.tpl header) is the page's one h1 *}
+            <h2 class="travel-bsidebar-name">
                 {if $tbs.product_id}
                     <bdi><a href="{"products.view?product_id=`$tbs.product_id`"|fn_url}" target="_blank" rel="noopener" class="product-title travel-hotel-name-link" title="{$tbs.name|escape:html}">{$tbs.name|escape:html}</a></bdi>
                 {else}
                     <bdi>{$tbs.name|escape:html}</bdi>
                 {/if}
-            </h1>
+            </h2>
 
             {if $tbs.location_line || $tbs.map_url}
                 <p class="travel-hotel-location travel-bsidebar-location">{$tbs.location_line|escape:html}{if $tbs.map_url}{if $tbs.location_line} - {/if}<a href="{$tbs.map_url|escape:html}" target="_blank" rel="noopener" class="travel-hotel-map-link">{__("travel_core.location_show_map")}</a>{/if}</p>
