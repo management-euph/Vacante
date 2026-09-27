@@ -26,9 +26,11 @@ final class QuoteOfferReader
      * @param string $packageName the booked package: the search card pairs a
      *                            promo row with the standard row of the SAME
      *                            room + board + package; '' = any package
+     *
+     * Null when no row of that room + board carries that price; standard is
+     * 0.0 when every matching row has extras.
+     *
      * @return array{early_booking: float, extras: string, standard: float}|null
-     *         null when no row of that room + board carries that price;
-     *         standard = 0.0 when every matching row has extras
      */
     public static function fromXml(\SimpleXMLElement $xml, string $roomId, string $boardId, float $chargedRaw, string $packageName = ''): ?array
     {
@@ -79,6 +81,8 @@ final class QuoteOfferReader
     /** A child's text; '' when the row has no such element (isset, not ??). */
     private static function child(\SimpleXMLElement $row, string $name): string
     {
-        return isset($row->{$name}) ? (string) $row->{$name} : '';
+        $el = $row->{$name} ?? null;
+
+        return $el instanceof \SimpleXMLElement ? (string) $el : '';
     }
 }

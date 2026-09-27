@@ -209,10 +209,10 @@ final class EurositeApiClient
         $details = $this->call('getProductInfoRequest', $payload);
         // The live response nests the product under <Product>; a flat
         // response (older shape, tests) is read the same way.
-        $p = isset($details->Product) ? $details->Product : $details;
+        $p = $details->Product ?? $details;
 
         $pictures = [];
-        $pictureList = isset($p->Pictures->Picture) ? $p->Pictures->Picture : (isset($p->Picture) ? $p->Picture : []);
+        $pictureList = $p->Pictures->Picture ?? ($p->Picture ?? []);
         foreach ($pictureList as $picture) {
             $url = trim((string) $picture);
             if ($url !== '') {
@@ -249,7 +249,8 @@ final class EurositeApiClient
     private static function childText(\SimpleXMLElement $node, string ...$names): string
     {
         foreach ($names as $name) {
-            $value = isset($node->{$name}) ? trim((string) $node->{$name}) : '';
+            $el = $node->{$name} ?? null;
+            $value = $el instanceof \SimpleXMLElement ? trim((string) $el) : '';
             if ($value !== '') {
                 return $value;
             }

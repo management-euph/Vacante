@@ -247,7 +247,7 @@ use Tygh\Addons\NovotonHolidays\ViewModels\NovotonBookingSidebarBuilder;
         defined('CART_LANGUAGE') ? TypeCoerce::toString(CART_LANGUAGE) : 'en',
         \Tygh\Addons\TravelCore\Services\MoneyFormatter::forStore(),
         _nvt_currency_service()->convertFromApiCurrency(
-            TypeCoerce::toFloat($booking['total_price'] ?? 0),
+            TypeCoerce::toFloat($booking['total_price']),
             defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : 'EUR',
         ),
         '',

@@ -127,10 +127,10 @@ final class TermsTimelineFactory
         $freeUntil = '';
         $fullNow = false;
         foreach ($steps as $s) {
-            if (!$s['is_current']) {
+            if ($s['is_current'] !== true) {
                 continue;
             }
-            if ($s['kind'] === self::KIND_FREE && $s['to_iso'] !== '') {
+            if ($s['kind'] === self::KIND_FREE && $s['to_iso'] !== '' && is_string($s['to_label'])) {
                 $freeUntil = $s['to_label'];
             }
             $fullNow = $s['kind'] === self::KIND_FULL;
@@ -153,7 +153,8 @@ final class TermsTimelineFactory
                 continue;
             }
             $due = self::iso($r['due'] ?? null);
-            if ($amount === null && $percent !== null && $total > 0) {
+            if ($amount === null && $total > 0) {
+                // $percent > 0 here: a row with neither was skipped above
                 $amount = $total * $percent / 100;
             }
             if ($percent === null && $amount !== null && $total > 0) {
@@ -208,8 +209,8 @@ final class TermsTimelineFactory
         if ($percent === null && $n === null && $amount !== null && $total > 0) {
             $percent = min(100.0, $amount / $total * 100);
         }
-        $from = $r['from'] ?? null;
-        $to = $r['to'] ?? null;
+        $from = is_string($r['from'] ?? null) ? $r['from'] : null;
+        $to = is_string($r['to'] ?? null) ? $r['to'] : null;
 
         return [
             'kind' => $kind,

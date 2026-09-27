@@ -124,7 +124,9 @@ final class NovotonBookingSidebarBuilder
             $perNight = BookingSidebarFactory::perNight($money->toDisplay($primaryTotal), $nights);
         }
         // discount() already priced the offer; shown only above the total.
-        $hasOld = $money !== null && $primaryTotal > 0 && $primaryOld > $primaryTotal;
+        $oldTotal = $money !== null && $primaryTotal > 0 && $primaryOld > $primaryTotal
+            ? $money->format($primaryOld)
+            : '';
 
         return new BookingSidebarViewModel(
             imagePair: function_exists('fn_travel_core_product_main_pair')
@@ -168,8 +170,8 @@ final class NovotonBookingSidebarBuilder
             ]),
             productId: $productId,
             total: $total,
-            oldTotal: $hasOld && $money !== null ? $money->format($primaryOld) : '',
-            discountLabel: $hasOld ? $discountLabel : '',
+            oldTotal: $oldTotal,
+            discountLabel: $oldTotal !== '' ? $discountLabel : '',
             perNight: $perNight !== null && $money !== null ? $money->formatDisplay($perNight) : '',
             featuresMax: $featuresMax,
             showWeekday: $dateFormat === '' || !DateHelper::formatHasWeekday($dateFormat),

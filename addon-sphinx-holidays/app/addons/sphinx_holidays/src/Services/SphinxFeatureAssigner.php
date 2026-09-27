@@ -237,7 +237,7 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
             // it rather than re-resolving through FacilityLabelResolver — the
             // language rules are shared, the lookup is not.
             $mapping = TypeCoerce::toStringMap($facility['mapping'] ?? []);
-            $id = trim(TypeCoerce::toString($facility['id'] ?? ''));
+            $id = trim($facility['id']);
             $label = trim(TypeCoerce::toString($mapping[$column] ?? ''));
             if ($label === '' || $label === $id) {
                 $label = trim(TypeCoerce::toString($mapping['display_name_en'] ?? ''));

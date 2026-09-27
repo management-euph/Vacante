@@ -225,8 +225,10 @@ use Tygh\Addons\NovotonHolidays\ViewModels\NovotonBookingSidebarBuilder;
     $nvtEarlyWord = TypeCoerce::toString(__('novoton_holidays.early_booking'));
     if (count($booking['rooms_data']) > 1) {
         $nvtRoomOffers = [];
-        foreach ($booking['rooms_data'] as $nvtIdx => $nvtRoom) {
+        $nvtRooms = [];
+        foreach ($booking['rooms_data'] as $nvtRoom) {
             if (!is_array($nvtRoom)) {
+                $nvtRooms[] = $nvtRoom;
                 continue;
             }
             $nvtRoomPrice = PriceInfoFormatter::toFloat($nvtRoom['price'] ?? 0);
@@ -238,10 +240,12 @@ use Tygh\Addons\NovotonHolidays\ViewModels\NovotonBookingSidebarBuilder;
                 $nvtBookPay,
                 $nvtEarlyWord,
             );
-            $booking['rooms_data'][$nvtIdx]['old_price'] = $nvtRoomOffer['old'];
-            $booking['rooms_data'][$nvtIdx]['discount_label'] = $nvtRoomOffer['label'];
+            $nvtRoom['old_price'] = $nvtRoomOffer['old'];
+            $nvtRoom['discount_label'] = $nvtRoomOffer['label'];
+            $nvtRooms[] = $nvtRoom;
             $nvtRoomOffers[] = ['price' => $nvtRoomPrice] + $nvtRoomOffer;
         }
+        $booking['rooms_data'] = $nvtRooms;
         $nvtOffer = NovotonBookingSidebarBuilder::combinedDiscount($nvtRoomOffers);
     } else {
         $nvtOffer = NovotonBookingSidebarBuilder::discount(
@@ -333,7 +337,7 @@ use Tygh\Addons\NovotonHolidays\ViewModels\NovotonBookingSidebarBuilder;
     // The cart-line amount (API EUR → store primary), shown in the shopper's
     // selected currency — the same number add_to_cart stores.
     $nvtPrimaryTotal = _nvt_currency_service()->convertFromApiCurrency(
-        PriceInfoFormatter::toFloat($booking['total_price'] ?? 0),
+        PriceInfoFormatter::toFloat($booking['total_price']),
         defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : 'EUR',
     );
     $sidebarVm = NovotonBookingSidebarBuilder::sidebar(
