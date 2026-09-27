@@ -9,6 +9,7 @@ use Tygh\Addons\Eurosite\EurositeTransportInterface;
 use Tygh\Addons\Eurosite\EurositeXmlBuilder;
 use Tygh\Addons\Eurosite\EurositeXmlParser;
 use Tygh\Addons\Eurosite\Exception\EurositeApiException;
+use Tygh\Addons\Eurosite\Services\FacilityTextParser;
 
 /**
  * Eurosite API facade — the MVP surface of the "individual accommodations"
@@ -220,6 +221,14 @@ final class EurositeApiClient
             'latitude' => trim((string) ($details->Latitude ?? '')),
             'longitude' => trim((string) ($details->Longitude ?? '')),
             'pictures' => $pictures,
+            // Facility chips for the booking page: the operator lists them in
+            // the free text of <DescriptionDet> (there is no structured list).
+            // The live response nests the product under <Product>.
+            // (SimpleXML gives an EMPTY element, never null, for a missing
+            // child — hence isset(), not ??.)
+            'facilities' => FacilityTextParser::facilities(
+                (string) ((isset($details->Product) ? $details->Product : $details)->DescriptionDet ?? ''),
+            ),
         ];
     }
 

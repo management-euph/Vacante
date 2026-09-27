@@ -420,6 +420,21 @@ final class EurositeApiClientTest extends TestCase
         self::assertStringContainsString('RequestType="CancelBookingRequest"', $t->lastRequest);
     }
 
+    /**
+     * The live getProductInfoResponse nests the product under <Product>;
+     * the facility chips come from its <DescriptionDet> free text.
+     */
+    public function testGetProductInfoParsesFacilitiesFromTheProductDescription(): void
+    {
+        $t = new FakeTransport(self::wrap('getProductInfoResponse',
+            '<Product><ProductCode>RO0451</ProductCode><ProductName>SCANDINAVIA CM</ProductName>'
+            . '<DescriptionDet>Hotel.&amp;lt;br&amp;gt;Facilitati: aer conditionat, bar, Wi-fi.&amp;lt;br&amp;gt;Camere</DescriptionDet>'
+            . '</Product>'));
+        $info = $this->client($t)->getProductInfo('RO', 'ROMM', 'RO0451', 'hotel', 'LA');
+
+        self::assertSame(['Aer conditionat', 'Bar', 'Wi-fi'], $info['facilities']);
+    }
+
     private static function wrap(string $responseType, string $inner): string
     {
         return '<?xml version="1.0" encoding="utf-8"?>'

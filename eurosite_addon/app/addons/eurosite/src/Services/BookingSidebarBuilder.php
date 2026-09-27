@@ -36,6 +36,9 @@ final class BookingSidebarBuilder
      *                                   null = the offer currency as "1.798,00 €"
      * @param float $coefficient offer currency → store primary, exactly as the
      *                           cart line computes it (EurositeProductFactory::toStorePrice)
+     * @param list<string> $features facility chips (FacilityTextParser, from the
+     *                               cached product info)
+     * @param int $featuresMax chips shown before "+N more" (admin setting)
      */
     public static function build(
         array $snapshot,
@@ -49,6 +52,8 @@ final class BookingSidebarBuilder
         string $dateFormat = '%d.%m.%Y',
         ?MoneyFormatter $money = null,
         float $coefficient = 1.0,
+        array $features = [],
+        int $featuresMax = 6,
     ): BookingSidebarViewModel {
         $checkIn = TypeCoerce::toString($snapshot['check_in'] ?? '');
         $checkOut = TypeCoerce::toString($snapshot['check_out'] ?? '');
@@ -107,6 +112,7 @@ final class BookingSidebarBuilder
             available: TypeCoerce::toString($snapshot['availability_code'] ?? '') !== 'OR',
             availabilityStatus: self::status(TypeCoerce::toString($snapshot['availability_code'] ?? '')),
             locationLine: $locationLine !== '' ? $locationLine : TypeCoerce::toString($snapshot['city_name'] ?? ''),
+            features: array_values(array_filter($features, static fn (string $f): bool => trim($f) !== '')),
             checkIn: $checkInTs > 0 ? DateHelper::formatWith($checkInTs, $dateFormat) : $checkIn,
             checkInWeekday: $checkInTs > 0 ? DateHelper::formatWith($checkInTs, '%A') : '',
             checkOut: $checkOutTs > 0 ? DateHelper::formatWith($checkOutTs, $dateFormat) : $checkOut,
@@ -139,6 +145,7 @@ final class BookingSidebarBuilder
             perNight: $perNight !== null ? $money->formatDisplay($perNight) : '',
             cancelSteps: $timeline['steps'],
             showWeekday: !DateHelper::formatHasWeekday($dateFormat),
+            featuresMax: $featuresMax,
         );
     }
 

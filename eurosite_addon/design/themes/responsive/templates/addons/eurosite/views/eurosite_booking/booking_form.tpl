@@ -34,7 +34,7 @@
         <input type="hidden" name="check_in" value="{$eurosite_check_in|escape:html}" />
 
         <div class="travel-form-section guest-names-section">
-            <h3>{__("eurosite.complete_booking")}</h3>
+            <h3>{__("travel_core.who_is_staying")}</h3>
             {include file="addons/travel_core/components/booking_guest_hint.tpl"}
 
             {include file="addons/travel_core/components/booking_guest_room_body.tpl"

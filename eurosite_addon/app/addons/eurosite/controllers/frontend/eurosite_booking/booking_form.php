@@ -91,6 +91,19 @@ $coefficient = TypeCoerce::toFloat(db_get_field(
     TypeCoerce::toString($snapshot['currency']),
 ));
 
+// Facility chips: Eurosite's own product info (cached getProductInfo),
+// parsed from the operator's "Facilitati: …" line. Rows cached before the
+// parser existed carry none until the product-info cron refreshes them.
+$features = [];
+if ($hotelRow !== null) {
+    $infoRow = Container::productInfoCache()->get(
+        TypeCoerce::toString($hotelRow['tourop_code'] ?? ''),
+        TypeCoerce::toString($snapshot['product_code']),
+    );
+    $infoPayload = json_decode(TypeCoerce::toString($infoRow['payload_json'] ?? ''), true);
+    $features = TypeCoerce::toStringList(is_array($infoPayload) ? ($infoPayload['facilities'] ?? []) : []);
+}
+
 $productId = $hotelRow !== null ? TypeCoerce::toInt($hotelRow['product_id'] ?? 0) : 0;
 $sidebar = BookingSidebarBuilder::build(
     $snapshot,
@@ -104,6 +117,8 @@ $sidebar = BookingSidebarBuilder::build(
     TravelCoreConfig::getDateFormat(),
     MoneyFormatter::forStore(),
     $coefficient,
+    $features,
+    TravelCoreConfig::getBookingSidebarMaxFeatures(),
 );
 $view->assign('travel_booking_sidebar', $sidebar->toViewArray());
 
