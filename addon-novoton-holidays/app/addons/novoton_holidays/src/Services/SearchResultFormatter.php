@@ -176,7 +176,6 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         $hotelLat = 0.0;
         $hotelLng = 0.0;
         $hotelStars = '';
-        $hotelStarCount = 0;
 
         if (!empty($hotelId)) {
             $hotelRepo = Container::getInstance()->hotelRepository();

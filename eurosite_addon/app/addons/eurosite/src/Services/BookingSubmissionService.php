@@ -191,7 +191,7 @@ class BookingSubmissionService
                 $this->repo->update($bookingId, [
                     'cancellation_fees_json' => (string) json_encode($fees, JSON_UNESCAPED_UNICODE),
                 ]);
-            } catch (\Throwable $e) {
+            } catch (\Throwable) {
                 // fees snapshot is best-effort; the admin can refresh later
             }
         } else {

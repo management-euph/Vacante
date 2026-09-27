@@ -59,8 +59,8 @@ if (!is_file($ss_docroot . '/init.php')) {
         . "fullstore container: php /repo/dev/tools/settings-schema.php\n");
 }
 
-define('AREA', 'A');
-define('ACCOUNT_TYPE', 'admin');
+const AREA = 'A';
+const ACCOUNT_TYPE = 'admin';
 require $ss_docroot . '/init.php';
 
 function ss_section(string $title): void

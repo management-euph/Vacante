@@ -124,7 +124,6 @@ final class BookingSidebarBuilder
             stars: $hotelRow !== null ? TypeCoerce::toInt($hotelRow['category'] ?? 0) : TypeCoerce::toInt($snapshot['category'] ?? 0),
             // IM = Immediate; OR (On request) shows the "on request" badge.
             available: TypeCoerce::toString($snapshot['availability_code'] ?? '') !== 'OR',
-            availabilityStatus: self::status(TypeCoerce::toString($snapshot['availability_code'] ?? '')),
             locationLine: $location,
             mapUrl: $mapUrl,
             features: array_values(array_filter($features, static fn (string $f): bool => trim($f) !== '')),
@@ -156,11 +155,12 @@ final class BookingSidebarBuilder
             cancelFreeUntil: $timeline['free_until'],
             paymentLines: $paymentLines,
             roomLabel: $roomLines !== [] ? $roomLines[0]['name'] : '',
+            availabilityStatus: self::status(TypeCoerce::toString($snapshot['availability_code'] ?? '')),
             discountLabel: $oldPrimary > $totalPrimary ? TypeCoerce::toString($snapshot['offer_description'] ?? '') : '',
             perNight: $perNight !== null ? $money->formatDisplay($perNight) : '',
             cancelSteps: $timeline['steps'],
-            showWeekday: !DateHelper::formatHasWeekday($dateFormat),
             featuresMax: $featuresMax,
+            showWeekday: !DateHelper::formatHasWeekday($dateFormat),
         );
     }
 

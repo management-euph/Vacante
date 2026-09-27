@@ -240,9 +240,9 @@
     }
 
     function wlRenderPage() {
-        wlPageCount = Math.max(1, Math.ceil(wlEligible.length / wlPerPage));
-        if (wlPage > wlPageCount) wlPage = wlPageCount;
-        if (wlPage < 1) wlPage = 1;
+        window.wlPageCount = Math.max(1, Math.ceil(wlEligible.length / wlPerPage));
+        if (wlPage > wlPageCount) window.wlPage = wlPageCount;
+        if (wlPage < 1) window.wlPage = 1;
 
         var start = (wlPage - 1) * wlPerPage;
         var end = start + wlPerPage;
@@ -272,7 +272,7 @@
     }
 
     window.wlGotoPage = function(p) {
-        wlPage = p;
+        window.wlPage = p;
         wlRenderPage();
         var list = document.getElementById('wl_country_list');
         if (list) list.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -282,15 +282,15 @@
     window.wlNext = function() { wlGotoPage(wlPage + 1); };
     window.wlLast = function() { wlGotoPage(wlPageCount); };
     window.wlSetPerPage = function(v) {
-        wlPerPage = parseInt(v, 10) || 50;
-        wlPage = 1;
+        window.wlPerPage = parseInt(v, 10) || 50;
+        window.wlPage = 1;
         wlRenderPage();
     };
 
     function applyWhitelistFilter() {
         // A filter/search change resets to page 1 over the new eligible set.
         wlComputeEligible();
-        wlPage = 1;
+        window.wlPage = 1;
         wlRenderPage();
 
         var countEl = document.getElementById('wl_filter_count');

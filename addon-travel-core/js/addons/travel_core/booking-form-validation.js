@@ -562,7 +562,7 @@
         var pattern = t.childAgeMismatch ||
             'The child [guest] will be [actual] years old at check-in, but the offer was priced for age [declared]. The search was re-run with the correct ages — please choose an offer again.';
         return pattern
-            .replace(/\s*\[guest\]/, '')
+            .replace(/\s*\[guest]/, '')
             .replace('[actual]', String(actual))
             .replace('[declared]', String(expected));
     }
@@ -713,7 +713,7 @@
         }
 
         // Children must still be under 18 at check-in.
-        if (/child_\d+\]/.test(input.name || '')) {
+        if (/child_\d+]/.test(input.name || '')) {
             var form = input.form || input.closest('form');
             var checkInEl = form ? form.querySelector('input[name="check_in"]') : null;
             var checkIn = _checkInDate(checkInEl);

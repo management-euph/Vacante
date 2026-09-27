@@ -46,8 +46,8 @@ if (!is_file($sl_docroot . '/init.php')) {
         . "container, where dev/ is mounted inside the CS-Cart docroot (see docker/fullstore).\n");
 }
 
-define('AREA', 'A');
-define('ACCOUNT_TYPE', 'admin');
+const AREA = 'A';
+const ACCOUNT_TYPE = 'admin';
 require $sl_docroot . '/init.php';
 
 $sl_force = $sl_is_cli
@@ -284,13 +284,13 @@ function sl_report_addon(string $addon, array $fns, string $docroot): void
     $init = (string) @file_get_contents($dir . '/init.php');
     if ($init === '') {
         $gate = 'init.php UNREADABLE';
-    } elseif (strpos($init, 'fn_travel_core_heal_language_keys(') !== false) {
+    } elseif (str_contains($init, 'fn_travel_core_heal_language_keys(')) {
         $gate = 'shared heal, guarded, every area (current)';
-    } elseif (strpos($init, $seederFn) === false) {
+    } elseif (!str_contains($init, $seederFn)) {
         $gate = 'NO lang self-heal probe in the loaded init.php — stale copy, update the container files';
     } else {
         $gate = 'OLD probe: single "en" stamp row, no read-back verification'
-            . (strpos($init, "AREA === 'A'") !== false ? ', ADMIN-GATED' : '')
+            . (str_contains($init, "AREA === 'A'") ? ', ADMIN-GATED' : '')
             . ' — update the container files';
     }
     sl_line('  loaded init gate:   ' . $gate);

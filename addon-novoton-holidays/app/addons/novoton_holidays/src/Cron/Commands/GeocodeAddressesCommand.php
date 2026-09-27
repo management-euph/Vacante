@@ -66,7 +66,7 @@ class GeocodeAddressesCommand extends AbstractCronCommand
 
     public function setSleeper(callable $sleeper): void
     {
-        $this->sleeper = \Closure::fromCallable($sleeper);
+        $this->sleeper = $sleeper(...);
     }
 
     /**

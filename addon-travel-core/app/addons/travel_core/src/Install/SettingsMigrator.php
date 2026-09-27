@@ -542,11 +542,8 @@ final class SettingsMigrator
             return [];
         }
 
-        try {
-            $method = new \ReflectionMethod($settings, 'removeById');
-        } catch (\ReflectionException) {
-            return [];
-        }
+        // method_exists() above: the reflection cannot throw here.
+        $method = new \ReflectionMethod($settings, 'removeById');
         if ($method->getNumberOfRequiredParameters() > 1) {
             return [];
         }
@@ -758,11 +755,8 @@ final class SettingsMigrator
             return [];
         }
 
-        try {
-            $method = new \ReflectionMethod($settings, 'removeById');
-        } catch (\ReflectionException) {
-            return [];
-        }
+        // method_exists() above: the reflection cannot throw here.
+        $method = new \ReflectionMethod($settings, 'removeById');
         if ($method->getNumberOfRequiredParameters() > 1) {
             return [];
         }

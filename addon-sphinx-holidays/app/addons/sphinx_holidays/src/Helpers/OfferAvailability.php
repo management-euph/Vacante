@@ -125,7 +125,7 @@ final class OfferAvailability
         }
 
         if (TypeCoerce::toString($offer['confirmation'] ?? '') !== '') {
-            return $requireImmediate ? self::isImmediate($offer) : true;
+            return !$requireImmediate || self::isImmediate($offer);
         }
 
         return self::extractPrice($offer) > 0;

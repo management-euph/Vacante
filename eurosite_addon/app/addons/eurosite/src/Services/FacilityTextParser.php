@@ -21,7 +21,7 @@ namespace Tygh\Addons\Eurosite\Services;
 final class FacilityTextParser
 {
     /** "Facilitati:", "Facilități hotel:", "Facilities:" — at the start of a line. */
-    private const HEADING = '/^\s*(?:facilit(?:a|ă)(?:t|ț|ţ)i|facilities)(?:\s+hotel)?\s*:\s*(.*)$/iu';
+    private const HEADING = '/^\s*(?:facilit[aă][tțţ]i|facilities)(?:\s+hotel)?\s*:\s*(.*)$/iu';
 
     /**
      * @return list<string> chip labels, first letter capitalised, de-duplicated
