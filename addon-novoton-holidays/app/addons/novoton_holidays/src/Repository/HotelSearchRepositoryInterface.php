@@ -56,9 +56,10 @@ interface HotelSearchRepositoryInterface
 
     /**
      * @param list<string> $excludeResorts
+     * @param list<string>|null $onlyResorts null = every resort; a list = only these (the destination whitelist)
      * @return list<HotelRow>
      */
-    public function findUnlinkedWithPrices(string $country, array $excludeResorts = [], int $limit = 0): array;
+    public function findUnlinkedWithPrices(string $country, array $excludeResorts = [], int $limit = 0, ?array $onlyResorts = null): array;
 
     /** @return list<HotelRow> */
     public function findUnlinkedForAdmin(string $country, string $filter = 'prices', int $limit = 500): array;

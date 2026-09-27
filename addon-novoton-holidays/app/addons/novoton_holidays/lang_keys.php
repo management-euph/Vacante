@@ -496,8 +496,8 @@ return [
         'ro' => 'Hoteluri transformate în produse CS-Cart',
     ],
     'novoton_holidays.dash_tile_products_open' => [
-        'en' => 'Open the hotels with products →',
-        'ro' => 'Deschide hotelurile cu produse →',
+        'en' => 'Open these products →',
+        'ro' => 'Deschide aceste produse →',
     ],
     'novoton_holidays.dash_tile_bookings' => [
         'en' => 'Bookings',
@@ -822,5 +822,287 @@ return [
     'novoton_holidays.dash_resorts_save_failed' => [
         'en' => 'The excluded resorts could not be saved: the add-on setting did not take the new value. Nothing was changed.',
         'ro' => 'Stațiunile excluse nu au putut fi salvate: setarea add-onului nu a preluat valoarea nouă. Nu s-a modificat nimic.',
+    ],
+
+    // Destinations (the destination whitelist) — novoton_destinations.manage + the dashboard card.
+    'novoton_holidays.dest_title' => [
+        'en' => 'Destinations',
+        'ro' => 'Destinații',
+    ],
+    'novoton_holidays.dest_page_title' => [
+        'en' => 'Destination whitelist',
+        'ro' => 'Destinații vândute (whitelist)',
+    ],
+    'novoton_holidays.dest_tile_countries' => [
+        'en' => 'Countries sold',
+        'ro' => 'Țări vândute',
+    ],
+    'novoton_holidays.dest_tile_resorts' => [
+        'en' => 'Resorts sold',
+        'ro' => 'Stațiuni vândute',
+    ],
+    'novoton_holidays.dest_tile_hotels' => [
+        'en' => 'Hotels in scope',
+        'ro' => 'Hoteluri incluse',
+    ],
+    'novoton_holidays.dest_tile_hotels_note' => [
+        'en' => '[n] with real-time prices',
+        'ro' => '[n] cu prețuri în timp real',
+    ],
+    'novoton_holidays.dest_tile_new' => [
+        'en' => 'New resorts to review',
+        'ro' => 'Stațiuni noi de verificat',
+    ],
+    'novoton_holidays.dest_not_configured_title' => [
+        'en' => 'No whitelist saved yet.',
+        'ro' => 'Nu există încă o listă salvată.',
+    ],
+    'novoton_holidays.dest_not_configured_body' => [
+        'en' => 'Shown below is what today\'s settings sell: the selected countries, minus the excluded resorts. Nothing changes until you press Save; from then on this page decides what is synced and made into products.',
+        'ro' => 'Mai jos este ce se vinde cu setările actuale: țările selectate, fără stațiunile excluse. Nimic nu se schimbă până nu apăsați Salvează; de atunci, această pagină decide ce se sincronizează și ce devine produs.',
+    ],
+    'novoton_holidays.dest_new_alert' => [
+        'en' => '[n] new resorts appeared in the hotel sync. Their countries are set to "Only selected", so they are not sold until you tick them.',
+        'ro' => '[n] stațiuni noi au apărut la sincronizarea hotelurilor. Țările lor sunt pe „Doar cele alese”, deci nu se vând până nu le bifați.',
+    ],
+    'novoton_holidays.dest_show_new' => [
+        'en' => 'Show new resorts',
+        'ro' => 'Arată stațiunile noi',
+    ],
+    'novoton_holidays.dest_gone_alert' => [
+        'en' => '[n] ticked resorts are no longer in the Novoton feed (shown crossed out). They stay ticked until you untick them.',
+        'ro' => '[n] stațiuni bifate nu mai apar în fluxul Novoton (tăiate). Rămân bifate până le debifați.',
+    ],
+    'novoton_holidays.dest_intro' => [
+        'en' => 'Choose what we sell from Novoton. Only hotels in these destinations are made into products. "All resorts" includes resorts Novoton adds later; "Only selected" waits for you to tick them.',
+        'ro' => 'Alegeți ce vindem de la Novoton. Doar hotelurile din aceste destinații devin produse. „Toate stațiunile” include și stațiunile adăugate ulterior de Novoton; „Doar cele alese” așteaptă să le bifați.',
+    ],
+    'novoton_holidays.dest_pending' => [
+        'en' => '[n] changes not saved',
+        'ro' => 'Modificări nesalvate: [n]',
+    ],
+    'novoton_holidays.dest_no_pending' => [
+        'en' => 'All changes saved',
+        'ro' => 'Toate modificările sunt salvate',
+    ],
+    'novoton_holidays.dest_badge_all' => [
+        'en' => 'ALL',
+        'ro' => 'TOATE',
+    ],
+    'novoton_holidays.dest_badge_off' => [
+        'en' => 'NOT SOLD',
+        'ro' => 'NU SE VINDE',
+    ],
+    'novoton_holidays.dest_badge_some' => [
+        'en' => '[sold] of [total]',
+        'ro' => '[sold] din [total]',
+    ],
+    'novoton_holidays.dest_badge_new' => [
+        'en' => 'NEW',
+        'ro' => 'NOU',
+    ],
+    'novoton_holidays.dest_badge_new_n' => [
+        'en' => '[n] new',
+        'ro' => '[n] noi',
+    ],
+    'novoton_holidays.dest_badge_gone' => [
+        'en' => 'not in feed',
+        'ro' => 'nu mai e în flux',
+    ],
+    'novoton_holidays.dest_search' => [
+        'en' => 'Search countries or resorts…',
+        'ro' => 'Caută țări sau stațiuni…',
+    ],
+    'novoton_holidays.dest_search_country' => [
+        'en' => 'Country',
+        'ro' => 'Țară',
+    ],
+    'novoton_holidays.dest_search_resort' => [
+        'en' => 'Resort',
+        'ro' => 'Stațiune',
+    ],
+    'novoton_holidays.dest_search_sold' => [
+        'en' => 'sold',
+        'ro' => 'se vinde',
+    ],
+    'novoton_holidays.dest_search_not_sold' => [
+        'en' => 'not sold',
+        'ro' => 'nu se vinde',
+    ],
+    'novoton_holidays.dest_search_no_match' => [
+        'en' => 'No country or resort matches.',
+        'ro' => 'Nicio țară sau stațiune nu se potrivește.',
+    ],
+    'novoton_holidays.dest_only_sold' => [
+        'en' => 'Show sold countries only',
+        'ro' => 'Doar țările vândute',
+    ],
+    'novoton_holidays.dest_country_meta' => [
+        'en' => '[resorts] resorts · [hotels] hotels',
+        'ro' => '[resorts] stațiuni · [hotels] hoteluri',
+    ],
+    'novoton_holidays.dest_mode_legend' => [
+        'en' => 'What we sell in [country]',
+        'ro' => 'Ce vindem în [country]',
+    ],
+    'novoton_holidays.dest_mode_off' => [
+        'en' => 'Not sold',
+        'ro' => 'Nu se vinde',
+    ],
+    'novoton_holidays.dest_mode_all' => [
+        'en' => 'All resorts',
+        'ro' => 'Toate stațiunile',
+    ],
+    'novoton_holidays.dest_mode_specific' => [
+        'en' => 'Only selected',
+        'ro' => 'Doar cele alese',
+    ],
+    'novoton_holidays.dest_hint_off' => [
+        'en' => 'Nothing is synced or sold in this country.',
+        'ro' => 'În această țară nu se sincronizează și nu se vinde nimic.',
+    ],
+    'novoton_holidays.dest_hint_all' => [
+        'en' => 'Every resort is sold, including ones Novoton adds later.',
+        'ro' => 'Se vinde fiecare stațiune, inclusiv cele adăugate ulterior de Novoton.',
+    ],
+    'novoton_holidays.dest_hint_specific' => [
+        'en' => 'Tick the resorts to sell. New resorts wait for you.',
+        'ro' => 'Bifați stațiunile de vândut. Stațiunile noi vă așteaptă.',
+    ],
+    'novoton_holidays.dest_select_shown' => [
+        'en' => 'Select shown',
+        'ro' => 'Bifează cele afișate',
+    ],
+    'novoton_holidays.dest_clear_shown' => [
+        'en' => 'Clear shown',
+        'ro' => 'Debifează cele afișate',
+    ],
+    'novoton_holidays.dest_n_priced' => [
+        'en' => '[n] with prices',
+        'ro' => '[n] cu prețuri',
+    ],
+    'novoton_holidays.dest_n_live' => [
+        'en' => '[n] live products',
+        'ro' => '[n] produse active',
+    ],
+    'novoton_holidays.dest_no_hotels' => [
+        'en' => 'No hotels are synced for [country] yet. Choose "All resorts" and the next hotel sync brings them in.',
+        'ro' => 'Nu există încă hoteluri sincronizate pentru [country]. Alegeți „Toate stațiunile” și următoarea sincronizare le aduce.',
+    ],
+    'novoton_holidays.dest_summary_title' => [
+        'en' => 'Whitelist summary',
+        'ro' => 'Rezumat',
+    ],
+    'novoton_holidays.dest_save' => [
+        'en' => 'Save whitelist',
+        'ro' => 'Salvează lista',
+    ],
+    'novoton_holidays.dest_undo' => [
+        'en' => 'Undo changes',
+        'ro' => 'Anulează modificările',
+    ],
+    'novoton_holidays.dest_outside_label' => [
+        'en' => 'Live products outside the whitelist',
+        'ro' => 'Produse active în afara listei',
+    ],
+    'novoton_holidays.dest_outside_button' => [
+        'en' => 'Disable products outside the whitelist…',
+        'ro' => 'Dezactivează produsele din afara listei…',
+    ],
+    'novoton_holidays.dest_outside_confirm' => [
+        'en' => 'These [n] live products are for hotels outside the saved whitelist. Disabling hides them from the store; they are not deleted and can be enabled again.',
+        'ro' => 'Aceste [n] produse active sunt pentru hoteluri din afara listei salvate. Dezactivarea le ascunde din magazin; nu sunt șterse și pot fi reactivate.',
+    ],
+    'novoton_holidays.dest_outside_do' => [
+        'en' => 'Disable [n] products',
+        'ro' => 'Dezactivează [n] produse',
+    ],
+    'novoton_holidays.dest_outside_note' => [
+        'en' => 'Saving never changes existing products. Use the button above to disable them on purpose.',
+        'ro' => 'Salvarea nu modifică niciodată produsele existente. Folosiți butonul de mai sus pentru a le dezactiva intenționat.',
+    ],
+    'novoton_holidays.dest_none_sold' => [
+        'en' => 'Choose at least one country to sell. Nothing was saved.',
+        'ro' => 'Alegeți cel puțin o țară de vândut. Nu s-a salvat nimic.',
+    ],
+    'novoton_holidays.dest_saved' => [
+        'en' => 'Whitelist saved: [countries] countries, [resorts] selected resorts. The next hotel sync uses it.',
+        'ro' => 'Lista a fost salvată: [countries] țări, [resorts] stațiuni alese. Următoarea sincronizare o folosește.',
+    ],
+    'novoton_holidays.dest_save_failed' => [
+        'en' => 'The whitelist could not be saved. Nothing was changed.',
+        'ro' => 'Lista nu a putut fi salvată. Nu s-a modificat nimic.',
+    ],
+    'novoton_holidays.dest_disabled' => [
+        'en' => '[n] products disabled.',
+        'ro' => 'Produse dezactivate: [n].',
+    ],
+    'novoton_holidays.dest_settings_pointer' => [
+        'en' => 'Which countries and resorts are sold is chosen on the Destinations page. Once saved there, it replaces "Selected countries" above.',
+        'ro' => 'Țările și stațiunile vândute se aleg pe pagina Destinații. Odată salvată acolo, înlocuiește „Țări selectate” de mai sus.',
+    ],
+    'novoton_holidays.dest_settings_open' => [
+        'en' => 'Open Destinations →',
+        'ro' => 'Deschide Destinații →',
+    ],
+    'novoton_holidays.dash_dest_intro' => [
+        'en' => '[countries] countries, [resorts] resorts sold.',
+        'ro' => '[countries] țări, [resorts] stațiuni vândute.',
+    ],
+    'novoton_holidays.dash_dest_not_configured' => [
+        'en' => 'No whitelist saved yet: this is what the selected countries and excluded resorts sell today.',
+        'ro' => 'Nu există încă o listă salvată: aceasta este ce se vinde azi cu țările selectate și stațiunile excluse.',
+    ],
+    'novoton_holidays.dash_dest_edit' => [
+        'en' => 'Edit destinations →',
+        'ro' => 'Editează destinațiile →',
+    ],
+    'novoton_holidays.dash_dest_col_sell' => [
+        'en' => 'What we sell',
+        'ro' => 'Ce vindem',
+    ],
+    'novoton_holidays.dash_dest_col_hotels' => [
+        'en' => 'Hotels in scope',
+        'ro' => 'Hoteluri incluse',
+    ],
+    'novoton_holidays.dash_dest_col_live' => [
+        'en' => 'Live products',
+        'ro' => 'Produse active',
+    ],
+    'novoton_holidays.dash_dest_col_review' => [
+        'en' => 'To review',
+        'ro' => 'De verificat',
+    ],
+    'novoton_holidays.dash_dest_n_resorts' => [
+        'en' => '[n] resorts',
+        'ro' => '[n] stațiuni',
+    ],
+    'novoton_holidays.dash_dest_resorts_word' => [
+        'en' => 'resorts',
+        'ro' => 'stațiuni',
+    ],
+    'novoton_holidays.dash_dest_none' => [
+        'en' => 'No country is sold.',
+        'ro' => 'Nu se vinde nicio țară.',
+    ],
+    'novoton_holidays.dash_dest_off' => [
+        'en' => '[n] more countries are not sold.',
+        'ro' => 'Alte [n] țări nu se vând.',
+    ],
+    'novoton_holidays.dash_dest_alert_new' => [
+        'en' => '[n] new resorts in [country] wait for review.',
+        'ro' => '[n] stațiuni noi în [country] așteaptă verificarea.',
+    ],
+    'novoton_holidays.dash_dest_alert_gone' => [
+        'en' => '[n] sold resorts are no longer in the Novoton feed.',
+        'ro' => '[n] stațiuni vândute nu mai apar în fluxul Novoton.',
+    ],
+    'novoton_holidays.dash_dest_alert_outside' => [
+        'en' => '[n] live products are outside the destination whitelist.',
+        'ro' => '[n] produse active sunt în afara listei de destinații.',
+    ],
+    'novoton_holidays.dash_dest_review' => [
+        'en' => 'Review destinations',
+        'ro' => 'Verifică destinațiile',
     ],
 ];

@@ -306,12 +306,13 @@ class HotelRepository implements HotelRepositoryInterface
 
     /**
      * @param list<string> $excludeResorts
+     * @param list<string>|null $onlyResorts null = every resort; a list = only these (the destination whitelist)
      * @return list<array<string, mixed>>
      */
     #[\Override]
-    public function findUnlinkedWithPrices(string $country, array $excludeResorts = [], int $limit = 0): array
+    public function findUnlinkedWithPrices(string $country, array $excludeResorts = [], int $limit = 0, ?array $onlyResorts = null): array
     {
-        return $this->search->findUnlinkedWithPrices($country, $excludeResorts, $limit);
+        return $this->search->findUnlinkedWithPrices($country, $excludeResorts, $limit, $onlyResorts);
     }
 
     /**

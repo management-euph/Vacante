@@ -61,16 +61,31 @@ final class DashboardPageTest extends TestCase
     }
 
     /** Resort names come from the API: printed escaped, posted back as the stored name. */
-    public function testTheResortFormPostsTheStoredNames(): void
+    public function testTheDestinationsFormPostsTheStoredNames(): void
+    {
+        $tpl = self::code('views/novoton_destinations/manage.tpl');
+
+        self::assertStringContainsString('<form action="{"novoton_destinations.save"|fn_url}" method="post" id="novoton-dest-form"', $tpl);
+        self::assertStringContainsString('<input type="checkbox" name="destinations[{$c.country|escape:html}][resorts][]" value="{$r.name|escape:html}"{if $r.selected} checked{/if}>', $tpl);
+        self::assertStringContainsString('<input type="radio" name="destinations[{$c.country|escape:html}][mode]" value="{$m}"{if $c.mode == $m} checked{/if}>', $tpl);
+        self::assertStringContainsString('{$r.label|escape:html}', $tpl);
+        // Disabling products is its own form: never nested in (or sent by) Save.
+        $main = strpos($tpl, 'id="novoton-dest-form"');
+        $mainEnd = strpos($tpl, '</form>', (int) $main);
+        $disable = strpos($tpl, '"novoton_destinations.disable_outside"|fn_url');
+        self::assertIsInt($disable);
+        self::assertGreaterThan($mainEnd, $disable);
+    }
+
+    /** The dashboard shows a summary of the destinations; the choosing happens on their page. */
+    public function testTheDashboardSummarisesTheDestinationsWithoutAForm(): void
     {
         $tpl = self::code('views/novoton_holidays/manage.tpl');
 
-        self::assertStringContainsString('<form action="{"novoton_holidays.save_excluded_resorts"|fn_url}" method="post" id="excluded-resorts-form"', $tpl);
-        self::assertStringContainsString('<input type="checkbox" name="excluded_resorts[]" value="{$resort.name|escape:html}"{if $resort.excluded} checked{/if}>', $tpl);
-        self::assertStringContainsString('{$resort.label|escape:html}', $tpl);
-        self::assertStringContainsString('data-hotels="{$resort.hotels}" data-products="{$resort.products}"', $tpl);
-        // Folded by default: a summary, not a wall of 76 checkboxes.
-        self::assertMatchesRegularExpression('/<details class="[^"]*novoton-resorts" id="novoton-resorts">/', $tpl);
+        self::assertStringContainsString('id="novoton-destinations"', $tpl);
+        self::assertStringContainsString('{"novoton_destinations.manage"|fn_url}', $tpl);
+        self::assertStringNotContainsString('save_excluded_resorts', $tpl);
+        self::assertStringNotContainsString('<form action="{"novoton_destinations', $tpl);
     }
 
     /** The resort count query: SUM(product_id > 0) is NULL for a resort with no linked hotel. */
@@ -100,19 +115,19 @@ final class DashboardPageTest extends TestCase
         self::assertMatchesRegularExpression("/\\\$view->assign\\('search', \\[\\s*'page' => \\\$activity\\['page'\\],\\s*'items_per_page' => \\\$activity\\['per_page'\\],\\s*'total_items' => \\\$activity\\['total'\\],/", $controller);
     }
 
-    /** Both page scripts load inside the capture, so they run after the admin's AJAX navigation too. */
+    /** Each page's script loads inside its capture, so it runs after the admin's AJAX navigation too. */
     public function testThePageScriptsLoadInsideTheCapture(): void
     {
-        $tpl = (string) file_get_contents(self::repo() . '/design/backend/templates/addons/novoton_holidays/views/novoton_holidays/manage.tpl');
-        $close = strpos($tpl, '{/capture}');
-        self::assertIsInt($close);
-        foreach (['dashboard.js', 'resort-manager.js'] as $js) {
+        foreach (['views/novoton_holidays/manage.tpl' => 'dashboard.js', 'views/novoton_destinations/manage.tpl' => 'destinations.js'] as $file => $js) {
+            $tpl = self::code($file);
+            $close = strpos($tpl, '{/capture}');
+            self::assertIsInt($close);
             $at = strpos($tpl, '{script src="js/addons/novoton_holidays/' . $js . '"}');
             self::assertIsInt($at, "{$js} is not loaded");
             self::assertLessThan($close, $at);
         }
 
         $hook = self::code('hooks/index/scripts.post.tpl');
-        self::assertStringNotContainsString('resort-manager.js', $hook, 'loaded on every admin page, it never ran after AJAX navigation');
+        self::assertStringNotContainsString('{script src="js/addons/novoton_holidays/destinations.js"}', $hook, 'loaded on every admin page, it would not run after AJAX navigation');
     }
 }

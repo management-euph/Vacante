@@ -1,10 +1,10 @@
 {** Novoton Holidays dashboard.
 
-   Top to bottom: what needs attention, the tools, hotels by country, the
-   scheduled jobs (in the order they run), every command, excluded resorts,
-   recent sync activity. Built on Travel Core's travel-cron-* styles so the
-   three providers' dashboards read alike; behaviour in dashboard.js and
-   resort-manager.js, no inline scripts. **}
+   Top to bottom: what needs attention, the tools, the destinations we sell
+   (a summary; they are chosen on Novoton -> Destinations), the scheduled
+   jobs (in the order they run), every command, recent sync activity. Built
+   on Travel Core's travel-cron-* styles so the three providers' dashboards
+   read alike; behaviour in dashboard.js, no inline scripts. **}
 
 {capture name="mainbox"}
 
@@ -26,7 +26,7 @@
             <div class="travel-cron-tile__value">{$_hotels.with_products|default:0}</div>
             <div class="travel-cron-tile__note">
                 {__("novoton_holidays.dash_tile_products_note")}
-                <br><a href="{"novoton_holidays.hotels?has_product=1"|fn_url}">{__("novoton_holidays.dash_tile_products_open")}</a>
+                <br><a href="{"products.manage?pcode=NVT"|fn_url}">{__("novoton_holidays.dash_tile_products_open")}</a>
             </div>
         </div>
         <div class="travel-cron-tile{if $novoton_stats.bookings.pending > 0} travel-cron-tile--warn{/if}">
@@ -59,10 +59,24 @@
     </div>
 
     {** Needs attention: only real problems, each with the one action that fixes it. **}
-    {if $novoton_attention}
+    {if $novoton_attention || $novoton_dest_alerts}
         <section class="travel-cron-card novoton-attention" aria-labelledby="novoton-attention-title">
-            <h3 id="novoton-attention-title">{__("novoton_holidays.dash_attention_title", ["[n]" => $novoton_attention|count])}</h3>
+            <h3 id="novoton-attention-title">{__("novoton_holidays.dash_attention_title", ["[n]" => $novoton_attention|count + $novoton_dest_alerts|count])}</h3>
             <ul class="novoton-attention__list">
+                {foreach from=$novoton_dest_alerts item=alert}
+                    <li class="novoton-attention__item">
+                        <span class="novoton-attention__text">
+                            {if $alert.kind == "new"}
+                                {__("novoton_holidays.dash_dest_alert_new", ["[n]" => $alert.n, "[country]" => $alert.country])}
+                            {elseif $alert.kind == "gone"}
+                                {__("novoton_holidays.dash_dest_alert_gone", ["[n]" => $alert.n])}
+                            {else}
+                                {__("novoton_holidays.dash_dest_alert_outside", ["[n]" => $alert.n])}
+                            {/if}
+                        </span>
+                        <a class="btn" href="{"novoton_destinations.manage"|fn_url}">{__("novoton_holidays.dash_dest_review")}</a>
+                    </li>
+                {/foreach}
                 {foreach from=$novoton_attention item=item}
                     {$_name = __("novoton_holidays.dash_job_`$item.mode`")}
                     {$_at = $item.at|date_format:"`$settings.Appearance.date_format`, `$settings.Appearance.time_format`"}
@@ -121,36 +135,55 @@
         </div>
     </section>
 
-    {** Hotels by country **}
-    {if $novoton_stats.by_country}
-        <section class="travel-cron-card travel-cron-card--flush novoton-countries" aria-labelledby="novoton-countries-title">
-            <div class="travel-cron-card__head travel-cron-card__head--pad">
-                <h3 id="novoton-countries-title">{__("novoton_holidays.dash_countries_title")}</h3>
+    {** Destinations: what we sell, per country. Chosen on Novoton -> Destinations. **}
+    {$_dest = $novoton_destinations}
+    <section class="travel-cron-card travel-cron-card--flush novoton-dest-card" id="novoton-destinations" aria-labelledby="novoton-dest-title">
+        <div class="travel-cron-card__head travel-cron-card__head--pad">
+            <div>
+                <h3 id="novoton-dest-title">{__("novoton_holidays.dest_title")}</h3>
+                <p class="muted">{if $_dest.configured}{__("novoton_holidays.dash_dest_intro", ["[countries]" => $_dest.totals.countries, "[resorts]" => $_dest.totals.resorts])}{else}{__("novoton_holidays.dash_dest_not_configured")}{/if}</p>
             </div>
-            <table class="table table-middle travel-cron-table">
-                <thead>
-                    <tr>
-                        <th>{__("novoton_holidays.dash_col_country")}</th>
-                        <th class="right">{__("novoton_holidays.dash_col_hotels")}</th>
-                        <th class="right">{__("novoton_holidays.dash_col_realtime")}</th>
-                        <th class="right">{__("novoton_holidays.dash_col_season")}</th>
-                        <th class="right">{__("novoton_holidays.dash_col_products")}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {foreach from=$novoton_stats.by_country key=country item=country_stats}
+            <a class="btn" href="{"novoton_destinations.manage"|fn_url}">{__("novoton_holidays.dash_dest_edit")}</a>
+        </div>
+        <table class="table table-middle travel-cron-table novoton-dest-card__table">
+            <thead>
+                <tr>
+                    <th>{__("novoton_holidays.dash_col_country")}</th>
+                    <th>{__("novoton_holidays.dash_dest_col_sell")}</th>
+                    <th class="right">{__("novoton_holidays.dash_dest_col_hotels")}</th>
+                    <th class="right">{__("novoton_holidays.dash_col_realtime")}</th>
+                    <th class="right">{__("novoton_holidays.dash_dest_col_live")}</th>
+                    <th>{__("novoton_holidays.dash_dest_col_review")}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {$_off = 0}
+                {foreach from=$_dest.countries item=c}
+                    {if $c.mode == "off"}
+                        {$_off = $_off + 1}
+                    {else}
                         <tr>
-                            <td><strong>{$country|escape:html}</strong></td>
-                            <td class="right">{$country_stats.total}</td>
-                            <td class="right">{$country_stats.with_prices}</td>
-                            <td class="right">{if $country_stats.total > 0 && $country_stats.with_packages == 0}<strong class="travel-cron-hint--warn">{$country_stats.with_packages}</strong>{else}{$country_stats.with_packages}{/if}</td>
-                            <td class="right">{$country_stats.with_products}</td>
+                            <td><strong>{$c.label|escape:html}</strong></td>
+                            <td>
+                                {if $c.mode == "all"}
+                                    <span class="novoton-dest-badge novoton-dest-badge--all">{__("novoton_holidays.dest_badge_all")}</span> {__("novoton_holidays.dash_dest_n_resorts", ["[n]" => $c.resorts])}
+                                {else}
+                                    <span class="novoton-dest-badge novoton-dest-badge--specific">{__("novoton_holidays.dest_badge_some", ["[sold]" => $c.sold, "[total]" => $c.resorts])}</span> {__("novoton_holidays.dash_dest_resorts_word")}
+                                {/if}
+                            </td>
+                            <td class="right">{$c.hotels_sold}</td>
+                            <td class="right">{if $c.hotels_sold > 0 && $c.priced_sold == 0}<strong class="travel-cron-hint--warn">0</strong>{else}{$c.priced_sold}{/if}</td>
+                            <td class="right">{$c.live_sold}</td>
+                            <td>{if $c.new > 0}<span class="novoton-dest-badge novoton-dest-badge--new">{__("novoton_holidays.dest_badge_new_n", ["[n]" => $c.new])}</span>{else}<span class="muted">—</span>{/if}</td>
                         </tr>
-                    {/foreach}
-                </tbody>
-            </table>
-        </section>
-    {/if}
+                    {/if}
+                {foreachelse}
+                    <tr><td colspan="6" class="muted">{__("novoton_holidays.dash_dest_none")}</td></tr>
+                {/foreach}
+            </tbody>
+        </table>
+        {if $_off > 0}<p class="travel-cron-foot novoton-dest-card__foot muted">{__("novoton_holidays.dash_dest_off", ["[n]" => $_off])}</p>{/if}
+    </section>
 
     {** Scheduled jobs — id: the target of the "Open Novoton cron" link on Travel Core -> Tools.
        One row per job, in the order the jobs run (CronPlanBuilder). No
@@ -251,82 +284,6 @@
         </section>
     {/if}
 
-    {** Excluded resorts: folded to a summary; opened, every resort with what excluding it affects. **}
-    {$_r = $novoton_resorts}
-    <details class="travel-cron-card novoton-resorts" id="novoton-resorts">
-        <summary class="novoton-resorts__summary">
-            <span class="novoton-resorts__heading">
-                <strong>{__("novoton_holidays.dash_resorts_title")}</strong>
-                <span class="novoton-resorts__counts">
-                    {__("novoton_holidays.dash_resorts_summary", ["[excluded]" => $_r.excluded, "[total]" => $_r.resorts])}
-                    {foreach from=$_r.countries item=c} · {__("novoton_holidays.dash_resorts_country_summary", ["[country]" => $c.label, "[excluded]" => $c.excluded, "[total]" => $c.total])}{/foreach}.
-                    {__("novoton_holidays.dash_resorts_rule")}
-                </span>
-            </span>
-            <span class="btn novoton-resorts__open">{__("novoton_holidays.dash_resorts_choose")}</span>
-        </summary>
-
-        {if $_r.countries}
-        <form action="{"novoton_holidays.save_excluded_resorts"|fn_url}" method="post" id="excluded-resorts-form" class="novoton-resorts__form"
-              data-txt-pending="{__("novoton_holidays.dash_resorts_pending")|escape:html}"
-              data-txt-saved="{__("novoton_holidays.dash_resorts_saved")|escape:html}">
-            <input type="hidden" name="security_hash" value="{$security_hash}">
-
-            <div class="novoton-resorts__toolbar">
-                <label for="resort-search" class="novoton-sr-only">{__("novoton_holidays.dash_resorts_search")}</label>
-                <input type="search" id="resort-search" placeholder="{__("novoton_holidays.dash_resorts_search")|escape:html}">
-                <div class="btn-group" role="group" aria-label="{__("novoton_holidays.dash_col_country")|escape:html}">
-                    <button type="button" class="btn" data-resort-country="" aria-pressed="true">{__("novoton_holidays.dash_resorts_all", ["[n]" => $_r.resorts])}</button>
-                    {foreach from=$_r.countries item=c}
-                        <button type="button" class="btn" data-resort-country="{$c.country|escape:html}" aria-pressed="false">{$c.label|escape:html} {$c.total}</button>
-                    {/foreach}
-                </div>
-                <button type="button" class="btn" id="resort-only-excluded" aria-pressed="false">{__("novoton_holidays.dash_resorts_only_excluded")} <span id="resort-excluded-count">{$_r.excluded}</span></button>
-                <div class="btn-group" role="group" aria-label="{__("novoton_holidays.dash_resorts_sort")|escape:html}">
-                    <button type="button" class="btn" data-resort-sort="name" aria-pressed="true">{__("novoton_holidays.dash_resorts_sort_name")}</button>
-                    <button type="button" class="btn" data-resort-sort="hotels" aria-pressed="false">{__("novoton_holidays.dash_resorts_sort_hotels")}</button>
-                </div>
-                <span class="muted" id="resort-visible-count"></span>
-            </div>
-
-            {foreach from=$_r.countries item=c}
-                <div class="novoton-resorts__group" data-country="{$c.country|escape:html}">
-                    <div class="novoton-resorts__grouphead">
-                        <h4>{$c.label|escape:html} <span class="muted">· {__("novoton_holidays.dash_resorts_group", ["[resorts]" => $c.total, "[hotels]" => $c.hotels])} · <span data-group-excluded>{$c.excluded}</span> {__("novoton_holidays.dash_resorts_excluded_word")}</span></h4>
-                        <span>
-                            <button type="button" class="btn btn-small" data-exclude-shown="{$c.country|escape:html}">{__("novoton_holidays.dash_resorts_exclude_shown")}</button>
-                            <button type="button" class="btn btn-small" data-include-shown="{$c.country|escape:html}">{__("novoton_holidays.dash_resorts_include_shown")}</button>
-                        </span>
-                    </div>
-                    <div class="novoton-resorts__grid">
-                        {foreach from=$c.resorts item=resort}
-                            <label class="novoton-resort{if $resort.excluded} is-excluded{/if}" data-resort="{$resort.label|lower|escape:html} {$resort.name|lower|escape:html}" data-country="{$c.country|escape:html}" data-name="{$resort.label|escape:html}" data-hotels="{$resort.hotels}" data-products="{$resort.products}">
-                                <input type="checkbox" name="excluded_resorts[]" value="{$resort.name|escape:html}"{if $resort.excluded} checked{/if}>
-                                <span class="novoton-resort__text">
-                                    <span class="novoton-resort__name">{$resort.label|escape:html}<span class="novoton-resort__dot" title="{__("novoton_holidays.dash_resorts_not_saved")|escape:html}" hidden></span></span>
-                                    <span class="novoton-resort__meta"><strong class="novoton-resort__flag">{__("novoton_holidays.dash_resorts_excluded_flag")} · </strong>{__("novoton_holidays.dash_n_hotels", [$resort.hotels])} · {if $resort.products == 0}{__("novoton_holidays.dash_no_products")}{else}{__("novoton_holidays.dash_n_products", [$resort.products])}{/if}</span>
-                                </span>
-                            </label>
-                        {/foreach}
-                    </div>
-                </div>
-            {/foreach}
-
-            <div id="resort-no-results" class="novoton-resorts__empty" hidden>{__("novoton_holidays.dash_resorts_no_match")}</div>
-
-            <div class="novoton-resorts__bar">
-                <span id="resort-pending" class="novoton-resorts__pending" aria-live="polite"></span>
-                <span>
-                    <button type="button" class="btn" id="resort-undo">{__("novoton_holidays.dash_resorts_undo")}</button>
-                    <button type="submit" class="btn btn-primary">{__("novoton_holidays.dash_resorts_save")}</button>
-                </span>
-            </div>
-        </form>
-        {else}
-            <div class="alert alert-warning">{__("novoton_holidays.dash_resorts_none")}</div>
-        {/if}
-    </details>
-
     {** Recent sync activity, CS-Cart paginated (its own template: the
        pagination pair wraps exactly one list). **}
     {include file="addons/novoton_holidays/components/activity.tpl"}
@@ -336,7 +293,6 @@
 {* Inside the capture on purpose: admin top-nav navigation is AJAX and runs
    only the scripts inside the mainbox capture. *}
 {script src="js/addons/novoton_holidays/dashboard.js"}
-{script src="js/addons/novoton_holidays/resort-manager.js"}
 
 {/capture}
 

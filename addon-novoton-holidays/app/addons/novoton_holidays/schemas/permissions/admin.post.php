@@ -12,6 +12,15 @@
  * @package NovotonHolidays
  */
 
+// novoton_destinations controller (the destination whitelist)
+$schema['novoton_destinations'] = [
+    'modes' => [
+        'manage'          => ['permissions' => 'manage_catalog'],
+        'save'            => ['permissions' => 'manage_catalog'],
+        'disable_outside' => ['permissions' => 'manage_catalog'],
+    ],
+];
+
 // novoton_holidays controller (main dashboard, hotel catalog, sync)
 $schema['novoton_holidays'] = [
     'modes' => [
@@ -19,7 +28,6 @@ $schema['novoton_holidays'] = [
         'hotels'                     => ['permissions' => 'manage_catalog'],
         'view_hotel'                 => ['permissions' => 'manage_catalog'],
         'list_facilities'            => ['permissions' => 'manage_catalog'],
-        'save_excluded_resorts'      => ['permissions' => 'manage_catalog'],
 
         'sync_facilities'            => ['permissions' => 'novoton_manage_sync'],
         'check_packages'             => ['permissions' => 'novoton_manage_sync'],

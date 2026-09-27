@@ -181,7 +181,14 @@ class AdminCronService implements AdminCronServiceInterface
         foreach ($countries as $country) {
             $this->output("=== {$country} ===");
 
-            $hotels = $hotelRepo->findUnlinkedWithPrices($country, array_values(ConfigProvider::getHiddenResorts()), $limit);
+            // Same scope as add_hotels_as_products: the destination whitelist,
+            // or the dashboard's excluded resorts until one is saved.
+            $query = DestinationScope::current()->productQuery($country);
+            if ($query['skip']) {
+                $this->output("Not in the destination whitelist — skipped.\n");
+                continue;
+            }
+            $hotels = $hotelRepo->findUnlinkedWithPrices($country, $query['exclude'], $limit, $query['only']);
 
             if (empty($hotels)) {
                 $this->output("No hotels to add.\n");

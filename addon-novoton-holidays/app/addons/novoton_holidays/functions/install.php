@@ -105,6 +105,7 @@ function fn_novoton_holidays_uninstall(): bool
 
     // Drop all addon tables (in correct order due to foreign key constraints)
     db_query("DROP TABLE IF EXISTS ?:hotel_feature_mappings");
+    db_query("DROP TABLE IF EXISTS ?:novoton_destination_whitelist");
     db_query("DROP TABLE IF EXISTS ?:novoton_resorts");
     db_query("DROP TABLE IF EXISTS ?:novoton_hotel_facilities");
     db_query("DROP TABLE IF EXISTS ?:novoton_facilities");

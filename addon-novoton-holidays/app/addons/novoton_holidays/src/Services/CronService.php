@@ -50,7 +50,7 @@ class CronService implements CronServiceInterface
         $this->reservations = $reservations ?? (new NovotonApi())->reservations();
         $this->bookingRepo = $bookingRepo ?? new \Tygh\Addons\NovotonHolidays\Repository\BookingRepository();
         $this->altRequestRepo = $altRequestRepo ?? new AlternativeRequestRepository();
-        $this->countries = fn_novoton_holidays_parse_countries(ConfigProvider::get('selected_countries', ''));
+        $this->countries = fn_novoton_holidays_parse_countries();
     }
 
     /**

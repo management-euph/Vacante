@@ -107,61 +107,32 @@ final class DashboardSummary
     }
 
     /**
-     * Resorts grouped by country, with hotel and product counts and whether
-     * each is excluded — what the list needs to say what excluding one affects.
+     * The Destinations lines for Needs attention, each linking to the page:
+     * resorts new since the last Save (per country, "Only selected" ones
+     * wait for review), whitelisted resorts gone from the feed, and live
+     * products outside the whitelist.
      *
-     * Hidden resorts (internal ones such as the gift voucher "resort") are
-     * left out, as the page always did. Matching is case-insensitive: the
-     * setting and the hotel rows do not always agree on case.
+     * @param array{countries: list<array<string, mixed>>, totals: array<string, int>} $destinations DestinationsPage::build()
      *
-     * @param list<array{country: string, city: string, hotels: int, products: int}> $counts
-     * @param array<string> $hidden
-     * @param array<string> $excluded
-     *
-     * @return array{countries: list<array<string, mixed>>, resorts: int, excluded: int}
+     * @return list<array{kind: string, country: string, n: int}>
      */
-    public static function resorts(array $counts, array $hidden, array $excluded): array
+    public static function destinationAlerts(array $destinations): array
     {
-        $hiddenUpper = array_map('mb_strtoupper', $hidden);
-        $excludedUpper = array_map('mb_strtoupper', $excluded);
-
-        $byCountry = [];
-        foreach ($counts as $row) {
-            $city = $row['city'];
-            if (in_array(mb_strtoupper($city), $hiddenUpper, true)) {
-                continue;
+        $alerts = [];
+        foreach ($destinations['countries'] as $c) {
+            $n = is_int($c['new'] ?? null) ? $c['new'] : 0;
+            if ($n > 0) {
+                $alerts[] = ['kind' => 'new', 'country' => is_string($c['label'] ?? null) ? $c['label'] : '', 'n' => $n];
             }
-            $isExcluded = in_array(mb_strtoupper($city), $excludedUpper, true);
-            $byCountry[$row['country']][] = [
-                'name' => $city,
-                'label' => self::displayName($city),
-                'hotels' => $row['hotels'],
-                'products' => $row['products'],
-                'excluded' => $isExcluded,
-            ];
+        }
+        if (($destinations['totals']['gone'] ?? 0) > 0) {
+            $alerts[] = ['kind' => 'gone', 'country' => '', 'n' => $destinations['totals']['gone']];
+        }
+        if (($destinations['totals']['outside'] ?? 0) > 0) {
+            $alerts[] = ['kind' => 'outside', 'country' => '', 'n' => $destinations['totals']['outside']];
         }
 
-        $countries = [];
-        $resorts = 0;
-        $excludedCount = 0;
-        foreach ($byCountry as $country => $list) {
-            $countryExcluded = count(array_filter($list, static fn (array $r): bool => $r['excluded']));
-            $countries[] = [
-                'country' => (string) $country,
-                'label' => self::displayName((string) $country),
-                'resorts' => $list,
-                'total' => count($list),
-                'hotels' => array_sum(array_column($list, 'hotels')),
-                'excluded' => $countryExcluded,
-            ];
-            $resorts += count($list);
-            $excludedCount += $countryExcluded;
-        }
-
-        // Largest country first: it is where most of the ticking happens.
-        usort($countries, static fn (array $a, array $b): int => $b['total'] <=> $a['total'] ?: strcmp($a['country'], $b['country']));
-
-        return ['countries' => $countries, 'resorts' => $resorts, 'excluded' => $excludedCount];
+        return $alerts;
     }
 
     /**

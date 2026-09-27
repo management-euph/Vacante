@@ -109,6 +109,7 @@ class ConfigProvider extends AbstractConfigProvider
     public static function reset(): void
     {
         static::resetSettingsCache();
+        DestinationScope::setCurrent(null);
         self::$version = null;
         self::$instance = null;
     }
@@ -287,8 +288,29 @@ class ConfigProvider extends AbstractConfigProvider
 
     // ── Array Settings ──
 
-    /** @return string[] */
+    /**
+     * The countries Novoton syncs and sells: the destination whitelist's
+     * countries once it has been saved (Novoton -> Destinations); until then
+     * the older "Selected countries" setting, all countries when none is ticked.
+     *
+     * @return string[]
+     */
     public static function getSelectedCountries(): array
+    {
+        $scope = DestinationScope::current();
+        if ($scope->isConfigured()) {
+            return $scope->countries();
+        }
+
+        return self::getSettingCountries();
+    }
+
+    /**
+     * The "Selected countries" setting alone, whatever the whitelist says.
+     *
+     * @return string[]
+     */
+    public static function getSettingCountries(): array
     {
         $val = self::settings()['selected_countries'] ?? '';
         $countries = [];
@@ -357,7 +379,7 @@ class ConfigProvider extends AbstractConfigProvider
         return 0;
     }
 
-    /** @return string[] Resorts that are internal-only and hidden from all UI listings. */
+    /** @return list<string> Resorts that are internal-only and hidden from all UI listings. */
     public static function getHiddenResorts(): array
     {
         return Constants::HIDDEN_RESORTS;
@@ -367,6 +389,52 @@ class ConfigProvider extends AbstractConfigProvider
     public static function getExcludedResorts(): array
     {
         return self::parseResortList(TypeCoerce::toString(self::settings()['excluded_resorts'] ?? ''));
+    }
+
+    /**
+     * Resorts no product may be created for: the dashboard's excluded
+     * resorts, any extra names a run passes (&exclude_resorts=a,b adds to
+     * the saved list, never replaces it), and the internal HIDDEN_RESORTS.
+     *
+     * Every product-creation path reads this one list. add_hotels_as_products
+     * used to be the only one that honoured the dashboard; offers_update and
+     * the legacy admin run_cron path created products in excluded resorts.
+     *
+     * @param list<string> $extra
+     * @return list<string>
+     */
+    public static function getProductExclusions(array $extra = []): array
+    {
+        $out = [];
+        foreach ([...self::getExcludedResorts(), ...$extra, ...self::getHiddenResorts()] as $name) {
+            $name = trim($name);
+            if ($name !== '' && !in_array($name, $out, true)) {
+                $out[] = $name;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * TRUE when a hotel's resort (novoton_hotels.city) is in the list,
+     * compared trimmed and case-insensitively, as the dashboard groups them.
+     *
+     * @param list<string> $exclusions
+     */
+    public static function isResortExcluded(?string $city, array $exclusions): bool
+    {
+        $city = mb_strtoupper(trim((string) $city));
+        if ($city === '') {
+            return false;
+        }
+        foreach ($exclusions as $name) {
+            if (mb_strtoupper(trim($name)) === $city) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
