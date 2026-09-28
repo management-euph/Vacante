@@ -1873,3 +1873,15 @@ msgstr "Valoarea sau maparea nu mai există, ori sunt tipuri diferite de caracte
 msgctxt "Languages::travel_core.fm_unmapped_dismissed"
 msgid "Dismissed [count] values."
 msgstr "[count] valori ignorate."
+
+msgctxt "Languages::travel_core.complete_booking_title"
+msgid "Complete Booking"
+msgstr "Finalizează rezervarea"
+
+msgctxt "Languages::travel_core.split_deposit"
+msgid "Deposit"
+msgstr "Avans"
+
+msgctxt "Languages::travel_core.split_balance"
+msgid "Balance"
+msgstr "Rest de plată"

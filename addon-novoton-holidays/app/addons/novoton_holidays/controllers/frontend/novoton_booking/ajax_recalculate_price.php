@@ -443,6 +443,7 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
         );
         $timeline = $timelineFactory->cancellation($timelineWindows, $primary_new_price, $nights);
         $payment_steps = $timelineFactory->payment($timelineInstallments, $primary_new_price);
+        $payment_split = $timelineFactory->split($timelineInstallments, $primary_new_price);
         if ($timeline['steps'] !== []) {
             // The old value was the FIRST PENALTY day, never checked
             // against today — the "free until 09/25 + you'll pay" card.
@@ -517,6 +518,14 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
             $terms_smarty->assign('tt_ids', false);
             $conditions_html = (string) $terms_smarty->fetch('addons/travel_core/components/booking_terms_timeline.tpl');
         }
+        // Deposit / balance line under the total (same partial as the page).
+        $split_html = '';
+        if ($payment_split !== []) {
+            /** @var \Smarty $split_smarty */
+            $split_smarty = \Tygh\Tygh::$app['view'];
+            $split_smarty->assign('ps', $payment_split);
+            $split_html = (string) $split_smarty->fetch('addons/travel_core/components/booking_payment_split.tpl');
+        }
 
         // Return success response with room change info and price change analysis
         $sendJson([
@@ -525,6 +534,7 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
             // conditions-modal section (booking-form.js swaps them in).
             'terms_html' => $terms_html,
             'conditions_html' => $conditions_html,
+            'split_html' => $split_html,
             'formatted_per_night' => $per_night !== null ? $money->formatDisplay($per_night) : '',
             'cancellation_lines' => $cancellation_lines,
             'free_cancellation_until' => $free_cancellation_until,

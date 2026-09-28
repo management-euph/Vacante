@@ -88,6 +88,7 @@ final class SphinxBookingSidebarBuilder
         $perNight = '';
         $timeline = ['steps' => [], 'free_until' => '', 'full_charge_now' => false];
         $paymentSteps = [];
+        $paymentSplit = [];
         $nights = TypeCoerce::toInt($bookingData['nights'] ?? 0);
         if ($money !== null && $primaryTotal > 0) {
             $total = $money->format($primaryTotal);
@@ -97,6 +98,7 @@ final class SphinxBookingSidebarBuilder
             $factory = new TermsTimelineFactory($money, $today !== '' ? $today : date('Y-m-d'), $dateFormat);
             $timeline = $factory->cancellation($windows, $primaryTotal, $nights);
             $paymentSteps = $factory->payment($installments, $primaryTotal);
+            $paymentSplit = $factory->split($installments, $primaryTotal);
         }
 
         return new BookingSidebarViewModel(
@@ -150,6 +152,7 @@ final class SphinxBookingSidebarBuilder
             perNight: $perNight,
             cancelSteps: $timeline['steps'],
             paymentSteps: $paymentSteps,
+            paymentSplit: $paymentSplit,
             featuresMax: $featuresMax,
             showWeekday: !DateHelper::formatHasWeekday($dateFormat),
         );

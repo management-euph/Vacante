@@ -9,7 +9,7 @@ use Tygh\Addons\TravelCore\Services\CartSkipPolicy;
 
 /**
  * Settings -> Travel Core -> "Skip the cart page for": the ticked add-ons'
- * booking buttons say "Continue booking" and go straight to checkout.checkout
+ * booking buttons say "Continue to payment" and go straight to checkout.checkout
  * (the one checkout page for every add-on); the others keep the cart step.
  */
 final class CartSkipPolicyTest extends TestCase
@@ -49,12 +49,12 @@ final class CartSkipPolicyTest extends TestCase
         }
     }
 
-    public function testATickedAddonGoesToCheckoutAndSaysContinueBooking(): void
+    public function testATickedAddonGoesToCheckoutAndSaysContinueToPayment(): void
     {
         $policy = CartSkipPolicy::fromSetting(['novoton_holidays' => 'Y']);
 
         self::assertSame('checkout.checkout', $policy->afterAddToCart('novoton_holidays'));
-        self::assertSame('travel_core.continue_booking', $policy->ctaLabelKey('novoton_holidays'));
+        self::assertSame('travel_core.continue_to_payment', $policy->ctaLabelKey('novoton_holidays'));
         self::assertSame('checkout.cart', $policy->afterAddToCart('sphinx_holidays'));
     }
 
@@ -64,7 +64,7 @@ final class CartSkipPolicyTest extends TestCase
         $policy = CartSkipPolicy::fromSetting(['sphinx_holidays' => 'Y']);
 
         self::assertSame('sphinx_holidays.add_to_cart_btn', CartSkipPolicy::fromSetting([])->ctaLabelKey('sphinx_holidays', 'sphinx_holidays.add_to_cart_btn'));
-        self::assertSame('travel_core.continue_booking', $policy->ctaLabelKey('sphinx_holidays', 'sphinx_holidays.add_to_cart_btn'));
+        self::assertSame('travel_core.continue_to_payment', $policy->ctaLabelKey('sphinx_holidays', 'sphinx_holidays.add_to_cart_btn'));
     }
 
     public function testTheSettingIsDeclaredForTheThreeAddonsAndOffByDefault(): void

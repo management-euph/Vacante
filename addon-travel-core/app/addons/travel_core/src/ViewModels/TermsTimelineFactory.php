@@ -174,6 +174,52 @@ final class TermsTimelineFactory
         return $out;
     }
 
+    /**
+     * Deposit / balance summary for the price card, from the same payment
+     * rows as payment(): what the supplier wants on booking and what is left,
+     * by the last due date. Information only — checkout still takes the full
+     * total. [] when the terms don't split (one payment, or everything due
+     * now) or when the balance falls due within $minDays.
+     *
+     * @param list<array<string, mixed>> $rows
+     * @return array{deposit: string, balance: string, balance_due: string}|array{}
+     */
+    public function split(array $rows, float $total, int $minDays = 7): array
+    {
+        $now = 0.0;
+        $later = 0.0;
+        $firstLater = null;
+        $lastLater = null;
+        foreach ($rows as $r) {
+            $percent = self::optFloat($r['percent'] ?? null);
+            $amount = self::optFloat($r['amount'] ?? null);
+            if ($amount === null && $percent !== null && $total > 0) {
+                $amount = $total * $percent / 100;
+            }
+            if ($amount === null || $amount <= 0) {
+                continue;
+            }
+            $due = self::iso($r['due'] ?? null);
+            if ($due === null || $due <= $this->today) {
+                $now += $amount;
+                continue;
+            }
+            $later += $amount;
+            $firstLater = $firstLater === null || $due < $firstLater ? $due : $firstLater;
+            $lastLater = $lastLater === null || $due > $lastLater ? $due : $lastLater;
+        }
+        if ($now <= 0 || $later <= 0 || $firstLater === null || $lastLater === null
+            || $firstLater < self::addDays($this->today, $minDays)) {
+            return [];
+        }
+
+        return [
+            'deposit' => $this->money->format($now),
+            'balance' => $this->money->format($later),
+            'balance_due' => $this->date($lastLater),
+        ];
+    }
+
     /** @param array<string, mixed> $r */
     private function kind(array $r, float $total): string
     {

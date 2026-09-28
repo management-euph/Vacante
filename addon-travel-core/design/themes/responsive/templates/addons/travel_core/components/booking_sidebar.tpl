@@ -173,6 +173,9 @@
         </div>
     </section>
 
+    {* Price + cancellation stay pinned beside the form on desktop (CSS
+       .travel-bsidebar__sticky); the sidebar itself never scrolls. *}
+    <div class="travel-bsidebar__sticky">
     {* ── 3. Price ─────────────────────────────────────────────────────── *}
     <section class="travel-bcard travel-bcard--price">
         <div class="travel-bcard__body booking-price-box travel-price-box">
@@ -198,6 +201,10 @@
                 <div class="travel-bsidebar-pernight" id="travel-price-pernight">{capture assign="tbs_pn_price"}<span class="travel-price-pernight__value">{$tbs.per_night|escape:html}</span>{/capture}{__("travel_core.per_night_line", ["[nights]" => $tbs_pn_nights, "[price]" => $tbs_pn_price])}</div>
             {/if}
 
+            {* Deposit / balance from the supplier's payment terms; novoton's
+               re-price refills it (split_html). *}
+            <div id="travel-price-split">{include file="addons/travel_core/components/booking_payment_split.tpl" ps=$tbs.payment_split|default:[]}</div>
+
             <span id="price-unverified-badge" class="travel-price-unverified travel-is-hidden"></span>
             <a href="#" id="refresh-price-link" class="travel-price-refresh travel-is-hidden" onclick="if (window.refreshPrice) { refreshPrice(); } return false;"></a>
         </div>
@@ -214,6 +221,7 @@
             {include file="addons/travel_core/components/booking_terms_timeline.tpl" tt=$tbs tt_show_link=true tt_ids=true}
         </div>
     </section>
+    </div>
 
 </aside>
 {/if}
