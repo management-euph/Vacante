@@ -35,4 +35,17 @@ final class ProbeAvailabilityTest extends TestCase
         self::assertStringNotContainsString('db_query', $src);
         self::assertStringNotContainsString('ProductGate', $src);
     }
+
+    public function testTheDashboardFormRunsItInTheAdminInANewWindow(): void
+    {
+        $root = dirname(__DIR__, 3);
+        $controller = (string) file_get_contents($root . '/controllers/backend/eurosite.php');
+        self::assertStringContainsString("if (\$mode === 'probe_availability')", $controller);
+        self::assertStringContainsString('new \\Tygh\\Addons\\Eurosite\\Cron\\Commands\\ProbeAvailabilityCommand()', $controller);
+
+        $tpl = (string) file_get_contents(dirname($root, 3) . '/design/backend/templates/addons/eurosite/views/eurosite/manage.tpl');
+        self::assertStringContainsString('name="dispatch" value="eurosite.probe_availability"', $tpl);
+        self::assertStringContainsString('target="_blank"', $tpl);
+        self::assertStringNotContainsString('value="probe_availability"', $tpl, 'no form to the storefront cron endpoint');
+    }
 }

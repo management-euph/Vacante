@@ -1013,4 +1013,8 @@ return [
         'en' => 'No Immediate hotel on the configured dates. Find dates with offers below, then add them to the peak-season dates.',
         'ro' => 'Niciun hotel Imediat la datele configurate. Găsiți mai jos date cu oferte, apoi adăugați-le la datele de sezon.',
     ],
+    'eurosite.probe_cities_all' => [
+        'en' => 'empty = all synced',
+        'ro' => 'gol = toate sincronizate',
+    ],
 ];

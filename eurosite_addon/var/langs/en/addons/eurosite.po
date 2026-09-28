@@ -1143,3 +1143,7 @@ msgstr "Search offers"
 msgctxt "Languages::eurosite.probe_none_hint"
 msgid "No Immediate hotel on the configured dates. Find dates with offers below, then add them to the peak-season dates."
 msgstr "No Immediate hotel on the configured dates. Find dates with offers below, then add them to the peak-season dates."
+
+msgctxt "Languages::eurosite.probe_cities_all"
+msgid "empty = all synced"
+msgstr "empty = all synced"

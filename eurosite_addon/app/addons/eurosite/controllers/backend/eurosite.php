@@ -309,6 +309,32 @@ if ($mode === 'get_cities') {
     exit;
 }
 
+if ($mode === 'probe_availability') {
+    // "Find dates with offers": run the read-only probe here, in the admin,
+    // and print its report as plain text in the window the form opened. The
+    // form used to post to the storefront cron endpoint, which the admin's
+    // form handling refused ("Couldn't upload the file") — and needed the key.
+    @set_time_limit(600);
+    header('Content-Type: text/plain; charset=utf-8');
+    $probe = new \Tygh\Addons\Eurosite\Cron\Commands\ProbeAvailabilityCommand();
+    $probe->setOutputCallback(static function (string $message, bool $newline = true): void {
+        echo $message, $newline ? "\n" : '';
+        if (ob_get_level() > 0) {
+            @ob_flush();
+        }
+        flush();
+    });
+    $probeParams = [];
+    foreach (['country', 'city', 'from', 'months', 'step', 'nights', 'max_calls'] as $key) {
+        $value = trim(RequestCoerce::string($_REQUEST, $key));
+        if ($value !== '') {
+            $probeParams[$key] = $value;
+        }
+    }
+    $probe->execute($probeParams);
+    exit;
+}
+
 if ($mode === 'search_destinations') {
     // AJAX for the whitelist search box: countries + cities by name OR code,
     // from the synced catalogs. Each result carries enough context for the

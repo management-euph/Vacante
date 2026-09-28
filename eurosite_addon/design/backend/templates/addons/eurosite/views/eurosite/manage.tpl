@@ -51,7 +51,7 @@
                         {if $job.mode == 'hotels' || $job.mode == 'availability' || $job.mode == 'add_products'}
                             <div class="muted" style="font-size: 11px;">
                                 <a href="{"eurosite.hotels"|fn_url}">{__("eurosite.open_hotel_list", ["[default]" => "Open hotel list"])} &rarr;</a>
-                                {if $job.mode == 'availability' && $eurosite_cron_has_key && $eurosite_cron_urls.probe_availability}
+                                {if $job.mode == 'availability'}
                                     &middot; <a href="#eurosite-probe">{__("eurosite.probe_title")} &rarr;</a>
                                 {/if}
                             </div>
@@ -305,27 +305,25 @@
             </form>
         </div>
 
-        {* Read-only probe (probe_availability): when the configured dates find
-           no Immediate hotel, ask the API across the next months which
-           destinations and dates do have offers. Never scheduled. *}
-        {if $eurosite_cron_urls.probe_availability}
+    {/if}
+
+    {* Read-only probe: when the configured dates find no Immediate hotel,
+       ask the API across the next months which destinations and dates do
+       have offers. Runs in the admin (eurosite.probe_availability, no cron
+       key needed) and prints its report in a new window. Never scheduled. *}
             <div id="eurosite-probe" class="well well-small" style="max-width: 1100px; margin-top: 16px;">
                 <h5 style="margin-top: 0;"><i class="icon-search"></i> {__("eurosite.probe_title")}</h5>
                 <p class="muted" style="font-size: 12px;">{__("eurosite.probe_hint")}</p>
-                <form action="{$eurosite_cron_urls.probe_availability|regex_replace:"/\?.*$/":""}" method="get" target="_blank" class="form-inline" style="margin: 0;">
-                    <input type="hidden" name="dispatch" value="eurosite_cron.run" />
-                    <input type="hidden" name="access_key" value="{$eurosite_cron_key|escape:html}" />
-                    <input type="hidden" name="cron_mode" value="probe_availability" />
+                <form action="{""|fn_url}" method="get" target="_blank" class="form-inline cm-disable-check-changes" style="margin: 0;">
+                    <input type="hidden" name="dispatch" value="eurosite.probe_availability" />
                     <label>{__("eurosite.probe_country")} <input type="text" name="country" value="GR" class="input-mini" maxlength="4" /></label>
-                    <label style="margin-left: 8px;">{__("eurosite.probe_cities")} <input type="text" name="city" value="" class="input-medium" placeholder="GR0041,GR0102" /></label>
+                    <label style="margin-left: 8px;">{__("eurosite.probe_cities")} <input type="text" name="city" value="" class="input-medium" placeholder="{__("eurosite.probe_cities_all")|escape:html}" /></label>
                     <label style="margin-left: 8px;">{__("eurosite.probe_from")} <input type="date" name="from" value="" class="input-medium" /></label>
                     <label style="margin-left: 8px;">{__("eurosite.probe_nights")} <input type="number" name="nights" value="" min="1" max="30" class="input-mini" /></label>
                     <label style="margin-left: 8px;">{__("eurosite.probe_months")} <input type="number" name="months" value="12" min="1" max="18" class="input-mini" /></label>
                     <button type="submit" class="btn btn-primary" style="margin-left: 8px;"><i class="icon-search"></i> {__("eurosite.probe_run")}</button>
                 </form>
             </div>
-        {/if}
-    {/if}
 
 </div>{* /.travel-admin-panel — opened at the top and never closed until now;
         the browser recovered by closing it at the end of the capture, which
