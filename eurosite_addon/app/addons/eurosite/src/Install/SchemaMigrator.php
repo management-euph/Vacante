@@ -62,6 +62,8 @@ final class SchemaMigrator
         'gate_hidden' => "ADD COLUMN `gate_hidden` ENUM('Y','N') NOT NULL DEFAULT 'N' AFTER `first_image`",
         'product_skip_reason' => "ADD COLUMN `product_skip_reason` VARCHAR(32) NOT NULL DEFAULT '' AFTER `gate_hidden`",
         'product_updated_at' => 'ADD COLUMN `product_updated_at` DATETIME DEFAULT NULL AFTER `product_skip_reason`',
+        'hotel_class' => "ADD COLUMN `hotel_class` VARCHAR(64) NOT NULL DEFAULT '' AFTER `product_updated_at`",
+        'meals' => "ADD COLUMN `meals` VARCHAR(255) NOT NULL DEFAULT '' AFTER `hotel_class`",
     ];
 
     public const HOTEL_INDEXES = [

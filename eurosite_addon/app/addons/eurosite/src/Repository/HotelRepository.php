@@ -307,12 +307,16 @@ class HotelRepository
             }
             $availability = TypeCoerce::toString($b['availability'] ?? 'NONE');
             $counts[isset($counts[$availability]) ? $availability : 'NONE']++;
+            // Meal plans the offers sold (the board feature), "|" separated.
+            $meals = mb_substr(implode('|', TypeCoerce::toStringList($b['meals'] ?? [])), 0, 255);
             db_query(
                 'UPDATE ?:eurosite_hotels SET
                     availability = ?s, availability_check_in = ?s, availability_window = ?s,
                     availability_checked_at = ?s, min_price = ?d, min_gross = ?d, price_currency = ?s,
                     category = IF(?i > 0, ?i, category),
-                    first_image = IF(?s <> \'\', ?s, first_image)
+                    first_image = IF(?s <> \'\', ?s, first_image),
+                    hotel_class = IF(?s <> \'\', ?s, hotel_class),
+                    meals = IF(?s <> \'\', ?s, meals)
                  WHERE tourop_code = ?s AND product_code = ?s',
                 $availability,
                 TypeCoerce::toString($b['check_in'] ?? ''),
@@ -325,6 +329,10 @@ class HotelRepository
                 TypeCoerce::toInt($b['category'] ?? 0),
                 TypeCoerce::toString($b['first_image'] ?? ''),
                 TypeCoerce::toString($b['first_image'] ?? ''),
+                mb_substr(TypeCoerce::toString($b['class'] ?? ''), 0, 64),
+                mb_substr(TypeCoerce::toString($b['class'] ?? ''), 0, 64),
+                $meals,
+                $meals,
                 $tourop,
                 $code,
             );

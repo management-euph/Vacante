@@ -9,8 +9,9 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * mode `update_products` — keeps the Eurosite products current: the price
- * follows the latest availability check, and a product still missing its
- * description or pictures gets them once the hotel details have them.
+ * follows the latest availability check, a product still missing its
+ * description or pictures gets them once the hotel details have them, and
+ * its features (Feature Mappings: stars, board, facilities…) are assigned.
  * Details older than 30 days are fetched again first. What an admin edited
  * (name, category, a description they wrote) is left alone.
  *
@@ -32,7 +33,7 @@ final class UpdateProductsCommand extends AbstractSyncCommand
     #[\Override]
     public static function getDescription(): string
     {
-        return 'Refresh the Eurosite products: price, description and pictures (&city=CODE, &limit=N)';
+        return 'Refresh the Eurosite products: price, description, pictures and features (&city=CODE, &limit=N)';
     }
 
     #[\Override]
@@ -48,7 +49,7 @@ final class UpdateProductsCommand extends AbstractSyncCommand
             $factory = Container::productFactory();
 
             $rows = $hotelRepo->getLinked($only, $limit);
-            $changed = ['price' => 0, 'description' => 0, 'images' => 0];
+            $changed = ['price' => 0, 'description' => 0, 'images' => 0, 'features' => 0];
             $synced = 0;
             $errors = [];
             foreach ($rows as $hotel) {
@@ -69,11 +70,12 @@ final class UpdateProductsCommand extends AbstractSyncCommand
             }
 
             $this->output(sprintf(
-                '  %d products checked: %d new prices, %d descriptions, %d with pictures added',
+                '  %d products checked: %d new prices, %d descriptions, %d with pictures added, %d with features',
                 $synced,
                 $changed['price'],
                 $changed['description'],
                 $changed['images'],
+                $changed['features'],
             ));
 
             return [
@@ -83,6 +85,7 @@ final class UpdateProductsCommand extends AbstractSyncCommand
                 'prices' => $changed['price'],
                 'descriptions' => $changed['description'],
                 'images' => $changed['images'],
+                'features' => $changed['features'],
                 'error' => implode('; ', array_slice($errors, 0, 5)),
             ];
         });

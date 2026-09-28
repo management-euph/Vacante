@@ -137,7 +137,7 @@ final class AvailabilityPlan
      * @param array<string, mixed>|null $current
      * @param array{kind: string, check_in: string, check_out: string} $window
      *
-     * @return array{availability: string, min_price: float, min_gross: float, currency: string, check_in: string, window: string, category: int, first_image: string, name: string, city_code: string, country_code: string}
+     * @return array{availability: string, min_price: float, min_gross: float, currency: string, check_in: string, window: string, category: int, first_image: string, name: string, city_code: string, country_code: string, class: string, meals: list<string>}
      */
     public static function merge(?array $current, HotelOffer $offer, array $window): array
     {
@@ -154,12 +154,14 @@ final class AvailabilityPlan
             'name' => $offer->productName,
             'city_code' => $offer->cityCode,
             'country_code' => $offer->countryCode,
+            'class' => $offer->class,
+            'meals' => self::mealNames($offer),
         ];
         if ($current === null) {
             return $candidate;
         }
 
-        /** @var array{availability: string, min_price: float, min_gross: float, currency: string, check_in: string, window: string, category: int, first_image: string, name: string, city_code: string, country_code: string} $current */
+        /** @var array{availability: string, min_price: float, min_gross: float, currency: string, check_in: string, window: string, category: int, first_image: string, name: string, city_code: string, country_code: string, class: string, meals: list<string>} $current */
         $rankNew = self::RANK[$code] ?? 0;
         $rankOld = self::RANK[$current['availability']] ?? 0;
         $better = $rankNew > $rankOld
@@ -170,8 +172,30 @@ final class AvailabilityPlan
         // keep whichever answer carried them.
         $winner['category'] = $winner['category'] > 0 ? $winner['category'] : ($better ? $current['category'] : $candidate['category']);
         $winner['first_image'] = $winner['first_image'] !== '' ? $winner['first_image'] : ($better ? $current['first_image'] : $candidate['first_image']);
+        // The class too; and the meal plans are every plan ANY offer sold
+        // (the board feature lists what the hotel offers, not the cheapest).
+        $winner['class'] = $winner['class'] !== '' ? $winner['class'] : ($better ? $current['class'] : $candidate['class']);
+        $winner['meals'] = array_values(array_unique([...$current['meals'], ...$candidate['meals']]));
 
         return $winner;
+    }
+
+    /**
+     * The meal plan names an offer sells ("Demipensiune", "All Inclusive").
+     *
+     * @return list<string>
+     */
+    public static function mealNames(HotelOffer $offer): array
+    {
+        $names = [];
+        foreach ($offer->meals as $meal) {
+            $name = trim($meal['name'] ?? '');
+            if ($name !== '') {
+                $names[$name] = true;
+            }
+        }
+
+        return array_map('strval', array_keys($names));
     }
 
     /** Only Immediate counts: On request and Stop sale hotels are listed, never published. */

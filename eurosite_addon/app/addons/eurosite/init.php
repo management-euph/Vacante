@@ -68,6 +68,23 @@ if (defined('AREA') && AREA === 'A' && function_exists('fn_eurosite_ensure_schem
     unset($__eu_heal_fp);
 }
 
+// Alias self-heal: seed Eurosite's ?:travel_api_alias rows (Feature Mappings)
+// once per deployed version of the seed data, so stars, property types, meal
+// plans and facilities resolve without a reinstall.
+if (defined('AREA') && AREA === 'A' && function_exists('fn_travel_core_self_heal_due')
+    && class_exists(\Tygh\Addons\TravelCore\Services\FeatureMapper::class)
+) {
+    $__eu_alias_fp = \Tygh\Addons\Eurosite\Install\EurositeAliasSeeder::fingerprint();
+    if (fn_travel_core_self_heal_due('eurosite_aliases', $__eu_alias_fp)) {
+        fn_travel_core_self_heal_guard('eurosite_aliases', static function (): void {
+            $prefix = \Tygh\Registry::get('config.table_prefix');
+            \Tygh\Addons\Eurosite\Install\EurositeAliasSeeder::seed(is_scalar($prefix) ? (string) $prefix : 'cscart_');
+        });
+        fn_travel_core_self_heal_stamp('eurosite_aliases', $__eu_alias_fp);
+    }
+    unset($__eu_alias_fp);
+}
+
 // Language self-heal: UPSERT lang_keys.php into ?:language_values whenever
 // the source fingerprint changes (novoton pattern, all areas). Admin menu
 // labels and storefront strings must not depend on the install-time .po
