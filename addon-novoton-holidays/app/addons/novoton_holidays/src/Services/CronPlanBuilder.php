@@ -71,7 +71,7 @@ final class CronPlanBuilder
     public const array ON_DEMAND = ['full', 'alternative_rs', 'alternative_rs_bookings', 'notify_alternatives', 'expire_requests', 'backfill_descriptions'];
 
     /** One-hotel diagnostics (they need hotel_id=…): never on the dashboard. */
-    public const array DIAGNOSTIC = ['diagnose_features', 'diagnose_image_urls'];
+    public const array DIAGNOSTIC = ['diagnose_features', 'diagnose_image_urls', 'diagnose_hotel_facilities'];
 
     /**
      * Suggested slot per job, and after how many hours without a finished run
