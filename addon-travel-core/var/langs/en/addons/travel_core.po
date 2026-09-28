@@ -1781,3 +1781,95 @@ msgstr "Add [provider] alias"
 msgctxt "Languages::travel_core.fm_other_source"
 msgid "Another source"
 msgstr "Another source"
+
+msgctxt "Languages::travel_core.fm_unmapped_intro"
+msgid "Values providers sent that match no alias of theirs: their hotels get nothing for these. Link each one to the mapping it means, create a new mapping, or dismiss it."
+msgstr "Values providers sent that match no alias of theirs: their hotels get nothing for these. Link each one to the mapping it means, create a new mapping, or dismiss it."
+
+msgctxt "Languages::travel_core.fm_unmapped_search"
+msgid "Search value or name"
+msgstr "Search value or name"
+
+msgctxt "Languages::travel_core.fm_unmapped_any_type"
+msgid "Any feature"
+msgstr "Any feature"
+
+msgctxt "Languages::travel_core.fm_unmapped_any_facility"
+msgid "Any facility"
+msgstr "Any facility"
+
+msgctxt "Languages::travel_core.fm_unmapped_col_value"
+msgid "Value sent"
+msgstr "Value sent"
+
+msgctxt "Languages::travel_core.fm_unmapped_col_hotels"
+msgid "Hotels"
+msgstr "Hotels"
+
+msgctxt "Languages::travel_core.fm_unmapped_col_last_seen"
+msgid "Last seen"
+msgstr "Last seen"
+
+msgctxt "Languages::travel_core.fm_unmapped_col_link"
+msgid "Link to an existing mapping"
+msgstr "Link to an existing mapping"
+
+msgctxt "Languages::travel_core.fm_unmapped_first_seen"
+msgid "First seen [date]"
+msgstr "First seen [date]"
+
+msgctxt "Languages::travel_core.fm_unmapped_choose"
+msgid "Choose a mapping…"
+msgstr "Choose a mapping…"
+
+msgctxt "Languages::travel_core.fm_unmapped_link_to"
+msgid "Mapping for [value]"
+msgstr "Mapping for [value]"
+
+msgctxt "Languages::travel_core.fm_unmapped_link"
+msgid "Link"
+msgstr "Link"
+
+msgctxt "Languages::travel_core.fm_unmapped_create"
+msgid "Create new"
+msgstr "Create new"
+
+msgctxt "Languages::travel_core.fm_unmapped_create_hint"
+msgid "Create a new mapping named after this value"
+msgstr "Create a new mapping named after this value"
+
+msgctxt "Languages::travel_core.fm_unmapped_create_confirm"
+msgid "Create a new mapping for [value]?"
+msgstr "Create a new mapping for [value]?"
+
+msgctxt "Languages::travel_core.fm_unmapped_dismiss"
+msgid "Dismiss"
+msgstr "Dismiss"
+
+msgctxt "Languages::travel_core.fm_unmapped_dismiss_hint"
+msgid "Removed from this list; it comes back if the provider sends it again."
+msgstr "Removed from this list; it comes back if the provider sends it again."
+
+msgctxt "Languages::travel_core.fm_unmapped_dismiss_confirm"
+msgid "Dismiss the selected values?"
+msgstr "Dismiss the selected values?"
+
+msgctxt "Languages::travel_core.fm_unmapped_none"
+msgid "No unmapped values: everything the providers sent is mapped."
+msgstr "No unmapped values: everything the providers sent is mapped."
+
+msgctxt "Languages::travel_core.fm_unmapped_none_filtered"
+msgid "No values match these filters."
+msgstr "No values match these filters."
+
+msgctxt "Languages::travel_core.fm_unmapped_linked"
+msgid "[value] is now an alias of [mapping] for [provider]. Run the provider's \"reassign features\" job so existing hotels get it."
+msgstr "[value] is now an alias of [mapping] for [provider]. Run the provider's \"reassign features\" job so existing hotels get it."
+
+msgctxt "Languages::travel_core.fm_unmapped_link_failed"
+msgid "That value or mapping no longer exists, or they are different kinds of feature."
+msgstr "That value or mapping no longer exists, or they are different kinds of feature."
+
+msgctxt "Languages::travel_core.fm_unmapped_dismissed"
+msgid "Dismissed [count] values."
+msgstr "Dismissed [count] values."

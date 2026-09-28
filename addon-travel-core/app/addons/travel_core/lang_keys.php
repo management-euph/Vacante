@@ -963,4 +963,96 @@ return [
         'en' => 'Another source',
         'ro' => 'Altă sursă',
     ],
+    'travel_core.fm_unmapped_intro' => [
+        'en' => 'Values providers sent that match no alias of theirs: their hotels get nothing for these. Link each one to the mapping it means, create a new mapping, or dismiss it.',
+        'ro' => 'Valori trimise de furnizori care nu corespund niciunui alias al lor: hotelurile lor nu primesc nimic pentru acestea. Legați fiecare valoare de maparea pe care o reprezintă, creați o mapare nouă sau ignorați-o.',
+    ],
+    'travel_core.fm_unmapped_search' => [
+        'en' => 'Search value or name',
+        'ro' => 'Căutați valoare sau nume',
+    ],
+    'travel_core.fm_unmapped_any_type' => [
+        'en' => 'Any feature',
+        'ro' => 'Orice caracteristică',
+    ],
+    'travel_core.fm_unmapped_any_facility' => [
+        'en' => 'Any facility',
+        'ro' => 'Orice facilitate',
+    ],
+    'travel_core.fm_unmapped_col_value' => [
+        'en' => 'Value sent',
+        'ro' => 'Valoare trimisă',
+    ],
+    'travel_core.fm_unmapped_col_hotels' => [
+        'en' => 'Hotels',
+        'ro' => 'Hoteluri',
+    ],
+    'travel_core.fm_unmapped_col_last_seen' => [
+        'en' => 'Last seen',
+        'ro' => 'Văzută ultima dată',
+    ],
+    'travel_core.fm_unmapped_col_link' => [
+        'en' => 'Link to an existing mapping',
+        'ro' => 'Legați de o mapare existentă',
+    ],
+    'travel_core.fm_unmapped_first_seen' => [
+        'en' => 'First seen [date]',
+        'ro' => 'Văzută prima dată [date]',
+    ],
+    'travel_core.fm_unmapped_choose' => [
+        'en' => 'Choose a mapping…',
+        'ro' => 'Alegeți o mapare…',
+    ],
+    'travel_core.fm_unmapped_link_to' => [
+        'en' => 'Mapping for [value]',
+        'ro' => 'Maparea pentru [value]',
+    ],
+    'travel_core.fm_unmapped_link' => [
+        'en' => 'Link',
+        'ro' => 'Leagă',
+    ],
+    'travel_core.fm_unmapped_create' => [
+        'en' => 'Create new',
+        'ro' => 'Creează nouă',
+    ],
+    'travel_core.fm_unmapped_create_hint' => [
+        'en' => 'Create a new mapping named after this value',
+        'ro' => 'Creează o mapare nouă cu numele acestei valori',
+    ],
+    'travel_core.fm_unmapped_create_confirm' => [
+        'en' => 'Create a new mapping for [value]?',
+        'ro' => 'Creați o mapare nouă pentru [value]?',
+    ],
+    'travel_core.fm_unmapped_dismiss' => [
+        'en' => 'Dismiss',
+        'ro' => 'Ignoră',
+    ],
+    'travel_core.fm_unmapped_dismiss_hint' => [
+        'en' => 'Removed from this list; it comes back if the provider sends it again.',
+        'ro' => 'Eliminată din listă; revine dacă furnizorul o trimite din nou.',
+    ],
+    'travel_core.fm_unmapped_dismiss_confirm' => [
+        'en' => 'Dismiss the selected values?',
+        'ro' => 'Ignorați valorile selectate?',
+    ],
+    'travel_core.fm_unmapped_none' => [
+        'en' => 'No unmapped values: everything the providers sent is mapped.',
+        'ro' => 'Nicio valoare nemapată: tot ce au trimis furnizorii este mapat.',
+    ],
+    'travel_core.fm_unmapped_none_filtered' => [
+        'en' => 'No values match these filters.',
+        'ro' => 'Nicio valoare nu corespunde acestor filtre.',
+    ],
+    'travel_core.fm_unmapped_linked' => [
+        'en' => '[value] is now an alias of [mapping] for [provider]. Run the provider\'s "reassign features" job so existing hotels get it.',
+        'ro' => '[value] este acum un alias al [mapping] pentru [provider]. Rulați jobul „reassign features” al furnizorului ca hotelurile existente să îl primească.',
+    ],
+    'travel_core.fm_unmapped_link_failed' => [
+        'en' => 'That value or mapping no longer exists, or they are different kinds of feature.',
+        'ro' => 'Valoarea sau maparea nu mai există, ori sunt tipuri diferite de caracteristici.',
+    ],
+    'travel_core.fm_unmapped_dismissed' => [
+        'en' => 'Dismissed [count] values.',
+        'ro' => '[count] valori ignorate.',
+    ],
 ];

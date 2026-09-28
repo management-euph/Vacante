@@ -1781,3 +1781,95 @@ msgstr "Adaugă alias [provider]"
 msgctxt "Languages::travel_core.fm_other_source"
 msgid "Another source"
 msgstr "Altă sursă"
+
+msgctxt "Languages::travel_core.fm_unmapped_intro"
+msgid "Values providers sent that match no alias of theirs: their hotels get nothing for these. Link each one to the mapping it means, create a new mapping, or dismiss it."
+msgstr "Valori trimise de furnizori care nu corespund niciunui alias al lor: hotelurile lor nu primesc nimic pentru acestea. Legați fiecare valoare de maparea pe care o reprezintă, creați o mapare nouă sau ignorați-o."
+
+msgctxt "Languages::travel_core.fm_unmapped_search"
+msgid "Search value or name"
+msgstr "Căutați valoare sau nume"
+
+msgctxt "Languages::travel_core.fm_unmapped_any_type"
+msgid "Any feature"
+msgstr "Orice caracteristică"
+
+msgctxt "Languages::travel_core.fm_unmapped_any_facility"
+msgid "Any facility"
+msgstr "Orice facilitate"
+
+msgctxt "Languages::travel_core.fm_unmapped_col_value"
+msgid "Value sent"
+msgstr "Valoare trimisă"
+
+msgctxt "Languages::travel_core.fm_unmapped_col_hotels"
+msgid "Hotels"
+msgstr "Hoteluri"
+
+msgctxt "Languages::travel_core.fm_unmapped_col_last_seen"
+msgid "Last seen"
+msgstr "Văzută ultima dată"
+
+msgctxt "Languages::travel_core.fm_unmapped_col_link"
+msgid "Link to an existing mapping"
+msgstr "Legați de o mapare existentă"
+
+msgctxt "Languages::travel_core.fm_unmapped_first_seen"
+msgid "First seen [date]"
+msgstr "Văzută prima dată [date]"
+
+msgctxt "Languages::travel_core.fm_unmapped_choose"
+msgid "Choose a mapping…"
+msgstr "Alegeți o mapare…"
+
+msgctxt "Languages::travel_core.fm_unmapped_link_to"
+msgid "Mapping for [value]"
+msgstr "Maparea pentru [value]"
+
+msgctxt "Languages::travel_core.fm_unmapped_link"
+msgid "Link"
+msgstr "Leagă"
+
+msgctxt "Languages::travel_core.fm_unmapped_create"
+msgid "Create new"
+msgstr "Creează nouă"
+
+msgctxt "Languages::travel_core.fm_unmapped_create_hint"
+msgid "Create a new mapping named after this value"
+msgstr "Creează o mapare nouă cu numele acestei valori"
+
+msgctxt "Languages::travel_core.fm_unmapped_create_confirm"
+msgid "Create a new mapping for [value]?"
+msgstr "Creați o mapare nouă pentru [value]?"
+
+msgctxt "Languages::travel_core.fm_unmapped_dismiss"
+msgid "Dismiss"
+msgstr "Ignoră"
+
+msgctxt "Languages::travel_core.fm_unmapped_dismiss_hint"
+msgid "Removed from this list; it comes back if the provider sends it again."
+msgstr "Eliminată din listă; revine dacă furnizorul o trimite din nou."
+
+msgctxt "Languages::travel_core.fm_unmapped_dismiss_confirm"
+msgid "Dismiss the selected values?"
+msgstr "Ignorați valorile selectate?"
+
+msgctxt "Languages::travel_core.fm_unmapped_none"
+msgid "No unmapped values: everything the providers sent is mapped."
+msgstr "Nicio valoare nemapată: tot ce au trimis furnizorii este mapat."
+
+msgctxt "Languages::travel_core.fm_unmapped_none_filtered"
+msgid "No values match these filters."
+msgstr "Nicio valoare nu corespunde acestor filtre."
+
+msgctxt "Languages::travel_core.fm_unmapped_linked"
+msgid "[value] is now an alias of [mapping] for [provider]. Run the provider's \"reassign features\" job so existing hotels get it."
+msgstr "[value] este acum un alias al [mapping] pentru [provider]. Rulați jobul „reassign features” al furnizorului ca hotelurile existente să îl primească."
+
+msgctxt "Languages::travel_core.fm_unmapped_link_failed"
+msgid "That value or mapping no longer exists, or they are different kinds of feature."
+msgstr "Valoarea sau maparea nu mai există, ori sunt tipuri diferite de caracteristici."
+
+msgctxt "Languages::travel_core.fm_unmapped_dismissed"
+msgid "Dismissed [count] values."
+msgstr "[count] valori ignorate."

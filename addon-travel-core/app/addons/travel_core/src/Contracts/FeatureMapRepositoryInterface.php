@@ -176,6 +176,42 @@ interface FeatureMapRepositoryInterface
     public function getVariantNames(array $variantIds, string $langCode): array;
 
     /**
+     * Raw values waiting for an alias, counted per provider and type.
+     *
+     * @return list<array<string, mixed>> {api_source, feature_type, values, hotels}
+     */
+    public function getUnmappedSummary(): array;
+
+    /**
+     * Drop logged values that resolve now: through an alias of their
+     * provider, or (for $codeTypes) because they are a canonical code.
+     *
+     * @param list<string> $codeTypes
+     */
+    public function purgeResolvedUnmapped(array $codeTypes): void;
+
+    /**
+     * An active mapping by its canonical code (the types whose values are
+     * travel_core's own codes, see FeatureMapper::CODE_RESOLVED_TYPES).
+     *
+     * @return array<string, mixed>|null
+     */
+    public function findByCode(string $featureType, string $canonicalCode): ?array;
+
+    /**
+     * @param list<int> $unmappedIds
+     */
+    public function deleteUnmappedByIds(array $unmappedIds): void;
+
+    /**
+     * The mappings a raw value can be linked to (the unmapped page's picker).
+     *
+     * @param list<string> $featureTypes
+     * @return list<array<string, mixed>> {map_id, feature_type, canonical_code, display_name_en}
+     */
+    public function findMappingsOfTypes(array $featureTypes): array;
+
+    /**
      * Get global mapping stats (total, active, unmapped, alias count).
      *
      * @return array<string, mixed>

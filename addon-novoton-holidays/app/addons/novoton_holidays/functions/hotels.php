@@ -607,9 +607,6 @@ function fn_novoton_holidays_sync_hotel_facilities(string $hotel_id): bool
             return false;
         }
 
-        // Clear existing facilities for this hotel
-        db_query("DELETE FROM ?:novoton_hotel_facilities WHERE hotel_id = ?s", $hotel_id);
-
         // Parse <IdFacility> elements from hotel_facilities API response
         $facility_nodes = $response->xpath('//IdFacility') ?: [];
 
@@ -621,15 +618,29 @@ function fn_novoton_holidays_sync_hotel_facilities(string $hotel_id): bool
                 $facility_ids[] = $fid;
             }
         }
-        if (!empty($facility_ids)) {
-            $values = [];
-            foreach ($facility_ids as $fid) {
-                $values[] = db_quote("(?s, ?i)", $hotel_id, $fid);
-            }
-            db_query(
-                "INSERT IGNORE INTO ?:novoton_hotel_facilities (hotel_id, facility_id) VALUES " . implode(', ', $values)
-            );
+
+        // No <IdFacility> at all: an error reply or an unexpected shape, not
+        // "this hotel has no facilities". Keep the stored ones (the old code
+        // deleted first, so one bad API day wiped every hotel's facilities)
+        // and report the hotel as failed with what the API answered.
+        if ($facility_ids === []) {
+            fn_log_event('general', 'runtime', [
+                'message' => 'Novoton: hotel_facilities returned no IdFacility; kept the stored facilities',
+                'hotel_id' => $hotel_id,
+                'response' => mb_substr((string) $response->asXML(), 0, 500),
+            ]);
+            return false;
         }
+
+        // Replace this hotel's facilities
+        db_query("DELETE FROM ?:novoton_hotel_facilities WHERE hotel_id = ?s", $hotel_id);
+        $values = [];
+        foreach ($facility_ids as $fid) {
+            $values[] = db_quote("(?s, ?i)", $hotel_id, $fid);
+        }
+        db_query(
+            "INSERT IGNORE INTO ?:novoton_hotel_facilities (hotel_id, facility_id) VALUES " . implode(', ', $values)
+        );
 
         return true;
 

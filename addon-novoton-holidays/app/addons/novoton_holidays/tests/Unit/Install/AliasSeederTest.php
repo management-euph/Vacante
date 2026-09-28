@@ -6,6 +6,7 @@ namespace Tygh\Addons\NovotonHolidays\Tests\Unit\Install;
 
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\NovotonHolidays\Install\AliasSeeder;
+use Tygh\Addons\NovotonHolidays\Tests\Support\DbStub;
 
 /**
  * Novoton's star aliases ('1'–'5') collided with its facility ids under the
@@ -47,5 +48,33 @@ final class AliasSeederTest extends TestCase
         $install = (string) file_get_contents(self::addonRoot() . '/functions/install.php');
 
         self::assertStringContainsString('AliasSeeder::seed(', $install);
+    }
+
+    protected function tearDown(): void
+    {
+        DbStub::reset();
+    }
+
+    public function testNumericStarCodesAreSeeded(): void
+    {
+        // db_get_hash_single_array keys by canonical_code: the star codes
+        // '1'–'5' arrive as INT keys. toStringMap() dropped them, so not one
+        // star alias was ever written.
+        DbStub::$getField = static fn (): string => '1';
+        DbStub::$getHashSingleArray = static fn (string $q, array $k, string $type): array
+            => $type === 'stars' ? [1 => '11', 2 => '12', 3 => '13', 4 => '14', 5 => '15'] : [];
+        $aliases = [];
+        DbStub::$query = static function (string $q, mixed ...$p) use (&$aliases): int {
+            if (str_contains($q, 'travel_api_alias')) {
+                $aliases[] = [$p[1], $p[2], $p[0]];
+            }
+
+            return 1;
+        };
+
+        AliasSeeder::seed('cscart_');
+
+        self::assertContains(['novoton', '3', 13], $aliases);
+        self::assertCount(5, array_filter($aliases, static fn (array $a): bool => $a[2] >= 11 && $a[2] <= 15));
     }
 }

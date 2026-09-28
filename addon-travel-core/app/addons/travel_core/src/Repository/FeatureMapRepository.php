@@ -49,6 +49,22 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         return $result === [] ? null : $result;
     }
 
+    /** @return array<string, mixed>|null */
+    #[\Override]
+    public function findByCode(string $featureType, string $canonicalCode): ?array
+    {
+        $result = self::asRow(db_get_row(
+            "SELECT map_id, feature_type, canonical_code, display_name_en, display_name_ro,
+                    cscart_feature_id, cscart_variant_id, variant_source
+             FROM ?:travel_feature_map
+             WHERE feature_type = ?s AND canonical_code = ?s AND status = 'A'",
+            $featureType,
+            $canonicalCode,
+        ));
+
+        return $result === [] ? null : $result;
+    }
+
     #[\Override]
     public function getDisplayName(string $featureType, string $canonicalCode, string $lang = 'en'): string
     {
@@ -210,6 +226,63 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
             $featureType,
             $apiValue,
         );
+    }
+
+    #[\Override]
+    public function purgeResolvedUnmapped(array $codeTypes): void
+    {
+        // Values that now have an alias of their provider (e.g. seeded after
+        // they were logged) no longer wait for anyone.
+        db_query(
+            'DELETE u FROM ?:travel_unmapped_values u
+             JOIN ?:travel_api_alias a ON a.api_source = u.api_source AND a.api_value = u.api_value
+             JOIN ?:travel_feature_map m ON m.map_id = a.map_id AND m.feature_type = u.feature_type',
+        );
+        if ($codeTypes !== []) {
+            db_query(
+                'DELETE u FROM ?:travel_unmapped_values u
+                 JOIN ?:travel_feature_map m ON m.feature_type = u.feature_type AND m.canonical_code = u.api_value
+                 WHERE u.feature_type IN (?a)',
+                $codeTypes,
+            );
+        }
+    }
+
+    /** @return list<array<string, mixed>> */
+    #[\Override]
+    public function getUnmappedSummary(): array
+    {
+        return self::asRowList(db_get_array(
+            'SELECT api_source, feature_type, COUNT(*) AS `values`, SUM(hotel_count) AS hotels
+             FROM ?:travel_unmapped_values
+             GROUP BY api_source, feature_type
+             ORDER BY `values` DESC',
+        ));
+    }
+
+    #[\Override]
+    public function deleteUnmappedByIds(array $unmappedIds): void
+    {
+        if ($unmappedIds !== []) {
+            db_query('DELETE FROM ?:travel_unmapped_values WHERE unmapped_id IN (?n)', $unmappedIds);
+        }
+    }
+
+    /** @return list<array<string, mixed>> */
+    #[\Override]
+    public function findMappingsOfTypes(array $featureTypes): array
+    {
+        if ($featureTypes === []) {
+            return [];
+        }
+
+        return self::asRowList(db_get_array(
+            'SELECT map_id, feature_type, canonical_code, display_name_en
+             FROM ?:travel_feature_map
+             WHERE feature_type IN (?a)
+             ORDER BY feature_type, display_name_en, canonical_code',
+            $featureTypes,
+        ));
     }
 
     /** @return array<string, mixed>|null */

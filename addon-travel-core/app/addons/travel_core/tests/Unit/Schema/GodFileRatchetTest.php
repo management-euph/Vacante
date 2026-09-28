@@ -19,7 +19,7 @@ final class GodFileRatchetTest extends TestCase
     private const CEILINGS = [
         'functions/hotels.php' => 1020,
         'src/Services/GuestDataService.php' => 740,
-        'controllers/backend/travel_feature_mappings.php' => 649,
+        'controllers/backend/travel_feature_mappings.php' => 647,
     ];
 
     public function testGodFilesNeverGrowPastTheirCeiling(): void

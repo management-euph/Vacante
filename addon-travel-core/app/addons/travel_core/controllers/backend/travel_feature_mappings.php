@@ -18,6 +18,7 @@ use Tygh\Addons\TravelCore\Services\FeatureMapper;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
 use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\TravelCore\ViewModels\FeatureMappingsView;
+use Tygh\Addons\TravelCore\ViewModels\UnmappedValuesView;
 
 /** @var \Tygh\Addons\TravelCore\Contracts\FeatureMapRepositoryInterface $repo */
 $repo = FeatureMapper::getRepository();
@@ -270,6 +271,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         fn_set_notification('E', __('error'), __('travel_core.fm_unmapped_promote_failed'));
         return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.unmapped'];
+    }
+
+    // Link a raw value to an existing mapping: an alias of its provider
+    if ($mode === 'link_unmapped') {
+        $row = $repo->getUnmappedById(RequestCoerce::int($_REQUEST, 'unmapped_id'));
+        $target = $repo->getMappingById(RequestCoerce::int($_REQUEST, 'map_id'));
+        $source = TypeCoerce::toString($row['api_source'] ?? '');
+        if ($row !== null && $target !== null && in_array(TypeCoerce::toString($target['feature_type'] ?? ''), UnmappedValuesView::linkTargetTypes(TypeCoerce::toString($row['feature_type'] ?? '')), true)) {
+            FeatureMapper::addAlias($source, TypeCoerce::toString($row['api_value'] ?? ''), TypeCoerce::toInt($target['map_id'] ?? 0), 'exact');
+            $repo->deleteUnmapped($source, TypeCoerce::toString($row['feature_type'] ?? ''), TypeCoerce::toString($row['api_value'] ?? ''));
+            FeatureMapper::clearCache();
+            fn_set_notification('N', __('notice'), __('travel_core.fm_unmapped_linked', ['[value]' => TypeCoerce::toString($row['api_value'] ?? ''), '[mapping]' => TypeCoerce::toString($target['display_name_en'] ?? '') ?: TypeCoerce::toString($target['canonical_code'] ?? ''), '[provider]' => ucfirst($source)]));
+        } else {
+            fn_set_notification('E', __('error'), __('travel_core.fm_unmapped_link_failed'));
+        }
+        return [CONTROLLER_STATUS_REDIRECT, UnmappedValuesView::returnUrl(UnmappedValuesView::filters($_REQUEST))];
+    }
+
+    // Dismiss raw values (they come back if a provider sends them again)
+    if ($mode === 'dismiss_unmapped') {
+        $ids = RequestCoerce::intList($_REQUEST, 'unmapped_ids');
+        $repo->deleteUnmappedByIds($ids);
+        if ($ids !== []) {
+            fn_set_notification('N', __('notice'), __('travel_core.fm_unmapped_dismissed', ['[count]' => count($ids)]));
+        }
+        return [CONTROLLER_STATUS_REDIRECT, UnmappedValuesView::returnUrl(UnmappedValuesView::filters($_REQUEST))];
     }
 
     // Batch scan provider hotel facilities → populate travel_unmapped_values
@@ -535,40 +562,11 @@ if ($mode === 'manage') {
 
 // ── GET: Unmapped values ──
 if ($mode === 'unmapped') {
-    $page = max(1, RequestCoerce::int($_REQUEST, 'page', 1));
-    $itemsPerPage = RequestCoerce::int($_REQUEST, 'items_per_page');
-    if ($itemsPerPage <= 0) {
-        $itemsPerPage = TypeCoerce::toInt(Registry::get('settings.Appearance.admin_elements_per_page')) ?: 25;
+    $itemsPerPage = RequestCoerce::int($_REQUEST, 'items_per_page') ?: (TypeCoerce::toInt(Registry::get('settings.Appearance.admin_elements_per_page')) ?: 25);
+    $providers = array_map(static fn (array $p): string => $p['label'], TravelProviderRegistry::all());
+    foreach (UnmappedValuesView::build($repo, UnmappedValuesView::filters($_REQUEST), min($itemsPerPage, 250), $providers) as $name => $value) {
+        $view->assign($name, $value);
     }
-
-    $sourceFilter = RequestCoerce::string($_REQUEST, 'api_source');
-    $typeFilter = RequestCoerce::string($_REQUEST, 'feature_type');
-
-    // Build condition using db_quote() (CS-Cart standard pattern)
-    $condition = '';
-    if ($sourceFilter !== '') {
-        $condition .= db_quote(" AND api_source = ?s", $sourceFilter);
-    }
-    if ($typeFilter !== '') {
-        $condition .= db_quote(" AND feature_type = ?s", $typeFilter);
-    }
-
-    $offset = ($page - 1) * $itemsPerPage;
-
-    $paginatedUnmapped = $repo->getPaginatedUnmapped($condition, $offset, $itemsPerPage);
-    $unmapped = $paginatedUnmapped['items'];
-    $totalItems = $paginatedUnmapped['total'];
-
-    $search = [
-        'api_source'     => $sourceFilter,
-        'feature_type'   => $typeFilter,
-        'page'           => $page,
-        'items_per_page' => $itemsPerPage,
-        'total_items'    => $totalItems,
-    ];
-
-    $view->assign('unmapped_values', $unmapped);
-    $view->assign('search', $search);
 }
 
 // ── GET: Scan progress (intermediate page between batches) ──

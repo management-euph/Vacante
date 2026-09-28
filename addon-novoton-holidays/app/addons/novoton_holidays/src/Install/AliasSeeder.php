@@ -78,13 +78,19 @@ final class AliasSeeder
     private static function seedGroup(string $featureType, array $aliases): void
     {
         // canonical_code → map_id for this feature type, one query per group.
-        $maps = TypeCoerce::toStringMap(db_get_hash_single_array(
+        // toArrayMap, NOT toStringMap: numeric codes (the star ratings '1'–'5')
+        // are int array keys in PHP and toStringMap drops them. That emptied
+        // the stars group, so Novoton never got a star alias at all.
+        $maps = [];
+        foreach (TypeCoerce::toArrayMap(db_get_hash_single_array(
             'SELECT canonical_code, map_id FROM ?:travel_feature_map WHERE feature_type = ?s',
             ['canonical_code', 'map_id'],
             $featureType,
-        ));
+        )) as $code => $mapId) {
+            $maps[(string) $code] = TypeCoerce::toInt($mapId);
+        }
         foreach ($aliases as $apiValue => $canonicalCode) {
-            $mapId = TypeCoerce::toInt($maps[$canonicalCode] ?? 0);
+            $mapId = $maps[(string) $canonicalCode] ?? 0;
             if ($mapId > 0) {
                 FeatureMapper::addAlias('novoton', (string) $apiValue, $mapId, 'exact');
             }
