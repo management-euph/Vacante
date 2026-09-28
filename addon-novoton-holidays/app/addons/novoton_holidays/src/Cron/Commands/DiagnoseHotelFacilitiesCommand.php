@@ -83,6 +83,11 @@ class DiagnoseHotelFacilitiesCommand extends AbstractCronCommand
         $this->output('Parsed root: <' . $response->getName() . '>');
         $this->output('Elements in the reply: ' . ($elements === [] ? '(none)' : implode(', ', array_map(static fn (string $n, int $c): string => "{$n}×{$c}", array_keys($elements), $elements))));
         $this->output('<IdFacility> the sync reads: ' . count($ids) . ($ids !== [] ? ' (' . implode(', ', array_slice($ids, 0, 30)) . (count($ids) > 30 ? ', …' : '') . ')' : ''));
+        if ($ids === []) {
+            $this->output($response->getName() === 'hotel_facilities_list'
+                ? 'Verdict: Novoton has no facility data for this hotel (empty list). Stored rows are kept.'
+                : 'Verdict: not a facilities list (an error or another shape). The sync keeps the stored rows and reports the hotel as failed.');
+        }
         $this->output('');
         $this->output('--- Raw reply (first ' . self::RAW_LIMIT . ' chars) ---');
         $this->output($raw !== '' ? mb_substr($raw, 0, self::RAW_LIMIT) : mb_substr((string) $response->asXML(), 0, self::RAW_LIMIT));
