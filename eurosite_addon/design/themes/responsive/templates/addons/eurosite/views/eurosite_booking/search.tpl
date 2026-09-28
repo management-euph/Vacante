@@ -69,7 +69,7 @@
                     <h2>{$hotel.name|escape:html}
                         {if $hotel.category}<span class="eurosite-stars">{section name=s loop=$hotel.category}★{/section}</span>{/if}
                     </h2>
-                    <div class="eurosite-hotel-city">{$hotel.city_name|escape:html}</div>
+                    <div class="eurosite-hotel-city">{$hotel.location|default:$hotel.city_name|escape:html}</div>
                     {if $hotel.description}
                         <div class="eurosite-hotel-desc">{$hotel.description|strip_tags|truncate:220|escape:html}</div>
                     {/if}

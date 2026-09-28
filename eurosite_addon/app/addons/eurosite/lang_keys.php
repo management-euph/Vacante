@@ -948,4 +948,8 @@ return [
         'en' => 'Add to Cart',
         'ro' => 'Adaugă în coș',
     ],
+    'eurosite.one_room_only' => [
+        'en' => 'Online booking here is for one room at a time. Please search for one room, or contact us to book more rooms.',
+        'ro' => 'Aici se poate rezerva online câte o singură cameră. Căutați pentru o cameră sau contactați-ne pentru a rezerva mai multe camere.',
+    ],
 ];

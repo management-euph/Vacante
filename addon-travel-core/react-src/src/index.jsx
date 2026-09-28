@@ -272,7 +272,7 @@ function init() {
                     initialChildren:     parseInt(url.get('children'), 10) || 0,
                     initialChildrenAges: url.get('children_ages') || '',
                     initialRooms:        parseInt(url.get('rooms'), 10) || 1,
-                    maxRooms:            12,
+                    maxRooms:            parseInt(serverConfig.maxRooms, 10) || 12,
                     maxAdults:           9,
                     maxChildren:         4,
                     buttonText:          '',

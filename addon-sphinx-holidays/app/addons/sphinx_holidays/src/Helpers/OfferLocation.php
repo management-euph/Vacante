@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Helpers;
 
+use Tygh\Addons\TravelCore\Helpers\LocationLine;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
@@ -17,19 +18,7 @@ final class OfferLocation
     /** The destination plus the country, unless the destination already ends with it. */
     public static function label(string $destination, string $country): string
     {
-        $destination = trim($destination);
-        $country = trim($country);
-        if ($country === '') {
-            return $destination;
-        }
-        if ($destination === '') {
-            return $country;
-        }
-        if (mb_strtolower(mb_substr($destination, -mb_strlen($country))) === mb_strtolower($country)) {
-            return $destination;
-        }
-
-        return $destination . ', ' . $country;
+        return LocationLine::placeAndCountry($destination, $country);
     }
 
     /**

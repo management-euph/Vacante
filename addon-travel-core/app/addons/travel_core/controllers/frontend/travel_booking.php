@@ -20,6 +20,7 @@ declare(strict_types=1);
 
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Services\ProviderRoomLimit;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
 
 if (!defined('BOOTSTRAP')) {
@@ -158,6 +159,8 @@ if ($mode === 'booking_config') {
                 // AJAX-swaps them into the mount's .travel-search-results-page
                 // shell instead of navigating to the standalone results page.
                 'inlineResults' => true,
+                // Rooms the guest picker offers (Eurosite books one room).
+                'maxRooms' => ProviderRoomLimit::maxRooms($providerName),
                 'colors' => $colors,
                 'translations' => $translations,
             ];
