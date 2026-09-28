@@ -10,7 +10,7 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  * A booking's cart line when the guest pays a deposit.
  *
  * The line PRICE is the deposit, so checkout — and whichever payment method
- * the guest picks (Netopia card, bank transfer) — charges only that. The
+ * the guest picks (the store's own CS-Cart methods) — charges only that. The
  * full price stays where every provider already reads it (extra.total_price,
  * the booking row), and extra.travel_deposit carries the plan plus the
  * amounts at the line's current price, in the store's primary currency:

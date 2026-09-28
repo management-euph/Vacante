@@ -1087,8 +1087,8 @@ return [
         'ro' => 'Plătiți un avans',
     ],
     'travel_core.pay_deposit_hint' => [
-        'en' => 'Balance [balance] by [date], by card or bank transfer. We email you the payment link.',
-        'ro' => 'Restul de [balance] până la [date], cu cardul sau prin transfer bancar. Vă trimitem linkul de plată pe email.',
+        'en' => 'Balance [balance] by [date], with any of our payment methods. We email you the payment link.',
+        'ro' => 'Restul de [balance] până la [date], prin oricare dintre metodele noastre de plată. Vă trimitem linkul de plată pe email.',
     ],
     'travel_core.deposit_unavailable' => [
         'en' => 'A deposit is no longer possible for this booking (the supplier\'s payment terms changed), so the full price applies.',
@@ -1108,8 +1108,8 @@ return [
         'ro' => 'Plătiți restul',
     ],
     'travel_core.pay_balance_note' => [
-        'en' => 'By card (Netopia) or bank transfer: you choose at checkout.',
-        'ro' => 'Cu cardul (Netopia) sau prin transfer bancar: alegeți la finalizarea comenzii.',
+        'en' => 'You choose how to pay at checkout.',
+        'ro' => 'Alegeți modul de plată la finalizarea comenzii.',
     ],
     'travel_core.balance_paid' => [
         'en' => 'Balance paid (order #[order_id])',
@@ -1160,7 +1160,7 @@ return [
 
 Thank you for your booking at [hotel] (order #[order_id]). The balance of [amount] is due by [date].
 
-Pay it here, by card or bank transfer:
+Pay it here, with any of our payment methods:
 [link]
 
 If you have already paid, please ignore this email.',
@@ -1168,7 +1168,7 @@ If you have already paid, please ignore this email.',
 
 Vă mulțumim pentru rezervarea la [hotel] (comanda #[order_id]). Restul de [amount] trebuie plătit până la [date].
 
-Îl puteți plăti aici, cu cardul sau prin transfer bancar:
+Îl puteți plăti aici, prin oricare dintre metodele noastre de plată:
 [link]
 
 Dacă ați plătit deja, vă rugăm să ignorați acest email.',

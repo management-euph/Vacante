@@ -10,8 +10,9 @@ declare(strict_types=1);
  *
  * Puts ONE cart line for the balance (the hotel's product, stored price =
  * the balance, extra.travel_balance_id) and sends the guest to the normal
- * checkout, where they pick how to pay — Netopia card, bank transfer (its
- * instructions come from that CS-Cart payment method), … Placing that order
+ * checkout, where they pick one of the store's own CS-Cart payment methods
+ * (card, bank transfer … with each method's own instructions). No payment
+ * method is created or chosen here. Placing that order
  * links it to the balance; its P/C status marks the balance paid
  * (BalanceService). The line carries no provider booking flags, so no
  * provider books or re-prices anything for it.

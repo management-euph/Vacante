@@ -7,8 +7,8 @@
     a deposit". The radios post pay_mode with that form (form= attribute, as
     the sidebar sits outside it on some pages); add_to_cart works the amount
     out again from the live terms, so only the choice is sent. Checkout then
-    charges the deposit, and the balance is paid later from a link (card via
-    Netopia, or bank transfer).
+    charges the deposit, and the balance is paid later from a link (with
+    the store's own CS-Cart payment methods).
 
     Without ps_form it is information only: "Deposit … · Balance … by …".
 

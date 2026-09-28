@@ -13,8 +13,8 @@ use Tygh\Addons\TravelCore\Repository\BalanceRepository;
  *
  *   deposit order placed   → one open travel_balances row per deposit item
  *   "Pay balance" link     → a cart line for the balance (extra.travel_balance_id),
- *                            paid through the normal checkout: Netopia card,
- *                            bank transfer (its instructions from CS-Cart) …
+ *                            paid through the normal checkout with the
+ *                            store's own CS-Cart payment methods
  *   balance order placed   → linked (balance_order_id)
  *   balance order P / C    → balance paid
  *   deposit order I / D    → open balance cancelled (nothing more to collect)
