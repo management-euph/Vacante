@@ -184,6 +184,7 @@ function fn_travel_core_render_booking_engine(array $params = []): string
     $lang = $vh::toString(defined('CART_LANGUAGE') ? CART_LANGUAGE : 'en');
     $cacheVer = $vh::toString(defined('TRAVEL_CACHE_VER') ? TRAVEL_CACHE_VER : '1');
     $baseUrl = $vh::toString(\Tygh\Registry::get('config.current_location') ?: '');
+    $maxRooms = \Tygh\Addons\TravelCore\Services\ProviderRoomLimit::maxRooms($provider);
 
     // Build data attributes for search mode
     $searchAttrs = '';
@@ -226,6 +227,7 @@ function fn_travel_core_render_booking_engine(array $params = []): string
              data-product-id="{$productId}"
              data-debug="false"
              data-mode="{$mode}"
+             data-max-rooms="{$maxRooms}"
              data-lang="{$lang}"
              {$searchAttrs}
              {$calAttrs}

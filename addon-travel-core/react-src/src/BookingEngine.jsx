@@ -21,6 +21,7 @@ import GuestPicker from './GuestPicker';
 import { CalendarIcon, GuestIcon, ChevronDown } from './icons';
 import { parseDate, toDateString, formatDateShort, nightsBetween, t, tPlural } from './utils';
 import { injectStyles } from './styles';
+import { syncSwitcherLinks } from './switcherLinks';
 
 // The booking params an inline (product-page) search writes onto the URL.
 const INLINE_SEARCH_KEYS = ['check_in', 'check_out', 'adults', 'children', 'rooms', 'rooms_data', 'children_ages'];
@@ -99,7 +100,8 @@ export default function BookingEngine({ config }) {
         if (roomsData) {
             try {
                 const parsed = JSON.parse(roomsData);
-                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+                // Never more rooms than the provider books (Eurosite: 1).
+                if (Array.isArray(parsed) && parsed.length > 0) return parsed.slice(0, Math.max(1, maxRooms));
             } catch (_) { /* fall through */ }
         }
 
@@ -107,7 +109,7 @@ export default function BookingEngine({ config }) {
             ? initialChildrenAges.split(',').map(a => parseInt(a.trim(), 10))
             : [];
         const roomArr = [];
-        const roomCount = Math.max(1, initialRooms);
+        const roomCount = Math.min(Math.max(1, initialRooms), Math.max(1, maxRooms));
 
         for (let i = 0; i < roomCount; i++) {
             if (i === 0) {
@@ -381,6 +383,7 @@ export default function BookingEngine({ config }) {
                         historyUrl = cur.toString();
                     }
                     window.history.pushState({}, '', historyUrl);
+                    syncSwitcherLinks();
                     if (inlineResults) rememberInlineSearch(productId, url);
 
                     // Swapped-in provider markup may need re-arming (sphinx
@@ -477,7 +480,7 @@ export default function BookingEngine({ config }) {
             setCheckOut(parseDate(saved.get('check_out')));
             try {
                 const savedRooms = JSON.parse(saved.get('rooms_data') || '[]');
-                if (Array.isArray(savedRooms) && savedRooms.length > 0) setRooms(savedRooms);
+                if (Array.isArray(savedRooms) && savedRooms.length > 0) setRooms(savedRooms.slice(0, Math.max(1, maxRooms)));
             } catch (_) { /* keep the default rooms */ }
             const restoreUrl = new URL(buildSearchUrl());
             INLINE_SEARCH_KEYS.forEach((k) => {

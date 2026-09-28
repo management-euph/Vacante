@@ -61,3 +61,12 @@ describe('react19-bundle.js is built from the current source', () => {
         expect(src).toContain('travel_inline_search:');
     });
 });
+
+describe('react19-bundle.js carries the language-switch and room-limit fixes', () => {
+    it('re-points the switcher links and honours the provider room limit', () => {
+        const src = bundle('react19-bundle.js');
+
+        expect(src).toContain('currency');
+        expect(src).toMatch(/serverConfig\.maxRooms|\.maxRooms,10\)/);
+    });
+});

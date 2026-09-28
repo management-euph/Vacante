@@ -16,8 +16,10 @@ use Tygh\Addons\Eurosite\Exception\EurositeApiException;
 use Tygh\Addons\Eurosite\Services\ConfigProvider;
 use Tygh\Addons\Eurosite\Services\Container;
 use Tygh\Addons\Eurosite\Services\OfferContextStore;
+use Tygh\Addons\TravelCore\Helpers\LocationLine;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Services\ProviderRoomLimit;
 use Tygh\Tygh;
 
 if (!defined('BOOTSTRAP')) {
@@ -32,6 +34,10 @@ $city = strtoupper((string) preg_replace('/[^A-Za-z0-9]/', '', RequestCoerce::st
 $checkIn = RequestCoerce::string($_REQUEST, 'check_in');
 $checkOut = RequestCoerce::string($_REQUEST, 'check_out');
 $adults = max(1, TypeCoerce::toInt($_REQUEST['adults'] ?? 2));
+// Eurosite books ONE room (search, booking form and booking are single-room);
+// the guest picker stops at 1 (ProviderRoomLimit). A multi-room request that
+// still arrives (an old link) is refused rather than priced as one big room.
+$roomCount = max(1, TypeCoerce::toInt($_REQUEST['rooms'] ?? 1));
 $childrenAges = [];
 foreach (explode(',', RequestCoerce::string($_REQUEST, 'children_ages')) as $age) {
     if ($age !== '' && is_numeric($age)) {
@@ -112,7 +118,9 @@ $searched = false;
 if ($country !== '' && $city !== '' && $checkIn !== '' && $checkOut !== '') {
     $searched = true;
 
-    if (!$whitelist->isCityAllowed($country, $city)) {
+    if ($roomCount > ProviderRoomLimit::maxRooms('eurosite')) {
+        $searchError = __('eurosite.one_room_only');
+    } elseif (!$whitelist->isCityAllowed($country, $city)) {
         $searchError = __('eurosite.destination_not_available', [
             '[default]' => 'This destination is not available for booking.',
         ]);
@@ -195,6 +203,8 @@ if ($country !== '' && $city !== '' && $checkIn !== '' && $checkOut !== '') {
                         'name'         => $offer->productName,
                         'category'     => $offer->category,
                         'city_name'    => $offer->cityName,
+                        // "Mamaia, Romania": the offer names only the city
+                        'location'     => LocationLine::placeAndCountry($offer->cityName, $countryNames[$country] ?? ''),
                         'image'        => $offer->firstImage !== ''
                             ? $offer->firstImage
                             : TypeCoerce::toString($pictures[0] ?? ''),
