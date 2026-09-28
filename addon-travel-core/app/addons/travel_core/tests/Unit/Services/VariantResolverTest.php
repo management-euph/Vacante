@@ -318,4 +318,14 @@ class VariantResolverTest extends TestCase
 
         $this->assertSame(99, $this->resolver->ensureVariantExists($mapping));
     }
+
+    public function testMatchNameTriesExactThenCaseInsensitiveThenNormalized(): void
+    {
+        $variants = ['All Inclusive' => 3, 'half board' => 4, 'Ultra-All (Premium)' => 5];
+
+        $this->assertSame(3, VariantResolver::matchName('All Inclusive', $variants));
+        $this->assertSame(4, VariantResolver::matchName('Half Board', $variants));
+        $this->assertSame(5, VariantResolver::matchName('ultra all premium', $variants));
+        $this->assertNull(VariantResolver::matchName('Bed & Breakfast', $variants));
+    }
 }

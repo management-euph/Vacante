@@ -190,6 +190,33 @@ class VariantResolver implements VariantResolverInterface
     }
 
     /**
+     * The same 3-pass match over an already-loaded name => id list (the admin
+     * "Auto-resolve variants" batch): exact, case-insensitive, normalized.
+     *
+     * @param array<string, int> $variantNameToId
+     */
+    public static function matchName(string $name, array $variantNameToId): ?int
+    {
+        if (isset($variantNameToId[$name])) {
+            return $variantNameToId[$name];
+        }
+        $lower = mb_strtolower($name);
+        foreach ($variantNameToId as $vName => $vId) {
+            if (mb_strtolower((string) $vName) === $lower) {
+                return $vId;
+            }
+        }
+        $normalized = self::normalizeName($name);
+        foreach ($variantNameToId as $vName => $vId) {
+            if (self::normalizeName((string) $vName) === $normalized) {
+                return $vId;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Normalize a variant name for fuzzy comparison.
      *
      * Lowercases, strips non-alphanumeric/non-space chars, and collapses whitespace.

@@ -17,6 +17,7 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
 use Tygh\Addons\TravelCore\TravelConstants;
+use Tygh\Addons\TravelCore\ViewModels\FeatureMappingsView;
 
 /** @var \Tygh\Addons\TravelCore\Contracts\FeatureMapRepositoryInterface $repo */
 $repo = FeatureMapper::getRepository();
@@ -55,8 +56,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if (isset($data['cscart_variant_id'])) {
                 $updateData['cscart_variant_id'] = TypeCoerce::toInt($data['cscart_variant_id']) ?: null;
-                // Mark as manually set to prevent auto-overwrite
-                if (TypeCoerce::toInt($data['cscart_variant_id']) > 0) {
+                // "Keep this variant" (variant_lock) decides; older forms without it lock any picked variant
+                if (isset($data['variant_lock'])) {
+                    $updateData['variant_source'] = $data['variant_lock'] === 'Y' ? 'manual' : 'auto';
+                } elseif (TypeCoerce::toInt($data['cscart_variant_id']) > 0) {
                     $updateData['variant_source'] = 'manual';
                 }
             }
@@ -164,33 +167,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     continue;
                 }
 
-                $variantId = null;
-
-                // Pass 1: exact match
-                $variantId = $variantNameToId[$nameEn] ?? null;
-
-                // Pass 2: case-insensitive match
-                if (empty($variantId)) {
-                    $nameEnLower = mb_strtolower($nameEn);
-                    foreach ($variantNameToId as $vName => $vId) {
-                        if (mb_strtolower($vName) === $nameEnLower) {
-                            $variantId = $vId;
-                            break;
-                        }
-                    }
-                }
-
-                // Pass 3: normalized match (strip punctuation, collapse whitespace)
-                if (empty($variantId)) {
-                    $normalizedTarget = preg_replace('/\s+/', ' ', trim((string) preg_replace('/[^\p{L}\p{N}\s]/u', ' ', mb_strtolower($nameEn, 'UTF-8'))));
-                    foreach ($variantNameToId as $vName => $vId) {
-                        $normalizedExisting = preg_replace('/\s+/', ' ', trim((string) preg_replace('/[^\p{L}\p{N}\s]/u', ' ', mb_strtolower($vName, 'UTF-8'))));
-                        if ($normalizedExisting === $normalizedTarget) {
-                            $variantId = $vId;
-                            break;
-                        }
-                    }
-                }
+                $variantId = \Tygh\Addons\TravelCore\Services\VariantResolver::matchName($nameEn, $variantNameToId);
 
                 if (!empty($variantId)) {
                     FeatureMapper::updateVariantId(TypeCoerce::toInt($mappingMap['map_id'] ?? 0), TypeCoerce::toInt($variantId), 'auto');
@@ -248,6 +225,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             fn_set_notification('N', __('notice'), __('travel_core.fm_alias_added'));
         }
         return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.edit&map_id=' . $mapId];
+    }
+
+    // Re-arm a provider's alias self-heal: its init.php re-seeds on the redirect
+    if ($mode === 'reseed_aliases') {
+        $provider = (string) preg_replace('/[^a-z0-9_]/', '', strtolower(RequestCoerce::string($_REQUEST, 'provider')));
+        if ($provider !== '' && fn_travel_core_self_heal_known($provider . '_aliases')) {
+            fn_travel_core_self_heal_reset($provider . '_aliases');
+            fn_set_notification('N', __('notice'), __('travel_core.fm_aliases_reseeded', ['[provider]' => ucfirst($provider)]));
+        }
+        $featureType = RequestCoerce::string($_REQUEST, 'feature_type');
+        return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.manage' . ($featureType !== '' ? '&feature_type=' . urlencode($featureType) : '')];
     }
 
     // Delete alias
@@ -415,32 +403,28 @@ if ($mode === 'manage') {
         // Global stats
         $stats = $repo->getGlobalStats();
 
-        // Human-readable labels for feature types
-        $typeLabels = [
-            'hotel_facility' => 'Hotel Facilities',
-            'room_facility'  => 'Room Facilities',
-            'beach_access'   => 'Beach Access',
-            'board'          => 'Board / Meals',
-            'resort'         => 'Resorts & Cities',
-            'stars'          => 'Star Rating',
-            'property_type'  => 'Property Type',
-            'travel_group'   => 'Travel Group',
-            'room_type'      => 'Room Type',
-            'region'         => 'Region',
-            'city'           => 'City',
-        ];
+        // Which providers' values reach each type (chips per row)
+        $aliasCounts = $repo->getAliasCountsBySource();
+        $providers = FeatureMappingsView::providers(array_map(static fn (array $p): string => $p['label'], TravelProviderRegistry::all()), $aliasCounts);
+        $featureNames = $repo->getFeatureNames(array_values(array_filter(array_map(static fn (array $st): int => TypeCoerce::toInt($st['feature_id']), $typeStats))), TypeCoerce::toString(DESCR_SL));
+        foreach ($typeStats as $ft => &$stat) {
+            $stat['coverage'] = FeatureMappingsView::coverage($providers, $aliasCounts, (string) $ft);
+            $stat['feature_name'] = $featureNames[TypeCoerce::toInt($stat['feature_id'])] ?? '';
+        }
+        unset($stat);
 
         // Providers with scan config (for "Scan Facilities" dropdown)
         $scanProviders = array_keys(TravelProviderRegistry::getAllScanConfigs());
 
         $view->assign('view_mode', 'dashboard');
         $view->assign('type_stats', $typeStats);
-        $view->assign('type_labels', $typeLabels);
+        $view->assign('type_labels', FeatureMappingsView::TYPE_LABELS);
+        $view->assign('alias_providers', count(array_filter($aliasCounts, static fn (array $c): bool => array_sum($c) > 0)));
         $view->assign('unmapped_count', $unmappedCount);
         $view->assign('mapping_stats', $stats);
         $view->assign('feature_types', $validFeatureTypes);
         $view->assign('scan_providers', $scanProviders);
-        $view->assign('alias_gaps', \Tygh\Addons\TravelCore\Services\AliasCoverage::gaps($repo->getAliasCountsBySource()));
+        $view->assign('alias_gaps', \Tygh\Addons\TravelCore\Services\AliasCoverage::gaps($aliasCounts));
     } else {
         // ── List mode (feature_type selected, paginated) ──
 
@@ -464,10 +448,20 @@ if ($mode === 'manage') {
         }
 
         if ($searchQuery !== '') {
-            $escaped = addcslashes($searchQuery, '%_\\');
+            $like = '%' . addcslashes($searchQuery, '%_\\') . '%';
             $condition .= db_quote(
-                " AND (m.canonical_code LIKE ?l OR m.display_name_en LIKE ?l OR m.display_name_ro LIKE ?l)",
-                '%' . $escaped . '%', '%' . $escaped . '%', '%' . $escaped . '%'
+                " AND (m.canonical_code LIKE ?l OR m.display_name_en LIKE ?l OR m.display_name_ro LIKE ?l"
+                . " OR EXISTS (SELECT 1 FROM ?:travel_api_alias sa WHERE sa.map_id = m.map_id AND sa.api_value LIKE ?l))",
+                $like, $like, $like, $like
+            );
+        }
+
+        // Provider filter: "novoton" = has a Novoton alias, "!novoton" = has none
+        $providerFilter = FeatureMappingsView::parseProviderFilter(RequestCoerce::string($_REQUEST, 'provider'));
+        if ($providerFilter !== null) {
+            $condition .= db_quote(
+                ' AND ' . ($providerFilter['negate'] ? 'NOT ' : '') . 'EXISTS (SELECT 1 FROM ?:travel_api_alias pa WHERE pa.map_id = m.map_id AND pa.api_source = ?s)',
+                $providerFilter['provider']
             );
         }
 
@@ -486,69 +480,55 @@ if ($mode === 'manage') {
             $mappings = $paginatedResult['items'];
         }
 
-        // Resolve variant + feature names for display
-        $variantIds = array_filter(array_unique(array_map(
-            static fn ($v): int => TypeCoerce::toInt($v),
-            array_column($mappings, 'cscart_variant_id')
-        )));
-        $variantNames = [];
-        if (!empty($variantIds)) {
-            $variantNames = db_get_hash_single_array(
-                "SELECT variant_id, variant FROM ?:product_feature_variant_descriptions WHERE variant_id IN (?n) AND lang_code = ?s",
-                ['variant_id', 'variant'], $variantIds, DESCR_SL
-            );
-        }
-
-        $featureIds = array_filter(array_unique(array_map(
-            static fn ($v): int => TypeCoerce::toInt($v),
-            array_column($mappings, 'cscart_feature_id')
-        )));
-        $featureNames = [];
-        if (!empty($featureIds)) {
-            $featureNames = db_get_hash_single_array(
-                "SELECT feature_id, description FROM ?:product_features_descriptions WHERE feature_id IN (?n) AND lang_code = ?s",
-                ['feature_id', 'description'], $featureIds, DESCR_SL
-            );
-        }
-
-        $variantNamesMap = TypeCoerce::toStringMap($variantNames);
-        $featureNamesMap = TypeCoerce::toStringMap($featureNames);
+        // Variant + feature names, and each provider's values, for display
+        $lang = TypeCoerce::toString(DESCR_SL);
+        $idsOf = static fn (string $col): array => array_values(array_filter(array_unique(array_map(static fn ($v): int => TypeCoerce::toInt($v), array_column($mappings, $col)))));
+        $variantNames = $repo->getVariantNames($idsOf('cscart_variant_id'), $lang);
+        $featureNames = $repo->getFeatureNames($idsOf('cscart_feature_id'), $lang);
+        $valuesByMap = FeatureMappingsView::groupAliases($repo->getAliasesForMappings($idsOf('map_id')));
         foreach ($mappings as &$m) {
-            $variantKey = TypeCoerce::toString($m['cscart_variant_id'] ?? '');
-            $featureKey = TypeCoerce::toString($m['cscart_feature_id'] ?? '');
-            $m['variant_name'] = $variantNamesMap[$variantKey] ?? '';
-            $m['feature_name'] = $featureNamesMap[$featureKey] ?? '';
+            $m['variant_name'] = $variantNames[TypeCoerce::toInt($m['cscart_variant_id'] ?? 0)] ?? '';
+            $m['feature_name'] = $featureNames[TypeCoerce::toInt($m['cscart_feature_id'] ?? 0)] ?? '';
+            $m['provider_values'] = $valuesByMap[TypeCoerce::toInt($m['map_id'] ?? 0)] ?? [];
         }
         unset($m);
 
         // Type-level stats for header
         $typeStats = $repo->getTypeStatsSingle($featureTypeFilter);
 
-        // Human-readable labels
-        $typeLabels = [
-            'hotel_facility' => 'Hotel Facilities', 'room_facility' => 'Room Facilities',
-            'beach_access' => 'Beach Access', 'board' => 'Board / Meals', 'resort' => 'Resorts & Cities',
-            'stars' => 'Star Rating', 'property_type' => 'Property Type', 'travel_group' => 'Travel Group',
-            'room_type' => 'Room Type', 'region' => 'Region', 'city' => 'City',
-        ];
+        // Providers whose values never reach this type (banner + re-seed)
+        $aliasCounts = $repo->getAliasCountsBySource();
+        $providers = FeatureMappingsView::providers(array_map(static fn (array $p): string => $p['label'], TravelProviderRegistry::all()), $aliasCounts);
+        $coverage = FeatureMappingsView::coverage($providers, $aliasCounts, $featureTypeFilter);
+        $missing = FeatureMappingsView::missing($coverage);
+        foreach ($missing as &$gap) {
+            $gap['reseedable'] = fn_travel_core_self_heal_known($gap['provider'] . '_aliases');
+        }
+        unset($gap);
 
         // CS-Cart pagination: assign $search with standard keys
         $search = [
             'feature_type'   => $featureTypeFilter,
             'status'         => $statusFilter,
             'mapping_source' => $sourceFilter,
+            'provider'       => RequestCoerce::string($_REQUEST, 'provider'),
             'q'              => $searchQuery,
             'page'           => $page,
             'items_per_page' => $itemsPerPage,
             'total_items'    => $totalItems,
         ];
 
+        $configuredFeatureId = FeatureMapper::getFeatureId($featureTypeFilter);
         $view->assign('view_mode', 'list');
         $view->assign('mappings', $mappings);
         $view->assign('search', $search);
         $view->assign('type_stats', $typeStats);
-        $view->assign('type_label', $typeLabels[$featureTypeFilter]);
-        $view->assign('configured_feature_id', FeatureMapper::getFeatureId($featureTypeFilter));
+        $view->assign('type_label', FeatureMappingsView::TYPE_LABELS[$featureTypeFilter]);
+        $view->assign('configured_feature_id', $configuredFeatureId);
+        $view->assign('configured_feature_name', $repo->getFeatureNames([$configuredFeatureId], $lang)[$configuredFeatureId] ?? '');
+        $view->assign('providers', $providers);
+        $view->assign('coverage', $coverage);
+        $view->assign('missing_providers', $missing);
         $view->assign('feature_types', $validFeatureTypes);
     }
 }
@@ -631,9 +611,15 @@ if ($mode === 'edit') {
         $featureVariants = $repo->findVariantsForFeature(TypeCoerce::toInt($mapping['cscart_feature_id']), TypeCoerce::toString(DESCR_SL));
     }
 
-    // Load aliases for this mapping
+    // Load aliases for this mapping, grouped into one card per provider
     $aliases = $repo->getAliasesForMapping($mapId);
+    $aliasCounts = $repo->getAliasCountsBySource();
+    $providers = FeatureMappingsView::providers(array_map(static fn (array $p): string => $p['label'], TravelProviderRegistry::all()), $aliasCounts);
+    $mappingType = TypeCoerce::toString($mapping['feature_type'] ?? '');
 
+    $view->assign('alias_cards', FeatureMappingsView::aliasCards($providers, $aliasCounts, $mappingType, $aliases));
+    $view->assign('type_label', FeatureMappingsView::TYPE_LABELS[$mappingType] ?? $mappingType);
+    $view->assign('created_by_key', FeatureMappingsView::createdByKey(TypeCoerce::toString($mapping['mapping_source'] ?? '')));
     $view->assign('mapping', $mapping);
     $view->assign('all_features', $allFeatures);
     $view->assign('feature_variants', $featureVariants);

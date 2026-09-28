@@ -7,9 +7,10 @@ namespace Tygh\Addons\TravelCore\Tests\Unit\Schema;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Smarty 5 passes the piped value as the modifier's FIRST argument, so
- * {$x|explode:","} runs explode($x, ",") and renders one "," pill instead
- * of the providers. The value must be the second argument.
+ * The Sources column once rendered one "," pill per row: Smarty 5 passes
+ * the piped value as the modifier's FIRST argument, so {$x|explode:","}
+ * ran explode($x, ","). The pages now get the providers pre-grouped
+ * (FeatureMappingsView) instead of exploding a GROUP_CONCAT.
  */
 final class FeatureMappingsSourcesTest extends TestCase
 {
@@ -22,13 +23,18 @@ final class FeatureMappingsSourcesTest extends TestCase
         return $tpl;
     }
 
-    public function testSourcesAreExplodedWithTheDelimiterFirst(): void
+    public function testNoModifierTakesTheDelimiterAsItsArgument(): void
+    {
+        self::assertStringNotContainsString('|explode:","', self::template());
+    }
+
+    public function testSourcesAreListedPerProvider(): void
     {
         $tpl = self::template();
 
-        self::assertStringContainsString('","|explode:$stat.providers', $tpl);
-        self::assertStringContainsString('","|explode:$m.api_sources', $tpl);
-        self::assertStringNotContainsString('|explode:","', $tpl);
+        // Dashboard: one coverage chip per provider; list: each provider's values.
+        self::assertStringContainsString('from=$stat.coverage', $tpl);
+        self::assertStringContainsString('$m.provider_values[$chip.provider]', $tpl);
     }
 
     public function testDashboardListsAliasGaps(): void
