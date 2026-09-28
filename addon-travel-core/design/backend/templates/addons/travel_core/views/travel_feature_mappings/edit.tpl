@@ -1,215 +1,174 @@
 {*
  * Travel Core - Feature Mapping Edit Page
- * Includes CS-Cart feature dropdown and AJAX variant loading
+ * Left: what the shop shows (names, CS-Cart feature + variant, AJAX variant
+ * loading). Right: one card per provider with the values it sends for this
+ * mapping (its aliases), flagged when a provider that needs one has none.
  *}
 
 {capture name="mainbox"}
 
-<form action="{"travel_feature_mappings.update"|fn_url}" method="post" class="form-horizontal">
-    <input type="hidden" name="security_hash" value="{$security_hash}">
-    <input type="hidden" name="map_id" value="{$mapping.map_id}">
+<div style="margin-bottom: 10px;">
+    <a href="{"travel_feature_mappings.manage?feature_type=`$mapping.feature_type`"|fn_url}">&larr; {$type_label|escape:'html'}</a>
+</div>
 
-    {* Read-only Info *}
-    <div class="control-group">
-        <label class="control-label">{__("travel_core.fm_map_id")}:</label>
-        <div class="controls">
-            <span class="uneditable-input">{$mapping.map_id}</span>
-        </div>
-    </div>
+<p style="margin: 0 0 14px;">
+    <span class="muted">{$type_label|escape:'html'} &middot; {__("travel_core.fm_canonical_code")} <code>{$mapping.canonical_code|escape:'html'}</code></span>
+    <span class="label label-info" style="margin-left: 8px;">{__("travel_core.fm_created_by")}: {__($created_by_key)}</span>
+</p>
 
-    <div class="control-group">
-        <label class="control-label">{__("travel_core.fm_feature_type")}:</label>
-        <div class="controls">
-            <span class="uneditable-input">{$mapping.feature_type}</span>
-        </div>
-    </div>
+<div class="travel-fm-edit">
 
-    <div class="control-group">
-        <label class="control-label">{__("travel_core.fm_canonical_code")}:</label>
-        <div class="controls">
-            <span class="uneditable-input"><code>{$mapping.canonical_code}</code></span>
-        </div>
-    </div>
+    {* ── What the shop shows ── *}
+    <form action="{"travel_feature_mappings.update"|fn_url}" method="post" class="travel-fm-panel">
+        <input type="hidden" name="security_hash" value="{$security_hash}">
+        <input type="hidden" name="map_id" value="{$mapping.map_id}">
+        <input type="hidden" name="feature_type_filter" value="{$mapping.feature_type|escape:'html'}">
 
-    <hr>
+        <h4>{__("travel_core.fm_edit_shop_title")}</h4>
 
-    {* Editable Fields *}
-    <div class="control-group">
-        <label class="control-label" for="display_name_en">{__("travel_core.fm_display_en")}:</label>
-        <div class="controls">
-            <input type="text" name="mapping_data[display_name_en]" id="display_name_en" value="{$mapping.display_name_en|escape:'html'}" size="50" />
-        </div>
-    </div>
+        <label class="travel-fm-field" for="display_name_en">{__("travel_core.fm_display_en")}
+            <input type="text" name="mapping_data[display_name_en]" id="display_name_en" value="{$mapping.display_name_en|escape:'html'}" />
+        </label>
+        <label class="travel-fm-field" for="display_name_ro">{__("travel_core.fm_display_ro")}
+            <input type="text" name="mapping_data[display_name_ro]" id="display_name_ro" value="{$mapping.display_name_ro|escape:'html'}" />
+        </label>
 
-    <div class="control-group">
-        <label class="control-label" for="display_name_ro">{__("travel_core.fm_display_ro")}:</label>
-        <div class="controls">
-            <input type="text" name="mapping_data[display_name_ro]" id="display_name_ro" value="{$mapping.display_name_ro|escape:'html'}" size="50" />
-        </div>
-    </div>
-
-    <hr>
-
-    {* CS-Cart Feature Dropdown *}
-    <div class="control-group">
-        <label class="control-label" for="cscart_feature_id">{__("travel_core.fm_cs_feature")}:</label>
-        <div class="controls">
+        <label class="travel-fm-field" for="cscart_feature_id">{__("travel_core.fm_cs_feature")}
             <select name="mapping_data[cscart_feature_id]" id="cscart_feature_id" onchange="loadVariants(this.value)">
                 <option value="0">-- {__("travel_core.fm_not_mapped")} --</option>
                 {foreach from=$all_features item=f}
-                    {assign var="type_label" value=""}
-                    {if $f.feature_type == 'M'}{assign var="type_label" value="Multi"}
-                    {elseif $f.feature_type == 'S'}{assign var="type_label" value="Select"}
-                    {elseif $f.feature_type == 'C'}{assign var="type_label" value="Checkbox"}
-                    {elseif $f.feature_type == 'T'}{assign var="type_label" value="Text"}
-                    {elseif $f.feature_type == 'N'}{assign var="type_label" value="Number"}
-                    {elseif $f.feature_type == 'O'}{assign var="type_label" value="Date"}
-                    {else}{assign var="type_label" value=$f.feature_type}{/if}
+                    {assign var="type_label_f" value=""}
+                    {if $f.feature_type == 'M'}{assign var="type_label_f" value="Multi"}
+                    {elseif $f.feature_type == 'S'}{assign var="type_label_f" value="Select"}
+                    {elseif $f.feature_type == 'C'}{assign var="type_label_f" value="Checkbox"}
+                    {elseif $f.feature_type == 'T'}{assign var="type_label_f" value="Text"}
+                    {elseif $f.feature_type == 'N'}{assign var="type_label_f" value="Number"}
+                    {elseif $f.feature_type == 'O'}{assign var="type_label_f" value="Date"}
+                    {else}{assign var="type_label_f" value=$f.feature_type}{/if}
                     <option value="{$f.feature_id}" {if $mapping.cscart_feature_id == $f.feature_id}selected{/if}>
-                        {$f.description|escape:'html'|default:"Feature"} #{$f.feature_id} ({$type_label})
+                        {$f.description|escape:'html'|default:"Feature"} #{$f.feature_id} ({$type_label_f})
                     </option>
                 {/foreach}
             </select>
-            <p class="muted">{__("travel_core.fm_feature_hint")}</p>
-        </div>
-    </div>
+            <span class="muted" style="font-weight: normal;">{__("travel_core.fm_feature_hint")}</span>
+        </label>
 
-    {* CS-Cart Variant Dropdown (AJAX-loaded) *}
-    <div class="control-group">
-        <label class="control-label" for="cscart_variant_id">{__("travel_core.fm_variant")}:</label>
-        <div class="controls">
+        <label class="travel-fm-field" for="cscart_variant_id">{__("travel_core.fm_variant")}
             <select name="mapping_data[cscart_variant_id]" id="cscart_variant_id">
                 <option value="0">-- {__("travel_core.fm_not_mapped")} --</option>
                 {if $feature_variants}
                     {foreach from=$feature_variants item=v}
                         <option value="{$v.variant_id}" {if $mapping.cscart_variant_id == $v.variant_id}selected{/if}>
-                            #{$v.variant_id} &mdash; {$v.name}
+                            #{$v.variant_id} &mdash; {$v.name|escape:'html'}
                         </option>
                     {/foreach}
                 {/if}
             </select>
-            <p class="muted">{__("travel_core.fm_variant_hint")}</p>
-        </div>
-    </div>
+            <span class="muted" style="font-weight: normal;">{__("travel_core.fm_variant_hint")}</span>
+        </label>
 
-    <div class="control-group">
-        <label class="control-label" for="position">{__("position")}:</label>
-        <div class="controls">
-            <input type="text" name="mapping_data[position]" id="position" value="{$mapping.position}" size="5" />
-        </div>
-    </div>
+        <input type="hidden" name="mapping_data[variant_lock]" value="N">
+        <label class="checkbox" for="variant_lock">
+            <input type="checkbox" name="mapping_data[variant_lock]" id="variant_lock" value="Y" {if $mapping.variant_source == 'manual'}checked{/if}>
+            {__("travel_core.fm_keep_variant")}
+        </label>
 
-    <div class="control-group">
-        <label class="control-label">{__("status")}:</label>
-        <div class="controls">
-            <select name="mapping_data[status]">
-                <option value="A" {if $mapping.status == 'A'}selected{/if}>{__("active")}</option>
-                <option value="D" {if $mapping.status == 'D'}selected{/if}>{__("disabled")}</option>
-            </select>
-        </div>
-    </div>
+        <input type="hidden" name="mapping_data[status]" value="D">
+        <label class="checkbox" for="mapping_active">
+            <input type="checkbox" name="mapping_data[status]" id="mapping_active" value="A" {if $mapping.status == 'A'}checked{/if}>
+            {__("active")}
+        </label>
 
-    <hr>
-
-    {* Metadata (read-only) *}
-    <div class="control-group">
-        <label class="control-label">Source:</label>
-        <div class="controls">
-            <span class="label {if $mapping.mapping_source == 'seed'}label-info{elseif $mapping.mapping_source == 'auto'}label-warning{else}label-success{/if}">
-                {$mapping.mapping_source|default:'seed'}
-            </span>
-        </div>
-    </div>
-
-    <div class="control-group">
-        <label class="control-label">Variant Lock:</label>
-        <div class="controls">
-            {if $mapping.variant_source == 'manual'}
-                <span class="label label-important"><i class="icon-lock"></i> Manual — auto-resolve will not overwrite</span>
-            {else}
-                <span class="label label-default"><i class="icon-unlock"></i> Auto — can be auto-resolved</span>
+        <details>
+            <summary>{__("travel_core.fm_advanced")}</summary>
+            <label class="travel-fm-field" for="position" style="margin-top: 8px;">{__("position")}
+                <input type="text" name="mapping_data[position]" id="position" value="{$mapping.position}" style="width: 80px;" />
+            </label>
+            <div>{__("travel_core.fm_map_id")}: {$mapping.map_id} &middot; {__("travel_core.fm_feature_type")}: <code>{$mapping.feature_type|escape:'html'}</code></div>
+            {if $mapping.last_used_at}
+                <div>{__("travel_core.fm_last_used", ["[date]" => $mapping.last_used_at|date_format:"%Y-%m-%d %H:%M"])}</div>
             {/if}
-        </div>
-    </div>
+        </details>
 
-    {if $mapping.last_used_at}
-    <div class="control-group">
-        <label class="control-label">Last Used:</label>
-        <div class="controls">
-            <span class="muted">{$mapping.last_used_at|date_format:"%Y-%m-%d %H:%M"}</span>
-        </div>
-    </div>
-    {/if}
-
-    <div class="buttons-container">
-        <button type="submit" class="btn btn-primary">
-            <i class="icon-ok"></i> {__("save")}
-        </button>
+        <button type="submit" class="btn btn-primary"><i class="icon-ok"></i> {__("save")}</button>
         <a href="{"travel_feature_mappings.manage?feature_type=`$mapping.feature_type`"|fn_url}" class="btn">{__("cancel")}</a>
-    </div>
-</form>
+    </form>
 
-<hr>
+    {* ── What each provider sends ── *}
+    {$mapping_name = $mapping.display_name_en|default:$mapping.canonical_code}
+    <div>
+        <h4 style="margin: 0 0 4px;">{__("travel_core.fm_edit_providers_title", ["[name]" => $mapping_name|escape:'html'])}</h4>
+        <p class="muted" style="margin: 0 0 12px;">{__("travel_core.fm_edit_providers_hint")}</p>
 
-{* Aliases Section *}
-<h4>{__("travel_core.fm_aliases")} ({$aliases|count})</h4>
+        {foreach from=$alias_cards item=card}
+            <div class="travel-fm-card travel-fm-card--{$card.state}">
+                <div class="travel-fm-card__head">
+                    <span class="travel-fm-card__name">{$card.label|escape:'html'}</span>
+                    <span class="travel-fm-card__state">
+                        {if $card.state == 'ok'}
+                            {__("travel_core.fm_card_count", ["[count]" => $card.aliases|count])}
+                        {elseif $card.state == 'missing'}
+                            {__("travel_core.fm_card_missing", ["[provider]" => $card.label|escape:'html'])}
+                        {else}
+                            {__("travel_core.fm_card_unused", ["[feature]" => $type_label|escape:'html'])}
+                        {/if}
+                    </span>
+                </div>
 
-{if $aliases}
-<table class="table table-striped table-condensed">
-    <thead>
-        <tr>
-            <th width="50">ID</th>
-            <th>{__("travel_core.fm_api_source")}</th>
-            <th>{__("travel_core.fm_api_value")}</th>
-            <th>{__("travel_core.fm_match_type")}</th>
-            <th width="80">{__("tools")}</th>
-        </tr>
-    </thead>
-    <tbody>
-        {foreach from=$aliases item=alias}
-        <tr>
-            <td>{$alias.alias_id}</td>
-            <td><span class="label">{$alias.api_source|escape:'html'}</span></td>
-            <td><code>{$alias.api_value|escape:'html'}</code></td>
-            <td>{$alias.match_type}</td>
-            <td>
-                <form action="{"travel_feature_mappings.delete_alias"|fn_url}" method="post" style="display:inline;">
+                {foreach from=$card.aliases item=alias}
+                    <div class="travel-fm-alias">
+                        <code>{$alias.api_value|escape:'html'}</code>
+                        <span class="travel-fm-alias__match">{if $alias.match_type == 'prefix'}{__("travel_core.fm_match_prefix")}{elseif $alias.match_type == 'contains'}{__("travel_core.fm_match_contains")}{else}{__("travel_core.fm_match_exact")}{/if}</span>
+                        <form action="{"travel_feature_mappings.delete_alias"|fn_url}" method="post">
+                            <input type="hidden" name="security_hash" value="{$security_hash}">
+                            <input type="hidden" name="alias_id" value="{$alias.alias_id}">
+                            <input type="hidden" name="map_id" value="{$mapping.map_id}">
+                            <button type="submit" class="btn btn-mini" onclick="return confirm('{__("travel_core.fm_alias_delete_confirm")|escape:'javascript'}');" aria-label="{__("travel_core.fm_remove_alias", ["[value]" => $alias.api_value|escape:'html'])}">{__("travel_core.fm_remove")}</button>
+                        </form>
+                    </div>
+                {/foreach}
+
+                {if $card.state == 'unused'}<details><summary class="muted">{__("travel_core.fm_add_anyway")}</summary>{/if}
+                <form action="{"travel_feature_mappings.add_alias"|fn_url}" method="post" class="travel-fm-card__add">
                     <input type="hidden" name="security_hash" value="{$security_hash}">
-                    <input type="hidden" name="alias_id" value="{$alias.alias_id}">
                     <input type="hidden" name="map_id" value="{$mapping.map_id}">
-                    <button type="submit" class="btn btn-xs btn-danger" onclick="return confirm('Delete this alias?');" title="{__("delete")}">
-                        <i class="icon-trash"></i>
-                    </button>
+                    <input type="hidden" name="api_source" value="{$card.provider|escape:'html'}">
+                    <input type="text" name="api_value" required class="input-medium"
+                        placeholder="{__("travel_core.fm_provider_value", ["[provider]" => $card.label|escape:'html'])}"
+                        aria-label="{__("travel_core.fm_provider_value", ["[provider]" => $card.label|escape:'html'])}">
+                    <select name="match_type" class="input-small" aria-label="{__("travel_core.fm_match_type")}">
+                        <option value="exact">{__("travel_core.fm_match_exact")}</option>
+                        <option value="prefix">{__("travel_core.fm_match_prefix")}</option>
+                        <option value="contains">{__("travel_core.fm_match_contains")}</option>
+                    </select>
+                    <button type="submit" class="btn {if $card.state == 'missing'}btn-warning{else}btn-default{/if}">{__("travel_core.fm_add_provider_alias", ["[provider]" => $card.label|escape:'html'])}</button>
                 </form>
-            </td>
-        </tr>
+                {if $card.state == 'unused'}</details>{/if}
+            </div>
         {/foreach}
-    </tbody>
-</table>
-{else}
-<p class="muted">{__("travel_core.fm_no_aliases")}</p>
-{/if}
 
-{* Add Alias Form *}
-<form action="{"travel_feature_mappings.add_alias"|fn_url}" method="post" class="form-inline" style="margin-top: 10px;">
-    <input type="hidden" name="security_hash" value="{$security_hash}">
-    <input type="hidden" name="map_id" value="{$mapping.map_id}">
-    <input type="text" name="api_source" placeholder="{__("travel_core.fm_api_source")}" size="15" required />
-    <input type="text" name="api_value" placeholder="{__("travel_core.fm_api_value")}" size="30" required />
-    <select name="match_type">
-        <option value="exact">exact</option>
-        <option value="prefix">prefix</option>
-        <option value="contains">contains</option>
-    </select>
-    <button type="submit" class="btn btn-mini btn-primary">
-        <i class="icon-plus"></i> {__("travel_core.fm_add_alias")}
-    </button>
-</form>
+        {* Any other source (a provider that is not installed yet) *}
+        <details class="travel-fm-card travel-fm-card--unused">
+            <summary class="muted">{__("travel_core.fm_other_source")}</summary>
+            <form action="{"travel_feature_mappings.add_alias"|fn_url}" method="post" class="travel-fm-card__add">
+                <input type="hidden" name="security_hash" value="{$security_hash}">
+                <input type="hidden" name="map_id" value="{$mapping.map_id}">
+                <input type="text" name="api_source" placeholder="{__("travel_core.fm_api_source")}" aria-label="{__("travel_core.fm_api_source")}" class="input-small" required />
+                <input type="text" name="api_value" placeholder="{__("travel_core.fm_api_value")}" aria-label="{__("travel_core.fm_api_value")}" class="input-medium" required />
+                <select name="match_type" class="input-small" aria-label="{__("travel_core.fm_match_type")}">
+                    <option value="exact">{__("travel_core.fm_match_exact")}</option>
+                    <option value="prefix">{__("travel_core.fm_match_prefix")}</option>
+                    <option value="contains">{__("travel_core.fm_match_contains")}</option>
+                </select>
+                <button type="submit" class="btn btn-default"><i class="icon-plus"></i> {__("travel_core.fm_add_alias")}</button>
+            </form>
+        </details>
+    </div>
+</div>
 
 {/capture}
 
-{assign var="_fm_label" value=__('travel_core.fm_edit_mapping')}
-{assign var="_fm_title" value="`$_fm_label`: `$mapping.canonical_code`"}
+{assign var="_fm_title" value=$mapping.display_name_en|default:$mapping.canonical_code}
 
 {capture name="buttons"}{/capture}
 

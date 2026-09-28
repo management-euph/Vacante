@@ -675,4 +675,292 @@ return [
         'en' => 'Each provider re-seeds its aliases on the first admin page load after an update, and on its hotel syncs; then run its "reassign features" job so existing hotels get the values.',
         'ro' => 'Fiecare furnizor își recreează aliasurile la prima încărcare a unei pagini de administrare după o actualizare și la sincronizarea hotelurilor; apoi rulați jobul „reassign features” ca hotelurile existente să primească valorile.',
     ],
+    'travel_core.fm_intro' => [
+        'en' => 'How each provider\'s values (stars, meals, facilities…) become CS-Cart product features. A value with no alias for its provider is never assigned.',
+        'ro' => 'Cum devin valorile fiecărui furnizor (stele, masă, facilități…) caracteristici de produs în CS-Cart. O valoare fără alias pentru furnizorul ei nu este atribuită niciodată.',
+    ],
+    'travel_core.fm_tile_mappings' => [
+        'en' => 'Mappings',
+        'ro' => 'Mapări',
+    ],
+    'travel_core.fm_tile_mappings_hint' => [
+        'en' => '[count] active',
+        'ro' => '[count] active',
+    ],
+    'travel_core.fm_tile_no_variant' => [
+        'en' => 'No CS-Cart variant',
+        'ro' => 'Fără variantă CS-Cart',
+    ],
+    'travel_core.fm_tile_no_variant_hint' => [
+        'en' => 'never shown on products',
+        'ro' => 'nu apar niciodată pe produse',
+    ],
+    'travel_core.fm_tile_aliases' => [
+        'en' => 'Provider aliases',
+        'ro' => 'Aliasuri furnizori',
+    ],
+    'travel_core.fm_tile_aliases_hint' => [
+        'en' => 'across [count] providers',
+        'ro' => 'la [count] furnizori',
+    ],
+    'travel_core.fm_tile_raw' => [
+        'en' => 'Unmapped raw values',
+        'ro' => 'Valori brute nemapate',
+    ],
+    'travel_core.fm_tile_raw_hint' => [
+        'en' => 'waiting for review',
+        'ro' => 'așteaptă verificarea',
+    ],
+    'travel_core.fm_needs_attention' => [
+        'en' => 'Needs attention',
+        'ro' => 'Necesită atenție',
+    ],
+    'travel_core.fm_attention_no_feature' => [
+        'en' => '[feature]: no CS-Cart feature selected; [count] values wait for a variant.',
+        'ro' => '[feature]: nicio caracteristică CS-Cart selectată; [count] valori așteaptă o variantă.',
+    ],
+    'travel_core.fm_attention_choose_feature' => [
+        'en' => 'Choose feature',
+        'ro' => 'Alegeți caracteristica',
+    ],
+    'travel_core.fm_auto_hint' => [
+        'en' => 'Discovered from provider data',
+        'ro' => 'Descoperite din datele furnizorului',
+    ],
+    'travel_core.fm_batch_size' => [
+        'en' => 'Hotels per batch',
+        'ro' => 'Hoteluri pe lot',
+    ],
+    'travel_core.fm_col_feature' => [
+        'en' => 'Feature',
+        'ro' => 'Caracteristică',
+    ],
+    'travel_core.fm_col_mapped' => [
+        'en' => 'Mapped',
+        'ro' => 'Mapate',
+    ],
+    'travel_core.fm_col_no_variant' => [
+        'en' => 'No variant',
+        'ro' => 'Fără variantă',
+    ],
+    'travel_core.fm_col_auto' => [
+        'en' => 'Auto',
+        'ro' => 'Auto',
+    ],
+    'travel_core.fm_col_cs_feature' => [
+        'en' => 'CS-Cart feature',
+        'ro' => 'Caracteristică CS-Cart',
+    ],
+    'travel_core.fm_col_provider_aliases' => [
+        'en' => 'Provider aliases',
+        'ro' => 'Aliasuri furnizori',
+    ],
+    'travel_core.fm_col_values' => [
+        'en' => 'Values each provider sends',
+        'ro' => 'Valorile trimise de fiecare furnizor',
+    ],
+    'travel_core.fm_chip_count' => [
+        'en' => '[count] aliases',
+        'ro' => '[count] aliasuri',
+    ],
+    'travel_core.fm_chip_none' => [
+        'en' => '[provider]: none',
+        'ro' => '[provider]: niciunul',
+    ],
+    'travel_core.fm_chip_unused' => [
+        'en' => '[provider] · not used',
+        'ro' => '[provider] · nefolosit',
+    ],
+    'travel_core.fm_derived' => [
+        'en' => 'Derived from facilities',
+        'ro' => 'Derivat din facilități',
+    ],
+    'travel_core.fm_not_configured' => [
+        'en' => 'Not configured',
+        'ro' => 'Neconfigurat',
+    ],
+    'travel_core.fm_raw_title' => [
+        'en' => 'Raw values not mapped yet',
+        'ro' => 'Valori brute încă nemapate',
+    ],
+    'travel_core.fm_raw_text' => [
+        'en' => '[count] values sent by providers match no alias.',
+        'ro' => '[count] valori trimise de furnizori nu corespund niciunui alias.',
+    ],
+    'travel_core.fm_raw_none' => [
+        'en' => 'Every scanned value is mapped.',
+        'ro' => 'Toate valorile scanate sunt mapate.',
+    ],
+    'travel_core.fm_review' => [
+        'en' => 'Review [count]',
+        'ro' => 'Verificați [count]',
+    ],
+    'travel_core.fm_scan' => [
+        'en' => 'Scan',
+        'ro' => 'Scanează',
+    ],
+    'travel_core.fm_list_count' => [
+        'en' => '[count] mappings',
+        'ro' => '[count] mapări',
+    ],
+    'travel_core.fm_list_assigned' => [
+        'en' => 'assigned to CS-Cart feature [feature]',
+        'ro' => 'atribuite caracteristicii CS-Cart [feature]',
+    ],
+    'travel_core.fm_list_no_variant' => [
+        'en' => '[count] without a CS-Cart variant',
+        'ro' => '[count] fără variantă CS-Cart',
+    ],
+    'travel_core.fm_list_missing_title' => [
+        'en' => '[provider] has no aliases here.',
+        'ro' => '[provider] nu are aliasuri aici.',
+    ],
+    'travel_core.fm_list_missing_text' => [
+        'en' => 'Its values never become [feature], so its hotels get none.',
+        'ro' => 'Valorile sale nu devin niciodată [feature], așa că hotelurile sale nu primesc nimic.',
+    ],
+    'travel_core.fm_list_missing_manual' => [
+        'en' => 'Add them on each mapping\'s page.',
+        'ro' => 'Adăugați-le pe pagina fiecărei mapări.',
+    ],
+    'travel_core.fm_reseed_provider' => [
+        'en' => 'Re-seed [provider] aliases',
+        'ro' => 'Recreează aliasurile [provider]',
+    ],
+    'travel_core.fm_aliases_reseeded' => [
+        'en' => '[provider]\'s aliases were re-seeded. If a value is still missing, add it on the mapping\'s page, then run the provider\'s "reassign features" job.',
+        'ro' => 'Aliasurile [provider] au fost recreate. Dacă o valoare încă lipsește, adăugați-o pe pagina mapării, apoi rulați jobul „reassign features” al furnizorului.',
+    ],
+    'travel_core.fm_search_placeholder' => [
+        'en' => 'Search code, name or provider value',
+        'ro' => 'Căutați cod, nume sau valoare furnizor',
+    ],
+    'travel_core.fm_filter_provider' => [
+        'en' => 'Provider',
+        'ro' => 'Furnizor',
+    ],
+    'travel_core.fm_filter_all_providers' => [
+        'en' => 'All providers',
+        'ro' => 'Toți furnizorii',
+    ],
+    'travel_core.fm_filter_has' => [
+        'en' => '[provider]: has a value',
+        'ro' => '[provider]: are valoare',
+    ],
+    'travel_core.fm_filter_missing' => [
+        'en' => '[provider]: missing a value',
+        'ro' => '[provider]: fără valoare',
+    ],
+    'travel_core.fm_filter_any_status' => [
+        'en' => 'Any status',
+        'ro' => 'Orice stare',
+    ],
+    'travel_core.fm_created_by' => [
+        'en' => 'Created by',
+        'ro' => 'Creat de',
+    ],
+    'travel_core.fm_created_by_seed' => [
+        'en' => 'Travel Core defaults',
+        'ro' => 'Valori implicite Travel Core',
+    ],
+    'travel_core.fm_created_by_auto' => [
+        'en' => 'Discovered from provider data',
+        'ro' => 'Descoperit din datele furnizorului',
+    ],
+    'travel_core.fm_created_by_manual' => [
+        'en' => 'An admin',
+        'ro' => 'Un administrator',
+    ],
+    'travel_core.fm_select_all' => [
+        'en' => 'Select all',
+        'ro' => 'Selectează tot',
+    ],
+    'travel_core.fm_variant_kept' => [
+        'en' => 'Kept: automatic matching never changes it',
+        'ro' => 'Păstrată: potrivirea automată nu o schimbă niciodată',
+    ],
+    'travel_core.fm_no_variant' => [
+        'en' => 'none',
+        'ro' => 'niciuna',
+    ],
+    'travel_core.fm_no_alias' => [
+        'en' => 'no alias',
+        'ro' => 'fără alias',
+    ],
+    'travel_core.fm_edit_shop_title' => [
+        'en' => 'What the shop shows',
+        'ro' => 'Ce afișează magazinul',
+    ],
+    'travel_core.fm_keep_variant' => [
+        'en' => 'Keep this variant: automatic matching never changes it',
+        'ro' => 'Păstrează această variantă: potrivirea automată nu o schimbă niciodată',
+    ],
+    'travel_core.fm_advanced' => [
+        'en' => 'Advanced',
+        'ro' => 'Avansat',
+    ],
+    'travel_core.fm_last_used' => [
+        'en' => 'Last used by a sync: [date]',
+        'ro' => 'Ultima folosire la o sincronizare: [date]',
+    ],
+    'travel_core.fm_edit_providers_title' => [
+        'en' => 'What each provider sends for “[name]”',
+        'ro' => 'Ce trimite fiecare furnizor pentru „[name]”',
+    ],
+    'travel_core.fm_edit_providers_hint' => [
+        'en' => 'A hotel gets this feature only when its provider\'s value matches one of these aliases.',
+        'ro' => 'Un hotel primește această caracteristică doar când valoarea furnizorului său corespunde unuia dintre aceste aliasuri.',
+    ],
+    'travel_core.fm_card_count' => [
+        'en' => '[count] aliases',
+        'ro' => '[count] aliasuri',
+    ],
+    'travel_core.fm_card_missing' => [
+        'en' => 'No alias: [provider] hotels never get this value',
+        'ro' => 'Fără alias: hotelurile [provider] nu primesc niciodată această valoare',
+    ],
+    'travel_core.fm_card_unused' => [
+        'en' => 'Not used for [feature]',
+        'ro' => 'Nefolosit pentru [feature]',
+    ],
+    'travel_core.fm_match_exact' => [
+        'en' => 'matches exactly',
+        'ro' => 'corespunde exact',
+    ],
+    'travel_core.fm_match_prefix' => [
+        'en' => 'starts with',
+        'ro' => 'începe cu',
+    ],
+    'travel_core.fm_match_contains' => [
+        'en' => 'contains',
+        'ro' => 'conține',
+    ],
+    'travel_core.fm_alias_delete_confirm' => [
+        'en' => 'Remove this alias?',
+        'ro' => 'Eliminați acest alias?',
+    ],
+    'travel_core.fm_remove' => [
+        'en' => 'Remove',
+        'ro' => 'Elimină',
+    ],
+    'travel_core.fm_remove_alias' => [
+        'en' => 'Remove alias [value]',
+        'ro' => 'Elimină aliasul [value]',
+    ],
+    'travel_core.fm_add_anyway' => [
+        'en' => 'Add an alias anyway',
+        'ro' => 'Adaugă totuși un alias',
+    ],
+    'travel_core.fm_provider_value' => [
+        'en' => '[provider] value',
+        'ro' => 'Valoare [provider]',
+    ],
+    'travel_core.fm_add_provider_alias' => [
+        'en' => 'Add [provider] alias',
+        'ro' => 'Adaugă alias [provider]',
+    ],
+    'travel_core.fm_other_source' => [
+        'en' => 'Another source',
+        'ro' => 'Altă sursă',
+    ],
 ];

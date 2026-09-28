@@ -1493,3 +1493,291 @@ msgstr "Open"
 msgctxt "Languages::travel_core.fm_alias_gaps_hint"
 msgid "Each provider re-seeds its aliases on the first admin page load after an update, and on its hotel syncs; then run its \"reassign features\" job so existing hotels get the values."
 msgstr "Each provider re-seeds its aliases on the first admin page load after an update, and on its hotel syncs; then run its \"reassign features\" job so existing hotels get the values."
+
+msgctxt "Languages::travel_core.fm_intro"
+msgid "How each provider's values (stars, meals, facilities…) become CS-Cart product features. A value with no alias for its provider is never assigned."
+msgstr "How each provider's values (stars, meals, facilities…) become CS-Cart product features. A value with no alias for its provider is never assigned."
+
+msgctxt "Languages::travel_core.fm_tile_mappings"
+msgid "Mappings"
+msgstr "Mappings"
+
+msgctxt "Languages::travel_core.fm_tile_mappings_hint"
+msgid "[count] active"
+msgstr "[count] active"
+
+msgctxt "Languages::travel_core.fm_tile_no_variant"
+msgid "No CS-Cart variant"
+msgstr "No CS-Cart variant"
+
+msgctxt "Languages::travel_core.fm_tile_no_variant_hint"
+msgid "never shown on products"
+msgstr "never shown on products"
+
+msgctxt "Languages::travel_core.fm_tile_aliases"
+msgid "Provider aliases"
+msgstr "Provider aliases"
+
+msgctxt "Languages::travel_core.fm_tile_aliases_hint"
+msgid "across [count] providers"
+msgstr "across [count] providers"
+
+msgctxt "Languages::travel_core.fm_tile_raw"
+msgid "Unmapped raw values"
+msgstr "Unmapped raw values"
+
+msgctxt "Languages::travel_core.fm_tile_raw_hint"
+msgid "waiting for review"
+msgstr "waiting for review"
+
+msgctxt "Languages::travel_core.fm_needs_attention"
+msgid "Needs attention"
+msgstr "Needs attention"
+
+msgctxt "Languages::travel_core.fm_attention_no_feature"
+msgid "[feature]: no CS-Cart feature selected; [count] values wait for a variant."
+msgstr "[feature]: no CS-Cart feature selected; [count] values wait for a variant."
+
+msgctxt "Languages::travel_core.fm_attention_choose_feature"
+msgid "Choose feature"
+msgstr "Choose feature"
+
+msgctxt "Languages::travel_core.fm_auto_hint"
+msgid "Discovered from provider data"
+msgstr "Discovered from provider data"
+
+msgctxt "Languages::travel_core.fm_batch_size"
+msgid "Hotels per batch"
+msgstr "Hotels per batch"
+
+msgctxt "Languages::travel_core.fm_col_feature"
+msgid "Feature"
+msgstr "Feature"
+
+msgctxt "Languages::travel_core.fm_col_mapped"
+msgid "Mapped"
+msgstr "Mapped"
+
+msgctxt "Languages::travel_core.fm_col_no_variant"
+msgid "No variant"
+msgstr "No variant"
+
+msgctxt "Languages::travel_core.fm_col_auto"
+msgid "Auto"
+msgstr "Auto"
+
+msgctxt "Languages::travel_core.fm_col_cs_feature"
+msgid "CS-Cart feature"
+msgstr "CS-Cart feature"
+
+msgctxt "Languages::travel_core.fm_col_provider_aliases"
+msgid "Provider aliases"
+msgstr "Provider aliases"
+
+msgctxt "Languages::travel_core.fm_col_values"
+msgid "Values each provider sends"
+msgstr "Values each provider sends"
+
+msgctxt "Languages::travel_core.fm_chip_count"
+msgid "[count] aliases"
+msgstr "[count] aliases"
+
+msgctxt "Languages::travel_core.fm_chip_none"
+msgid "[provider]: none"
+msgstr "[provider]: none"
+
+msgctxt "Languages::travel_core.fm_chip_unused"
+msgid "[provider] · not used"
+msgstr "[provider] · not used"
+
+msgctxt "Languages::travel_core.fm_derived"
+msgid "Derived from facilities"
+msgstr "Derived from facilities"
+
+msgctxt "Languages::travel_core.fm_not_configured"
+msgid "Not configured"
+msgstr "Not configured"
+
+msgctxt "Languages::travel_core.fm_raw_title"
+msgid "Raw values not mapped yet"
+msgstr "Raw values not mapped yet"
+
+msgctxt "Languages::travel_core.fm_raw_text"
+msgid "[count] values sent by providers match no alias."
+msgstr "[count] values sent by providers match no alias."
+
+msgctxt "Languages::travel_core.fm_raw_none"
+msgid "Every scanned value is mapped."
+msgstr "Every scanned value is mapped."
+
+msgctxt "Languages::travel_core.fm_review"
+msgid "Review [count]"
+msgstr "Review [count]"
+
+msgctxt "Languages::travel_core.fm_scan"
+msgid "Scan"
+msgstr "Scan"
+
+msgctxt "Languages::travel_core.fm_list_count"
+msgid "[count] mappings"
+msgstr "[count] mappings"
+
+msgctxt "Languages::travel_core.fm_list_assigned"
+msgid "assigned to CS-Cart feature [feature]"
+msgstr "assigned to CS-Cart feature [feature]"
+
+msgctxt "Languages::travel_core.fm_list_no_variant"
+msgid "[count] without a CS-Cart variant"
+msgstr "[count] without a CS-Cart variant"
+
+msgctxt "Languages::travel_core.fm_list_missing_title"
+msgid "[provider] has no aliases here."
+msgstr "[provider] has no aliases here."
+
+msgctxt "Languages::travel_core.fm_list_missing_text"
+msgid "Its values never become [feature], so its hotels get none."
+msgstr "Its values never become [feature], so its hotels get none."
+
+msgctxt "Languages::travel_core.fm_list_missing_manual"
+msgid "Add them on each mapping's page."
+msgstr "Add them on each mapping's page."
+
+msgctxt "Languages::travel_core.fm_reseed_provider"
+msgid "Re-seed [provider] aliases"
+msgstr "Re-seed [provider] aliases"
+
+msgctxt "Languages::travel_core.fm_aliases_reseeded"
+msgid "[provider]'s aliases were re-seeded. If a value is still missing, add it on the mapping's page, then run the provider's \"reassign features\" job."
+msgstr "[provider]'s aliases were re-seeded. If a value is still missing, add it on the mapping's page, then run the provider's \"reassign features\" job."
+
+msgctxt "Languages::travel_core.fm_search_placeholder"
+msgid "Search code, name or provider value"
+msgstr "Search code, name or provider value"
+
+msgctxt "Languages::travel_core.fm_filter_provider"
+msgid "Provider"
+msgstr "Provider"
+
+msgctxt "Languages::travel_core.fm_filter_all_providers"
+msgid "All providers"
+msgstr "All providers"
+
+msgctxt "Languages::travel_core.fm_filter_has"
+msgid "[provider]: has a value"
+msgstr "[provider]: has a value"
+
+msgctxt "Languages::travel_core.fm_filter_missing"
+msgid "[provider]: missing a value"
+msgstr "[provider]: missing a value"
+
+msgctxt "Languages::travel_core.fm_filter_any_status"
+msgid "Any status"
+msgstr "Any status"
+
+msgctxt "Languages::travel_core.fm_created_by"
+msgid "Created by"
+msgstr "Created by"
+
+msgctxt "Languages::travel_core.fm_created_by_seed"
+msgid "Travel Core defaults"
+msgstr "Travel Core defaults"
+
+msgctxt "Languages::travel_core.fm_created_by_auto"
+msgid "Discovered from provider data"
+msgstr "Discovered from provider data"
+
+msgctxt "Languages::travel_core.fm_created_by_manual"
+msgid "An admin"
+msgstr "An admin"
+
+msgctxt "Languages::travel_core.fm_select_all"
+msgid "Select all"
+msgstr "Select all"
+
+msgctxt "Languages::travel_core.fm_variant_kept"
+msgid "Kept: automatic matching never changes it"
+msgstr "Kept: automatic matching never changes it"
+
+msgctxt "Languages::travel_core.fm_no_variant"
+msgid "none"
+msgstr "none"
+
+msgctxt "Languages::travel_core.fm_no_alias"
+msgid "no alias"
+msgstr "no alias"
+
+msgctxt "Languages::travel_core.fm_edit_shop_title"
+msgid "What the shop shows"
+msgstr "What the shop shows"
+
+msgctxt "Languages::travel_core.fm_keep_variant"
+msgid "Keep this variant: automatic matching never changes it"
+msgstr "Keep this variant: automatic matching never changes it"
+
+msgctxt "Languages::travel_core.fm_advanced"
+msgid "Advanced"
+msgstr "Advanced"
+
+msgctxt "Languages::travel_core.fm_last_used"
+msgid "Last used by a sync: [date]"
+msgstr "Last used by a sync: [date]"
+
+msgctxt "Languages::travel_core.fm_edit_providers_title"
+msgid "What each provider sends for “[name]”"
+msgstr "What each provider sends for “[name]”"
+
+msgctxt "Languages::travel_core.fm_edit_providers_hint"
+msgid "A hotel gets this feature only when its provider's value matches one of these aliases."
+msgstr "A hotel gets this feature only when its provider's value matches one of these aliases."
+
+msgctxt "Languages::travel_core.fm_card_count"
+msgid "[count] aliases"
+msgstr "[count] aliases"
+
+msgctxt "Languages::travel_core.fm_card_missing"
+msgid "No alias: [provider] hotels never get this value"
+msgstr "No alias: [provider] hotels never get this value"
+
+msgctxt "Languages::travel_core.fm_card_unused"
+msgid "Not used for [feature]"
+msgstr "Not used for [feature]"
+
+msgctxt "Languages::travel_core.fm_match_exact"
+msgid "matches exactly"
+msgstr "matches exactly"
+
+msgctxt "Languages::travel_core.fm_match_prefix"
+msgid "starts with"
+msgstr "starts with"
+
+msgctxt "Languages::travel_core.fm_match_contains"
+msgid "contains"
+msgstr "contains"
+
+msgctxt "Languages::travel_core.fm_alias_delete_confirm"
+msgid "Remove this alias?"
+msgstr "Remove this alias?"
+
+msgctxt "Languages::travel_core.fm_remove"
+msgid "Remove"
+msgstr "Remove"
+
+msgctxt "Languages::travel_core.fm_remove_alias"
+msgid "Remove alias [value]"
+msgstr "Remove alias [value]"
+
+msgctxt "Languages::travel_core.fm_add_anyway"
+msgid "Add an alias anyway"
+msgstr "Add an alias anyway"
+
+msgctxt "Languages::travel_core.fm_provider_value"
+msgid "[provider] value"
+msgstr "[provider] value"
+
+msgctxt "Languages::travel_core.fm_add_provider_alias"
+msgid "Add [provider] alias"
+msgstr "Add [provider] alias"
+
+msgctxt "Languages::travel_core.fm_other_source"
+msgid "Another source"
+msgstr "Another source"

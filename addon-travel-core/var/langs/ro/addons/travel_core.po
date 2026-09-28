@@ -1493,3 +1493,291 @@ msgstr "Deschide"
 msgctxt "Languages::travel_core.fm_alias_gaps_hint"
 msgid "Each provider re-seeds its aliases on the first admin page load after an update, and on its hotel syncs; then run its \"reassign features\" job so existing hotels get the values."
 msgstr "Fiecare furnizor își recreează aliasurile la prima încărcare a unei pagini de administrare după o actualizare și la sincronizarea hotelurilor; apoi rulați jobul „reassign features” ca hotelurile existente să primească valorile."
+
+msgctxt "Languages::travel_core.fm_intro"
+msgid "How each provider's values (stars, meals, facilities…) become CS-Cart product features. A value with no alias for its provider is never assigned."
+msgstr "Cum devin valorile fiecărui furnizor (stele, masă, facilități…) caracteristici de produs în CS-Cart. O valoare fără alias pentru furnizorul ei nu este atribuită niciodată."
+
+msgctxt "Languages::travel_core.fm_tile_mappings"
+msgid "Mappings"
+msgstr "Mapări"
+
+msgctxt "Languages::travel_core.fm_tile_mappings_hint"
+msgid "[count] active"
+msgstr "[count] active"
+
+msgctxt "Languages::travel_core.fm_tile_no_variant"
+msgid "No CS-Cart variant"
+msgstr "Fără variantă CS-Cart"
+
+msgctxt "Languages::travel_core.fm_tile_no_variant_hint"
+msgid "never shown on products"
+msgstr "nu apar niciodată pe produse"
+
+msgctxt "Languages::travel_core.fm_tile_aliases"
+msgid "Provider aliases"
+msgstr "Aliasuri furnizori"
+
+msgctxt "Languages::travel_core.fm_tile_aliases_hint"
+msgid "across [count] providers"
+msgstr "la [count] furnizori"
+
+msgctxt "Languages::travel_core.fm_tile_raw"
+msgid "Unmapped raw values"
+msgstr "Valori brute nemapate"
+
+msgctxt "Languages::travel_core.fm_tile_raw_hint"
+msgid "waiting for review"
+msgstr "așteaptă verificarea"
+
+msgctxt "Languages::travel_core.fm_needs_attention"
+msgid "Needs attention"
+msgstr "Necesită atenție"
+
+msgctxt "Languages::travel_core.fm_attention_no_feature"
+msgid "[feature]: no CS-Cart feature selected; [count] values wait for a variant."
+msgstr "[feature]: nicio caracteristică CS-Cart selectată; [count] valori așteaptă o variantă."
+
+msgctxt "Languages::travel_core.fm_attention_choose_feature"
+msgid "Choose feature"
+msgstr "Alegeți caracteristica"
+
+msgctxt "Languages::travel_core.fm_auto_hint"
+msgid "Discovered from provider data"
+msgstr "Descoperite din datele furnizorului"
+
+msgctxt "Languages::travel_core.fm_batch_size"
+msgid "Hotels per batch"
+msgstr "Hoteluri pe lot"
+
+msgctxt "Languages::travel_core.fm_col_feature"
+msgid "Feature"
+msgstr "Caracteristică"
+
+msgctxt "Languages::travel_core.fm_col_mapped"
+msgid "Mapped"
+msgstr "Mapate"
+
+msgctxt "Languages::travel_core.fm_col_no_variant"
+msgid "No variant"
+msgstr "Fără variantă"
+
+msgctxt "Languages::travel_core.fm_col_auto"
+msgid "Auto"
+msgstr "Auto"
+
+msgctxt "Languages::travel_core.fm_col_cs_feature"
+msgid "CS-Cart feature"
+msgstr "Caracteristică CS-Cart"
+
+msgctxt "Languages::travel_core.fm_col_provider_aliases"
+msgid "Provider aliases"
+msgstr "Aliasuri furnizori"
+
+msgctxt "Languages::travel_core.fm_col_values"
+msgid "Values each provider sends"
+msgstr "Valorile trimise de fiecare furnizor"
+
+msgctxt "Languages::travel_core.fm_chip_count"
+msgid "[count] aliases"
+msgstr "[count] aliasuri"
+
+msgctxt "Languages::travel_core.fm_chip_none"
+msgid "[provider]: none"
+msgstr "[provider]: niciunul"
+
+msgctxt "Languages::travel_core.fm_chip_unused"
+msgid "[provider] · not used"
+msgstr "[provider] · nefolosit"
+
+msgctxt "Languages::travel_core.fm_derived"
+msgid "Derived from facilities"
+msgstr "Derivat din facilități"
+
+msgctxt "Languages::travel_core.fm_not_configured"
+msgid "Not configured"
+msgstr "Neconfigurat"
+
+msgctxt "Languages::travel_core.fm_raw_title"
+msgid "Raw values not mapped yet"
+msgstr "Valori brute încă nemapate"
+
+msgctxt "Languages::travel_core.fm_raw_text"
+msgid "[count] values sent by providers match no alias."
+msgstr "[count] valori trimise de furnizori nu corespund niciunui alias."
+
+msgctxt "Languages::travel_core.fm_raw_none"
+msgid "Every scanned value is mapped."
+msgstr "Toate valorile scanate sunt mapate."
+
+msgctxt "Languages::travel_core.fm_review"
+msgid "Review [count]"
+msgstr "Verificați [count]"
+
+msgctxt "Languages::travel_core.fm_scan"
+msgid "Scan"
+msgstr "Scanează"
+
+msgctxt "Languages::travel_core.fm_list_count"
+msgid "[count] mappings"
+msgstr "[count] mapări"
+
+msgctxt "Languages::travel_core.fm_list_assigned"
+msgid "assigned to CS-Cart feature [feature]"
+msgstr "atribuite caracteristicii CS-Cart [feature]"
+
+msgctxt "Languages::travel_core.fm_list_no_variant"
+msgid "[count] without a CS-Cart variant"
+msgstr "[count] fără variantă CS-Cart"
+
+msgctxt "Languages::travel_core.fm_list_missing_title"
+msgid "[provider] has no aliases here."
+msgstr "[provider] nu are aliasuri aici."
+
+msgctxt "Languages::travel_core.fm_list_missing_text"
+msgid "Its values never become [feature], so its hotels get none."
+msgstr "Valorile sale nu devin niciodată [feature], așa că hotelurile sale nu primesc nimic."
+
+msgctxt "Languages::travel_core.fm_list_missing_manual"
+msgid "Add them on each mapping's page."
+msgstr "Adăugați-le pe pagina fiecărei mapări."
+
+msgctxt "Languages::travel_core.fm_reseed_provider"
+msgid "Re-seed [provider] aliases"
+msgstr "Recreează aliasurile [provider]"
+
+msgctxt "Languages::travel_core.fm_aliases_reseeded"
+msgid "[provider]'s aliases were re-seeded. If a value is still missing, add it on the mapping's page, then run the provider's \"reassign features\" job."
+msgstr "Aliasurile [provider] au fost recreate. Dacă o valoare încă lipsește, adăugați-o pe pagina mapării, apoi rulați jobul „reassign features” al furnizorului."
+
+msgctxt "Languages::travel_core.fm_search_placeholder"
+msgid "Search code, name or provider value"
+msgstr "Căutați cod, nume sau valoare furnizor"
+
+msgctxt "Languages::travel_core.fm_filter_provider"
+msgid "Provider"
+msgstr "Furnizor"
+
+msgctxt "Languages::travel_core.fm_filter_all_providers"
+msgid "All providers"
+msgstr "Toți furnizorii"
+
+msgctxt "Languages::travel_core.fm_filter_has"
+msgid "[provider]: has a value"
+msgstr "[provider]: are valoare"
+
+msgctxt "Languages::travel_core.fm_filter_missing"
+msgid "[provider]: missing a value"
+msgstr "[provider]: fără valoare"
+
+msgctxt "Languages::travel_core.fm_filter_any_status"
+msgid "Any status"
+msgstr "Orice stare"
+
+msgctxt "Languages::travel_core.fm_created_by"
+msgid "Created by"
+msgstr "Creat de"
+
+msgctxt "Languages::travel_core.fm_created_by_seed"
+msgid "Travel Core defaults"
+msgstr "Valori implicite Travel Core"
+
+msgctxt "Languages::travel_core.fm_created_by_auto"
+msgid "Discovered from provider data"
+msgstr "Descoperit din datele furnizorului"
+
+msgctxt "Languages::travel_core.fm_created_by_manual"
+msgid "An admin"
+msgstr "Un administrator"
+
+msgctxt "Languages::travel_core.fm_select_all"
+msgid "Select all"
+msgstr "Selectează tot"
+
+msgctxt "Languages::travel_core.fm_variant_kept"
+msgid "Kept: automatic matching never changes it"
+msgstr "Păstrată: potrivirea automată nu o schimbă niciodată"
+
+msgctxt "Languages::travel_core.fm_no_variant"
+msgid "none"
+msgstr "niciuna"
+
+msgctxt "Languages::travel_core.fm_no_alias"
+msgid "no alias"
+msgstr "fără alias"
+
+msgctxt "Languages::travel_core.fm_edit_shop_title"
+msgid "What the shop shows"
+msgstr "Ce afișează magazinul"
+
+msgctxt "Languages::travel_core.fm_keep_variant"
+msgid "Keep this variant: automatic matching never changes it"
+msgstr "Păstrează această variantă: potrivirea automată nu o schimbă niciodată"
+
+msgctxt "Languages::travel_core.fm_advanced"
+msgid "Advanced"
+msgstr "Avansat"
+
+msgctxt "Languages::travel_core.fm_last_used"
+msgid "Last used by a sync: [date]"
+msgstr "Ultima folosire la o sincronizare: [date]"
+
+msgctxt "Languages::travel_core.fm_edit_providers_title"
+msgid "What each provider sends for “[name]”"
+msgstr "Ce trimite fiecare furnizor pentru „[name]”"
+
+msgctxt "Languages::travel_core.fm_edit_providers_hint"
+msgid "A hotel gets this feature only when its provider's value matches one of these aliases."
+msgstr "Un hotel primește această caracteristică doar când valoarea furnizorului său corespunde unuia dintre aceste aliasuri."
+
+msgctxt "Languages::travel_core.fm_card_count"
+msgid "[count] aliases"
+msgstr "[count] aliasuri"
+
+msgctxt "Languages::travel_core.fm_card_missing"
+msgid "No alias: [provider] hotels never get this value"
+msgstr "Fără alias: hotelurile [provider] nu primesc niciodată această valoare"
+
+msgctxt "Languages::travel_core.fm_card_unused"
+msgid "Not used for [feature]"
+msgstr "Nefolosit pentru [feature]"
+
+msgctxt "Languages::travel_core.fm_match_exact"
+msgid "matches exactly"
+msgstr "corespunde exact"
+
+msgctxt "Languages::travel_core.fm_match_prefix"
+msgid "starts with"
+msgstr "începe cu"
+
+msgctxt "Languages::travel_core.fm_match_contains"
+msgid "contains"
+msgstr "conține"
+
+msgctxt "Languages::travel_core.fm_alias_delete_confirm"
+msgid "Remove this alias?"
+msgstr "Eliminați acest alias?"
+
+msgctxt "Languages::travel_core.fm_remove"
+msgid "Remove"
+msgstr "Elimină"
+
+msgctxt "Languages::travel_core.fm_remove_alias"
+msgid "Remove alias [value]"
+msgstr "Elimină aliasul [value]"
+
+msgctxt "Languages::travel_core.fm_add_anyway"
+msgid "Add an alias anyway"
+msgstr "Adaugă totuși un alias"
+
+msgctxt "Languages::travel_core.fm_provider_value"
+msgid "[provider] value"
+msgstr "Valoare [provider]"
+
+msgctxt "Languages::travel_core.fm_add_provider_alias"
+msgid "Add [provider] alias"
+msgstr "Adaugă alias [provider]"
+
+msgctxt "Languages::travel_core.fm_other_source"
+msgid "Another source"
+msgstr "Altă sursă"

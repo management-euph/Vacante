@@ -539,3 +539,355 @@
         min-width: 0;
     }
 }
+
+/* ─── Feature Mappings (travel_feature_mappings.*) ─── */
+
+.travel-fm-intro {
+    margin: 0 0 14px;
+    color: #4b5563;
+}
+
+.travel-fm-tiles {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.travel-fm-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 14px;
+    background: #fff;
+    border: 1px solid #dde3ea;
+    border-radius: 6px;
+    color: inherit;
+}
+
+.travel-fm-tile,
+.travel-fm-tile:hover {
+    text-decoration: none;
+    border-color: #9fb6d3;
+}
+
+.travel-fm-tile--warn {
+    border-color: #f3c58f;
+}
+
+.travel-fm-tile--bad {
+    border-color: #f1b5ae;
+}
+
+.travel-fm-tile__label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #4b5563;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.travel-fm-tile__value {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #1d2533;
+}
+
+.travel-fm-tile__hint {
+    font-size: 12px;
+    color: #4b5563;
+}
+
+.travel-fm-attention {
+    margin-bottom: 16px;
+    padding: 12px 14px;
+    background: #fff7ed;
+    border: 1px solid #f3c58f;
+    border-radius: 6px;
+    color: #3d2a17;
+}
+
+.travel-fm-attention__title {
+    margin-bottom: 6px;
+    font-weight: 700;
+    color: #7c3d0a;
+}
+
+.travel-fm-attention ul {
+    margin: 0 0 6px 18px;
+}
+
+.travel-fm-attention li {
+    margin-bottom: 4px;
+}
+
+.travel-fm-attention .muted {
+    font-size: 12px;
+}
+
+.travel-fm-table td,
+.travel-fm-table th {
+    vertical-align: middle;
+}
+
+.travel-fm-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.travel-fm-chip {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 18px;
+    white-space: nowrap;
+    background: #f3f4f6;
+    color: #6b7280;
+    border: 1px solid #e5e7eb;
+}
+
+.travel-fm-chip--ok {
+    background: #e6f0fb;
+    color: #174e8f;
+    border-color: #b7d1ee;
+}
+
+.travel-fm-chip--missing {
+    background: #fff;
+    color: #9a3412;
+    border: 1px dashed #d97706;
+}
+
+.travel-fm-bad {
+    color: #b42318;
+    font-weight: 700;
+}
+
+.travel-fm-values {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.travel-fm-values__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+}
+
+.travel-fm-values__provider {
+    min-width: 64px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #174e8f;
+}
+
+.travel-fm-values__row--missing .travel-fm-values__provider,
+.travel-fm-values__row--missing .travel-fm-values__none {
+    color: #9a3412;
+}
+
+.travel-fm-values code {
+    padding: 0 5px;
+    font-size: 11px;
+    color: #1d2533;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+}
+
+.travel-fm-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    background: #fff7ed;
+    border: 1px solid #f3c58f;
+    border-radius: 6px;
+    color: #3d2a17;
+}
+
+.travel-fm-banner__text {
+    flex: 1 1 auto;
+}
+
+.travel-fm-banner form {
+    margin: 0;
+}
+
+.travel-fm-edit {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 20px;
+    align-items: start;
+}
+
+.travel-fm-panel {
+    padding: 16px 18px;
+    background: #fff;
+    border: 1px solid #dde3ea;
+    border-radius: 6px;
+}
+
+.travel-fm-panel h4 {
+    margin: 0 0 12px;
+}
+
+.travel-fm-panel label.travel-fm-field {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: #4b5563;
+}
+
+.travel-fm-panel label.travel-fm-field input[type="text"],
+.travel-fm-panel label.travel-fm-field select {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    height: 30px;
+    margin-top: 3px;
+}
+
+.travel-fm-panel label.checkbox {
+    display: block;
+    margin-bottom: 8px;
+}
+
+.travel-fm-panel details {
+    margin: 10px 0 14px;
+    color: #4b5563;
+}
+
+.travel-fm-panel summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.travel-fm-card {
+    margin-bottom: 12px;
+    padding: 12px 14px;
+    background: #fff;
+    border: 1px solid #dde3ea;
+    border-radius: 6px;
+}
+
+.travel-fm-card--missing {
+    border: 1px dashed #d97706;
+}
+
+.travel-fm-card--unused {
+    background: #f9fafb;
+}
+
+.travel-fm-card__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.travel-fm-card__name {
+    flex: 1 1 auto;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.travel-fm-card--unused .travel-fm-card__name {
+    color: #4b5563;
+}
+
+.travel-fm-card__state {
+    font-size: 12px;
+    color: #4b5563;
+}
+
+.travel-fm-card--missing .travel-fm-card__state {
+    font-weight: 600;
+    color: #9a3412;
+}
+
+.travel-fm-alias {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 0;
+    border-top: 1px solid #eef1f5;
+}
+
+.travel-fm-alias__match {
+    flex: 1 1 auto;
+    color: #4b5563;
+}
+
+.travel-fm-alias form,
+.travel-fm-card__add {
+    margin: 0;
+}
+
+.travel-fm-card__add {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.travel-fm-card__add input[type="text"],
+.travel-fm-card__add select {
+    margin: 0;
+}
+
+@media (max-width: 979px) {
+    .travel-fm-tiles {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .travel-fm-edit {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.travel-fm-grid {
+    margin-bottom: 16px;
+    background: #fff;
+    border: 1px solid #dde3ea;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.travel-fm-grid__row {
+    display: grid;
+    grid-template-columns: minmax(150px, 1.4fr) 70px 90px 60px minmax(140px, 1.3fr) minmax(0, 2.4fr) 70px;
+    gap: 8px;
+    align-items: center;
+    padding: 9px 14px;
+    border-bottom: 1px solid #eef1f5;
+}
+
+.travel-fm-grid__row:last-child {
+    border-bottom: 0;
+}
+
+.travel-fm-grid__head {
+    background: #f7f9fb;
+    font-size: 11px;
+    font-weight: 700;
+    color: #4b5563;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+@media (max-width: 979px) {
+    .travel-fm-grid__row {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .travel-fm-grid__head {
+        display: none;
+    }
+}

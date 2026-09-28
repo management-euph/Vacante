@@ -156,6 +156,26 @@ interface FeatureMapRepositoryInterface
     public function getAliasCountsBySource(): array;
 
     /**
+     * Aliases of several mappings (the list page's per-provider values).
+     *
+     * @param list<int> $mapIds
+     * @return list<array<string, mixed>> {map_id, api_source, api_value, match_type}
+     */
+    public function getAliasesForMappings(array $mapIds): array;
+
+    /**
+     * @param list<int> $featureIds
+     * @return array<int, string> feature_id => name
+     */
+    public function getFeatureNames(array $featureIds, string $langCode): array;
+
+    /**
+     * @param list<int> $variantIds
+     * @return array<int, string> variant_id => name
+     */
+    public function getVariantNames(array $variantIds, string $langCode): array;
+
+    /**
      * Get global mapping stats (total, active, unmapped, alias count).
      *
      * @return array<string, mixed>

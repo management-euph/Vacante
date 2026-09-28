@@ -68,6 +68,32 @@ function fn_travel_core_self_heal_stamp(string $key, string $fingerprint): void
 }
 
 /**
+ * TRUE when the heal $key has run on this store (a provider add-on that
+ * self-heals its aliases stamps "<provider>_aliases").
+ */
+function fn_travel_core_self_heal_known(string $key): bool
+{
+    if (!function_exists('fn_get_storage_data')) {
+        return false;
+    }
+    $stored = fn_get_storage_data('travel_heal_' . $key);
+
+    return is_string($stored) && $stored !== '';
+}
+
+/**
+ * Re-arm the heal $key: it runs again on the next admin request. Stamped
+ * with a marker, not cleared: an empty value deletes the storage row, which
+ * would also make the heal look unknown.
+ */
+function fn_travel_core_self_heal_reset(string $key): void
+{
+    if (function_exists('fn_set_storage_data')) {
+        fn_set_storage_data('travel_heal_' . $key, 'reset');
+    }
+}
+
+/**
  * Heal every travel addon's settings, once per deployed version, at a point
  * in the request where CS-Cart is actually ready for it.
  *

@@ -265,7 +265,12 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
 
     // ── Stats / listing ──
 
-    /** @return array<string, array<string, mixed>> */
+    /**
+     * Providers come from a subquery: joining the aliases directly counted
+     * each mapping once per alias, inflating every total.
+     *
+     * @return array<string, array<string, mixed>>
+     */
     #[\Override]
     public function getTypeStats(): array
     {
@@ -275,9 +280,11 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
                     SUM(m.status = 'A') AS active,
                     SUM(m.cscart_variant_id IS NULL OR m.cscart_variant_id = 0) AS unmapped,
                     SUM(m.mapping_source = 'auto') AS auto_registered,
-                    GROUP_CONCAT(DISTINCT a.api_source ORDER BY a.api_source) AS providers
+                    (SELECT GROUP_CONCAT(DISTINCT a.api_source ORDER BY a.api_source)
+                     FROM ?:travel_api_alias a
+                     JOIN ?:travel_feature_map m2 ON m2.map_id = a.map_id
+                     WHERE m2.feature_type = m.feature_type AND a.api_source != '') AS providers
              FROM ?:travel_feature_map m
-             LEFT JOIN ?:travel_api_alias a ON a.map_id = m.map_id
              GROUP BY m.feature_type
              ORDER BY FIELD(m.feature_type, 'hotel_facility', 'room_facility', 'beach_access', 'board', 'resort', 'stars', 'property_type', 'travel_group', 'room_type', 'region', 'city')",
             'feature_type',
@@ -353,6 +360,67 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         ));
 
         return ['items' => $items, 'total' => $total];
+    }
+
+    /** @return list<array<string, mixed>> */
+    #[\Override]
+    public function getAliasesForMappings(array $mapIds): array
+    {
+        if ($mapIds === []) {
+            return [];
+        }
+
+        return self::asRowList(db_get_array(
+            "SELECT map_id, api_source, api_value, match_type FROM ?:travel_api_alias
+             WHERE map_id IN (?n) AND api_source != ''
+             ORDER BY api_source, api_value",
+            $mapIds,
+        ));
+    }
+
+    /** @return array<int, string> */
+    #[\Override]
+    public function getFeatureNames(array $featureIds, string $langCode): array
+    {
+        if ($featureIds === []) {
+            return [];
+        }
+
+        return self::asIntStringMap(db_get_hash_single_array(
+            'SELECT feature_id, description FROM ?:product_features_descriptions WHERE feature_id IN (?n) AND lang_code = ?s',
+            ['feature_id', 'description'],
+            $featureIds,
+            $langCode,
+        ));
+    }
+
+    /** @return array<int, string> */
+    #[\Override]
+    public function getVariantNames(array $variantIds, string $langCode): array
+    {
+        if ($variantIds === []) {
+            return [];
+        }
+
+        return self::asIntStringMap(db_get_hash_single_array(
+            'SELECT variant_id, variant FROM ?:product_feature_variant_descriptions WHERE variant_id IN (?n) AND lang_code = ?s',
+            ['variant_id', 'variant'],
+            $variantIds,
+            $langCode,
+        ));
+    }
+
+    /** @return array<int, string> */
+    private static function asIntStringMap(mixed $rows): array
+    {
+        // Not TypeCoerce::toStringMap(): it keeps string keys only, and
+        // these ids are integer keys.
+        $map = [];
+        foreach (is_array($rows) ? $rows : [] as $id => $name) {
+            $map[(int) $id] = TypeCoerce::toString($name);
+        }
+
+        return $map;
     }
 
     /** @return array<string, mixed> */
