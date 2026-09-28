@@ -1642,3 +1642,36 @@ body.travel-conditions-open {
     color: #15803d;
     font-weight: 600;
 }
+
+/* Order summary with a deposit (components/deposit_totals.tpl) */
+.travel-deposit-totals {
+    margin: 12px 0;
+    padding: 10px 12px;
+    border: 1.5px solid #0b5ed7;
+    border-radius: 10px;
+    background: #f0f6ff;
+    font-size: 14px;
+    color: #1e293b;
+}
+.travel-deposit-totals__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 3px 0;
+}
+.travel-deposit-totals__row--total {
+    font-size: 16px;
+    font-weight: 700;
+    border-bottom: 1px solid #c9d6ea;
+    padding-bottom: 6px;
+    margin-bottom: 3px;
+}
+.travel-deposit-totals__row--now {
+    font-weight: 700;
+    color: #0b3d91;
+}
+.travel-deposit-totals__note {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #64748b;
+}

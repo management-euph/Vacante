@@ -105,4 +105,31 @@ final class DepositTest extends TestCase
         self::assertNull(DepositPlan::fromSaved(['ratio' => 0.3]));
         self::assertNull(DepositPlan::fromSaved(null));
     }
+
+    /** Order total shows the full price; what is charged now stays the store's own total. */
+    public function testOrderTotalsAddTheBalanceToWhatIsChargedNow(): void
+    {
+        $products = [
+            'a' => ['price' => 89.7, 'extra' => ['travel_deposit' => ['ratio' => 0.3, 'balance_due' => '2026-10-14', 'full' => 299.0, 'deposit' => 89.7, 'balance' => 209.3]]],
+            'b' => ['price' => 20.0, 'extra' => []],
+        ];
+
+        self::assertSame(
+            ['total' => 319.0, 'now' => 109.7, 'balance' => 209.3, 'balance_due' => '2026-10-14'],
+            DepositCartLine::totals($products, 109.7),
+        );
+        self::assertSame([], DepositCartLine::totals(['b' => $products['b']], 20.0), 'no deposit line: nothing to add');
+    }
+
+    public function testTheSummaryIsHookedIntoCartCheckoutAndOrderPages(): void
+    {
+        $t = dirname(__DIR__, 7) . '/addon-travel-core/design/themes/responsive/templates/addons/travel_core/';
+        foreach (['hooks/checkout/checkout_totals.post.tpl' => '$cart', 'hooks/checkout/summary_extra.post.tpl' => '$cart', 'hooks/orders/details.post.tpl' => '$order_info'] as $hook => $var) {
+            $src = (string) file_get_contents($t . $hook);
+            self::assertStringContainsString('components/deposit_totals.tpl" dt_products=' . $var . '.products dt_charged=' . $var . '.total', $src, $hook);
+        }
+        $partial = (string) file_get_contents($t . 'components/deposit_totals.tpl');
+        self::assertStringContainsString('fn_travel_core_deposit_totals(', $partial);
+        self::assertLessThan(strpos($partial, 'deposit_paid_now")}</span>'), strpos($partial, 'deposit_order_total'), 'full total first');
+    }
 }

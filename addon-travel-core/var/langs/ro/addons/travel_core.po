@@ -1989,3 +1989,19 @@ msgstr "Bună ziua, [name],\n\nVă mulțumim pentru rezervarea la [hotel] (coman
 msgctxt "Languages::travel_core.split_total"
 msgid "Total"
 msgstr "Total"
+
+msgctxt "Languages::travel_core.deposit_order_total"
+msgid "Order total"
+msgstr "Total comandă"
+
+msgctxt "Languages::travel_core.deposit_paid_now"
+msgid "Deposit — paid now"
+msgstr "Avans — plătit acum"
+
+msgctxt "Languages::travel_core.deposit_balance_by"
+msgid "Balance — by [date]"
+msgstr "Rest de plată — până la [date]"
+
+msgctxt "Languages::travel_core.deposit_pay_now_btn"
+msgid "pay [amount] now"
+msgstr "plătiți acum [amount]"

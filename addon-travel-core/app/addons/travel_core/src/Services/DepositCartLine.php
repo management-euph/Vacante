@@ -90,6 +90,40 @@ final class DepositCartLine
     }
 
     /**
+     * Totals of a cart / order that holds deposit lines, for the summary:
+     * the full order total (what is charged now + every balance), what is
+     * charged now (the cart / order total itself — the payment method charges
+     * exactly that), and the balance with its last due date. [] when no line
+     * is paid with a deposit.
+     *
+     * @param array<array-key, mixed> $products cart / order products
+     * @return array{total: float, now: float, balance: float, balance_due: string}|array{}
+     */
+    public static function totals(array $products, float $chargedTotal): array
+    {
+        $balance = 0.0;
+        $due = '';
+        foreach ($products as $item) {
+            $a = is_array($item) ? self::amounts(TypeCoerce::toStringMap($item)) : [];
+            if ($a === []) {
+                continue;
+            }
+            $balance += $a['balance'];
+            $due = $a['balance_due'] > $due ? $a['balance_due'] : $due;
+        }
+        if ($balance <= 0) {
+            return [];
+        }
+
+        return [
+            'total' => round($chargedTotal + $balance, 2),
+            'now' => round($chargedTotal, 2),
+            'balance' => round($balance, 2),
+            'balance_due' => $due,
+        ];
+    }
+
+    /**
      * @param array<string, mixed> $row
      * @return array<string, mixed>
      */

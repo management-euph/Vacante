@@ -308,6 +308,22 @@ function fn_settings_variants_addons_travel_core_default_currency(): array
 }
 
 /**
+ * Order summary of a cart / order with deposit lines — Order total (full),
+ * Deposit paid now, Balance by date (DepositCartLine::totals). Called from
+ * components/deposit_totals.tpl.
+ *
+ * @param mixed $products
+ * @return array<string, float|string>
+ */
+function fn_travel_core_deposit_totals(mixed $products, mixed $chargedTotal): array
+{
+    return \Tygh\Addons\TravelCore\Services\DepositCartLine::totals(
+        is_array($products) ? $products : [],
+        \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toFloat($chargedTotal),
+    );
+}
+
+/**
  * A Y-m-d date in the store's date format (deposit / balance lines in the
  * cart, order and email templates).
  */

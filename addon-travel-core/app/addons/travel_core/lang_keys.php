@@ -1186,4 +1186,21 @@ Dacă ați plătit deja, vă rugăm să ignorați acest email.',
         'en' => 'Total',
         'ro' => 'Total',
     ],
+    // Order summary with a deposit (components/deposit_totals.tpl).
+    'travel_core.deposit_order_total' => [
+        'en' => 'Order total',
+        'ro' => 'Total comandă',
+    ],
+    'travel_core.deposit_paid_now' => [
+        'en' => 'Deposit — paid now',
+        'ro' => 'Avans — plătit acum',
+    ],
+    'travel_core.deposit_balance_by' => [
+        'en' => 'Balance — by [date]',
+        'ro' => 'Rest de plată — până la [date]',
+    ],
+    'travel_core.deposit_pay_now_btn' => [
+        'en' => 'pay [amount] now',
+        'ro' => 'plătiți acum [amount]',
+    ],
 ];
