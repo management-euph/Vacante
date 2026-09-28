@@ -113,6 +113,9 @@ class FeatureMapper implements FeatureMapperInterface
         }
 
         $result = self::getRepository()->findByAlias($apiSource, $featureType, $apiValue);
+        if (($result === null || $result === []) && in_array($featureType, self::CODE_RESOLVED_TYPES, true)) {
+            $result = self::getRepository()->findByCode($featureType, $apiValue);
+        }
 
         if ($result !== null && $result !== []) {
             // Batch last_used_at updates — collect map_ids and flush at clearCache()
@@ -123,6 +126,15 @@ class FeatureMapper implements FeatureMapperInterface
 
         return self::$cache[$cacheKey];
     }
+
+    /**
+     * Types whose values are travel_core's own canonical codes, not provider
+     * values: travel groups are DERIVED from facilities (TravelGroupResolver
+     * returns adults_only / family_friendly / pets_friendly), so no provider
+     * seeds aliases for them. Without an alias they resolve by code; before
+     * this every provider's travel group was logged as unmapped instead.
+     */
+    public const array CODE_RESOLVED_TYPES = ['travel_group'];
 
     /** All facility sub-types */
     public const array FACILITY_TYPES = ['hotel_facility', 'room_facility', 'beach_access'];

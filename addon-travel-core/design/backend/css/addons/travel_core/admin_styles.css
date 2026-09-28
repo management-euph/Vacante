@@ -891,3 +891,8 @@
         display: none;
     }
 }
+
+a.travel-fm-chip,
+a.travel-fm-chip:hover {
+    text-decoration: none;
+}
