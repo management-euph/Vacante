@@ -88,9 +88,23 @@
 
                 {* Offer details *}
                 <div class="travel-offer-details sphinx-offer-details">
-                    <div class="travel-offer-room sphinx-offer-room">
-                        {$result.room_name|default:$result.room_type|escape:html}
-                    </div>
+                    {* A multi-room search returns ONE offer for the whole party:
+                       list every room with its guests, not just the first name *}
+                    {if $result.room_lines && $result.room_lines|count > 1}
+                        <ol class="travel-offer-rooms sphinx-offer-rooms">
+                            {foreach from=$result.room_lines item=sx_room name=sx_rooms}
+                                <li class="travel-offer-rooms__item">
+                                    <span class="travel-offer-rooms__label">{__("sphinx_holidays.sx_room", ["[num]" => $smarty.foreach.sx_rooms.iteration])}</span>
+                                    <span class="travel-offer-rooms__name">{$sx_room.name|default:$result.room_name|escape:html}</span>
+                                    <span class="travel-offer-rooms__guests">{if $sx_room.adults == 1}{__("sphinx_holidays.sx_adults_one")}{else}{__("sphinx_holidays.sx_adults_many", ["[count]" => $sx_room.adults])}{/if}{if $sx_room.children == 1} + {__("sphinx_holidays.sx_children_one")}{elseif $sx_room.children > 1} + {__("sphinx_holidays.sx_children_many", ["[count]" => $sx_room.children])}{/if}</span>
+                                </li>
+                            {/foreach}
+                        </ol>
+                    {else}
+                        <div class="travel-offer-room sphinx-offer-room">
+                            {$result.room_name|default:$result.room_type|escape:html}
+                        </div>
+                    {/if}
                     <div class="travel-offer-board sphinx-offer-board">
                         {$result.board_name|default:$result.board_type|escape:html}
                     </div>
@@ -114,6 +128,9 @@
                             <span class="travel-price-per-night sphinx-price-per-night">
                                 {($result.price / $sphinx_search_params.nights)|number_format:2:",":"."} / {__("sphinx_holidays.per_night")|default:"night"}
                             </span>
+                        {/if}
+                        {if $result.room_lines && $result.room_lines|count > 1}
+                            <span class="travel-price-rooms sphinx-price-rooms">{__("sphinx_holidays.sx_total_for_rooms", ["[count]" => $result.room_lines|count])}</span>
                         {/if}
                         <span class="travel-price-includes">{__("sphinx_holidays.includes_taxes")|default:"Includes taxes and commissions"}</span>
                     </div>

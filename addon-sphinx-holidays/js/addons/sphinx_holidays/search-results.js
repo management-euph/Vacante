@@ -121,6 +121,11 @@ window.SphinxSearch.onReady = function (fn) {
             ? (labels.starsRating || '%s-star rating').replace('%s', String(parseInt(result.star_rating, 10)))
             : '';
 
+        // A multi-room search returns ONE offer for the whole party: list
+        // every room with its guests (room_lines, SearchOfferNormalizer).
+        var roomLines = Array.isArray(result.room_lines) ? result.room_lines : [];
+        var multiRoom = roomLines.length > 1;
+
         var card = document.createElement('div');
         card.className = 'travel-offer-card sphinx-offer-card';
         card.setAttribute('data-offer-id', result.offer_id || '');
@@ -136,7 +141,9 @@ window.SphinxSearch.onReady = function (fn) {
                 '</div>' +
             '</div>' +
             '<div class="travel-offer-details sphinx-offer-details">' +
-                '<div class="travel-offer-room sphinx-offer-room"><span class="sx-room"></span></div>' +
+                (multiRoom
+                    ? '<ol class="travel-offer-rooms sphinx-offer-rooms"></ol>'
+                    : '<div class="travel-offer-room sphinx-offer-room"><span class="sx-room"></span></div>') +
                 '<div class="travel-offer-board sphinx-offer-board sx-board"></div>' +
                 (datesLine ? '<div class="travel-offer-dates sphinx-offer-dates">' + datesLine + '</div>' : '') +
                 (result.confirmation === 'immediate'
@@ -149,6 +156,9 @@ window.SphinxSearch.onReady = function (fn) {
                     '<span class="travel-price-amount sphinx-price-amount">' + price + '</span> ' +
                     '<span class="travel-price-currency sphinx-price-currency">' + (result.currency || searchParams.currency) + '</span>' +
                     perNight +
+                    (multiRoom
+                        ? '<span class="travel-price-rooms sphinx-price-rooms"></span>'
+                        : '') +
                     '<span class="travel-price-includes">' + (labels.includesTaxes || 'Includes taxes and commissions') + '</span>' +
                 '</div>' +
                 '<a href="' + bookingUrl + '" class="travel-offer-book-btn sphinx-offer-book-btn">' + (labels.bookNow || 'Book now') + '</a>' +
@@ -157,10 +167,51 @@ window.SphinxSearch.onReady = function (fn) {
         // Set text nodes safely to avoid XSS
         card.querySelector('.sphinx-offer-hotel-name').textContent = result.hotel_name || '';
         if (result.destination) card.querySelector('.sphinx-offer-location').textContent = result.destination;
-        card.querySelector('.sx-room').textContent = result.room_name || result.room_type || '';
+        if (multiRoom) {
+            var list = card.querySelector('.sphinx-offer-rooms');
+            roomLines.forEach(function (line, i) {
+                var li = document.createElement('li');
+                li.className = 'travel-offer-rooms__item';
+                [
+                    ['travel-offer-rooms__label', fill(labels.roomN || 'Room [num]', { num: i + 1 })],
+                    ['travel-offer-rooms__name', line.name || result.room_name || ''],
+                    ['travel-offer-rooms__guests', guestsText(line, labels)]
+                ].forEach(function (part) {
+                    var span = document.createElement('span');
+                    span.className = part[0];
+                    span.textContent = part[1];
+                    li.appendChild(span);
+                });
+                list.appendChild(li);
+            });
+            card.querySelector('.sphinx-price-rooms').textContent =
+                fill(labels.totalForRooms || 'Total for [count] rooms', { count: roomLines.length });
+        } else {
+            card.querySelector('.sx-room').textContent = result.room_name || result.room_type || '';
+        }
         card.querySelector('.sx-board').textContent = result.board_name || result.board_type || '';
 
         return card;
+    }
+
+    function fill(template, values) {
+        return String(template).replace(/\[(\w+)]/g, function (match, key) {
+            return key in values ? String(values[key]) : match;
+        });
+    }
+
+    function guestsText(line, labels) {
+        var adults = parseInt(line.adults, 10) || 0;
+        var children = parseInt(line.children, 10) || 0;
+        var text = adults === 1
+            ? (labels.adultsOne || '1 adult')
+            : fill(labels.adultsMany || '[count] adults', { count: adults });
+        if (children === 1) {
+            text += ' + ' + (labels.childrenOne || '1 child');
+        } else if (children > 1) {
+            text += ' + ' + fill(labels.childrenMany || '[count] children', { count: children });
+        }
+        return text;
     }
 
     function appendResults(results) {

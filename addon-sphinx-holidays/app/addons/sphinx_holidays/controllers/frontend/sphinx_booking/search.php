@@ -22,6 +22,7 @@ if (!defined('BOOTSTRAP')) {
 
 use Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability;
 use Tygh\Addons\SphinxHolidays\Helpers\SearchMetrics;
+use Tygh\Addons\SphinxHolidays\Helpers\OfferLocation;
 use Tygh\Addons\SphinxHolidays\Helpers\SearchOfferNormalizer;
 use Tygh\Addons\SphinxHolidays\Services\CacheService;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
@@ -143,6 +144,12 @@ try {
             'instantConfirmation' => $sxLbl('sphinx_holidays.instant_confirmation', 'Instant confirmation'),
             'includesTaxes' => $sxLbl('sphinx_holidays.includes_taxes', 'Includes taxes and commissions'),
             'bookNow' => $sxLbl('sphinx_holidays.book_now', 'Book now'),
+            'roomN' => $sxLbl('sphinx_holidays.sx_room', 'Room [num]'),
+            'adultsOne' => $sxLbl('sphinx_holidays.sx_adults_one', '1 adult'),
+            'adultsMany' => $sxLbl('sphinx_holidays.sx_adults_many', '[count] adults'),
+            'childrenOne' => $sxLbl('sphinx_holidays.sx_children_one', '1 child'),
+            'childrenMany' => $sxLbl('sphinx_holidays.sx_children_many', '[count] children'),
+            'totalForRooms' => $sxLbl('sphinx_holidays.sx_total_for_rooms', 'Total for [count] rooms'),
             'nights' => $sxLbl('travel_core.nights', 'nights'),
             'starsRating' => $sxLbl('sphinx_holidays.stars_rating', '%s-star rating', ['[rating]' => '%s']),
             'cancellationAndPaymentTerms' => $sxLbl('sphinx_holidays.cancellation_and_payment_terms', 'Condiții de Plată și Anulare'),
@@ -384,6 +391,11 @@ try {
         // Flatten the nested API offer shape (pricing.selling_price,
         // meal_type_name, rooms[]) to the flat keys the template expects.
         $initialResults = SearchOfferNormalizer::flattenAll($initialResults);
+        // The offer names only the resort/city: add the hotel's country.
+        $initialResults = OfferLocation::applyCountry(
+            $initialResults,
+            Container::getHotelRepository()->findCountryNames(OfferLocation::hotelIds($initialResults)),
+        );
         $cartService = Container::getCartService();
         foreach ($initialResults as &$result) {
             if (isset($result['price'])) {

@@ -1359,3 +1359,27 @@ msgstr "Detaliile rezervării au fost actualizate."
 msgctxt "Languages::sphinx_holidays.complete_booking"
 msgid "Complete Your Booking"
 msgstr "Finalizează rezervarea"
+
+msgctxt "Languages::sphinx_holidays.sx_room"
+msgid "Room [num]"
+msgstr "Camera [num]"
+
+msgctxt "Languages::sphinx_holidays.sx_adults_one"
+msgid "1 adult"
+msgstr "1 adult"
+
+msgctxt "Languages::sphinx_holidays.sx_adults_many"
+msgid "[count] adults"
+msgstr "[count] adulți"
+
+msgctxt "Languages::sphinx_holidays.sx_children_one"
+msgid "1 child"
+msgstr "1 copil"
+
+msgctxt "Languages::sphinx_holidays.sx_children_many"
+msgid "[count] children"
+msgstr "[count] copii"
+
+msgctxt "Languages::sphinx_holidays.sx_total_for_rooms"
+msgid "Total for [count] rooms"
+msgstr "Total pentru [count] camere"

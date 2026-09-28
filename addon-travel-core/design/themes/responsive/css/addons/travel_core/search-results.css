@@ -188,6 +188,38 @@
     color: var(--nvt-text-light, #666);
     margin-top: 2px;
 }
+/* A multi-room offer (one offer for the whole party): one line per room —
+   "Room 1 · Double Sea View · 2 adults + 1 child". */
+.travel-search-results-page .travel-offer-rooms {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0 0 4px;
+    padding: 0;
+    list-style: none;
+}
+.travel-search-results-page .travel-offer-rooms__item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 8px;
+}
+.travel-search-results-page .travel-offer-rooms__label {
+    flex-shrink: 0;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--nvt-primary-tint, #eef5fd);
+    color: var(--nvt-price-color, #003580);
+    font-size: 12px;
+    font-weight: 700;
+}
+.travel-search-results-page .travel-offer-rooms__name {
+    font-weight: 600;
+}
+.travel-search-results-page .travel-offer-rooms__guests {
+    font-size: 13px;
+    color: var(--nvt-text-light, #666);
+}
 .travel-search-results-page .travel-offer-dates {
     font-size: 13px;
     color: var(--nvt-text-light, #666);
@@ -227,11 +259,16 @@
     color: var(--nvt-price-color, #003580);
 }
 .travel-search-results-page .travel-price-per-night,
+.travel-search-results-page .travel-price-rooms,
 .travel-search-results-page .travel-price-includes {
     display: block;
     font-size: 12px;
     color: var(--nvt-text-light, #666);
     margin-top: 2px;
+}
+.travel-search-results-page .travel-price-rooms {
+    font-weight: 600;
+    color: var(--nvt-text, #1a1a1a);
 }
 /* Box model only — the brand-blue color, hover, and focus-visible ring come
    from the shared .travel-btn--primary contract in booking-engine.css. */

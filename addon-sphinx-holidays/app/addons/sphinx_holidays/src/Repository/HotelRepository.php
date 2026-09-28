@@ -336,6 +336,38 @@ class HotelRepository implements HotelRepositoryInterface
     }
 
     /**
+     * Country of each hotel, for the location line of search offers (the
+     * offer itself only names the resort/city). Falls back to the country
+     * of the hotel's API address when country_name is empty.
+     *
+     * @param string[] $hotelIds
+     * @return array<string, string> hotel_id => country name
+     */
+    public function findCountryNames(array $hotelIds): array
+    {
+        if ($hotelIds === []) {
+            return [];
+        }
+
+        $rows = self::asRowList(db_get_array(
+            "SELECT hotel_id, COALESCE(NULLIF(TRIM(country_name), ''), NULLIF(TRIM(address_country), '')) AS country
+             FROM ?:sphinx_hotels WHERE hotel_id IN (?a)",
+            $hotelIds,
+        ));
+
+        $byId = [];
+        foreach ($rows as $row) {
+            $id = TypeCoerce::toString($row['hotel_id'] ?? '');
+            $country = TypeCoerce::toString($row['country'] ?? '');
+            if ($id !== '' && $country !== '') {
+                $byId[$id] = $country;
+            }
+        }
+
+        return $byId;
+    }
+
+    /**
      * Get last hotel sync timestamp, optionally per country.
      */
     public function getLastSyncedAt(?string $countryCode = null): ?string

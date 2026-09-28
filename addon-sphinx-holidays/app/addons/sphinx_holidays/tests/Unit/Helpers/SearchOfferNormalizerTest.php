@@ -148,4 +148,29 @@ class SearchOfferNormalizerTest extends TestCase
         $this->assertSame('61992', $flat['hotel_id']);
         $this->assertSame('immediate', $flat['confirmation']);
     }
+
+    public function testEveryRoomOfAMultiRoomOfferBecomesARoomLine(): void
+    {
+        $offer = $this->nestedOffer();
+        $offer['rooms'] = [
+            ['name' => 'Double Sea View', 'adults' => 2, 'children_ages' => [7]],
+            ['room_name' => 'Triple Room', 'adults' => 3, 'children_ages' => []],
+        ];
+
+        $flat = SearchOfferNormalizer::flatten($offer);
+
+        self::assertSame([
+            ['name' => 'Double Sea View', 'adults' => 2, 'children' => 1],
+            ['name' => 'Triple Room', 'adults' => 3, 'children' => 0],
+        ], $flat['room_lines']);
+        self::assertSame('Double Sea View', $flat['room_name']);
+    }
+
+    public function testAnOfferWithoutRoomsHasNoRoomLines(): void
+    {
+        $offer = $this->nestedOffer();
+        unset($offer['rooms']);
+
+        self::assertArrayNotHasKey('room_lines', SearchOfferNormalizer::flatten($offer));
+    }
 }
