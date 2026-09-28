@@ -195,7 +195,7 @@ window.SphinxSearch.onReady = function (fn) {
     }
 
     function fill(template, values) {
-        return String(template).replace(/\[(\w+)\]/g, function (match, key) {
+        return String(template).replace(/\[(\w+)]/g, function (match, key) {
             return key in values ? String(values[key]) : match;
         });
     }

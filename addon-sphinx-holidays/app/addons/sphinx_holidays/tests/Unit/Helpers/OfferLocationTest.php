@@ -61,9 +61,10 @@ final class OfferLocationTest extends TestCase
             self::assertStringContainsString('OfferLocation::applyCountry(', $src, $file);
             self::assertStringContainsString('findCountryNames(OfferLocation::hotelIds(', $src, $file);
         }
-        self::assertMatchesRegularExpression(
-            "/\\\$templateFields = \\[[^\\]]*'room_lines'/s",
-            (string) file_get_contents($dir . 'search_poll.php'),
-        );
+        $poll = (string) file_get_contents($dir . 'search_poll.php');
+        $start = strpos($poll, '$templateFields = [');
+        self::assertNotFalse($start);
+        $fields = substr($poll, $start, (int) strpos($poll, '];', $start) - $start);
+        self::assertStringContainsString("'room_lines'", $fields);
     }
 }
