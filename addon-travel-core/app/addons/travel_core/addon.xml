@@ -268,6 +268,30 @@
         </sections>
     </settings>
 
+    <!-- Order emails (Twig email templates): the full order total, deposit
+         paid now and balance. Add {{ snippet("travel_deposit_totals") }} to
+         Design -> Email templates -> order notification, under the totals. -->
+    <email_templates>
+        <snippets>
+            <item>
+                <code><![CDATA[travel_deposit_totals]]></code>
+                <name>
+                    <en><![CDATA[Travel: order total with deposit]]></en>
+                    <ro><![CDATA[Travel: total comandă cu avans]]></ro>
+                </name>
+                <default_template><![CDATA[{% set dt = order_info.travel_deposit_totals|default([]) %}
+{% if dt %}
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:12px 0;border:1.5px solid #0b5ed7;border-radius:8px;background:#f0f6ff;">
+  <tr><td style="padding:10px 12px 4px;font-size:16px;font-weight:bold;">{{ __("travel_core.deposit_order_total") }}</td><td align="right" style="padding:10px 12px 4px;font-size:16px;font-weight:bold;">{{ dt.total_formatted }}</td></tr>
+  <tr><td style="padding:2px 12px;font-weight:bold;color:#0b3d91;">{{ __("travel_core.deposit_paid_now") }}</td><td align="right" style="padding:2px 12px;font-weight:bold;color:#0b3d91;">{{ dt.now_formatted }}</td></tr>
+  <tr><td style="padding:2px 12px 10px;">{{ __("travel_core.deposit_balance_by", {"[date]": dt.balance_due_formatted}) }}</td><td align="right" style="padding:2px 12px 10px;">{{ dt.balance_formatted }}</td></tr>
+</table>
+{% endif %}]]></default_template>
+                <status><![CDATA[A]]></status>
+                <addon><![CDATA[travel_core]]></addon>
+            </item>
+        </snippets>
+    </email_templates>
     <queries>
         <!-- Shared feature mapping table: canonical definitions -->
         <item>
