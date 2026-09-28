@@ -80,7 +80,7 @@ function fn_travel_core_get_order_info(&$order, $additional_data): void
         $order['travel_balances'] = (new BalanceService())->forOrder(TypeCoerce::toInt($order['order_id'] ?? 0));
         // The full order total beside what was charged (the order total) —
         // formatted here for the order emails, Twig snippet and Smarty alike.
-        $totals = DepositCartLine::totals(is_array($order['products'] ?? null) ? $order['products'] : [], TypeCoerce::toFloat($order['total'] ?? 0));
+        $totals = DepositCartLine::totals($order['products'], TypeCoerce::toFloat($order['total'] ?? 0));
         if ($totals !== []) {
             $money = MoneyFormatter::forStore();
             $order['travel_deposit_totals'] = $totals + [

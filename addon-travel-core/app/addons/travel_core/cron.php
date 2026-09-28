@@ -83,4 +83,3 @@ echo fn_travel_core_format_exchange_rate_output($result) . "\n";
 $exitCode = TypeCoerce::toBool($result['success'] ?? false) ? 0 : 1;
 echo "\n[" . date('Y-m-d H:i:s') . "] Cron job completed.\n";
 exit($exitCode);
-
