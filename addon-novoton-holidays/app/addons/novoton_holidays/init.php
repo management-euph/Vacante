@@ -171,6 +171,25 @@ if (function_exists('fn_travel_core_heal_language_keys')) {
     });
 }
 
+// Alias self-heal: re-seed Novoton's ?:travel_api_alias rows once per
+// deployed version of the seed data. Seeding otherwise ran only at install
+// and on the product syncs, so rows lost to the old (api_source, api_value)
+// key — Novoton's star ratings '1'-'5' collided with its facility ids — were
+// never written back, and Novoton hotels got no star rating.
+if (defined('AREA') && AREA === 'A' && function_exists('fn_travel_core_self_heal_due')
+    && class_exists(\Tygh\Addons\TravelCore\Services\FeatureMapper::class)
+) {
+    $__nvt_alias_fp = \Tygh\Addons\NovotonHolidays\Install\AliasSeeder::fingerprint();
+    if (fn_travel_core_self_heal_due('novoton_aliases', $__nvt_alias_fp)) {
+        fn_travel_core_self_heal_guard('novoton_aliases', static function (): void {
+            $prefix = \Tygh\Registry::get('config.table_prefix');
+            \Tygh\Addons\NovotonHolidays\Install\AliasSeeder::seed(is_scalar($prefix) ? (string) $prefix : 'cscart_');
+        });
+        fn_travel_core_self_heal_stamp('novoton_aliases', $__nvt_alias_fp);
+    }
+    unset($__nvt_alias_fp);
+}
+
 // Register addon hooks
 fn_register_hooks(
     'get_product_data_post',                   // Add hotel data to products

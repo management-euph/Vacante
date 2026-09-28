@@ -284,6 +284,26 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         ));
     }
 
+    /** @return array<string, array<string, int>> */
+    #[\Override]
+    public function getAliasCountsBySource(): array
+    {
+        $rows = self::asRowList(db_get_array(
+            'SELECT a.api_source, m.feature_type, COUNT(*) AS aliases
+             FROM ?:travel_api_alias a
+             JOIN ?:travel_feature_map m ON m.map_id = a.map_id
+             GROUP BY a.api_source, m.feature_type',
+        ));
+
+        $counts = [];
+        foreach ($rows as $row) {
+            $counts[TypeCoerce::toString($row['api_source'] ?? '')][TypeCoerce::toString($row['feature_type'] ?? '')]
+                = TypeCoerce::toInt($row['aliases'] ?? 0);
+        }
+
+        return $counts;
+    }
+
     /** @return array<string, mixed> */
     #[\Override]
     public function getGlobalStats(): array

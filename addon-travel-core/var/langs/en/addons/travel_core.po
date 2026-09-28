@@ -1477,3 +1477,19 @@ msgstr "current step"
 msgctxt "Languages::travel_core.continue_to_payment"
 msgid "Continue to payment"
 msgstr "Continue to payment"
+
+msgctxt "Languages::travel_core.fm_alias_gaps_title"
+msgid "Provider values that are never mapped"
+msgstr "Provider values that are never mapped"
+
+msgctxt "Languages::travel_core.fm_alias_gap"
+msgid "[provider] has no aliases for [feature]: its hotels get no value for this feature."
+msgstr "[provider] has no aliases for [feature]: its hotels get no value for this feature."
+
+msgctxt "Languages::travel_core.fm_alias_gap_open"
+msgid "Open"
+msgstr "Open"
+
+msgctxt "Languages::travel_core.fm_alias_gaps_hint"
+msgid "Each provider re-seeds its aliases on the first admin page load after an update, and on its hotel syncs; then run its \"reassign features\" job so existing hotels get the values."
+msgstr "Each provider re-seeds its aliases on the first admin page load after an update, and on its hotel syncs; then run its \"reassign features\" job so existing hotels get the values."

@@ -40,9 +40,9 @@ final class NovotonAliasSeedDataTest extends TestCase
         self::assertContains('AI', $boards);
     }
 
-    public function testInstallReadsTheDataClassInsteadOfInlineArrays(): void
+    public function testTheSeederReadsTheDataClassInsteadOfInlineArrays(): void
     {
-        $install = (string) file_get_contents(dirname(__DIR__, 3) . '/functions/install.php');
+        $install = (string) file_get_contents(dirname(__DIR__, 3) . '/src/Install/AliasSeeder.php');
 
         self::assertStringContainsString('NovotonAliasSeedData::boardAliases()', $install);
         self::assertStringContainsString('NovotonAliasSeedData::hotelFacilityAliases()', $install);
