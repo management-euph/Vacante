@@ -22,6 +22,7 @@ if (!defined('BOOTSTRAP')) {
 
 use Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability;
 use Tygh\Addons\SphinxHolidays\Helpers\SearchMetrics;
+use Tygh\Addons\SphinxHolidays\Helpers\OfferLocation;
 use Tygh\Addons\SphinxHolidays\Helpers\SearchOfferNormalizer;
 use Tygh\Addons\SphinxHolidays\Services\AlternativeDateProber;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
@@ -145,6 +146,11 @@ try {
     // template expect (price, currency, board_name, room_name, destination) —
     // otherwise every offer renders with a 0,00 price and blank room/board.
     $results = SearchOfferNormalizer::flattenAll($results);
+    // The offer names only the resort/city: add the hotel's country.
+    $results = OfferLocation::applyCountry(
+        $results,
+        Container::getHotelRepository()->findCountryNames(OfferLocation::hotelIds($results)),
+    );
 
     // Apply commission to each result
     $cartService = Container::getCartService();
@@ -171,7 +177,7 @@ try {
     $templateFields = [
         'offer_id', 'hotel_id', 'product_id',
         'hotel_name', 'hotel_image', 'star_rating', 'destination',
-        'room_name', 'room_type', 'board_name', 'board_type',
+        'room_name', 'room_type', 'room_lines', 'board_name', 'board_type',
         'price', 'original_price', 'currency', 'confirmation',
     ];
     $slimResults = [];

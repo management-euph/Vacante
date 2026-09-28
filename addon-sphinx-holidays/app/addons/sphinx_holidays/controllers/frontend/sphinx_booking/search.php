@@ -22,6 +22,7 @@ if (!defined('BOOTSTRAP')) {
 
 use Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability;
 use Tygh\Addons\SphinxHolidays\Helpers\SearchMetrics;
+use Tygh\Addons\SphinxHolidays\Helpers\OfferLocation;
 use Tygh\Addons\SphinxHolidays\Helpers\SearchOfferNormalizer;
 use Tygh\Addons\SphinxHolidays\Services\CacheService;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
@@ -390,6 +391,11 @@ try {
         // Flatten the nested API offer shape (pricing.selling_price,
         // meal_type_name, rooms[]) to the flat keys the template expects.
         $initialResults = SearchOfferNormalizer::flattenAll($initialResults);
+        // The offer names only the resort/city: add the hotel's country.
+        $initialResults = OfferLocation::applyCountry(
+            $initialResults,
+            Container::getHotelRepository()->findCountryNames(OfferLocation::hotelIds($initialResults)),
+        );
         $cartService = Container::getCartService();
         foreach ($initialResults as &$result) {
             if (isset($result['price'])) {
