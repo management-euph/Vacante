@@ -151,4 +151,40 @@ final class TermsTimelineFactoryTest extends TestCase
         self::assertTrue($rows[0]['is_now'], 'a due date already passed is due now');
         self::assertSame('25%', $rows[0]['percent_label']);
     }
+
+    /** 30% on booking, 70% later: the price card shows deposit and balance. */
+    public function testSplitShowsDepositAndBalance(): void
+    {
+        $split = self::factory()->split([
+            ['due' => null, 'percent' => 30],
+            ['due' => '2026-10-20', 'percent' => 70],
+        ], 360.0);
+
+        self::assertSame(['deposit' => '108,00 €', 'balance' => '252,00 €', 'balance_due' => '10/20/2026'], $split);
+    }
+
+    public function testSplitTakesTheLastBalanceDate(): void
+    {
+        $split = self::factory()->split([
+            ['due' => '2026-09-20', 'amount' => 100.0],
+            ['due' => '2026-10-10', 'amount' => 100.0],
+            ['due' => '2026-11-01', 'amount' => 200.0],
+        ], 400.0);
+
+        self::assertSame('100,00 €', $split['deposit'] ?? null, 'a passed date counts as due now');
+        self::assertSame('300,00 €', $split['balance'] ?? null);
+        self::assertSame('11/01/2026', $split['balance_due'] ?? null);
+    }
+
+    /** No choice to show: one payment, all due now, nothing due now, or the balance is days away. */
+    public function testSplitIsEmptyWhenTheTermsDoNotSplit(): void
+    {
+        $f = self::factory();
+
+        self::assertSame([], $f->split([['due' => '2026-10-18', 'percent' => 100]], 393.0), 'one payment later');
+        self::assertSame([], $f->split([['due' => null, 'percent' => 100]], 393.0), 'all now');
+        self::assertSame([], $f->split([['due' => null, 'percent' => 30], ['due' => '2026-10-02', 'percent' => 70]], 360.0), 'balance within 7 days');
+        self::assertNotSame([], $f->split([['due' => null, 'percent' => 30], ['due' => '2026-10-03', 'percent' => 70]], 360.0), 'balance 7 days away');
+        self::assertSame([], $f->split([], 360.0));
+    }
 }
