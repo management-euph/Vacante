@@ -1055,4 +1055,9 @@ return [
         'en' => 'Dismissed [count] values.',
         'ro' => '[count] valori ignorate.',
     ],
+    // Booking page H1, beside the progress bar (short so both fit one row).
+    'travel_core.complete_booking_title' => [
+        'en' => 'Complete Booking',
+        'ro' => 'Finalizează rezervarea',
+    ],
 ];

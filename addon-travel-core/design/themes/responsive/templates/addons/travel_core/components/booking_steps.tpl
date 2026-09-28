@@ -13,12 +13,14 @@
 
     Parameters:
       bs_edit_mode   (bool, default false) hide the bar in edit mode.
-      bs_title       (string) the page H1; defaults to $page_title.
+      bs_title       (string) the page H1; defaults to "Complete Booking"
+                     (edit mode: $page_title, e.g. "Edit booking").
       bs_search_url  (string, dispatch URL) where "Search" leads; defaults
                      to the sidebar's "Change your selection" URL. No URL →
                      the step is shown done but not linked.
 *}
-{$bs_heading = $bs_title|default:$page_title|default:""}
+{if $bs_edit_mode|default:false}{$bs_default_title = $page_title|default:""}{else}{$bs_default_title = __("travel_core.complete_booking_title")}{/if}
+{$bs_heading = $bs_title|default:$bs_default_title}
 {$bs_back = $bs_search_url|default:$travel_booking_sidebar.change_url|default:""}
 <div class="travel-booking-head{if $bs_edit_mode|default:false} travel-booking-head--no-steps{/if}">
     {if $bs_heading}

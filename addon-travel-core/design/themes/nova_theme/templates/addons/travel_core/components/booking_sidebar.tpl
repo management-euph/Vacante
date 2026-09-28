@@ -173,6 +173,9 @@
         </div>
     </section>
 
+    {* Price + cancellation stay pinned beside the form on desktop (CSS
+       .travel-bsidebar__sticky); the sidebar itself never scrolls. *}
+    <div class="travel-bsidebar__sticky">
     {* ── 3. Price ─────────────────────────────────────────────────────── *}
     <section class="travel-bcard travel-bcard--price">
         <div class="travel-bcard__body booking-price-box travel-price-box">
@@ -214,6 +217,7 @@
             {include file="addons/travel_core/components/booking_terms_timeline.tpl" tt=$tbs tt_show_link=true tt_ids=true}
         </div>
     </section>
+    </div>
 
 </aside>
 {/if}

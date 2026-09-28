@@ -1873,3 +1873,7 @@ msgstr "That value or mapping no longer exists, or they are different kinds of f
 msgctxt "Languages::travel_core.fm_unmapped_dismissed"
 msgid "Dismissed [count] values."
 msgstr "Dismissed [count] values."
+
+msgctxt "Languages::travel_core.complete_booking_title"
+msgid "Complete Booking"
+msgstr "Complete Booking"
