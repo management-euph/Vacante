@@ -105,7 +105,7 @@ final class BookingFormInitialRecalcTest extends TestCase
         // 2-column layout. The booking form owns no summary markup any more —
         // that is the whole point of sharing it with sphinx.
         self::assertStringContainsString('class="travel-booking-layout"', $tpl);
-        self::assertStringContainsString('{include file="addons/travel_core/components/booking_sidebar.tpl"}', $tpl);
+        self::assertStringContainsString('{include file="addons/travel_core/components/booking_sidebar.tpl" tbs_deposit_addon="novoton_holidays" tbs_deposit_form="novoton-booking-form"}', $tpl);
         self::assertStringNotContainsString('components/hotel_header.tpl', $tpl, 'the header now renders inside the sidebar');
         self::assertStringNotContainsString('travel-detail-row', $tpl, 'the old image|info|price row is gone');
         self::assertStringNotContainsString('$hotel_image', $tpl, 'the dead image block went with it');

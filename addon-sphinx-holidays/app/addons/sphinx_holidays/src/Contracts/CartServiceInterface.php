@@ -65,7 +65,8 @@ interface CartServiceInterface
 
     /**
      * Assemble the product entry in the CS-Cart cart and persist it.
-     * Returns the controller redirect tuple.
+     * Returns the controller redirect tuple. With a deposit plan the line
+     * charges only the deposit (travel_core DepositCartLine).
      *
      * @return array<int, mixed>
      * @param array<string, mixed> $productExtra
@@ -77,6 +78,7 @@ interface CartServiceInterface
         array $productExtra,
         string $successMessage,
         ?string $redirectUrl = null,
+        ?\Tygh\Addons\TravelCore\Services\DepositPlan $deposit = null,
     ): array;
 
     /**

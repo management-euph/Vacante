@@ -40,13 +40,14 @@ if ($mode === 'run') {
         $cron_mode = isset($_REQUEST['cron_mode']) ? preg_replace('/[^a-z0-9_]/', '', strtolower(RequestCoerce::string($_REQUEST, 'cron_mode'))) : '';
     }
 
-    $supported_modes = ['exchange_rates', 'expire_alternative_requests'];
+    $supported_modes = ['exchange_rates', 'expire_alternative_requests', 'balances'];
 
     if (empty($cron_mode) || !in_array($cron_mode, $supported_modes, true)) {
         header('Content-Type: text/plain');
         echo "Travel Core Cron - Available modes:\n";
         echo "  exchange_rates              - Update BNR exchange rates\n";
-        echo "  expire_alternative_requests - Expire stale availability requests (&days=30) and purge old terminal rows (&purge_days=180)\n\n";
+        echo "  expire_alternative_requests - Expire stale availability requests (&days=30) and purge old terminal rows (&purge_days=180)\n";
+        echo "  balances                    - Deposit bookings: balance reminders (7 and 2 days before) and overdue alerts (daily)\n\n";
         echo "Usage: dispatch=travel_cron.run&access_key=KEY&cron_mode=exchange_rates\n";
         exit;
     }
@@ -54,7 +55,11 @@ if ($mode === 'run') {
     header('Content-Type: text/plain');
     echo "[" . date('Y-m-d H:i:s') . "] Travel Core Cron - Mode: {$cron_mode}\n\n";
 
-    if ($cron_mode === 'expire_alternative_requests') {
+    if ($cron_mode === 'balances') {
+        $r = CronRunLog::record('travel_core', 'balances', static fn (): array => ['success' => true]
+            + (new \Tygh\Addons\TravelCore\Services\BalanceReminder())->run(date('Y-m-d')));
+        echo 'Balance reminders sent: ' . $r['reminded'] . ', overdue alerts: ' . $r['overdue'] . "\n";
+    } elseif ($cron_mode === 'expire_alternative_requests') {
         // Lifecycle for the shared travel_alternative_requests table.
         // Expiry targets ONLY sphinx rows — they are internal-manual with no
         // provider workflow; novoton's own expire_requests cron propagates

@@ -28,7 +28,7 @@
        policy from $travel_booking_sidebar, so the old separate summary header,
        price box and terms box are gone from this page. *}
     <div class="travel-booking-layout">
-        {include file="addons/travel_core/components/booking_sidebar.tpl"}
+        {include file="addons/travel_core/components/booking_sidebar.tpl" tbs_deposit_addon="sphinx_holidays" tbs_deposit_form="sphinx-booking-form"}
 
         <div class="travel-booking-col-main">
 

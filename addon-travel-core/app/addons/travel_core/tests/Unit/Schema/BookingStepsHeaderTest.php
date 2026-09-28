@@ -131,7 +131,7 @@ final class BookingStepsHeaderTest extends TestCase
     {
         $root = self::root();
         $sidebar = (string) file_get_contents($root . '/addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/booking_sidebar.tpl');
-        self::assertStringContainsString('<div id="travel-price-split">{include file="addons/travel_core/components/booking_payment_split.tpl" ps=$tbs.payment_split', $sidebar);
+        self::assertStringContainsString('<div id="travel-price-split"{if $tbs_ps_form} data-deposit-form="{$tbs_ps_form|escape:html}"{/if}>{include file="addons/travel_core/components/booking_payment_split.tpl" ps=$tbs.payment_split', $sidebar);
 
         $partial = (string) file_get_contents($root . '/addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/booking_payment_split.tpl');
         foreach (['split_deposit', 'split_balance', 'due_by'] as $key) {

@@ -188,7 +188,7 @@ final class BillingMapper
             $vat = VatRate::fromSubtotalAndTax($subtotal, $subtotalTax);
 
             $name = trim(TypeCoerce::toString($p['product'] ?? $p['product_code'] ?? 'Produs'));
-            $name = strip_tags($name);
+            $name = self::depositLabel(strip_tags($name), $p);
             $code = $this->resolveArticleCode($p, $articleField);
             $sku = TypeCoerce::toString($p['product_code'] ?? '');
             $descr = $appendDesc && $sku !== '' ? 'SKU: ' . $sku : null;
@@ -205,6 +205,29 @@ final class BillingMapper
             );
         }
         return $lines;
+    }
+
+    /**
+     * Travel bookings paid with a deposit (travel_core DepositCartLine /
+     * BalanceService): the deposit order invoices an advance, the balance
+     * order the rest — say so on the line, so neither reads as the whole stay.
+     *
+     * @param array<string, mixed> $p
+     */
+    private static function depositLabel(string $name, array $p): string
+    {
+        $extra = is_array($p['extra'] ?? null) ? $p['extra'] : [];
+        if (!empty($extra['travel_balance_id'])) {
+            $parent = TypeCoerce::toInt($extra['parent_order_id'] ?? 0);
+
+            return 'Rest de plată rezervare: ' . $name . ($parent > 0 ? ' (comanda #' . $parent . ')' : '');
+        }
+        $deposit = $extra['travel_deposit'] ?? null;
+        if (is_array($deposit) && TypeCoerce::toFloat($deposit['deposit'] ?? 0) > 0) {
+            return 'Avans rezervare: ' . $name;
+        }
+
+        return $name;
     }
 
     /**

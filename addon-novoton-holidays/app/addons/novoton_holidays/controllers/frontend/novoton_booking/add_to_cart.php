@@ -660,8 +660,8 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
     $primaryCurrency = defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : 'EUR';
     $cart_price = _nvt_currency_service()->convertFromApiCurrency($total_price, $primaryCurrency);
 
-    // Add product to cart
-    $cart['products'][$cart_id] = [
+    // Add product to cart (with a chosen deposit, the line charges only that)
+    $cart['products'][$cart_id] = \Tygh\Addons\NovotonHolidays\Services\DepositLine::fromRequest([
         'product_id' => $product_id,
         'amount' => 1,
         'price' => $cart_price,
@@ -669,7 +669,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
         'original_price' => $cart_price,
         'extra' => $product['extra'],
         'stored_price' => 'Y'  // Important: use our calculated price
-    ];
+    ], $terms_of_payment, $bookingData);
 
     // Recalculate cart
     fn_calculate_cart_content($cart, $auth, 'S', true, 'F', true);

@@ -121,6 +121,16 @@
         </div>
     {/if}
 
+    {* Paid with a deposit (travel_core DepositCartLine): this line charges
+       the deposit; the balance is paid later from the order's pay link. *}
+    {if !empty($product.extra.travel_deposit.deposit)}
+        <div class="travel-bcard-deposit">
+            <span class="travel-bcard-deposit__item">{__("travel_core.split_deposit")} <strong>{include file="common/price.tpl" value=$product.extra.travel_deposit.deposit}</strong></span>
+            <span class="travel-bcard-deposit__item">{__("travel_core.split_balance")} <strong>{include file="common/price.tpl" value=$product.extra.travel_deposit.balance}</strong> {__("travel_core.due_by", ["[date]" => fn_travel_core_store_date($product.extra.travel_deposit.balance_due)])}</span>
+            <span class="travel-bcard-deposit__note">{__("travel_core.deposit_cart_note")}</span>
+        </div>
+    {/if}
+
     {* Line-item price change: the pre-order verifier corrected this line —
        cross out the old price, show the new one (both providers write
        extra.price_before_correction on correction). *}
@@ -148,4 +158,14 @@
 </div>
 
 {script src="js/addons/travel_core/cart-booking-details.js"}
+{/if}
+
+{* The balance of an earlier deposit booking (travel_balance.pay) *}
+{if !empty($product.extra.travel_balance_id)}
+<div class="travel-booking-card travel-bcard travel-bcard--balance">
+    <div class="travel-bcard-deposit">
+        <span class="travel-bcard-deposit__item"><strong>{__("travel_core.balance_payment_for", ["[order_id]" => $product.extra.parent_order_id])}</strong></span>
+        {if $product.extra.hotel_name}<span class="travel-bcard-deposit__item">{$product.extra.hotel_name|escape:html}{if $product.extra.check_in} · {fn_travel_core_store_date($product.extra.check_in)}{/if}</span>{/if}
+    </div>
+</div>
 {/if}

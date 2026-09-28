@@ -69,14 +69,21 @@ function fn_novoton_holidays_pre_place_order(&$cart, &$allow, &$product_groups):
             /** @var array<string, mixed> $existingExtra */
             $existingExtra = is_array($existingProduct['extra'] ?? null) ? $existingProduct['extra'] : [];
 
-            // Store the old price for "Old vs New" display before overwriting
-            $existingExtra['price_before_correction'] = $existingProduct['price'] ?? null;
+            // Store the old price for "Old vs New" display before overwriting —
+            // the old FULL price, in the same (API) currency as total_price
+            // (the line price is converted, and only the deposit on a deposit line).
+            $existingExtra['price_before_correction'] = $existingExtra['total_price'] ?? $existingProduct['price'] ?? null;
             $existingExtra['total_price'] = $newPrice;
 
-            $existingProduct['price']          = $newPrice;
-            $existingProduct['base_price']     = $newPrice;
-            $existingProduct['original_price'] = $newPrice;
             $existingProduct['extra']          = $existingExtra;
+            // extra.total_price is in the API currency; the line is in the
+            // store's primary currency (add_to_cart converts the same way).
+            // A deposit line keeps charging its deposit, rescaled.
+            $primaryCurrency = defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : 'EUR';
+            $existingProduct = \Tygh\Addons\TravelCore\Services\DepositCartLine::reprice(
+                $existingProduct,
+                _nvt_currency_service()->convertFromApiCurrency($newPrice, $primaryCurrency),
+            );
             $cart['products'][$cartId]         = $existingProduct;
         }
     }

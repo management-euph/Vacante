@@ -518,13 +518,21 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
             $terms_smarty->assign('tt_ids', false);
             $conditions_html = (string) $terms_smarty->fetch('addons/travel_core/components/booking_terms_timeline.tpl');
         }
-        // Deposit / balance line under the total (same partial as the page).
+        // Deposit / balance under the total (same partial as the page): the
+        // information line, and the "Pay in full / Pay a deposit" choice the
+        // booking page swaps in where it offers one (data-deposit-form).
         $split_html = '';
+        $split_choice_html = '';
         if ($payment_split !== []) {
             /** @var \Smarty $split_smarty */
             $split_smarty = \Tygh\Tygh::$app['view'];
             $split_smarty->assign('ps', $payment_split);
+            $split_smarty->assign('ps_form', '');
             $split_html = (string) $split_smarty->fetch('addons/travel_core/components/booking_payment_split.tpl');
+            if (fn_travel_core_deposit_offered('novoton_holidays')) {
+                $split_smarty->assign('ps_form', 'novoton-booking-form');
+                $split_choice_html = (string) $split_smarty->fetch('addons/travel_core/components/booking_payment_split.tpl');
+            }
         }
 
         // Return success response with room change info and price change analysis
@@ -535,6 +543,7 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
             'terms_html' => $terms_html,
             'conditions_html' => $conditions_html,
             'split_html' => $split_html,
+            'split_choice_html' => $split_choice_html,
             'formatted_per_night' => $per_night !== null ? $money->formatDisplay($per_night) : '',
             'cancellation_lines' => $cancellation_lines,
             'free_cancellation_until' => $free_cancellation_until,

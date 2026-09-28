@@ -129,6 +129,22 @@ final class BillingMapperTest extends TestCase
         self::assertSame('SKU-1', $line->codArticol);
     }
 
+    /** A booking paid with a deposit invoices an advance; its balance order, the rest. */
+    public function testDepositAndBalanceLinesSaySo(): void
+    {
+        $deposit = (new BillingMapper())->mapOrderInfo($this->baseOrder(['products' => [[
+            'product' => 'ADMIRAL', 'amount' => 1, 'subtotal' => 89.70, 'tax_value' => 0,
+            'extra' => ['travel_deposit' => ['deposit' => 89.70, 'balance' => 209.30]],
+        ]]]));
+        self::assertSame('Avans rezervare: ADMIRAL', $deposit->continut[0]->denumire);
+
+        $balance = (new BillingMapper())->mapOrderInfo($this->baseOrder(['products' => [[
+            'product' => 'ADMIRAL', 'amount' => 1, 'subtotal' => 209.30, 'tax_value' => 0,
+            'extra' => ['travel_balance_id' => 17, 'parent_order_id' => 1042],
+        ]]]));
+        self::assertSame('Rest de plată rezervare: ADMIRAL (comanda #1042)', $balance->continut[0]->denumire);
+    }
+
     public function testDiscountAddedAsNegativeQuantityLine(): void
     {
         $req = (new BillingMapper())->mapOrderInfo($this->baseOrder([

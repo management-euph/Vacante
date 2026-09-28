@@ -257,7 +257,27 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         'confirmation' => TypeCoerce::toString($verifyResult['confirmation'] ?? ''),
     ];
 
+    // Pay a deposit (travel_core DepositPolicy): the form posts only the
+    // choice; the deposit comes from the offer's live payment terms.
+    $deposit_plan = null;
+    $deposit_policy = \Tygh\Addons\TravelCore\Services\DepositPolicy::current();
+    $deposit_request = TypeCoerce::toStringMap($_REQUEST);
+    if ($deposit_policy->offers('sphinx_holidays')
+        && TypeCoerce::toString($deposit_request[\Tygh\Addons\TravelCore\Services\DepositPolicy::FIELD] ?? '') === \Tygh\Addons\TravelCore\Services\DepositPolicy::MODE_DEPOSIT) {
+        [, $deposit_installments] = \Tygh\Addons\SphinxHolidays\ViewModels\SphinxBookingSidebarBuilder::terms($cancellation_fees_raw, $payment_terms_raw);
+        $deposit_plan = $deposit_policy->chosen(
+            'sphinx_holidays',
+            $deposit_request,
+            \Tygh\Addons\TravelCore\Services\DepositPlan::fromInstallments($deposit_installments, date('Y-m-d')),
+        );
+        if ($deposit_plan === null) {
+            fn_set_notification('W', __('notice'), __('travel_core.deposit_unavailable'));
+        }
+    }
+
     return $cartService->addToCartAndRedirect(
         $product_id, $total_price, $currency, $product_extra,
-        TypeCoerce::toString(__('sphinx_holidays.added_to_cart', ['[default]' => 'Hotel booking added to cart.']))
+        TypeCoerce::toString(__('sphinx_holidays.added_to_cart', ['[default]' => 'Hotel booking added to cart.'])),
+        null,
+        $deposit_plan,
     );

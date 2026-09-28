@@ -714,6 +714,18 @@ msgctxt "SettingsTooltips::travel_core::geocoding_endpoint"
 msgid "Base URL of the Nominatim server. Change only if you run your own instance (removes the 1 request/second limit of the public server)."
 msgstr "Base URL of the Nominatim server. Change only if you run your own instance (removes the 1 request/second limit of the public server)."
 
+msgctxt "SettingsOptions::travel_core::deposit_header"
+msgid "Deposit payments"
+msgstr "Deposit payments"
+
+msgctxt "SettingsOptions::travel_core::deposit_enabled"
+msgid "Let guests pay a deposit"
+msgstr "Let guests pay a deposit"
+
+msgctxt "SettingsTooltips::travel_core::deposit_enabled"
+msgid "When the supplier's payment terms split the price (Sphinx, Novoton) and the balance is due at least 7 days later, the booking page offers \"Pay a deposit\". Checkout then charges only the deposit; the guest pays the balance later from a link in the order and reminder emails."
+msgstr "When the supplier's payment terms split the price (Sphinx, Novoton) and the balance is due at least 7 days later, the booking page offers \"Pay a deposit\". Checkout then charges only the deposit; the guest pays the balance later from a link in the order and reminder emails."
+
 msgctxt "SettingsOptions::travel_core::show_booking_form"
 msgid "Show Booking Form on Product Pages"
 msgstr "Show Booking Form on Product Pages"
@@ -1885,3 +1897,91 @@ msgstr "Deposit"
 msgctxt "Languages::travel_core.split_balance"
 msgid "Balance"
 msgstr "Balance"
+
+msgctxt "Languages::travel_core.pay_mode_legend"
+msgid "How would you like to pay?"
+msgstr "How would you like to pay?"
+
+msgctxt "Languages::travel_core.pay_in_full"
+msgid "Pay in full"
+msgstr "Pay in full"
+
+msgctxt "Languages::travel_core.pay_in_full_hint"
+msgid "Nothing more to pay"
+msgstr "Nothing more to pay"
+
+msgctxt "Languages::travel_core.pay_deposit"
+msgid "Pay a deposit"
+msgstr "Pay a deposit"
+
+msgctxt "Languages::travel_core.pay_deposit_hint"
+msgid "Balance [balance] by [date], by card or bank transfer. We email you the payment link."
+msgstr "Balance [balance] by [date], by card or bank transfer. We email you the payment link."
+
+msgctxt "Languages::travel_core.deposit_unavailable"
+msgid "A deposit is no longer possible for this booking (the supplier's payment terms changed), so the full price applies."
+msgstr "A deposit is no longer possible for this booking (the supplier's payment terms changed), so the full price applies."
+
+msgctxt "Languages::travel_core.deposit_cart_note"
+msgid "Paid now: the deposit. You pay the balance later from the link in your order and in our reminder emails."
+msgstr "Paid now: the deposit. You pay the balance later from the link in your order and in our reminder emails."
+
+msgctxt "Languages::travel_core.paid_with_deposit"
+msgid "Paid with a deposit"
+msgstr "Paid with a deposit"
+
+msgctxt "Languages::travel_core.pay_balance_btn"
+msgid "Pay balance"
+msgstr "Pay balance"
+
+msgctxt "Languages::travel_core.pay_balance_note"
+msgid "By card (Netopia) or bank transfer: you choose at checkout."
+msgstr "By card (Netopia) or bank transfer: you choose at checkout."
+
+msgctxt "Languages::travel_core.balance_paid"
+msgid "Balance paid (order #[order_id])"
+msgstr "Balance paid (order #[order_id])"
+
+msgctxt "Languages::travel_core.balance_cancelled"
+msgid "Balance cancelled"
+msgstr "Balance cancelled"
+
+msgctxt "Languages::travel_core.balance_open"
+msgid "Balance not paid yet"
+msgstr "Balance not paid yet"
+
+msgctxt "Languages::travel_core.balance_overdue"
+msgid "Overdue"
+msgstr "Overdue"
+
+msgctxt "Languages::travel_core.balance_pay_link"
+msgid "Customer pay link"
+msgstr "Customer pay link"
+
+msgctxt "Languages::travel_core.balance_payment_for"
+msgid "Balance payment for order #[order_id]"
+msgstr "Balance payment for order #[order_id]"
+
+msgctxt "Languages::travel_core.balance_added_to_cart"
+msgid "The balance of order #[order_id] is ready to pay. Choose how you want to pay."
+msgstr "The balance of order #[order_id] is ready to pay. Choose how you want to pay."
+
+msgctxt "Languages::travel_core.balance_link_invalid"
+msgid "This payment link is not valid."
+msgstr "This payment link is not valid."
+
+msgctxt "Languages::travel_core.balance_already_settled"
+msgid "This balance has already been paid or is no longer due."
+msgstr "This balance has already been paid or is no longer due."
+
+msgctxt "Languages::travel_core.balance_order_inactive"
+msgid "The booking of this balance is no longer active. Please contact us."
+msgstr "The booking of this balance is no longer active. Please contact us."
+
+msgctxt "Languages::travel_core.balance_reminder_subject"
+msgid "Reminder: balance of [amount] for [hotel] due by [date]"
+msgstr "Reminder: balance of [amount] for [hotel] due by [date]"
+
+msgctxt "Languages::travel_core.balance_reminder_body"
+msgid "Hello [name],\n\nThank you for your booking at [hotel] (order #[order_id]). The balance of [amount] is due by [date].\n\nPay it here, by card or bank transfer:\n[link]\n\nIf you have already paid, please ignore this email."
+msgstr "Hello [name],\n\nThank you for your booking at [hotel] (order #[order_id]). The balance of [amount] is due by [date].\n\nPay it here, by card or bank transfer:\n[link]\n\nIf you have already paid, please ignore this email."
