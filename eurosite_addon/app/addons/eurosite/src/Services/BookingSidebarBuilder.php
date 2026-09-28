@@ -73,13 +73,12 @@ final class BookingSidebarBuilder
         $total = $money->format($totalPrimary);
         $nights = DateHelper::calculateNights($checkIn, $checkOut);
         $perNight = BookingSidebarFactory::perNight($money->toDisplay($totalPrimary), $nights);
-        $childrenAges = TypeCoerce::toIntList($snapshot['children_ages'] ?? []);
-        $adults = max(1, TypeCoerce::toInt($snapshot['adults'] ?? 2));
+        $occupancy = RoomOccupancy::fromSnapshot($snapshot);
+        ['adults' => $adults, 'children_ages' => $childrenAges] = RoomOccupancy::totals($occupancy);
+        $adults = max(1, $adults);
 
-        $roomNames = [];
-        foreach (TypeCoerce::toRowList($snapshot['rooms'] ?? null) as $room) {
-            $roomNames[] = ['room_name' => TypeCoerce::toString($room['name'] ?? '')];
-        }
+        // One line per room: the offer's room with that room's guests.
+        $roomNames = RoomOccupancy::displayRooms($snapshot);
         $mealNames = [];
         foreach (TypeCoerce::toRowList($snapshot['meals'] ?? null) as $meal) {
             $name = trim(TypeCoerce::toString($meal['name'] ?? ''));
@@ -132,7 +131,7 @@ final class BookingSidebarBuilder
             checkOut: $checkOutTs > 0 ? DateHelper::formatWith($checkOutTs, $dateFormat) : $checkOut,
             checkOutWeekday: $checkOutTs > 0 ? DateHelper::formatWith($checkOutTs, '%A') : '',
             nights: $nights,
-            rooms: 1,
+            rooms: count($occupancy),
             adults: $adults,
             children: count($childrenAges),
             roomLines: $roomLines,
@@ -143,7 +142,11 @@ final class BookingSidebarBuilder
                 'adults' => $adults,
                 'children' => count($childrenAges),
                 'children_ages' => implode(',', $childrenAges),
-                'rooms' => 1,
+                'rooms' => count($occupancy),
+                'rooms_data' => (string) json_encode(array_map(
+                    static fn (array $room): array => ['adults' => $room['adults'], 'children' => count($room['children_ages']), 'childrenAges' => $room['children_ages']],
+                    $occupancy,
+                )),
             ]),
             productId: $productId,
             total: $total,

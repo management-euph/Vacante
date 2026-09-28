@@ -18,6 +18,7 @@ declare(strict_types=1);
 
 use Tygh\Addons\Eurosite\Services\Container;
 use Tygh\Addons\Eurosite\Services\OfferContextStore;
+use Tygh\Addons\Eurosite\Services\RoomOccupancy;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\DateHelper;
@@ -78,7 +79,7 @@ foreach ($rawGuests as $key => $guest) {
         'name'       => $last . ' / ' . $first,
         'gender'     => $type === 'child' ? 'C' : (in_array($gender, ['B', 'F'], true) ? $gender : 'B'),
         'dob'        => $dob,
-        'room'       => 1,
+        'room'       => max(1, TypeCoerce::toInt($guest['room'] ?? 1)),
     ];
     if ($type === 'child') {
         $entry['age'] = TypeCoerce::toInt($guest['age'] ?? 0);
@@ -89,8 +90,20 @@ foreach ($rawGuests as $key => $guest) {
     $guests[] = $entry;
 }
 
-$expectedGuests = TypeCoerce::toInt($snapshot['adults'] ?? 2) + count((array) ($snapshot['children_ages'] ?? []));
-if ($invalid || count($guests) !== $expectedGuests) {
+// Every room must hold exactly the adults and children it was priced for.
+$occupancy = RoomOccupancy::fromSnapshot($snapshot);
+$perRoom = [];
+foreach ($guests as $g) {
+    $perRoom[$g['room']][$g['type']] = ($perRoom[$g['room']][$g['type']] ?? 0) + 1;
+}
+$roomsMatch = count($perRoom) === count($occupancy);
+foreach ($occupancy as $i => $room) {
+    $got = $perRoom[$i + 1] ?? [];
+    if (($got['adult'] ?? 0) !== $room['adults'] || ($got['child'] ?? 0) !== count($room['children_ages'])) {
+        $roomsMatch = false;
+    }
+}
+if ($invalid || !$roomsMatch) {
     fn_set_notification('E', __('error'), __('eurosite.guests_invalid', [
         '[default]' => 'Please fill in every guest (children need a date of birth).',
     ]));
@@ -106,6 +119,10 @@ if ($invalid || count($guests) !== $expectedGuests) {
 $checkInDate = DateHelper::parseDate(TypeCoerce::toString($snapshot['check_in']));
 $ageMismatch = null;
 $correctedAges = [];
+$correctedRooms = [];
+foreach ($occupancy as $i => $room) {
+    $correctedRooms[$i + 1] = ['adults' => $room['adults'], 'children' => 0, 'childrenAges' => []];
+}
 foreach ($guests as $g) {
     if ($g['type'] !== 'child') {
         continue;
@@ -114,6 +131,8 @@ foreach ($guests as $g) {
         ? (new \DateTimeImmutable($g['dob']))->diff(new \DateTimeImmutable($checkInDate))->y
         : TypeCoerce::toInt($g['age'] ?? 0);
     $correctedAges[] = $atCheckIn;
+    $correctedRooms[$g['room']]['childrenAges'][] = $atCheckIn;
+    $correctedRooms[$g['room']]['children'] = count($correctedRooms[$g['room']]['childrenAges']);
     if ($ageMismatch === null && $atCheckIn !== TypeCoerce::toInt($g['age'] ?? 0)) {
         $ageMismatch = ['name' => $g['name'], 'declared' => TypeCoerce::toInt($g['age'] ?? 0), 'actual' => $atCheckIn];
     }
@@ -133,6 +152,8 @@ if ($ageMismatch !== null) {
         'check_out'     => TypeCoerce::toString($snapshot['check_out']),
         'adults'        => TypeCoerce::toInt($snapshot['adults'] ?? 2),
         'children_ages' => implode(',', $correctedAges),
+        'rooms'         => count($correctedRooms),
+        'rooms_data'    => (string) json_encode(array_values($correctedRooms)),
     ])];
 }
 
@@ -162,6 +183,10 @@ $checkIn = TypeCoerce::toString($snapshot['check_in']);
 $checkOut = TypeCoerce::toString($snapshot['check_out']);
 $nights = max(0, (int) round((strtotime($checkOut) - strtotime($checkIn)) / 86400));
 $rooms = TypeCoerce::toRowList($snapshot['rooms'] ?? null);
+// The rooms with their guests (room_name, code, adults, children,
+// childrenAges): the shared cart card reads them, and the booking submission
+// sends each room's code and travellers back to Eurosite.
+$roomsData = RoomOccupancy::displayRooms($snapshot);
 $meals = TypeCoerce::toRowList($snapshot['meals'] ?? null);
 $childrenAges = TypeCoerce::toIntList($snapshot['children_ages'] ?? []);
 $sessionId = function_exists('session_id') ? (string) session_id() : '';
@@ -187,8 +212,8 @@ $bookingId = Container::bookings()->create([
     'adults'        => TypeCoerce::toInt($snapshot['adults'] ?? 2),
     'children'      => count($childrenAges),
     'children_ages' => implode(',', $childrenAges),
-    'num_rooms'     => 1,
-    'rooms_data'    => (string) json_encode($rooms, JSON_UNESCAPED_UNICODE),
+    'num_rooms'     => count($roomsData),
+    'rooms_data'    => (string) json_encode($roomsData, JSON_UNESCAPED_UNICODE),
     'room_type'     => $rooms !== [] ? TypeCoerce::toString($rooms[0]['name'] ?? '') : '',
     'board_id'      => $meals !== [] ? TypeCoerce::toString($meals[0]['code'] ?? '') : '',
     'meal_name'     => $meals !== [] ? TypeCoerce::toString($meals[0]['name'] ?? '') : '',
@@ -232,7 +257,11 @@ $cart['products'][$cartId] = [
         'check_in'            => $checkIn,
         'check_out'           => $checkOut,
         'nights'              => $nights,
-        'rooms_data'          => (string) json_encode($rooms, JSON_UNESCAPED_UNICODE),
+        'rooms_data'          => (string) json_encode($roomsData, JSON_UNESCAPED_UNICODE),
+        'num_rooms'           => count($roomsData),
+        'room_name'           => $rooms !== [] ? TypeCoerce::toString($rooms[0]['name'] ?? '') : '',
+        'adults'              => TypeCoerce::toInt($snapshot['adults'] ?? 2),
+        'children_ages'       => implode(',', $childrenAges),
         'guests_data'         => (string) json_encode($guests, JSON_UNESCAPED_UNICODE),
         'holder_name'         => $holderName,
     ],

@@ -80,9 +80,22 @@
                 {assign var="modal_id" value="`$hotel.product_code`-`$offer.row_id`"}
                 <div class="travel-offer-card eurosite-offer-card">
                     <div class="travel-offer-details">
-                        {foreach from=$offer.rooms item=room}
-                            <div class="travel-offer-room">{$room.name|escape:html}{if $room.quantity && $room.quantity != '1'} &times; {$room.quantity}{/if}</div>
-                        {/foreach}
+                        {* One offer for the whole party: a room per requested room *}
+                        {if $offer.room_lines|count > 1}
+                            <ol class="travel-offer-rooms eurosite-offer-rooms">
+                                {foreach from=$offer.room_lines item=es_room name=es_rooms}
+                                    <li class="travel-offer-rooms__item">
+                                        <span class="travel-offer-rooms__label">{__("eurosite.room_n", ["[num]" => $smarty.foreach.es_rooms.iteration])}</span>
+                                        <span class="travel-offer-rooms__name">{$es_room.room_name|escape:html}</span>
+                                        <span class="travel-offer-rooms__guests">{if $es_room.adults == 1}{__("eurosite.adults_one")}{else}{__("eurosite.adults_many", ["[count]" => $es_room.adults])}{/if}{if $es_room.children == 1} + {__("eurosite.children_one")}{elseif $es_room.children > 1} + {__("eurosite.children_many", ["[count]" => $es_room.children])}{/if}</span>
+                                    </li>
+                                {/foreach}
+                            </ol>
+                        {else}
+                            {foreach from=$offer.rooms item=room}
+                                <div class="travel-offer-room">{$room.name|escape:html}{if $room.quantity && $room.quantity != '1'} &times; {$room.quantity}{/if}</div>
+                            {/foreach}
+                        {/if}
                         <div class="eurosite-offer-dates">{$offer.check_in} &rarr; {$offer.check_out}</div>
                         {if $offer.grila}<div class="eurosite-offer-grila">{$offer.grila|escape:html}</div>{/if}
                     </div>
@@ -107,6 +120,9 @@
                     <div class="travel-offer-price-action">
                         <div class="travel-offer-price">
                             <span class="travel-price-amount">{$offer.price} {$offer.currency}</span>
+                            {if $offer.room_lines|count > 1}
+                                <span class="travel-price-rooms">{__("eurosite.total_for_rooms", ["[count]" => $offer.room_lines|count])}</span>
+                            {/if}
                         </div>
                         {if $offer.bookable}
                         <a class="ty-btn ty-btn__primary travel-offer-book-btn"

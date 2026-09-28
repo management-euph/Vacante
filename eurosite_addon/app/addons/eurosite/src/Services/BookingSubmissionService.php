@@ -128,18 +128,11 @@ class BookingSubmissionService
             if ($type === 'child') {
                 $entry['child_age'] = TypeCoerce::toString($guest['age'] ?? '');
             }
+            // Which room the traveller sleeps in (1-based) — RoomOccupancy
+            // groups them into each room's <PaxNames>.
+            $entry['room'] = max(1, TypeCoerce::toInt($guest['room'] ?? 1));
             $pax[] = $entry;
         }
-
-        $roomsData = json_decode(TypeCoerce::toString($booking['rooms_data'] ?? '[]'), true);
-        $roomsData = is_array($roomsData) ? $roomsData : [];
-        $roomCode = $roomsData !== [] && is_array($roomsData[0])
-            ? TypeCoerce::toString($roomsData[0]['code'] ?? '')
-            : '';
-        $childrenAges = array_values(array_filter(array_map(
-            'intval',
-            explode(',', TypeCoerce::toString($booking['children_ages'] ?? '')),
-        ), static fn (int $a): bool => $a >= 0 && TypeCoerce::toString($booking['children_ages'] ?? '') !== ''));
 
         $hotelRow = Container::hotels()->findByProductCode(TypeCoerce::toString($booking['product_code'] ?? ''));
         $tourop = $hotelRow !== null ? TypeCoerce::toString($hotelRow['tourop_code'] ?? '') : '';
@@ -156,12 +149,9 @@ class BookingSubmissionService
                 'check_in' => TypeCoerce::toString($booking['check_in'] ?? ''),
                 'check_out' => TypeCoerce::toString($booking['check_out'] ?? ''),
                 'tourop_code' => $tourop,
-                'rooms' => [[
-                    'code' => $roomCode,
-                    'adults' => TypeCoerce::toInt($booking['adults'] ?? 2),
-                    'children' => $childrenAges,
-                    'pax' => $pax,
-                ]],
+                // Every room with its code and travellers (older single-room
+                // rows: one room with every traveller).
+                'rooms' => RoomOccupancy::bookingRooms($booking, $pax),
             ]);
         } catch (\Throwable $e) {
             $this->repo->update($bookingId, [
