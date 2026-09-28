@@ -16,6 +16,7 @@ use Tygh\Addons\Eurosite\Exception\EurositeApiException;
 use Tygh\Addons\Eurosite\Services\ConfigProvider;
 use Tygh\Addons\Eurosite\Services\Container;
 use Tygh\Addons\Eurosite\Services\OfferContextStore;
+use Tygh\Addons\Eurosite\Services\RoomOccupancy;
 use Tygh\Addons\TravelCore\Helpers\LocationLine;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
@@ -34,16 +35,17 @@ $city = strtoupper((string) preg_replace('/[^A-Za-z0-9]/', '', RequestCoerce::st
 $checkIn = RequestCoerce::string($_REQUEST, 'check_in');
 $checkOut = RequestCoerce::string($_REQUEST, 'check_out');
 $adults = max(1, TypeCoerce::toInt($_REQUEST['adults'] ?? 2));
-// Eurosite books ONE room (search, booking form and booking are single-room);
-// the guest picker stops at 1 (ProviderRoomLimit). A multi-room request that
-// still arrives (an old link) is refused rather than priced as one big room.
-$roomCount = max(1, TypeCoerce::toInt($_REQUEST['rooms'] ?? 1));
 $childrenAges = [];
 foreach (explode(',', RequestCoerce::string($_REQUEST, 'children_ages')) as $age) {
     if ($age !== '' && is_numeric($age)) {
         $childrenAges[] = (int) $age;
     }
 }
+// One occupancy per room (the engine's rooms_data), each sent to Eurosite as
+// its own <Room>; links without rooms_data are one room with the totals.
+$occupancy = RoomOccupancy::fromRequest(RequestCoerce::string($_REQUEST, 'rooms_data'), $adults, $childrenAges);
+$roomCount = count($occupancy);
+['adults' => $adults, 'children_ages' => $childrenAges] = RoomOccupancy::totals($occupancy);
 
 // ── From a hotel's product page ──
 // travel_core's booking form sends the hotel's code (hotel_id) instead of a
@@ -100,6 +102,15 @@ $searchParams = [
     'adults'        => $adults,
     'children'      => count($childrenAges),
     'children_ages' => implode(',', $childrenAges),
+    'rooms'         => $roomCount,
+    'rooms_data_json' => (string) json_encode(array_map(
+        static fn (array $room): array => [
+            'adults' => $room['adults'],
+            'children' => count($room['children_ages']),
+            'childrenAges' => $room['children_ages'],
+        ],
+        $occupancy,
+    )),
 ];
 $bookingEngineHtml = function_exists('fn_travel_core_render_booking_engine')
     ? fn_travel_core_render_booking_engine([
@@ -119,20 +130,15 @@ if ($country !== '' && $city !== '' && $checkIn !== '' && $checkOut !== '') {
     $searched = true;
 
     if ($roomCount > ProviderRoomLimit::maxRooms('eurosite')) {
-        $searchError = __('eurosite.one_room_only');
+        $searchError = __('eurosite.too_many_rooms', ['[count]' => ProviderRoomLimit::maxRooms('eurosite')]);
     } elseif (!$whitelist->isCityAllowed($country, $city)) {
         $searchError = __('eurosite.destination_not_available', [
             '[default]' => 'This destination is not available for booking.',
         ]);
     } else {
-        // Room-type GCode by occupancy (base codes; children ride as ages).
-        $roomCode = match (true) {
-            $adults <= 1 => 'SB',
-            $adults === 2 => 'DB',
-            $adults === 3 => 'TR',
-            default => 'Q',
-        };
-        $roomsPayload = [['code' => $roomCode, 'adults' => $adults, 'children' => $childrenAges]];
+        // One <Room> per room: generic GCode by that room's adults (children
+        // ride as ages); every offer answers with a room per requested room.
+        $roomsPayload = RoomOccupancy::searchPayload($occupancy);
 
         $tourops = Container::hotels()->getTouropCodesForCity($city);
         if ($tourops === []) {
@@ -165,8 +171,9 @@ if ($country !== '' && $city !== '' && $checkIn !== '' && $checkOut !== '') {
 
         if ($searchError === '' && $offers !== []) {
             $offerKeys = OfferContextStore::remember($offers, [
-                'adults'        => $adults,
-                'children_ages' => $childrenAges,
+                'adults'          => $adults,
+                'children_ages'   => $childrenAges,
+                'rooms_occupancy' => $occupancy,
             ]);
 
             // Group offers per hotel; enrich the card from the product-info
@@ -226,6 +233,11 @@ if ($country !== '' && $city !== '' && $checkIn !== '' && $checkOut !== '') {
                     'currency'     => $offer->currency,
                     'grila'        => $offer->grila,
                     'rooms'        => $offer->rooms,
+                    // One line per requested room: the offer's room + its guests
+                    'room_lines'   => RoomOccupancy::displayRooms([
+                        'rooms'           => $offer->rooms,
+                        'rooms_occupancy' => $occupancy,
+                    ]),
                     'meals'        => $offer->meals,
                 ];
             }
@@ -246,4 +258,5 @@ $view->assign('eurosite_params', [
     'check_out'     => $checkOut,
     'adults'        => $adults,
     'children_ages' => implode(',', $childrenAges),
+    'rooms'         => $roomCount,
 ]);

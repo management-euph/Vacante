@@ -37,17 +37,27 @@
             <h3>{__("travel_core.who_is_staying")}</h3>
             {include file="addons/travel_core/components/booking_guest_hint.tpl"}
 
-            {include file="addons/travel_core/components/booking_guest_room_body.tpl"
-                gb_room=$eurosite_room
-                gb_room_num=1
-                gb_room_idx=0
-                gb_label_prefix="travel_core"
-                gb_show_adult_dob=true
-                gb_child_dob_required=true
-                gb_guard_expected_ages=true
-                gb_seq_offset=0
-                gb_gender_options=$eurosite_gender_options
-                gb_child_gender="C"}
+            {foreach from=$eurosite_rooms item=es_room}
+                <div class="room-guest-section" data-room-num="{$es_room.num}">
+                {if $eurosite_rooms|count > 1}
+                    <div class="travel-room-banner room-section-header room-card" data-room-num="{$es_room.num}">
+                        <span>{__("eurosite.room_n", ["[num]" => $es_room.num])}</span>
+                        <span class="travel-room-banner-meta">{if $es_room.adults == 1}{__("eurosite.adults_one")}{else}{__("eurosite.adults_many", ["[count]" => $es_room.adults])}{/if}{if $es_room.children == 1} + {__("eurosite.children_one")}{elseif $es_room.children > 1} + {__("eurosite.children_many", ["[count]" => $es_room.children])}{/if}</span>
+                    </div>
+                {/if}
+                {include file="addons/travel_core/components/booking_guest_room_body.tpl"
+                    gb_room=$es_room
+                    gb_room_num=$es_room.num
+                    gb_room_idx=$es_room.idx
+                    gb_label_prefix="travel_core"
+                    gb_show_adult_dob=true
+                    gb_child_dob_required=true
+                    gb_guard_expected_ages=true
+                    gb_seq_offset=$es_room.seq_offset
+                    gb_gender_options=$eurosite_gender_options
+                    gb_child_gender="C"}
+                </div>
+            {/foreach}
         </div>
 
         <div class="travel-form-actions travel-form-actions--cta">

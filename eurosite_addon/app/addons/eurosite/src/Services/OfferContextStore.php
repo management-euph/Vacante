@@ -26,7 +26,7 @@ final class OfferContextStore
 
     /**
      * @param list<HotelOffer> $offers
-     * @param array{adults: int, children_ages: list<int>} $occupancy
+     * @param array{adults: int, children_ages: list<int>, rooms_occupancy?: list<array{adults: int, children_ages: list<int>}>} $occupancy
      * @return array<int, string> map: offer index => snapshot key
      */
     public static function remember(array $offers, array $occupancy): array
@@ -63,6 +63,12 @@ final class OfferContextStore
                 'meals' => $offer->meals,
                 'adults' => $occupancy['adults'],
                 'children_ages' => $occupancy['children_ages'],
+                // The guests of each room, in the order they were requested
+                // (RoomOccupancy); offer rooms[i] answers rooms_occupancy[i].
+                'rooms_occupancy' => $occupancy['rooms_occupancy'] ?? [[
+                    'adults' => $occupancy['adults'],
+                    'children_ages' => $occupancy['children_ages'],
+                ]],
             ];
         }
         SessionAccessor::setArray(self::SESSION_KEY, $snapshots);

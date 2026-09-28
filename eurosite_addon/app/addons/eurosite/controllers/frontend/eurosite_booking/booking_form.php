@@ -19,6 +19,7 @@ use Tygh\Addons\Eurosite\Services\BookingSidebarBuilder;
 use Tygh\Addons\Eurosite\Services\ConfigProvider;
 use Tygh\Addons\Eurosite\Services\Container;
 use Tygh\Addons\Eurosite\Services\OfferContextStore;
+use Tygh\Addons\Eurosite\Services\RoomOccupancy;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\MoneyFormatter;
@@ -45,8 +46,8 @@ if ($snapshot === null) {
     return [CONTROLLER_STATUS_REDIRECT, 'eurosite_booking.search'];
 }
 
-$adults = max(1, TypeCoerce::toInt($snapshot['adults'] ?? 2));
-$childrenAges = TypeCoerce::toIntList($snapshot['children_ages'] ?? []);
+$occupancy = RoomOccupancy::fromSnapshot($snapshot);
+['adults' => $adults, 'children_ages' => $childrenAges] = RoomOccupancy::totals($occupancy);
 $hotelRow = Container::hotels()->findByProductCode(TypeCoerce::toString($snapshot['product_code']));
 
 // Cancellation fees for the sidebar card + conditions modal (best effort —
@@ -54,7 +55,6 @@ $hotelRow = Container::hotels()->findByProductCode(TypeCoerce::toString($snapsho
 $fees = [];
 try {
     $tourop = $hotelRow !== null ? TypeCoerce::toString($hotelRow['tourop_code'] ?? '') : '';
-    $rooms = TypeCoerce::toRowList($snapshot['rooms'] ?? null);
     $fees = Container::getApi()->getItemFees([
         'currency'     => TypeCoerce::toString($snapshot['currency']),
         'country_code' => TypeCoerce::toString($snapshot['country_code']),
@@ -64,11 +64,7 @@ try {
         'check_in'     => TypeCoerce::toString($snapshot['check_in']),
         'check_out'    => TypeCoerce::toString($snapshot['check_out']),
         'tourop_code'  => $tourop,
-        'rooms'        => [[
-            'code'     => $rooms !== [] ? TypeCoerce::toString($rooms[0]['code'] ?? '') : '',
-            'adults'   => $adults,
-            'children' => $childrenAges,
-        ]],
+        'rooms'        => RoomOccupancy::itemRooms($snapshot),
     ]);
 } catch (\Throwable $e) {
     fn_log_event('general', 'runtime', ['message' => 'Eurosite booking_form fees unavailable: ' . $e->getMessage()]);
@@ -122,12 +118,22 @@ $sidebar = BookingSidebarBuilder::build(
 );
 $view->assign('travel_booking_sidebar', $sidebar->toViewArray());
 
-// One room, in the shape the shared guest cards iterate.
-$view->assign('eurosite_room', [
-    'adults'       => $adults,
-    'children'     => count($childrenAges),
-    'childrenAges' => $childrenAges,
-]);
+// One guest card per room, in the shape the shared cards iterate; seq_offset
+// numbers the guests across rooms (Guest 1…N), as on the other providers.
+$guestRooms = [];
+$seq = 0;
+foreach ($occupancy as $i => $room) {
+    $guestRooms[] = [
+        'num'          => $i + 1,
+        'idx'          => $i,
+        'seq_offset'   => $seq,
+        'adults'       => $room['adults'],
+        'children'     => count($room['children_ages']),
+        'childrenAges' => $room['children_ages'],
+    ];
+    $seq += $room['adults'] + count($room['children_ages']);
+}
+$view->assign('eurosite_rooms', $guestRooms);
 // AddBookingRequest TGender: B (male) / F (female); explicit words, no
 // preselection (the shared radios are required).
 $view->assign('eurosite_gender_options', [
@@ -145,6 +151,11 @@ $view->assign('eurosite_back_url', 'eurosite_booking.search?' . http_build_query
     'check_out'     => TypeCoerce::toString($snapshot['check_out']),
     'adults'        => $adults,
     'children_ages' => implode(',', $childrenAges),
+    'rooms'         => count($occupancy),
+    'rooms_data'    => (string) json_encode(array_map(
+        static fn (array $room): array => ['adults' => $room['adults'], 'children' => count($room['children_ages']), 'childrenAges' => $room['children_ages']],
+        $occupancy,
+    )),
 ]));
 
 $pageTitle = TypeCoerce::toString(__('eurosite.complete_booking'));

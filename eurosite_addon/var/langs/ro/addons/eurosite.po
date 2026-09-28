@@ -1080,6 +1080,30 @@ msgctxt "Languages::eurosite.add_to_cart"
 msgid "Add to Cart"
 msgstr "Adaugă în coș"
 
-msgctxt "Languages::eurosite.one_room_only"
-msgid "Online booking here is for one room at a time. Please search for one room, or contact us to book more rooms."
-msgstr "Aici se poate rezerva online câte o singură cameră. Căutați pentru o cameră sau contactați-ne pentru a rezerva mai multe camere."
+msgctxt "Languages::eurosite.too_many_rooms"
+msgid "You can book up to [count] rooms at once. Please search for fewer rooms, or contact us."
+msgstr "Puteți rezerva cel mult [count] camere o dată. Căutați pentru mai puține camere sau contactați-ne."
+
+msgctxt "Languages::eurosite.room_n"
+msgid "Room [num]"
+msgstr "Camera [num]"
+
+msgctxt "Languages::eurosite.adults_one"
+msgid "1 adult"
+msgstr "1 adult"
+
+msgctxt "Languages::eurosite.adults_many"
+msgid "[count] adults"
+msgstr "[count] adulți"
+
+msgctxt "Languages::eurosite.children_one"
+msgid "1 child"
+msgstr "1 copil"
+
+msgctxt "Languages::eurosite.children_many"
+msgid "[count] children"
+msgstr "[count] copii"
+
+msgctxt "Languages::eurosite.total_for_rooms"
+msgid "Total for [count] rooms"
+msgstr "Total pentru [count] camere"

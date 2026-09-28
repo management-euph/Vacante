@@ -8,14 +8,14 @@ use PHPUnit\Framework\TestCase;
 use Tygh\Addons\TravelCore\Services\ProviderRoomLimit;
 
 /**
- * Eurosite books one room (its search, booking form and booking are
- * single-room), so its guest picker stops at 1; the others offer 12.
+ * The guest picker offers up to 12 rooms for every provider (Eurosite since
+ * its booking flow went multi-room), and the limit reaches both mounts.
  */
 final class ProviderRoomLimitTest extends TestCase
 {
-    public function testEurositeBooksOneRoomTheOthersTwelve(): void
+    public function testEveryProviderBooksUpToTwelveRooms(): void
     {
-        self::assertSame(1, ProviderRoomLimit::maxRooms('eurosite'));
+        self::assertSame(12, ProviderRoomLimit::maxRooms('eurosite'));
         self::assertSame(12, ProviderRoomLimit::maxRooms('novoton'));
         self::assertSame(12, ProviderRoomLimit::maxRooms('sphinx'));
         self::assertSame(12, ProviderRoomLimit::maxRooms(''));

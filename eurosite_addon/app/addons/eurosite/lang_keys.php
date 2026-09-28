@@ -948,8 +948,33 @@ return [
         'en' => 'Add to Cart',
         'ro' => 'Adaugă în coș',
     ],
-    'eurosite.one_room_only' => [
-        'en' => 'Online booking here is for one room at a time. Please search for one room, or contact us to book more rooms.',
-        'ro' => 'Aici se poate rezerva online câte o singură cameră. Căutați pentru o cameră sau contactați-ne pentru a rezerva mai multe camere.',
+    'eurosite.too_many_rooms' => [
+        'en' => 'You can book up to [count] rooms at once. Please search for fewer rooms, or contact us.',
+        'ro' => 'Puteți rezerva cel mult [count] camere o dată. Căutați pentru mai puține camere sau contactați-ne.',
+    ],
+    // Multi-room offers: one line per room on the result card
+    'eurosite.room_n' => [
+        'en' => 'Room [num]',
+        'ro' => 'Camera [num]',
+    ],
+    'eurosite.adults_one' => [
+        'en' => '1 adult',
+        'ro' => '1 adult',
+    ],
+    'eurosite.adults_many' => [
+        'en' => '[count] adults',
+        'ro' => '[count] adulți',
+    ],
+    'eurosite.children_one' => [
+        'en' => '1 child',
+        'ro' => '1 copil',
+    ],
+    'eurosite.children_many' => [
+        'en' => '[count] children',
+        'ro' => '[count] copii',
+    ],
+    'eurosite.total_for_rooms' => [
+        'en' => 'Total for [count] rooms',
+        'ro' => 'Total pentru [count] camere',
     ],
 ];

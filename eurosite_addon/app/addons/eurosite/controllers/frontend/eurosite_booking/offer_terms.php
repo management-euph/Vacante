@@ -18,6 +18,7 @@ declare(strict_types=1);
 use Tygh\Addons\Eurosite\Services\ConfigProvider;
 use Tygh\Addons\Eurosite\Services\Container;
 use Tygh\Addons\Eurosite\Services\OfferContextStore;
+use Tygh\Addons\Eurosite\Services\RoomOccupancy;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
@@ -44,12 +45,6 @@ try {
     $hotelRow = Container::hotels()->findByProductCode(TypeCoerce::toString($snapshot['product_code']));
     $tourop = $hotelRow !== null ? TypeCoerce::toString($hotelRow['tourop_code'] ?? '') : '';
 
-    $roomCode = '';
-    $rooms = TypeCoerce::toRowList($snapshot['rooms'] ?? null);
-    if ($rooms !== []) {
-        $roomCode = TypeCoerce::toString($rooms[0]['code'] ?? '');
-    }
-
     $fees = Container::getApi()->getItemFees([
         'currency'     => TypeCoerce::toString($snapshot['currency']),
         'country_code' => TypeCoerce::toString($snapshot['country_code']),
@@ -59,11 +54,7 @@ try {
         'check_in'     => TypeCoerce::toString($snapshot['check_in']),
         'check_out'    => TypeCoerce::toString($snapshot['check_out']),
         'tourop_code'  => $tourop,
-        'rooms'        => [[
-            'code'     => $roomCode,
-            'adults'   => TypeCoerce::toInt($snapshot['adults'] ?? 2),
-            'children' => TypeCoerce::toIntList($snapshot['children_ages'] ?? []),
-        ]],
+        'rooms'        => RoomOccupancy::itemRooms($snapshot),
     ]);
 
     $feeRows = [];
