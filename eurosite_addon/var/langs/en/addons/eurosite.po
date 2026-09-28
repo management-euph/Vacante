@@ -1107,3 +1107,39 @@ msgstr "[count] children"
 msgctxt "Languages::eurosite.total_for_rooms"
 msgid "Total for [count] rooms"
 msgstr "Total for [count] rooms"
+
+msgctxt "Languages::eurosite.probe_title"
+msgid "Find dates with offers"
+msgstr "Find dates with offers"
+
+msgctxt "Languages::eurosite.probe_hint"
+msgid "Read-only: asks Eurosite, destination by destination, for check-ins every 14 days over the next months and lists the dates with Immediate, On request and Stop sale hotels, plus the first five Immediate hotels. Nothing is stored. Leave the destinations empty to check every synced one of the country; put the dates that answer in the peak-season dates setting, then run availability."
+msgstr "Read-only: asks Eurosite, destination by destination, for check-ins every 14 days over the next months and lists the dates with Immediate, On request and Stop sale hotels, plus the first five Immediate hotels. Nothing is stored. Leave the destinations empty to check every synced one of the country; put the dates that answer in the peak-season dates setting, then run availability."
+
+msgctxt "Languages::eurosite.probe_country"
+msgid "Country"
+msgstr "Country"
+
+msgctxt "Languages::eurosite.probe_cities"
+msgid "Destinations"
+msgstr "Destinations"
+
+msgctxt "Languages::eurosite.probe_from"
+msgid "First check-in"
+msgstr "First check-in"
+
+msgctxt "Languages::eurosite.probe_nights"
+msgid "Nights"
+msgstr "Nights"
+
+msgctxt "Languages::eurosite.probe_months"
+msgid "Months"
+msgstr "Months"
+
+msgctxt "Languages::eurosite.probe_run"
+msgid "Search offers"
+msgstr "Search offers"
+
+msgctxt "Languages::eurosite.probe_none_hint"
+msgid "No Immediate hotel on the configured dates. Find dates with offers below, then add them to the peak-season dates."
+msgstr "No Immediate hotel on the configured dates. Find dates with offers below, then add them to the peak-season dates."
