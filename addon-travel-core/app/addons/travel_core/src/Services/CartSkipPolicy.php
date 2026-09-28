@@ -24,7 +24,9 @@ final class CartSkipPolicy
     public const string CART = 'checkout.cart';
     public const string CHECKOUT = 'checkout.checkout';
     public const string LABEL_SKIP = 'travel_core.continue_booking';
-    public const string LABEL_DEFAULT = 'travel_core.continue_to_checkout';
+    // The booking page's next step is Payment (booking_steps.tpl), so the
+    // button says so; "Continue to checkout" named a step the bar no longer has.
+    public const string LABEL_DEFAULT = 'travel_core.continue_to_payment';
 
     /** @param list<string> $addons */
     public function __construct(private readonly array $addons)

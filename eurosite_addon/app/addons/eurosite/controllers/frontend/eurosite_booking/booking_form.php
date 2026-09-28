@@ -150,4 +150,5 @@ $view->assign('eurosite_back_url', 'eurosite_booking.search?' . http_build_query
 $pageTitle = TypeCoerce::toString(__('eurosite.complete_booking'));
 $view->assign('page_title', $pageTitle);
 Registry::set('navigation.dynamic.page_title', $pageTitle);
-fn_add_breadcrumb($pageTitle);
+// No breadcrumb: the page title and the progress bar share one row
+// (booking_steps.tpl), so the form starts higher. <title> still uses page_title.

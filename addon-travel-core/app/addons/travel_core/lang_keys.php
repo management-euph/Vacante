@@ -601,6 +601,11 @@ return [
         'en' => 'Continue to checkout',
         'ro' => 'Continuă spre finalizare',
     ],
+    // Booking button (default): the next step on the progress bar is Payment.
+    'travel_core.continue_to_payment' => [
+        'en' => 'Continue to payment',
+        'ro' => 'Continuă spre plată',
+    ],
     // Booking button when Settings -> "Skip the cart page for" ticks the add-on.
     'travel_core.continue_booking' => [
         'en' => 'Continue booking',
@@ -633,5 +638,25 @@ return [
     'travel_core.who_is_staying' => [
         'en' => 'Who is staying?',
         'ro' => 'Cine se cazează?',
+    ],
+    'travel_core.step_guests' => [
+        'en' => 'Guests',
+        'ro' => 'Oaspeți',
+    ],
+    'travel_core.step_payment' => [
+        'en' => 'Payment',
+        'ro' => 'Plată',
+    ],
+    'travel_core.step_search_back' => [
+        'en' => 'Back to your search results',
+        'ro' => 'Înapoi la rezultatele căutării',
+    ],
+    'travel_core.step_locked_hint' => [
+        'en' => 'Enter the guest details first',
+        'ro' => 'Completați mai întâi datele oaspeților',
+    ],
+    'travel_core.step_current' => [
+        'en' => 'current step',
+        'ro' => 'pasul curent',
     ],
 ];
