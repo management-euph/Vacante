@@ -1877,3 +1877,11 @@ msgstr "[count] valori ignorate."
 msgctxt "Languages::travel_core.complete_booking_title"
 msgid "Complete Booking"
 msgstr "Finalizează rezervarea"
+
+msgctxt "Languages::travel_core.split_deposit"
+msgid "Deposit"
+msgstr "Avans"
+
+msgctxt "Languages::travel_core.split_balance"
+msgid "Balance"
+msgstr "Rest de plată"

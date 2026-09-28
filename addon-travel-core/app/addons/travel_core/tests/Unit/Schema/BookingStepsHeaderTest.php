@@ -123,6 +123,31 @@ final class BookingStepsHeaderTest extends TestCase
         self::assertDoesNotMatchRegularExpression('/\.travel-bsidebar \{[^}]*overflow-y: auto/', $css);
     }
 
+    /**
+     * Deposit / balance under the total: rendered by the page (sphinx) and
+     * refilled by novoton's re-price, from one partial.
+     */
+    public function testPaymentSplitIsWiredForEveryPath(): void
+    {
+        $root = self::root();
+        $sidebar = (string) file_get_contents($root . '/addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/booking_sidebar.tpl');
+        self::assertStringContainsString('<div id="travel-price-split">{include file="addons/travel_core/components/booking_payment_split.tpl" ps=$tbs.payment_split', $sidebar);
+
+        $partial = (string) file_get_contents($root . '/addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/booking_payment_split.tpl');
+        foreach (['split_deposit', 'split_balance', 'due_by'] as $key) {
+            self::assertStringContainsString('__("travel_core.' . $key . '"', $partial);
+        }
+
+        self::assertStringContainsString('$factory->split($installments, $primaryTotal)', (string) file_get_contents($root . '/addon-sphinx-holidays/app/addons/sphinx_holidays/src/ViewModels/SphinxBookingSidebarBuilder.php'));
+        self::assertStringContainsString('\'split_html\' => $split_html', (string) file_get_contents($root . '/addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/ajax_recalculate_price.php'));
+        self::assertStringContainsString('renderPaymentSplit(data, isMultiRoom);', (string) file_get_contents($root . '/addon-novoton-holidays/js/addons/novoton_holidays/booking-form.js'));
+
+        $keys = require $root . '/addon-travel-core/app/addons/travel_core/lang_keys.php';
+        self::assertIsArray($keys);
+        self::assertSame('Avans', $keys['travel_core.split_deposit']['ro'] ?? null);
+        self::assertSame('Rest de plată', $keys['travel_core.split_balance']['ro'] ?? null);
+    }
+
     /** One h1 per page: the sidebar hotel name steps down to h2. */
     public function testSidebarHotelNameIsNotASecondH1(): void
     {

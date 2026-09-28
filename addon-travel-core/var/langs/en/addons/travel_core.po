@@ -1877,3 +1877,11 @@ msgstr "Dismissed [count] values."
 msgctxt "Languages::travel_core.complete_booking_title"
 msgid "Complete Booking"
 msgstr "Complete Booking"
+
+msgctxt "Languages::travel_core.split_deposit"
+msgid "Deposit"
+msgstr "Deposit"
+
+msgctxt "Languages::travel_core.split_balance"
+msgid "Balance"
+msgstr "Balance"

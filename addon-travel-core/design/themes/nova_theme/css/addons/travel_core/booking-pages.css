@@ -909,6 +909,25 @@
     }
 }
 
+/* Deposit / balance under the total (components/booking_payment_split.tpl) */
+.travel-booking-page .travel-price-split {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px 12px;
+    margin-top: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: #fff;
+    border: 1px dashed #c9d6ea;
+    font-size: 13px;
+    line-height: 1.4;
+    color: #334155;
+}
+.travel-booking-page .travel-price-split strong {
+    color: #0f172a;
+}
+
 /* Desktop: no inner scrollbar — the page scrolls as one. The aside stretches
    to the form's height and only its price + cancellation cards
    (.travel-bsidebar__sticky) stay pinned beside the form while the guest

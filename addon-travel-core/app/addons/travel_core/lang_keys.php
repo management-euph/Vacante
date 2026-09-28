@@ -1060,4 +1060,13 @@ return [
         'en' => 'Complete Booking',
         'ro' => 'Finalizează rezervarea',
     ],
+    // Price card: the supplier's deposit / balance split (information only).
+    'travel_core.split_deposit' => [
+        'en' => 'Deposit',
+        'ro' => 'Avans',
+    ],
+    'travel_core.split_balance' => [
+        'en' => 'Balance',
+        'ro' => 'Rest de plată',
+    ],
 ];
