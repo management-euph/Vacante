@@ -90,7 +90,7 @@ final class Container
 
     public static function productFactory(): EurositeProductFactory
     {
-        return self::$productFactory ??= new EurositeProductFactory(self::hotels());
+        return self::$productFactory ??= new EurositeProductFactory(self::hotels(), new EurositeFeatureAssigner());
     }
 
     public static function hotelProducts(): HotelProductService

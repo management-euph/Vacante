@@ -22,6 +22,9 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  * (getProductInfoRequest), the price from the lowest Immediate offer the
  * availability check found, converted to the store's primary currency.
  *
+ * Features (star rating, board, facilities…) come from the shared Feature
+ * Mappings through EurositeFeatureAssigner, at creation and on every refresh.
+ *
  * Only Immediate hotels become products (skipReason()); the static parts are
  * pure and unit-tested, create() / refresh() are the CS-Cart boundary.
  */
@@ -41,8 +44,10 @@ final class EurositeProductFactory
     /** @var array<string, float> currency => coefficient to the primary currency */
     private array $coefficients = [];
 
-    public function __construct(private readonly HotelRepository $hotels)
-    {
+    public function __construct(
+        private readonly HotelRepository $hotels,
+        private readonly ?EurositeFeatureAssigner $features = null,
+    ) {
     }
 
     public static function productCode(string $tourop, string $hotelCode): string
@@ -282,6 +287,7 @@ final class EurositeProductFactory
         }
 
         $this->hotels->linkProduct($tourop, $code, $productId);
+        $this->assignFeatures($productId, $hotel, $productCode);
 
         $pictures = self::pictures($hotel);
         if ($pictures !== []) {
@@ -297,12 +303,13 @@ final class EurositeProductFactory
 
     /**
      * Bring an existing product up to date: price, description (only while
-     * the product still has none), and pictures (only while it has none).
+     * the product still has none), pictures (only while it has none) and
+     * its Feature Mappings features.
      * Name, category and anything else the admin may have edited stay.
      *
      * @param array<string, mixed> $hotel
      *
-     * @return list<string> what changed: price | description | images
+     * @return list<string> what changed: price | description | images | features
      */
     public function refresh(array $hotel): array
     {
@@ -355,12 +362,37 @@ final class EurositeProductFactory
             }
         }
 
+        if ($this->assignFeatures($productId, $hotel, TypeCoerce::toString($hotel['product_code'] ?? '')) > 0) {
+            $changes[] = 'features';
+        }
+
         $this->hotels->touchProductUpdated(
             TypeCoerce::toString($hotel['tourop_code'] ?? ''),
             TypeCoerce::toString($hotel['product_code'] ?? ''),
         );
 
         return $changes;
+    }
+
+    /**
+     * Star rating, property type, board, resort, facilities and travel
+     * groups (Feature Mappings). Never lets a feature problem fail the
+     * product itself.
+     *
+     * @param array<string, mixed> $hotel
+     */
+    private function assignFeatures(int $productId, array $hotel, string $productCode): int
+    {
+        if ($this->features === null) {
+            return 0;
+        }
+        try {
+            return $this->features->assign($productId, $hotel);
+        } catch (\Throwable $e) {
+            fn_log_event('general', 'runtime', ['message' => "Eurosite: features for {$productCode}: " . $e->getMessage()]);
+
+            return 0;
+        }
     }
 
     /** @param array<string, mixed> $hotel */

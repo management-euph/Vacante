@@ -137,4 +137,23 @@ final class AvailabilityPlanTest extends TestCase
     {
         self::assertSame(['code' => 'DB', 'adults' => 2, 'children' => []], AvailabilityPlan::ROOM);
     }
+
+    public function testMealPlansAreEveryPlanAnyOfferSoldAndTheClassIsKept(): void
+    {
+        $w = ['kind' => 'near', 'check_in' => '2026-10-01', 'check_out' => '2026-10-08'];
+        $withMeals = static fn (float $price, array $meals, string $class): HotelOffer => new HotelOffer(
+            productCode: 'RO0363', productName: 'Parc', countryCode: 'RO', cityCode: 'RO0101', cityName: 'Mamaia',
+            category: 3, class: $class, firstImage: '', latitude: '', longitude: '', currency: 'EUR', offerType: 'CAZARE',
+            availability: '', checkIn: '', checkOut: '', price: $price, gross: $price, net: $price, commission: 0,
+            variantId: '', grila: '', meals: array_map(static fn (string $n): array => ['type' => '2', 'code' => '', 'name' => $n, 'price' => ''], $meals),
+            availabilityCode: 'IM',
+        );
+
+        $b = AvailabilityPlan::merge(null, $withMeals(500, ['Mic dejun'], 'Vila'), $w);
+        $b = AvailabilityPlan::merge($b, $withMeals(400, ['Demipensiune', 'Mic dejun'], ''), $w);
+
+        self::assertSame(400.0, $b['min_price']);
+        self::assertSame(['Mic dejun', 'Demipensiune'], $b['meals']);
+        self::assertSame('Vila', $b['class'], 'a fact about the hotel, kept from the answer that carried it');
+    }
 }
