@@ -1983,5 +1983,9 @@ msgid "Reminder: balance of [amount] for [hotel] due by [date]"
 msgstr "Reamintire: restul de [amount] pentru [hotel] până la [date]"
 
 msgctxt "Languages::travel_core.balance_reminder_body"
-msgid "Hello [name],\n\nThank you for your booking at [hotel] (order #[order_id]). The balance of [amount] is due by [date].\n\nPay it here, with any of our payment methods:\n[link]\n\nIf you have already paid, please ignore this email."
-msgstr "Bună ziua, [name],\n\nVă mulțumim pentru rezervarea la [hotel] (comanda #[order_id]). Restul de [amount] trebuie plătit până la [date].\n\nÎl puteți plăti aici, prin oricare dintre metodele noastre de plată:\n[link]\n\nDacă ați plătit deja, vă rugăm să ignorați acest email."
+msgid "Hello [name],\n\nThank you for your booking at [hotel] (order #[order_id]).\n\nTotal: [total]\nDeposit paid: [deposit]\nBalance: [amount], due by [date]\n\nPay it here, with any of our payment methods:\n[link]\n\nIf you have already paid, please ignore this email."
+msgstr "Bună ziua, [name],\n\nVă mulțumim pentru rezervarea la [hotel] (comanda #[order_id]).\n\nTotal: [total]\nAvans plătit: [deposit]\nRest de plată: [amount], până la [date]\n\nÎl puteți plăti aici, prin oricare dintre metodele noastre de plată:\n[link]\n\nDacă ați plătit deja, vă rugăm să ignorați acest email."
+
+msgctxt "Languages::travel_core.split_total"
+msgid "Total"
+msgstr "Total"

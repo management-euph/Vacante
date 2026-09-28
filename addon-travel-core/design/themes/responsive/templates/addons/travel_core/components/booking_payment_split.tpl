@@ -39,6 +39,7 @@
         </fieldset>
     {else}
         <div class="travel-price-split">
+            <span class="travel-price-split__item">{__("travel_core.split_total")} <strong>{$ps.full nofilter}</strong></span>
             <span class="travel-price-split__item">{__("travel_core.split_deposit")} <strong>{$ps.deposit nofilter}</strong></span>
             <span class="travel-price-split__item">{__("travel_core.split_balance")} <strong>{$ps.balance nofilter}</strong> {__("travel_core.due_by", ["[date]" => $ps.balance_due])}</span>
         </div>

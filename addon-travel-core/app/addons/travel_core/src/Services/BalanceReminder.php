@@ -95,6 +95,8 @@ final class BalanceReminder
             '[name]' => trim(TypeCoerce::toString($row['firstname'] ?? '')),
             '[hotel]' => TypeCoerce::toString($row['hotel_name'] ?? ''),
             '[amount]' => $this->amount($row['amount'] ?? 0),
+            '[total]' => $this->amount($row['full_amount'] ?? 0),
+            '[deposit]' => $this->amount($row['deposit_amount'] ?? 0),
             '[date]' => DateHelper::formatStoreDate(TypeCoerce::toString($row['due_date'] ?? '')),
             '[order_id]' => (string) $orderId,
             '[link]' => $link,
@@ -127,7 +129,9 @@ final class BalanceReminder
                 . 'Guest: ' . $guest . ' <' . TypeCoerce::toString($row['email'] ?? '') . ">\n"
                 . 'Hotel: ' . TypeCoerce::toString($row['hotel_name'] ?? '')
                 . ' (check-in ' . TypeCoerce::toString($row['check_in'] ?? '') . ")\n"
-                . 'Balance: ' . $this->amount($row['amount'] ?? 0)
+                . 'Total: ' . $this->amount($row['full_amount'] ?? 0)
+                . ' · Deposit paid: ' . $this->amount($row['deposit_amount'] ?? 0)
+                . ' · Balance: ' . $this->amount($row['amount'] ?? 0)
                 . ', due ' . TypeCoerce::toString($row['due_date'] ?? '') . "\n\n"
                 . "Nothing was cancelled. The supplier's cancellation fees apply from their own dates.\n"
                 . "Order: admin.php?dispatch=orders.details&order_id={$orderId}",

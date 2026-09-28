@@ -1158,7 +1158,11 @@ return [
     'travel_core.balance_reminder_body' => [
         'en' => 'Hello [name],
 
-Thank you for your booking at [hotel] (order #[order_id]). The balance of [amount] is due by [date].
+Thank you for your booking at [hotel] (order #[order_id]).
+
+Total: [total]
+Deposit paid: [deposit]
+Balance: [amount], due by [date]
 
 Pay it here, with any of our payment methods:
 [link]
@@ -1166,11 +1170,20 @@ Pay it here, with any of our payment methods:
 If you have already paid, please ignore this email.',
         'ro' => 'Bună ziua, [name],
 
-Vă mulțumim pentru rezervarea la [hotel] (comanda #[order_id]). Restul de [amount] trebuie plătit până la [date].
+Vă mulțumim pentru rezervarea la [hotel] (comanda #[order_id]).
+
+Total: [total]
+Avans plătit: [deposit]
+Rest de plată: [amount], până la [date]
 
 Îl puteți plăti aici, prin oricare dintre metodele noastre de plată:
 [link]
 
 Dacă ați plătit deja, vă rugăm să ignorați acest email.',
+    ],
+    // Deposit bookings: the full price beside Deposit / Balance.
+    'travel_core.split_total' => [
+        'en' => 'Total',
+        'ro' => 'Total',
     ],
 ];

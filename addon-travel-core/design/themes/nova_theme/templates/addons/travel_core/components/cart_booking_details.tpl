@@ -125,6 +125,7 @@
        the deposit; the balance is paid later from the order's pay link. *}
     {if !empty($product.extra.travel_deposit.deposit)}
         <div class="travel-bcard-deposit">
+            <span class="travel-bcard-deposit__item">{__("travel_core.split_total")} <strong>{include file="common/price.tpl" value=$product.extra.travel_deposit.full}</strong></span>
             <span class="travel-bcard-deposit__item">{__("travel_core.split_deposit")} <strong>{include file="common/price.tpl" value=$product.extra.travel_deposit.deposit}</strong></span>
             <span class="travel-bcard-deposit__item">{__("travel_core.split_balance")} <strong>{include file="common/price.tpl" value=$product.extra.travel_deposit.balance}</strong> {__("travel_core.due_by", ["[date]" => fn_travel_core_store_date($product.extra.travel_deposit.balance_due)])}</span>
             <span class="travel-bcard-deposit__note">{__("travel_core.deposit_cart_note")}</span>

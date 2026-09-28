@@ -5,7 +5,7 @@
     set up in CS-Cart works (card, bank transfer, …); none is added here.
 
     Parameters:
-      od           the order item's extra.travel_deposit {deposit, balance, balance_due}
+      od           the order item's extra.travel_deposit {full, deposit, balance, balance_due}
       od_balances  $order_info.travel_balances (fn_travel_core_get_order_info)
 *}
 {$od_row = []}
@@ -14,7 +14,7 @@
 {/foreach}
 <div class="travel-order-deposit">
     <div class="travel-order-deposit__title">{__("travel_core.paid_with_deposit")}</div>
-    <div>{__("travel_core.split_deposit")} <strong>{include file="common/price.tpl" value=$od.deposit}</strong> &middot; {__("travel_core.split_balance")} <strong>{include file="common/price.tpl" value=$od.balance}</strong> {__("travel_core.due_by", ["[date]" => fn_travel_core_store_date($od.balance_due)])}</div>
+    <div>{__("travel_core.split_total")} <strong>{include file="common/price.tpl" value=$od.full}</strong> &middot; {__("travel_core.split_deposit")} <strong>{include file="common/price.tpl" value=$od.deposit}</strong> &middot; {__("travel_core.split_balance")} <strong>{include file="common/price.tpl" value=$od.balance}</strong> {__("travel_core.due_by", ["[date]" => fn_travel_core_store_date($od.balance_due)])}</div>
     {if $od_row.status|default:"" == "paid"}
         <div class="travel-order-deposit__state travel-order-deposit__state--paid">{__("travel_core.balance_paid", ["[order_id]" => $od_row.balance_order_id])}</div>
     {elseif $od_row.status|default:"" == "cancelled"}
