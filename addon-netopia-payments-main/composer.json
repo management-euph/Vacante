@@ -1,0 +1,55 @@
+{
+    "name": "puboop2018/addon-netopia-payments",
+    "description": "NETOPIA Payments gateway addon for CS-Cart",
+    "type": "project",
+    "require": {
+        "php": ">=8.3"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.95",
+        "phpmd/phpmd": "^2.15",
+        "phpro/grumphp": "^2.19",
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^11.0",
+        "squizlabs/php_codesniffer": "^3.10",
+        "vimeo/psalm": "^6.16"
+    },
+    "autoload": {
+        "psr-4": {
+            "Netopia\\CsCart\\": "app/addons/netopia_payments/lib/",
+            "Netopia\\Payment2\\": "app/addons/netopia_payments/lib/Sdk/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Netopia\\CsCart\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "stan": "phpstan analyse",
+        "psalm": "psalm",
+        "fixer": "php-cs-fixer fix --dry-run --diff",
+        "fixer-fix": "php-cs-fixer fix",
+        "phpcs": "phpcs --warning-severity=0",
+        "phpcs-warnings": "phpcs",
+        "phpcbf": "phpcbf",
+        "phpmd": "phpmd app/addons/netopia_payments,app/payments text phpmd.xml",
+        "lint": [
+            "@stan",
+            "@psalm",
+            "@fixer",
+            "@phpcs",
+            "@phpmd"
+        ],
+        "test": "phpunit"
+    },
+    "config": {
+        "sort-packages": true,
+        "platform": {
+            "php": "8.3.16"
+        },
+        "allow-plugins": {
+            "phpro/grumphp": true
+        }
+    }
+}

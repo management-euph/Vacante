@@ -1,0 +1,6 @@
+/vendor/
+.php-cs-fixer.cache
+.phpunit.cache
+/netopia_test.php
+/netopia_log.php
+/app/addons/netopia_payments/var/

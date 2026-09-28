@@ -1,0 +1,23 @@
+parameters:
+    level: 10
+    paths:
+        - app/addons/netopia_payments
+        - app/payments/netopia_payments.php
+    scanDirectories:
+        - app/addons/netopia_payments/lib
+    bootstrapFiles:
+        - .phpstan/cscart-stubs.php
+        - .phpstan/tygh-stubs.php
+    dynamicConstantNames:
+        - DEVELOPMENT
+    excludePaths:
+        - app/addons/netopia_payments/lib/Psr
+    # CS-Cart injects these variables into controller/processor scope at runtime
+    universalObjectCratesClasses:
+        - ArrayAccess
+    ignoreErrors:
+        -
+            identifier: variable.undefined
+            paths:
+                - app/addons/netopia_payments/controllers/*
+                - app/payments/netopia_payments.php

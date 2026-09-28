@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<psalm
+    errorLevel="4"
+    resolveFromConfigFile="true"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://getpsalm.org/schema/config"
+    xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
+    findUnusedBaselineEntry="true"
+    findUnusedCode="false"
+>
+    <stubs>
+        <file name="psalm-stubs.php"/>
+    </stubs>
+    <projectFiles>
+        <directory name="app/addons/netopia_payments/lib"/>
+        <ignoreFiles>
+            <directory name="vendor"/>
+            <directory name="app/addons/netopia_payments/lib/Psr"/>
+            <directory name="app/addons/netopia_payments/controllers"/>
+            <file name="app/addons/netopia_payments/func.php"/>
+            <file name="app/addons/netopia_payments/init.php"/>
+            <file name="app/addons/netopia_payments/autoload.php"/>
+            <file name="app/payments/netopia_payments.php"/>
+        </ignoreFiles>
+    </projectFiles>
+</psalm>

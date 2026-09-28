@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<ruleset name="netopia-payments">
+    <description>PSR-12 enforcement for the NETOPIA Payments addon. Complements PHP CS Fixer (per-line formatting) by owning structural style: file headers, class declaration, method signatures, line length.</description>
+
+    <file>app/addons/netopia_payments</file>
+    <file>app/payments</file>
+    <file>tests</file>
+
+    <!-- Vendored / third-party code we don't own. -->
+    <exclude-pattern>app/addons/netopia_payments/lib/Sdk</exclude-pattern>
+    <exclude-pattern>app/addons/netopia_payments/lib/Psr</exclude-pattern>
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/var/*</exclude-pattern>
+    <!-- PHPStan/Psalm stubs deliberately use collapsed single-line shape
+         (they're shape-only declarations, not real source). -->
+    <exclude-pattern>.phpstan/*</exclude-pattern>
+
+    <arg name="extensions" value="php"/>
+    <arg name="colors"/>
+    <arg value="sp"/>
+
+    <rule ref="PSR12">
+        <!-- CS-Cart procedural files (controllers, func.php) legitimately
+             have side effects at the top level — that's how the framework
+             discovers hooks. Suppress the purist sniff that flags this. -->
+        <exclude name="PSR1.Files.SideEffects"/>
+    </rule>
+
+    <!-- 120-char soft, 150-char hard. PHP CS Fixer doesn't enforce line
+         length so PHPCS owns that lane. -->
+    <rule ref="Generic.Files.LineLength">
+        <properties>
+            <property name="lineLimit" value="120"/>
+            <property name="absoluteLineLimit" value="150"/>
+        </properties>
+    </rule>
+</ruleset>

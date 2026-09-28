@@ -1,0 +1,189 @@
+<?xml version="1.0"?>
+<addon scheme="3.0">
+    <id>netopia_payments</id>
+    <version>1.0.0</version>
+    <priority>100</priority>
+    <position>0</position>
+    <status>active</status>
+    <auto_install>MULTIVENDOR,ULTIMATE</auto_install>
+    <default_language>en</default_language>
+    <supplier>VacanteLitoral.ro</supplier>
+    <supplier_link>https://vacantelitoral.ro</supplier_link>
+    <compatibility>
+        <core_version>
+            <min>4.19.1</min>
+        </core_version>
+        <php_version>
+            <min>8.3</min>
+        </php_version>
+    </compatibility>
+    <settings>
+        <sections>
+            <section id="general">
+                <items>
+                    <item id="setup_instructions">
+                        <type>info</type>
+                        <default_value>netopia_setup_instructions</default_value>
+                    </item>
+                    <item id="auto_payment_link">
+                        <type>selectbox</type>
+                        <default_value>Y</default_value>
+                        <variants>
+                            <item id="Y"></item>
+                            <item id="N"></item>
+                        </variants>
+                    </item>
+                    <item id="auto_payment_link_statuses">
+                        <type>input</type>
+                        <default_value>F,D</default_value>
+                    </item>
+                    <item id="auto_send_retry_email">
+                        <type>selectbox</type>
+                        <default_value>Y</default_value>
+                        <variants>
+                            <item id="Y"></item>
+                            <item id="N"></item>
+                        </variants>
+                    </item>
+                </items>
+            </section>
+        </sections>
+    </settings>
+    <queries>
+        <item for="install"><![CDATA[
+            INSERT INTO ?:payment_processors (processor, processor_script, processor_template, admin_template, callback, type, addon)
+            SELECT 'NETOPIA Payments', 'netopia_payments.php', 'views/orders/components/payments/cc_outside.tpl', 'netopia_payments.tpl', 'N', 'P', 'netopia_payments'
+            FROM (SELECT 1) AS placeholder
+            WHERE NOT EXISTS (
+                SELECT 1 FROM ?:payment_processors WHERE processor_script = 'netopia_payments.php'
+            );
+        ]]></item>
+        <item for="install"><![CDATA[
+            UPDATE ?:payments p
+            LEFT JOIN ?:payment_processors pp ON pp.processor_id = p.processor_id
+            JOIN ?:payment_processors netopia ON netopia.processor_script = 'netopia_payments.php'
+            SET p.processor_id = netopia.processor_id
+            WHERE pp.processor_id IS NULL
+              AND p.processor_params LIKE '%pos_signature%';
+        ]]></item>
+        <item for="install"><![CDATA[
+            CREATE TABLE IF NOT EXISTS ?:netopia_refund_attempts (
+                request_id   VARCHAR(64)     NOT NULL,
+                order_id     INT UNSIGNED    NOT NULL,
+                amount       DECIMAL(15,2)   NOT NULL,
+                ntp_id       VARCHAR(64)     DEFAULT NULL,
+                status       ENUM('pending','succeeded','failed') NOT NULL DEFAULT 'pending',
+                error        VARCHAR(500)    DEFAULT NULL,
+                created_at   INT UNSIGNED    NOT NULL,
+                completed_at INT UNSIGNED    DEFAULT NULL,
+                PRIMARY KEY (request_id),
+                INDEX idx_order (order_id, created_at)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ]]></item>
+        <item for="uninstall"><![CDATA[
+            DROP TABLE IF EXISTS ?:netopia_refund_attempts;
+        ]]></item>
+        <item for="uninstall"><![CDATA[
+            DELETE FROM ?:payment_processors WHERE processor_script = 'netopia_payments.php';
+        ]]></item>
+        <item for="uninstall"><![CDATA[
+            DELETE FROM ?:template_emails WHERE addon = 'netopia_payments';
+        ]]></item>
+        <item for="uninstall"><![CDATA[
+            DELETE FROM ?:language_values WHERE name IN (
+                'netopia_payment_link',
+                'netopia_payment_link_at',
+                'netopia_amount',
+                'netopia_refunded_amount',
+                'netopia_order_id'
+            );
+        ]]></item>
+    </queries>
+    <email_templates>
+        <templates>
+            <item>
+                <code><![CDATA[netopia_payment_retry]]></code>
+                <area><![CDATA[C]]></area>
+                <status><![CDATA[A]]></status>
+                <default_subject><![CDATA[{{ __("netopia_payment_retry_email_subject", {"[order]": order_info.order_id}) }}]]></default_subject>
+                <default_template><![CDATA[{{ snippet("header", {"title": __("netopia_payment_retry_email_subject", {"[order]": order_info.order_id})}) }}
+
+<h2 style="color:#333;margin:0 0 16px 0;">{{ __("netopia_payment_retry_email_heading", {"[order]": order_info.order_id}) }}</h2>
+
+<p>{{ __("netopia_payment_retry_email_intro", {"[order]": order_info.order_id}) }}</p>
+
+<p style="text-align:center;margin:24px 0;">
+    <a href="{{ payment_url }}" target="_blank" style="display:inline-block;padding:12px 30px;background:#4CAF50;color:#ffffff;text-decoration:none;border-radius:4px;font-weight:bold;">
+        {{ __("netopia_pay_now_button") }}
+    </a>
+</p>
+
+{{ include_doc("order.summary", order_info.order_id) }}
+
+<p style="text-align:center;margin:24px 0;">
+    <a href="{{ payment_url }}" target="_blank" style="display:inline-block;padding:12px 30px;background:#4CAF50;color:#ffffff;text-decoration:none;border-radius:4px;font-weight:bold;">
+        {{ __("netopia_pay_now_button") }}
+    </a>
+</p>
+
+<p style="color:#888;font-size:13px;">{{ __("netopia_payment_retry_email_footer_note") }}</p>
+
+{{ snippet("footer") }}]]></default_template>
+                <addon><![CDATA[netopia_payments]]></addon>
+            </item>
+            <item>
+                <code><![CDATA[netopia_refund_notification]]></code>
+                <area><![CDATA[C]]></area>
+                <status><![CDATA[A]]></status>
+                <default_subject><![CDATA[{{ __("netopia_refund_email_subject", {"[order]": order_info.order_id}) }}]]></default_subject>
+                <default_template><![CDATA[{{ snippet("header", {"title": __("netopia_refund_email_subject", {"[order]": order_info.order_id})}) }}
+
+<h2 style="color:#333;margin:0 0 16px 0;">{{ __("netopia_refund_email_heading") }}</h2>
+
+{% if is_full_refund %}
+<p>{{ __("netopia_refund_email_intro_full", {"[customer_name]": customer_name, "[order]": order_info.order_id, "[amount]": cumulative_refunded}) }}</p>
+{% else %}
+<p>{{ __("netopia_refund_email_intro_partial", {"[customer_name]": customer_name, "[order]": order_info.order_id, "[amount]": refund_amount}) }}</p>
+{% endif %}
+
+<table cellpadding="6" cellspacing="0" border="0" style="margin:16px 0;">
+    <tr>
+        <td><strong>{{ __("netopia_email_order_id_label") }}:</strong></td>
+        <td>#{{ order_info.order_id }}</td>
+    </tr>
+    <tr>
+        <td><strong>{{ __("netopia_email_refund_amount_label") }}:</strong></td>
+        <td>{{ refund_amount }}</td>
+    </tr>
+    {% if not is_full_refund %}
+    <tr>
+        <td><strong>{{ __("netopia_email_total_refunded_label") }}:</strong></td>
+        <td>{{ cumulative_refunded }}</td>
+    </tr>
+    <tr>
+        <td><strong>{{ __("netopia_email_order_total_label") }}:</strong></td>
+        <td>{{ original_amount }}</td>
+    </tr>
+    <tr>
+        <td><strong>{{ __("netopia_email_remaining_paid_label") }}:</strong></td>
+        <td>{{ remaining_paid }}</td>
+    </tr>
+    {% endif %}
+    <tr>
+        <td><strong>{{ __("netopia_email_transaction_id_label") }}:</strong></td>
+        <td>{{ ntp_id }}</td>
+    </tr>
+    <tr>
+        <td><strong>{{ __("netopia_email_refund_date_label") }}:</strong></td>
+        <td>{{ refund_date }}</td>
+    </tr>
+</table>
+
+<p style="color:#888;font-size:13px;">{{ __("netopia_refund_email_footer_note") }}</p>
+
+{{ snippet("footer") }}]]></default_template>
+                <addon><![CDATA[netopia_payments]]></addon>
+            </item>
+        </templates>
+    </email_templates>
+</addon>
