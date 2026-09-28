@@ -31,7 +31,7 @@ final class CronDispatcherTest extends TestCase
 
         $expected = [
             'add_products', 'availability', 'cities', 'cleanup', 'countries', 'full', 'hotels',
-            'own_cities', 'product_info', 'room_types', 'tags', 'update_products',
+            'own_cities', 'probe_availability', 'product_info', 'room_types', 'tags', 'update_products',
         ];
         self::assertSame($expected, array_keys($modes));
         foreach ($modes as $mode => $description) {

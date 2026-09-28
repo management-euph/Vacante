@@ -977,4 +977,40 @@ return [
         'en' => 'Total for [count] rooms',
         'ro' => 'Total pentru [count] camere',
     ],
+    'eurosite.probe_title' => [
+        'en' => 'Find dates with offers',
+        'ro' => 'Găsește date cu oferte',
+    ],
+    'eurosite.probe_hint' => [
+        'en' => 'Read-only: asks Eurosite, destination by destination, for check-ins every 14 days over the next months and lists the dates with Immediate, On request and Stop sale hotels, plus the first five Immediate hotels. Nothing is stored. Leave the destinations empty to check every synced one of the country; put the dates that answer in the peak-season dates setting, then run availability.',
+        'ro' => 'Doar citire: întreabă Eurosite, destinație cu destinație, pentru check-in la fiecare 14 zile în lunile următoare și listează datele cu hoteluri Imediat, La cerere și Stop vânzări, plus primele cinci hoteluri Imediat. Nu se salvează nimic. Lăsați destinațiile goale pentru a verifica toate destinațiile sincronizate ale țării; puneți datele care răspund în setarea datelor de sezon, apoi rulați availability.',
+    ],
+    'eurosite.probe_country' => [
+        'en' => 'Country',
+        'ro' => 'Țară',
+    ],
+    'eurosite.probe_cities' => [
+        'en' => 'Destinations',
+        'ro' => 'Destinații',
+    ],
+    'eurosite.probe_from' => [
+        'en' => 'First check-in',
+        'ro' => 'Primul check-in',
+    ],
+    'eurosite.probe_nights' => [
+        'en' => 'Nights',
+        'ro' => 'Nopți',
+    ],
+    'eurosite.probe_months' => [
+        'en' => 'Months',
+        'ro' => 'Luni',
+    ],
+    'eurosite.probe_run' => [
+        'en' => 'Search offers',
+        'ro' => 'Caută oferte',
+    ],
+    'eurosite.probe_none_hint' => [
+        'en' => 'No Immediate hotel on the configured dates. Find dates with offers below, then add them to the peak-season dates.',
+        'ro' => 'Niciun hotel Imediat la datele configurate. Găsiți mai jos date cu oferte, apoi adăugați-le la datele de sezon.',
+    ],
 ];

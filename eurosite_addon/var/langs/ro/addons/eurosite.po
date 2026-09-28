@@ -1107,3 +1107,39 @@ msgstr "[count] copii"
 msgctxt "Languages::eurosite.total_for_rooms"
 msgid "Total for [count] rooms"
 msgstr "Total pentru [count] camere"
+
+msgctxt "Languages::eurosite.probe_title"
+msgid "Find dates with offers"
+msgstr "Găsește date cu oferte"
+
+msgctxt "Languages::eurosite.probe_hint"
+msgid "Read-only: asks Eurosite, destination by destination, for check-ins every 14 days over the next months and lists the dates with Immediate, On request and Stop sale hotels, plus the first five Immediate hotels. Nothing is stored. Leave the destinations empty to check every synced one of the country; put the dates that answer in the peak-season dates setting, then run availability."
+msgstr "Doar citire: întreabă Eurosite, destinație cu destinație, pentru check-in la fiecare 14 zile în lunile următoare și listează datele cu hoteluri Imediat, La cerere și Stop vânzări, plus primele cinci hoteluri Imediat. Nu se salvează nimic. Lăsați destinațiile goale pentru a verifica toate destinațiile sincronizate ale țării; puneți datele care răspund în setarea datelor de sezon, apoi rulați availability."
+
+msgctxt "Languages::eurosite.probe_country"
+msgid "Country"
+msgstr "Țară"
+
+msgctxt "Languages::eurosite.probe_cities"
+msgid "Destinations"
+msgstr "Destinații"
+
+msgctxt "Languages::eurosite.probe_from"
+msgid "First check-in"
+msgstr "Primul check-in"
+
+msgctxt "Languages::eurosite.probe_nights"
+msgid "Nights"
+msgstr "Nopți"
+
+msgctxt "Languages::eurosite.probe_months"
+msgid "Months"
+msgstr "Luni"
+
+msgctxt "Languages::eurosite.probe_run"
+msgid "Search offers"
+msgstr "Caută oferte"
+
+msgctxt "Languages::eurosite.probe_none_hint"
+msgid "No Immediate hotel on the configured dates. Find dates with offers below, then add them to the peak-season dates."
+msgstr "Niciun hotel Imediat la datele configurate. Găsiți mai jos date cu oferte, apoi adăugați-le la datele de sezon."

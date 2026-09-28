@@ -384,6 +384,11 @@ final class DashboardCronContractTest extends TestCase
             if ($mode === 'full') {
                 continue; // the headline action, not a row
             }
+            if (in_array($mode, CronPlanBuilder::DIAGNOSTIC, true)) {
+                // Read-only, run by hand: never a dashboard row or a crontab line.
+                self::assertArrayNotHasKey($mode, $scheduled, "diagnostic {$mode} must not be scheduled");
+                continue;
+            }
             self::assertArrayHasKey($mode, $scheduled, "cron mode {$mode} has no row");
             self::assertTrue(
                 CronPlanBuilder::hasSchedule($mode),

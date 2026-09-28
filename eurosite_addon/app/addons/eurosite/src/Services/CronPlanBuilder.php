@@ -37,6 +37,9 @@ final class CronPlanBuilder
      */
     public const STANDALONE = ['product_info', 'availability', 'add_products', 'update_products', 'cleanup'];
 
+    /** One-off, read-only diagnostics: run by hand, never on the dashboard or in the crontab. */
+    public const DIAGNOSTIC = ['probe_availability'];
+
     /**
      * Suggested crontab slot per mode, plus how often it is expected to run.
      *
@@ -288,7 +291,7 @@ final class CronPlanBuilder
             }
         }
 
-        $rest = array_diff($known, $ordered, ['full']);
+        $rest = array_diff($known, $ordered, ['full'], self::DIAGNOSTIC);
         sort($rest);
 
         return [...$ordered, ...$rest];
