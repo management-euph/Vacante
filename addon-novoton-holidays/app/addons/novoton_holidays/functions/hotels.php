@@ -619,10 +619,14 @@ function fn_novoton_holidays_sync_hotel_facilities(string $hotel_id): bool
             }
         }
 
-        // No <IdFacility> at all: an error reply or an unexpected shape, not
-        // "this hotel has no facilities". Keep the stored ones (the old code
-        // deleted first, so one bad API day wiped every hotel's facilities)
-        // and report the hotel as failed with what the API answered.
+        // No <IdFacility>. An empty <hotel_facilities_list/> is Novoton's
+        // real answer for a hotel it has no facility data for (e.g. 2906):
+        // success, and the stored rows stay (a reply that is empty for a day
+        // must not wipe them). Any other reply is an error or an unexpected
+        // shape: keep the stored rows, report the hotel as failed and log it.
+        if ($facility_ids === [] && $response->getName() === 'hotel_facilities_list') {
+            return true;
+        }
         if ($facility_ids === []) {
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton: hotel_facilities returned no IdFacility; kept the stored facilities',
