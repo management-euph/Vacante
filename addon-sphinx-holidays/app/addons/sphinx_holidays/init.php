@@ -154,6 +154,27 @@ if (defined('AREA') && AREA === 'A' && function_exists('fn_sphinx_holidays_ensur
     unset($__spx_heal_fp);
 }
 
+// Alias self-heal: re-seed Sphinx's ?:travel_api_alias rows once per
+// deployed version of the seed data (it otherwise ran only at install and on
+// the syncs), so aliases lost to the old (api_source, api_value) key — or to
+// a travel_core reinstall — come back without waiting for a sync.
+if (defined('AREA') && AREA === 'A' && function_exists('fn_travel_core_self_heal_due')
+    && class_exists(\Tygh\Addons\TravelCore\Services\FeatureMapper::class)
+) {
+    $__spx_alias_fp = md5(
+        (string) @md5_file(__DIR__ . '/src/Install/FeatureAliasSeeder.php')
+        . (string) @md5_file(__DIR__ . '/src/Install/SphinxAliasSeedData.php'),
+    );
+    if (fn_travel_core_self_heal_due('sphinx_aliases', $__spx_alias_fp)) {
+        fn_travel_core_self_heal_guard('sphinx_aliases', static function (): void {
+            $prefix = \Tygh\Registry::get('config.table_prefix');
+            \Tygh\Addons\SphinxHolidays\Install\FeatureAliasSeeder::seedAliases(is_scalar($prefix) ? (string) $prefix : 'cscart_');
+        });
+        fn_travel_core_self_heal_stamp('sphinx_aliases', $__spx_alias_fp);
+    }
+    unset($__spx_alias_fp);
+}
+
 // Register addon hooks
 fn_register_hooks(
     'pre_place_order',                         // Re-verify Sphinx offer prices before order

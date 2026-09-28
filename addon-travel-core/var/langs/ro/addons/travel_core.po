@@ -1477,3 +1477,19 @@ msgstr "pasul curent"
 msgctxt "Languages::travel_core.continue_to_payment"
 msgid "Continue to payment"
 msgstr "Continuă spre plată"
+
+msgctxt "Languages::travel_core.fm_alias_gaps_title"
+msgid "Provider values that are never mapped"
+msgstr "Valori ale furnizorilor care nu sunt mapate niciodată"
+
+msgctxt "Languages::travel_core.fm_alias_gap"
+msgid "[provider] has no aliases for [feature]: its hotels get no value for this feature."
+msgstr "[provider] nu are aliasuri pentru [feature]: hotelurile sale nu primesc nicio valoare pentru această caracteristică."
+
+msgctxt "Languages::travel_core.fm_alias_gap_open"
+msgid "Open"
+msgstr "Deschide"
+
+msgctxt "Languages::travel_core.fm_alias_gaps_hint"
+msgid "Each provider re-seeds its aliases on the first admin page load after an update, and on its hotel syncs; then run its \"reassign features\" job so existing hotels get the values."
+msgstr "Fiecare furnizor își recreează aliasurile la prima încărcare a unei pagini de administrare după o actualizare și la sincronizarea hotelurilor; apoi rulați jobul „reassign features” ca hotelurile existente să primească valorile."

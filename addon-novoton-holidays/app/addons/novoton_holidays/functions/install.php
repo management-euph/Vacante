@@ -213,80 +213,12 @@ function fn_novoton_holidays_post_install(): bool
  * Seed Novoton API aliases into the shared travel_api_alias table.
  * Maps Novoton API values to canonical feature codes.
  *
- * Idempotent — uses FeatureMapper::addAlias() which does INSERT ON DUPLICATE KEY UPDATE.
+ * Idempotent; body in Install\AliasSeeder (also run as an admin self-heal
+ * from init.php, once per deployed version of the seed data).
  */
 function fn_novoton_holidays_seed_travel_aliases(): void
 {
-    if (!class_exists(\Tygh\Addons\TravelCore\Services\FeatureMapper::class)) {
-        return;
-    }
-
-    $featureMapper = \Tygh\Addons\TravelCore\Services\FeatureMapper::class;
-
-    // Board/Meal aliases (Novoton XML API values)
-    $boardAliases = \Tygh\Addons\NovotonHolidays\Install\NovotonAliasSeedData::boardAliases();
-
-    // Room type aliases (Novoton uses short codes)
-    $roomAliases = \Tygh\Addons\NovotonHolidays\Install\NovotonAliasSeedData::roomAliases();
-
-    // Guard: travel_feature_map table may not exist if travel_core isn't installed yet
-    $tableExists = db_get_field(
-        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?s",
-        TypeCoerce::toString(Registry::get('config.table_prefix')) . 'travel_feature_map'
-    );
-    if (!$tableExists) {
-        fn_log_event('general', 'runtime', [
-            'message' => 'Novoton: Skipping alias seeding — travel_feature_map table not found (travel_core not installed?)',
-        ]);
-        return;
-    }
-
-    // Star rating aliases (Novoton uses simple '1'-'5' codes, same as canonical)
-    $starAliases = ['1' => '1', '2' => '2', '3' => '3', '4' => '4', '5' => '5'];
-
-    // Property type aliases (Novoton canonical codes match travel_core)
-    $propertyTypeAliases = \Tygh\Addons\NovotonHolidays\Install\NovotonAliasSeedData::propertyTypeAliases();
-
-    // Batch-load canonical_code → map_id per feature type (4 queries instead of ~43)
-    $seedAliasGroup = static function (string $featureType, array $aliases, string $matchType = 'exact') use ($featureMapper): void {
-        $allMaps = TypeCoerce::toStringMap(db_get_hash_single_array(
-            "SELECT canonical_code, map_id FROM ?:travel_feature_map WHERE feature_type = ?s",
-            ['canonical_code', 'map_id'],
-            $featureType
-        ));
-        foreach ($aliases as $apiValue => $canonicalCode) {
-            $mapId = TypeCoerce::toInt($allMaps[TypeCoerce::toString($canonicalCode)] ?? 0);
-            if ($mapId > 0) {
-                $featureMapper::addAlias('novoton', (string) $apiValue, $mapId, $matchType);
-            }
-        }
-    };
-
-    // Hotel facility aliases (Novoton API facility IDs → canonical codes)
-    $hotelFacilityAliases = \Tygh\Addons\NovotonHolidays\Install\NovotonAliasSeedData::hotelFacilityAliases();
-
-    // Room facility aliases — in-room amenities
-    $roomFacilityAliases = \Tygh\Addons\NovotonHolidays\Install\NovotonAliasSeedData::roomFacilityAliases();
-
-    // Beach access aliases
-    $beachAccessAliases = \Tygh\Addons\NovotonHolidays\Install\NovotonAliasSeedData::beachAccessAliases();
-
-    // Travel groups are NOT seeded as aliases — they're derived from facilities
-    // at runtime via TravelGroupResolver::derive(). No API value mapping needed.
-
-    $seedAliasGroup('board', $boardAliases, 'exact');
-    $seedAliasGroup('room_type', $roomAliases, 'exact');
-    $seedAliasGroup('stars', $starAliases, 'exact');
-    $seedAliasGroup('property_type', $propertyTypeAliases, 'exact');
-    $seedAliasGroup('hotel_facility', $hotelFacilityAliases, 'exact');
-    $seedAliasGroup('room_facility', $roomFacilityAliases, 'exact');
-    $seedAliasGroup('beach_access', $beachAccessAliases, 'exact');
-
-    // Resort aliases are dynamic — auto-registered by FeatureMapper::handleUnmapped()
-    // when new city names appear from the API (no pre-seeding needed)
-
-    // Clear resolve cache after batch alias inserts
-    $featureMapper::clearCache();
+    \Tygh\Addons\NovotonHolidays\Install\AliasSeeder::seed(TypeCoerce::toString(Registry::get('config.table_prefix')));
 }
 
 /**

@@ -148,6 +148,14 @@ interface FeatureMapRepositoryInterface
     public function getTypeStats(): array;
 
     /**
+     * Alias counts per provider and feature type (the dashboard's coverage
+     * check: a provider with no alias for a type never gets that feature).
+     *
+     * @return array<string, array<string, int>> api_source => feature_type => count
+     */
+    public function getAliasCountsBySource(): array;
+
+    /**
      * Get global mapping stats (total, active, unmapped, alias count).
      *
      * @return array<string, mixed>

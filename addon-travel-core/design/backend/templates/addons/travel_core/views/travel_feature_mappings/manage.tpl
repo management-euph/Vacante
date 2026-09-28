@@ -49,6 +49,23 @@
         </form>
     </div>
 
+    {* Providers with NO alias for a type they need: their hotels never get
+       that feature (AliasCoverage). The provider self-heals re-seed their
+       aliases on the next admin page load after an update. *}
+    {if $alias_gaps}
+        <div class="alert alert-block" style="margin-bottom: 15px;">
+            <strong>{__("travel_core.fm_alias_gaps_title")}</strong>
+            <ul style="margin: 6px 0 6px 18px;">
+                {foreach from=$alias_gaps item=gap}
+                    {$gap_type = $gap.feature_type}
+                    <li>{__("travel_core.fm_alias_gap", ["[provider]" => $gap.provider|capitalize, "[feature]" => $type_labels.$gap_type|default:$gap_type])}
+                        &middot; <a href="{"travel_feature_mappings.manage?feature_type=`$gap_type`"|fn_url}">{__("travel_core.fm_alias_gap_open")}</a></li>
+                {/foreach}
+            </ul>
+            <span class="muted">{__("travel_core.fm_alias_gaps_hint")}</span>
+        </div>
+    {/if}
+
     {* Feature Type Cards *}
     <div class="row-fluid" style="margin-bottom: 15px;">
         {assign var="card_count" value=0}
@@ -95,7 +112,7 @@
                        Smarty 5, hiding the sources entirely. *}
                     {if $stat.providers}
                         <div style="margin-top: 6px;">
-                            {foreach from=$stat.providers|explode:"," item=src}
+                            {foreach from=","|explode:$stat.providers item=src}
                                 {if $src|trim}
                                 <span class="label {if $src|trim == 'sphinx'}label-info{elseif $src|trim == 'novoton'}label-warning{else}label-default{/if}" style="font-size: 9px;">{$src|trim|escape:'html'}</span>
                                 {/if}
@@ -260,7 +277,7 @@
                     </td>
                     <td>
                         {if $m.api_sources}
-                            {foreach from=$m.api_sources|explode:"," item=src}
+                            {foreach from=","|explode:$m.api_sources item=src}
                                 {if $src|trim}
                                 <span class="label {if $src == 'sphinx'}label-info{elseif $src == 'novoton'}label-warning{else}label-default{/if}" style="font-size: 9px;" title="{$src|escape:'html'}">{$src|escape:'html'}</span>
                                 {/if}

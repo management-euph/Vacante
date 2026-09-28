@@ -440,7 +440,7 @@ if ($mode === 'manage') {
         $view->assign('mapping_stats', $stats);
         $view->assign('feature_types', $validFeatureTypes);
         $view->assign('scan_providers', $scanProviders);
-
+        $view->assign('alias_gaps', \Tygh\Addons\TravelCore\Services\AliasCoverage::gaps($repo->getAliasCountsBySource()));
     } else {
         // ── List mode (feature_type selected, paginated) ──
 

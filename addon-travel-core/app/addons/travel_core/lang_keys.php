@@ -659,4 +659,20 @@ return [
         'en' => 'current step',
         'ro' => 'pasul curent',
     ],
+    'travel_core.fm_alias_gaps_title' => [
+        'en' => 'Provider values that are never mapped',
+        'ro' => 'Valori ale furnizorilor care nu sunt mapate niciodată',
+    ],
+    'travel_core.fm_alias_gap' => [
+        'en' => '[provider] has no aliases for [feature]: its hotels get no value for this feature.',
+        'ro' => '[provider] nu are aliasuri pentru [feature]: hotelurile sale nu primesc nicio valoare pentru această caracteristică.',
+    ],
+    'travel_core.fm_alias_gap_open' => [
+        'en' => 'Open',
+        'ro' => 'Deschide',
+    ],
+    'travel_core.fm_alias_gaps_hint' => [
+        'en' => 'Each provider re-seeds its aliases on the first admin page load after an update, and on its hotel syncs; then run its "reassign features" job so existing hotels get the values.',
+        'ro' => 'Fiecare furnizor își recreează aliasurile la prima încărcare a unei pagini de administrare după o actualizare și la sincronizarea hotelurilor; apoi rulați jobul „reassign features” ca hotelurile existente să primească valorile.',
+    ],
 ];
