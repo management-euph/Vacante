@@ -10,6 +10,27 @@ use Tygh\Addons\FgoInvoicing\Helpers\TypeCoerce;
 use Tygh\Addons\FgoInvoicing\Services\ConfigProvider;
 use Tygh\Addons\FgoInvoicing\Services\Container;
 use Tygh\Addons\FgoInvoicing\Services\OrderInvoiceColumn;
+use Tygh\Registry;
+
+/**
+ * Whether FGO invoice data may be attached to orders in this request: the
+ * admin panel only (not the storefront, not the REST API), not for a
+ * restricted admin (whom the FGO pages deny) and not while a storefront /
+ * vendor is selected (runtime.company_id), where the FGO pages are not what
+ * the admin is looking at. Both order hooks below answer to it, and the
+ * order templates hide the FGO column and panel on the same terms.
+ */
+function fn_fgo_invoicing_shows_invoice_data(): bool
+{
+    if (!defined('AREA') || AREA !== 'A' || defined('API')) {
+        return false;
+    }
+    if (defined('RESTRICTED_ADMIN') && RESTRICTED_ADMIN) {
+        return false;
+    }
+
+    return TypeCoerce::toInt(Registry::get('runtime.company_id')) === 0;
+}
 
 /**
  * Hook: place_order_post — issue the invoice immediately when configured for "onOrder".
@@ -120,25 +141,59 @@ function fn_fgo_invoicing_change_order_status(
         return;
     }
 
-    Container::getInstance()->issuer()->issueForOrder($orderId, $order_info);
+    // Runs inside the status change, often the customer's payment callback:
+    // nothing may escape (see fn_fgo_invoicing_place_order_post()). An order
+    // another request is issuing right now answers `in_progress`; the issuer
+    // logs it and there is nothing else to do here.
+    try {
+        Container::getInstance()->issuer()->issueForOrder($orderId, $order_info);
+    } catch (\Throwable $e) {
+        if (function_exists('fn_log_event')) {
+            fn_log_event('fgo_invoicing', 'runtime', [
+                'message' => '[error] change-order-status',
+                'context' => ['order_id' => $orderId, 'exception' => $e::class, 'message' => $e->getMessage()],
+            ]);
+        }
+    }
 }
 
 /**
- * Hook: get_order_info — attach the persisted FGO invoice row onto $order
- * so the admin order-details template can render the panel.
+ * Hook: get_order_info — attach the order's FGO invoice summary as
+ * $order['fgo_invoice'] for the admin order-details panel
+ * (hooks/orders/details.post.tpl).
+ *
+ * fn_get_order_info() serves the storefront, the REST API, e-mails and
+ * every add-on too, so only in fn_fgo_invoicing_shows_invoice_data()'s
+ * context, and only the summary columns (OrderInvoiceColumn::summary):
+ * the stored request / response payloads never leave the FGO pages. One
+ * indexed read; nothing may escape, the order page must render without it.
  *
  * @param array<string, mixed> $order
  * @param array<string, mixed> $additional_data
  */
 function fn_fgo_invoicing_get_order_info(&$order, $additional_data = []): void
 {
+    if (!fn_fgo_invoicing_shows_invoice_data()) {
+        return;
+    }
     $orderId = TypeCoerce::toInt($order['order_id'] ?? 0);
     if ($orderId <= 0) {
         return;
     }
-    $row = Container::getInstance()->repository()->findByOrderId($orderId);
+    try {
+        $row = Container::getInstance()->repository()->findByOrderIds([$orderId])[$orderId] ?? null;
+    } catch (\Throwable $e) {
+        if (function_exists('fn_log_event')) {
+            fn_log_event('fgo_invoicing', 'runtime', [
+                'message' => '[error] order-details-panel',
+                'context' => ['order_id' => $orderId, 'exception' => $e::class, 'message' => $e->getMessage()],
+            ]);
+        }
+
+        return;
+    }
     if ($row !== null) {
-        $order['fgo_invoice'] = $row;
+        $order['fgo_invoice'] = OrderInvoiceColumn::summary($row);
     }
 }
 
@@ -149,11 +204,11 @@ function fn_fgo_invoicing_get_order_info(&$order, $additional_data = []): void
  *
  *     fn_set_hook('get_orders_post', $params, $orders);
  *
- * right after the SELECT, for EVERY fn_get_orders() caller, storefront
- * included: hence the admin-area gate, one query for the whole page
- * (OrderInvoiceColumn / InvoiceRepository::findByOrderIds) and nothing for
- * admins the FGO pages deny anyway (RESTRICTED_ADMIN; the column templates
- * hide the column for them too).
+ * right after the SELECT, for EVERY fn_get_orders() caller, storefront and
+ * REST API included: hence fn_fgo_invoicing_shows_invoice_data() (admin
+ * panel, no API, no restricted admin, no selected storefront; the column
+ * templates hide the column on the same terms) and one query for the whole
+ * page (OrderInvoiceColumn / InvoiceRepository::findByOrderIds).
  *
  * $orders is the only argument touched, and it gets a default like every
  * parameter after the first (see fn_fgo_invoicing_change_order_status()).
@@ -166,7 +221,7 @@ function fn_fgo_invoicing_get_order_info(&$order, $additional_data = []): void
  */
 function fn_fgo_invoicing_get_orders_post($params, &$orders = []): void
 {
-    if (!defined('AREA') || AREA !== 'A' || (defined('RESTRICTED_ADMIN') && RESTRICTED_ADMIN)) {
+    if (!fn_fgo_invoicing_shows_invoice_data()) {
         return;
     }
     if (!is_array($orders) || $orders === []) {

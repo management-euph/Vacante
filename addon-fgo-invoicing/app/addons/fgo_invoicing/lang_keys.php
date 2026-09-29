@@ -143,6 +143,10 @@ return [
         'en' => 'FGO issue failed',
         'ro' => 'Emiterea FGO a eșuat',
     ],
+    'fgo_invoicing.invoice_in_progress' => [
+        'en' => 'This invoice is being issued right now by another request; nothing was sent. Reload the page in a minute.',
+        'ro' => 'Această factură se emite chiar acum dintr-o altă cerere; nu s-a trimis nimic. Reîncărcați pagina peste un minut.',
+    ],
     'fgo_invoicing.action_succeeded' => [
         'en' => 'FGO action completed.',
         'ro' => 'Acțiune FGO finalizată.',
@@ -328,12 +332,16 @@ return [
         'ro' => 'Producție',
     ],
     'fgo_invoicing.bulk_intro' => [
-        'en' => 'Selected orders: [count]. Review the pre-check before anything is sent to FGO.',
-        'ro' => 'Comenzi selectate: [count]. Verificați pre-verificarea înainte ca ceva să fie trimis către FGO.',
+        'en' => 'Selected orders: [count]. Nothing is sent to FGO until you start: read the pre-check below first.',
+        'ro' => 'Comenzi selectate: [count]. Nimic nu este trimis către FGO până nu porniți: citiți mai întâi rezultatul verificării de mai jos.',
     ],
     'fgo_invoicing.bulk_truncated' => [
-        'en' => 'Selected orders: [selected]. One run handles only the first [max]: run the action again for the rest.',
-        'ro' => 'Comenzi selectate: [selected]. O rulare le procesează doar pe primele [max]: rulați din nou acțiunea pentru restul.',
+        'en' => 'Selected orders: [selected]. This page handles orders [from] to [to]; one run takes at most [max].',
+        'ro' => 'Comenzi selectate: [selected]. Această pagină le procesează pe cele de la [from] la [to]; o rulare preia cel mult [max].',
+    ],
+    'fgo_invoicing.bulk_next_batch' => [
+        'en' => 'Continue with the next batch ([count])',
+        'ro' => 'Continuați cu lotul următor ([count])',
     ],
     'fgo_invoicing.bulk_missing' => [
         'en' => 'Left out because they no longer exist: [count] of the selected orders.',
@@ -346,6 +354,14 @@ return [
     'fgo_invoicing.bulk_nothing_found' => [
         'en' => 'None of the selected orders could be loaded.',
         'ro' => 'Niciuna dintre comenzile selectate nu a putut fi încărcată.',
+    ],
+    'fgo_invoicing.bulk_selection_expired' => [
+        'en' => 'This selection has expired. Select the orders again.',
+        'ro' => 'Această selecție a expirat. Selectați din nou comenzile.',
+    ],
+    'fgo_invoicing.bulk_script_missing' => [
+        'en' => 'This page\'s script did not load, so nothing can be started from here. Clear the cache and reload the page; on the Docker dev store, re-run docker/fullstore/link-addons.sh or restart the app container.',
+        'ro' => 'Scriptul acestei pagini nu s-a încărcat, deci de aici nu se poate porni nimic. Goliți cache-ul și reîncărcați pagina; pe magazinul Docker de dezvoltare, rulați din nou docker/fullstore/link-addons.sh sau reporniți containerul aplicației.',
     ],
     'fgo_invoicing.chip_to_process' => [
         'en' => '[count] will be processed',
@@ -379,6 +395,10 @@ return [
         'en' => '[count] remaining',
         'ro' => 'Rămase: [count]',
     ],
+    'fgo_invoicing.chip_not_processed' => [
+        'en' => '[count] not processed',
+        'ro' => 'Neprocesate: [count]',
+    ],
     'fgo_invoicing.snap_document_type' => [
         'en' => 'Document type',
         'ro' => 'Tip document',
@@ -408,8 +428,8 @@ return [
         'ro' => '[currency] (moneda principală a magazinului)',
     ],
     'fgo_invoicing.select_all' => [
-        'en' => 'Select all orders that can be processed',
-        'ro' => 'Selectează toate comenzile care pot fi procesate',
+        'en' => 'Select all ready',
+        'ro' => 'Selectează toate cele pregătite',
     ],
     'fgo_invoicing.th_order' => [
         'en' => 'Order',
@@ -551,11 +571,11 @@ return [
     ],
     'fgo_invoicing.run_state_done' => [
         'en' => 'Done',
-        'ro' => 'Finalizat',
+        'ro' => 'Finalizată',
     ],
     'fgo_invoicing.run_state_failed' => [
         'en' => 'Failed',
-        'ro' => 'Eșuat',
+        'ro' => 'Eșuată',
     ],
     'fgo_invoicing.run_state_skipped' => [
         'en' => 'Skipped',
@@ -574,8 +594,16 @@ return [
         'ro' => 'Emisă, dar e-mailul către client nu a fost trimis',
     ],
     'fgo_invoicing.run_transport_error' => [
-        'en' => 'No valid answer from the server (network error or expired session). Check the order before retrying.',
-        'ro' => 'Niciun răspuns valid de la server (eroare de rețea sau sesiune expirată). Verificați comanda înainte de reîncercare.',
+        'en' => 'No valid answer from the server (network error, timeout or server error). Check the order before retrying.',
+        'ro' => 'Niciun răspuns valid de la server (eroare de rețea, timp expirat sau eroare a serverului). Verificați comanda înainte de reîncercare.',
+    ],
+    'fgo_invoicing.run_session_expired' => [
+        'en' => 'Your session expired, so the run stopped. Log in again, then retry the failed orders from the orders list.',
+        'ro' => 'Sesiunea a expirat, așa că rularea s-a oprit. Autentificați-vă din nou, apoi reîncercați comenzile eșuate din lista de comenzi.',
+    ],
+    'fgo_invoicing.run_log_in' => [
+        'en' => 'Log in again',
+        'ro' => 'Autentificați-vă din nou',
     ],
     'fgo_invoicing.run_leave_warning' => [
         'en' => 'FGO invoices are still being processed. If you leave, the run stops after the current order.',
@@ -613,9 +641,17 @@ return [
         'en' => 'Last attempt failed: [error]',
         'ro' => 'Ultima încercare a eșuat: [error]',
     ],
-    'fgo_invoicing.pc_pending' => [
-        'en' => 'A previous attempt is still marked as in progress and may still be running: wait a minute before retrying.',
-        'ro' => 'O încercare anterioară apare încă în curs și poate rula încă: așteptați un minut înainte de reîncercare.',
+    'fgo_invoicing.pc_in_progress' => [
+        'en' => 'Being issued right now by another request (for example the automatic issue on a status change): nothing to do here.',
+        'ro' => 'Se emite chiar acum dintr-o altă cerere (de exemplu emiterea automată la schimbarea stării): nu este nimic de făcut aici.',
+    ],
+    'fgo_invoicing.pc_stale_pending' => [
+        'en' => 'A previous attempt started more than 10 minutes ago and never finished: retrying takes it over. Check in FGO that no invoice was issued for this order meanwhile.',
+        'ro' => 'O încercare anterioară a început acum mai bine de 10 minute și nu s-a încheiat: reîncercarea o preia. Verificați în FGO că nu s-a emis între timp nicio factură pentru această comandă.',
+    ],
+    'fgo_invoicing.pc_reissue_of' => [
+        'en' => 'Re-issue: replaces the invoice [invoice].',
+        'ro' => 'Reemitere: înlocuiește factura [invoice].',
     ],
     'fgo_invoicing.pc_previously_canceled' => [
         'en' => 'Its invoice [invoice] was canceled: issuing creates a new invoice.',
@@ -681,6 +717,10 @@ return [
         'en' => 'FGO returned no PDF link for this invoice.',
         'ro' => 'FGO nu a returnat un link PDF pentru această factură.',
     ],
+    'fgo_invoicing.pc_recently_emailed' => [
+        'en' => 'Already e-mailed to the customer at [time] (less than 24 hours ago).',
+        'ro' => 'Trimisă deja clientului pe e-mail la [time] (acum mai puțin de 24 de ore).',
+    ],
     'fgo_invoicing.pc_already_canceled' => [
         'en' => 'The invoice [invoice] is already canceled.',
         'ro' => 'Factura [invoice] este deja anulată.',
@@ -705,6 +745,10 @@ return [
         'en' => 'Unknown FGO bulk action.',
         'ro' => 'Acțiune FGO în masă necunoscută.',
     ],
+    'fgo_invoicing.pc_changed_since_precheck' => [
+        'en' => 'The order changed since the pre-check and needs another look: nothing was sent. Select it again on the orders list.',
+        'ro' => 'Comanda s-a schimbat de la pre-verificare și trebuie verificată din nou: nu s-a trimis nimic. Selectați-o din nou în lista de comenzi.',
+    ],
 
     // ── Admin: PDF ZIP download ───────────────────────────────────────────
     'fgo_invoicing.zip_unavailable' => [
@@ -727,9 +771,25 @@ return [
         'en' => 'Some PDFs could not be downloaded and are missing from the ZIP (see missing-pdfs.txt inside it): [orders]',
         'ro' => 'Unele PDF-uri nu au putut fi descărcate și lipsesc din ZIP (vedeți missing-pdfs.txt din arhivă): [orders]',
     ],
+    'fgo_invoicing.zip_truncated' => [
+        'en' => 'Only the first [max] of the [selected] selected orders were put in the ZIP.',
+        'ro' => 'În ZIP au intrat doar primele [max] din cele [selected] comenzi selectate.',
+    ],
+    'fgo_invoicing.zip_time_budget' => [
+        'en' => 'The [seconds]-second limit was reached: [count] PDFs were not downloaded ([orders]). Download them in a second ZIP.',
+        'ro' => 'Limita de [seconds] de secunde a fost atinsă: [count] PDF-uri nu au fost descărcate ([orders]). Descărcați-le într-un al doilea ZIP.',
+    ],
     'fgo_invoicing.zip_missing_note' => [
         'en' => 'These invoice PDFs could not be downloaded from FGO:',
         'ro' => 'Aceste PDF-uri de facturi nu au putut fi descărcate din FGO:',
+    ],
+    'fgo_invoicing.zip_note_time_budget' => [
+        'en' => 'not downloaded: the [seconds]-second limit was reached',
+        'ro' => 'nedescărcat: limita de [seconds] de secunde a fost atinsă',
+    ],
+    'fgo_invoicing.zip_note_over_cap' => [
+        'en' => 'not included: one ZIP holds at most [max] orders',
+        'ro' => 'neinclus: un ZIP cuprinde cel mult [max] comenzi',
     ],
 
     // ── Admin: invoice page — issue attempts (?:fgo_diagnostic_logs) ─────

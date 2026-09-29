@@ -23,7 +23,14 @@ use Tygh\Addons\FgoInvoicing\Services\OrderInfoSource;
  * blocked one "failed" with the reason, and only an actionable one reaches
  * InvoiceIssuer / InvoiceMailer / InvoiceCanceler. Whether the admin ticked
  * a row the pre-check left unticked (a warning) is the admin's call; a block
- * is not.
+ * is not. But only a warning the admin SAW: the page sends the verdict and
+ * the reason codes it showed for the row, and an order that has turned
+ * `warn` since, or warns about something new, is skipped
+ * (changed_since_precheck, with the new reasons) instead of being sent on a
+ * decision nobody made.
+ *
+ * An order another request is issuing right now (the issuer could not claim
+ * it) comes back "skipped" too, reason in_progress: nothing was sent.
  *
  * Never throws: whatever goes wrong becomes a "failed" result, so the page
  * always gets an answer and moves on to the next order.
@@ -50,9 +57,16 @@ final class BulkRunner
 
     /**
      * @param bool $sendEmail Issue / Retry: e-mail the PDF link afterwards
+     * @param string|null $seenVerdict the verdict the page showed for the row; null when the caller is not a page (no check)
+     * @param list<string> $seenReasons the reason codes the page showed for it
      */
-    public function run(BulkAction $action, int $orderId, bool $sendEmail = false): BulkRunResult
-    {
+    public function run(
+        BulkAction $action,
+        int $orderId,
+        bool $sendEmail = false,
+        ?string $seenVerdict = null,
+        array $seenReasons = [],
+    ): BulkRunResult {
         if ($orderId <= 0) {
             return self::failedWith($orderId, 'order_not_found');
         }
@@ -83,6 +97,16 @@ final class BulkRunner
             if ($check->verdict === PrecheckVerdict::Block) {
                 return new BulkRunResult($orderId, BulkRunResult::OUTCOME_FAILED, '', $check->reasons);
             }
+            if ($seenVerdict !== null) {
+                $unseen = self::unseenWarnings($check, $seenVerdict, $seenReasons);
+                if ($unseen !== null) {
+                    return new BulkRunResult(
+                        orderId: $orderId,
+                        outcome: BulkRunResult::OUTCOME_SKIPPED,
+                        reasons: [new PrecheckReason('changed_since_precheck', PrecheckReason::LEVEL_WARN), ...$unseen],
+                    );
+                }
+            }
 
             return match (true) {
                 $action->issues() => $this->issue($orderId, $orderInfo, $sendEmail),
@@ -105,6 +129,13 @@ final class BulkRunner
         $number = TypeCoerce::toString($row['invoice_number'] ?? '');
         $pdf = TypeCoerce::toString($row['pdf_link'] ?? '');
 
+        if ($result['status'] === InvoiceIssuer::RESULT_IN_PROGRESS) {
+            return new BulkRunResult(
+                orderId: $orderId,
+                outcome: BulkRunResult::OUTCOME_SKIPPED,
+                reasons: [new PrecheckReason('in_progress', PrecheckReason::LEVEL_INFO)],
+            );
+        }
         if ($result['status'] !== Constants::STATUS_ISSUED) {
             $error = $result['error'] ?? '';
 
@@ -121,7 +152,9 @@ final class BulkRunner
             return new BulkRunResult(
                 orderId:       $orderId,
                 outcome:       BulkRunResult::OUTCOME_SKIPPED,
-                reasons:       [new PrecheckReason('already_invoiced', PrecheckReason::LEVEL_INFO, ['[invoice]' => trim($series . ' ' . $number)])],
+                reasons:       [new PrecheckReason('already_invoiced', PrecheckReason::LEVEL_INFO, [
+                    '[invoice]' => trim($series . ' ' . $number) !== '' ? trim($series . ' ' . $number) : '—',
+                ])],
                 invoiceSeries: $series,
                 invoiceNumber: $number,
                 pdfLink:       $pdf,
@@ -172,6 +205,35 @@ final class BulkRunner
             invoiceSeries: $check->invoiceSeries,
             invoiceNumber: $check->invoiceNumber,
         );
+    }
+
+    /**
+     * The warnings of a `warn` verdict the page did not show: all of them
+     * when it did not show the row as `warn` at all, else the codes it did
+     * not list. Null when there is nothing the admin has not seen (or the
+     * verdict is not `warn`: a ready or retry row needs no decision).
+     *
+     * @param list<string> $seenReasons
+     *
+     * @return non-empty-list<PrecheckReason>|null
+     */
+    private static function unseenWarnings(PrecheckRow $check, string $seenVerdict, array $seenReasons): ?array
+    {
+        if ($check->verdict !== PrecheckVerdict::Warn) {
+            return null;
+        }
+        $warnings = array_values(array_filter(
+            $check->reasons,
+            static fn (PrecheckReason $r): bool => $r->level === PrecheckReason::LEVEL_WARN,
+        ));
+        $unseen = $seenVerdict === PrecheckVerdict::Warn->value
+            ? array_values(array_filter($warnings, static fn (PrecheckReason $r): bool => !in_array($r->code, $seenReasons, true)))
+            : $warnings;
+
+        // A `warn` verdict always carries a warning (it is what unticks the
+        // row or turns a ready one into warn), so a row shown otherwise
+        // always has one to name here.
+        return $unseen !== [] ? $unseen : null;
     }
 
     private static function failedWith(int $orderId, string $code): BulkRunResult

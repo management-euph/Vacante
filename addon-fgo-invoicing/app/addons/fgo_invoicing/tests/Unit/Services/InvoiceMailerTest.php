@@ -138,6 +138,31 @@ final class InvoiceMailerTest extends TestCase
         self::assertSame('https://api.fgo.ro/p/2', $this->sent[0]['pdf_link']);
     }
 
+    /**
+     * The bulk "Email" pre-check holds back a second copy within the day:
+     * only a sent e-mail is stamped, and a stamp that cannot be written does
+     * not turn a sent e-mail into a failure.
+     */
+    public function testASentEmailIsStampedOnTheInvoiceRow(): void
+    {
+        $this->repo->put(7, ['status' => 'issued', 'pdf_link' => 'https://api.fgo.ro/p/2']);
+
+        $this->mailer(false)->sendForOrder(7);
+        self::assertNull($this->repo->rows[7]['emailed_at'], 'not sent, not stamped');
+
+        $this->mailer()->sendForOrder(7);
+        self::assertNotNull($this->repo->rows[7]['emailed_at']);
+
+        $this->repo = new class () extends InMemoryInvoiceRepository {
+            #[\Override]
+            public function markEmailed(int $orderId): bool
+            {
+                throw new \RuntimeException('Unknown column emailed_at');
+            }
+        };
+        self::assertSame(['status' => InvoiceMailer::STATUS_SENT], $this->mailer()->send($this->orders[7], 'F', '1', 'https://api.fgo.ro/p/1'));
+    }
+
     public function testSendForOrderSkipsAnOrderWithoutAnIssuedInvoice(): void
     {
         self::assertSame(InvoiceMailer::STATUS_SKIPPED, $this->mailer()->sendForOrder(7)['status']);

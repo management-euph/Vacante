@@ -17,6 +17,7 @@ use Tygh\Addons\FgoInvoicing\Services\BillingMapper;
 use Tygh\Addons\FgoInvoicing\Services\ConfigProvider;
 use Tygh\Addons\FgoInvoicing\Services\InvoiceIssuer;
 use Tygh\Addons\FgoInvoicing\Services\InvoiceMailer;
+use Tygh\Addons\FgoInvoicing\Tests\Support\InMemoryInvoiceRepository;
 use Tygh\Addons\FgoInvoicing\Tests\Support\InMemoryProfileFieldCatalog;
 use Tygh\Addons\FgoInvoicing\Tests\Support\LogStub;
 
@@ -598,73 +599,11 @@ final class InvoiceIssuerTest extends TestCase
     }
 
     /**
-     * In-memory repository that mimics the `cscart_fgo_invoices` table.
+     * In-memory ?:fgo_invoices with the SQL's claim rules (the shared
+     * double, so the issuer is tested against one definition of them).
      */
-    private function fakeRepository(): InvoiceRepository
+    private function fakeRepository(): InMemoryInvoiceRepository
     {
-        return new class () extends InvoiceRepository {
-            /** @var array<int, array<string, mixed>> */
-            private array $rows = [];
-
-            public function findByOrderId(int $orderId): ?array
-            {
-                return $this->rows[$orderId] ?? null;
-            }
-
-            public function insertPending(int $orderId, ?int $cartId = null): array
-            {
-                if (isset($this->rows[$orderId])) {
-                    return [
-                        'id' => (int) $this->rows[$orderId]['id'],
-                        'isExisting' => true,
-                        'status' => (string) $this->rows[$orderId]['status'],
-                    ];
-                }
-                $this->rows[$orderId] = [
-                    'id' => count($this->rows) + 1,
-                    'order_id' => $orderId,
-                    'cart_id' => $cartId ?? 0,
-                    'status' => Constants::STATUS_PENDING,
-                    'invoice_number' => null,
-                    'invoice_series' => null,
-                    'pdf_link' => null,
-                    'payment_link' => null,
-                    'message' => null,
-                    'last_error' => null,
-                    'retry_count' => 0,
-                    'request_payload' => null,
-                    'payload' => null,
-                ];
-                return ['id' => $this->rows[$orderId]['id'], 'isExisting' => false, 'status' => Constants::STATUS_PENDING];
-            }
-
-            public function markIssued(int $orderId, \Tygh\Addons\FgoInvoicing\Dto\Invoice\IssueInvoiceResponse $r, array $form): void
-            {
-                $this->rows[$orderId] = array_merge($this->rows[$orderId] ?? [], [
-                    'status' => Constants::STATUS_ISSUED,
-                    'invoice_number' => $r->invoiceNumber,
-                    'invoice_series' => $r->invoiceSeries,
-                    'pdf_link' => $r->pdfLink,
-                    'payment_link' => $r->paymentLink,
-                    'message' => $r->message,
-                    'last_error' => null,
-                    'request_payload' => json_encode($form),
-                    'payload' => json_encode($r->raw),
-                ]);
-            }
-
-            public function markFailed(int $orderId, string $err, array $form, ?array $raw = null): void
-            {
-                $existing = $this->rows[$orderId] ?? [];
-                $this->rows[$orderId] = array_merge($existing, [
-                    'status' => Constants::STATUS_FAILED,
-                    'last_error' => $err,
-                    'message' => mb_substr($err, 0, 250),
-                    'retry_count' => (int) ($existing['retry_count'] ?? 0) + 1,
-                    'request_payload' => json_encode($form),
-                    'payload' => $raw !== null ? json_encode($raw) : '',
-                ]);
-            }
-        };
+        return new InMemoryInvoiceRepository();
     }
 }

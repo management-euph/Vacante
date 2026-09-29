@@ -17,12 +17,23 @@ use Tygh\Addons\FgoInvoicing\Api\FgoSigner;
  * series nor number falls back to "order-<id>.pdf".
  *
  * Each PDF goes to a temporary file and is added by path, so the archive is
- * assembled without holding every PDF in memory at once (up to 100 files of
+ * assembled without holding every PDF in memory at once (up to 250 files of
  * up to 15 MB each). close() writes the archive and removes the temporary
- * files.
+ * files; removeTemporaryFiles() is there for a shutdown function, as a
+ * destructor does not run after a fatal error or a timeout.
  */
 final class InvoicePdfZipper
 {
+    /**
+     * Seconds the ZIP download may spend fetching PDFs before it stops and
+     * lists the rest as not downloaded. Reverse proxies and PHP-FPM commonly
+     * cut a request at 60 s whatever set_time_limit() says, and the admin
+     * then gets a gateway error and no archive at all; 45 s leaves room for
+     * the fetch in flight (20 s at most) to mostly finish and the archive to
+     * be written and sent.
+     */
+    public const TIME_BUDGET_SECONDS = 45;
+
     private const NAME_MAX = 100;
 
     private readonly \ZipArchive $zip;
@@ -194,6 +205,12 @@ final class InvoicePdfZipper
         if ($this->closed) {
             throw new \RuntimeException('The ZIP archive is already closed');
         }
+    }
+
+    /** Delete the scratch PDFs written so far. Idempotent. */
+    public function removeTemporaryFiles(): void
+    {
+        $this->removeTempFiles();
     }
 
     private function removeTempFiles(): void

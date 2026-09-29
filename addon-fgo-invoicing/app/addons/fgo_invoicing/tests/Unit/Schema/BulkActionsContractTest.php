@@ -260,15 +260,54 @@ final class BulkActionsContractTest extends TestCase
     /**
      * fn_dispatch() follows the orders list form's own redirect_url unless
      * the controller drops it, and the admin would never see the pre-check.
+     * The ZIP download KEEPS it: an error there returns to the list as the
+     * admin had filtered it.
      */
     public function testTheMenuModesDropTheListsRedirect(): void
     {
         $src = (string) file_get_contents(self::ADDON . '/controllers/backend/fgo_invoicing.php');
 
-        self::assertSame(2, substr_count($src, "unset(\$_REQUEST['redirect_url'], \$_REQUEST['page']);"));
-        self::assertStringContainsString("'fgo_invoicing.bulk?action=' . \$bulkAction->value", $src);
+        self::assertSame(1, substr_count($src, "unset(\$_REQUEST['redirect_url'], \$_REQUEST['page']);"));
+        $zipBranch = substr($src, (int) strpos($src, "if (\$mode === 'm_download_pdfs')"));
+        self::assertStringNotContainsString("unset(\$_REQUEST['redirect_url']", $zipBranch);
         self::assertStringContainsString('return [CONTROLLER_STATUS_NO_CONTENT];', $src, 'bulk_run answers JSON only');
         self::assertStringContainsString("fn_get_file(\$zip['path'], 'fgo-invoices-' . date('Ymd-His') . '.zip', true);", $src);
+        self::assertStringContainsString('ignore_user_abort(true);', $zipBranch, 'a closed tab leaves no archive behind');
+    }
+
+    /**
+     * The pre-check page opens a selection kept in the admin's session, by
+     * token: order ids in its URL are not read (a crafted link cannot open a
+     * pre-ticked mass Delete page), and an unknown token goes back to the
+     * orders list.
+     */
+    public function testThePrecheckPageTakesATokenNotOrderIds(): void
+    {
+        $src = (string) file_get_contents(self::ADDON . '/controllers/backend/fgo_invoicing.php');
+        $bulkBranch = substr($src, (int) strpos($src, "if (\$mode === 'bulk')"));
+
+        self::assertStringContainsString("return [CONTROLLER_STATUS_REDIRECT, 'fgo_invoicing.bulk?token=' . \$token];", $src);
+        self::assertStringContainsString("fn_fgo_invoicing_bulk_recall(TypeCoerce::toString(\$_REQUEST['token'] ?? ''))", $bulkBranch);
+        self::assertStringNotContainsString("\$_REQUEST['order_ids']", $bulkBranch);
+        self::assertStringNotContainsString("\$_REQUEST['action']", $bulkBranch);
+        self::assertStringContainsString("__('fgo_invoicing.bulk_selection_expired')", $bulkBranch);
+        self::assertStringNotContainsString("fgo_invoicing.bulk_truncated", $bulkBranch, 'announced on the page only, never as a notification');
+    }
+
+    /**
+     * The page cannot act without its script: the start button is rendered
+     * disabled, next to an alert (core classes: styles.css may be missing
+     * too) that bulk.js removes once bound.
+     */
+    public function testThePageSaysSoWhenItsScriptIsMissing(): void
+    {
+        $tpl = (string) file_get_contents(self::package() . '/design/backend/templates/addons/fgo_invoicing/views/fgo_invoicing/bulk.tpl');
+
+        self::assertMatchesRegularExpression('/<button[^>]*data-fgo-start disabled="disabled"/', $tpl);
+        self::assertStringContainsString('<div class="alert alert-error" data-fgo-script-missing>{__("fgo_invoicing.bulk_script_missing")}</div>', $tpl);
+        self::assertStringContainsString('data-fgo-reasons="{$row.reason_codes}"', $tpl);
+        self::assertStringContainsString('{"fgo_invoicing.`$b.retry_mode`"|fn_url}', $tpl);
+        self::assertStringNotContainsString('{__("cancel")}', $tpl, 'the way back says "Back to orders"');
     }
 
     #[RunInSeparateProcess]

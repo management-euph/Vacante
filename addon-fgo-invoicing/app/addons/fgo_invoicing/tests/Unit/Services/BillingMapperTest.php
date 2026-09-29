@@ -187,6 +187,46 @@ final class BillingMapperTest extends TestCase
         self::assertNotEmpty($req1->requestId);
     }
 
+    /**
+     * The first issue keeps the RequestId it always had: rows issued before
+     * re-issues existed must still deduplicate against it.
+     */
+    public function testAFirstIssueKeepsTheOrderOnlyRequestId(): void
+    {
+        $hash = sha1(sha1('fgo_invoicing') . '1234');
+        $expected = sprintf(
+            '%s-%s-5%s-%s%s-%s',
+            substr($hash, 0, 8),
+            substr($hash, 8, 4),
+            substr($hash, 13, 3),
+            dechex((hexdec(substr($hash, 16, 2)) & 0x3F) | 0x80),
+            substr($hash, 18, 2),
+            substr($hash, 20, 12),
+        );
+
+        self::assertSame($expected, (new BillingMapper())->mapOrderInfo($this->baseOrder())->requestId);
+        self::assertSame($expected, (new BillingMapper())->mapOrderInfo($this->baseOrder(), '', '')->requestId);
+    }
+
+    /**
+     * A re-issue must not share the RequestId of the invoice it replaces (FGO
+     * would deduplicate it into the cancelled one), must stay the same across
+     * its own retries, and differs per replaced invoice.
+     */
+    public function testAReissueNamesTheInvoiceItReplaces(): void
+    {
+        $mapper = new BillingMapper();
+        $first = $mapper->mapOrderInfo($this->baseOrder())->requestId;
+        $reissue = $mapper->mapOrderInfo($this->baseOrder(), 'F', '0002');
+
+        self::assertNotSame($first, $reissue->requestId);
+        self::assertSame($reissue->requestId, $mapper->mapOrderInfo($this->baseOrder(), ' F ', '0002 ')->requestId, 'retries are idempotent');
+        self::assertNotSame($reissue->requestId, $mapper->mapOrderInfo($this->baseOrder(), 'F', '0005')->requestId);
+        self::assertMatchesRegularExpression('/^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/', $reissue->requestId);
+        self::assertSame($reissue->requestId, $reissue->toFormFields()['RequestId']);
+        self::assertSame('true', $reissue->toFormFields()['VerificareDuplicat'], 'kept as configured');
+    }
+
     public function testExplicatiiContainsOrderNumberAndPaymentMethod(): void
     {
         $req = (new BillingMapper())->mapOrderInfo($this->baseOrder());

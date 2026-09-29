@@ -28,12 +28,28 @@ final class DbStub
     /** @var array<string, mixed>|false */
     public static array|false $row = false;
 
+    /**
+     * What the next db_query() calls return, first in first out; 0 once it
+     * runs dry. CS-Cart's db_query() answers a write with the new
+     * AUTO_INCREMENT id or the affected-row count, which is what the
+     * repository's claims read.
+     *
+     * @var list<int>
+     */
+    public static array $queryResults = [];
+
     public static function reset(): void
     {
         self::$calls = [];
         self::$rows = [];
         self::$field = null;
         self::$row = false;
+        self::$queryResults = [];
+    }
+
+    public static function nextQueryResult(): int
+    {
+        return self::$queryResults === [] ? 0 : (int) array_shift(self::$queryResults);
     }
 
     /**

@@ -45,6 +45,8 @@ clean with `docker compose down -v && docker compose up -d --build`.
   mounted read-write because CS-Cart's installer requires its `design/`/`var/`
   trees writable; CS-Cart writes runtime data into the `var/` volume, not your
   addon source, so the working tree stays clean.)
+- After pulling code that adds a new addon folder (`js/addons/<id>`, `design/backend/css/addons/<id>`),
+  re-run `link-addons.sh` or restart the `app` container, then clear the cache: the links are made at start.
 - `mailpit` captures every outbound email (booking confirmations, availability
   notifications, fgo invoices); `phpmyadmin` exposes the DB.
 - **Storefront theme**: the provision installs `nova_theme` automatically when

@@ -7,7 +7,7 @@
   the lookup did not run (it failed, or this is not the admin list): "—",
   never a wrong "Not invoiced".
 *}
-{if !"RESTRICTED_ADMIN"|defined}
+{if !"RESTRICTED_ADMIN"|defined && !$runtime.company_id}
 <td width="10%" class="fgo-invoicing-cell" data-th="{__("fgo_invoicing.col_fgo")}" data-fgo-status="{if $o.fgo_invoice}{$o.fgo_invoice.status}{else}unknown{/if}">
     {if !$o.fgo_invoice}
         <span class="muted">&mdash;</span>

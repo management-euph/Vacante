@@ -181,9 +181,87 @@ final class BulkRunnerTest extends TestCase
     {
         $this->orders[5] = self::order(5, ['status' => 'N']);
 
-        $result = $this->runner()->run(BulkAction::Issue, 5);
+        $result = $this->runner()->run(BulkAction::Issue, 5, false, 'warn', ['order_status']);
 
         self::assertSame(BulkRunResult::OUTCOME_ISSUED, $result->outcome);
+    }
+
+    /**
+     * The page showed the order as ready; since then it turned `warn` (here:
+     * its status went back to Incomplete). Nobody decided to send that, so
+     * it is skipped with the new warning, and FGO is not called.
+     */
+    public function testAWarningThePageDidNotShowStopsTheOrder(): void
+    {
+        $this->orders[5] = self::order(5, ['status' => 'N']);
+
+        $result = $this->runner()->run(BulkAction::Issue, 5, false, 'ready', []);
+
+        self::assertSame(BulkRunResult::OUTCOME_SKIPPED, $result->outcome);
+        self::assertSame(['changed_since_precheck', 'order_status'], self::codes($result));
+        self::assertSame([], $this->api->calls);
+    }
+
+    /**
+     * Shown as warn, but for another reason: the new warning was not seen.
+     * A warning that went away is no reason to stop.
+     */
+    public function testOnlyTheWarningsThePageShowedCount(): void
+    {
+        $this->orders[5] = self::order(5, ['status' => 'N', 'total' => 0]);
+
+        $new = $this->runner()->run(BulkAction::Issue, 5, false, 'warn', ['order_status']);
+        self::assertSame(['changed_since_precheck', 'zero_total'], self::codes($new));
+
+        $fewer = $this->runner()->run(BulkAction::Issue, 5, false, 'warn', ['order_status', 'zero_total', 'cif_invalid']);
+        self::assertSame(BulkRunResult::OUTCOME_ISSUED, $fewer->outcome);
+    }
+
+    public function testAReadyOrRetryVerdictNeedsNoSeenWarning(): void
+    {
+        $this->repo->put(5, ['status' => 'failed', 'last_error' => 'HTTP 504']);
+
+        self::assertSame(BulkRunResult::OUTCOME_ISSUED, $this->runner()->run(BulkAction::Issue, 5, false, 'ready', [])->outcome);
+    }
+
+    /**
+     * Another request holds the order's claim (auto-issue from a status
+     * change, a second tab): nothing is sent, the row says why.
+     */
+    public function testAnOrderBeingIssuedRightNowIsSkipped(): void
+    {
+        $this->repo->put(5, ['status' => 'pending', 'updated_age' => 5]);
+
+        $result = $this->runner()->run(BulkAction::Issue, 5, false, 'ready', []);
+
+        self::assertSame(BulkRunResult::OUTCOME_SKIPPED, $result->outcome);
+        self::assertSame(['in_progress'], self::codes($result));
+        self::assertSame([], $this->api->calls);
+    }
+
+    /**
+     * The pre-check saw a claimable row, but the claim went to another
+     * request in between: the issuer's in_progress becomes a skip too.
+     */
+    public function testALostClaimIsReportedAsInProgress(): void
+    {
+        $repo = new class () extends InMemoryInvoiceRepository {
+            #[\Override]
+            public function claimForRetry(int $orderId, int $staleSeconds = Constants::PENDING_STALE_SECONDS): bool
+            {
+                $this->rows[$orderId]['status'] = Constants::STATUS_PENDING;
+
+                return false;
+            }
+        };
+        $repo->put(5, ['status' => 'failed']);
+        $this->repo = $repo;
+
+        $result = $this->runner()->run(BulkAction::Issue, 5, false, 'retry', ['last_error']);
+
+        self::assertSame(BulkRunResult::OUTCOME_SKIPPED, $result->outcome);
+        self::assertSame(['in_progress'], self::codes($result));
+        self::assertSame([], $this->api->calls);
     }
 
     public function testAnFgoRejectionFailsWithFgosMessage(): void
@@ -249,6 +327,31 @@ final class BulkRunnerTest extends TestCase
         self::assertSame([], $this->api->calls);
     }
 
+    public function testAnInvoiceIssuedByARacingRequestWithoutANumberSaysDash(): void
+    {
+        $repo = new class () extends InMemoryInvoiceRepository {
+            private bool $hidden = true;
+
+            #[\Override]
+            public function findByOrderId(int $orderId): ?array
+            {
+                if ($this->hidden) {
+                    $this->hidden = false;
+
+                    return null;
+                }
+
+                return parent::findByOrderId($orderId);
+            }
+        };
+        $repo->put(5, ['status' => 'issued']);
+        $this->repo = $repo;
+
+        $result = $this->runner()->run(BulkAction::Issue, 5);
+
+        self::assertSame(['[invoice]' => '—'], $result->reasons[0]->params);
+    }
+
     // ── Email ────────────────────────────────────────────────────────────
 
     public function testEmailSendsTheIssuedInvoice(): void
@@ -263,6 +366,29 @@ final class BulkRunnerTest extends TestCase
         self::assertCount(1, $this->sent);
         self::assertSame('https://pay.fgo.ro/2', $this->sent[0]['payment_link']);
         self::assertSame([], $this->api->calls, 'e-mailing never calls FGO');
+    }
+
+    public function testEmailRecordsWhenItWasSent(): void
+    {
+        $this->repo->put(5, ['status' => 'issued', 'invoice_series' => 'F', 'invoice_number' => '0002', 'pdf_link' => 'https://api.fgo.ro/p/2']);
+
+        $this->runner()->run(BulkAction::Email, 5);
+
+        self::assertNotNull($this->repo->rows[5]['emailed_at']);
+    }
+
+    /**
+     * Sent within the day: unticked on the page; when the admin ticks it the
+     * page reports the warning as seen and it goes; otherwise it is skipped.
+     */
+    public function testARecentlyEmailedInvoiceGoesOnlyWhenTheAdminSawTheWarning(): void
+    {
+        $this->repo->put(5, ['status' => 'issued', 'invoice_series' => 'F', 'invoice_number' => '0002', 'pdf_link' => 'https://api.fgo.ro/p/2', 'emailed_at' => '2026-09-29 09:00:00', 'emailed_age' => 600]);
+
+        self::assertSame(['changed_since_precheck', 'recently_emailed'], self::codes($this->runner()->run(BulkAction::Email, 5, false, 'ready', [])));
+        self::assertSame([], $this->sent);
+        self::assertSame(BulkRunResult::OUTCOME_DONE, $this->runner()->run(BulkAction::Email, 5, false, 'warn', ['recently_emailed'])->outcome);
+        self::assertCount(1, $this->sent);
     }
 
     public function testEmailFailsWhenTheMailerRefuses(): void

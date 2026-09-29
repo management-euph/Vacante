@@ -115,7 +115,11 @@ final class BillingExtrasResolver
      * and siblings); 0 means auto-detect. $legacyLookup maps a profile_id to
      * its legacy fgo_billing_* values; null means there is no legacy source.
      *
+     * @param ProfileFieldCatalog $catalog the store's custom profile fields
      * @param (\Closure(int): array<string, mixed>)|null $legacyLookup
+     * @param int $cifFieldId profile field holding the CIF; 0 auto-detects
+     * @param int $regComFieldId profile field holding the Reg. Com. number; 0 auto-detects
+     * @param int $cnpFieldId profile field holding the CNP; 0 auto-detects
      */
     public function __construct(
         private readonly ProfileFieldCatalog $catalog,

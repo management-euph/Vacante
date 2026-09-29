@@ -86,7 +86,7 @@ if (!function_exists('db_query')) {
     {
         \Tygh\Addons\FgoInvoicing\Tests\Support\DbStub::record($query, $params);
 
-        return 0;
+        return \Tygh\Addons\FgoInvoicing\Tests\Support\DbStub::nextQueryResult();
     }
 }
 if (!function_exists('db_replace_into')) {

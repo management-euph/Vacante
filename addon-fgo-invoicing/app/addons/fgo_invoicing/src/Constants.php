@@ -37,6 +37,19 @@ final class Constants
     public const STATUS_REVERSED = 'reversed';
     public const STATUS_DELETED = 'deleted';
 
+    /**
+     * How long a `pending` row counts as a request still talking to FGO.
+     *
+     * A pending row IS the claim on an order (InvoiceRepository::insertPending /
+     * claimForRetry): while it is younger than this, no other request may call
+     * FGO for the order. The worst single issue call is (api_max_retries + 1)
+     * x 30 s cURL timeout plus one 60 s back-off after an HTTP 429, about 150 s
+     * with the default two retries; 600 s leaves room for a higher retry
+     * setting and a slow process, and still frees the claim of a request that
+     * died (fatal error, killed worker) within ten minutes.
+     */
+    public const PENDING_STALE_SECONDS = 600;
+
     public const TRIGGER_ON_ORDER = 'onOrder';
     public const TRIGGER_ON_PAYMENT = 'onPayment';
     public const TRIGGER_ON_COMPLETED = 'onCompleted';

@@ -7,6 +7,7 @@ namespace Tygh\Addons\FgoInvoicing\Tests\Unit\Services\Bulk;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tygh\Addons\FgoInvoicing\Constants;
 use Tygh\Addons\FgoInvoicing\Services\BillingMapper;
 use Tygh\Addons\FgoInvoicing\Services\Bulk\BulkAction;
 use Tygh\Addons\FgoInvoicing\Services\Bulk\BulkPrecheck;
@@ -95,7 +96,7 @@ final class BulkPrecheckTest extends TestCase
     /**
      * @return array<string, mixed>
      */
-    private static function invoice(string $status, string $series = 'F', string $number = '0002', string $pdf = 'https://api.fgo.ro/pdf/1', string $error = ''): array
+    private static function invoice(string $status, string $series = 'F', string $number = '0002', string $pdf = 'https://api.fgo.ro/pdf/1', string $error = '', int $age = 0): array
     {
         return [
             'order_id' => 5,
@@ -104,7 +105,14 @@ final class BulkPrecheckTest extends TestCase
             'invoice_number' => $number,
             'pdf_link' => $pdf,
             'last_error' => $error,
+            'updated_age' => (string) $age,
         ];
+    }
+
+    /** A pending row whose request died: older than any FGO call takes. */
+    private static function stalePending(): array
+    {
+        return self::invoice('pending', '', '', '', '', Constants::PENDING_STALE_SECONDS + 1);
     }
 
     /**
@@ -185,14 +193,74 @@ final class BulkPrecheckTest extends TestCase
         self::assertSame(['[error]' => '—'], self::reason($row, 'last_error')->params);
     }
 
-    public function testAPendingOrderIsRetriedWithAWarning(): void
+    /**
+     * A pending row is what a request still talking to FGO looks like: it is
+     * not offered while it is younger than the stale threshold, and the
+     * verdict says so.
+     */
+    public function testAnOrderBeingIssuedRightNowIsSkipped(): void
     {
-        $row = self::precheck()->check(BulkAction::Issue, self::order(), self::invoice('pending', '', '', ''));
+        foreach ([0, Constants::PENDING_STALE_SECONDS] as $age) {
+            $row = self::precheck()->check(BulkAction::Issue, self::order(), self::invoice('pending', '', '', '', '', $age));
+
+            self::assertSame(PrecheckVerdict::Skip, $row->verdict, (string) $age);
+            self::assertFalse($row->actionable());
+            self::assertSame(['in_progress'], self::codes($row));
+        }
+
+        $unknown = self::invoice('pending', '', '', '');
+        unset($unknown['updated_age']);
+        self::assertSame(['in_progress'], self::codes(self::precheck()->check(BulkAction::Issue, self::order(), $unknown)), 'an unknown age counts as fresh');
+    }
+
+    /**
+     * Older than any FGO call: its request died. Offered, ticked, with a
+     * warning; the issuer's atomic claim still decides.
+     */
+    public function testAStalePendingOrderIsRetriedWithAWarning(): void
+    {
+        $row = self::precheck()->check(BulkAction::Issue, self::order(), self::stalePending());
 
         self::assertSame(PrecheckVerdict::Retry, $row->verdict);
         self::assertTrue($row->selected);
-        self::assertSame(['pending'], self::codes($row));
+        self::assertSame(['stale_pending'], self::codes($row));
+        self::assertSame(PrecheckReason::LEVEL_WARN, $row->reasons[0]->level);
         self::assertTrue($row->hasWarnings());
+    }
+
+    /**
+     * A failed re-issue still replaces the cancelled invoice (the row keeps
+     * its series and number), and says so.
+     */
+    public function testAFailedReissueNamesTheInvoiceItReplaces(): void
+    {
+        $row = self::precheck()->check(BulkAction::Issue, self::order(), self::invoice('failed', 'F', '0002', '', 'HTTP 504'));
+
+        self::assertSame(PrecheckVerdict::Retry, $row->verdict);
+        self::assertSame(['last_error', 'reissue_of'], self::codes($row));
+        self::assertSame(['[invoice]' => 'F 0002'], self::reason($row, 'reissue_of')->params);
+    }
+
+    public function testAnIssuedOrderWithoutANumberSaysDash(): void
+    {
+        $row = self::precheck()->check(BulkAction::Issue, self::order(), self::invoice('issued', '', ''));
+
+        self::assertSame(['[invoice]' => '—'], self::reason($row, 'already_invoiced')->params);
+    }
+
+    /**
+     * A failed invoice on an unfinished order is not a one-click retry: it
+     * is a warn row, unticked, like a fresh one on that order.
+     */
+    #[DataProvider('incompleteStatuses')]
+    public function testAFailedInvoiceOnAnUnfinishedOrderIsAWarnRow(string $status): void
+    {
+        $row = self::precheck()->check(BulkAction::Issue, self::order(['status' => $status]), self::invoice('failed', '', '', '', 'boom'));
+
+        self::assertSame(PrecheckVerdict::Warn, $row->verdict);
+        self::assertTrue($row->actionable());
+        self::assertFalse($row->selected);
+        self::assertSame(['last_error', 'order_status'], self::codes($row));
     }
 
     /**
@@ -415,7 +483,8 @@ final class BulkPrecheckTest extends TestCase
         $check = self::precheck();
 
         self::assertSame(PrecheckVerdict::Retry, $check->check(BulkAction::Retry, self::order(), self::invoice('failed', '', '', '', 'x'))->verdict);
-        self::assertSame(PrecheckVerdict::Retry, $check->check(BulkAction::Retry, self::order(), self::invoice('pending', '', '', ''))->verdict);
+        self::assertSame(PrecheckVerdict::Retry, $check->check(BulkAction::Retry, self::order(), self::stalePending())->verdict);
+        self::assertSame(['in_progress'], self::codes($check->check(BulkAction::Retry, self::order(), self::invoice('pending', '', '', ''))));
 
         $none = $check->check(BulkAction::Retry, self::order(), null);
         self::assertSame(PrecheckVerdict::Skip, $none->verdict);
@@ -448,6 +517,32 @@ final class BulkPrecheckTest extends TestCase
         self::assertSame(PrecheckVerdict::Ready, $row->verdict);
         self::assertTrue($row->selected);
         self::assertSame('ion@example.ro', $row->email);
+    }
+
+    /**
+     * An invoice e-mailed in the last 24 hours is not sent again by default:
+     * a warn row, unticked, saying when.
+     */
+    public function testAnInvoiceEmailedRecentlyIsNotSentAgainByDefault(): void
+    {
+        $invoice = self::invoice('issued') + ['emailed_at' => '2026-09-29 09:15:00', 'emailed_age' => '3600'];
+
+        $row = self::precheck()->check(BulkAction::Email, self::order(), $invoice);
+
+        self::assertSame(PrecheckVerdict::Warn, $row->verdict);
+        self::assertTrue($row->actionable());
+        self::assertFalse($row->selected);
+        self::assertSame(['recently_emailed'], self::codes($row));
+        self::assertSame(['[time]' => '2026-09-29 09:15:00'], $row->reasons[0]->params);
+    }
+
+    public function testAnInvoiceEmailedMoreThanADayAgoIsReady(): void
+    {
+        $old = self::invoice('issued') + ['emailed_at' => '2026-09-27 09:15:00', 'emailed_age' => (string) BulkPrecheck::EMAIL_RESEND_WINDOW_SECONDS];
+        $never = self::invoice('issued') + ['emailed_at' => null, 'emailed_age' => null];
+
+        self::assertSame(PrecheckVerdict::Ready, self::precheck()->check(BulkAction::Email, self::order(), $old)->verdict);
+        self::assertSame(PrecheckVerdict::Ready, self::precheck()->check(BulkAction::Email, self::order(), $never)->verdict);
     }
 
     public function testEmailIsBlockedWithoutAValidAddress(): void
@@ -554,7 +649,7 @@ final class BulkPrecheckTest extends TestCase
 
     public function testRowToArrayCarriesWhatThePageNeeds(): void
     {
-        $row = self::precheck()->check(BulkAction::Issue, self::order(), self::invoice('pending', '', '', ''));
+        $row = self::precheck()->check(BulkAction::Issue, self::order(), self::stalePending());
 
         self::assertSame([
             'order_id' => 5,
@@ -566,7 +661,7 @@ final class BulkPrecheckTest extends TestCase
             'actionable' => true,
             'selected' => true,
             'has_warnings' => true,
-            'reasons' => [['code' => 'pending', 'level' => 'warn', 'params' => []]],
+            'reasons' => [['code' => 'stale_pending', 'level' => 'warn', 'params' => []]],
             'invoice_status' => 'pending',
             'invoice_label' => '',
             'pdf_link' => '',
@@ -626,6 +721,6 @@ final class BulkPrecheckTest extends TestCase
     public function testAnUnknownReasonLevelIsAProgrammingError(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        new PrecheckReason('pending', 'loud');
+        new PrecheckReason('in_progress', 'loud');
     }
 }

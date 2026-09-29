@@ -32,6 +32,7 @@ final class BulkUi
         'chip_failed' => 'fgo_invoicing.chip_failed',
         'chip_skipped' => 'fgo_invoicing.chip_skipped',
         'chip_remaining' => 'fgo_invoicing.chip_remaining',
+        'chip_not_processed' => 'fgo_invoicing.chip_not_processed',
         'progress_count' => 'fgo_invoicing.progress_count',
         'progress_stopping' => 'fgo_invoicing.progress_stopping',
         'progress_stopped' => 'fgo_invoicing.progress_stopped',
@@ -45,6 +46,8 @@ final class BulkUi
         'emailed' => 'fgo_invoicing.run_emailed',
         'email_failed' => 'fgo_invoicing.run_email_failed',
         'transport_error' => 'fgo_invoicing.run_transport_error',
+        'session_expired' => 'fgo_invoicing.run_session_expired',
+        'log_in' => 'fgo_invoicing.run_log_in',
         'leave_warning' => 'fgo_invoicing.run_leave_warning',
         'retry_failed' => 'fgo_invoicing.btn_retry_failed',
         'open_pdf' => 'fgo_invoicing.open_pdf',
@@ -86,6 +89,8 @@ final class BulkUi
      * Which "N invoices" form a count takes: CLDR's Romanian rule, which
      * English satisfies too (its few and many texts are the same plural).
      * bulk.js carries the same rule for the live count.
+     *
+     * @param int $count how many invoices the label counts
      *
      * @return 'one'|'few'|'many'
      */

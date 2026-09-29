@@ -3,18 +3,30 @@
  * (design/backend/templates/addons/fgo_invoicing/views/fgo_invoicing/bulk.tpl).
  *
  * The page lists the pre-check; this script:
+ *   - enables the start button and removes the "page script did not load"
+ *     alert once it is bound (both are rendered for a page WITHOUT it);
  *   - keeps the primary button's count live ("Issue 6 invoices") as rows are
- *     ticked, with a select-all over the rows that can be ticked at all;
+ *     ticked, with a select-all over the READY and RETRY rows only: a warn
+ *     row (a re-issue, an unfinished order, ...) is ticked one by one;
  *   - on start, sends the ticked orders to fgo_invoicing.bulk_run strictly
  *     ONE AT A TIME, and never starts two requests closer than the pacing
  *     interval (FGO takes about one request per second, and the PHP-side
  *     throttle only spaces calls within one process: each AJAX request is a
  *     new process, so without this the requests would hit FGO back to back);
+ *   - sends with each order the verdict and reason codes the page showed
+ *     for it, so the server stops an order that now warns about anything
+ *     the admin did not see;
  *   - updates each row, the progress bar ("3 of 6 processed · issuing order
  *     #5") and the counts; "Stop after current order" lets the one in flight
  *     finish and starts no other; leaving the page while it runs asks first;
- *   - when done, offers the PDFs as one ZIP, "Retry failed (N)" and the way
- *     back to the orders list.
+ *   - notices an expired session (CS-Cart answers a logged-out AJAX request
+ *     with force_redirection and never calls back): the order in flight
+ *     fails, the run stops, the page stays with its results and says how to
+ *     go on, instead of freezing on "Issuing…" or jumping to the login form;
+ *   - when done, offers the PDFs as one ZIP (posted into a new tab, so a
+ *     failure never replaces the results), "Retry failed (N)" (the failed
+ *     orders posted back through the same menu action, with the e-mail
+ *     choice) and the way back to the orders list.
  *
  * Every server string is inserted as text (textContent), never as HTML.
  * The queue, pacing and counting are plain functions on
@@ -25,6 +37,9 @@
     'use strict';
 
     var OUTCOMES = ['issued', 'done', 'failed', 'skipped'];
+
+    /** Verdicts select-all ticks; a warn row is the admin's call, one by one. */
+    var BULK_SELECTABLE = ['ready', 'retry'];
 
     // ── Pure helpers ─────────────────────────────────────────────────────
 
@@ -40,7 +55,7 @@
     /** Substitute CS-Cart style [placeholders]. */
     function fill(template, values) {
         return String(template === undefined || template === null ? '' : template)
-            .replace(/\[([a-z_]+)\]/g, function (all, name) {
+            .replace(/\[([a-z_]+)]/g, function (all, name) {
                 return Object.prototype.hasOwnProperty.call(values || {}, name) ? String(values[name]) : all;
             });
     }
@@ -222,10 +237,13 @@
         this.progressFill = q('[data-fgo-progress-fill]');
         this.progressLabel = q('[data-fgo-progress-label]');
         this.runChips = q('[data-fgo-run-chips]');
+        this.sessionBox = q('[data-fgo-session-expired]');
         this.runner = null;
         this.summary = null;
         this.current = null;
         this.stopping = false;
+        this.finished = false;
+        this.sessionExpired = null;
         this.notQueued = 0;
         var self = this;
         this.onBeforeUnload = function (event) {
@@ -252,6 +270,14 @@
         });
     };
 
+    /** The boxes select-all toggles: rows whose verdict is ready or retry. */
+    Page.prototype.bulkBoxes = function () {
+        return this.boxes().filter(function (box) {
+            var row = box.closest ? box.closest('[data-fgo-row]') : null;
+            return row !== null && BULK_SELECTABLE.indexOf(row.getAttribute('data-fgo-verdict')) !== -1;
+        });
+    };
+
     Page.prototype.selectedIds = function () {
         return this.boxes().filter(function (box) {
             return box.checked;
@@ -261,7 +287,7 @@
     };
 
     Page.prototype.refreshSelection = function () {
-        var boxes = this.boxes();
+        var bulk = this.bulkBoxes();
         var count = this.selectedIds().length;
         if (this.startBtn) {
             this.startBtn.textContent = startLabel(this.i18n, count);
@@ -272,8 +298,9 @@
             chip.textContent = fill(this.i18n.chip_to_process, { count: count });
         }
         if (this.selectAll) {
-            this.selectAll.checked = boxes.length > 0 && count === boxes.length;
-            this.selectAll.indeterminate = count > 0 && count < boxes.length;
+            var all = bulk.length > 0 && bulk.every(function (box) { return box.checked; });
+            this.selectAll.checked = all;
+            this.selectAll.indeterminate = !all && count > 0;
         }
     };
 
@@ -285,7 +312,7 @@
             }
             var target = event.target;
             if (target === self.selectAll) {
-                self.boxes().forEach(function (box) {
+                self.bulkBoxes().forEach(function (box) {
                     box.checked = target.checked;
                 });
             }
@@ -305,12 +332,26 @@
         if (this.retryBtn) {
             this.retryBtn.addEventListener('click', function () { self.retryFailed(); });
         }
+        if (this.selectAll && this.bulkBoxes().length === 0) {
+            this.selectAll.disabled = true;
+        }
+        // Enables the start button, rendered disabled for a page without
+        // this script.
         this.refreshSelection();
     };
 
-    /** One bulk_run request; always resolves (a transport error is a failed result). */
+    /**
+     * One bulk_run request; always resolves (a transport error is a failed
+     * result, an expired session one too).
+     *
+     * pre_processing runs in ajax.js before it follows data.force_redirection,
+     * which is how CS-Cart answers a request whose admin is logged out: it
+     * then neither calls callback nor error_callback, and the row would wait
+     * forever. The redirect is dropped so the results stay on screen.
+     */
     Page.prototype.send = function (orderId) {
         var self = this;
+        var row = this.rowFor(orderId);
         return new Promise(function (resolve) {
             if (!$ || typeof $.ceAjax !== 'function') {
                 resolve(null);
@@ -323,6 +364,20 @@
                     action: self.action,
                     order_id: orderId,
                     send_email: self.emailBox && self.emailBox.checked ? 'Y' : 'N',
+                    seen_verdict: row ? row.getAttribute('data-fgo-verdict') || '' : '',
+                    seen_reasons: row ? row.getAttribute('data-fgo-reasons') || '' : '',
+                },
+                pre_processing: function (data) {
+                    if (data && typeof data === 'object' && data.force_redirection) {
+                        var loginUrl = String(data.force_redirection);
+                        delete data.force_redirection;
+                        self.onSessionExpired(loginUrl);
+                        resolve({
+                            outcome: 'failed',
+                            message: self.i18n.session_expired || '',
+                            session_expired: true,
+                        });
+                    }
                 },
                 callback: function (data) {
                     resolve(data && typeof data === 'object' ? data.fgo_result : null);
@@ -332,6 +387,27 @@
                 },
             });
         });
+    };
+
+    /**
+     * The session is gone: stop sending, stop guarding the page, and say how
+     * to go on. "Log in" opens a new tab, so these results stay.
+     */
+    Page.prototype.onSessionExpired = function (loginUrl) {
+        if (this.sessionExpired !== null) {
+            return;
+        }
+        this.sessionExpired = loginUrl;
+        window.removeEventListener('beforeunload', this.onBeforeUnload);
+        if (this.runner) {
+            this.stopping = true;
+            this.runner.stop();
+        }
+        if (this.sessionBox) {
+            this.sessionBox.textContent = (this.i18n.session_expired || '') + ' ';
+            this.link(this.sessionBox, loginUrl, this.i18n.log_in || '', true);
+            show(this.sessionBox, true);
+        }
     };
 
     Page.prototype.setState = function (row, state, label) {
@@ -393,8 +469,16 @@
             }
             this.link(line, result.view_url, i18n.details || '', false);
         }
+        // Issued now, or found already invoiced at run time: either way it
+        // has a PDF for the ZIP.
+        var alreadyInvoiced = result.outcome === 'skipped' && Array.isArray(result.reasons)
+            && result.reasons.some(function (reason) { return reason && reason.code === 'already_invoiced'; });
+        if ((result.outcome === 'issued' || alreadyInvoiced) && /^https:\/\//i.test(result.pdf_link || '')) {
+            row.setAttribute('data-fgo-has-invoice', 'Y');
+        } else if (result.outcome === 'issued') {
+            row.setAttribute('data-fgo-has-invoice', 'N');
+        }
         if (result.outcome === 'issued') {
-            row.setAttribute('data-fgo-has-invoice', /^https:\/\//i.test(result.pdf_link || '') ? 'Y' : 'N');
             if (result.email_status === 'sent') {
                 this.detail(cell, i18n.emailed || '');
             } else if (result.email_status === 'failed' || result.email_status === 'skipped') {
@@ -409,7 +493,7 @@
             // The invoice page exists once FGO was asked; a pre-check block
             // (reasons) never reached it, and its page would be empty.
             var fromFgo = !Array.isArray(result.reasons) || result.reasons.length === 0;
-            if (result.outcome === 'failed' && !invoice && fromFgo && !result.transport_error) {
+            if (result.outcome === 'failed' && !invoice && fromFgo && !result.transport_error && !result.session_expired) {
                 this.link(this.detail(cell, ''), result.view_url, i18n.details || '', false);
             }
         }
@@ -446,8 +530,14 @@
         var successKey = summary.issued > 0 || this.action === 'issue' || this.action === 'retry' ? 'issued' : 'done';
         chips.push([successKey, i18n['chip_' + successKey], summary[successKey]]);
         chips.push(['failed', i18n.chip_failed, summary.failed]);
-        chips.push(['skipped', i18n.chip_skipped, summary.skipped + this.notQueued]);
-        if (summary.remaining > 0) {
+        // Skipped: sent, and the server found nothing to do. Not processed:
+        // never sent (left unticked, blocked, or left by a stop).
+        chips.push(['skipped', i18n.chip_skipped, summary.skipped]);
+        var notProcessed = this.notQueued + (this.finished ? summary.remaining : 0);
+        if (notProcessed > 0) {
+            chips.push(['not_processed', i18n.chip_not_processed, notProcessed]);
+        }
+        if (!this.finished && summary.remaining > 0) {
             chips.push(['remaining', i18n.chip_remaining, summary.remaining]);
         }
         this.runChips.textContent = '';
@@ -539,6 +629,7 @@
         var i18n = this.i18n;
         this.summary = summary;
         this.current = null;
+        this.finished = true;
         window.removeEventListener('beforeunload', this.onBeforeUnload);
         this.root.classList.add('fgo-bulk--finished');
 
@@ -558,10 +649,13 @@
         }
         show(this.stopBtn ? this.stopBtn.parentNode : null, false);
 
-        show(this.zipBtn, this.zipEnabled && this.zipIds().length > 0);
+        // After an expired session both would post with a security hash the
+        // new session does not know: the message says to start over instead.
+        var live = this.sessionExpired === null;
+        show(this.zipBtn, live && this.zipEnabled && this.zipIds().length > 0);
         if (this.retryBtn) {
             this.retryBtn.textContent = fill(i18n.retry_failed, { count: summary.failedIds.length });
-            show(this.retryBtn, summary.failedIds.length > 0);
+            show(this.retryBtn, live && summary.failedIds.length > 0);
         }
         show(this.root.querySelector('[data-fgo-finished]'), true);
     };
@@ -580,17 +674,28 @@
         if (!ids.length) {
             return;
         }
+        // A new tab: the archive downloads there, and an error page lands
+        // there too instead of replacing these results.
         if ($ && typeof $.performPostRequest === 'function') {
-            $.performPostRequest(this.zipUrl, { order_ids: ids.join(',') });
+            $.performPostRequest(this.zipUrl, { order_ids: ids.join(',') }, '_blank');
         }
     };
 
+    /**
+     * The failed orders go back through the same menu action (issue and
+     * retry both through m_issue: an order may fail without a failed row,
+     * which Retry would skip), as a POST: a new selection and pre-check,
+     * with the admin's e-mail choice.
+     */
     Page.prototype.retryFailed = function () {
-        if (!this.summary || !this.summary.failedIds.length) {
+        if (!this.summary || !this.summary.failedIds.length || !$ || typeof $.performPostRequest !== 'function') {
             return;
         }
-        var separator = this.retryUrl.indexOf('?') === -1 ? '?' : '&';
-        api.navigate(this.retryUrl + separator + 'order_ids=' + this.summary.failedIds.join(','));
+        var data = { order_ids: this.summary.failedIds.join(',') };
+        if (this.emailBox) {
+            data.send_email = this.emailBox.checked ? 'Y' : 'N';
+        }
+        $.performPostRequest(this.retryUrl, data);
     };
 
     function init(context) {
@@ -603,15 +708,29 @@
                 return;
             }
             root.setAttribute('data-fgo-initialised', 'Y');
-            var page = new Page(root);
-            page.bind();
+            var page;
+            try {
+                page = new Page(root);
+                page.bind();
+            } catch (e) {
+                // The "script did not load" alert stays: the page cannot act.
+                if (window.console && typeof window.console.error === 'function') {
+                    window.console.error('FGO bulk page could not start', e);
+                }
+                return;
+            }
+            // Removed, not hidden: styles.css may be missing as well.
+            var missing = root.querySelector('[data-fgo-script-missing]');
+            if (missing && missing.parentNode) {
+                missing.parentNode.removeChild(missing);
+            }
             root.fgoBulkPage = page;
             pages.push(page);
         });
         return pages;
     }
 
-    var api = {
+    window.FgoInvoicingBulk = {
         pluralForm: pluralForm,
         fill: fill,
         countLabel: countLabel,
@@ -621,11 +740,7 @@
         Runner: Runner,
         Page: Page,
         init: init,
-        navigate: function (url) {
-            window.location.assign(url);
-        },
     };
-    window.FgoInvoicingBulk = api;
 
     if ($ && typeof $.ceEvent === 'function') {
         $.ceEvent('on', 'ce.commoninit', function () {

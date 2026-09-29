@@ -49,7 +49,13 @@ use Tygh\Addons\FgoInvoicing\Helpers\TypeCoerce;
  *     `shipping_tax_vat` setting (vat_included / vat_not_included / vat_zero).
  *
  * The `RequestId` is a deterministic UUIDv5 of `('fgo_invoicing', order_id)`
- * so retries do not change it (FGO uses it for server-side dedup).
+ * so retries do not change it (FGO uses it for server-side dedup). A
+ * RE-ISSUE — the order's invoice was cancelled, reversed or deleted and a new
+ * one is wanted — names the invoice it replaces, and its RequestId is the
+ * UUIDv5 of (order id, that series, that number) instead: with the plain one,
+ * FGO's deduplication (VerificareDuplicat) would answer with the cancelled
+ * invoice. It is still deterministic, so the retries of one re-issue stay
+ * idempotent, and every later re-issue (of the new invoice) gets its own.
  */
 final class BillingMapper
 {
@@ -75,8 +81,10 @@ final class BillingMapper
 
     /**
      * @param array<string, mixed> $orderInfo
+     * @param string $replacesSeries series of the cancelled / reversed / deleted invoice this one re-issues ('' for a first issue)
+     * @param string $replacesNumber its number
      */
-    public function mapOrderInfo(array $orderInfo): IssueInvoiceRequest
+    public function mapOrderInfo(array $orderInfo, string $replacesSeries = '', string $replacesNumber = ''): IssueInvoiceRequest
     {
         $orderId = TypeCoerce::toInt($orderInfo['order_id'] ?? 0);
         if ($orderId <= 0) {
@@ -113,7 +121,7 @@ final class BillingMapper
             valuta:    $this->resolveCurrency(),
             tipFactura:ConfigProvider::invoiceType(),
             idExtern:  $orderId,
-            requestId: $this->buildRequestId($orderId),
+            requestId: self::buildRequestId($orderId, trim($replacesSeries), trim($replacesNumber)),
             verificareDuplicat: ConfigProvider::verifyDuplicate(),
             valideazaCodUnicRo: ConfigProvider::sanitizeVat(),
             serie:     ConfigProvider::invoiceSeries() !== '' ? ConfigProvider::invoiceSeries() : null,
@@ -497,12 +505,17 @@ final class BillingMapper
         return $note !== '' ? $note : null;
     }
 
-    private function buildRequestId(int $orderId): string
+    private static function buildRequestId(int $orderId, string $replacesSeries, string $replacesNumber): string
     {
         // Deterministic UUIDv5 (RFC 4122 §4.3) over the namespace ('fgo_invoicing')
-        // and the order id, so retries reuse the same RequestId.
+        // and the order id, so retries reuse the same RequestId. A re-issue adds
+        // the invoice it replaces (see the class docblock); a first issue keeps
+        // the name it always had, so rows issued before this change still match.
+        $name = $replacesSeries === '' && $replacesNumber === ''
+            ? (string) $orderId
+            : $orderId . '|reissue|' . $replacesSeries . '|' . $replacesNumber;
         $namespace = sha1('fgo_invoicing');
-        $hash = sha1($namespace . (string) $orderId);
+        $hash = sha1($namespace . $name);
         return sprintf(
             '%s-%s-5%s-%s%s-%s',
             substr($hash, 0, 8),

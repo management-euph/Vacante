@@ -26,7 +26,9 @@ final readonly class PrecheckReason
     public const CODES = [
         'already_invoiced',
         'last_error',
-        'pending',
+        'in_progress',
+        'stale_pending',
+        'reissue_of',
         'previously_canceled',
         'previously_reversed',
         'previously_deleted',
@@ -43,12 +45,14 @@ final readonly class PrecheckReason
         'not_invoiced',
         'no_email',
         'no_pdf_link',
+        'recently_emailed',
         'already_canceled',
         'already_reversed',
         'already_deleted',
         'no_series_number',
         'order_not_found',
         'unknown_action',
+        'changed_since_precheck',
     ];
 
     /**
