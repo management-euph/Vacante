@@ -7,16 +7,19 @@ declare(strict_types=1);
  * Modes:
  *   - manage (default): dashboard — API health, catalog counts, last syncs,
  *     recent bookings, cron URL map, quick sync actions
- *   - whitelist: destination whitelist editor (countries → cities)
+ *   - whitelist: the destination whitelist (Travel Core's destination picker:
+ *     per country Not sold / All cities / Own cities / Only selected)
+ *   - whitelist_body (AJAX GET): one country's cities for the picker, as {html}
+ *   - search_destinations (AJAX GET): cities matching q, as picker hits
  *   - hotels: the listed (whitelisted) hotels — availability, images,
  *     products; filters, sorting and CS-Cart paging
  *   - create_products (POST): products for the selected hotels (hotel_keys[])
  *   - check_availability (POST): run the availability check for the selected
  *     hotels' destinations (all listed destinations when none is selected)
- *   - get_cities (AJAX GET): synced cities of a country as JSON, with a live
- *     getCityRequest fallback for countries not yet synced
  *   - run_sync (POST): run one cron command inline (sync_type param)
- *   - save_whitelist (POST): replace the whitelist (whitelist_json field)
+ *   - save_whitelist (POST): replace the whitelist (the picker's dest_json)
+ *   - disable_outside (POST): disable the live products outside the saved
+ *     whitelist that the admin confirmed (Save never touches products)
  *   - test_connection (POST): cheap auth probe (getRoomTypes)
  *   - generate_cron_key (POST): mint the SHARED Travel Core cron key
  *   - seo_templates: SEO Templates (Travel Core's shared page)
@@ -29,10 +32,12 @@ use Tygh\Addons\Eurosite\Repository\HotelListingRepository;
 use Tygh\Addons\Eurosite\Services\ConfigProvider;
 use Tygh\Addons\Eurosite\Services\Container;
 use Tygh\Addons\Eurosite\Services\CronPlanBuilder;
+use Tygh\Addons\Eurosite\Services\DestinationsPicker;
 use Tygh\Addons\Eurosite\Services\HotelListView;
 use Tygh\Addons\TravelCore\Cron\CronKeyService;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Services\DestinationPicker;
 use Tygh\Tygh;
 
 if (!defined('BOOTSTRAP')) {
@@ -41,6 +46,56 @@ if (!defined('BOOTSTRAP')) {
 
 /** @var \Smarty $view */
 $view = Tygh::$app['view'];
+
+/**
+ * The destination whitelist as DestinationsPicker::build() sees it: every
+ * country (or one), its synced cities with their figures, the saved rows and
+ * the live products.
+ *
+ * @return array{configured: bool, countries: list<array<string, mixed>>, totals: array<string, int>, outside: list<array{product_id: int, label: string}>}
+ */
+function _eurosite_dest_build(string $country = ''): array
+{
+    $countries = Container::countries()->findAll();
+    if ($country !== '') {
+        $countries = array_values(array_filter($countries, static fn (array $row): bool => strtoupper(TypeCoerce::toString($row['country_code'] ?? '')) === $country));
+    }
+    $whitelist = Container::whitelist();
+
+    return DestinationsPicker::build(
+        $countries,
+        Container::cities()->pickerRows($country),
+        $whitelist->findAll(),
+        $whitelist->lastSavedAt(),
+        $country === '' ? $whitelist->liveProducts() : [],
+    );
+}
+
+/**
+ * The picker page data (fn_travel_core_dest_page()) around a build().
+ *
+ * @param array{configured: bool, countries: list<array<string, mixed>>, totals: array<string, int>, outside: list<array{product_id: int, label: string}>} $built
+ * @return array<string, mixed>
+ */
+function _eurosite_dest_page(array $built, bool $lazy = true): array
+{
+    $page = DestinationsPicker::page($built, fn_travel_core_dest_words([
+        'search' => __('eurosite.dest_search'),
+        'filter' => __('eurosite.dest_filter'),
+        'item_type' => __('eurosite.dest_item_type'),
+        'gone' => __('eurosite.dest_gone'),
+        'no_match' => __('eurosite.dest_no_match'),
+        'fold' => __('eurosite.dest_fold'),
+    ]), [
+        'save' => TypeCoerce::toString(fn_url('eurosite.save_whitelist')),
+        'outside' => TypeCoerce::toString(fn_url('eurosite.disable_outside')),
+        'body' => TypeCoerce::toString(fn_url('eurosite.whitelist_body')),
+        'search' => TypeCoerce::toString(fn_url('eurosite.search_destinations')),
+    ]);
+    $page['lazy_bodies'] = $lazy;
+
+    return fn_travel_core_dest_page($page);
+}
 
 // The dashboard is a first-class entry point for schema-dependent reads —
 // apply any pending deltas before touching the eurosite tables (per-request
@@ -95,26 +150,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($mode === 'save_whitelist') {
-        $raw = RequestCoerce::string($_REQUEST, 'whitelist_json');
-        $decoded = json_decode($raw, true);
-        if (!is_array($decoded)) {
-            fn_set_notification('E', __('error'), 'Invalid whitelist payload.');
+        $known = [];
+        foreach (Container::countries()->findAll() as $row) {
+            $known[strtoupper(TypeCoerce::toString($row['country_code'] ?? ''))] = true;
+        }
+        $synced = [];
+        foreach (Container::cities()->pickerRows() as $row) {
+            $synced[strtoupper($row['country_code'])][strtoupper($row['city_code'])] = true;
+        }
+        $whitelist = Container::whitelist();
+        $rows = DestinationsPicker::rows(DestinationPicker::readPost($_POST), $known, $synced, DestinationsPicker::scope($whitelist->findAll()));
+        $countries = array_filter($rows, static fn (array $r): bool => $r['city_code'] === '');
+
+        // An empty whitelist stops every hotel sync ("Configure the whitelist
+        // first"): choosing to sell nothing is not something Save does.
+        if ($countries === []) {
+            fn_set_notification('E', __('error'), __('travel_core.dest_none_sold'));
 
             return [CONTROLLER_STATUS_REDIRECT, 'eurosite.whitelist'];
         }
-        $entries = [];
-        foreach ($decoded as $entry) {
-            if (!is_array($entry)) {
-                continue;
-            }
-            $entries[] = [
-                'country_code'   => strtoupper(TypeCoerce::toString($entry['country_code'] ?? '')),
-                'city_code'      => strtoupper(TypeCoerce::toString($entry['city_code'] ?? '')),
-                'selection_type' => TypeCoerce::toString($entry['selection_type'] ?? 'specific'),
-            ];
+
+        try {
+            $whitelist->replaceAll($rows);
+            fn_set_notification('N', __('notice'), __('eurosite.dest_saved', [
+                '[countries]' => count($countries),
+                '[cities]' => count($rows) - count($countries),
+            ]));
+        } catch (\Throwable $e) {
+            error_log('eurosite: could not save the destination whitelist — ' . $e->getMessage());
+            fn_set_notification('E', __('error'), __('travel_core.dest_save_failed'));
         }
-        Container::whitelist()->replaceAll($entries);
-        fn_set_notification('N', __('notice'), 'Eurosite destination whitelist saved (' . count($entries) . ' entries).');
+
+        return [CONTROLLER_STATUS_REDIRECT, 'eurosite.whitelist'];
+    }
+
+    if ($mode === 'disable_outside') {
+        // Only the products the admin confirmed AND still outside the saved
+        // whitelist: a stale page never disables something now sold.
+        $confirmed = DestinationPicker::productIds($_POST['product_ids'] ?? '');
+        $outside = array_map(static fn (array $p): int => $p['product_id'], _eurosite_dest_build()['outside']);
+        $ids = array_values(array_intersect($outside, $confirmed));
+        $n = Container::whitelist()->disableProducts($ids);
+        fn_set_notification('N', __('notice'), __('travel_core.dest_disabled', ['[n]' => $n]));
 
         return [CONTROLLER_STATUS_REDIRECT, 'eurosite.whitelist'];
     }
@@ -270,80 +347,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // ─── GET modes ───
 
-if ($mode === 'get_cities') {
-    // AJAX: cities of one country for the whitelist editor. Synced rows
-    // first; live fallback so the editor works before the first city sync.
+if ($mode === 'whitelist_body') {
+    // AJAX: one country's cities for the picker, rendered by Travel Core's
+    // destination_country_body.tpl. A country with no synced city gets the
+    // live getCityRequest list (not stored), so it can be picked before the
+    // first cities sync.
     $country = strtoupper((string) preg_replace('/[^A-Za-z]/', '', RequestCoerce::string($_REQUEST, 'country')));
-    $cities = [];
-    $source = 'db';
+    $html = '';
     if ($country !== '') {
-        try {
-            $hotelCounts = Container::hotels()->countAllByCity($country);
-        } catch (\Throwable) {
-            $hotelCounts = [];
-        }
-        foreach (Container::cities()->getByCountry($country) as $row) {
-            $code = TypeCoerce::toString($row['city_code'] ?? '');
-            $cities[] = [
-                'code'   => $code,
-                'name'   => TypeCoerce::toString($row['name'] ?? ''),
-                'is_own' => TypeCoerce::toString($row['is_own'] ?? 'N') === 'Y',
-                'hotels' => $hotelCounts[$code] ?? 0,
-            ];
-        }
-        if ($cities === []) {
-            $source = 'live';
+        $built = _eurosite_dest_build($country);
+        if ($built['countries'] !== [] && ($built['countries'][0]['groups'] ?? []) === []) {
             try {
+                $items = [];
                 foreach (Container::getApi()->getCities($country) as $city) {
-                    $cities[] = ['code' => $city['code'], 'name' => $city['name'], 'is_own' => false, 'hotels' => 0];
+                    $items[] = [
+                        'city_code' => TypeCoerce::toString($city['code']), 'country_code' => $country, 'name' => TypeCoerce::toString($city['name']),
+                        'is_own' => false, 'first_seen_at' => '', 'last_synced_at' => '', 'hotels' => 0, 'priced' => 0, 'instant' => 0, 'live' => 0,
+                    ];
                 }
-            } catch (\Throwable $e) {
-                header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
-                exit;
+                $whitelist = Container::whitelist();
+                $built = DestinationsPicker::build(Container::countries()->findAll(), $items, $whitelist->findAll(), $whitelist->lastSavedAt(), []);
+                $built['countries'] = array_values(array_filter($built['countries'], static fn (array $c): bool => $c['key'] === $country));
+            } catch (\Throwable) {
+                // No API: the body says no cities are synced yet.
+            }
+        }
+        $dest = _eurosite_dest_page($built, false);
+        foreach (is_array($dest['countries'] ?? null) ? $dest['countries'] : [] as $c) {
+            if (is_array($c) && ($c['key'] ?? '') === $country) {
+                $view->assign('dest', $dest);
+                $view->assign('country', $c);
+                $html = TypeCoerce::toString($view->fetch('addons/travel_core/components/destination_country_body.tpl'));
             }
         }
     }
     header('Content-Type: application/json');
-    echo json_encode(['success' => true, 'source' => $source, 'cities' => $cities]);
+    echo json_encode(['html' => $html]);
     exit;
 }
 
 if ($mode === 'search_destinations') {
-    // AJAX for the whitelist search box: countries + cities by name OR code,
-    // from the synced catalogs. Each result carries enough context for the
-    // picker to open the right country and scroll to the right city.
+    // AJAX for the picker's search box: cities by name OR code, from the
+    // synced catalog (countries are matched on the page itself). Each hit
+    // names its country, so the picker can load that body and tick the city.
     $query = trim(RequestCoerce::string($_REQUEST, 'q'));
-    $results = [];
+    $hits = [];
     if (mb_strlen($query) >= 2) {
-        foreach (Container::countries()->search($query) as $row) {
-            $cc = TypeCoerce::toString($row['country_code'] ?? '');
-            $results[] = [
-                'id'           => 'country:' . $cc,
-                'type'         => 'country',
-                'country_code' => $cc,
-                'city_code'    => '',
-                'text'         => TypeCoerce::toString($row['name'] ?? '') . ' (' . $cc . ')',
-            ];
-        }
-        foreach (Container::cities()->search($query) as $row) {
-            $cc = TypeCoerce::toString($row['country_code'] ?? '');
-            $city = TypeCoerce::toString($row['city_code'] ?? '');
-            $own = TypeCoerce::toString($row['is_own'] ?? 'N') === 'Y';
-            $results[] = [
-                'id'           => 'city:' . $cc . ':' . $city,
-                'type'         => 'city',
-                'country_code' => $cc,
-                'city_code'    => $city,
-                'is_own'       => $own,
-                'text'         => TypeCoerce::toString($row['name'] ?? '')
-                    . ' — ' . TypeCoerce::toString($row['country_name'] ?? $cc)
-                    . ($own ? ' ★' : ''),
+        foreach (Container::cities()->search($query, 30) as $row) {
+            $cc = strtoupper(TypeCoerce::toString($row['country_code'] ?? ''));
+            $code = TypeCoerce::toString($row['city_code'] ?? '');
+            $name = trim(TypeCoerce::toString($row['name'] ?? ''));
+            $hits[] = [
+                'country' => $cc,
+                'item' => $code,
+                'label' => ($name !== '' ? $name : $code) . (TypeCoerce::toString($row['is_own'] ?? 'N') === 'Y' ? ' ★' : ''),
+                'path' => $code,
             ];
         }
     }
     header('Content-Type: application/json');
-    echo json_encode(['success' => true, 'results' => $results]);
+    echo json_encode(['hits' => $hits]);
     exit;
 }
 
@@ -437,34 +500,7 @@ if ($mode === 'whitelist') {
         }
     }
 
-    $entries = Container::whitelist()->findAll();
-
-    // country => ['all' => bool, 'cities' => list<string>]
-    $whitelistMap = [];
-    foreach ($entries as $entry) {
-        $cc = TypeCoerce::toString($entry['country_code'] ?? '');
-        $city = TypeCoerce::toString($entry['city_code'] ?? '');
-        if ($cc === '') {
-            continue;
-        }
-        $whitelistMap[$cc] = $whitelistMap[$cc] ?? ['all' => false, 'cities' => []];
-        if ($city === '') {
-            $whitelistMap[$cc]['all'] = true;
-        } else {
-            $whitelistMap[$cc]['cities'][] = $city;
-        }
-    }
-
-    // Own-offer cities per country, on the row itself: the "own" badge and
-    // the "Show only destinations with own hotels" filter read it.
-    $ownByCountry = Container::cities()->ownCountsByCountry();
-    foreach ($countries as $i => $row) {
-        $countries[$i]['own_cities'] = $ownByCountry[TypeCoerce::toString($row['country_code'] ?? '')] ?? 0;
-    }
-
-    $view->assign('eurosite_countries', $countries);
-    $view->assign('eurosite_whitelist_map', $whitelistMap);
-    $view->assign('eurosite_whitelist_json', json_encode($whitelistMap));
+    $view->assign('eurosite_destinations', _eurosite_dest_page(_eurosite_dest_build()));
     $view->assign('eurosite_countries_synced', $countries !== []);
     $view->assign('eurosite_country_names_missing', $countries !== [] && $namesMissing);
     $view->assign('eurosite_country_heal_error', $healFailed);
@@ -487,6 +523,7 @@ if ($mode === 'manage' || empty($mode)) {
     ];
     $lastSyncs = [];
     $recentBookings = [];
+    $destCard = [];
     try {
         $syncLog = Container::syncLog();
 
@@ -504,6 +541,9 @@ if ($mode === 'manage' || empty($mode)) {
             'immediate'  => Container::hotels()->countByAvailability()['IM'],
             'products'   => Container::hotels()->countProducts(),
         ];
+
+        // Destinations: what we sell per country, and what needs a look.
+        $destCard = DestinationsPicker::card(_eurosite_dest_build(), TypeCoerce::toString(fn_url('eurosite.whitelist')));
 
         // Pre-format for Smarty 5 (modifiers throw inside the admin capture).
         foreach ($syncLog->getLastPerType() as $type => $row) {
@@ -566,6 +606,7 @@ if ($mode === 'manage' || empty($mode)) {
 
     $apiUser = ConfigProvider::getApiUser();
     $view->assign('eurosite_counts', $counts);
+    $view->assign('eurosite_dest_card', $destCard);
     $view->assign('eurosite_recent_bookings', $recentBookings);
     $view->assign('eurosite_sync_modes', $syncModes);
     $view->assign('eurosite_cron_urls', $cronUrls);

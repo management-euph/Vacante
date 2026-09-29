@@ -57,6 +57,8 @@ final class SchemaMigrator
             ],
             'sphinx_destinations' => [
                 'full_path' => "ADD COLUMN `full_path` VARCHAR(500) DEFAULT NULL COMMENT 'Breadcrumb: City, Region, Country, Continent' AFTER `country_code`",
+                // NULL on the rows already there ("known before"): upgrading flags nothing as new.
+                'first_seen_at' => "ADD COLUMN `first_seen_at` DATETIME DEFAULT NULL COMMENT 'First destinations sync that listed it: new since the last whitelist Save' AFTER `hotel_count`",
             ],
             'sphinx_sync_log' => [
                 'rate_limit_hits' => 'ADD COLUMN `rate_limit_hits` INT UNSIGNED DEFAULT 0 AFTER `error_message`',

@@ -48,22 +48,24 @@ final class LanguageSeederTest extends TestCase
     }
 
     /**
-     * The whitelist editor's own labels — the ones the admin actually saw as
-     * raw keys. Listed by name so a future edit cannot drop them silently.
+     * The whitelist page's own labels (the old editor once showed them as
+     * raw keys). Listed by name so a future edit cannot drop them silently;
+     * the shared words are Travel Core's (travel_core.dest_*).
      */
     public function testTheWhitelistEditorLabelsAreDeliverable(): void
     {
         $vars = LanguageSeeder::variables();
 
         foreach ([
-            'eurosite.countries',
-            'eurosite.cities',
-            'eurosite.own_offer_cities',
-            'eurosite.whitelist_summary',
-            'eurosite.whitelisted_countries',
-            'eurosite.whitelisted_cities',
-            'eurosite.save_whitelist',
-            'eurosite.remove_all',
+            'eurosite.whitelist_title',
+            'eurosite.dest_mode_all',
+            'eurosite.dest_mode_own',
+            'eurosite.dest_mode_specific',
+            'eurosite.dest_filter_own',
+            'eurosite.dest_select_own',
+            'eurosite.dest_catalog',
+            'eurosite.dest_saved',
+            'eurosite.sync_countries',
         ] as $key) {
             self::assertArrayHasKey($key, $vars, "{$key} would render as a raw key in the admin");
         }

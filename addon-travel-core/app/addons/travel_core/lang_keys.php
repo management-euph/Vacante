@@ -1069,4 +1069,269 @@ return [
         'en' => 'Balance',
         'ro' => 'Rest de plată',
     ],
+    // Destination picker (components/destination_picker.tpl + destination-picker.js) and the dashboard Destinations card.
+    'travel_core.dest_only_sold' => [
+        'en' => 'Show sold countries only',
+        'ro' => 'Doar țările vândute',
+    ],
+    'travel_core.dest_fold_show' => [
+        'en' => 'Show them',
+        'ro' => 'Arată-le',
+    ],
+    'travel_core.dest_fold_hide' => [
+        'en' => 'Fold the countries with nothing synced',
+        'ro' => 'Ascunde țările fără nimic sincronizat',
+    ],
+    'travel_core.dest_page_first' => [
+        'en' => 'First page',
+        'ro' => 'Prima pagină',
+    ],
+    'travel_core.dest_page_prev' => [
+        'en' => 'Previous page',
+        'ro' => 'Pagina anterioară',
+    ],
+    'travel_core.dest_page_next' => [
+        'en' => 'Next page',
+        'ro' => 'Pagina următoare',
+    ],
+    'travel_core.dest_page_last' => [
+        'en' => 'Last page',
+        'ro' => 'Ultima pagină',
+    ],
+    'travel_core.dest_summary_title' => [
+        'en' => 'Whitelist summary',
+        'ro' => 'Rezumatul listei',
+    ],
+    'travel_core.dest_save' => [
+        'en' => 'Save whitelist',
+        'ro' => 'Salvează lista',
+    ],
+    'travel_core.dest_undo' => [
+        'en' => 'Undo changes',
+        'ro' => 'Anulează modificările',
+    ],
+    'travel_core.dest_undo_short' => [
+        'en' => 'Undo',
+        'ro' => 'Anulează',
+    ],
+    'travel_core.dest_outside_label' => [
+        'en' => 'Live products outside the whitelist',
+        'ro' => 'Produse active în afara listei',
+    ],
+    'travel_core.dest_outside_button' => [
+        'en' => 'Disable products outside the whitelist…',
+        'ro' => 'Dezactivează produsele din afara listei…',
+    ],
+    'travel_core.dest_outside_confirm' => [
+        'en' => 'These [n] live products are outside the saved whitelist. Disabling hides them from the store; they are not deleted and can be enabled again.',
+        'ro' => 'Aceste [n] produse active sunt în afara listei salvate. Dezactivarea le ascunde din magazin; nu sunt șterse și pot fi reactivate.',
+    ],
+    'travel_core.dest_n_products' => [
+        'en' => '[n] products',
+        'ro' => '[n] produse',
+    ],
+    'travel_core.dest_outside_do' => [
+        'en' => 'Disable [n] products',
+        'ro' => 'Dezactivează [n] produse',
+    ],
+    'travel_core.dest_outside_note' => [
+        'en' => 'Saving never changes existing products. Use the button above to disable them on purpose.',
+        'ro' => 'Salvarea nu modifică niciodată produsele existente. Folosiți butonul de mai sus pentru a le dezactiva intenționat.',
+    ],
+    'travel_core.dest_badge_new' => [
+        'en' => 'NEW',
+        'ro' => 'NOU',
+    ],
+    'travel_core.dest_badge_new_n' => [
+        'en' => '[n] new',
+        'ro' => '[n] noi',
+    ],
+    'travel_core.dest_mode_legend' => [
+        'en' => 'What we sell in [country]',
+        'ro' => 'Ce vindem în [country]',
+    ],
+    'travel_core.dest_select_shown' => [
+        'en' => 'Select shown',
+        'ro' => 'Bifează cele afișate',
+    ],
+    'travel_core.dest_clear_shown' => [
+        'en' => 'Clear shown',
+        'ro' => 'Debifează cele afișate',
+    ],
+    'travel_core.dest_chips_label' => [
+        'en' => 'Show',
+        'ro' => 'Afișează',
+    ],
+    'travel_core.dest_chip_all' => [
+        'en' => 'All',
+        'ro' => 'Toate',
+    ],
+    'travel_core.dest_chip_sold' => [
+        'en' => 'Sold',
+        'ro' => 'Vândute',
+    ],
+    'travel_core.dest_chip_unsold' => [
+        'en' => 'Not sold',
+        'ro' => 'Nevândute',
+    ],
+    'travel_core.dest_chip_new' => [
+        'en' => 'New',
+        'ro' => 'Noi',
+    ],
+    'travel_core.dest_sort' => [
+        'en' => 'Sort',
+        'ro' => 'Sortare',
+    ],
+    'travel_core.dest_expand' => [
+        'en' => 'Expand all',
+        'ro' => 'Deschide tot',
+    ],
+    'travel_core.dest_collapse' => [
+        'en' => 'Collapse all',
+        'ro' => 'Închide tot',
+    ],
+    'travel_core.dest_fold_group' => [
+        'en' => 'Show or hide the cities of [group]',
+        'ro' => 'Arată sau ascunde orașele din [group]',
+    ],
+    'travel_core.dest_not_saved' => [
+        'en' => 'Not saved',
+        'ro' => 'Nesalvat',
+    ],
+    'travel_core.dest_live_title' => [
+        'en' => 'Live products',
+        'ro' => 'Produse active',
+    ],
+    'travel_core.dest_n_live' => [
+        'en' => '[n] live',
+        'ro' => '[n] active',
+    ],
+    'travel_core.dest_no_item_match' => [
+        'en' => 'Nothing here matches the filter.',
+        'ro' => 'Nimic de aici nu se potrivește filtrului.',
+    ],
+    'travel_core.dest_none_sold' => [
+        'en' => 'Choose at least one country to sell. Nothing was saved.',
+        'ro' => 'Alegeți cel puțin o țară de vândut. Nu s-a salvat nimic.',
+    ],
+    'travel_core.dest_save_failed' => [
+        'en' => 'The whitelist could not be saved. Nothing was changed.',
+        'ro' => 'Lista nu a putut fi salvată. Nu s-a modificat nimic.',
+    ],
+    'travel_core.dest_disabled' => [
+        'en' => '[n] products disabled.',
+        'ro' => '[n] produse dezactivate.',
+    ],
+    'travel_core.dest_w_search' => [
+        'en' => 'Search countries or destinations…',
+        'ro' => 'Caută țări sau destinații…',
+    ],
+    'travel_core.dest_w_filter' => [
+        'en' => 'Filter…',
+        'ro' => 'Filtrează…',
+    ],
+    'travel_core.dest_w_item_type' => [
+        'en' => 'Destination',
+        'ro' => 'Destinație',
+    ],
+    'travel_core.dest_w_group_type' => [
+        'en' => 'Region',
+        'ro' => 'Regiune',
+    ],
+    'travel_core.dest_w_country_type' => [
+        'en' => 'Country',
+        'ro' => 'Țară',
+    ],
+    'travel_core.dest_w_gone' => [
+        'en' => 'not in feed',
+        'ro' => 'nu mai e în feed',
+    ],
+    'travel_core.dest_w_pending' => [
+        'en' => '[n] change not saved|[n] changes not saved',
+        'ro' => '[n] modificare nesalvată|[n] modificări nesalvate|[n] de modificări nesalvate',
+    ],
+    'travel_core.dest_w_no_pending' => [
+        'en' => 'All changes saved',
+        'ro' => 'Toate modificările sunt salvate',
+    ],
+    'travel_core.dest_w_badge_all' => [
+        'en' => 'ALL',
+        'ro' => 'TOATE',
+    ],
+    'travel_core.dest_w_group_whole' => [
+        'en' => 'WHOLE REGION',
+        'ro' => 'TOATĂ REGIUNEA',
+    ],
+    'travel_core.dest_w_group_some' => [
+        'en' => '[sold] of [total]',
+        'ro' => '[sold] din [total]',
+    ],
+    'travel_core.dest_w_group_none' => [
+        'en' => 'none',
+        'ro' => 'niciunul',
+    ],
+    'travel_core.dest_w_sold' => [
+        'en' => 'sold',
+        'ro' => 'vândut',
+    ],
+    'travel_core.dest_w_not_sold' => [
+        'en' => 'not sold',
+        'ro' => 'nevândut',
+    ],
+    'travel_core.dest_w_no_match' => [
+        'en' => 'No country or destination matches.',
+        'ro' => 'Nicio țară sau destinație nu se potrivește.',
+    ],
+    'travel_core.dest_w_more' => [
+        'en' => 'Show [n] more',
+        'ro' => 'Arată încă [n]',
+    ],
+    'travel_core.dest_w_showing' => [
+        'en' => 'Showing [shown] of [total]',
+        'ro' => 'Se afișează [shown] din [total]',
+    ],
+    'travel_core.dest_w_visible' => [
+        'en' => '[shown] / [total] countries',
+        'ro' => '[shown] / [total] țări',
+    ],
+    'travel_core.dest_w_fold' => [
+        'en' => '[n] more country has nothing synced and is not sold.|[n] more countries have nothing synced and are not sold.',
+        'ro' => 'Încă [n] țară nu are nimic sincronizat și nu este vândută.|Încă [n] țări nu au nimic sincronizat și nu sunt vândute.|Încă [n] de țări nu au nimic sincronizat și nu sunt vândute.',
+    ],
+    'travel_core.dest_w_loading' => [
+        'en' => 'Loading…',
+        'ro' => 'Se încarcă…',
+    ],
+    'travel_core.dest_w_load_failed' => [
+        'en' => 'This country could not be loaded. Close it and open it again to retry.',
+        'ro' => 'Țara nu a putut fi încărcată. Închideți-o și deschideți-o din nou.',
+    ],
+    'travel_core.dest_card_col_country' => [
+        'en' => 'Country',
+        'ro' => 'Țară',
+    ],
+    'travel_core.dest_card_col_sell' => [
+        'en' => 'What we sell',
+        'ro' => 'Ce vindem',
+    ],
+    'travel_core.dest_card_col_review' => [
+        'en' => 'To review',
+        'ro' => 'De verificat',
+    ],
+    'travel_core.dest_card_edit' => [
+        'en' => 'Edit destinations →',
+        'ro' => 'Editează destinațiile →',
+    ],
+    'travel_core.dest_card_off' => [
+        'en' => '[n] more countries are not sold.',
+        'ro' => 'Încă [n] țări nu sunt vândute.',
+    ],
+    'travel_core.dest_card_none' => [
+        'en' => 'No country is sold.',
+        'ro' => 'Nicio țară nu este vândută.',
+    ],
+    'travel_core.dest_card_review' => [
+        'en' => 'Review destinations',
+        'ro' => 'Verifică destinațiile',
+    ],
 ];

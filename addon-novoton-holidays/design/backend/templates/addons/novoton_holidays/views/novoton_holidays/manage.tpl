@@ -135,55 +135,8 @@
         </div>
     </section>
 
-    {** Destinations: what we sell, per country. Chosen on Novoton -> Destinations. **}
-    {$_dest = $novoton_destinations}
-    <section class="travel-cron-card travel-cron-card--flush novoton-dest-card" id="novoton-destinations" aria-labelledby="novoton-dest-title">
-        <div class="travel-cron-card__head travel-cron-card__head--pad">
-            <div>
-                <h3 id="novoton-dest-title">{__("novoton_holidays.dest_title")}</h3>
-                <p class="muted">{if $_dest.configured}{__("novoton_holidays.dash_dest_intro", ["[countries]" => $_dest.totals.countries, "[resorts]" => $_dest.totals.resorts])}{else}{__("novoton_holidays.dash_dest_not_configured")}{/if}</p>
-            </div>
-            <a class="btn" href="{"novoton_destinations.manage"|fn_url}">{__("novoton_holidays.dash_dest_edit")}</a>
-        </div>
-        <table class="table table-middle travel-cron-table novoton-dest-card__table">
-            <thead>
-                <tr>
-                    <th>{__("novoton_holidays.dash_col_country")}</th>
-                    <th>{__("novoton_holidays.dash_dest_col_sell")}</th>
-                    <th class="right">{__("novoton_holidays.dash_dest_col_hotels")}</th>
-                    <th class="right">{__("novoton_holidays.dash_col_realtime")}</th>
-                    <th class="right">{__("novoton_holidays.dash_dest_col_live")}</th>
-                    <th>{__("novoton_holidays.dash_dest_col_review")}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {$_off = 0}
-                {foreach from=$_dest.countries item=c}
-                    {if $c.mode == "off"}
-                        {$_off = $_off + 1}
-                    {else}
-                        <tr>
-                            <td><strong>{$c.label|escape:html}</strong></td>
-                            <td>
-                                {if $c.mode == "all"}
-                                    <span class="novoton-dest-badge novoton-dest-badge--all">{__("novoton_holidays.dest_badge_all")}</span> {__("novoton_holidays.dash_dest_n_resorts", ["[n]" => $c.resorts])}
-                                {else}
-                                    <span class="novoton-dest-badge novoton-dest-badge--specific">{__("novoton_holidays.dest_badge_some", ["[sold]" => $c.sold, "[total]" => $c.resorts])}</span> {__("novoton_holidays.dash_dest_resorts_word")}
-                                {/if}
-                            </td>
-                            <td class="right">{$c.hotels_sold}</td>
-                            <td class="right">{if $c.hotels_sold > 0 && $c.priced_sold == 0}<strong class="travel-cron-hint--warn">0</strong>{else}{$c.priced_sold}{/if}</td>
-                            <td class="right">{$c.live_sold}</td>
-                            <td>{if $c.new > 0}<span class="novoton-dest-badge novoton-dest-badge--new">{__("novoton_holidays.dest_badge_new_n", ["[n]" => $c.new])}</span>{else}<span class="muted">—</span>{/if}</td>
-                        </tr>
-                    {/if}
-                {foreachelse}
-                    <tr><td colspan="6" class="muted">{__("novoton_holidays.dash_dest_none")}</td></tr>
-                {/foreach}
-            </tbody>
-        </table>
-        {if $_off > 0}<p class="travel-cron-foot novoton-dest-card__foot muted">{__("novoton_holidays.dash_dest_off", ["[n]" => $_off])}</p>{/if}
-    </section>
+    {** Destinations: what we sell, per country (Travel Core's shared card). Chosen on Novoton -> Destinations. **}
+    {include file="addons/travel_core/components/destinations_card.tpl" card=$novoton_dest_card}
 
     {** Scheduled jobs — id: the target of the "Open Novoton cron" link on Travel Core -> Tools.
        One row per job, in the order the jobs run (CronPlanBuilder). No

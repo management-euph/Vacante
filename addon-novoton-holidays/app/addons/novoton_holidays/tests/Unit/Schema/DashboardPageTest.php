@@ -60,19 +60,32 @@ final class DashboardPageTest extends TestCase
         self::assertStringContainsString("if (\$_SERVER['REQUEST_METHOD'] !== 'POST') {", $body);
     }
 
-    /** Resort names come from the API: printed escaped, posted back as the stored name. */
-    public function testTheDestinationsFormPostsTheStoredNames(): void
+    /**
+     * The Destinations page is Travel Core's destination picker: resort names
+     * come from the API, printed escaped and posted back as the stored name;
+     * disabling products is its own form, never nested in (or sent by) Save.
+     */
+    public function testTheDestinationsPageIsTheSharedPicker(): void
     {
         $tpl = self::code('views/novoton_destinations/manage.tpl');
+        self::assertStringContainsString('{include file="addons/travel_core/components/destination_picker.tpl" dest=$novoton_destinations}', $tpl);
 
-        self::assertStringContainsString('<form action="{"novoton_destinations.save"|fn_url}" method="post" id="novoton-dest-form"', $tpl);
-        self::assertStringContainsString('<input type="checkbox" name="destinations[{$c.country|escape:html}][resorts][]" value="{$r.name|escape:html}"{if $r.selected} checked{/if}>', $tpl);
-        self::assertStringContainsString('<input type="radio" name="destinations[{$c.country|escape:html}][mode]" value="{$m}"{if $c.mode == $m} checked{/if}>', $tpl);
-        self::assertStringContainsString('{$r.label|escape:html}', $tpl);
-        // Disabling products is its own form: never nested in (or sent by) Save.
-        $main = strpos($tpl, 'id="novoton-dest-form"');
-        $mainEnd = strpos($tpl, '</form>', (int) $main);
-        $disable = strpos($tpl, '"novoton_destinations.disable_outside"|fn_url');
+        $controller = (string) file_get_contents(dirname(__DIR__, 3) . '/controllers/backend/novoton_destinations.php');
+        self::assertStringContainsString("TypeCoerce::toString(fn_url('novoton_destinations.save'))", $controller);
+        self::assertStringContainsString("fn_url('novoton_destinations.disable_outside')", $controller);
+
+        $core = dirname(__DIR__, 7) . '/addon-travel-core/design/backend/templates/addons/travel_core/components/';
+        $body = (string) file_get_contents($core . 'destination_country_body.tpl');
+        self::assertStringContainsString('name="dest[{$_c.key|escape:html}][items][]" value="{$_i.value|escape:html}"{if $_i.selected} checked{/if}', $body);
+        self::assertStringContainsString('{$_i.label|escape:html}', $body);
+        $country = (string) file_get_contents($core . 'destination_country.tpl');
+        self::assertStringContainsString('name="dest[{$_c.key|escape:html}][mode]" value="{$_m.value}"', $country);
+
+        $page = (string) file_get_contents($core . 'destination_picker.tpl');
+        $main = strpos($page, 'id="{$_d.id}-dest-form"');
+        self::assertIsInt($main);
+        $mainEnd = strpos($page, '</form>', $main);
+        $disable = strpos($page, '<form action="{$_d.outside_url}"');
         self::assertIsInt($disable);
         self::assertGreaterThan($mainEnd, $disable);
     }
@@ -82,8 +95,10 @@ final class DashboardPageTest extends TestCase
     {
         $tpl = self::code('views/novoton_holidays/manage.tpl');
 
-        self::assertStringContainsString('id="novoton-destinations"', $tpl);
-        self::assertStringContainsString('{"novoton_destinations.manage"|fn_url}', $tpl);
+        self::assertStringContainsString('{include file="addons/travel_core/components/destinations_card.tpl" card=$novoton_dest_card}', $tpl);
+        self::assertStringContainsString("DestinationsPicker::card(\$destinations, \\Tygh\\Addons\\TravelCore\\Helpers\\TypeCoerce::toString(fn_url('novoton_destinations.manage')))", self::controller());
+        $picker = (string) file_get_contents(dirname(__DIR__, 3) . '/src/Services/DestinationsPicker.php');
+        self::assertStringContainsString("'id' => 'novoton-destinations'", $picker, 'the anchor other pages link to');
         self::assertStringNotContainsString('save_excluded_resorts', $tpl);
         self::assertStringNotContainsString('<form action="{"novoton_destinations', $tpl);
     }
@@ -118,16 +133,19 @@ final class DashboardPageTest extends TestCase
     /** Each page's script loads inside its capture, so it runs after the admin's AJAX navigation too. */
     public function testThePageScriptsLoadInsideTheCapture(): void
     {
-        foreach (['views/novoton_holidays/manage.tpl' => 'dashboard.js', 'views/novoton_destinations/manage.tpl' => 'destinations.js'] as $file => $js) {
-            $tpl = self::code($file);
-            $close = strpos($tpl, '{/capture}');
-            self::assertIsInt($close);
-            $at = strpos($tpl, '{script src="js/addons/novoton_holidays/' . $js . '"}');
-            self::assertIsInt($at, "{$js} is not loaded");
-            self::assertLessThan($close, $at);
-        }
+        $tpl = self::code('views/novoton_holidays/manage.tpl');
+        $close = strpos($tpl, '{/capture}');
+        self::assertIsInt($close);
+        $at = strpos($tpl, '{script src="js/addons/novoton_holidays/dashboard.js"}');
+        self::assertIsInt($at, 'dashboard.js is not loaded');
+        self::assertLessThan($close, $at);
 
-        $hook = self::code('hooks/index/scripts.post.tpl');
-        self::assertStringNotContainsString('{script src="js/addons/novoton_holidays/destinations.js"}', $hook, 'loaded on every admin page, it would not run after AJAX navigation');
+        // The Destinations page includes the picker inside its capture; the
+        // picker loads its own script, so it comes along.
+        $dest = self::code('views/novoton_destinations/manage.tpl');
+        $include = strpos($dest, 'components/destination_picker.tpl');
+        self::assertIsInt($include);
+        self::assertLessThan((int) strpos($dest, '{/capture}'), $include);
+        self::assertFileDoesNotExist(dirname(__DIR__, 6) . '/js/addons/novoton_holidays/destinations.js', 'replaced by travel_core/destination-picker.js');
     }
 }

@@ -53,7 +53,7 @@ final class CoordinatePrecisionTest extends TestCase
         $src = self::src('src/Repository/DestinationRepository.php');
 
         self::assertNoDdBinding($src);
-        self::assertStringContainsString('(?i, ?s, ?s, ?i, ?s, ?i, ?s, ?s, ?i, ?s)', $src);
+        self::assertStringContainsString('(?i, ?s, ?s, ?i, ?s, ?i, ?s, ?s, ?i, ?s, ?s)', $src);
         self::assertStringContainsString("toDecimalString(\$dest['latitude'] ?? 0, 8)", $src);
         self::assertStringContainsString("toDecimalString(\$dest['longitude'] ?? 0, 8)", $src);
     }

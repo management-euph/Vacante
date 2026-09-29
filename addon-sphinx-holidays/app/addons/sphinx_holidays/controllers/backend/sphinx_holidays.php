@@ -10,6 +10,12 @@ declare(strict_types=1);
  *   - hotels: List/filter hotels with pagination
  *   - sync_destinations (POST): Trigger destination sync from admin panel
  *   - sync_hotels (POST): Trigger hotel sync from admin panel
+ *   - whitelist: the destination whitelist (Travel Core's destination picker:
+ *     per country Not sold / All destinations / Only selected, whole regions)
+ *   - whitelist_body (AJAX GET): one country's regions and cities, as {html}
+ *   - search_destinations (AJAX GET): regions and cities matching q, as hits
+ *   - save_whitelist (POST): replace the whitelist (the picker's dest_json)
+ *   - disable_outside (POST): disable the confirmed live products outside it
  *
  * @package SphinxHolidays
  * @since 1.0.0
@@ -19,11 +25,14 @@ use Tygh\Addons\SphinxHolidays\Cron\Commands\AddProductsCommand;
 use Tygh\Addons\SphinxHolidays\Services\CircuitSyncService;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\SphinxHolidays\Services\DestinationsPicker;
 use Tygh\Addons\SphinxHolidays\Services\DestinationSyncService;
 use Tygh\Addons\SphinxHolidays\Services\HotelSyncService;
 use Tygh\Addons\SphinxHolidays\Services\PackageRouteSyncService;
+use Tygh\Addons\SphinxHolidays\Services\WhitelistPageLoader;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Services\DestinationPicker;
 use Tygh\Tygh;
 
 if (!defined('BOOTSTRAP')) {
@@ -32,6 +41,35 @@ if (!defined('BOOTSTRAP')) {
 
 /** @var \Smarty $view */
 $view = Tygh::$app['view'];
+
+/**
+ * The destination whitelist page (fn_travel_core_dest_page()) around a
+ * WhitelistPageLoader::built(): every country's body loads on open ($lazy),
+ * or one country's body is rendered alone.
+ *
+ * @param array{configured: bool, countries: list<array<string, mixed>>, totals: array<string, int>} $built
+ * @return array<string, mixed>
+ */
+function _sphinx_dest_page(array $built, bool $lazy): array
+{
+    $loader = new WhitelistPageLoader();
+    $page = DestinationsPicker::page($built, $loader->outside(), $loader->routes(), fn_travel_core_dest_words([
+        'search' => __('sphinx_holidays.dest_search'),
+        'filter' => __('sphinx_holidays.dest_filter'),
+        'item_type' => __('sphinx_holidays.dest_item_type'),
+        'group_type' => __('sphinx_holidays.dest_group_type'),
+        'no_match' => __('sphinx_holidays.dest_no_match'),
+        'fold' => __('sphinx_holidays.dest_fold'),
+    ]), [
+        'save' => TypeCoerce::toString(fn_url('sphinx_holidays.save_whitelist')),
+        'outside' => TypeCoerce::toString(fn_url('sphinx_holidays.disable_outside')),
+        'body' => TypeCoerce::toString(fn_url('sphinx_holidays.whitelist_body')),
+        'search' => TypeCoerce::toString(fn_url('sphinx_holidays.search_destinations')),
+    ]);
+    $page['lazy_bodies'] = $lazy;
+
+    return fn_travel_core_dest_page($page);
+}
 
 // $mode is set automatically by CS-Cart from the dispatch parameter
 // e.g. dispatch=sphinx_holidays.sync_destinations sets $mode = 'sync_destinations'
@@ -80,8 +118,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $skipRepo = Container::getHotelSkipRepository();
         $service = new HotelSyncService($api, $hotelRepo, $destRepo, $skipRepo);
 
-        $countryCodes = ConfigProvider::getSelectedCountryCodes();
-        $result = $service->sync($countryCodes);
+        // The whitelist's destination ids too: with country codes alone the
+        // service syncs every destination of an "Only selected" country.
+        $result = $service->sync(ConfigProvider::getSelectedCountryCodes(), ConfigProvider::getAllowedDestinationIds());
 
         if (!empty($result['success'])) {
             fn_set_notification('N', __('notice'), TypeCoerce::toString(__('sphinx_holidays.hotel_sync_completed')) . ': ' . TypeCoerce::toInt($result['synced']) . '/' . TypeCoerce::toInt($result['total']));
@@ -227,20 +266,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($mode === 'save_whitelist') {
-        // Single JSON field to avoid PHP max_input_vars limit
-        $whitelist = json_decode(TypeCoerce::toString($_REQUEST['whitelist_json'] ?? '[]'), true) ?: [];
-
-        $whitelistEntries = [];
-        foreach (TypeCoerce::toRowList($whitelist) as $entry) {
-            $whitelistEntries[] = [
-                'destination_id' => TypeCoerce::toInt($entry['destination_id'] ?? 0),
-                'selection_type' => TypeCoerce::toString($entry['selection_type'] ?? ''),
-            ];
+        $loader = new WhitelistPageLoader();
+        $rows = $loader->rows(DestinationPicker::readPost($_POST));
+        // Every country sold starts with its row: none means "sell nothing",
+        // which stops every Sphinx sync ("No sync targets configured").
+        if ($rows === []) {
+            fn_set_notification('E', __('error'), __('travel_core.dest_none_sold'));
+            return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.whitelist'];
         }
-
-        $whitelistRepo = Container::getDestinationWhitelistRepository();
         try {
-            $whitelistRepo->replaceAll($whitelistEntries);
+            Container::getDestinationWhitelistRepository()->replaceAll($rows);
         } catch (\Exception $e) {
             fn_set_notification('E', __('error'), __('sphinx_holidays.whitelist_save_failed'));
             return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.whitelist'];
@@ -250,6 +285,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         fn_sphinx_holidays_seed_region_mappings();
 
         fn_set_notification('N', __('notice'), __('sphinx_holidays.whitelist_saved'));
+        return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.whitelist'];
+    }
+
+    if ($mode === 'disable_outside') {
+        // Only the products the admin confirmed AND still outside the saved
+        // whitelist: a stale page never disables something now sold.
+        $loader = new WhitelistPageLoader();
+        $outside = array_map(static fn (array $p): int => $p['product_id'], $loader->outside()['outside']);
+        $ids = array_values(array_intersect($outside, DestinationPicker::productIds($_POST['product_ids'] ?? '')));
+        fn_set_notification('N', __('notice'), __('travel_core.dest_disabled', ['[n]' => $loader->disableProducts($ids)]));
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.whitelist'];
     }
 
@@ -424,69 +469,42 @@ if ($mode === 'get_cities') {
     exit;
 }
 
-if ($mode === 'get_destinations_tree') {
+if ($mode === 'whitelist_body') {
+    // AJAX: one country's regions and cities for the picker, rendered by
+    // Travel Core's destination_country_body.tpl.
+    $country = strtoupper((string) preg_replace('/[^A-Za-z]/', '', RequestCoerce::string($_REQUEST, 'country')));
+    $html = '';
+    $dest = $country === '' ? [] : _sphinx_dest_page((new WhitelistPageLoader())->built($country), false);
+    foreach (is_array($dest['countries'] ?? null) ? $dest['countries'] : [] as $c) {
+        if (is_array($c) && ($c['key'] ?? '') === $country) {
+            $view->assign('dest', $dest);
+            $view->assign('country', $c);
+            $html = TypeCoerce::toString($view->fetch('addons/travel_core/components/destination_country_body.tpl'));
+        }
+    }
     header('Content-Type: application/json; charset=utf-8');
-    $country_code = RequestCoerce::string($_REQUEST, 'country_code');
-    if ($country_code === '') {
-        echo json_encode(['tree' => []]);
-        exit;
-    }
-    $destRepo = Container::getDestinationRepository();
-    $regions = $destRepo->getRegionsByCountry($country_code);
-    $tree = [];
-    foreach ($regions as $region) {
-        $children = $destRepo->getCitiesByParent(TypeCoerce::toInt($region['destination_id'] ?? 0));
-        $region['children'] = $children;
-        $tree[] = $region;
-    }
-    echo json_encode(['tree' => $tree]);
-    exit;
-}
-
-if ($mode === 'get_whitelist_children') {
-    header('Content-Type: application/json; charset=utf-8');
-    $countryId = RequestCoerce::int($_REQUEST, 'country_id');
-    $whitelistRepo = Container::getDestinationWhitelistRepository();
-
-    // Batch form (no country_id): the whole map in ONE response. The
-    // whitelist page previously fired this endpoint once per whitelisted
-    // country on load — one XHR per country plus two queries each.
-    if ($countryId <= 0) {
-        echo json_encode(['children_by_country' => (object) $whitelistRepo->getWhitelistedChildIdsGroupedByCountryId()]);
-        exit;
-    }
-
-    $destRepo = Container::getDestinationRepository();
-    $countryCode = $destRepo->getCountryCodeById($countryId);
-    if (empty($countryCode)) {
-        echo json_encode(['children' => []]);
-        exit;
-    }
-    $childIds = $whitelistRepo->getWhitelistedChildIdsByCountry($countryCode);
-    echo json_encode(['children' => $childIds]);
+    echo json_encode(['html' => $html]);
     exit;
 }
 
 if ($mode === 'search_destinations') {
+    // AJAX for the picker's search: regions and cities matching q, each with
+    // its country, so the picker can load that body and tick the match.
     header('Content-Type: application/json; charset=utf-8');
     $q = trim(RequestCoerce::string($_REQUEST, 'q'));
-    if (strlen($q) < 2) {
-        echo json_encode(['results' => []]);
-        exit;
+    $hits = [];
+    foreach (strlen($q) < 2 ? [] : Container::getDestinationRepository()->search($q, 30) as $r) {
+        $type = TypeCoerce::toString($r['type'] ?? '');
+        if (in_array($type, ['region', 'city', 'destination'], true)) {
+            $hits[] = [
+                'country' => strtoupper(TypeCoerce::toString($r['country_code'] ?? '')),
+                ($type === 'region' ? 'group' : 'item') => (string) TypeCoerce::toInt($r['destination_id'] ?? 0),
+                'label' => TypeCoerce::toString($r['name'] ?? ''),
+                'path' => TypeCoerce::toString($r['full_path'] ?? ''),
+            ];
+        }
     }
-    $destRepo = Container::getDestinationRepository();
-    $results = $destRepo->search($q, 30);
-    $formatted = [];
-    foreach ($results as $r) {
-        $formatted[] = [
-            'destination_id' => TypeCoerce::toInt($r['destination_id'] ?? 0),
-            'name' => $r['name'],
-            'type' => $r['type'],
-            'country_code' => $r['country_code'] ?? '',
-            'full_path' => $r['full_path'] ?? $r['name'],
-        ];
-    }
-    echo json_encode(['results' => $formatted]);
+    echo json_encode(['hits' => $hits]);
     exit;
 }
 
@@ -569,6 +587,8 @@ if ($mode === 'manage') {
     $view->assign('unlinked_hotels', $unlinkedCount);
     $view->assign('skipped_hotels', $skippedCount);
     $view->assign('selected_countries', $selectedCountries);
+    $destLoader = new WhitelistPageLoader();
+    $view->assign('sphinx_dest_card', DestinationsPicker::card($destLoader->built(), $destLoader->outside(), TypeCoerce::toString(fn_url('sphinx_holidays.whitelist'))));
     $view->assign('is_configured', $isConfigured);
     // Sphinx-shaped products with NO hotel row linked to them — what the
     // relink action actually repairs. (The old gate used the orphan count —
@@ -675,114 +695,10 @@ if ($mode === 'manage') {
 
 } elseif ($mode === 'whitelist') {
     $destRepo = Container::getDestinationRepository();
-    $whitelistRepo = Container::getDestinationWhitelistRepository();
-    $countsByType = $destRepo->getCountsByType();
-    $totalDestinations = $destRepo->getTotal();
-
-    // Get all countries for the tree
-    $countries = $destRepo->getCountries();
-
-    // Get current whitelist entries
-    $whitelistRows = $whitelistRepo->findAll();
-    $whitelistMap = []; // destination_id => selection_type
-    foreach ($whitelistRows as $row) {
-        $whitelistMap[TypeCoerce::toInt($row['destination_id'])] = $row['selection_type'];
-    }
-
-    // Whitelisted children per country + whitelisted counts per region —
-    // grouped queries. The previous per-country/per-region loops issued
-    // hundreds of queries per page view at real whitelist sizes
-    // (~2 + 22×N for N whitelisted countries of ~20 regions).
-    $childIdsByCountryId = $whitelistRepo->getWhitelistedChildIdsGroupedByCountryId();
-    $whitelistedCountsByParent = $whitelistRepo->getWhitelistedCountsByParent();
-
-    // For each whitelisted country, child count for badge display
-    $countryData = [];
-    $whitelistedCountryCodes = [];
-    foreach ($countries as $country) {
-        $cid = TypeCoerce::toInt($country['destination_id']);
-        $countryCode = TypeCoerce::toString($country['country_code']);
-        $isWhitelisted = isset($whitelistMap[$cid]);
-        $selectionType = $whitelistMap[$cid] ?? null;
-        if ($isWhitelisted) {
-            $whitelistedCountryCodes[] = $countryCode;
-        }
-
-        $childCount = ($isWhitelisted && $selectionType !== 'all')
-            ? count($childIdsByCountryId[$cid] ?? [])
-            : 0;
-
-        $countryData[] = [
-            'destination_id' => $cid,
-            'name' => $country['name'],
-            'country_code' => $countryCode,
-            'is_whitelisted' => $isWhitelisted,
-            'selection_type' => $selectionType,
-            'whitelisted_child_count' => $childCount,
-        ];
-    }
-
-    // Summary stats — single query instead of N+1
-    $whitelistedTypeCounts = $whitelistRepo->getCountsByDestinationType();
-    $whitelistedCountryCount = (int) ($whitelistedTypeCounts['country'] ?? 0);
-    $whitelistedRegionCount = array_sum($whitelistedTypeCounts) - $whitelistedCountryCount;
-
-    // Sample whitelisted city names for summary
-    $sampleCities = $whitelistRepo->getSampleNonCountryNames(5);
-
-    // Per-country whitelist summary: region full/partial counts + city count.
-    // Two grouped queries for ALL whitelisted countries, assembled in PHP.
-    $regionStatsByCountry = $destRepo->getRegionChildStatsByCountry($whitelistedCountryCodes);
-    $cityCountsByCountry = $destRepo->countCitiesByCountries($whitelistedCountryCodes);
-
-    $whitelistSummary = [];
-    foreach ($countryData as $cd) {
-        if (!$cd['is_whitelisted']) {
-            continue;
-        }
-
-        $regionStats = $regionStatsByCountry[$cd['country_code']] ?? [];
-        $fullRegions = 0;
-        $partialRegions = 0;
-        $totalCities = 0;
-
-        if ($cd['selection_type'] === 'all') {
-            $fullRegions = count($regionStats);
-            $totalCities = $cityCountsByCountry[$cd['country_code']] ?? 0;
-        } else {
-            foreach ($regionStats as $regionStat) {
-                $whitelistedInRegion = $whitelistedCountsByParent[$regionStat['region_id']] ?? 0;
-                if ($whitelistedInRegion > 0) {
-                    $totalCities += $whitelistedInRegion;
-                    if ($whitelistedInRegion >= $regionStat['total_cities']) {
-                        $fullRegions++;
-                    } else {
-                        $partialRegions++;
-                    }
-                }
-            }
-        }
-
-        $whitelistSummary[] = [
-            'name' => $cd['name'],
-            'full_regions' => $fullRegions,
-            'partial_regions' => $partialRegions,
-            'total_cities' => $totalCities,
-        ];
-    }
-
-    $view->assign('counts_by_type', $countsByType);
-    $view->assign('total_destinations', $totalDestinations);
-    // Namespaced: 'countries' is a CS-Cart core Smarty global ([code => name]
-    // map present on every admin page); assigning our numeric whitelist rows
-    // to it clobbered core data page-wide (same defect class as novoton
-    // 33f15ad). Guarded by ReservedSmartyGlobalsTest.
-    $view->assign('sphinx_whitelist_countries', $countryData);
-    $view->assign('whitelist_map', $whitelistMap);
-    $view->assign('whitelisted_country_count', $whitelistedCountryCount);
-    $view->assign('whitelisted_region_count', $whitelistedRegionCount);
-    $view->assign('sample_cities', $sampleCities);
-    $view->assign('whitelist_summary', $whitelistSummary);
+    $view->assign('counts_by_type', $destRepo->getCountsByType());
+    $view->assign('total_destinations', $destRepo->getTotal());
+    $view->assign('sphinx_dest_last_synced', $destRepo->getLastSyncedAt());
+    $view->assign('sphinx_destinations', _sphinx_dest_page((new WhitelistPageLoader())->built(), true));
 
 } elseif ($mode === 'circuits') {
     $circuitRepo = Container::getCircuitRepository();
