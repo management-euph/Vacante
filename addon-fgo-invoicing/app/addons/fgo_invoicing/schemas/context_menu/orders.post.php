@@ -26,11 +26,11 @@ use Tygh\ContextMenu\Items\GroupItem;
 
 defined('BOOTSTRAP') or die('Access denied');
 
-/** @var array<string, mixed> $schema */
-
 $fgo_invoicing_allowed = static function (): bool {
     return !defined('RESTRICTED_ADMIN') || !RESTRICTED_ADMIN;
 };
+
+/** @var array<string, mixed> $schema */
 
 $schema['items']['fgo_invoice'] = [
     'name'                => ['template' => 'fgo_invoicing.menu_fgo_invoice'],

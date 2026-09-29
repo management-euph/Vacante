@@ -90,6 +90,8 @@ final class BulkUi
      * English satisfies too (its few and many texts are the same plural).
      * bulk.js carries the same rule for the live count.
      *
+     * @param int $count how many invoices the label counts
+     *
      * @return 'one'|'few'|'many'
      */
     public static function pluralForm(int $count): string

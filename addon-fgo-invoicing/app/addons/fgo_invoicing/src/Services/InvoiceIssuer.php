@@ -141,7 +141,6 @@ final class InvoiceIssuer
 
         // Known before the first line that can throw, so every catch below can
         // mask what it stores.
-        $form = [];
         $maskedForm = [];
         $cnp = '';
         $cnpFacts = [null, null];

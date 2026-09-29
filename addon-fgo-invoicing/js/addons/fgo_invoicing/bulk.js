@@ -55,7 +55,7 @@
     /** Substitute CS-Cart style [placeholders]. */
     function fill(template, values) {
         return String(template === undefined || template === null ? '' : template)
-            .replace(/\[([a-z_]+)\]/g, function (all, name) {
+            .replace(/\[([a-z_]+)]/g, function (all, name) {
                 return Object.prototype.hasOwnProperty.call(values || {}, name) ? String(values[name]) : all;
             });
     }
@@ -730,7 +730,7 @@
         return pages;
     }
 
-    var api = {
+    window.FgoInvoicingBulk = {
         pluralForm: pluralForm,
         fill: fill,
         countLabel: countLabel,
@@ -741,7 +741,6 @@
         Page: Page,
         init: init,
     };
-    window.FgoInvoicingBulk = api;
 
     if ($ && typeof $.ceEvent === 'function') {
         $.ceEvent('on', 'ce.commoninit', function () {
