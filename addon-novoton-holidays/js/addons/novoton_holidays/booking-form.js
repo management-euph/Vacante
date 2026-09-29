@@ -396,6 +396,7 @@ function triggerPriceRecalculationInline(childrenAges, roomNum, isInitialLoad) {
             hidePriceError();
 
             renderCancellationPolicy(data);
+            renderPaymentSplit(data, isMultiRoom);
             renderBookingConditions(data, roomNum, isMultiRoom);
 
             try {
@@ -644,6 +645,18 @@ function renderCancellationPolicy(data) {
     body.textContent = '';
     body.appendChild(list);
     card.classList.remove('travel-is-hidden');
+}
+
+/**
+ * Deposit / balance line under the total (travel_core
+ * booking_payment_split.tpl, server-rendered as split_html). Single room
+ * only: a multi-room quote is ONE room's terms, not the booking's.
+ */
+function renderPaymentSplit(data, isMultiRoom) {
+    var box = document.getElementById('travel-price-split');
+    if (!box) return;
+    // Trusted server markup (Smarty-escaped partial).
+    box.innerHTML = (!isMultiRoom && data && data.split_html) || '';
 }
 
 /**

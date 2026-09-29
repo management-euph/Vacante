@@ -408,26 +408,6 @@ msgctxt "Languages::sphinx_holidays.alt_from"
 msgid "from"
 msgstr "from"
 
-msgctxt "Languages::sphinx_holidays.per_page"
-msgid "Per page"
-msgstr "Per page"
-
-msgctxt "Languages::sphinx_holidays.first_page"
-msgid "First"
-msgstr "First"
-
-msgctxt "Languages::sphinx_holidays.prev_page"
-msgid "Previous"
-msgstr "Previous"
-
-msgctxt "Languages::sphinx_holidays.next_page"
-msgid "Next"
-msgstr "Next"
-
-msgctxt "Languages::sphinx_holidays.last_page"
-msgid "Last"
-msgstr "Last"
-
 msgctxt "Languages::sphinx_holidays.cancellation_and_payment_terms"
 msgid "Payment and cancellation terms"
 msgstr "Payment and cancellation terms"
@@ -855,10 +835,6 @@ msgstr "Enable search timing metrics"
 msgctxt "Languages::sphinx_holidays.addon_settings"
 msgid "Settings"
 msgstr "Settings"
-
-msgctxt "Languages::sphinx_holidays.show_whitelisted_only"
-msgid "Show whitelisted only"
-msgstr "Show whitelisted only"
 
 msgctxt "Languages::sphinx_holidays.classification"
 msgid "Classification"
@@ -1383,3 +1359,191 @@ msgstr "[count] children"
 msgctxt "Languages::sphinx_holidays.sx_total_for_rooms"
 msgid "Total for [count] rooms"
 msgstr "Total for [count] rooms"
+
+msgctxt "Languages::sphinx_holidays.dest_mode_off"
+msgid "Not sold"
+msgstr "Not sold"
+
+msgctxt "Languages::sphinx_holidays.dest_mode_all"
+msgid "All destinations"
+msgstr "All destinations"
+
+msgctxt "Languages::sphinx_holidays.dest_mode_specific"
+msgid "Only selected"
+msgstr "Only selected"
+
+msgctxt "Languages::sphinx_holidays.dest_hint_off"
+msgid "Nothing is synced or sold in this country."
+msgstr "Nothing is synced or sold in this country."
+
+msgctxt "Languages::sphinx_holidays.dest_hint_all"
+msgid "Every region and city is sold, including ones Sphinx adds later."
+msgstr "Every region and city is sold, including ones Sphinx adds later."
+
+msgctxt "Languages::sphinx_holidays.dest_hint_specific"
+msgid "Tick a whole region (cities Sphinx adds to it later come with it) or single cities. New destinations wait for you."
+msgstr "Tick a whole region (cities Sphinx adds to it later come with it) or single cities. New destinations wait for you."
+
+msgctxt "Languages::sphinx_holidays.dest_badge_off"
+msgid "NOT SOLD"
+msgstr "NOT SOLD"
+
+msgctxt "Languages::sphinx_holidays.dest_badge_all"
+msgid "ALL"
+msgstr "ALL"
+
+msgctxt "Languages::sphinx_holidays.dest_badge_some"
+msgid "[groups_sold] of [groups] regions"
+msgstr "[groups_sold] of [groups] regions"
+
+msgctxt "Languages::sphinx_holidays.dest_tile_countries"
+msgid "Countries sold"
+msgstr "Countries sold"
+
+msgctxt "Languages::sphinx_holidays.dest_tile_cities"
+msgid "Cities sold"
+msgstr "Cities sold"
+
+msgctxt "Languages::sphinx_holidays.dest_tile_cities_note"
+msgid "in [n] regions"
+msgstr "in [n] regions"
+
+msgctxt "Languages::sphinx_holidays.dest_tile_hotels"
+msgid "Hotels in scope"
+msgstr "Hotels in scope"
+
+msgctxt "Languages::sphinx_holidays.dest_tile_hotels_note"
+msgid "[n] live products"
+msgstr "[n] live products"
+
+msgctxt "Languages::sphinx_holidays.dest_tile_circuits"
+msgid "Circuits in scope"
+msgstr "Circuits in scope"
+
+msgctxt "Languages::sphinx_holidays.dest_tile_circuits_note"
+msgid "[n] package routes"
+msgstr "[n] package routes"
+
+msgctxt "Languages::sphinx_holidays.dest_tile_new"
+msgid "New destinations to review"
+msgstr "New destinations to review"
+
+msgctxt "Languages::sphinx_holidays.dest_regions_sold"
+msgid "Regions sold"
+msgstr "Regions sold"
+
+msgctxt "Languages::sphinx_holidays.dest_not_configured"
+msgid "<strong>No whitelist saved yet.</strong> Nothing is synced or sold from Sphinx until you choose at least one country and save."
+msgstr "<strong>No whitelist saved yet.</strong> Nothing is synced or sold from Sphinx until you choose at least one country and save."
+
+msgctxt "Languages::sphinx_holidays.dest_new_alert"
+msgid "[n] new destinations appeared in the destinations sync. They are not sold until you tick them."
+msgstr "[n] new destinations appeared in the destinations sync. They are not sold until you tick them."
+
+msgctxt "Languages::sphinx_holidays.dest_show_new"
+msgid "Show new destinations"
+msgstr "Show new destinations"
+
+msgctxt "Languages::sphinx_holidays.dest_intro"
+msgid "Choose what we sell from Sphinx. Only hotels, circuits and package routes in these destinations are synced and made into products; live products stay until you disable them. \"All destinations\" and a ticked region include what Sphinx adds later; single cities are only themselves."
+msgstr "Choose what we sell from Sphinx. Only hotels, circuits and package routes in these destinations are synced and made into products; live products stay until you disable them. \"All destinations\" and a ticked region include what Sphinx adds later; single cities are only themselves."
+
+msgctxt "Languages::sphinx_holidays.dest_all_continents"
+msgid "All continents"
+msgstr "All continents"
+
+msgctxt "Languages::sphinx_holidays.dest_feature_note"
+msgid "Saving also adds the sold regions to Feature Mappings, for the storefront's region filter."
+msgstr "Saving also adds the sold regions to Feature Mappings, for the storefront's region filter."
+
+msgctxt "Languages::sphinx_holidays.dest_country_meta"
+msgid "[regions] regions · [cities] cities · [hotels] hotels"
+msgstr "[regions] regions · [cities] cities · [hotels] hotels"
+
+msgctxt "Languages::sphinx_holidays.dest_country_meta_none"
+msgid "[regions] regions · [cities] cities · hotels not synced yet"
+msgstr "[regions] regions · [cities] cities · hotels not synced yet"
+
+msgctxt "Languages::sphinx_holidays.dest_region_meta"
+msgid "[cities] cities · [hotels] hotels"
+msgstr "[cities] cities · [hotels] hotels"
+
+msgctxt "Languages::sphinx_holidays.dest_city_meta"
+msgid "[hotels] hotels"
+msgstr "[hotels] hotels"
+
+msgctxt "Languages::sphinx_holidays.dest_city_not_synced"
+msgid "Hotels not synced yet"
+msgstr "Hotels not synced yet"
+
+msgctxt "Languages::sphinx_holidays.dest_n_circuits"
+msgid "[n] circuit|[n] circuits"
+msgstr "[n] circuit|[n] circuits"
+
+msgctxt "Languages::sphinx_holidays.dest_circuit_label"
+msgid "Circuit: [name]"
+msgstr "Circuit: [name]"
+
+msgctxt "Languages::sphinx_holidays.dest_no_destinations"
+msgid "No destinations are synced for [country] yet."
+msgstr "No destinations are synced for [country] yet."
+
+msgctxt "Languages::sphinx_holidays.dest_search"
+msgid "Search countries, regions or cities…"
+msgstr "Search countries, regions or cities…"
+
+msgctxt "Languages::sphinx_holidays.dest_filter"
+msgid "Filter cities…"
+msgstr "Filter cities…"
+
+msgctxt "Languages::sphinx_holidays.dest_item_type"
+msgid "City"
+msgstr "City"
+
+msgctxt "Languages::sphinx_holidays.dest_group_type"
+msgid "Region"
+msgstr "Region"
+
+msgctxt "Languages::sphinx_holidays.dest_no_match"
+msgid "No country, region or city matches."
+msgstr "No country, region or city matches."
+
+msgctxt "Languages::sphinx_holidays.dest_fold"
+msgid "[n] more country has no destinations synced and is not sold.|[n] more countries have no destinations synced and are not sold."
+msgstr "[n] more country has no destinations synced and is not sold.|[n] more countries have no destinations synced and are not sold."
+
+msgctxt "Languages::sphinx_holidays.dest_catalog"
+msgid "Sphinx catalog: [continents] continents, [countries] countries, [regions] regions, [cities] cities"
+msgstr "Sphinx catalog: [continents] continents, [countries] countries, [regions] regions, [cities] cities"
+
+msgctxt "Languages::sphinx_holidays.dest_last_synced"
+msgid "destinations synced [at]"
+msgstr "destinations synced [at]"
+
+msgctxt "Languages::sphinx_holidays.dest_card_title"
+msgid "Destinations"
+msgstr "Destinations"
+
+msgctxt "Languages::sphinx_holidays.dest_card_intro"
+msgid "[countries] countries, [cities] cities sold."
+msgstr "[countries] countries, [cities] cities sold."
+
+msgctxt "Languages::sphinx_holidays.dest_card_cities"
+msgid "[n] cities"
+msgstr "[n] cities"
+
+msgctxt "Languages::sphinx_holidays.dest_col_circuits"
+msgid "Circuits"
+msgstr "Circuits"
+
+msgctxt "Languages::sphinx_holidays.dest_col_live"
+msgid "Live products"
+msgstr "Live products"
+
+msgctxt "Languages::sphinx_holidays.dest_alert_new"
+msgid "[n] new destinations in [country] wait for review."
+msgstr "[n] new destinations in [country] wait for review."
+
+msgctxt "Languages::sphinx_holidays.dest_alert_outside"
+msgid "[n] live products are outside the destination whitelist."
+msgstr "[n] live products are outside the destination whitelist."

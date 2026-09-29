@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<ruleset name="netopia-payments"
+         xmlns="http://pmd.sf.net/ruleset/1.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sf.net/ruleset/1.0.0 http://pmd.sf.net/ruleset_xml_schema.xsd"
+         xsi:noNamespaceSchemaLocation="http://pmd.sf.net/ruleset_xml_schema.xsd">
+
+    <description>Pragmatic PHPMD ruleset for the NETOPIA Payments addon — catches design smells while accepting CS-Cart shape.</description>
+
+    <exclude-pattern>app/addons/netopia_payments/lib/Sdk/.*</exclude-pattern>
+    <exclude-pattern>app/addons/netopia_payments/lib/Psr/.*</exclude-pattern>
+    <!-- CS-Cart procedural entry points: hook signatures we don't control,
+         multi-purpose dispatcher functions, framework globals (Tygh::$app
+         that PHPMD reads as $app and flags as undefined). PHPCS still
+         enforces style across these files. -->
+    <exclude-pattern>app/addons/netopia_payments/func.php</exclude-pattern>
+    <exclude-pattern>app/payments/.*</exclude-pattern>
+    <!-- Test code: PHPMD's design rules target production. Tests
+         legitimately have unused parameters (closure signatures matching
+         a contract), reference params (output via &$out), and high
+         per-test setup. PHPCS still enforces style on tests. -->
+    <exclude-pattern>tests/.*</exclude-pattern>
+    <!-- Type stubs: shape-only declarations for the static analysers
+         (Psalm/PHPStan), with deliberately empty bodies and unused
+         parameters. Not real source. -->
+    <exclude-pattern>psalm-stubs.php</exclude-pattern>
+    <exclude-pattern>.phpstan/.*</exclude-pattern>
+
+    <!-- cleancode minus rules that fight CS-Cart's procedural shape. -->
+    <rule ref="rulesets/cleancode.xml">
+        <exclude name="StaticAccess"/>
+        <exclude name="BooleanArgumentFlag"/>
+        <exclude name="MissingImport"/>
+        <exclude name="ElseExpression"/>
+    </rule>
+
+    <!-- codesize with thresholds tuned to the addon's current high-water
+         marks plus a small headroom buffer. The intent is to catch DRIFT,
+         not refactor today's deliberate design choices (orchestration
+         dispatchers, JWT verification with multiple checkpoints, DI-style
+         constructors, fixed-shape DTOs). -->
+    <rule ref="rulesets/codesize.xml/CyclomaticComplexity">
+        <properties>
+            <property name="reportLevel" value="20"/>
+        </properties>
+    </rule>
+    <rule ref="rulesets/codesize.xml/NPathComplexity">
+        <properties>
+            <property name="minimum" value="200000"/>
+        </properties>
+    </rule>
+    <rule ref="rulesets/codesize.xml/ExcessiveMethodLength">
+        <properties>
+            <property name="minimum" value="250"/>
+            <property name="ignore-whitespace" value="true"/>
+        </properties>
+    </rule>
+    <rule ref="rulesets/codesize.xml/ExcessiveClassLength">
+        <properties>
+            <property name="minimum" value="600"/>
+        </properties>
+    </rule>
+    <rule ref="rulesets/codesize.xml/TooManyMethods">
+        <properties>
+            <property name="maxmethods" value="20"/>
+        </properties>
+    </rule>
+    <!-- ThreeDsData carries the 15 fields NETOPIA's 3DS browser fingerprint
+         requires; IpnHandler/ThreeDsReturnHandler use ~12 closures for
+         CS-Cart globals injection. Bump minimum to 16 so these don't
+         flag — the alternative is dropping into property-bag DTOs that
+         would lose static typing. -->
+    <rule ref="rulesets/codesize.xml/ExcessiveParameterList">
+        <properties>
+            <property name="minimum" value="16"/>
+        </properties>
+    </rule>
+
+    <!-- design — keep most rules; drop CouplingBetweenObjects because
+         Bootstrap is the wiring point and intentionally couples to many. -->
+    <rule ref="rulesets/design.xml">
+        <exclude name="CouplingBetweenObjects"/>
+    </rule>
+
+    <!-- naming — short/long variable warnings fight legitimate CS-Cart
+         conventions ($sql, $db_query, $orderInfoCustomerLanguageCode). -->
+    <rule ref="rulesets/naming.xml">
+        <exclude name="ShortVariable"/>
+        <exclude name="LongVariable"/>
+        <exclude name="ShortMethodName"/>
+    </rule>
+
+    <rule ref="rulesets/unusedcode.xml"/>
+</ruleset>

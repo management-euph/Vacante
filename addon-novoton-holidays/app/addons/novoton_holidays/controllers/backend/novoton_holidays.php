@@ -466,6 +466,7 @@ if ($mode === 'manage' || empty($mode)) {
         $destRepo->liveProducts(),
     );
     $view->assign('novoton_destinations', $destinations);
+    $view->assign('novoton_dest_card', \Tygh\Addons\NovotonHolidays\Services\DestinationsPicker::card($destinations, \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toString(fn_url('novoton_destinations.manage'))));
     $view->assign('novoton_dest_alerts', \Tygh\Addons\NovotonHolidays\Services\DashboardSummary::destinationAlerts($destinations));
 
     // The top of the page: which figures are a problem, and what fixes them.

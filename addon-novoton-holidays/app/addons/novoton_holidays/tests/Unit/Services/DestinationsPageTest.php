@@ -110,6 +110,8 @@ final class DestinationsPageTest extends TestCase
         self::assertSame(1, $page['totals']['new']);
         self::assertSame(2, $page['totals']['gone']);
         self::assertSame(1, $bg['sold'], 'gone resorts are not counted as sold');
+        self::assertIsArray($bg['resorts'], 'the resort list');
+        self::assertSame(3, $bg['resort_count'], 'its own key (the page once printed "Array resorts"); gone resorts are not counted');
     }
 
     public function testLiveProductsOutsideTheSavedWhitelistAreListed(): void
@@ -147,9 +149,9 @@ final class DestinationsPageTest extends TestCase
     public function testTheFormBecomesWhitelistRows(): void
     {
         $rows = DestinationsPage::rowsFromPost([
-            'BULGARIA' => ['mode' => 'specific', 'resorts' => ['SUNNY BEACH', ' BANSKO ', 'bansko', '', 'GIFT VOUCHER', ['x']]],
-            'ALBANIA' => ['mode' => 'all', 'resorts' => ['DURRES']],
-            'GREECE' => ['mode' => 'off', 'resorts' => ['THASSOS']],
+            'BULGARIA' => ['mode' => 'specific', 'items' => ['SUNNY BEACH', ' BANSKO ', 'bansko', '', 'GIFT VOUCHER', ['x']]],
+            'ALBANIA' => ['mode' => 'all', 'items' => ['DURRES']],
+            'GREECE' => ['mode' => 'off', 'items' => ['THASSOS']],
             'MARS' => ['mode' => 'all'],
             'TURKEY' => 'all',
         ], self::KNOWN, ['GIFT VOUCHER']);

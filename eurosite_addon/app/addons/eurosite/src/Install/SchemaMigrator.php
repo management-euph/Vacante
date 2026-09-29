@@ -14,10 +14,13 @@ namespace Tygh\Addons\Eurosite\Install;
  *     EXISTS` install items verbatim (single source of truth, no DDL drift;
  *     only items starting with that exact phrase are run, so future seed
  *     INSERTs can never replay here).
- *  2. Missing COLUMNS on ?:eurosite_bookings and ?:eurosite_hotels — both
- *     tables predate columns added later (the booking pipeline; the
- *     availability check and product links); checked via INFORMATION_SCHEMA
- *     and ADDed one by one, with their indexes.
+ *  2. Missing COLUMNS on ?:eurosite_bookings, ?:eurosite_hotels and
+ *     ?:eurosite_cities — all predate columns added later (the booking
+ *     pipeline; the availability check and product links; when a city was
+ *     first seen); checked via INFORMATION_SCHEMA and ADDed one by one, with
+ *     their indexes.
+ *  3. The whitelist's selection_type gains 'own' (Eurosite's "Own cities":
+ *     every own-offer city of a country, new ones included).
  *
  * Called once per request from func.php (AREA 'A' and the cron controller);
  * "reinstall the addon" remains the manual fallback.
@@ -66,6 +69,17 @@ final class SchemaMigrator
         'meals' => "ADD COLUMN `meals` VARCHAR(255) NOT NULL DEFAULT '' AFTER `hotel_class`",
     ];
 
+    /**
+     * When a city was first listed. Existing rows stay NULL ("known before"),
+     * so upgrading flags no city as new. Keep in sync with addon.xml.
+     */
+    public const CITY_COLUMNS = [
+        'first_seen_at' => 'ADD COLUMN `first_seen_at` DATETIME DEFAULT NULL AFTER `is_own`',
+    ];
+
+    /** The whitelist's selection_type, with 'own'. Keep in sync with addon.xml. */
+    public const WHITELIST_SELECTION_TYPE = "ENUM('all','own','specific') NOT NULL DEFAULT 'specific'";
+
     public const HOTEL_INDEXES = [
         'idx_availability' => 'ADD KEY `idx_availability` (`availability`)',
         'idx_product' => 'ADD KEY `idx_product` (`product_id`)',
@@ -86,6 +100,21 @@ final class SchemaMigrator
         self::addMissingColumns($prefix, 'eurosite_bookings', self::BOOKING_COLUMNS);
         self::addMissingColumns($prefix, 'eurosite_hotels', self::HOTEL_COLUMNS);
         self::addMissingIndexes($prefix, 'eurosite_hotels', self::HOTEL_INDEXES);
+        self::addMissingColumns($prefix, 'eurosite_cities', self::CITY_COLUMNS);
+        self::widenSelectionType($prefix);
+    }
+
+    /** An install from before "Own cities" has ENUM('all','specific'). */
+    private static function widenSelectionType(string $prefix): void
+    {
+        $type = db_get_field(
+            "SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?s AND COLUMN_NAME = 'selection_type'",
+            $prefix . 'eurosite_destination_whitelist',
+        );
+        if (is_string($type) && $type !== '' && !str_contains($type, "'own'")) {
+            db_query('ALTER TABLE ?:eurosite_destination_whitelist MODIFY COLUMN `selection_type` ' . self::WHITELIST_SELECTION_TYPE);
+        }
     }
 
     private static function createMissingTables(): void

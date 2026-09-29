@@ -1,0 +1,34 @@
+grumphp:
+    stop_on_failure: true
+    tasks:
+        phpstan:
+            configuration: phpstan.neon
+            use_grumphp_paths: false
+        psalm:
+            config: psalm.xml
+            no_cache: true
+            ignore_patterns:
+                - '#^app/addons/netopia_payments/(func|init|autoload)\.php$#'
+                - '#^app/addons/netopia_payments/controllers/#'
+                - '#^app/payments/#'
+        phpcs:
+            standard: phpcs.xml
+            triggered_by: [php]
+            warning_severity: 0
+            ignore_patterns:
+                - '#^app/addons/netopia_payments/lib/(Sdk|Psr)/#'
+        phpmd:
+            ruleset: [phpmd.xml]
+            triggered_by: [php]
+            exclude:
+                - 'app/addons/netopia_payments/lib/Sdk'
+                - 'app/addons/netopia_payments/lib/Psr'
+                - 'app/addons/netopia_payments/func.php'
+                - 'app/payments'
+                - 'tests'
+                - '.phpstan'
+        phpcsfixer:
+            config: .php-cs-fixer.php
+            diff: true
+        phpunit:
+            always_execute: true

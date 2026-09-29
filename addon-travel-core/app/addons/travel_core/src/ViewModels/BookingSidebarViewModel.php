@@ -60,6 +60,7 @@ final class BookingSidebarViewModel
      * @param string $perNight formatted total / nights
      * @param list<array<string, mixed>> $cancelSteps TermsTimelineFactory::cancellation() steps
      * @param list<array<string, mixed>> $paymentSteps TermsTimelineFactory::payment() rows
+     * @param array<string, string> $paymentSplit TermsTimelineFactory::split() (deposit / balance)
      * @param int $featuresMax chips shown before "+N more" (admin setting)
      * @param bool $showWeekday false when the store date format already
      *                          prints the weekday
@@ -99,6 +100,7 @@ final class BookingSidebarViewModel
         public readonly string $perNight = '',
         public readonly array $cancelSteps = [],
         public readonly array $paymentSteps = [],
+        public readonly array $paymentSplit = [],
         public readonly int $featuresMax = 6,
         public readonly bool $showWeekday = true,
     ) {
@@ -160,6 +162,7 @@ final class BookingSidebarViewModel
             'per_night' => $this->perNight,
             'cancel_steps' => $this->cancelSteps,
             'payment_steps' => $this->paymentSteps,
+            'payment_split' => $this->paymentSplit,
             'features_max' => max(1, $this->featuresMax),
             'features_extra' => max(0, count($this->features) - max(1, $this->featuresMax)),
             'show_weekday' => $this->showWeekday,

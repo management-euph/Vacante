@@ -159,16 +159,17 @@
             <i class="icon-refresh"></i> {__("eurosite.sync_full", ["[default]" => "Run full sync"])}
         </button>
     </form>
-    <a href="{"eurosite.whitelist"|fn_url}" class="btn">
-        <i class="icon-map-marker"></i> {__("eurosite.destination_whitelist", ["[default]" => "Destination whitelist"])}
-        ({$eurosite_counts.whitelist})
-    </a>
     <form action="{""|fn_url}" method="post" style="display:inline;">
         <input type="hidden" name="dispatch" value="eurosite.seed_menu" />
         <button type="submit" class="btn">
             <i class="icon-list"></i> {__("eurosite.seed_menu", ["[default]" => "Seed storefront menu"])}
         </button>
     </form>
+
+    {* ── Destinations: what we sell, per country (Travel Core's shared card) ── *}
+    {if $eurosite_dest_card}
+        {include file="addons/travel_core/components/destinations_card.tpl" card=$eurosite_dest_card}
+    {/if}
 
     {* ── Recent bookings ── *}
     <h4 style="margin-top: 20px;">{__("eurosite.recent_bookings", ["[default]" => "Recent bookings"])} ({$eurosite_counts.bookings})</h4>

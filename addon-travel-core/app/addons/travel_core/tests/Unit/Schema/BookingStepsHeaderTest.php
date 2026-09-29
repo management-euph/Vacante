@@ -35,7 +35,10 @@ final class BookingStepsHeaderTest extends TestCase
 
         self::assertStringContainsString('<div class="travel-booking-head', $tpl);
         self::assertStringContainsString('<h1 class="travel-booking-head__title">', $tpl);
-        self::assertStringContainsString('$bs_title|default:$page_title', $tpl);
+        // "Complete Booking" (short, so it fits beside the bar); edit mode keeps its own page title.
+        self::assertStringContainsString('__("travel_core.complete_booking_title")', $tpl);
+        self::assertStringContainsString('{$bs_default_title = $page_title', $tpl);
+        self::assertStringContainsString('$bs_title|default:$bs_default_title', $tpl);
         self::assertLessThan(strpos($tpl, '<nav class="travel-steps-nav"'), strpos($tpl, '<h1'), 'title first, then the steps');
     }
 
@@ -73,14 +76,14 @@ final class BookingStepsHeaderTest extends TestCase
     {
         $keys = require self::root() . '/addon-travel-core/app/addons/travel_core/lang_keys.php';
         self::assertIsArray($keys);
-        foreach (['step_guests' => 'Guests', 'step_payment' => 'Payment', 'step_search_back' => null, 'step_locked_hint' => null, 'step_current' => null] as $key => $en) {
+        foreach (['complete_booking_title' => 'Complete Booking', 'step_guests' => 'Guests', 'step_payment' => 'Payment', 'step_search_back' => null, 'step_locked_hint' => null, 'step_current' => null] as $key => $en) {
             $row = $keys['travel_core.' . $key] ?? null;
             self::assertIsArray($row, $key);
             self::assertNotSame('', $row['ro'] ?? '', $key . ' ro');
             if ($en !== null) {
                 self::assertSame($en, $row['en'] ?? null);
             }
-            self::assertStringContainsString('{__("travel_core.' . $key . '")', self::tpl());
+            self::assertStringContainsString('__("travel_core.' . $key . '")', self::tpl());
         }
     }
 
@@ -96,6 +99,53 @@ final class BookingStepsHeaderTest extends TestCase
             self::assertStringNotContainsString('fn_add_breadcrumb(', $src, $controller);
             self::assertStringContainsString("'page_title'", $src, $controller . ' keeps the <title>');
         }
+    }
+
+    /**
+     * The sidebar never gets its own scrollbar: the page scrolls as one and
+     * only the price + cancellation cards stay pinned beside the form.
+     */
+    public function testSidebarHasNoInnerScrollbar(): void
+    {
+        $sidebar = (string) file_get_contents(
+            self::root() . '/addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/booking_sidebar.tpl',
+        );
+        $sticky = strpos($sidebar, '<div class="travel-bsidebar__sticky">');
+        self::assertNotFalse($sticky);
+        self::assertLessThan(strpos($sidebar, 'travel-bcard--price'), $sticky, 'the price card is inside the pinned block');
+        self::assertLessThan(strpos($sidebar, '</aside>'), (int) strpos($sidebar, 'id="travel-cancel-card"'));
+
+        $css = (string) file_get_contents(
+            self::root() . '/addon-travel-core/design/themes/responsive/css/addons/travel_core/booking-pages.css',
+        );
+        self::assertStringNotContainsString('max-height: calc(100vh', $css);
+        self::assertMatchesRegularExpression('/\.travel-bsidebar__sticky \{\s*position: sticky;/', $css);
+        self::assertDoesNotMatchRegularExpression('/\.travel-bsidebar \{[^}]*overflow-y: auto/', $css);
+    }
+
+    /**
+     * Deposit / balance under the total: rendered by the page (sphinx) and
+     * refilled by novoton's re-price, from one partial.
+     */
+    public function testPaymentSplitIsWiredForEveryPath(): void
+    {
+        $root = self::root();
+        $sidebar = (string) file_get_contents($root . '/addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/booking_sidebar.tpl');
+        self::assertStringContainsString('<div id="travel-price-split">{include file="addons/travel_core/components/booking_payment_split.tpl" ps=$tbs.payment_split', $sidebar);
+
+        $partial = (string) file_get_contents($root . '/addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/booking_payment_split.tpl');
+        foreach (['split_deposit', 'split_balance', 'due_by'] as $key) {
+            self::assertStringContainsString('__("travel_core.' . $key . '"', $partial);
+        }
+
+        self::assertStringContainsString('$factory->split($installments, $primaryTotal)', (string) file_get_contents($root . '/addon-sphinx-holidays/app/addons/sphinx_holidays/src/ViewModels/SphinxBookingSidebarBuilder.php'));
+        self::assertStringContainsString('\'split_html\' => $split_html', (string) file_get_contents($root . '/addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/ajax_recalculate_price.php'));
+        self::assertStringContainsString('renderPaymentSplit(data, isMultiRoom);', (string) file_get_contents($root . '/addon-novoton-holidays/js/addons/novoton_holidays/booking-form.js'));
+
+        $keys = require $root . '/addon-travel-core/app/addons/travel_core/lang_keys.php';
+        self::assertIsArray($keys);
+        self::assertSame('Avans', $keys['travel_core.split_deposit']['ro'] ?? null);
+        self::assertSame('Rest de plată', $keys['travel_core.split_balance']['ro'] ?? null);
     }
 
     /** One h1 per page: the sidebar hotel name steps down to h2. */

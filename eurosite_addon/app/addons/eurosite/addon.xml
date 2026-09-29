@@ -271,6 +271,7 @@ Diferența de 70% cu 21 de zile înainte de check-in.</default_value>
                 `country_code`   VARCHAR(4)   NOT NULL DEFAULT '',
                 `name`           VARCHAR(255) NOT NULL DEFAULT '',
                 `is_own`         ENUM('Y','N') NOT NULL DEFAULT 'N' COMMENT 'appears in getOwnCityResponse',
+                `first_seen_at`  DATETIME     DEFAULT NULL COMMENT 'first cities sync that listed it: new since the last whitelist Save',
                 `last_synced_at` DATETIME     DEFAULT NULL,
                 PRIMARY KEY (`city_code`),
                 KEY `idx_country` (`country_code`),
@@ -331,7 +332,7 @@ Diferența de 70% cu 21 de zile înainte de check-in.</default_value>
                 `id`             INT UNSIGNED NOT NULL AUTO_INCREMENT,
                 `country_code`   VARCHAR(4)   NOT NULL,
                 `city_code`      VARCHAR(16)  NOT NULL DEFAULT '' COMMENT 'empty = country-level row',
-                `selection_type` ENUM('all','specific') NOT NULL DEFAULT 'specific',
+                `selection_type` ENUM('all','own','specific') NOT NULL DEFAULT 'specific' COMMENT 'country row: all / own (own-offer cities) / specific',
                 `created_at`     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY (`id`),
                 UNIQUE KEY `uk_dest` (`country_code`, `city_code`)

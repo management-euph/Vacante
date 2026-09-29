@@ -1,0 +1,75 @@
+<?php
+/**
+ * CS-Cart global stubs for PHPStan static analysis.
+ *
+ * Constants and global functions the addon depends on at runtime.
+ */
+
+// ── Constants ────────────────────────────────────────────────────────
+
+define('BOOTSTRAP', true);
+define('AREA', 'A');
+define('CONTROLLER_STATUS_NO_PAGE', '__status_no_page');
+define('CONTROLLER_STATUS_REDIRECT', '__status_redirect');
+define('PAYMENT_NOTIFICATION', true);
+define('DEVELOPMENT', false);
+define('CART_PRIMARY_CURRENCY', 'USD');
+
+// ── CS-Cart core functions ───────────────────────────────────────────
+
+/**
+ * @param string $type  N(otice) | W(arning) | E(rror)
+ */
+function fn_set_notification(string $type, string $title, string $message): void {}
+
+function __(string $var, array $params = []): string { return ''; }
+
+function fn_url(string $url, string $area = '', string $protocol = ''): string { return ''; }
+
+/**
+ * @return array<string, mixed>|false
+ */
+function fn_get_order_info(int $order_id): array|false { return []; }
+
+function fn_update_order_payment_info(int $order_id, array $extra_info): void {}
+
+function fn_change_order_status(int $order_id, string $status_to, string $reason = '', bool $notify = true): bool { return true; }
+
+/**
+ * @param array<string, string> $data
+ */
+function fn_create_payment_form(string $submit_url, array $data, string $payment_name = '', bool $exclude_empty = true): void {}
+
+function fn_redirect(string $url, bool $allow_external = false): void {}
+
+/**
+ * @return array<string, mixed>
+ */
+function fn_get_payment_method_data(int $payment_id): array { return []; }
+
+function fn_finish_payment(int $order_id, array $pp_response): void {}
+
+function fn_order_placement_routines(string $action, int $order_id, bool $force_notification = false): void {}
+
+function fn_register_hooks(string ...$hooks): void {}
+
+function fn_format_price(float $price, string $currency = ''): string { return ''; }
+
+/**
+ * @return array<string, mixed>|false
+ */
+function fn_get_schema(string $schema_name, string $type = ''): array|false { return []; }
+
+// ── Database helpers ─────────────────────────────────────────────────
+
+/**
+ * @return array<string, mixed>|false
+ */
+function db_get_row(string $query, mixed ...$params): array|false { return []; }
+
+/**
+ * @return string|false
+ */
+function db_get_field(string $query, mixed ...$params): string|false { return ''; }
+
+function db_query(string $query, mixed ...$params): mixed { return null; }

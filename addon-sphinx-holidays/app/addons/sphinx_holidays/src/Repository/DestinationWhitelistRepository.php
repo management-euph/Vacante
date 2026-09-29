@@ -44,6 +44,31 @@ class DestinationWhitelistRepository
     }
 
     /**
+     * Every whitelist row with its destination's type and country, for the
+     * Destination whitelist page (Services\DestinationsPicker::scope()).
+     *
+     * @return list<array{destination_id: int, selection_type: string, type: string, country_code: string}>
+     */
+    public function findAllWithPlace(): array
+    {
+        $out = [];
+        foreach (self::asRowList(db_get_array(
+            "SELECT w.destination_id, w.selection_type, COALESCE(d.type, '') AS type, COALESCE(d.country_code, '') AS country_code
+             FROM ?:sphinx_destination_whitelist w
+             LEFT JOIN ?:sphinx_destinations d ON d.destination_id = w.destination_id",
+        )) as $row) {
+            $out[] = [
+                'destination_id' => TypeCoerce::toInt($row['destination_id'] ?? 0),
+                'selection_type' => TypeCoerce::toString($row['selection_type'] ?? ''),
+                'type' => TypeCoerce::toString($row['type'] ?? ''),
+                'country_code' => strtoupper(TypeCoerce::toString($row['country_code'] ?? '')),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
      * Get country codes for given destination IDs.
      *
      * @param int[] $destinationIds
@@ -67,6 +92,62 @@ class DestinationWhitelistRepository
             $out[(int) $k] = TypeCoerce::toString($v);
         }
         return $out;
+    }
+
+    /**
+     * The type of each destination (country, region, city, destination).
+     *
+     * @param list<int> $destinationIds
+     * @return array<int, string> destination_id => type
+     */
+    public function getTypesForDestinations(array $destinationIds): array
+    {
+        if ($destinationIds === []) {
+            return [];
+        }
+        $out = [];
+        foreach (self::asRowList(db_get_array(
+            'SELECT destination_id, type FROM ?:sphinx_destinations WHERE destination_id IN (?n)',
+            $destinationIds,
+        )) as $row) {
+            $out[TypeCoerce::toInt($row['destination_id'] ?? 0)] = TypeCoerce::toString($row['type'] ?? '');
+        }
+
+        return $out;
+    }
+
+    /**
+     * Every destination under the given ones, down the whole tree (region >
+     * city > destination): one query per level, at most five levels.
+     *
+     * @param list<int> $parentIds
+     * @return list<int>
+     */
+    public function getDescendantIds(array $parentIds): array
+    {
+        $found = [];
+        $level = array_values(array_unique(array_filter($parentIds, static fn (int $id): bool => $id > 0)));
+        for ($depth = 0; $depth < 5 && $level !== []; $depth++) {
+            $children = self::asIntList(db_get_fields(
+                'SELECT destination_id FROM ?:sphinx_destinations WHERE parent_id IN (?n)',
+                $level,
+            ));
+            $level = [];
+            foreach ($children as $id) {
+                if (!isset($found[$id])) {
+                    $found[$id] = true;
+                    $level[] = $id;
+                }
+            }
+        }
+
+        return array_map('intval', array_keys($found));
+    }
+
+    /** When the whitelist was last saved ('' = never): destinations first seen after it are new. */
+    public function lastSavedAt(): string
+    {
+        return TypeCoerce::toString(db_get_field('SELECT MAX(created_at) FROM ?:sphinx_destination_whitelist'));
     }
 
     /**

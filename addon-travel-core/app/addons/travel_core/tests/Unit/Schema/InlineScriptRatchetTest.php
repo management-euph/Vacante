@@ -29,7 +29,6 @@ final class InlineScriptRatchetTest extends TestCase
         'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/hooks/index/scripts.post.tpl' => 1,
         'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/views/novoton_booking/booking_form.tpl' => 1,
         'addon-sphinx-holidays/design/backend/templates/addons/sphinx_holidays/views/sphinx_holidays/hotels.tpl' => 1,
-        'addon-sphinx-holidays/design/backend/templates/addons/sphinx_holidays/views/sphinx_holidays/whitelist.tpl' => 1,
         'addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/blocks/best_deals.tpl' => 1,
         'addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/blocks/package_search.tpl' => 1,
         'addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/hooks/index/scripts.post.tpl' => 1,
