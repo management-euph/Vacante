@@ -76,6 +76,7 @@ function fn_netopia_get_keys_dir(int $payment_id): string
  * @param 'public_key'|'private_key' $key_type
  * @param int $payment_id the payment method whose key directory is read
  * @param string $mode 'live' or 'sandbox'; '' uses $processor_params['mode']
+ * @return string the key's PEM text; '' when none is configured
  */
 function fn_netopia_load_key(array $processor_params, string $key_type, int $payment_id, string $mode = ''): string
 {

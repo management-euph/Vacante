@@ -66,6 +66,7 @@ exclude:
   - name: PhpArrayIndexImmediatelyRewrittenInspection # false-positive on defensive init-then-populate arrays
   - name: PhpClassCanBeReadonlyInspection
   - name: PhpPluralMixedCanBeReplacedWithArrayInspection
+  - name: PhpMixedReturnTypeCanBeReducedInspection    # narrows CS-Cart globals (db_query, …) from the test fakes, the only definitions in the repo
   - name: PhpParameterByRefIsNotUsedAsReferenceInspection
   - name: PhpUnnecessaryLocalVariableInspection
   - name: PhpUnusedFieldDefaultValueInspection

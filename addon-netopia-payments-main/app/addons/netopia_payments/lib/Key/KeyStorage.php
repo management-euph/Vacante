@@ -49,6 +49,7 @@ final class KeyStorage
      * @param 'public_key'|'private_key' $keyType
      * @param int $paymentId the payment method whose key directory is read
      * @param PaymentMode $mode picks the live_* or sandbox_* key
+     * @return string the key's PEM text; '' when none is configured
      */
     public function load(array $processorParams, string $keyType, int $paymentId, PaymentMode $mode): string
     {
