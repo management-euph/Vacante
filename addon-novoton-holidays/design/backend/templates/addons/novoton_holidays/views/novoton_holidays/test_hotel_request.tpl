@@ -127,4 +127,4 @@
 
 {* /capture - DISABLED *}
 
-{* include file="common/mainbox.tpl" title="Test hotel_request API" content=$smarty.capture.mainbox}
+{* include file="common/mainbox.tpl" title="Test hotel_request API" content=$smarty.capture.mainbox - DISABLED *}

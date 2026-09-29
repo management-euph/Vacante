@@ -129,4 +129,4 @@
 
 {* /capture - DISABLED *}
 
-{* include file="common/mainbox.tpl" title="Test alternative_RS API" content=$smarty.capture.mainbox}
+{* include file="common/mainbox.tpl" title="Test alternative_RS API" content=$smarty.capture.mainbox - DISABLED *}
