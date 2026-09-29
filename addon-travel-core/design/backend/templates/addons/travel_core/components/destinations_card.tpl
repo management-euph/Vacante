@@ -6,6 +6,7 @@
  *   cols   [{label}]                   the add-on's figure columns
  *   rows   [{label, badge, badge_class, words, cells: [{value, warn}], new}]
  *   off    countries not sold (one line under the table)
+ *   alerts optional lines that need a look (new cities, products outside)
  *}
 {style src="addons/travel_core/destination-picker.css"}
 {$_card = $card}
@@ -17,6 +18,13 @@
         </div>
         <a class="btn" href="{$_card.edit_url}">{__("travel_core.dest_card_edit")}</a>
     </div>
+    {if $_card.alerts}
+        <ul class="travel-dest-card__alerts">
+            {foreach $_card.alerts as $_alert}
+                <li><span>{$_alert}</span> <a class="btn btn-small" href="{$_card.edit_url}">{__("travel_core.dest_card_review")}</a></li>
+            {/foreach}
+        </ul>
+    {/if}
     <table class="table table-middle travel-cron-table travel-dest-card__table">
         <thead>
             <tr>

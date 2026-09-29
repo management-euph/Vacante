@@ -33,6 +33,25 @@
     margin: 0 0 12px;
 }
 
+/* An add-on's own line under the intro (Eurosite: the country catalog). */
+.travel-dest__catalog {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    align-items: center;
+    margin: 0 0 12px;
+    padding: 7px 10px;
+    border: 1px dashed #d5dbe2;
+    border-radius: 4px;
+    background: #fafbfc;
+    font-size: 12px;
+}
+
+.travel-dest__catalog-form {
+    display: inline;
+    margin: 0;
+}
+
 .travel-dest__cols {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 300px;
@@ -669,6 +688,26 @@
 }
 
 /* Dashboard: the Destinations card (components/destinations_card.tpl) */
+.travel-dest-card__alerts {
+    display: grid;
+    gap: 6px;
+    margin: 0 16px 12px;
+    padding: 0;
+    list-style: none;
+}
+
+.travel-dest-card__alerts li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 10px;
+    border: 1px solid #f0d18a;
+    border-radius: 4px;
+    background: #fff8e6;
+}
+
 .travel-dest-card__table td,
 .travel-dest-card__table th {
     white-space: nowrap;

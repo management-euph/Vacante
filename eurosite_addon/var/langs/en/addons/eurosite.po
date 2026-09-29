@@ -284,10 +284,6 @@ msgctxt "Languages::eurosite.whitelist_title"
 msgid "Eurosite — Destination whitelist"
 msgstr "Eurosite — Destination whitelist"
 
-msgctxt "Languages::eurosite.whitelist_hint"
-msgid "Only whitelisted destinations are synced and searchable on the storefront. Tick a country to include all of its cities, or expand it and pick specific cities."
-msgstr "Only whitelisted destinations are synced and searchable on the storefront. Tick a country to include all of its cities, or expand it and pick specific cities."
-
 msgctxt "Languages::eurosite.whitelist_needs_countries"
 msgid "The country catalog has not been synced yet — run the 'countries' sync from the dashboard first. City lists fall back to live API calls."
 msgstr "The country catalog has not been synced yet — run the 'countries' sync from the dashboard first. City lists fall back to live API calls."
@@ -300,10 +296,6 @@ msgctxt "Languages::eurosite.cities_selected"
 msgid "cities"
 msgstr "cities"
 
-msgctxt "Languages::eurosite.no_cities"
-msgid "No cities found."
-msgstr "No cities found."
-
 msgctxt "Languages::eurosite.countries"
 msgid "Countries"
 msgstr "Countries"
@@ -312,65 +304,13 @@ msgctxt "Languages::eurosite.cities"
 msgid "Cities"
 msgstr "Cities"
 
-msgctxt "Languages::eurosite.own_offer_cities"
-msgid "Own-offer cities"
-msgstr "Own-offer cities"
-
 msgctxt "Languages::eurosite.search_destinations"
 msgid "Search country or city..."
 msgstr "Search country or city..."
 
-msgctxt "Languages::eurosite.show_whitelisted_only"
-msgid "Show only whitelisted"
-msgstr "Show only whitelisted"
-
-msgctxt "Languages::eurosite.shown"
-msgid "shown"
-msgstr "shown"
-
-msgctxt "Languages::eurosite.select_all_cities"
-msgid "Select all cities"
-msgstr "Select all cities"
-
-msgctxt "Languages::eurosite.all_cities_included"
-msgid "ALL CITIES"
-msgstr "ALL CITIES"
-
-msgctxt "Languages::eurosite.selected"
-msgid "selected"
-msgstr "selected"
-
-msgctxt "Languages::eurosite.whitelist_summary"
-msgid "Whitelist summary"
-msgstr "Whitelist summary"
-
-msgctxt "Languages::eurosite.whitelisted_countries"
-msgid "Whitelisted countries"
-msgstr "Whitelisted countries"
-
-msgctxt "Languages::eurosite.whitelisted_cities"
-msgid "Whitelisted cities"
-msgstr "Whitelisted cities"
-
 msgctxt "Languages::eurosite.save_whitelist"
 msgid "Save whitelist"
 msgstr "Save whitelist"
-
-msgctxt "Languages::eurosite.remove_all"
-msgid "Remove all"
-msgstr "Remove all"
-
-msgctxt "Languages::eurosite.confirm_remove_all"
-msgid "Remove all whitelisted destinations? Click Save to persist."
-msgstr "Remove all whitelisted destinations? Click Save to persist."
-
-msgctxt "Languages::eurosite.request_failed"
-msgid "Request failed."
-msgstr "Request failed."
-
-msgctxt "Languages::eurosite.back_to_dashboard"
-msgid "Back to dashboard"
-msgstr "Back to dashboard"
 
 msgctxt "Languages::eurosite.country"
 msgid "Country"
@@ -531,10 +471,6 @@ msgstr "Booking checkout is not fully configured yet — please contact us to fi
 msgctxt "Languages::eurosite.added_to_cart"
 msgid "Your stay was added to the cart — complete checkout to confirm the reservation."
 msgstr "Your stay was added to the cart — complete checkout to confirm the reservation."
-
-msgctxt "Languages::eurosite.no_search_results"
-msgid "No matches."
-msgstr "No matches."
 
 msgctxt "Languages::eurosite.whitelist_names_missing"
 msgid "The country catalog has codes but no names. Run the 'countries' sync to refill it."
@@ -976,10 +912,6 @@ msgctxt "Languages::eurosite.hotels_empty"
 msgid "No hotels listed yet. Whitelist destinations, then run the hotels sync from the dashboard."
 msgstr "No hotels listed yet. Whitelist destinations, then run the hotels sync from the dashboard."
 
-msgctxt "Languages::eurosite.hotels_word"
-msgid "hotels"
-msgstr "hotels"
-
 msgctxt "Languages::eurosite.open_hotel_list"
 msgid "Open hotel list"
 msgstr "Open hotel list"
@@ -1039,18 +971,6 @@ msgstr "The hotel details (pictures, description) are fetched by the product_inf
 msgctxt "Languages::eurosite.product_can_create"
 msgid "Can become a product"
 msgstr "Can become a product"
-
-msgctxt "Languages::eurosite.show_own_only"
-msgid "Show only countries with own hotels"
-msgstr "Show only countries with own hotels"
-
-msgctxt "Languages::eurosite.own_n"
-msgid "[n] own"
-msgstr "[n] own"
-
-msgctxt "Languages::eurosite.select_all_own_cities"
-msgid "Select all own cities"
-msgstr "Select all own cities"
 
 msgctxt "Languages::eurosite.seo_templates"
 msgid "SEO Templates"
@@ -1143,3 +1063,227 @@ msgstr "Search offers"
 msgctxt "Languages::eurosite.probe_none_hint"
 msgid "No Immediate hotel on the configured dates. Find dates with offers below, then add them to the peak-season dates."
 msgstr "No Immediate hotel on the configured dates. Find dates with offers below, then add them to the peak-season dates."
+
+msgctxt "Languages::eurosite.dest_mode_off"
+msgid "Not sold"
+msgstr "Not sold"
+
+msgctxt "Languages::eurosite.dest_mode_all"
+msgid "All cities"
+msgstr "All cities"
+
+msgctxt "Languages::eurosite.dest_mode_own"
+msgid "Own cities"
+msgstr "Own cities"
+
+msgctxt "Languages::eurosite.dest_mode_specific"
+msgid "Only selected"
+msgstr "Only selected"
+
+msgctxt "Languages::eurosite.dest_hint_off"
+msgid "Nothing is synced or sold in this country."
+msgstr "Nothing is synced or sold in this country."
+
+msgctxt "Languages::eurosite.dest_hint_all"
+msgid "Every city is sold, including ones Eurosite adds later."
+msgstr "Every city is sold, including ones Eurosite adds later."
+
+msgctxt "Languages::eurosite.dest_hint_own"
+msgid "Every own-offer city is sold, including ones Eurosite adds later. The other cities are not sold."
+msgstr "Every own-offer city is sold, including ones Eurosite adds later. The other cities are not sold."
+
+msgctxt "Languages::eurosite.dest_hint_specific"
+msgid "Tick the cities to sell. New cities wait for you."
+msgstr "Tick the cities to sell. New cities wait for you."
+
+msgctxt "Languages::eurosite.dest_badge_off"
+msgid "NOT SOLD"
+msgstr "NOT SOLD"
+
+msgctxt "Languages::eurosite.dest_badge_all"
+msgid "ALL"
+msgstr "ALL"
+
+msgctxt "Languages::eurosite.dest_badge_own"
+msgid "OWN ([sold])"
+msgstr "OWN ([sold])"
+
+msgctxt "Languages::eurosite.dest_badge_some"
+msgid "[sold] of [total]"
+msgstr "[sold] of [total]"
+
+msgctxt "Languages::eurosite.dest_tile_countries"
+msgid "Countries sold"
+msgstr "Countries sold"
+
+msgctxt "Languages::eurosite.dest_tile_cities"
+msgid "Cities sold"
+msgstr "Cities sold"
+
+msgctxt "Languages::eurosite.dest_tile_cities_note"
+msgid "[n] with own offers"
+msgstr "[n] with own offers"
+
+msgctxt "Languages::eurosite.dest_tile_hotels"
+msgid "Hotels in scope"
+msgstr "Hotels in scope"
+
+msgctxt "Languages::eurosite.dest_tile_hotels_note"
+msgid "[priced] with prices · [instant] instant"
+msgstr "[priced] with prices · [instant] instant"
+
+msgctxt "Languages::eurosite.dest_tile_new"
+msgid "New cities to review"
+msgstr "New cities to review"
+
+msgctxt "Languages::eurosite.dest_not_configured"
+msgid "<strong>No whitelist saved yet.</strong> Nothing is synced or sold from Eurosite until you choose at least one country and save."
+msgstr "<strong>No whitelist saved yet.</strong> Nothing is synced or sold from Eurosite until you choose at least one country and save."
+
+msgctxt "Languages::eurosite.dest_new_alert"
+msgid "[n] new cities appeared in the cities sync. They are not sold until you tick them."
+msgstr "[n] new cities appeared in the cities sync. They are not sold until you tick them."
+
+msgctxt "Languages::eurosite.dest_show_new"
+msgid "Show new cities"
+msgstr "Show new cities"
+
+msgctxt "Languages::eurosite.dest_gone_alert"
+msgid "[n] ticked cities are no longer in the Eurosite catalog (crossed out). They stay ticked until you untick them."
+msgstr "[n] ticked cities are no longer in the Eurosite catalog (crossed out). They stay ticked until you untick them."
+
+msgctxt "Languages::eurosite.dest_intro"
+msgid "Choose what we sell from Eurosite. Only hotels in these destinations are synced and shown on the storefront; hotels outside are hidden at the next hotel sync, and live products stay until you disable them. \"All cities\" and \"Own cities\" include cities Eurosite adds later; \"Only selected\" waits for you to tick them."
+msgstr "Choose what we sell from Eurosite. Only hotels in these destinations are synced and shown on the storefront; hotels outside are hidden at the next hotel sync, and live products stay until you disable them. \"All cities\" and \"Own cities\" include cities Eurosite adds later; \"Only selected\" waits for you to tick them."
+
+msgctxt "Languages::eurosite.dest_country_meta"
+msgid "[cities] cities · [hotels] hotels"
+msgstr "[cities] cities · [hotels] hotels"
+
+msgctxt "Languages::eurosite.dest_country_meta_none"
+msgid "[cities] cities · hotels not synced yet"
+msgstr "[cities] cities · hotels not synced yet"
+
+msgctxt "Languages::eurosite.dest_no_cities"
+msgid "No cities are synced for [country] yet. Choose \"All cities\" and the next cities sync brings them in."
+msgstr "No cities are synced for [country] yet. Choose \"All cities\" and the next cities sync brings them in."
+
+msgctxt "Languages::eurosite.dest_city_meta"
+msgid "[hotels] hotels · [priced] with prices · [instant] instant"
+msgstr "[hotels] hotels · [priced] with prices · [instant] instant"
+
+msgctxt "Languages::eurosite.dest_city_not_synced"
+msgid "Hotels not synced yet"
+msgstr "Hotels not synced yet"
+
+msgctxt "Languages::eurosite.dest_city_gone"
+msgid "No longer in the Eurosite catalog"
+msgstr "No longer in the Eurosite catalog"
+
+msgctxt "Languages::eurosite.dest_own_n"
+msgid "★ [n] own"
+msgstr "★ [n] own"
+
+msgctxt "Languages::eurosite.dest_own"
+msgid "★ own"
+msgstr "★ own"
+
+msgctxt "Languages::eurosite.dest_own_title"
+msgid "Cities with the operator's own offers"
+msgstr "Cities with the operator's own offers"
+
+msgctxt "Languages::eurosite.dest_filter_own"
+msgid "Countries with own offers only"
+msgstr "Countries with own offers only"
+
+msgctxt "Languages::eurosite.dest_chip_own"
+msgid "★ Own"
+msgstr "★ Own"
+
+msgctxt "Languages::eurosite.dest_select_own"
+msgid "★ Select own cities"
+msgstr "★ Select own cities"
+
+msgctxt "Languages::eurosite.dest_sort_own"
+msgid "Own first"
+msgstr "Own first"
+
+msgctxt "Languages::eurosite.dest_sort_az"
+msgid "A–Z"
+msgstr "A–Z"
+
+msgctxt "Languages::eurosite.dest_sort_hotels"
+msgid "Most hotels"
+msgstr "Most hotels"
+
+msgctxt "Languages::eurosite.dest_search"
+msgid "Search countries, cities or codes…"
+msgstr "Search countries, cities or codes…"
+
+msgctxt "Languages::eurosite.dest_filter"
+msgid "Filter cities…"
+msgstr "Filter cities…"
+
+msgctxt "Languages::eurosite.dest_item_type"
+msgid "City"
+msgstr "City"
+
+msgctxt "Languages::eurosite.dest_gone"
+msgid "not in catalog"
+msgstr "not in catalog"
+
+msgctxt "Languages::eurosite.dest_no_match"
+msgid "No country or city matches."
+msgstr "No country or city matches."
+
+msgctxt "Languages::eurosite.dest_fold"
+msgid "[n] more country has no cities synced and is not sold.|[n] more countries have no cities synced and are not sold."
+msgstr "[n] more country has no cities synced and is not sold.|[n] more countries have no cities synced and are not sold."
+
+msgctxt "Languages::eurosite.dest_catalog"
+msgid "Country catalog: [countries] countries, [cities] cities synced ([own] with own offers)"
+msgstr "Country catalog: [countries] countries, [cities] cities synced ([own] with own offers)"
+
+msgctxt "Languages::eurosite.dest_saved"
+msgid "Whitelist saved: [countries] countries, [cities] selected cities. The next hotel sync uses it."
+msgstr "Whitelist saved: [countries] countries, [cities] selected cities. The next hotel sync uses it."
+
+msgctxt "Languages::eurosite.dest_card_title"
+msgid "Destinations"
+msgstr "Destinations"
+
+msgctxt "Languages::eurosite.dest_card_intro"
+msgid "[countries] countries, [cities] cities sold."
+msgstr "[countries] countries, [cities] cities sold."
+
+msgctxt "Languages::eurosite.dest_card_not_configured"
+msgid "No whitelist saved yet: nothing is synced or sold."
+msgstr "No whitelist saved yet: nothing is synced or sold."
+
+msgctxt "Languages::eurosite.dest_col_instant"
+msgid "Instant"
+msgstr "Instant"
+
+msgctxt "Languages::eurosite.dest_col_live"
+msgid "Live products"
+msgstr "Live products"
+
+msgctxt "Languages::eurosite.dest_card_n_cities"
+msgid "[n] cities"
+msgstr "[n] cities"
+
+msgctxt "Languages::eurosite.dest_card_cities"
+msgid "cities"
+msgstr "cities"
+
+msgctxt "Languages::eurosite.dest_alert_new"
+msgid "[n] new cities in [country] wait for review."
+msgstr "[n] new cities in [country] wait for review."
+
+msgctxt "Languages::eurosite.dest_alert_gone"
+msgid "[n] sold cities are no longer in the Eurosite catalog."
+msgstr "[n] sold cities are no longer in the Eurosite catalog."
+
+msgctxt "Languages::eurosite.dest_alert_outside"
+msgid "[n] live products are outside the destination whitelist."
+msgstr "[n] live products are outside the destination whitelist."

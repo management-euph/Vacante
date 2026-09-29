@@ -282,9 +282,11 @@ final class DestinationPicker
     }
 
     /**
-     * The add-on's modes, typed: [{value, label, hint, sells, badge}].
+     * The add-on's modes, typed: [{value, label, hint, sells, badge, requires}].
+     * A mode that requires a flag is offered only to countries carrying it
+     * (Eurosite's "Own cities" to countries with own-offer cities).
      *
-     * @return list<array{value: string, label: string, hint: string, sells: string, badge: string}>
+     * @return list<array{value: string, label: string, hint: string, sells: string, badge: string, requires: string}>
      */
     public static function modes(mixed $raw): array
     {
@@ -299,6 +301,7 @@ final class DestinationPicker
                 'hint' => self::str($m['hint'] ?? ''),
                 'sells' => self::str($m['sells'] ?? self::SELLS_NONE),
                 'badge' => self::str($m['badge'] ?? ''),
+                'requires' => self::str($m['requires'] ?? ''),
             ];
         }
 

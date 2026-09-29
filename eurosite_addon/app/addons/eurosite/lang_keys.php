@@ -146,10 +146,6 @@ return [
         'en' => 'Eurosite — Destination whitelist',
         'ro' => 'Eurosite — Listă destinații active',
     ],
-    'eurosite.whitelist_hint' => [
-        'en' => 'Only whitelisted destinations are synced and searchable on the storefront. Tick a country to include all of its cities, or expand it and pick specific cities.',
-        'ro' => 'Doar destinațiile active sunt sincronizate și căutabile în storefront. Bifați o țară pentru toate orașele ei sau expandați și alegeți orașe specifice.',
-    ],
     'eurosite.whitelist_needs_countries' => [
         'en' => 'The country catalog has not been synced yet — run the \'countries\' sync from the dashboard first. City lists fall back to live API calls.',
         'ro' => 'Catalogul de țări nu a fost încă sincronizat — rulați mai întâi sincronizarea "countries" din panou. Listele de orașe se încarcă direct din API.',
@@ -162,10 +158,6 @@ return [
         'en' => 'cities',
         'ro' => 'orașe',
     ],
-    'eurosite.no_cities' => [
-        'en' => 'No cities found.',
-        'ro' => 'Niciun oraș găsit.',
-    ],
     'eurosite.countries' => [
         'en' => 'Countries',
         'ro' => 'Țări',
@@ -174,65 +166,13 @@ return [
         'en' => 'Cities',
         'ro' => 'Orașe',
     ],
-    'eurosite.own_offer_cities' => [
-        'en' => 'Own-offer cities',
-        'ro' => 'Orașe cu oferte proprii',
-    ],
     'eurosite.search_destinations' => [
         'en' => 'Search country or city...',
         'ro' => 'Caută țară sau oraș...',
     ],
-    'eurosite.show_whitelisted_only' => [
-        'en' => 'Show only whitelisted',
-        'ro' => 'Afișează doar destinațiile selectate',
-    ],
-    'eurosite.shown' => [
-        'en' => 'shown',
-        'ro' => 'afișate',
-    ],
-    'eurosite.select_all_cities' => [
-        'en' => 'Select all cities',
-        'ro' => 'Selectează toate orașele',
-    ],
-    'eurosite.all_cities_included' => [
-        'en' => 'ALL CITIES',
-        'ro' => 'TOATE ORAȘELE',
-    ],
-    'eurosite.selected' => [
-        'en' => 'selected',
-        'ro' => 'selectate',
-    ],
-    'eurosite.whitelist_summary' => [
-        'en' => 'Whitelist summary',
-        'ro' => 'Sumar destinații',
-    ],
-    'eurosite.whitelisted_countries' => [
-        'en' => 'Whitelisted countries',
-        'ro' => 'Țări selectate',
-    ],
-    'eurosite.whitelisted_cities' => [
-        'en' => 'Whitelisted cities',
-        'ro' => 'Orașe selectate',
-    ],
     'eurosite.save_whitelist' => [
         'en' => 'Save whitelist',
         'ro' => 'Salvează lista',
-    ],
-    'eurosite.remove_all' => [
-        'en' => 'Remove all',
-        'ro' => 'Elimină tot',
-    ],
-    'eurosite.confirm_remove_all' => [
-        'en' => 'Remove all whitelisted destinations? Click Save to persist.',
-        'ro' => 'Eliminați toate destinațiile selectate? Apăsați Salvează pentru a persista.',
-    ],
-    'eurosite.request_failed' => [
-        'en' => 'Request failed.',
-        'ro' => 'Cererea a eșuat.',
-    ],
-    'eurosite.back_to_dashboard' => [
-        'en' => 'Back to dashboard',
-        'ro' => 'Înapoi la panou',
     ],
     'eurosite.country' => [
         'en' => 'Country',
@@ -393,10 +333,6 @@ return [
     'eurosite.added_to_cart' => [
         'en' => 'Your stay was added to the cart — complete checkout to confirm the reservation.',
         'ro' => 'Sejurul a fost adăugat în coș — finalizați comanda pentru a confirma rezervarea.',
-    ],
-    'eurosite.no_search_results' => [
-        'en' => 'No matches.',
-        'ro' => 'Niciun rezultat.',
     ],
     'eurosite.whitelist_names_missing' => [
         'en' => 'The country catalog has codes but no names. Run the \'countries\' sync to refill it.',
@@ -839,10 +775,6 @@ return [
         'en' => 'No hotels listed yet. Whitelist destinations, then run the hotels sync from the dashboard.',
         'ro' => 'Niciun hotel listat încă. Activați destinații, apoi rulați sincronizarea hotelurilor din panoul de control.',
     ],
-    'eurosite.hotels_word' => [
-        'en' => 'hotels',
-        'ro' => 'hoteluri',
-    ],
     'eurosite.open_hotel_list' => [
         'en' => 'Open hotel list',
         'ro' => 'Deschide lista de hoteluri',
@@ -905,20 +837,8 @@ return [
         'ro' => 'Poate deveni produs',
     ],
     // Whitelist: own-hotels filter
-    'eurosite.show_own_only' => [
-        'en' => 'Show only countries with own hotels',
-        'ro' => 'Arată doar țările cu hoteluri proprii',
-    ],
-    'eurosite.own_n' => [
-        'en' => '[n] own',
-        'ro' => '[n] proprii',
-    ],
     // Whitelist: own cities per country
     // Whitelist: select all own cities
-    'eurosite.select_all_own_cities' => [
-        'en' => 'Select all own cities',
-        'ro' => 'Selectează toate orașele proprii',
-    ],
     // SEO Templates page (Travel Core's shared page)
     'eurosite.seo_templates' => [
         'en' => 'SEO Templates',
@@ -1012,5 +932,230 @@ return [
     'eurosite.probe_none_hint' => [
         'en' => 'No Immediate hotel on the configured dates. Find dates with offers below, then add them to the peak-season dates.',
         'ro' => 'Niciun hotel Imediat la datele configurate. Găsiți mai jos date cu oferte, apoi adăugați-le la datele de sezon.',
+    ],
+    // Destination whitelist (Travel Core's destination picker) and the dashboard Destinations card.
+    'eurosite.dest_mode_off' => [
+        'en' => 'Not sold',
+        'ro' => 'Nu se vinde',
+    ],
+    'eurosite.dest_mode_all' => [
+        'en' => 'All cities',
+        'ro' => 'Toate orașele',
+    ],
+    'eurosite.dest_mode_own' => [
+        'en' => 'Own cities',
+        'ro' => 'Orașe proprii',
+    ],
+    'eurosite.dest_mode_specific' => [
+        'en' => 'Only selected',
+        'ro' => 'Doar cele bifate',
+    ],
+    'eurosite.dest_hint_off' => [
+        'en' => 'Nothing is synced or sold in this country.',
+        'ro' => 'Nimic nu se sincronizează și nu se vinde în această țară.',
+    ],
+    'eurosite.dest_hint_all' => [
+        'en' => 'Every city is sold, including ones Eurosite adds later.',
+        'ro' => 'Se vând toate orașele, inclusiv cele adăugate ulterior de Eurosite.',
+    ],
+    'eurosite.dest_hint_own' => [
+        'en' => 'Every own-offer city is sold, including ones Eurosite adds later. The other cities are not sold.',
+        'ro' => 'Se vând toate orașele cu oferte proprii, inclusiv cele adăugate ulterior de Eurosite. Celelalte orașe nu se vând.',
+    ],
+    'eurosite.dest_hint_specific' => [
+        'en' => 'Tick the cities to sell. New cities wait for you.',
+        'ro' => 'Bifați orașele de vândut. Orașele noi vă așteaptă.',
+    ],
+    'eurosite.dest_badge_off' => [
+        'en' => 'NOT SOLD',
+        'ro' => 'NU SE VINDE',
+    ],
+    'eurosite.dest_badge_all' => [
+        'en' => 'ALL',
+        'ro' => 'TOATE',
+    ],
+    'eurosite.dest_badge_own' => [
+        'en' => 'OWN ([sold])',
+        'ro' => 'PROPRII ([sold])',
+    ],
+    'eurosite.dest_badge_some' => [
+        'en' => '[sold] of [total]',
+        'ro' => '[sold] din [total]',
+    ],
+    'eurosite.dest_tile_countries' => [
+        'en' => 'Countries sold',
+        'ro' => 'Țări vândute',
+    ],
+    'eurosite.dest_tile_cities' => [
+        'en' => 'Cities sold',
+        'ro' => 'Orașe vândute',
+    ],
+    'eurosite.dest_tile_cities_note' => [
+        'en' => '[n] with own offers',
+        'ro' => '[n] cu oferte proprii',
+    ],
+    'eurosite.dest_tile_hotels' => [
+        'en' => 'Hotels in scope',
+        'ro' => 'Hoteluri incluse',
+    ],
+    'eurosite.dest_tile_hotels_note' => [
+        'en' => '[priced] with prices · [instant] instant',
+        'ro' => '[priced] cu prețuri · [instant] imediat',
+    ],
+    'eurosite.dest_tile_new' => [
+        'en' => 'New cities to review',
+        'ro' => 'Orașe noi de verificat',
+    ],
+    'eurosite.dest_not_configured' => [
+        'en' => '<strong>No whitelist saved yet.</strong> Nothing is synced or sold from Eurosite until you choose at least one country and save.',
+        'ro' => '<strong>Nicio listă salvată încă.</strong> Nu se sincronizează și nu se vinde nimic de la Eurosite până nu alegeți cel puțin o țară și salvați.',
+    ],
+    'eurosite.dest_new_alert' => [
+        'en' => '[n] new cities appeared in the cities sync. They are not sold until you tick them.',
+        'ro' => '[n] orașe noi au apărut la sincronizarea orașelor. Nu se vând până nu le bifați.',
+    ],
+    'eurosite.dest_show_new' => [
+        'en' => 'Show new cities',
+        'ro' => 'Arată orașele noi',
+    ],
+    'eurosite.dest_gone_alert' => [
+        'en' => '[n] ticked cities are no longer in the Eurosite catalog (crossed out). They stay ticked until you untick them.',
+        'ro' => '[n] orașe bifate nu mai sunt în catalogul Eurosite (tăiate). Rămân bifate până le debifați.',
+    ],
+    'eurosite.dest_intro' => [
+        'en' => 'Choose what we sell from Eurosite. Only hotels in these destinations are synced and shown on the storefront; hotels outside are hidden at the next hotel sync, and live products stay until you disable them. "All cities" and "Own cities" include cities Eurosite adds later; "Only selected" waits for you to tick them.',
+        'ro' => 'Alegeți ce vindem de la Eurosite. Doar hotelurile din aceste destinații se sincronizează și apar în magazin; cele din afară se ascund la următoarea sincronizare a hotelurilor, iar produsele active rămân până le dezactivați. „Toate orașele" și „Orașe proprii" includ și orașele adăugate ulterior de Eurosite; „Doar cele bifate" așteaptă să le bifați.',
+    ],
+    'eurosite.dest_country_meta' => [
+        'en' => '[cities] cities · [hotels] hotels',
+        'ro' => '[cities] orașe · [hotels] hoteluri',
+    ],
+    'eurosite.dest_country_meta_none' => [
+        'en' => '[cities] cities · hotels not synced yet',
+        'ro' => '[cities] orașe · hoteluri nesincronizate încă',
+    ],
+    'eurosite.dest_no_cities' => [
+        'en' => 'No cities are synced for [country] yet. Choose "All cities" and the next cities sync brings them in.',
+        'ro' => 'Nu există încă orașe sincronizate pentru [country]. Alegeți „Toate orașele" și următoarea sincronizare le aduce.',
+    ],
+    'eurosite.dest_city_meta' => [
+        'en' => '[hotels] hotels · [priced] with prices · [instant] instant',
+        'ro' => '[hotels] hoteluri · [priced] cu prețuri · [instant] imediat',
+    ],
+    'eurosite.dest_city_not_synced' => [
+        'en' => 'Hotels not synced yet',
+        'ro' => 'Hoteluri nesincronizate încă',
+    ],
+    'eurosite.dest_city_gone' => [
+        'en' => 'No longer in the Eurosite catalog',
+        'ro' => 'Nu mai este în catalogul Eurosite',
+    ],
+    'eurosite.dest_own_n' => [
+        'en' => '★ [n] own',
+        'ro' => '★ [n] proprii',
+    ],
+    'eurosite.dest_own' => [
+        'en' => '★ own',
+        'ro' => '★ propriu',
+    ],
+    'eurosite.dest_own_title' => [
+        'en' => 'Cities with the operator\'s own offers',
+        'ro' => 'Orașe cu ofertele proprii ale operatorului',
+    ],
+    'eurosite.dest_filter_own' => [
+        'en' => 'Countries with own offers only',
+        'ro' => 'Doar țările cu oferte proprii',
+    ],
+    'eurosite.dest_chip_own' => [
+        'en' => '★ Own',
+        'ro' => '★ Proprii',
+    ],
+    'eurosite.dest_select_own' => [
+        'en' => '★ Select own cities',
+        'ro' => '★ Bifează orașele proprii',
+    ],
+    'eurosite.dest_sort_own' => [
+        'en' => 'Own first',
+        'ro' => 'Întâi cele proprii',
+    ],
+    'eurosite.dest_sort_az' => [
+        'en' => 'A–Z',
+        'ro' => 'A–Z',
+    ],
+    'eurosite.dest_sort_hotels' => [
+        'en' => 'Most hotels',
+        'ro' => 'Cele mai multe hoteluri',
+    ],
+    'eurosite.dest_search' => [
+        'en' => 'Search countries, cities or codes…',
+        'ro' => 'Caută țări, orașe sau coduri…',
+    ],
+    'eurosite.dest_filter' => [
+        'en' => 'Filter cities…',
+        'ro' => 'Filtrează orașele…',
+    ],
+    'eurosite.dest_item_type' => [
+        'en' => 'City',
+        'ro' => 'Oraș',
+    ],
+    'eurosite.dest_gone' => [
+        'en' => 'not in catalog',
+        'ro' => 'nu mai e în catalog',
+    ],
+    'eurosite.dest_no_match' => [
+        'en' => 'No country or city matches.',
+        'ro' => 'Nicio țară sau oraș nu se potrivește.',
+    ],
+    'eurosite.dest_fold' => [
+        'en' => '[n] more country has no cities synced and is not sold.|[n] more countries have no cities synced and are not sold.',
+        'ro' => 'Încă [n] țară nu are orașe sincronizate și nu se vinde.|Încă [n] țări nu au orașe sincronizate și nu se vând.|Încă [n] de țări nu au orașe sincronizate și nu se vând.',
+    ],
+    'eurosite.dest_catalog' => [
+        'en' => 'Country catalog: [countries] countries, [cities] cities synced ([own] with own offers)',
+        'ro' => 'Catalogul de țări: [countries] țări, [cities] orașe sincronizate ([own] cu oferte proprii)',
+    ],
+    'eurosite.dest_saved' => [
+        'en' => 'Whitelist saved: [countries] countries, [cities] selected cities. The next hotel sync uses it.',
+        'ro' => 'Lista a fost salvată: [countries] țări, [cities] orașe bifate. Următoarea sincronizare a hotelurilor o folosește.',
+    ],
+    'eurosite.dest_card_title' => [
+        'en' => 'Destinations',
+        'ro' => 'Destinații',
+    ],
+    'eurosite.dest_card_intro' => [
+        'en' => '[countries] countries, [cities] cities sold.',
+        'ro' => '[countries] țări, [cities] orașe vândute.',
+    ],
+    'eurosite.dest_card_not_configured' => [
+        'en' => 'No whitelist saved yet: nothing is synced or sold.',
+        'ro' => 'Nicio listă salvată încă: nu se sincronizează și nu se vinde nimic.',
+    ],
+    'eurosite.dest_col_instant' => [
+        'en' => 'Instant',
+        'ro' => 'Imediat',
+    ],
+    'eurosite.dest_col_live' => [
+        'en' => 'Live products',
+        'ro' => 'Produse active',
+    ],
+    'eurosite.dest_card_n_cities' => [
+        'en' => '[n] cities',
+        'ro' => '[n] orașe',
+    ],
+    'eurosite.dest_card_cities' => [
+        'en' => 'cities',
+        'ro' => 'orașe',
+    ],
+    'eurosite.dest_alert_new' => [
+        'en' => '[n] new cities in [country] wait for review.',
+        'ro' => '[n] orașe noi din [country] așteaptă verificarea.',
+    ],
+    'eurosite.dest_alert_gone' => [
+        'en' => '[n] sold cities are no longer in the Eurosite catalog.',
+        'ro' => '[n] orașe vândute nu mai sunt în catalogul Eurosite.',
+    ],
+    'eurosite.dest_alert_outside' => [
+        'en' => '[n] live products are outside the destination whitelist.',
+        'ro' => '[n] produse active sunt în afara listei de destinații.',
     ],
 ];

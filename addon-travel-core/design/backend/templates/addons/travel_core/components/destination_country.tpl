@@ -29,10 +29,13 @@
         <fieldset class="travel-dest-mode">
             <legend class="travel-dest-sr">{__("travel_core.dest_mode_legend", ["[country]" => $_c.label|escape:html])}</legend>
             {foreach $dest.modes as $_m}
-                <label class="travel-dest-mode__opt">
-                    <input type="radio" name="dest[{$_c.key|escape:html}][mode]" value="{$_m.value}" data-sells="{$_m.sells}" data-badge="{$_m.badge|escape:html}"{if $_c.mode == $_m.value} checked{/if}>
-                    <span>{$_m.label}</span>
-                </label>
+                {* A mode that requires a flag (Eurosite: Own cities) is offered where it sells something. *}
+                {if $_m.requires == "" || $_c.flags[$_m.requires]|default:0 > 0 || $_c.mode == $_m.value}
+                    <label class="travel-dest-mode__opt">
+                        <input type="radio" name="dest[{$_c.key|escape:html}][mode]" value="{$_m.value}" data-sells="{$_m.sells}" data-badge="{$_m.badge|escape:html}"{if $_c.mode == $_m.value} checked{/if}>
+                        <span>{$_m.label}</span>
+                    </label>
+                {/if}
             {/foreach}
         </fieldset>
     </div>

@@ -56,10 +56,18 @@ function fn_travel_core_dest_words(array $overrides = []): array
 function fn_travel_core_dest_page(array $dest): array
 {
     $modes = DestinationPicker::modes($dest['modes'] ?? []);
+    // lazy_bodies: every country's figures come from its items, then its
+    // body is left out; the script loads it from body_url when it opens.
+    $lazy = ($dest['lazy_bodies'] ?? false) === true;
     $countries = [];
     foreach (is_array($dest['countries'] ?? null) ? $dest['countries'] : [] as $country) {
         if (is_array($country)) {
-            $countries[] = DestinationPicker::finish($country, $modes);
+            $finished = DestinationPicker::finish($country, $modes);
+            if ($lazy) {
+                $finished['lazy'] = true;
+                $finished['groups'] = [];
+            }
+            $countries[] = $finished;
         }
     }
     $dest['modes'] = $modes;
