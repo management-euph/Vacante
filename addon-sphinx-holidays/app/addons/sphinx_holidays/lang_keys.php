@@ -158,10 +158,6 @@ return [
         'en' => 'Settings',
         'ro' => 'Setări',
     ],
-    'sphinx_holidays.show_whitelisted_only' => [
-        'en' => 'Show whitelisted only',
-        'ro' => 'Arată doar cele din whitelist',
-    ],
     'sphinx_holidays.classification' => [
         'en' => 'Classification',
         'ro' => 'Clasificare',
@@ -890,5 +886,194 @@ return [
     'sphinx_holidays.sx_total_for_rooms' => [
         'en' => 'Total for [count] rooms',
         'ro' => 'Total pentru [count] camere',
+    ],
+    // Destination whitelist (Travel Core's destination picker) and the dashboard Destinations card.
+    'sphinx_holidays.dest_mode_off' => [
+        'en' => 'Not sold',
+        'ro' => 'Nu se vinde',
+    ],
+    'sphinx_holidays.dest_mode_all' => [
+        'en' => 'All destinations',
+        'ro' => 'Toate destinațiile',
+    ],
+    'sphinx_holidays.dest_mode_specific' => [
+        'en' => 'Only selected',
+        'ro' => 'Doar cele bifate',
+    ],
+    'sphinx_holidays.dest_hint_off' => [
+        'en' => 'Nothing is synced or sold in this country.',
+        'ro' => 'Nimic nu se sincronizează și nu se vinde în această țară.',
+    ],
+    'sphinx_holidays.dest_hint_all' => [
+        'en' => 'Every region and city is sold, including ones Sphinx adds later.',
+        'ro' => 'Se vând toate regiunile și orașele, inclusiv cele adăugate ulterior de Sphinx.',
+    ],
+    'sphinx_holidays.dest_hint_specific' => [
+        'en' => 'Tick a whole region (cities Sphinx adds to it later come with it) or single cities. New destinations wait for you.',
+        'ro' => 'Bifați o regiune întreagă (orașele adăugate ulterior de Sphinx vin odată cu ea) sau orașe separate. Destinațiile noi vă așteaptă.',
+    ],
+    'sphinx_holidays.dest_badge_off' => [
+        'en' => 'NOT SOLD',
+        'ro' => 'NU SE VINDE',
+    ],
+    'sphinx_holidays.dest_badge_all' => [
+        'en' => 'ALL',
+        'ro' => 'TOATE',
+    ],
+    'sphinx_holidays.dest_badge_some' => [
+        'en' => '[groups_sold] of [groups] regions',
+        'ro' => '[groups_sold] din [groups] regiuni',
+    ],
+    'sphinx_holidays.dest_tile_countries' => [
+        'en' => 'Countries sold',
+        'ro' => 'Țări vândute',
+    ],
+    'sphinx_holidays.dest_tile_cities' => [
+        'en' => 'Cities sold',
+        'ro' => 'Orașe vândute',
+    ],
+    'sphinx_holidays.dest_tile_cities_note' => [
+        'en' => 'in [n] regions',
+        'ro' => 'în [n] regiuni',
+    ],
+    'sphinx_holidays.dest_tile_hotels' => [
+        'en' => 'Hotels in scope',
+        'ro' => 'Hoteluri incluse',
+    ],
+    'sphinx_holidays.dest_tile_hotels_note' => [
+        'en' => '[n] live products',
+        'ro' => '[n] produse active',
+    ],
+    'sphinx_holidays.dest_tile_circuits' => [
+        'en' => 'Circuits in scope',
+        'ro' => 'Circuite incluse',
+    ],
+    'sphinx_holidays.dest_tile_circuits_note' => [
+        'en' => '[n] package routes',
+        'ro' => '[n] rute de pachete',
+    ],
+    'sphinx_holidays.dest_tile_new' => [
+        'en' => 'New destinations to review',
+        'ro' => 'Destinații noi de verificat',
+    ],
+    'sphinx_holidays.dest_regions_sold' => [
+        'en' => 'Regions sold',
+        'ro' => 'Regiuni vândute',
+    ],
+    'sphinx_holidays.dest_not_configured' => [
+        'en' => '<strong>No whitelist saved yet.</strong> Nothing is synced or sold from Sphinx until you choose at least one country and save.',
+        'ro' => '<strong>Nicio listă salvată încă.</strong> Nu se sincronizează și nu se vinde nimic de la Sphinx până nu alegeți cel puțin o țară și salvați.',
+    ],
+    'sphinx_holidays.dest_new_alert' => [
+        'en' => '[n] new destinations appeared in the destinations sync. They are not sold until you tick them.',
+        'ro' => '[n] destinații noi au apărut la sincronizarea destinațiilor. Nu se vând până nu le bifați.',
+    ],
+    'sphinx_holidays.dest_show_new' => [
+        'en' => 'Show new destinations',
+        'ro' => 'Arată destinațiile noi',
+    ],
+    'sphinx_holidays.dest_intro' => [
+        'en' => 'Choose what we sell from Sphinx. Only hotels, circuits and package routes in these destinations are synced and made into products; live products stay until you disable them. "All destinations" and a ticked region include what Sphinx adds later; single cities are only themselves.',
+        'ro' => 'Alegeți ce vindem de la Sphinx. Doar hotelurile, circuitele și rutele de pachete din aceste destinații se sincronizează și devin produse; produsele active rămân până le dezactivați. „Toate destinațiile" și o regiune bifată includ și ce adaugă ulterior Sphinx; orașele bifate separat sunt doar ele însele.',
+    ],
+    'sphinx_holidays.dest_all_continents' => [
+        'en' => 'All continents',
+        'ro' => 'Toate continentele',
+    ],
+    'sphinx_holidays.dest_feature_note' => [
+        'en' => 'Saving also adds the sold regions to Feature Mappings, for the storefront\'s region filter.',
+        'ro' => 'Salvarea adaugă și regiunile vândute în Feature Mappings, pentru filtrul de regiuni din magazin.',
+    ],
+    'sphinx_holidays.dest_country_meta' => [
+        'en' => '[regions] regions · [cities] cities · [hotels] hotels',
+        'ro' => '[regions] regiuni · [cities] orașe · [hotels] hoteluri',
+    ],
+    'sphinx_holidays.dest_country_meta_none' => [
+        'en' => '[regions] regions · [cities] cities · hotels not synced yet',
+        'ro' => '[regions] regiuni · [cities] orașe · hoteluri nesincronizate încă',
+    ],
+    'sphinx_holidays.dest_region_meta' => [
+        'en' => '[cities] cities · [hotels] hotels',
+        'ro' => '[cities] orașe · [hotels] hoteluri',
+    ],
+    'sphinx_holidays.dest_city_meta' => [
+        'en' => '[hotels] hotels',
+        'ro' => '[hotels] hoteluri',
+    ],
+    'sphinx_holidays.dest_city_not_synced' => [
+        'en' => 'Hotels not synced yet',
+        'ro' => 'Hoteluri nesincronizate încă',
+    ],
+    'sphinx_holidays.dest_n_circuits' => [
+        'en' => '[n] circuit|[n] circuits',
+        'ro' => '[n] circuit|[n] circuite|[n] de circuite',
+    ],
+    'sphinx_holidays.dest_circuit_label' => [
+        'en' => 'Circuit: [name]',
+        'ro' => 'Circuit: [name]',
+    ],
+    'sphinx_holidays.dest_no_destinations' => [
+        'en' => 'No destinations are synced for [country] yet.',
+        'ro' => 'Nu există încă destinații sincronizate pentru [country].',
+    ],
+    'sphinx_holidays.dest_search' => [
+        'en' => 'Search countries, regions or cities…',
+        'ro' => 'Caută țări, regiuni sau orașe…',
+    ],
+    'sphinx_holidays.dest_filter' => [
+        'en' => 'Filter cities…',
+        'ro' => 'Filtrează orașele…',
+    ],
+    'sphinx_holidays.dest_item_type' => [
+        'en' => 'City',
+        'ro' => 'Oraș',
+    ],
+    'sphinx_holidays.dest_group_type' => [
+        'en' => 'Region',
+        'ro' => 'Regiune',
+    ],
+    'sphinx_holidays.dest_no_match' => [
+        'en' => 'No country, region or city matches.',
+        'ro' => 'Nicio țară, regiune sau oraș nu se potrivește.',
+    ],
+    'sphinx_holidays.dest_fold' => [
+        'en' => '[n] more country has no destinations synced and is not sold.|[n] more countries have no destinations synced and are not sold.',
+        'ro' => 'Încă [n] țară nu are destinații sincronizate și nu se vinde.|Încă [n] țări nu au destinații sincronizate și nu se vând.|Încă [n] de țări nu au destinații sincronizate și nu se vând.',
+    ],
+    'sphinx_holidays.dest_catalog' => [
+        'en' => 'Sphinx catalog: [continents] continents, [countries] countries, [regions] regions, [cities] cities',
+        'ro' => 'Catalogul Sphinx: [continents] continente, [countries] țări, [regions] regiuni, [cities] orașe',
+    ],
+    'sphinx_holidays.dest_last_synced' => [
+        'en' => 'destinations synced [at]',
+        'ro' => 'destinații sincronizate la [at]',
+    ],
+    'sphinx_holidays.dest_card_title' => [
+        'en' => 'Destinations',
+        'ro' => 'Destinații',
+    ],
+    'sphinx_holidays.dest_card_intro' => [
+        'en' => '[countries] countries, [cities] cities sold.',
+        'ro' => '[countries] țări, [cities] orașe vândute.',
+    ],
+    'sphinx_holidays.dest_card_cities' => [
+        'en' => '[n] cities',
+        'ro' => '[n] orașe',
+    ],
+    'sphinx_holidays.dest_col_circuits' => [
+        'en' => 'Circuits',
+        'ro' => 'Circuite',
+    ],
+    'sphinx_holidays.dest_col_live' => [
+        'en' => 'Live products',
+        'ro' => 'Produse active',
+    ],
+    'sphinx_holidays.dest_alert_new' => [
+        'en' => '[n] new destinations in [country] wait for review.',
+        'ro' => '[n] destinații noi din [country] așteaptă verificarea.',
+    ],
+    'sphinx_holidays.dest_alert_outside' => [
+        'en' => '[n] live products are outside the destination whitelist.',
+        'ro' => '[n] produse active sunt în afara listei de destinații.',
     ],
 ];

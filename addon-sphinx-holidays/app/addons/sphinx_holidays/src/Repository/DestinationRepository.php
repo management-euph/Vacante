@@ -58,7 +58,7 @@ class DestinationRepository
 
                 // lat/lng bound as ?s decimal strings — Tygh's ?d placeholder
                 // truncates DECIMAL(10,8) to ~2 dp (see HotelRepository).
-                $tuples[] = '(?i, ?s, ?s, ?i, ?s, ?i, ?s, ?s, ?i, ?s)';
+                $tuples[] = '(?i, ?s, ?s, ?i, ?s, ?i, ?s, ?s, ?i, ?s, ?s)';
                 array_push(
                     $params,
                     $id,
@@ -71,6 +71,7 @@ class DestinationRepository
                     TypeCoerce::toDecimalString($dest['longitude'] ?? 0, 8),
                     TypeCoerce::toInt($dest['hotel_count'] ?? 0),
                     $now,
+                    $now,
                 );
             }
 
@@ -78,9 +79,11 @@ class DestinationRepository
                 continue;
             }
 
+            // first_seen_at is written once, on the insert: the whitelist
+            // page calls a destination new when it appeared after the last Save.
             db_query(
                 'INSERT INTO ?:sphinx_destinations
-                    (destination_id, name, type, parent_id, country_code, geoname_id, latitude, longitude, hotel_count, last_synced_at)
+                    (destination_id, name, type, parent_id, country_code, geoname_id, latitude, longitude, hotel_count, first_seen_at, last_synced_at)
                  VALUES ' . implode(', ', $tuples) . '
                  ON DUPLICATE KEY UPDATE
                     name = VALUES(name),

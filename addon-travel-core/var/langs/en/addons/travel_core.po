@@ -2005,3 +2005,267 @@ msgstr "Balance — by [date]"
 msgctxt "Languages::travel_core.deposit_pay_now_btn"
 msgid "pay [amount] now"
 msgstr "pay [amount] now"
+
+msgctxt "Languages::travel_core.dest_only_sold"
+msgid "Show sold countries only"
+msgstr "Show sold countries only"
+
+msgctxt "Languages::travel_core.dest_fold_show"
+msgid "Show them"
+msgstr "Show them"
+
+msgctxt "Languages::travel_core.dest_fold_hide"
+msgid "Fold the countries with nothing synced"
+msgstr "Fold the countries with nothing synced"
+
+msgctxt "Languages::travel_core.dest_page_first"
+msgid "First page"
+msgstr "First page"
+
+msgctxt "Languages::travel_core.dest_page_prev"
+msgid "Previous page"
+msgstr "Previous page"
+
+msgctxt "Languages::travel_core.dest_page_next"
+msgid "Next page"
+msgstr "Next page"
+
+msgctxt "Languages::travel_core.dest_page_last"
+msgid "Last page"
+msgstr "Last page"
+
+msgctxt "Languages::travel_core.dest_summary_title"
+msgid "Whitelist summary"
+msgstr "Whitelist summary"
+
+msgctxt "Languages::travel_core.dest_save"
+msgid "Save whitelist"
+msgstr "Save whitelist"
+
+msgctxt "Languages::travel_core.dest_undo"
+msgid "Undo changes"
+msgstr "Undo changes"
+
+msgctxt "Languages::travel_core.dest_undo_short"
+msgid "Undo"
+msgstr "Undo"
+
+msgctxt "Languages::travel_core.dest_outside_label"
+msgid "Live products outside the whitelist"
+msgstr "Live products outside the whitelist"
+
+msgctxt "Languages::travel_core.dest_outside_button"
+msgid "Disable products outside the whitelist…"
+msgstr "Disable products outside the whitelist…"
+
+msgctxt "Languages::travel_core.dest_outside_confirm"
+msgid "These [n] live products are outside the saved whitelist. Disabling hides them from the store; they are not deleted and can be enabled again."
+msgstr "These [n] live products are outside the saved whitelist. Disabling hides them from the store; they are not deleted and can be enabled again."
+
+msgctxt "Languages::travel_core.dest_n_products"
+msgid "[n] products"
+msgstr "[n] products"
+
+msgctxt "Languages::travel_core.dest_outside_do"
+msgid "Disable [n] products"
+msgstr "Disable [n] products"
+
+msgctxt "Languages::travel_core.dest_outside_note"
+msgid "Saving never changes existing products. Use the button above to disable them on purpose."
+msgstr "Saving never changes existing products. Use the button above to disable them on purpose."
+
+msgctxt "Languages::travel_core.dest_badge_new"
+msgid "NEW"
+msgstr "NEW"
+
+msgctxt "Languages::travel_core.dest_badge_new_n"
+msgid "[n] new"
+msgstr "[n] new"
+
+msgctxt "Languages::travel_core.dest_mode_legend"
+msgid "What we sell in [country]"
+msgstr "What we sell in [country]"
+
+msgctxt "Languages::travel_core.dest_select_shown"
+msgid "Select shown"
+msgstr "Select shown"
+
+msgctxt "Languages::travel_core.dest_clear_shown"
+msgid "Clear shown"
+msgstr "Clear shown"
+
+msgctxt "Languages::travel_core.dest_chips_label"
+msgid "Show"
+msgstr "Show"
+
+msgctxt "Languages::travel_core.dest_chip_all"
+msgid "All"
+msgstr "All"
+
+msgctxt "Languages::travel_core.dest_chip_sold"
+msgid "Sold"
+msgstr "Sold"
+
+msgctxt "Languages::travel_core.dest_chip_unsold"
+msgid "Not sold"
+msgstr "Not sold"
+
+msgctxt "Languages::travel_core.dest_chip_new"
+msgid "New"
+msgstr "New"
+
+msgctxt "Languages::travel_core.dest_sort"
+msgid "Sort"
+msgstr "Sort"
+
+msgctxt "Languages::travel_core.dest_expand"
+msgid "Expand all"
+msgstr "Expand all"
+
+msgctxt "Languages::travel_core.dest_collapse"
+msgid "Collapse all"
+msgstr "Collapse all"
+
+msgctxt "Languages::travel_core.dest_fold_group"
+msgid "Show or hide the cities of [group]"
+msgstr "Show or hide the cities of [group]"
+
+msgctxt "Languages::travel_core.dest_not_saved"
+msgid "Not saved"
+msgstr "Not saved"
+
+msgctxt "Languages::travel_core.dest_live_title"
+msgid "Live products"
+msgstr "Live products"
+
+msgctxt "Languages::travel_core.dest_n_live"
+msgid "[n] live"
+msgstr "[n] live"
+
+msgctxt "Languages::travel_core.dest_no_item_match"
+msgid "Nothing here matches the filter."
+msgstr "Nothing here matches the filter."
+
+msgctxt "Languages::travel_core.dest_none_sold"
+msgid "Choose at least one country to sell. Nothing was saved."
+msgstr "Choose at least one country to sell. Nothing was saved."
+
+msgctxt "Languages::travel_core.dest_save_failed"
+msgid "The whitelist could not be saved. Nothing was changed."
+msgstr "The whitelist could not be saved. Nothing was changed."
+
+msgctxt "Languages::travel_core.dest_disabled"
+msgid "[n] products disabled."
+msgstr "[n] products disabled."
+
+msgctxt "Languages::travel_core.dest_w_search"
+msgid "Search countries or destinations…"
+msgstr "Search countries or destinations…"
+
+msgctxt "Languages::travel_core.dest_w_filter"
+msgid "Filter…"
+msgstr "Filter…"
+
+msgctxt "Languages::travel_core.dest_w_item_type"
+msgid "Destination"
+msgstr "Destination"
+
+msgctxt "Languages::travel_core.dest_w_group_type"
+msgid "Region"
+msgstr "Region"
+
+msgctxt "Languages::travel_core.dest_w_country_type"
+msgid "Country"
+msgstr "Country"
+
+msgctxt "Languages::travel_core.dest_w_gone"
+msgid "not in feed"
+msgstr "not in feed"
+
+msgctxt "Languages::travel_core.dest_w_pending"
+msgid "[n] change not saved|[n] changes not saved"
+msgstr "[n] change not saved|[n] changes not saved"
+
+msgctxt "Languages::travel_core.dest_w_no_pending"
+msgid "All changes saved"
+msgstr "All changes saved"
+
+msgctxt "Languages::travel_core.dest_w_badge_all"
+msgid "ALL"
+msgstr "ALL"
+
+msgctxt "Languages::travel_core.dest_w_group_whole"
+msgid "WHOLE REGION"
+msgstr "WHOLE REGION"
+
+msgctxt "Languages::travel_core.dest_w_group_some"
+msgid "[sold] of [total]"
+msgstr "[sold] of [total]"
+
+msgctxt "Languages::travel_core.dest_w_group_none"
+msgid "none"
+msgstr "none"
+
+msgctxt "Languages::travel_core.dest_w_sold"
+msgid "sold"
+msgstr "sold"
+
+msgctxt "Languages::travel_core.dest_w_not_sold"
+msgid "not sold"
+msgstr "not sold"
+
+msgctxt "Languages::travel_core.dest_w_no_match"
+msgid "No country or destination matches."
+msgstr "No country or destination matches."
+
+msgctxt "Languages::travel_core.dest_w_more"
+msgid "Show [n] more"
+msgstr "Show [n] more"
+
+msgctxt "Languages::travel_core.dest_w_showing"
+msgid "Showing [shown] of [total]"
+msgstr "Showing [shown] of [total]"
+
+msgctxt "Languages::travel_core.dest_w_visible"
+msgid "[shown] / [total] countries"
+msgstr "[shown] / [total] countries"
+
+msgctxt "Languages::travel_core.dest_w_fold"
+msgid "[n] more country has nothing synced and is not sold.|[n] more countries have nothing synced and are not sold."
+msgstr "[n] more country has nothing synced and is not sold.|[n] more countries have nothing synced and are not sold."
+
+msgctxt "Languages::travel_core.dest_w_loading"
+msgid "Loading…"
+msgstr "Loading…"
+
+msgctxt "Languages::travel_core.dest_w_load_failed"
+msgid "This country could not be loaded. Close it and open it again to retry."
+msgstr "This country could not be loaded. Close it and open it again to retry."
+
+msgctxt "Languages::travel_core.dest_card_col_country"
+msgid "Country"
+msgstr "Country"
+
+msgctxt "Languages::travel_core.dest_card_col_sell"
+msgid "What we sell"
+msgstr "What we sell"
+
+msgctxt "Languages::travel_core.dest_card_col_review"
+msgid "To review"
+msgstr "To review"
+
+msgctxt "Languages::travel_core.dest_card_edit"
+msgid "Edit destinations →"
+msgstr "Edit destinations →"
+
+msgctxt "Languages::travel_core.dest_card_off"
+msgid "[n] more countries are not sold."
+msgstr "[n] more countries are not sold."
+
+msgctxt "Languages::travel_core.dest_card_none"
+msgid "No country is sold."
+msgstr "No country is sold."
+
+msgctxt "Languages::travel_core.dest_card_review"
+msgid "Review destinations"
+msgstr "Review destinations"

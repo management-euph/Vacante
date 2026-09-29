@@ -1,0 +1,161 @@
+/*
+ * FGO Invoicing — admin styles.
+ * Loaded on every admin page (hooks/index/styles.post.tpl): the orders list
+ * FGO column and the bulk pre-check / results page (views/fgo_invoicing/bulk.tpl).
+ */
+
+/* ── Orders list: FGO column ─────────────────────────────────────────── */
+.fgo-invoicing-cell {
+    white-space: nowrap;
+}
+.fgo-invoicing-cell__invoice {
+    color: #14602a;
+    font-weight: 600;
+}
+.fgo-invoicing-cell__details {
+    display: block;
+    font-size: 11px;
+}
+
+/* ── Bulk page ───────────────────────────────────────────────────────── */
+.fgo-bulk__intro {
+    margin: 0 0 10px;
+}
+.fgo-bulk__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0 0 14px;
+}
+.fgo-bulk__chip {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: #eef1f4;
+    color: #334155;
+    font-size: 12px;
+    line-height: 18px;
+}
+.fgo-bulk__chip--ready,
+.fgo-bulk__chip--issued,
+.fgo-bulk__chip--done {
+    background: #e6f4ea;
+    color: #14602a;
+}
+.fgo-bulk__chip--warn {
+    background: #fff4e0;
+    color: #7a4300;
+}
+.fgo-bulk__chip--block,
+.fgo-bulk__chip--failed {
+    background: #fdecea;
+    color: #8c1d18;
+}
+.fgo-bulk__settings {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 32px;
+    margin: 0 0 16px;
+    padding: 10px 14px;
+    border: 1px solid #e2e6ea;
+    border-radius: 4px;
+    background: #f9fafb;
+}
+.fgo-bulk__settings dt {
+    color: #5b6878;
+    font-size: 11px;
+    font-weight: normal;
+    text-transform: uppercase;
+}
+.fgo-bulk__settings dd {
+    margin: 2px 0 0;
+    font-weight: 600;
+}
+.fgo-bulk__row--skip,
+.fgo-bulk__row--block {
+    background: #f7f9fb;
+}
+.fgo-bulk__row[data-fgo-run-state="failed"] {
+    background: #fff7f6;
+}
+.fgo-bulk__row[data-fgo-run-state="running"] {
+    background: #f3f8fe;
+}
+.fgo-bulk__icon {
+    display: inline-block;
+    width: 1.2em;
+    font-weight: 700;
+    text-align: center;
+}
+.fgo-bulk__verdict,
+.fgo-bulk__state {
+    font-weight: 600;
+}
+.fgo-bulk__verdict--ready,
+.fgo-bulk__state--issued,
+.fgo-bulk__state--done {
+    color: #14602a;
+}
+.fgo-bulk__verdict--retry,
+.fgo-bulk__state--running {
+    color: #0f4c96;
+}
+.fgo-bulk__verdict--warn {
+    color: #7a4300;
+}
+.fgo-bulk__verdict--block,
+.fgo-bulk__state--failed {
+    color: #8c1d18;
+}
+.fgo-bulk__verdict--skip,
+.fgo-bulk__state--skipped,
+.fgo-bulk__state--queued,
+.fgo-bulk__state--not_processed {
+    color: #5b6878;
+}
+.fgo-bulk__reason,
+.fgo-bulk__detail {
+    font-size: 12px;
+    color: #5b6878;
+}
+.fgo-bulk__reason--warn {
+    color: #7a4300;
+}
+.fgo-bulk__reason--block {
+    color: #8c1d18;
+}
+.fgo-bulk__detail a {
+    margin-right: 8px;
+}
+.fgo-bulk__option {
+    margin: 12px 0 4px;
+}
+.fgo-bulk__note {
+    margin: 6px 0 12px;
+}
+.fgo-bulk__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0;
+}
+.fgo-bulk__bar {
+    overflow: hidden;
+    height: 8px;
+    margin: 6px 0 8px;
+    border-radius: 4px;
+    background: #e2e6ea;
+}
+.fgo-bulk__bar-fill {
+    display: block;
+    height: 100%;
+    background: #1667c7;
+    transition: width 0.3s ease;
+}
+.fgo-bulk--finished .fgo-bulk__bar-fill {
+    background: #1e8e3e;
+}
+.fgo-bulk__progress-label {
+    margin: 0 0 8px;
+    font-weight: 600;
+}

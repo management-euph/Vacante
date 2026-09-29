@@ -6,6 +6,8 @@ namespace Tygh\Addons\FgoInvoicing\Tests\Unit\Services;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\FgoInvoicing\Constants;
 use Tygh\Addons\FgoInvoicing\Services\ConfigProvider;
@@ -128,6 +130,87 @@ final class ConfigProviderTest extends TestCase
         self::assertTrue(ConfigProvider::sanitizeVat());
         self::assertTrue(ConfigProvider::clientVatRequired());
         self::assertTrue(ConfigProvider::clientCnpRequired());
+    }
+
+    /**
+     * A store installed before the selectors existed has no setting rows at
+     * all, and must behave exactly like "Auto-detect" (0) — never like a
+     * field id that happens to parse out of garbage.
+     *
+     * @return array<string, array{mixed, int}>
+     */
+    public static function profileFieldIdCases(): array
+    {
+        return [
+            'auto-detect (empty)' => ['', 0],
+            'field id'            => ['12', 12],
+            'padded id'           => [' 7 ', 7],
+            'int id'              => [42, 42],
+            'negative int'        => [-3, 0],
+            'negative string'     => ['-3', 0],
+            'not a number'        => ['abc', 0],
+            'decimal'             => ['1.5', 0],
+            'array'               => [['12'], 0],
+            'null'                => [null, 0],
+        ];
+    }
+
+    #[DataProvider('profileFieldIdCases')]
+    public function testProfileFieldSelectorsParseAFieldIdOrFallBackToAutoDetect(mixed $seeded, int $expected): void
+    {
+        ConfigProvider::seed(['cif_field' => $seeded, 'reg_com_field' => $seeded, 'cnp_field' => $seeded]);
+
+        self::assertSame($expected, ConfigProvider::cifFieldId());
+        self::assertSame($expected, ConfigProvider::regComFieldId());
+        self::assertSame($expected, ConfigProvider::cnpFieldId());
+    }
+
+    public function testProfileFieldSelectorsAreAutoDetectWhenTheSettingRowsDoNotExist(): void
+    {
+        ConfigProvider::seed([]);
+
+        self::assertSame(0, ConfigProvider::cifFieldId());
+        self::assertSame(0, ConfigProvider::regComFieldId());
+        self::assertSame(0, ConfigProvider::cnpFieldId());
+    }
+
+    public function testProfileFieldSelectorsAreIndependent(): void
+    {
+        ConfigProvider::seed(['cif_field' => '3', 'reg_com_field' => '4', 'cnp_field' => '']);
+
+        self::assertSame(3, ConfigProvider::cifFieldId());
+        self::assertSame(4, ConfigProvider::regComFieldId());
+        self::assertSame(0, ConfigProvider::cnpFieldId());
+    }
+
+    // ── Currency ─────────────────────────────────────────────────────────
+
+    public function testPrimaryCurrencyFallsBackToRonWithoutTheCoreConstant(): void
+    {
+        self::assertFalse(defined('CART_PRIMARY_CURRENCY'), 'precondition: the unit bootstrap does not define it');
+        self::assertSame('RON', ConfigProvider::primaryCurrency());
+    }
+
+    /**
+     * Separate process: the constant is process-global and permanent, and
+     * defining it here would change every later currency assertion.
+     */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
+    public function testPrimaryCurrencyIsTheCoreConstantNormalised(): void
+    {
+        define('CART_PRIMARY_CURRENCY', ' eur ');
+
+        self::assertSame('EUR', ConfigProvider::primaryCurrency());
+    }
+
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
+    public function testABlankCoreConstantStillYieldsRon(): void
+    {
+        define('CART_PRIMARY_CURRENCY', '');
+
+        self::assertSame('RON', ConfigProvider::primaryCurrency());
     }
 
     // ── Lines / codes ────────────────────────────────────────────────────

@@ -85,12 +85,24 @@ msgid "Validează CIF românesc (ValideazaCodUnicRo)"
 msgstr "Validează CIF românesc (ValideazaCodUnicRo)"
 
 msgctxt "SettingsOptions::fgo_invoicing::client_vat_required"
-msgid "Solicită CIF la finalizare pentru persoane juridice"
-msgstr "Solicită CIF la finalizare pentru persoane juridice"
+msgid "Nu emite factura pentru persoane juridice fără CIF"
+msgstr "Nu emite factura pentru persoane juridice fără CIF"
 
 msgctxt "SettingsOptions::fgo_invoicing::client_cnp_required"
-msgid "Solicită CNP la finalizare pentru persoane fizice"
-msgstr "Solicită CNP la finalizare pentru persoane fizice"
+msgid "Nu emite factura pentru persoane fizice fără CNP"
+msgstr "Nu emite factura pentru persoane fizice fără CNP"
+
+msgctxt "SettingsOptions::fgo_invoicing::cif_field"
+msgid "Câmpul de profil cu CIF-ul (cod fiscal firmă)"
+msgstr "Câmpul de profil cu CIF-ul (cod fiscal firmă)"
+
+msgctxt "SettingsOptions::fgo_invoicing::reg_com_field"
+msgid "Câmpul de profil cu Nr. Reg. Com."
+msgstr "Câmpul de profil cu Nr. Reg. Com."
+
+msgctxt "SettingsOptions::fgo_invoicing::cnp_field"
+msgid "Câmpul de profil cu CNP-ul (persoane fizice)"
+msgstr "Câmpul de profil cu CNP-ul (persoane fizice)"
 
 msgctxt "SettingsOptions::fgo_invoicing::lines_header"
 msgid "Linii factură & Coduri"
@@ -392,6 +404,10 @@ msgctxt "Languages::fgo_invoicing.response_payload"
 msgid "fgo_invoicing.response_payload"
 msgstr "Payload răspuns"
 
+msgctxt "Languages::fgo_invoicing.profile_field_auto_detect"
+msgid "fgo_invoicing.profile_field_auto_detect"
+msgstr "Detectare automată după numele câmpului"
+
 msgctxt "Languages::fgo_invoicing.email_subject"
 msgid "fgo_invoicing.email_subject"
 msgstr "Factura dumneavoastră"
@@ -415,3 +431,556 @@ msgstr "Plătește factura online"
 msgctxt "Languages::fgo_invoicing.email_signoff"
 msgid "fgo_invoicing.email_signoff"
 msgstr "Vă mulțumim pentru comandă!"
+
+msgctxt "Languages::fgo_invoicing.menu_fgo_invoice"
+msgid "fgo_invoicing.menu_fgo_invoice"
+msgstr "Factură FGO"
+
+msgctxt "Languages::fgo_invoicing.menu_issue"
+msgid "fgo_invoicing.menu_issue"
+msgstr "Emite facturi"
+
+msgctxt "Languages::fgo_invoicing.menu_retry"
+msgid "fgo_invoicing.menu_retry"
+msgstr "Reîncearcă facturile eșuate"
+
+msgctxt "Languages::fgo_invoicing.menu_download_pdfs"
+msgid "fgo_invoicing.menu_download_pdfs"
+msgstr "Descarcă PDF-urile (ZIP)"
+
+msgctxt "Languages::fgo_invoicing.menu_email"
+msgid "fgo_invoicing.menu_email"
+msgstr "Trimite factura clientului pe e-mail"
+
+msgctxt "Languages::fgo_invoicing.menu_cancel"
+msgid "fgo_invoicing.menu_cancel"
+msgstr "Anulează factura"
+
+msgctxt "Languages::fgo_invoicing.menu_storno"
+msgid "fgo_invoicing.menu_storno"
+msgstr "Stornează factura"
+
+msgctxt "Languages::fgo_invoicing.menu_delete"
+msgid "fgo_invoicing.menu_delete"
+msgstr "Șterge factura"
+
+msgctxt "Languages::fgo_invoicing.menu_open_log"
+msgid "fgo_invoicing.menu_open_log"
+msgstr "Deschide jurnalul facturilor FGO"
+
+msgctxt "Languages::fgo_invoicing.col_fgo"
+msgid "fgo_invoicing.col_fgo"
+msgstr "FGO"
+
+msgctxt "Languages::fgo_invoicing.col_not_invoiced"
+msgid "fgo_invoicing.col_not_invoiced"
+msgstr "Nefacturată"
+
+msgctxt "Languages::fgo_invoicing.col_failed"
+msgid "fgo_invoicing.col_failed"
+msgstr "Eroare FGO"
+
+msgctxt "Languages::fgo_invoicing.col_details"
+msgid "fgo_invoicing.col_details"
+msgstr "Detalii"
+
+msgctxt "Languages::fgo_invoicing.state_issued"
+msgid "fgo_invoicing.state_issued"
+msgstr "Emisă"
+
+msgctxt "Languages::fgo_invoicing.state_failed"
+msgid "fgo_invoicing.state_failed"
+msgstr "Eșuată"
+
+msgctxt "Languages::fgo_invoicing.state_pending"
+msgid "fgo_invoicing.state_pending"
+msgstr "În curs"
+
+msgctxt "Languages::fgo_invoicing.state_canceled"
+msgid "fgo_invoicing.state_canceled"
+msgstr "Anulată"
+
+msgctxt "Languages::fgo_invoicing.state_reversed"
+msgid "fgo_invoicing.state_reversed"
+msgstr "Stornată"
+
+msgctxt "Languages::fgo_invoicing.state_deleted"
+msgid "fgo_invoicing.state_deleted"
+msgstr "Ștearsă"
+
+msgctxt "Languages::fgo_invoicing.bulk_title_issue"
+msgid "fgo_invoicing.bulk_title_issue"
+msgstr "Emitere facturi FGO"
+
+msgctxt "Languages::fgo_invoicing.bulk_title_retry"
+msgid "fgo_invoicing.bulk_title_retry"
+msgstr "Reîncercare facturi FGO eșuate"
+
+msgctxt "Languages::fgo_invoicing.bulk_title_email"
+msgid "fgo_invoicing.bulk_title_email"
+msgstr "Trimitere facturi FGO clienților"
+
+msgctxt "Languages::fgo_invoicing.bulk_title_cancel"
+msgid "fgo_invoicing.bulk_title_cancel"
+msgstr "Anulare facturi FGO"
+
+msgctxt "Languages::fgo_invoicing.bulk_title_storno"
+msgid "fgo_invoicing.bulk_title_storno"
+msgstr "Stornare facturi FGO"
+
+msgctxt "Languages::fgo_invoicing.bulk_title_delete"
+msgid "fgo_invoicing.bulk_title_delete"
+msgstr "Ștergere facturi FGO"
+
+msgctxt "Languages::fgo_invoicing.env_sandbox"
+msgid "fgo_invoicing.env_sandbox"
+msgstr "Sandbox"
+
+msgctxt "Languages::fgo_invoicing.env_production"
+msgid "fgo_invoicing.env_production"
+msgstr "Producție"
+
+msgctxt "Languages::fgo_invoicing.bulk_intro"
+msgid "fgo_invoicing.bulk_intro"
+msgstr "Comenzi selectate: [count]. Verificați pre-verificarea înainte ca ceva să fie trimis către FGO."
+
+msgctxt "Languages::fgo_invoicing.bulk_truncated"
+msgid "fgo_invoicing.bulk_truncated"
+msgstr "Comenzi selectate: [selected]. O rulare le procesează doar pe primele [max]: rulați din nou acțiunea pentru restul."
+
+msgctxt "Languages::fgo_invoicing.bulk_missing"
+msgid "fgo_invoicing.bulk_missing"
+msgstr "Omise pentru că nu mai există: [count] dintre comenzile selectate."
+
+msgctxt "Languages::fgo_invoicing.bulk_nothing_selected"
+msgid "fgo_invoicing.bulk_nothing_selected"
+msgstr "Selectați mai întâi cel puțin o comandă."
+
+msgctxt "Languages::fgo_invoicing.bulk_nothing_found"
+msgid "fgo_invoicing.bulk_nothing_found"
+msgstr "Niciuna dintre comenzile selectate nu a putut fi încărcată."
+
+msgctxt "Languages::fgo_invoicing.chip_to_process"
+msgid "fgo_invoicing.chip_to_process"
+msgstr "Vor fi procesate: [count]"
+
+msgctxt "Languages::fgo_invoicing.chip_skipped"
+msgid "fgo_invoicing.chip_skipped"
+msgstr "Omise: [count]"
+
+msgctxt "Languages::fgo_invoicing.chip_warnings"
+msgid "fgo_invoicing.chip_warnings"
+msgstr "Cu avertismente: [count]"
+
+msgctxt "Languages::fgo_invoicing.chip_blocked"
+msgid "fgo_invoicing.chip_blocked"
+msgstr "Blocate: [count]"
+
+msgctxt "Languages::fgo_invoicing.chip_issued"
+msgid "fgo_invoicing.chip_issued"
+msgstr "Emise: [count]"
+
+msgctxt "Languages::fgo_invoicing.chip_done"
+msgid "fgo_invoicing.chip_done"
+msgstr "Finalizate: [count]"
+
+msgctxt "Languages::fgo_invoicing.chip_failed"
+msgid "fgo_invoicing.chip_failed"
+msgstr "Eșuate: [count]"
+
+msgctxt "Languages::fgo_invoicing.chip_remaining"
+msgid "fgo_invoicing.chip_remaining"
+msgstr "Rămase: [count]"
+
+msgctxt "Languages::fgo_invoicing.snap_document_type"
+msgid "fgo_invoicing.snap_document_type"
+msgstr "Tip document"
+
+msgctxt "Languages::fgo_invoicing.snap_series"
+msgid "fgo_invoicing.snap_series"
+msgstr "Serie"
+
+msgctxt "Languages::fgo_invoicing.snap_series_default"
+msgid "fgo_invoicing.snap_series_default"
+msgstr "Seria implicită din FGO"
+
+msgctxt "Languages::fgo_invoicing.snap_issue_date"
+msgid "fgo_invoicing.snap_issue_date"
+msgstr "Data emiterii"
+
+msgctxt "Languages::fgo_invoicing.snap_today"
+msgid "fgo_invoicing.snap_today"
+msgstr "[date] (azi)"
+
+msgctxt "Languages::fgo_invoicing.snap_currency"
+msgid "fgo_invoicing.snap_currency"
+msgstr "Monedă"
+
+msgctxt "Languages::fgo_invoicing.snap_currency_primary"
+msgid "fgo_invoicing.snap_currency_primary"
+msgstr "[currency] (moneda principală a magazinului)"
+
+msgctxt "Languages::fgo_invoicing.select_all"
+msgid "fgo_invoicing.select_all"
+msgstr "Selectează toate comenzile care pot fi procesate"
+
+msgctxt "Languages::fgo_invoicing.th_order"
+msgid "fgo_invoicing.th_order"
+msgstr "Comandă"
+
+msgctxt "Languages::fgo_invoicing.th_customer"
+msgid "fgo_invoicing.th_customer"
+msgstr "Client"
+
+msgctxt "Languages::fgo_invoicing.th_type"
+msgid "fgo_invoicing.th_type"
+msgstr "Tip"
+
+msgctxt "Languages::fgo_invoicing.th_total"
+msgid "fgo_invoicing.th_total"
+msgstr "Total"
+
+msgctxt "Languages::fgo_invoicing.th_precheck"
+msgid "fgo_invoicing.th_precheck"
+msgstr "Pre-verificare"
+
+msgctxt "Languages::fgo_invoicing.th_result"
+msgid "fgo_invoicing.th_result"
+msgstr "Rezultat"
+
+msgctxt "Languages::fgo_invoicing.type_pf"
+msgid "fgo_invoicing.type_pf"
+msgstr "Persoană fizică"
+
+msgctxt "Languages::fgo_invoicing.type_pj"
+msgid "fgo_invoicing.type_pj"
+msgstr "Persoană juridică"
+
+msgctxt "Languages::fgo_invoicing.bulk_email_option"
+msgid "fgo_invoicing.bulk_email_option"
+msgstr "Trimite linkul PDF fiecărui client după emitere"
+
+msgctxt "Languages::fgo_invoicing.bulk_footer_note"
+msgid "fgo_invoicing.bulk_footer_note"
+msgstr "Comenzile sunt trimise pe rând (FGO acceptă aproximativ o cerere pe secundă). Păstrați această fereastră deschisă până la final."
+
+msgctxt "Languages::fgo_invoicing.bulk_keep_open"
+msgid "fgo_invoicing.bulk_keep_open"
+msgstr "Păstrați această fereastră deschisă. Comenzile deja procesate rămân procesate dacă opriți."
+
+msgctxt "Languages::fgo_invoicing.btn_stop"
+msgid "fgo_invoicing.btn_stop"
+msgstr "Oprește după comanda curentă"
+
+msgctxt "Languages::fgo_invoicing.btn_back_to_orders"
+msgid "fgo_invoicing.btn_back_to_orders"
+msgstr "Înapoi la comenzi"
+
+msgctxt "Languages::fgo_invoicing.btn_retry_failed"
+msgid "fgo_invoicing.btn_retry_failed"
+msgstr "Reîncearcă eșuatele ([count])"
+
+msgctxt "Languages::fgo_invoicing.run_verb_issue"
+msgid "fgo_invoicing.run_verb_issue"
+msgstr "Emite"
+
+msgctxt "Languages::fgo_invoicing.run_verb_retry"
+msgid "fgo_invoicing.run_verb_retry"
+msgstr "Reîncearcă"
+
+msgctxt "Languages::fgo_invoicing.run_verb_email"
+msgid "fgo_invoicing.run_verb_email"
+msgstr "Trimite"
+
+msgctxt "Languages::fgo_invoicing.run_verb_cancel"
+msgid "fgo_invoicing.run_verb_cancel"
+msgstr "Anulează"
+
+msgctxt "Languages::fgo_invoicing.run_verb_storno"
+msgid "fgo_invoicing.run_verb_storno"
+msgstr "Stornează"
+
+msgctxt "Languages::fgo_invoicing.run_verb_delete"
+msgid "fgo_invoicing.run_verb_delete"
+msgstr "Șterge"
+
+msgctxt "Languages::fgo_invoicing.count_invoices_one"
+msgid "fgo_invoicing.count_invoices_one"
+msgstr "1 factură"
+
+msgctxt "Languages::fgo_invoicing.count_invoices_few"
+msgid "fgo_invoicing.count_invoices_few"
+msgstr "[count] facturi"
+
+msgctxt "Languages::fgo_invoicing.count_invoices_many"
+msgid "fgo_invoicing.count_invoices_many"
+msgstr "[count] de facturi"
+
+msgctxt "Languages::fgo_invoicing.progress_count"
+msgid "fgo_invoicing.progress_count"
+msgstr "[done] din [total] procesate"
+
+msgctxt "Languages::fgo_invoicing.progress_current_issue"
+msgid "fgo_invoicing.progress_current_issue"
+msgstr "se emite comanda #[order]"
+
+msgctxt "Languages::fgo_invoicing.progress_current_email"
+msgid "fgo_invoicing.progress_current_email"
+msgstr "se trimite e-mailul pentru comanda #[order]"
+
+msgctxt "Languages::fgo_invoicing.progress_current_other"
+msgid "fgo_invoicing.progress_current_other"
+msgstr "se procesează comanda #[order]"
+
+msgctxt "Languages::fgo_invoicing.progress_stopping"
+msgid "fgo_invoicing.progress_stopping"
+msgstr "se oprește după comanda curentă…"
+
+msgctxt "Languages::fgo_invoicing.progress_stopped"
+msgid "fgo_invoicing.progress_stopped"
+msgstr "Oprit: [done] din [total] procesate."
+
+msgctxt "Languages::fgo_invoicing.progress_done"
+msgid "fgo_invoicing.progress_done"
+msgstr "Gata: [done] din [total] procesate."
+
+msgctxt "Languages::fgo_invoicing.run_state_queued"
+msgid "fgo_invoicing.run_state_queued"
+msgstr "În așteptare"
+
+msgctxt "Languages::fgo_invoicing.run_state_running_issue"
+msgid "fgo_invoicing.run_state_running_issue"
+msgstr "Se emite…"
+
+msgctxt "Languages::fgo_invoicing.run_state_running"
+msgid "fgo_invoicing.run_state_running"
+msgstr "Se procesează…"
+
+msgctxt "Languages::fgo_invoicing.run_state_issued"
+msgid "fgo_invoicing.run_state_issued"
+msgstr "Emisă"
+
+msgctxt "Languages::fgo_invoicing.run_state_done"
+msgid "fgo_invoicing.run_state_done"
+msgstr "Finalizat"
+
+msgctxt "Languages::fgo_invoicing.run_state_failed"
+msgid "fgo_invoicing.run_state_failed"
+msgstr "Eșuat"
+
+msgctxt "Languages::fgo_invoicing.run_state_skipped"
+msgid "fgo_invoicing.run_state_skipped"
+msgstr "Omisă"
+
+msgctxt "Languages::fgo_invoicing.run_state_not_processed"
+msgid "fgo_invoicing.run_state_not_processed"
+msgstr "Neprocesată"
+
+msgctxt "Languages::fgo_invoicing.run_emailed"
+msgid "fgo_invoicing.run_emailed"
+msgstr "Linkul PDF a fost trimis clientului"
+
+msgctxt "Languages::fgo_invoicing.run_email_failed"
+msgid "fgo_invoicing.run_email_failed"
+msgstr "Emisă, dar e-mailul către client nu a fost trimis"
+
+msgctxt "Languages::fgo_invoicing.run_transport_error"
+msgid "fgo_invoicing.run_transport_error"
+msgstr "Niciun răspuns valid de la server (eroare de rețea sau sesiune expirată). Verificați comanda înainte de reîncercare."
+
+msgctxt "Languages::fgo_invoicing.run_leave_warning"
+msgid "fgo_invoicing.run_leave_warning"
+msgstr "Facturile FGO sunt încă în procesare. Dacă părăsiți pagina, rularea se oprește după comanda curentă."
+
+msgctxt "Languages::fgo_invoicing.verdict_ready"
+msgid "fgo_invoicing.verdict_ready"
+msgstr "Pregătită"
+
+msgctxt "Languages::fgo_invoicing.verdict_retry"
+msgid "fgo_invoicing.verdict_retry"
+msgstr "Reîncercare"
+
+msgctxt "Languages::fgo_invoicing.verdict_warn"
+msgid "fgo_invoicing.verdict_warn"
+msgstr "Verificați"
+
+msgctxt "Languages::fgo_invoicing.verdict_skip"
+msgid "fgo_invoicing.verdict_skip"
+msgstr "Omisă"
+
+msgctxt "Languages::fgo_invoicing.verdict_block"
+msgid "fgo_invoicing.verdict_block"
+msgstr "Blocată"
+
+msgctxt "Languages::fgo_invoicing.pc_already_invoiced"
+msgid "fgo_invoicing.pc_already_invoiced"
+msgstr "Deja facturată · [invoice]"
+
+msgctxt "Languages::fgo_invoicing.pc_last_error"
+msgid "fgo_invoicing.pc_last_error"
+msgstr "Ultima încercare a eșuat: [error]"
+
+msgctxt "Languages::fgo_invoicing.pc_pending"
+msgid "fgo_invoicing.pc_pending"
+msgstr "O încercare anterioară apare încă în curs și poate rula încă: așteptați un minut înainte de reîncercare."
+
+msgctxt "Languages::fgo_invoicing.pc_previously_canceled"
+msgid "fgo_invoicing.pc_previously_canceled"
+msgstr "Factura [invoice] a fost anulată: emiterea creează o factură nouă."
+
+msgctxt "Languages::fgo_invoicing.pc_previously_reversed"
+msgid "fgo_invoicing.pc_previously_reversed"
+msgstr "Factura [invoice] a fost stornată: emiterea creează o factură nouă."
+
+msgctxt "Languages::fgo_invoicing.pc_previously_deleted"
+msgid "fgo_invoicing.pc_previously_deleted"
+msgstr "Factura [invoice] a fost ștearsă din FGO: emiterea creează o factură nouă."
+
+msgctxt "Languages::fgo_invoicing.pc_order_status"
+msgid "fgo_invoicing.pc_order_status"
+msgstr "Starea comenzii: [status]. Verificați comanda înainte de facturare."
+
+msgctxt "Languages::fgo_invoicing.pc_pj_without_cif"
+msgid "fgo_invoicing.pc_pj_without_cif"
+msgstr "Persoană juridică (PJ) fără CIF. FGO o poate respinge."
+
+msgctxt "Languages::fgo_invoicing.pc_pj_without_cif_required"
+msgid "fgo_invoicing.pc_pj_without_cif_required"
+msgstr "Persoană juridică (PJ) fără CIF, obligatoriu conform setărilor: adăugați CIF-ul în comandă, apoi reîncercați."
+
+msgctxt "Languages::fgo_invoicing.pc_cif_invalid"
+msgid "fgo_invoicing.pc_cif_invalid"
+msgstr "CIF-ul [cif] nu trece verificarea cifrei de control."
+
+msgctxt "Languages::fgo_invoicing.pc_pf_without_cnp_required"
+msgid "fgo_invoicing.pc_pf_without_cnp_required"
+msgstr "Persoană fizică (PF) fără CNP, obligatoriu conform setărilor: adăugați CNP-ul în comandă, apoi reîncercați."
+
+msgctxt "Languages::fgo_invoicing.pc_cnp_required_no_field"
+msgid "fgo_invoicing.pc_cnp_required_no_field"
+msgstr "Setările cer CNP, dar magazinul nu are un câmp pentru CNP: factura va fi emisă fără el."
+
+msgctxt "Languages::fgo_invoicing.pc_cnp_invalid"
+msgid "fgo_invoicing.pc_cnp_invalid"
+msgstr "CNP-ul nu trece verificarea cifrei de control."
+
+msgctxt "Languages::fgo_invoicing.pc_zero_total"
+msgid "fgo_invoicing.pc_zero_total"
+msgstr "Totalul comenzii este 0."
+
+msgctxt "Languages::fgo_invoicing.pc_mapping_failed"
+msgid "fgo_invoicing.pc_mapping_failed"
+msgstr "Comanda nu poate fi transformată în factură FGO: [error]"
+
+msgctxt "Languages::fgo_invoicing.pc_not_failed"
+msgid "fgo_invoicing.pc_not_failed"
+msgstr "Nicio încercare eșuată de reluat."
+
+msgctxt "Languages::fgo_invoicing.pc_not_invoiced"
+msgid "fgo_invoicing.pc_not_invoiced"
+msgstr "Încă nefacturată."
+
+msgctxt "Languages::fgo_invoicing.pc_no_email"
+msgid "fgo_invoicing.pc_no_email"
+msgstr "Clientul nu are o adresă de e-mail validă."
+
+msgctxt "Languages::fgo_invoicing.pc_no_pdf_link"
+msgid "fgo_invoicing.pc_no_pdf_link"
+msgstr "FGO nu a returnat un link PDF pentru această factură."
+
+msgctxt "Languages::fgo_invoicing.pc_already_canceled"
+msgid "fgo_invoicing.pc_already_canceled"
+msgstr "Factura [invoice] este deja anulată."
+
+msgctxt "Languages::fgo_invoicing.pc_already_reversed"
+msgid "fgo_invoicing.pc_already_reversed"
+msgstr "Factura [invoice] este deja stornată."
+
+msgctxt "Languages::fgo_invoicing.pc_already_deleted"
+msgid "fgo_invoicing.pc_already_deleted"
+msgstr "Factura [invoice] este deja ștearsă."
+
+msgctxt "Languages::fgo_invoicing.pc_no_series_number"
+msgid "fgo_invoicing.pc_no_series_number"
+msgstr "Factura nu are serie sau număr salvate, deci FGO nu o poate identifica."
+
+msgctxt "Languages::fgo_invoicing.pc_order_not_found"
+msgid "fgo_invoicing.pc_order_not_found"
+msgstr "Comanda nu mai există."
+
+msgctxt "Languages::fgo_invoicing.pc_unknown_action"
+msgid "fgo_invoicing.pc_unknown_action"
+msgstr "Acțiune FGO în masă necunoscută."
+
+msgctxt "Languages::fgo_invoicing.zip_unavailable"
+msgid "fgo_invoicing.zip_unavailable"
+msgstr "Extensia PHP zip (ZipArchive) nu este disponibilă pe acest server, deci nu se poate crea arhiva ZIP."
+
+msgctxt "Languages::fgo_invoicing.zip_nothing"
+msgid "fgo_invoicing.zip_nothing"
+msgstr "Niciuna dintre comenzile selectate nu are o factură FGO emisă cu PDF."
+
+msgctxt "Languages::fgo_invoicing.zip_failed"
+msgid "fgo_invoicing.zip_failed"
+msgstr "Arhiva ZIP nu a putut fi creată"
+
+msgctxt "Languages::fgo_invoicing.zip_all_failed"
+msgid "fgo_invoicing.zip_all_failed"
+msgstr "Niciun PDF nu a putut fi descărcat din FGO. Comenzi eșuate: [orders]"
+
+msgctxt "Languages::fgo_invoicing.zip_some_failed"
+msgid "fgo_invoicing.zip_some_failed"
+msgstr "Unele PDF-uri nu au putut fi descărcate și lipsesc din ZIP (vedeți missing-pdfs.txt din arhivă): [orders]"
+
+msgctxt "Languages::fgo_invoicing.zip_missing_note"
+msgid "fgo_invoicing.zip_missing_note"
+msgstr "Aceste PDF-uri de facturi nu au putut fi descărcate din FGO:"
+
+msgctxt "Languages::fgo_invoicing.diagnostics_title"
+msgid "fgo_invoicing.diagnostics_title"
+msgstr "Încercări de emitere"
+
+msgctxt "Languages::fgo_invoicing.diagnostics_intro"
+msgid "fgo_invoicing.diagnostics_intro"
+msgstr "Fiecare încercare de emitere a acestei facturi, cele mai recente primele. CNP-ul este stocat mascat; valoarea completă rămâne pe comandă."
+
+msgctxt "Languages::fgo_invoicing.diag_date"
+msgid "fgo_invoicing.diag_date"
+msgstr "Data"
+
+msgctxt "Languages::fgo_invoicing.diag_response_code"
+msgid "fgo_invoicing.diag_response_code"
+msgstr "Răspuns FGO"
+
+msgctxt "Languages::fgo_invoicing.diag_cnp_length"
+msgid "fgo_invoicing.diag_cnp_length"
+msgstr "Lungime CNP"
+
+msgctxt "Languages::fgo_invoicing.diag_cnp_checksum"
+msgid "fgo_invoicing.diag_cnp_checksum"
+msgstr "Cifra de control CNP"
+
+msgctxt "Languages::fgo_invoicing.diag_error_message"
+msgid "fgo_invoicing.diag_error_message"
+msgstr "Mesaj"
+
+msgctxt "Languages::fgo_invoicing.diag_checksum_ok"
+msgid "fgo_invoicing.diag_checksum_ok"
+msgstr "validă"
+
+msgctxt "Languages::fgo_invoicing.diag_checksum_bad"
+msgid "fgo_invoicing.diag_checksum_bad"
+msgstr "invalidă"
+
+msgctxt "Languages::fgo_invoicing.diag_no_cnp"
+msgid "fgo_invoicing.diag_no_cnp"
+msgstr "fără CNP trimis"
+
+msgctxt "Languages::fgo_invoicing.diag_none"
+msgid "fgo_invoicing.diag_none"
+msgstr "Nicio încercare de emitere înregistrată încă."
+
+msgctxt "Languages::fgo_invoicing.diag_payload"
+msgid "fgo_invoicing.diag_payload"
+msgstr "Cerere trimisă (CNP mascat)"
+

@@ -131,6 +131,20 @@ not the spec-example `EU` the `tourop_code` setting defaults to — confirm the
 right code for your account with the operator before relying on
 search/booking payloads.
 
+## Destination whitelist
+
+**Eurosite → Destination whitelist** (`eurosite.whitelist`) is Travel Core's
+destination picker (the page Novoton and Sphinx use too). Each country is
+**Not sold**, **All cities** (new cities included), **Own cities** (every
+own-offer city, including ones the `own_cities` sync adds later) or **Only
+selected**. A country's cities load when it opens (`eurosite.whitelist_body`;
+a country with no synced city is listed live from getCityRequest). Cities
+first seen after the last Save are flagged new; a ticked city whose cities-sync
+stamp falls two days behind its country's is flagged as gone. Save refuses an
+empty whitelist (it would stop every hotel sync) and never touches products;
+**Disable products outside the whitelist** is its own confirmed step
+(status D, never deleted). The dashboard's Destinations card sums it up.
+
 ## Hotels and products
 
 **Eurosite → Hotels** (`eurosite.hotels`) lists the hotels of the

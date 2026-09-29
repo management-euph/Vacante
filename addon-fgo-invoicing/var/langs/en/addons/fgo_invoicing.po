@@ -85,12 +85,24 @@ msgid "Validate Romanian CIF (ValideazaCodUnicRo)"
 msgstr "Validate Romanian CIF (ValideazaCodUnicRo)"
 
 msgctxt "SettingsOptions::fgo_invoicing::client_vat_required"
-msgid "Require CIF for company customers at checkout"
-msgstr "Require CIF for company customers at checkout"
+msgid "Do not issue for company customers without a CIF"
+msgstr "Do not issue for company customers without a CIF"
 
 msgctxt "SettingsOptions::fgo_invoicing::client_cnp_required"
-msgid "Require CNP for individuals at checkout"
-msgstr "Require CNP for individuals at checkout"
+msgid "Do not issue for individuals without a CNP"
+msgstr "Do not issue for individuals without a CNP"
+
+msgctxt "SettingsOptions::fgo_invoicing::cif_field"
+msgid "Profile field holding the CIF (company tax ID)"
+msgstr "Profile field holding the CIF (company tax ID)"
+
+msgctxt "SettingsOptions::fgo_invoicing::reg_com_field"
+msgid "Profile field holding the Reg. Com. number"
+msgstr "Profile field holding the Reg. Com. number"
+
+msgctxt "SettingsOptions::fgo_invoicing::cnp_field"
+msgid "Profile field holding the CNP (individuals)"
+msgstr "Profile field holding the CNP (individuals)"
 
 msgctxt "SettingsOptions::fgo_invoicing::lines_header"
 msgid "Invoice Lines & Codes"
@@ -393,6 +405,10 @@ msgctxt "Languages::fgo_invoicing.response_payload"
 msgid "fgo_invoicing.response_payload"
 msgstr "Response payload"
 
+msgctxt "Languages::fgo_invoicing.profile_field_auto_detect"
+msgid "fgo_invoicing.profile_field_auto_detect"
+msgstr "Auto-detect by field name"
+
 
 msgctxt "Languages::fgo_invoicing.email_subject"
 msgid "fgo_invoicing.email_subject"
@@ -417,4 +433,556 @@ msgstr "Pay this invoice online"
 msgctxt "Languages::fgo_invoicing.email_signoff"
 msgid "fgo_invoicing.email_signoff"
 msgstr "Thank you for your order!"
+
+msgctxt "Languages::fgo_invoicing.menu_fgo_invoice"
+msgid "fgo_invoicing.menu_fgo_invoice"
+msgstr "FGO invoice"
+
+msgctxt "Languages::fgo_invoicing.menu_issue"
+msgid "fgo_invoicing.menu_issue"
+msgstr "Issue invoices"
+
+msgctxt "Languages::fgo_invoicing.menu_retry"
+msgid "fgo_invoicing.menu_retry"
+msgstr "Retry failed"
+
+msgctxt "Languages::fgo_invoicing.menu_download_pdfs"
+msgid "fgo_invoicing.menu_download_pdfs"
+msgstr "Download PDFs (ZIP)"
+
+msgctxt "Languages::fgo_invoicing.menu_email"
+msgid "fgo_invoicing.menu_email"
+msgstr "Email invoice to customer"
+
+msgctxt "Languages::fgo_invoicing.menu_cancel"
+msgid "fgo_invoicing.menu_cancel"
+msgstr "Cancel invoice (Anulare)"
+
+msgctxt "Languages::fgo_invoicing.menu_storno"
+msgid "fgo_invoicing.menu_storno"
+msgstr "Reverse invoice (Storno)"
+
+msgctxt "Languages::fgo_invoicing.menu_delete"
+msgid "fgo_invoicing.menu_delete"
+msgstr "Delete invoice"
+
+msgctxt "Languages::fgo_invoicing.menu_open_log"
+msgid "fgo_invoicing.menu_open_log"
+msgstr "Open FGO invoice log"
+
+msgctxt "Languages::fgo_invoicing.col_fgo"
+msgid "fgo_invoicing.col_fgo"
+msgstr "FGO"
+
+msgctxt "Languages::fgo_invoicing.col_not_invoiced"
+msgid "fgo_invoicing.col_not_invoiced"
+msgstr "Not invoiced"
+
+msgctxt "Languages::fgo_invoicing.col_failed"
+msgid "fgo_invoicing.col_failed"
+msgstr "FGO failed"
+
+msgctxt "Languages::fgo_invoicing.col_details"
+msgid "fgo_invoicing.col_details"
+msgstr "Details"
+
+msgctxt "Languages::fgo_invoicing.state_issued"
+msgid "fgo_invoicing.state_issued"
+msgstr "Issued"
+
+msgctxt "Languages::fgo_invoicing.state_failed"
+msgid "fgo_invoicing.state_failed"
+msgstr "Failed"
+
+msgctxt "Languages::fgo_invoicing.state_pending"
+msgid "fgo_invoicing.state_pending"
+msgstr "Pending"
+
+msgctxt "Languages::fgo_invoicing.state_canceled"
+msgid "fgo_invoicing.state_canceled"
+msgstr "Canceled"
+
+msgctxt "Languages::fgo_invoicing.state_reversed"
+msgid "fgo_invoicing.state_reversed"
+msgstr "Reversed (storno)"
+
+msgctxt "Languages::fgo_invoicing.state_deleted"
+msgid "fgo_invoicing.state_deleted"
+msgstr "Deleted"
+
+msgctxt "Languages::fgo_invoicing.bulk_title_issue"
+msgid "fgo_invoicing.bulk_title_issue"
+msgstr "Issue FGO invoices"
+
+msgctxt "Languages::fgo_invoicing.bulk_title_retry"
+msgid "fgo_invoicing.bulk_title_retry"
+msgstr "Retry failed FGO invoices"
+
+msgctxt "Languages::fgo_invoicing.bulk_title_email"
+msgid "fgo_invoicing.bulk_title_email"
+msgstr "Email FGO invoices to customers"
+
+msgctxt "Languages::fgo_invoicing.bulk_title_cancel"
+msgid "fgo_invoicing.bulk_title_cancel"
+msgstr "Cancel FGO invoices (Anulare)"
+
+msgctxt "Languages::fgo_invoicing.bulk_title_storno"
+msgid "fgo_invoicing.bulk_title_storno"
+msgstr "Reverse FGO invoices (Storno)"
+
+msgctxt "Languages::fgo_invoicing.bulk_title_delete"
+msgid "fgo_invoicing.bulk_title_delete"
+msgstr "Delete FGO invoices"
+
+msgctxt "Languages::fgo_invoicing.env_sandbox"
+msgid "fgo_invoicing.env_sandbox"
+msgstr "Sandbox"
+
+msgctxt "Languages::fgo_invoicing.env_production"
+msgid "fgo_invoicing.env_production"
+msgstr "Production"
+
+msgctxt "Languages::fgo_invoicing.bulk_intro"
+msgid "fgo_invoicing.bulk_intro"
+msgstr "Selected orders: [count]. Review the pre-check before anything is sent to FGO."
+
+msgctxt "Languages::fgo_invoicing.bulk_truncated"
+msgid "fgo_invoicing.bulk_truncated"
+msgstr "Selected orders: [selected]. One run handles only the first [max]: run the action again for the rest."
+
+msgctxt "Languages::fgo_invoicing.bulk_missing"
+msgid "fgo_invoicing.bulk_missing"
+msgstr "Left out because they no longer exist: [count] of the selected orders."
+
+msgctxt "Languages::fgo_invoicing.bulk_nothing_selected"
+msgid "fgo_invoicing.bulk_nothing_selected"
+msgstr "Select at least one order first."
+
+msgctxt "Languages::fgo_invoicing.bulk_nothing_found"
+msgid "fgo_invoicing.bulk_nothing_found"
+msgstr "None of the selected orders could be loaded."
+
+msgctxt "Languages::fgo_invoicing.chip_to_process"
+msgid "fgo_invoicing.chip_to_process"
+msgstr "[count] will be processed"
+
+msgctxt "Languages::fgo_invoicing.chip_skipped"
+msgid "fgo_invoicing.chip_skipped"
+msgstr "[count] skipped"
+
+msgctxt "Languages::fgo_invoicing.chip_warnings"
+msgid "fgo_invoicing.chip_warnings"
+msgstr "[count] with warnings"
+
+msgctxt "Languages::fgo_invoicing.chip_blocked"
+msgid "fgo_invoicing.chip_blocked"
+msgstr "[count] blocked"
+
+msgctxt "Languages::fgo_invoicing.chip_issued"
+msgid "fgo_invoicing.chip_issued"
+msgstr "[count] issued"
+
+msgctxt "Languages::fgo_invoicing.chip_done"
+msgid "fgo_invoicing.chip_done"
+msgstr "[count] done"
+
+msgctxt "Languages::fgo_invoicing.chip_failed"
+msgid "fgo_invoicing.chip_failed"
+msgstr "[count] failed"
+
+msgctxt "Languages::fgo_invoicing.chip_remaining"
+msgid "fgo_invoicing.chip_remaining"
+msgstr "[count] remaining"
+
+msgctxt "Languages::fgo_invoicing.snap_document_type"
+msgid "fgo_invoicing.snap_document_type"
+msgstr "Document type"
+
+msgctxt "Languages::fgo_invoicing.snap_series"
+msgid "fgo_invoicing.snap_series"
+msgstr "Series"
+
+msgctxt "Languages::fgo_invoicing.snap_series_default"
+msgid "fgo_invoicing.snap_series_default"
+msgstr "FGO default series"
+
+msgctxt "Languages::fgo_invoicing.snap_issue_date"
+msgid "fgo_invoicing.snap_issue_date"
+msgstr "Issue date"
+
+msgctxt "Languages::fgo_invoicing.snap_today"
+msgid "fgo_invoicing.snap_today"
+msgstr "[date] (today)"
+
+msgctxt "Languages::fgo_invoicing.snap_currency"
+msgid "fgo_invoicing.snap_currency"
+msgstr "Currency"
+
+msgctxt "Languages::fgo_invoicing.snap_currency_primary"
+msgid "fgo_invoicing.snap_currency_primary"
+msgstr "[currency] (store primary currency)"
+
+msgctxt "Languages::fgo_invoicing.select_all"
+msgid "fgo_invoicing.select_all"
+msgstr "Select all orders that can be processed"
+
+msgctxt "Languages::fgo_invoicing.th_order"
+msgid "fgo_invoicing.th_order"
+msgstr "Order"
+
+msgctxt "Languages::fgo_invoicing.th_customer"
+msgid "fgo_invoicing.th_customer"
+msgstr "Customer"
+
+msgctxt "Languages::fgo_invoicing.th_type"
+msgid "fgo_invoicing.th_type"
+msgstr "Type"
+
+msgctxt "Languages::fgo_invoicing.th_total"
+msgid "fgo_invoicing.th_total"
+msgstr "Total"
+
+msgctxt "Languages::fgo_invoicing.th_precheck"
+msgid "fgo_invoicing.th_precheck"
+msgstr "Pre-check"
+
+msgctxt "Languages::fgo_invoicing.th_result"
+msgid "fgo_invoicing.th_result"
+msgstr "Result"
+
+msgctxt "Languages::fgo_invoicing.type_pf"
+msgid "fgo_invoicing.type_pf"
+msgstr "Individual (persoană fizică)"
+
+msgctxt "Languages::fgo_invoicing.type_pj"
+msgid "fgo_invoicing.type_pj"
+msgstr "Company (persoană juridică)"
+
+msgctxt "Languages::fgo_invoicing.bulk_email_option"
+msgid "fgo_invoicing.bulk_email_option"
+msgstr "Email the PDF link to each customer after issuing"
+
+msgctxt "Languages::fgo_invoicing.bulk_footer_note"
+msgid "fgo_invoicing.bulk_footer_note"
+msgstr "Orders are sent one at a time (FGO accepts about one request per second). Keep this window open until it finishes."
+
+msgctxt "Languages::fgo_invoicing.bulk_keep_open"
+msgid "fgo_invoicing.bulk_keep_open"
+msgstr "Keep this window open. Orders already processed stay processed if you stop."
+
+msgctxt "Languages::fgo_invoicing.btn_stop"
+msgid "fgo_invoicing.btn_stop"
+msgstr "Stop after current order"
+
+msgctxt "Languages::fgo_invoicing.btn_back_to_orders"
+msgid "fgo_invoicing.btn_back_to_orders"
+msgstr "Back to orders"
+
+msgctxt "Languages::fgo_invoicing.btn_retry_failed"
+msgid "fgo_invoicing.btn_retry_failed"
+msgstr "Retry failed ([count])"
+
+msgctxt "Languages::fgo_invoicing.run_verb_issue"
+msgid "fgo_invoicing.run_verb_issue"
+msgstr "Issue"
+
+msgctxt "Languages::fgo_invoicing.run_verb_retry"
+msgid "fgo_invoicing.run_verb_retry"
+msgstr "Retry"
+
+msgctxt "Languages::fgo_invoicing.run_verb_email"
+msgid "fgo_invoicing.run_verb_email"
+msgstr "Email"
+
+msgctxt "Languages::fgo_invoicing.run_verb_cancel"
+msgid "fgo_invoicing.run_verb_cancel"
+msgstr "Cancel"
+
+msgctxt "Languages::fgo_invoicing.run_verb_storno"
+msgid "fgo_invoicing.run_verb_storno"
+msgstr "Reverse"
+
+msgctxt "Languages::fgo_invoicing.run_verb_delete"
+msgid "fgo_invoicing.run_verb_delete"
+msgstr "Delete"
+
+msgctxt "Languages::fgo_invoicing.count_invoices_one"
+msgid "fgo_invoicing.count_invoices_one"
+msgstr "1 invoice"
+
+msgctxt "Languages::fgo_invoicing.count_invoices_few"
+msgid "fgo_invoicing.count_invoices_few"
+msgstr "[count] invoices"
+
+msgctxt "Languages::fgo_invoicing.count_invoices_many"
+msgid "fgo_invoicing.count_invoices_many"
+msgstr "[count] invoices"
+
+msgctxt "Languages::fgo_invoicing.progress_count"
+msgid "fgo_invoicing.progress_count"
+msgstr "[done] of [total] processed"
+
+msgctxt "Languages::fgo_invoicing.progress_current_issue"
+msgid "fgo_invoicing.progress_current_issue"
+msgstr "issuing order #[order]"
+
+msgctxt "Languages::fgo_invoicing.progress_current_email"
+msgid "fgo_invoicing.progress_current_email"
+msgstr "emailing order #[order]"
+
+msgctxt "Languages::fgo_invoicing.progress_current_other"
+msgid "fgo_invoicing.progress_current_other"
+msgstr "processing order #[order]"
+
+msgctxt "Languages::fgo_invoicing.progress_stopping"
+msgid "fgo_invoicing.progress_stopping"
+msgstr "stopping after the current order…"
+
+msgctxt "Languages::fgo_invoicing.progress_stopped"
+msgid "fgo_invoicing.progress_stopped"
+msgstr "Stopped: [done] of [total] processed."
+
+msgctxt "Languages::fgo_invoicing.progress_done"
+msgid "fgo_invoicing.progress_done"
+msgstr "Done: [done] of [total] processed."
+
+msgctxt "Languages::fgo_invoicing.run_state_queued"
+msgid "fgo_invoicing.run_state_queued"
+msgstr "Queued"
+
+msgctxt "Languages::fgo_invoicing.run_state_running_issue"
+msgid "fgo_invoicing.run_state_running_issue"
+msgstr "Issuing…"
+
+msgctxt "Languages::fgo_invoicing.run_state_running"
+msgid "fgo_invoicing.run_state_running"
+msgstr "Working…"
+
+msgctxt "Languages::fgo_invoicing.run_state_issued"
+msgid "fgo_invoicing.run_state_issued"
+msgstr "Issued"
+
+msgctxt "Languages::fgo_invoicing.run_state_done"
+msgid "fgo_invoicing.run_state_done"
+msgstr "Done"
+
+msgctxt "Languages::fgo_invoicing.run_state_failed"
+msgid "fgo_invoicing.run_state_failed"
+msgstr "Failed"
+
+msgctxt "Languages::fgo_invoicing.run_state_skipped"
+msgid "fgo_invoicing.run_state_skipped"
+msgstr "Skipped"
+
+msgctxt "Languages::fgo_invoicing.run_state_not_processed"
+msgid "fgo_invoicing.run_state_not_processed"
+msgstr "Not processed"
+
+msgctxt "Languages::fgo_invoicing.run_emailed"
+msgid "fgo_invoicing.run_emailed"
+msgstr "PDF link emailed to the customer"
+
+msgctxt "Languages::fgo_invoicing.run_email_failed"
+msgid "fgo_invoicing.run_email_failed"
+msgstr "Issued, but the e-mail to the customer was not sent"
+
+msgctxt "Languages::fgo_invoicing.run_transport_error"
+msgid "fgo_invoicing.run_transport_error"
+msgstr "No valid answer from the server (network error or expired session). Check the order before retrying."
+
+msgctxt "Languages::fgo_invoicing.run_leave_warning"
+msgid "fgo_invoicing.run_leave_warning"
+msgstr "FGO invoices are still being processed. If you leave, the run stops after the current order."
+
+msgctxt "Languages::fgo_invoicing.verdict_ready"
+msgid "fgo_invoicing.verdict_ready"
+msgstr "Ready"
+
+msgctxt "Languages::fgo_invoicing.verdict_retry"
+msgid "fgo_invoicing.verdict_retry"
+msgstr "Retry"
+
+msgctxt "Languages::fgo_invoicing.verdict_warn"
+msgid "fgo_invoicing.verdict_warn"
+msgstr "Check first"
+
+msgctxt "Languages::fgo_invoicing.verdict_skip"
+msgid "fgo_invoicing.verdict_skip"
+msgstr "Skipped"
+
+msgctxt "Languages::fgo_invoicing.verdict_block"
+msgid "fgo_invoicing.verdict_block"
+msgstr "Blocked"
+
+msgctxt "Languages::fgo_invoicing.pc_already_invoiced"
+msgid "fgo_invoicing.pc_already_invoiced"
+msgstr "Already invoiced · [invoice]"
+
+msgctxt "Languages::fgo_invoicing.pc_last_error"
+msgid "fgo_invoicing.pc_last_error"
+msgstr "Last attempt failed: [error]"
+
+msgctxt "Languages::fgo_invoicing.pc_pending"
+msgid "fgo_invoicing.pc_pending"
+msgstr "A previous attempt is still marked as in progress and may still be running: wait a minute before retrying."
+
+msgctxt "Languages::fgo_invoicing.pc_previously_canceled"
+msgid "fgo_invoicing.pc_previously_canceled"
+msgstr "Its invoice [invoice] was canceled: issuing creates a new invoice."
+
+msgctxt "Languages::fgo_invoicing.pc_previously_reversed"
+msgid "fgo_invoicing.pc_previously_reversed"
+msgstr "Its invoice [invoice] was reversed (storno): issuing creates a new invoice."
+
+msgctxt "Languages::fgo_invoicing.pc_previously_deleted"
+msgid "fgo_invoicing.pc_previously_deleted"
+msgstr "Its invoice [invoice] was deleted in FGO: issuing creates a new invoice."
+
+msgctxt "Languages::fgo_invoicing.pc_order_status"
+msgid "fgo_invoicing.pc_order_status"
+msgstr "Order status: [status]. Check the order before invoicing it."
+
+msgctxt "Languages::fgo_invoicing.pc_pj_without_cif"
+msgid "fgo_invoicing.pc_pj_without_cif"
+msgstr "Company (PJ) without CIF. FGO may reject it."
+
+msgctxt "Languages::fgo_invoicing.pc_pj_without_cif_required"
+msgid "fgo_invoicing.pc_pj_without_cif_required"
+msgstr "Company (PJ) without CIF, which the settings require: add the CIF to the order, then retry."
+
+msgctxt "Languages::fgo_invoicing.pc_cif_invalid"
+msgid "fgo_invoicing.pc_cif_invalid"
+msgstr "The CIF [cif] fails the Romanian check digit."
+
+msgctxt "Languages::fgo_invoicing.pc_pf_without_cnp_required"
+msgid "fgo_invoicing.pc_pf_without_cnp_required"
+msgstr "Individual (PF) without CNP, which the settings require: add the CNP to the order, then retry."
+
+msgctxt "Languages::fgo_invoicing.pc_cnp_required_no_field"
+msgid "fgo_invoicing.pc_cnp_required_no_field"
+msgstr "The settings require a CNP, but the store has no CNP field: it will be issued without one."
+
+msgctxt "Languages::fgo_invoicing.pc_cnp_invalid"
+msgid "fgo_invoicing.pc_cnp_invalid"
+msgstr "The CNP fails the check digit."
+
+msgctxt "Languages::fgo_invoicing.pc_zero_total"
+msgid "fgo_invoicing.pc_zero_total"
+msgstr "The order total is 0."
+
+msgctxt "Languages::fgo_invoicing.pc_mapping_failed"
+msgid "fgo_invoicing.pc_mapping_failed"
+msgstr "The order cannot be turned into an FGO invoice: [error]"
+
+msgctxt "Languages::fgo_invoicing.pc_not_failed"
+msgid "fgo_invoicing.pc_not_failed"
+msgstr "No failed attempt to retry."
+
+msgctxt "Languages::fgo_invoicing.pc_not_invoiced"
+msgid "fgo_invoicing.pc_not_invoiced"
+msgstr "Not invoiced yet."
+
+msgctxt "Languages::fgo_invoicing.pc_no_email"
+msgid "fgo_invoicing.pc_no_email"
+msgstr "The customer has no valid e-mail address."
+
+msgctxt "Languages::fgo_invoicing.pc_no_pdf_link"
+msgid "fgo_invoicing.pc_no_pdf_link"
+msgstr "FGO returned no PDF link for this invoice."
+
+msgctxt "Languages::fgo_invoicing.pc_already_canceled"
+msgid "fgo_invoicing.pc_already_canceled"
+msgstr "The invoice [invoice] is already canceled."
+
+msgctxt "Languages::fgo_invoicing.pc_already_reversed"
+msgid "fgo_invoicing.pc_already_reversed"
+msgstr "The invoice [invoice] is already reversed (storno)."
+
+msgctxt "Languages::fgo_invoicing.pc_already_deleted"
+msgid "fgo_invoicing.pc_already_deleted"
+msgstr "The invoice [invoice] is already deleted."
+
+msgctxt "Languages::fgo_invoicing.pc_no_series_number"
+msgid "fgo_invoicing.pc_no_series_number"
+msgstr "The invoice has no series or number stored, so FGO cannot identify it."
+
+msgctxt "Languages::fgo_invoicing.pc_order_not_found"
+msgid "fgo_invoicing.pc_order_not_found"
+msgstr "The order no longer exists."
+
+msgctxt "Languages::fgo_invoicing.pc_unknown_action"
+msgid "fgo_invoicing.pc_unknown_action"
+msgstr "Unknown FGO bulk action."
+
+msgctxt "Languages::fgo_invoicing.zip_unavailable"
+msgid "fgo_invoicing.zip_unavailable"
+msgstr "The PHP zip extension (ZipArchive) is not available on this server, so no ZIP can be built."
+
+msgctxt "Languages::fgo_invoicing.zip_nothing"
+msgid "fgo_invoicing.zip_nothing"
+msgstr "None of the selected orders has an issued FGO invoice with a PDF."
+
+msgctxt "Languages::fgo_invoicing.zip_failed"
+msgid "fgo_invoicing.zip_failed"
+msgstr "The ZIP archive could not be created"
+
+msgctxt "Languages::fgo_invoicing.zip_all_failed"
+msgid "fgo_invoicing.zip_all_failed"
+msgstr "No PDF could be downloaded from FGO. Failed orders: [orders]"
+
+msgctxt "Languages::fgo_invoicing.zip_some_failed"
+msgid "fgo_invoicing.zip_some_failed"
+msgstr "Some PDFs could not be downloaded and are missing from the ZIP (see missing-pdfs.txt inside it): [orders]"
+
+msgctxt "Languages::fgo_invoicing.zip_missing_note"
+msgid "fgo_invoicing.zip_missing_note"
+msgstr "These invoice PDFs could not be downloaded from FGO:"
+
+msgctxt "Languages::fgo_invoicing.diagnostics_title"
+msgid "fgo_invoicing.diagnostics_title"
+msgstr "Issue attempts"
+
+msgctxt "Languages::fgo_invoicing.diagnostics_intro"
+msgid "fgo_invoicing.diagnostics_intro"
+msgstr "Every attempt to issue this invoice, newest first. The CNP is stored masked; the full value stays on the order."
+
+msgctxt "Languages::fgo_invoicing.diag_date"
+msgid "fgo_invoicing.diag_date"
+msgstr "Date"
+
+msgctxt "Languages::fgo_invoicing.diag_response_code"
+msgid "fgo_invoicing.diag_response_code"
+msgstr "FGO response"
+
+msgctxt "Languages::fgo_invoicing.diag_cnp_length"
+msgid "fgo_invoicing.diag_cnp_length"
+msgstr "CNP length"
+
+msgctxt "Languages::fgo_invoicing.diag_cnp_checksum"
+msgid "fgo_invoicing.diag_cnp_checksum"
+msgstr "CNP checksum"
+
+msgctxt "Languages::fgo_invoicing.diag_error_message"
+msgid "fgo_invoicing.diag_error_message"
+msgstr "Message"
+
+msgctxt "Languages::fgo_invoicing.diag_checksum_ok"
+msgid "fgo_invoicing.diag_checksum_ok"
+msgstr "valid"
+
+msgctxt "Languages::fgo_invoicing.diag_checksum_bad"
+msgid "fgo_invoicing.diag_checksum_bad"
+msgstr "invalid"
+
+msgctxt "Languages::fgo_invoicing.diag_no_cnp"
+msgid "fgo_invoicing.diag_no_cnp"
+msgstr "no CNP sent"
+
+msgctxt "Languages::fgo_invoicing.diag_none"
+msgid "fgo_invoicing.diag_none"
+msgstr "No issue attempts recorded yet."
+
+msgctxt "Languages::fgo_invoicing.diag_payload"
+msgid "fgo_invoicing.diag_payload"
+msgstr "Request sent (CNP masked)"
 

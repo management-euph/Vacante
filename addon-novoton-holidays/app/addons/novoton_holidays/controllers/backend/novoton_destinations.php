@@ -22,6 +22,8 @@ use Tygh\Addons\NovotonHolidays\Repository\DestinationWhitelistRepository;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\DestinationScope;
 use Tygh\Addons\NovotonHolidays\Services\DestinationsPage;
+use Tygh\Addons\NovotonHolidays\Services\DestinationsPicker;
+use Tygh\Addons\TravelCore\Services\DestinationPicker;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Tygh;
 
@@ -53,8 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             static fn (array $c): string => TypeCoerce::toString($c['country']),
             _novoton_destinations_page($repo)['countries'],
         );
-        $posted = $_POST['destinations'] ?? [];
-        $rows = DestinationsPage::rowsFromPost(is_array($posted) ? $posted : [], $known, ConfigProvider::getHiddenResorts());
+        $rows = DestinationsPage::rowsFromPost(DestinationPicker::readPost($_POST), $known, ConfigProvider::getHiddenResorts());
         $sold = array_filter($rows, static fn (array $r): bool => $r['resort'] === '');
 
         // No country at all would read as "not configured", i.e. the older
@@ -83,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($mode === 'disable_outside') {
         // Only the products the admin confirmed AND still outside the saved
         // whitelist: a stale page never disables something now sold.
-        $confirmed = array_map(static fn (mixed $id): int => TypeCoerce::toInt($id), is_array($_POST['product_ids'] ?? null) ? $_POST['product_ids'] : []);
+        $confirmed = DestinationPicker::productIds($_POST['product_ids'] ?? '');
         $outside = array_map(
             static fn (array $p): int => $p['product_id'],
             _novoton_destinations_page($repo)['outside'],
@@ -102,5 +103,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if ($mode === 'manage' || $mode === '') {
     /** @var \Smarty $view */
     $view = Tygh::$app['view'];
-    $view->assign('novoton_destinations', _novoton_destinations_page($repo));
+    $view->assign('novoton_destinations', fn_travel_core_dest_page(DestinationsPicker::page(
+        _novoton_destinations_page($repo),
+        fn_travel_core_dest_words([
+            'search' => __('novoton_holidays.dest_search'),
+            'filter' => __('novoton_holidays.dest_filter'),
+            'item_type' => __('novoton_holidays.dest_search_resort'),
+            'gone' => __('novoton_holidays.dest_badge_gone'),
+            'no_match' => __('novoton_holidays.dest_search_no_match'),
+            'fold' => __('novoton_holidays.dest_fold'),
+            'sold' => __('novoton_holidays.dest_search_sold'),
+            'not_sold' => __('novoton_holidays.dest_search_not_sold'),
+        ]),
+        TypeCoerce::toString(fn_url('novoton_destinations.save')),
+        TypeCoerce::toString(fn_url('novoton_destinations.disable_outside')),
+    )));
 }

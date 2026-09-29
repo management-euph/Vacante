@@ -4180,14 +4180,6 @@ msgctxt "Languages::novoton_holidays.dest_intro"
 msgid "Choose what we sell from Novoton. Only hotels in these destinations are synced and made into products (hotels with live products keep syncing until you disable them). \"All resorts\" includes resorts Novoton adds later; \"Only selected\" waits for you to tick them."
 msgstr "Choose what we sell from Novoton. Only hotels in these destinations are synced and made into products (hotels with live products keep syncing until you disable them). \"All resorts\" includes resorts Novoton adds later; \"Only selected\" waits for you to tick them."
 
-msgctxt "Languages::novoton_holidays.dest_pending"
-msgid "[n] changes not saved"
-msgstr "[n] changes not saved"
-
-msgctxt "Languages::novoton_holidays.dest_no_pending"
-msgid "All changes saved"
-msgstr "All changes saved"
-
 msgctxt "Languages::novoton_holidays.dest_badge_all"
 msgid "ALL"
 msgstr "ALL"
@@ -4200,14 +4192,6 @@ msgctxt "Languages::novoton_holidays.dest_badge_some"
 msgid "[sold] of [total]"
 msgstr "[sold] of [total]"
 
-msgctxt "Languages::novoton_holidays.dest_badge_new"
-msgid "NEW"
-msgstr "NEW"
-
-msgctxt "Languages::novoton_holidays.dest_badge_new_n"
-msgid "[n] new"
-msgstr "[n] new"
-
 msgctxt "Languages::novoton_holidays.dest_badge_gone"
 msgid "not in feed"
 msgstr "not in feed"
@@ -4215,10 +4199,6 @@ msgstr "not in feed"
 msgctxt "Languages::novoton_holidays.dest_search"
 msgid "Search countries or resorts…"
 msgstr "Search countries or resorts…"
-
-msgctxt "Languages::novoton_holidays.dest_search_country"
-msgid "Country"
-msgstr "Country"
 
 msgctxt "Languages::novoton_holidays.dest_search_resort"
 msgid "Resort"
@@ -4236,17 +4216,9 @@ msgctxt "Languages::novoton_holidays.dest_search_no_match"
 msgid "No country or resort matches."
 msgstr "No country or resort matches."
 
-msgctxt "Languages::novoton_holidays.dest_only_sold"
-msgid "Show sold countries only"
-msgstr "Show sold countries only"
-
 msgctxt "Languages::novoton_holidays.dest_country_meta"
 msgid "[resorts] resorts · [hotels] hotels"
 msgstr "[resorts] resorts · [hotels] hotels"
-
-msgctxt "Languages::novoton_holidays.dest_mode_legend"
-msgid "What we sell in [country]"
-msgstr "What we sell in [country]"
 
 msgctxt "Languages::novoton_holidays.dest_mode_off"
 msgid "Not sold"
@@ -4272,57 +4244,13 @@ msgctxt "Languages::novoton_holidays.dest_hint_specific"
 msgid "Tick the resorts to sell. New resorts wait for you."
 msgstr "Tick the resorts to sell. New resorts wait for you."
 
-msgctxt "Languages::novoton_holidays.dest_select_shown"
-msgid "Select shown"
-msgstr "Select shown"
-
-msgctxt "Languages::novoton_holidays.dest_clear_shown"
-msgid "Clear shown"
-msgstr "Clear shown"
-
 msgctxt "Languages::novoton_holidays.dest_n_priced"
 msgid "[n] with prices"
 msgstr "[n] with prices"
 
-msgctxt "Languages::novoton_holidays.dest_n_live"
-msgid "[n] live products"
-msgstr "[n] live products"
-
 msgctxt "Languages::novoton_holidays.dest_no_hotels"
 msgid "No hotels are synced for [country] yet. Choose \"All resorts\" and the next hotel sync brings them in."
 msgstr "No hotels are synced for [country] yet. Choose \"All resorts\" and the next hotel sync brings them in."
-
-msgctxt "Languages::novoton_holidays.dest_summary_title"
-msgid "Whitelist summary"
-msgstr "Whitelist summary"
-
-msgctxt "Languages::novoton_holidays.dest_save"
-msgid "Save whitelist"
-msgstr "Save whitelist"
-
-msgctxt "Languages::novoton_holidays.dest_undo"
-msgid "Undo changes"
-msgstr "Undo changes"
-
-msgctxt "Languages::novoton_holidays.dest_outside_label"
-msgid "Live products outside the whitelist"
-msgstr "Live products outside the whitelist"
-
-msgctxt "Languages::novoton_holidays.dest_outside_button"
-msgid "Disable products outside the whitelist…"
-msgstr "Disable products outside the whitelist…"
-
-msgctxt "Languages::novoton_holidays.dest_outside_confirm"
-msgid "These [n] live products are for hotels outside the saved whitelist. Disabling hides them from the store; they are not deleted and can be enabled again."
-msgstr "These [n] live products are for hotels outside the saved whitelist. Disabling hides them from the store; they are not deleted and can be enabled again."
-
-msgctxt "Languages::novoton_holidays.dest_outside_do"
-msgid "Disable [n] products"
-msgstr "Disable [n] products"
-
-msgctxt "Languages::novoton_holidays.dest_outside_note"
-msgid "Saving never changes existing products. Use the button above to disable them on purpose."
-msgstr "Saving never changes existing products. Use the button above to disable them on purpose."
 
 msgctxt "Languages::novoton_holidays.dest_none_sold"
 msgid "Choose at least one country to sell. Nothing was saved."
@@ -4356,14 +4284,6 @@ msgctxt "Languages::novoton_holidays.dash_dest_not_configured"
 msgid "No whitelist saved yet: this is what the selected countries and excluded resorts sell today."
 msgstr "No whitelist saved yet: this is what the selected countries and excluded resorts sell today."
 
-msgctxt "Languages::novoton_holidays.dash_dest_edit"
-msgid "Edit destinations →"
-msgstr "Edit destinations →"
-
-msgctxt "Languages::novoton_holidays.dash_dest_col_sell"
-msgid "What we sell"
-msgstr "What we sell"
-
 msgctxt "Languages::novoton_holidays.dash_dest_col_hotels"
 msgid "Hotels in scope"
 msgstr "Hotels in scope"
@@ -4372,10 +4292,6 @@ msgctxt "Languages::novoton_holidays.dash_dest_col_live"
 msgid "Live products"
 msgstr "Live products"
 
-msgctxt "Languages::novoton_holidays.dash_dest_col_review"
-msgid "To review"
-msgstr "To review"
-
 msgctxt "Languages::novoton_holidays.dash_dest_n_resorts"
 msgid "[n] resorts"
 msgstr "[n] resorts"
@@ -4383,14 +4299,6 @@ msgstr "[n] resorts"
 msgctxt "Languages::novoton_holidays.dash_dest_resorts_word"
 msgid "resorts"
 msgstr "resorts"
-
-msgctxt "Languages::novoton_holidays.dash_dest_none"
-msgid "No country is sold."
-msgstr "No country is sold."
-
-msgctxt "Languages::novoton_holidays.dash_dest_off"
-msgid "[n] more countries are not sold."
-msgstr "[n] more countries are not sold."
 
 msgctxt "Languages::novoton_holidays.dash_dest_alert_new"
 msgid "[n] new resorts in [country] wait for review."
@@ -4467,3 +4375,11 @@ msgstr "Room"
 msgctxt "Languages::novoton_holidays.mr_whole_stay"
 msgid "whole stay"
 msgstr "whole stay"
+
+msgctxt "Languages::novoton_holidays.dest_filter"
+msgid "Filter resorts…"
+msgstr "Filter resorts…"
+
+msgctxt "Languages::novoton_holidays.dest_fold"
+msgid "[n] more country has no hotels synced and is not sold.|[n] more countries have no hotels synced and are not sold."
+msgstr "[n] more country has no hotels synced and is not sold.|[n] more countries have no hotels synced and are not sold."

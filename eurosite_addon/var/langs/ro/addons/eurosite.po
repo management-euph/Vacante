@@ -284,10 +284,6 @@ msgctxt "Languages::eurosite.whitelist_title"
 msgid "Eurosite — Destination whitelist"
 msgstr "Eurosite — Listă destinații active"
 
-msgctxt "Languages::eurosite.whitelist_hint"
-msgid "Only whitelisted destinations are synced and searchable on the storefront. Tick a country to include all of its cities, or expand it and pick specific cities."
-msgstr "Doar destinațiile active sunt sincronizate și căutabile în storefront. Bifați o țară pentru toate orașele ei sau expandați și alegeți orașe specifice."
-
 msgctxt "Languages::eurosite.whitelist_needs_countries"
 msgid "The country catalog has not been synced yet — run the 'countries' sync from the dashboard first. City lists fall back to live API calls."
 msgstr "Catalogul de țări nu a fost încă sincronizat — rulați mai întâi sincronizarea \"countries\" din panou. Listele de orașe se încarcă direct din API."
@@ -300,10 +296,6 @@ msgctxt "Languages::eurosite.cities_selected"
 msgid "cities"
 msgstr "orașe"
 
-msgctxt "Languages::eurosite.no_cities"
-msgid "No cities found."
-msgstr "Niciun oraș găsit."
-
 msgctxt "Languages::eurosite.countries"
 msgid "Countries"
 msgstr "Țări"
@@ -312,65 +304,13 @@ msgctxt "Languages::eurosite.cities"
 msgid "Cities"
 msgstr "Orașe"
 
-msgctxt "Languages::eurosite.own_offer_cities"
-msgid "Own-offer cities"
-msgstr "Orașe cu oferte proprii"
-
 msgctxt "Languages::eurosite.search_destinations"
 msgid "Search country or city..."
 msgstr "Caută țară sau oraș..."
 
-msgctxt "Languages::eurosite.show_whitelisted_only"
-msgid "Show only whitelisted"
-msgstr "Afișează doar destinațiile selectate"
-
-msgctxt "Languages::eurosite.shown"
-msgid "shown"
-msgstr "afișate"
-
-msgctxt "Languages::eurosite.select_all_cities"
-msgid "Select all cities"
-msgstr "Selectează toate orașele"
-
-msgctxt "Languages::eurosite.all_cities_included"
-msgid "ALL CITIES"
-msgstr "TOATE ORAȘELE"
-
-msgctxt "Languages::eurosite.selected"
-msgid "selected"
-msgstr "selectate"
-
-msgctxt "Languages::eurosite.whitelist_summary"
-msgid "Whitelist summary"
-msgstr "Sumar destinații"
-
-msgctxt "Languages::eurosite.whitelisted_countries"
-msgid "Whitelisted countries"
-msgstr "Țări selectate"
-
-msgctxt "Languages::eurosite.whitelisted_cities"
-msgid "Whitelisted cities"
-msgstr "Orașe selectate"
-
 msgctxt "Languages::eurosite.save_whitelist"
 msgid "Save whitelist"
 msgstr "Salvează lista"
-
-msgctxt "Languages::eurosite.remove_all"
-msgid "Remove all"
-msgstr "Elimină tot"
-
-msgctxt "Languages::eurosite.confirm_remove_all"
-msgid "Remove all whitelisted destinations? Click Save to persist."
-msgstr "Eliminați toate destinațiile selectate? Apăsați Salvează pentru a persista."
-
-msgctxt "Languages::eurosite.request_failed"
-msgid "Request failed."
-msgstr "Cererea a eșuat."
-
-msgctxt "Languages::eurosite.back_to_dashboard"
-msgid "Back to dashboard"
-msgstr "Înapoi la panou"
 
 msgctxt "Languages::eurosite.country"
 msgid "Country"
@@ -531,10 +471,6 @@ msgstr "Finalizarea rezervării nu este configurată complet — contactați-ne 
 msgctxt "Languages::eurosite.added_to_cart"
 msgid "Your stay was added to the cart — complete checkout to confirm the reservation."
 msgstr "Sejurul a fost adăugat în coș — finalizați comanda pentru a confirma rezervarea."
-
-msgctxt "Languages::eurosite.no_search_results"
-msgid "No matches."
-msgstr "Niciun rezultat."
 
 msgctxt "Languages::eurosite.whitelist_names_missing"
 msgid "The country catalog has codes but no names. Run the 'countries' sync to refill it."
@@ -976,10 +912,6 @@ msgctxt "Languages::eurosite.hotels_empty"
 msgid "No hotels listed yet. Whitelist destinations, then run the hotels sync from the dashboard."
 msgstr "Niciun hotel listat încă. Activați destinații, apoi rulați sincronizarea hotelurilor din panoul de control."
 
-msgctxt "Languages::eurosite.hotels_word"
-msgid "hotels"
-msgstr "hoteluri"
-
 msgctxt "Languages::eurosite.open_hotel_list"
 msgid "Open hotel list"
 msgstr "Deschide lista de hoteluri"
@@ -1039,18 +971,6 @@ msgstr "Detaliile hotelului (poze, descriere) sunt aduse de jobul product_info s
 msgctxt "Languages::eurosite.product_can_create"
 msgid "Can become a product"
 msgstr "Poate deveni produs"
-
-msgctxt "Languages::eurosite.show_own_only"
-msgid "Show only countries with own hotels"
-msgstr "Arată doar țările cu hoteluri proprii"
-
-msgctxt "Languages::eurosite.own_n"
-msgid "[n] own"
-msgstr "[n] proprii"
-
-msgctxt "Languages::eurosite.select_all_own_cities"
-msgid "Select all own cities"
-msgstr "Selectează toate orașele proprii"
 
 msgctxt "Languages::eurosite.seo_templates"
 msgid "SEO Templates"
@@ -1143,3 +1063,231 @@ msgstr "Caută oferte"
 msgctxt "Languages::eurosite.probe_none_hint"
 msgid "No Immediate hotel on the configured dates. Find dates with offers below, then add them to the peak-season dates."
 msgstr "Niciun hotel Imediat la datele configurate. Găsiți mai jos date cu oferte, apoi adăugați-le la datele de sezon."
+
+msgctxt "Languages::eurosite.probe_cities_all"
+msgid "empty = all synced"
+msgstr "gol = toate sincronizate"
+
+msgctxt "Languages::eurosite.dest_mode_off"
+msgid "Not sold"
+msgstr "Nu se vinde"
+
+msgctxt "Languages::eurosite.dest_mode_all"
+msgid "All cities"
+msgstr "Toate orașele"
+
+msgctxt "Languages::eurosite.dest_mode_own"
+msgid "Own cities"
+msgstr "Orașe proprii"
+
+msgctxt "Languages::eurosite.dest_mode_specific"
+msgid "Only selected"
+msgstr "Doar cele bifate"
+
+msgctxt "Languages::eurosite.dest_hint_off"
+msgid "Nothing is synced or sold in this country."
+msgstr "Nimic nu se sincronizează și nu se vinde în această țară."
+
+msgctxt "Languages::eurosite.dest_hint_all"
+msgid "Every city is sold, including ones Eurosite adds later."
+msgstr "Se vând toate orașele, inclusiv cele adăugate ulterior de Eurosite."
+
+msgctxt "Languages::eurosite.dest_hint_own"
+msgid "Every own-offer city is sold, including ones Eurosite adds later. The other cities are not sold."
+msgstr "Se vând toate orașele cu oferte proprii, inclusiv cele adăugate ulterior de Eurosite. Celelalte orașe nu se vând."
+
+msgctxt "Languages::eurosite.dest_hint_specific"
+msgid "Tick the cities to sell. New cities wait for you."
+msgstr "Bifați orașele de vândut. Orașele noi vă așteaptă."
+
+msgctxt "Languages::eurosite.dest_badge_off"
+msgid "NOT SOLD"
+msgstr "NU SE VINDE"
+
+msgctxt "Languages::eurosite.dest_badge_all"
+msgid "ALL"
+msgstr "TOATE"
+
+msgctxt "Languages::eurosite.dest_badge_own"
+msgid "OWN ([sold])"
+msgstr "PROPRII ([sold])"
+
+msgctxt "Languages::eurosite.dest_badge_some"
+msgid "[sold] of [total]"
+msgstr "[sold] din [total]"
+
+msgctxt "Languages::eurosite.dest_tile_countries"
+msgid "Countries sold"
+msgstr "Țări vândute"
+
+msgctxt "Languages::eurosite.dest_tile_cities"
+msgid "Cities sold"
+msgstr "Orașe vândute"
+
+msgctxt "Languages::eurosite.dest_tile_cities_note"
+msgid "[n] with own offers"
+msgstr "[n] cu oferte proprii"
+
+msgctxt "Languages::eurosite.dest_tile_hotels"
+msgid "Hotels in scope"
+msgstr "Hoteluri incluse"
+
+msgctxt "Languages::eurosite.dest_tile_hotels_note"
+msgid "[priced] with prices · [instant] instant"
+msgstr "[priced] cu prețuri · [instant] imediat"
+
+msgctxt "Languages::eurosite.dest_tile_new"
+msgid "New cities to review"
+msgstr "Orașe noi de verificat"
+
+msgctxt "Languages::eurosite.dest_not_configured"
+msgid "<strong>No whitelist saved yet.</strong> Nothing is synced or sold from Eurosite until you choose at least one country and save."
+msgstr "<strong>Nicio listă salvată încă.</strong> Nu se sincronizează și nu se vinde nimic de la Eurosite până nu alegeți cel puțin o țară și salvați."
+
+msgctxt "Languages::eurosite.dest_new_alert"
+msgid "[n] new cities appeared in the cities sync. They are not sold until you tick them."
+msgstr "[n] orașe noi au apărut la sincronizarea orașelor. Nu se vând până nu le bifați."
+
+msgctxt "Languages::eurosite.dest_show_new"
+msgid "Show new cities"
+msgstr "Arată orașele noi"
+
+msgctxt "Languages::eurosite.dest_gone_alert"
+msgid "[n] ticked cities are no longer in the Eurosite catalog (crossed out). They stay ticked until you untick them."
+msgstr "[n] orașe bifate nu mai sunt în catalogul Eurosite (tăiate). Rămân bifate până le debifați."
+
+msgctxt "Languages::eurosite.dest_intro"
+msgid "Choose what we sell from Eurosite. Only hotels in these destinations are synced and shown on the storefront; hotels outside are hidden at the next hotel sync, and live products stay until you disable them. \"All cities\" and \"Own cities\" include cities Eurosite adds later; \"Only selected\" waits for you to tick them."
+msgstr "Alegeți ce vindem de la Eurosite. Doar hotelurile din aceste destinații se sincronizează și apar în magazin; cele din afară se ascund la următoarea sincronizare a hotelurilor, iar produsele active rămân până le dezactivați. „Toate orașele\" și „Orașe proprii\" includ și orașele adăugate ulterior de Eurosite; „Doar cele bifate\" așteaptă să le bifați."
+
+msgctxt "Languages::eurosite.dest_country_meta"
+msgid "[cities] cities · [hotels] hotels"
+msgstr "[cities] orașe · [hotels] hoteluri"
+
+msgctxt "Languages::eurosite.dest_country_meta_none"
+msgid "[cities] cities · hotels not synced yet"
+msgstr "[cities] orașe · hoteluri nesincronizate încă"
+
+msgctxt "Languages::eurosite.dest_no_cities"
+msgid "No cities are synced for [country] yet. Choose \"All cities\" and the next cities sync brings them in."
+msgstr "Nu există încă orașe sincronizate pentru [country]. Alegeți „Toate orașele\" și următoarea sincronizare le aduce."
+
+msgctxt "Languages::eurosite.dest_city_meta"
+msgid "[hotels] hotels · [priced] with prices · [instant] instant"
+msgstr "[hotels] hoteluri · [priced] cu prețuri · [instant] imediat"
+
+msgctxt "Languages::eurosite.dest_city_not_synced"
+msgid "Hotels not synced yet"
+msgstr "Hoteluri nesincronizate încă"
+
+msgctxt "Languages::eurosite.dest_city_gone"
+msgid "No longer in the Eurosite catalog"
+msgstr "Nu mai este în catalogul Eurosite"
+
+msgctxt "Languages::eurosite.dest_own_n"
+msgid "★ [n] own"
+msgstr "★ [n] proprii"
+
+msgctxt "Languages::eurosite.dest_own"
+msgid "★ own"
+msgstr "★ propriu"
+
+msgctxt "Languages::eurosite.dest_own_title"
+msgid "Cities with the operator's own offers"
+msgstr "Orașe cu ofertele proprii ale operatorului"
+
+msgctxt "Languages::eurosite.dest_filter_own"
+msgid "Countries with own offers only"
+msgstr "Doar țările cu oferte proprii"
+
+msgctxt "Languages::eurosite.dest_chip_own"
+msgid "★ Own"
+msgstr "★ Proprii"
+
+msgctxt "Languages::eurosite.dest_select_own"
+msgid "★ Select own cities"
+msgstr "★ Bifează orașele proprii"
+
+msgctxt "Languages::eurosite.dest_sort_own"
+msgid "Own first"
+msgstr "Întâi cele proprii"
+
+msgctxt "Languages::eurosite.dest_sort_az"
+msgid "A–Z"
+msgstr "A–Z"
+
+msgctxt "Languages::eurosite.dest_sort_hotels"
+msgid "Most hotels"
+msgstr "Cele mai multe hoteluri"
+
+msgctxt "Languages::eurosite.dest_search"
+msgid "Search countries, cities or codes…"
+msgstr "Caută țări, orașe sau coduri…"
+
+msgctxt "Languages::eurosite.dest_filter"
+msgid "Filter cities…"
+msgstr "Filtrează orașele…"
+
+msgctxt "Languages::eurosite.dest_item_type"
+msgid "City"
+msgstr "Oraș"
+
+msgctxt "Languages::eurosite.dest_gone"
+msgid "not in catalog"
+msgstr "nu mai e în catalog"
+
+msgctxt "Languages::eurosite.dest_no_match"
+msgid "No country or city matches."
+msgstr "Nicio țară sau oraș nu se potrivește."
+
+msgctxt "Languages::eurosite.dest_fold"
+msgid "[n] more country has no cities synced and is not sold.|[n] more countries have no cities synced and are not sold."
+msgstr "Încă [n] țară nu are orașe sincronizate și nu se vinde.|Încă [n] țări nu au orașe sincronizate și nu se vând.|Încă [n] de țări nu au orașe sincronizate și nu se vând."
+
+msgctxt "Languages::eurosite.dest_catalog"
+msgid "Country catalog: [countries] countries, [cities] cities synced ([own] with own offers)"
+msgstr "Catalogul de țări: [countries] țări, [cities] orașe sincronizate ([own] cu oferte proprii)"
+
+msgctxt "Languages::eurosite.dest_saved"
+msgid "Whitelist saved: [countries] countries, [cities] selected cities. The next hotel sync uses it."
+msgstr "Lista a fost salvată: [countries] țări, [cities] orașe bifate. Următoarea sincronizare a hotelurilor o folosește."
+
+msgctxt "Languages::eurosite.dest_card_title"
+msgid "Destinations"
+msgstr "Destinații"
+
+msgctxt "Languages::eurosite.dest_card_intro"
+msgid "[countries] countries, [cities] cities sold."
+msgstr "[countries] țări, [cities] orașe vândute."
+
+msgctxt "Languages::eurosite.dest_card_not_configured"
+msgid "No whitelist saved yet: nothing is synced or sold."
+msgstr "Nicio listă salvată încă: nu se sincronizează și nu se vinde nimic."
+
+msgctxt "Languages::eurosite.dest_col_instant"
+msgid "Instant"
+msgstr "Imediat"
+
+msgctxt "Languages::eurosite.dest_col_live"
+msgid "Live products"
+msgstr "Produse active"
+
+msgctxt "Languages::eurosite.dest_card_n_cities"
+msgid "[n] cities"
+msgstr "[n] orașe"
+
+msgctxt "Languages::eurosite.dest_card_cities"
+msgid "cities"
+msgstr "orașe"
+
+msgctxt "Languages::eurosite.dest_alert_new"
+msgid "[n] new cities in [country] wait for review."
+msgstr "[n] orașe noi din [country] așteaptă verificarea."
+
+msgctxt "Languages::eurosite.dest_alert_gone"
+msgid "[n] sold cities are no longer in the Eurosite catalog."
+msgstr "[n] orașe vândute nu mai sunt în catalogul Eurosite."
+
+msgctxt "Languages::eurosite.dest_alert_outside"
+msgid "[n] live products are outside the destination whitelist."
+msgstr "[n] produse active sunt în afara listei de destinații."

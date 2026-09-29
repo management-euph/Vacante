@@ -109,5 +109,60 @@
     </div>
 </div>
 
+{* Issue attempts from ?:fgo_diagnostic_logs. Output is auto-escaped by
+   CS-Cart (escape_html), so no |escape here. *}
+<div class="row-fluid">
+    <div class="span12">
+        <h4>{__("fgo_invoicing.diagnostics_title")}</h4>
+        <p class="muted">{__("fgo_invoicing.diagnostics_intro")}</p>
+        {if $fgo_attempts}
+            <table class="table table-middle">
+                <thead>
+                    <tr>
+                        <th>{__("fgo_invoicing.diag_date")}</th>
+                        <th>{__("fgo_invoicing.diag_response_code")}</th>
+                        <th>{__("fgo_invoicing.diag_cnp_length")}</th>
+                        <th>{__("fgo_invoicing.diag_cnp_checksum")}</th>
+                        <th>{__("fgo_invoicing.diag_error_message")}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {foreach from=$fgo_attempts item="attempt"}
+                    <tr>
+                        <td class="nowrap">{$attempt.created_at}</td>
+                        <td>
+                            <span class="label {if $attempt.fgo_response_code == "success"}label-success{elseif $attempt.fgo_response_code == "blocked"}label-warning{else}label-important{/if}">{$attempt.fgo_response_code}</span>
+                        </td>
+                        <td>{if $attempt.cnp_length === null || $attempt.cnp_length === ""}-{else}{$attempt.cnp_length}{/if}</td>
+                        <td>
+                            {if $attempt.is_cnp_checksum_valid === null || $attempt.is_cnp_checksum_valid === ""}
+                                <span class="muted">{__("fgo_invoicing.diag_no_cnp")}</span>
+                            {elseif $attempt.is_cnp_checksum_valid == 1}
+                                {__("fgo_invoicing.diag_checksum_ok")}
+                            {else}
+                                <strong class="text-error">{__("fgo_invoicing.diag_checksum_bad")}</strong>
+                            {/if}
+                        </td>
+                        <td>{$attempt.fgo_error_message|default:"-"}</td>
+                    </tr>
+                    {if $attempt.request_pretty}
+                    <tr>
+                        <td colspan="5">
+                            <details>
+                                <summary>{__("fgo_invoicing.diag_payload")}</summary>
+                                <pre style="max-height:300px;overflow:auto;">{$attempt.request_pretty}</pre>
+                            </details>
+                        </td>
+                    </tr>
+                    {/if}
+                {/foreach}
+                </tbody>
+            </table>
+        {else}
+            <p>{__("fgo_invoicing.diag_none")}</p>
+        {/if}
+    </div>
+</div>
+
 {/capture}
 {include file="common/mainbox.tpl" title=__("fgo_invoicing.invoice_for_order"):" #":$fgo_invoice.order_id content=$smarty.capture.mainbox}

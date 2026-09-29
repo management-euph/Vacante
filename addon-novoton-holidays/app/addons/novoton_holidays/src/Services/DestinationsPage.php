@@ -95,7 +95,8 @@ final class DestinationsPage
             $reviewedTs = $reviewedAt === '' ? 0 : (int) strtotime($reviewedAt);
 
             $resorts = [];
-            $c = ['resorts' => 0, 'sold' => 0, 'hotels' => 0, 'hotels_sold' => 0, 'priced_sold' => 0, 'live_sold' => 0, 'new' => 0, 'gone' => 0];
+            // resort_count, not 'resorts': that key holds the resort list below.
+            $c = ['resort_count' => 0, 'sold' => 0, 'hotels' => 0, 'hotels_sold' => 0, 'priced_sold' => 0, 'live_sold' => 0, 'new' => 0, 'gone' => 0];
             foreach ($rows as $key => $r) {
                 $isSelected = in_array((string) $key, $selected, true);
                 $lastTs = (int) strtotime($r['last_seen'] ?: '1970-01-01');
@@ -118,7 +119,7 @@ final class DestinationsPage
                     'gone' => $gone,
                 ];
                 if (!$gone) {
-                    $c['resorts']++;
+                    $c['resort_count']++;
                     $c['hotels'] += $r['hotels'];
                 }
                 if ($sold) {
@@ -168,11 +169,11 @@ final class DestinationsPage
     }
 
     /**
-     * The posted form as whitelist rows. Countries must be known ones; an
+     * The posted picker as whitelist rows. Countries must be known ones; an
      * 'only selected' country keeps its ticked resorts (names trimmed,
      * repeats and hidden resorts dropped).
      *
-     * @param array<mixed> $posted $_POST['destinations']: COUNTRY => [mode, resorts[]]
+     * @param array<mixed> $posted DestinationPicker::readPost(): COUNTRY => [mode, items[]]
      * @param list<string> $known countries the page listed
      * @param list<string> $hidden
      * @return list<array{country: string, resort: string, selection_type: string}>
@@ -200,7 +201,7 @@ final class DestinationsPage
                 continue;
             }
             $seen = [];
-            $resorts = is_array($entry['resorts'] ?? null) ? $entry['resorts'] : [];
+            $resorts = is_array($entry['items'] ?? null) ? $entry['items'] : [];
             foreach ($resorts as $resort) {
                 if (!is_scalar($resort)) {
                     continue;
