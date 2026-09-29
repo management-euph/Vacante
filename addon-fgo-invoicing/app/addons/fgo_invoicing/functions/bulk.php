@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use Tygh\Addons\FgoInvoicing\Helpers\TypeCoerce;
+use Tygh\Addons\FgoInvoicing\Services\Bulk\BulkAction;
 use Tygh\Addons\FgoInvoicing\Services\Bulk\BulkRunResult;
+use Tygh\Addons\FgoInvoicing\Services\Bulk\BulkSelection;
 use Tygh\Addons\FgoInvoicing\Services\Bulk\PrecheckReason;
 use Tygh\Addons\FgoInvoicing\Services\Bulk\PrecheckRow;
 use Tygh\Addons\FgoInvoicing\Services\Pdf\InvoicePdfZipper;
@@ -15,8 +17,9 @@ if (!defined('BOOTSTRAP')) {
 
 /*
  * CS-Cart glue for the bulk FGO actions (controllers/backend/fgo_invoicing.php):
- * translation, order status names, the rows and results as the page and the
- * page script consume them, the AJAX answer and the ZIP scratch directory.
+ * translation, order status names, the selection kept in the admin's session,
+ * the rows and results as the page and the page script consume them, the
+ * AJAX answer and the ZIP scratch directory.
  * The decisions themselves live in src/Services/Bulk (pure, unit-tested);
  * nothing here decides anything.
  *
@@ -81,8 +84,67 @@ function fn_fgo_invoicing_bulk_row_view(PrecheckRow $row): array
     $view = $row->toArray();
     $view['verdict_label'] = fn_fgo_invoicing_t($row->verdict->langKey());
     $view['lines'] = fn_fgo_invoicing_bulk_reason_lines($row->reasons);
+    // What the page showed, sent back with the order (bulk_run's
+    // seen_verdict / seen_reasons): a warning it did not show stops it.
+    $view['reason_codes'] = implode(',', array_map(static fn (PrecheckReason $r): string => $r->code, $row->reasons));
 
     return $view;
+}
+
+/**
+ * CS-Cart's session (Tygh::$app['session'], ArrayAccess), or null outside a
+ * request that has one.
+ *
+ * @return \ArrayAccess<string, mixed>|null
+ */
+function fn_fgo_invoicing_session(): ?\ArrayAccess
+{
+    if (!class_exists('Tygh')) {
+        return null;
+    }
+    try {
+        $app = Tygh::$app;
+        $session = $app instanceof \ArrayAccess && $app->offsetExists('session') ? $app->offsetGet('session') : null;
+    } catch (\Throwable) {
+        return null;
+    }
+
+    return $session instanceof \ArrayAccess ? $session : null;
+}
+
+/**
+ * Keep a bulk selection in the admin's session (BulkSelection) and return
+ * its token for fgo_invoicing.bulk?token=...; '' when there is no session.
+ * The bucket is read and written back whole: nested writes through
+ * ArrayAccess are not reliable.
+ *
+ * @param list<int> $orderIds
+ */
+function fn_fgo_invoicing_bulk_remember(BulkAction $action, array $orderIds, ?bool $sendEmail = null): string
+{
+    $session = fn_fgo_invoicing_session();
+    if ($session === null) {
+        return '';
+    }
+    $token = BulkSelection::newToken();
+    $bucket = $session->offsetExists(BulkSelection::SESSION_KEY) ? $session->offsetGet(BulkSelection::SESSION_KEY) : [];
+    $session->offsetSet(
+        BulkSelection::SESSION_KEY,
+        (new BulkSelection($action, $orderIds, $sendEmail, time()))->storeIn($bucket, $token),
+    );
+
+    return $token;
+}
+
+/** The selection a token names in this admin's session, or null. */
+function fn_fgo_invoicing_bulk_recall(string $token): ?BulkSelection
+{
+    $session = fn_fgo_invoicing_session();
+    if ($session === null || !$session->offsetExists(BulkSelection::SESSION_KEY)) {
+        return null;
+    }
+
+    return BulkSelection::findIn($session->offsetGet(BulkSelection::SESSION_KEY), $token);
 }
 
 /**
@@ -100,6 +162,16 @@ function fn_fgo_invoicing_bulk_result_payload(BulkRunResult $result): array
         : '';
 
     return $payload;
+}
+
+/**
+ * "#12, #15" for a notification.
+ *
+ * @param list<int> $orderIds
+ */
+function fn_fgo_invoicing_order_list(array $orderIds): string
+{
+    return implode(', ', array_map(static fn (int $id): string => '#' . $id, $orderIds));
 }
 
 /**
@@ -146,22 +218,75 @@ function fn_fgo_invoicing_bulk_temp_dir(): string
 }
 
 /**
+ * Remove archives and PDF scratch files older than $maxAgeSeconds from the
+ * ZIP directory: a request killed mid-way (a fatal error, a worker that was
+ * stopped) runs no cleanup of its own. Only this add-on's file names are
+ * touched, also when the directory is the system temp dir.
+ *
+ * @return int files removed
+ */
+function fn_fgo_invoicing_bulk_purge_temp(string $dir, int $maxAgeSeconds = 3600, ?int $now = null): int
+{
+    $now ??= time();
+    $removed = 0;
+    foreach (['fgo-invoices-*.zip', 'fgo-pdf-*'] as $pattern) {
+        foreach (glob(rtrim($dir, '/') . '/' . $pattern) ?: [] as $file) {
+            $mtime = @filemtime($file);
+            if (is_file($file) && $mtime !== false && $now - $mtime > $maxAgeSeconds && @unlink($file)) {
+                $removed++;
+            }
+        }
+    }
+
+    return $removed;
+}
+
+/**
  * Build the ZIP of the given invoices' PDFs.
+ *
+ * Downloads stop once $budgetSeconds have passed (InvoicePdfZipper::
+ * TIME_BUDGET_SECONDS): the orders not reached are returned as `unfetched`
+ * and, like the failed ones and $notIncluded (selected above the batch
+ * cap), listed in missing-pdfs.txt inside the archive. The archive is
+ * readable by the web server's user only, and a shutdown function removes
+ * it and the scratch PDFs whatever ends the request (after fn_get_file()
+ * has streamed it, on a timeout, on a fatal error).
  *
  * @param array<int, array<string, mixed>> $invoices order_id => ?:fgo_invoices row (issued, with a pdf_link)
  * @param \Closure(string): string $fetch downloads one PDF (PdfFetcher::fetch)
+ * @param (\Closure(): float)|null $clock seconds, monotonic enough (microtime); tests pass a fake
+ * @param list<int> $notIncluded selected, but past the batch cap: listed in the note, not fetched
  *
- * @return array{path: string, added: int, failed: array<int, string>}
+ * @return array{path: string, added: int, failed: array<int, string>, unfetched: list<int>}
  */
-function fn_fgo_invoicing_build_pdf_zip(array $invoices, \Closure $fetch): array
-{
+function fn_fgo_invoicing_build_pdf_zip(
+    array $invoices,
+    \Closure $fetch,
+    float $budgetSeconds = InvoicePdfZipper::TIME_BUDGET_SECONDS,
+    ?\Closure $clock = null,
+    array $notIncluded = [],
+): array {
+    $clock ??= static fn (): float => microtime(true);
     $dir = fn_fgo_invoicing_bulk_temp_dir();
+    fn_fgo_invoicing_bulk_purge_temp($dir);
     $path = $dir . '/fgo-invoices-' . bin2hex(random_bytes(6)) . '.zip';
     $zipper = new InvoicePdfZipper($path, $dir);
+    register_shutdown_function(static function () use ($zipper, $path): void {
+        $zipper->removeTemporaryFiles();
+        if (is_file($path)) {
+            @unlink($path);
+        }
+    });
 
+    $started = $clock();
     $added = 0;
     $failed = [];
+    $unfetched = [];
     foreach ($invoices as $orderId => $row) {
+        if ($clock() - $started >= $budgetSeconds) {
+            $unfetched[] = $orderId;
+            continue;
+        }
         try {
             $pdf = $fetch(TypeCoerce::toString($row['pdf_link'] ?? ''));
             $zipper->addPdf(
@@ -177,14 +302,25 @@ function fn_fgo_invoicing_build_pdf_zip(array $invoices, \Closure $fetch): array
         }
     }
 
-    if ($added > 0 && $failed !== []) {
+    if ($added > 0 && ($failed !== [] || $unfetched !== [] || $notIncluded !== [])) {
         $note = fn_fgo_invoicing_t('fgo_invoicing.zip_missing_note') . "\r\n\r\n";
         foreach ($failed as $orderId => $error) {
             $note .= '#' . $orderId . ': ' . $error . "\r\n";
         }
+        $later = fn_fgo_invoicing_t('fgo_invoicing.zip_note_time_budget', ['[seconds]' => (int) $budgetSeconds]);
+        foreach ($unfetched as $orderId) {
+            $note .= '#' . $orderId . ': ' . $later . "\r\n";
+        }
+        $over = fn_fgo_invoicing_t('fgo_invoicing.zip_note_over_cap', ['[max]' => BulkAction::MAX_BATCH]);
+        foreach ($notIncluded as $orderId) {
+            $note .= '#' . $orderId . ': ' . $over . "\r\n";
+        }
         $zipper->addText('missing-pdfs.txt', $note);
     }
     $zipper->close();
+    if ($added > 0) {
+        @chmod($path, 0600);
+    }
 
-    return ['path' => $added > 0 ? $path : '', 'added' => $added, 'failed' => $failed];
+    return ['path' => $added > 0 ? $path : '', 'added' => $added, 'failed' => $failed, 'unfetched' => $unfetched];
 }

@@ -27,6 +27,25 @@ use Tygh\Addons\FgoInvoicing\Services\BillingMapper;
  * warning, as the issuer then issues and logs. Checksums (RomanianTaxId) are
  * warnings only: FGO is the authority on a CIF, and a local rule must not
  * stop a genuine order.
+ *
+ * A pending row younger than Constants::PENDING_STALE_SECONDS is a request
+ * talking to FGO right now: skipped ("being issued right now"). An older one
+ * is offered as a retry with a warning; the issuer's atomic claim decides
+ * either way. A row that stays unticked by default (a re-issue, an
+ * unfinished order, an invoice e-mailed in the last day) is always a `warn`
+ * row, never `ready` or `retry`: select-all leaves those alone.
+ *
+ * @phpstan-type InvoiceFacts array{
+ *     status: string,
+ *     series: string,
+ *     number: string,
+ *     label: string,
+ *     pdf_link: string,
+ *     last_error: string,
+ *     updated_age: ?int,
+ *     emailed_at: string,
+ *     emailed_age: ?int
+ * }
  */
 final class BulkPrecheck
 {
@@ -39,6 +58,9 @@ final class BulkPrecheck
 
     /** The last FGO error is shown in a table cell; its full text is on the invoice page. */
     private const ERROR_EXCERPT = 160;
+
+    /** A second "your invoice" e-mail within this many seconds is not sent by default. */
+    public const EMAIL_RESEND_WINDOW_SECONDS = 86400;
 
     /**
      * @param array<string, string> $statusNames CS-Cart order status code => name, for the messages
@@ -95,7 +117,7 @@ final class BulkPrecheck
 
     /**
      * @param array<string, mixed> $orderInfo
-     * @param array{status: string, series: string, number: string, label: string, pdf_link: string, last_error: string} $inv
+     * @param InvoiceFacts $inv
      *
      * @return array{0: PrecheckVerdict, 1: list<PrecheckReason>, 2: bool}
      */
@@ -108,9 +130,14 @@ final class BulkPrecheck
     ): array {
         $status = $inv['status'];
         if ($status === Constants::STATUS_ISSUED) {
-            return [PrecheckVerdict::Skip, [self::reason('already_invoiced', PrecheckReason::LEVEL_INFO, ['[invoice]' => $inv['label']])], false];
+            return [PrecheckVerdict::Skip, [self::reason('already_invoiced', PrecheckReason::LEVEL_INFO, ['[invoice]' => self::labelOrDash($inv['label'])])], false];
         }
-        $retryable = $status === Constants::STATUS_FAILED || $status === Constants::STATUS_PENDING;
+        $pending = $status === Constants::STATUS_PENDING;
+        if ($pending && !self::isStale($inv)) {
+            // Another request holds the claim and may be talking to FGO.
+            return [PrecheckVerdict::Skip, [self::reason('in_progress', PrecheckReason::LEVEL_INFO)], false];
+        }
+        $retryable = $status === Constants::STATUS_FAILED || $pending;
         if ($action === BulkAction::Retry && !$retryable) {
             return [PrecheckVerdict::Skip, [self::reason('not_failed', PrecheckReason::LEVEL_INFO)], false];
         }
@@ -123,16 +150,20 @@ final class BulkPrecheck
             $reasons[] = self::reason('last_error', PrecheckReason::LEVEL_INFO, [
                 '[error]' => $inv['last_error'] !== '' ? self::excerpt($inv['last_error']) : '—',
             ]);
-        } elseif ($status === Constants::STATUS_PENDING) {
-            // A pending row is also what a request still talking to FGO looks
-            // like: say so, but let the admin retry a row that got stuck.
+        } elseif ($pending) {
+            // Pending for longer than any FGO call takes: its request died.
+            // The issuer's claim takes the row over, so ticked is safe.
             $verdict = PrecheckVerdict::Retry;
-            $reasons[] = self::reason('pending', PrecheckReason::LEVEL_WARN);
+            $reasons[] = self::reason('stale_pending', PrecheckReason::LEVEL_WARN);
         } elseif (in_array($status, [Constants::STATUS_CANCELED, Constants::STATUS_REVERSED, Constants::STATUS_DELETED], true)) {
             // Issuing again creates a NEW fiscal document next to the one
             // that was cancelled: allowed, never by default.
             $selected = false;
-            $reasons[] = self::reason('previously_' . $status, PrecheckReason::LEVEL_WARN, ['[invoice]' => $inv['label'] !== '' ? $inv['label'] : '—']);
+            $reasons[] = self::reason('previously_' . $status, PrecheckReason::LEVEL_WARN, ['[invoice]' => self::labelOrDash($inv['label'])]);
+        }
+        if ($retryable && $inv['series'] !== '' && $inv['number'] !== '') {
+            // A failed re-issue: the next attempt still replaces that invoice.
+            $reasons[] = self::reason('reissue_of', PrecheckReason::LEVEL_INFO, ['[invoice]' => $inv['label']]);
         }
 
         if ($client === null) {
@@ -162,7 +193,9 @@ final class BulkPrecheck
                 return [PrecheckVerdict::Block, $reasons, false];
             }
         }
-        if ($verdict === PrecheckVerdict::Ready && self::anyWarning($reasons)) {
+        if (!$selected || ($verdict === PrecheckVerdict::Ready && self::anyWarning($reasons))) {
+            // Unticked by default means "read this first": a warn row, also
+            // when it failed before (a failed invoice on an unfinished order).
             $verdict = PrecheckVerdict::Warn;
         }
 
@@ -207,7 +240,7 @@ final class BulkPrecheck
     }
 
     /**
-     * @param array{status: string, series: string, number: string, label: string, pdf_link: string, last_error: string} $inv
+     * @param InvoiceFacts $inv
      *
      * @return array{0: PrecheckVerdict, 1: list<PrecheckReason>, 2: bool}
      */
@@ -222,6 +255,12 @@ final class BulkPrecheck
         if ($email === '' || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
             return [PrecheckVerdict::Block, [self::reason('no_email', PrecheckReason::LEVEL_BLOCK)], false];
         }
+        if ($inv['emailed_age'] !== null && $inv['emailed_age'] < self::EMAIL_RESEND_WINDOW_SECONDS) {
+            // The customer already has it; a second copy only on purpose.
+            return [PrecheckVerdict::Warn, [self::reason('recently_emailed', PrecheckReason::LEVEL_WARN, [
+                '[time]' => $inv['emailed_at'] !== '' ? $inv['emailed_at'] : '—',
+            ])], false];
+        }
 
         return [PrecheckVerdict::Ready, [], true];
     }
@@ -229,7 +268,7 @@ final class BulkPrecheck
     /**
      * Cancel / Storno / Delete.
      *
-     * @param array{status: string, series: string, number: string, label: string, pdf_link: string, last_error: string} $inv
+     * @param InvoiceFacts $inv
      *
      * @return array{0: PrecheckVerdict, 1: list<PrecheckReason>, 2: bool}
      */
@@ -248,7 +287,7 @@ final class BulkPrecheck
     }
 
     /**
-     * @param array{status: string, series: string, number: string, label: string, pdf_link: string, last_error: string} $inv
+     * @param InvoiceFacts $inv
      *
      * @return array{0: PrecheckVerdict, 1: list<PrecheckReason>, 2: bool}
      */
@@ -256,16 +295,20 @@ final class BulkPrecheck
     {
         $status = $inv['status'];
         if (in_array($status, [Constants::STATUS_CANCELED, Constants::STATUS_REVERSED, Constants::STATUS_DELETED], true)) {
-            return [PrecheckVerdict::Skip, [self::reason('already_' . $status, PrecheckReason::LEVEL_INFO, ['[invoice]' => $inv['label'] !== '' ? $inv['label'] : '—'])], false];
+            return [PrecheckVerdict::Skip, [self::reason('already_' . $status, PrecheckReason::LEVEL_INFO, ['[invoice]' => self::labelOrDash($inv['label'])])], false];
         }
 
         return [PrecheckVerdict::Skip, [self::reason('not_invoiced', PrecheckReason::LEVEL_INFO)], false];
     }
 
     /**
+     * The row's facts the rules read. The ages are the seconds MySQL computed
+     * (InvoiceRepository: updated_age, emailed_age); null when the row did
+     * not carry one.
+     *
      * @param array<string, mixed>|null $row
      *
-     * @return array{status: string, series: string, number: string, label: string, pdf_link: string, last_error: string}
+     * @return InvoiceFacts
      */
     private static function invoice(?array $row): array
     {
@@ -279,7 +322,32 @@ final class BulkPrecheck
             'label' => trim($series . ' ' . $number),
             'pdf_link' => trim(TypeCoerce::toString($row['pdf_link'] ?? '')),
             'last_error' => trim(TypeCoerce::toString($row['last_error'] ?? '')),
+            'updated_age' => self::age($row['updated_age'] ?? null),
+            'emailed_at' => trim(TypeCoerce::toString($row['emailed_at'] ?? '')),
+            'emailed_age' => ($row['emailed_at'] ?? null) === null ? null : self::age($row['emailed_age'] ?? null),
         ];
+    }
+
+    private static function age(mixed $value): ?int
+    {
+        return $value === null || $value === '' ? null : TypeCoerce::toInt($value);
+    }
+
+    /**
+     * Pending for longer than any FGO call can take. An unknown age counts
+     * as fresh: the row is left to the claim rather than offered.
+     *
+     * @param InvoiceFacts $inv
+     */
+    private static function isStale(array $inv): bool
+    {
+        return $inv['updated_age'] !== null && $inv['updated_age'] > Constants::PENDING_STALE_SECONDS;
+    }
+
+    /** An invoice label for a message: "—" when the row has no series or number. */
+    private static function labelOrDash(string $label): string
+    {
+        return $label !== '' ? $label : '—';
     }
 
     /**

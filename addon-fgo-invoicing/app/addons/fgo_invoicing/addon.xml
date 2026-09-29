@@ -314,6 +314,7 @@
                 `status` ENUM('pending','issued','failed','canceled','reversed','deleted') NOT NULL DEFAULT 'pending',
                 `last_error` TEXT NULL,
                 `retry_count` INT NOT NULL DEFAULT 0,
+                `emailed_at` DATETIME NULL DEFAULT NULL COMMENT 'when the invoice e-mail last went to the customer',
                 `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 PRIMARY KEY (`id`),
@@ -322,6 +323,9 @@
                 KEY `idx_invoice_number` (`invoice_number`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='FGO issued invoices, one row per CS-Cart order'
         </item>
+        <!-- emailed_at came after the first release: stores installed before it
+             get it from InvoiceRepository::ensureSchema(), whose ADDED_COLUMNS
+             must match the definition above (a test checks). -->
         <!-- One row per issue attempt, CNP masked. Stores installed before this
              table existed get it from DiagnosticLogRepository::ensureTable(),
              whose CREATE_SQL must stay identical to this query (a test checks). -->

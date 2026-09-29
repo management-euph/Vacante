@@ -2,6 +2,15 @@
  * FGO Invoicing — admin styles.
  * Loaded on every admin page (hooks/index/styles.post.tpl): the orders list
  * FGO column and the bulk pre-check / results page (views/fgo_invoicing/bulk.tpl).
+ *
+ * Colours come from the back office's own CSS custom properties, which
+ * CS-Cart 4.20 declares per colour scheme (design/backend/css/
+ * less_to_css_vars.less, redefined by config_dark.less in the dark and
+ * system bundles): a text colour, a background and a border are always
+ * taken as a matching pair (success / warning / error / info), so every
+ * piece stays readable on the light, dark and system schemes alike. The
+ * value after each var() is the light scheme's, for cores without the
+ * variables. Every selector stays under .fgo-*.
  */
 
 /* ── Orders list: FGO column ─────────────────────────────────────────── */
@@ -9,7 +18,7 @@
     white-space: nowrap;
 }
 .fgo-invoicing-cell__invoice {
-    color: #14602a;
+    color: var(--cs-success-text, #14602a);
     font-weight: 600;
 }
 .fgo-invoicing-cell__details {
@@ -30,26 +39,30 @@
 .fgo-bulk__chip {
     display: inline-block;
     padding: 3px 10px;
+    border: 1px solid var(--cs-table-border, #dde4ef);
     border-radius: 12px;
-    background: #eef1f4;
-    color: #334155;
+    background: var(--cs-table-background-accent, #eef1f4);
+    color: var(--cs-text-color, #334155);
     font-size: 12px;
     line-height: 18px;
 }
 .fgo-bulk__chip--ready,
 .fgo-bulk__chip--issued,
 .fgo-bulk__chip--done {
-    background: #e6f4ea;
-    color: #14602a;
+    border-color: var(--cs-success-border, #cfe8d6);
+    background: var(--cs-success-background, #e6f4ea);
+    color: var(--cs-success-text, #14602a);
 }
 .fgo-bulk__chip--warn {
-    background: #fff4e0;
-    color: #7a4300;
+    border-color: var(--cs-warning-border, #f5dfb3);
+    background: var(--cs-warning-background, #fff4e0);
+    color: var(--cs-warning-text, #7a4300);
 }
 .fgo-bulk__chip--block,
 .fgo-bulk__chip--failed {
-    background: #fdecea;
-    color: #8c1d18;
+    border-color: var(--cs-error-border, #f4c7c3);
+    background: var(--cs-error-background, #fdecea);
+    color: var(--cs-error-text, #8c1d18);
 }
 .fgo-bulk__settings {
     display: flex;
@@ -57,12 +70,13 @@
     gap: 8px 32px;
     margin: 0 0 16px;
     padding: 10px 14px;
-    border: 1px solid #e2e6ea;
+    border: 1px solid var(--cs-table-border, #e2e6ea);
     border-radius: 4px;
-    background: #f9fafb;
+    background: var(--cs-table-background-accent, #f9fafb);
+    color: var(--cs-text-color, #333);
 }
 .fgo-bulk__settings dt {
-    color: #5b6878;
+    color: var(--cs-text-muted-color, #5b6878);
     font-size: 11px;
     font-weight: normal;
     text-transform: uppercase;
@@ -71,15 +85,17 @@
     margin: 2px 0 0;
     font-weight: 600;
 }
+/* Row tints: translucent, so they shade whatever the table's own background
+   is, light or dark, and the row text keeps the table's colour. */
 .fgo-bulk__row--skip,
 .fgo-bulk__row--block {
-    background: #f7f9fb;
+    background: rgba(100, 116, 139, 0.08);
 }
 .fgo-bulk__row[data-fgo-run-state="failed"] {
-    background: #fff7f6;
+    background: rgba(220, 38, 38, 0.08);
 }
 .fgo-bulk__row[data-fgo-run-state="running"] {
-    background: #f3f8fe;
+    background: rgba(37, 99, 235, 0.08);
 }
 .fgo-bulk__icon {
     display: inline-block;
@@ -94,35 +110,35 @@
 .fgo-bulk__verdict--ready,
 .fgo-bulk__state--issued,
 .fgo-bulk__state--done {
-    color: #14602a;
+    color: var(--cs-success-text, #14602a);
 }
 .fgo-bulk__verdict--retry,
 .fgo-bulk__state--running {
-    color: #0f4c96;
+    color: var(--cs-info-text, #0f4c96);
 }
 .fgo-bulk__verdict--warn {
-    color: #7a4300;
+    color: var(--cs-warning-text, #7a4300);
 }
 .fgo-bulk__verdict--block,
 .fgo-bulk__state--failed {
-    color: #8c1d18;
+    color: var(--cs-error-text, #8c1d18);
 }
 .fgo-bulk__verdict--skip,
 .fgo-bulk__state--skipped,
 .fgo-bulk__state--queued,
 .fgo-bulk__state--not_processed {
-    color: #5b6878;
+    color: var(--cs-text-muted-color, #5b6878);
 }
 .fgo-bulk__reason,
 .fgo-bulk__detail {
     font-size: 12px;
-    color: #5b6878;
+    color: var(--cs-text-muted-color, #5b6878);
 }
 .fgo-bulk__reason--warn {
-    color: #7a4300;
+    color: var(--cs-warning-text, #7a4300);
 }
 .fgo-bulk__reason--block {
-    color: #8c1d18;
+    color: var(--cs-error-text, #8c1d18);
 }
 .fgo-bulk__detail a {
     margin-right: 8px;
@@ -144,16 +160,16 @@
     height: 8px;
     margin: 6px 0 8px;
     border-radius: 4px;
-    background: #e2e6ea;
+    background: var(--cs-table-border, #e2e6ea);
 }
 .fgo-bulk__bar-fill {
     display: block;
     height: 100%;
-    background: #1667c7;
+    background: var(--cs-main-color, #1667c7);
     transition: width 0.3s ease;
 }
 .fgo-bulk--finished .fgo-bulk__bar-fill {
-    background: #1e8e3e;
+    background: var(--cs-btn-success-background, #1e8e3e);
 }
 .fgo-bulk__progress-label {
     margin: 0 0 8px;

@@ -13,6 +13,7 @@ use Tygh\Addons\FgoInvoicing\Services\Bulk\PrecheckReason;
 use Tygh\Addons\FgoInvoicing\Services\Bulk\PrecheckSummary;
 use Tygh\Addons\FgoInvoicing\Services\ConfigProvider;
 use Tygh\Addons\FgoInvoicing\Services\Container;
+use Tygh\Addons\FgoInvoicing\Services\InvoiceIssuer;
 use Tygh\Addons\FgoInvoicing\Services\OrderInfoSource;
 use Tygh\Addons\FgoInvoicing\Services\Pdf\InvoicePdfZipper;
 use Tygh\Addons\FgoInvoicing\Services\Pdf\PdfFetcher;
@@ -36,10 +37,17 @@ if (!defined('BOOTSTRAP')) {
  *
  * Bulk actions from the orders list ("FGO invoice" context menu):
  *   POST /fgo_invoicing.m_issue | m_retry | m_email | m_cancel | m_storno | m_delete
- *        order_ids[] from the list -> redirect to the pre-check page.
- *   GET  /fgo_invoicing.bulk?action=<issue|retry|email|cancel|storno|delete>&order_ids=1,2,3
- *        The pre-check page; its script then runs the ticked orders one by one:
- *   POST /fgo_invoicing.bulk_run       (AJAX) action, order_id, send_email=Y|N
+ *        order_ids (array from the list, or CSV from the results page's
+ *        "Retry failed"), optional send_email=Y|N. The selection is kept in
+ *        the admin's session under a random token (BulkSelection), then
+ *        -> redirect to the pre-check page.
+ *   GET  /fgo_invoicing.bulk?token=<32 hex>[&offset=250]
+ *        The pre-check page of that selection, MAX_BATCH orders at a time.
+ *        No order ids in the URL: a crafted link cannot open a pre-ticked
+ *        page, and an unknown or expired token goes back to the orders list.
+ *        Its script then runs the ticked orders one by one:
+ *   POST /fgo_invoicing.bulk_run       (AJAX) action, order_id, send_email=Y|N,
+ *        seen_verdict, seen_reasons (what the page showed for the row)
  *        -> data.fgo_result; the order is pre-checked AGAIN here first.
  *   POST /fgo_invoicing.m_download_pdfs order_ids (array or CSV) -> ZIP of the PDFs.
  *
@@ -69,6 +77,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = $container->issuer()->issueForOrder($orderId);
         if ($result['status'] === 'issued') {
             fn_set_notification('N', __('notice'), __('fgo_invoicing.invoice_issued'));
+        } elseif ($result['status'] === InvoiceIssuer::RESULT_IN_PROGRESS) {
+            fn_set_notification('W', __('warning'), __('fgo_invoicing.invoice_in_progress'));
         } else {
             fn_set_notification(
                 'E',
@@ -138,30 +148,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return [CONTROLLER_STATUS_REDIRECT, 'orders.manage'];
         }
 
-        // One run handles MAX_BATCH orders; the page says how many more were
-        // selected, and the URL stays short however many rows were ticked.
-        $url = 'fgo_invoicing.bulk?action=' . $bulkAction->value
-            . '&order_ids=' . OrderIdList::toCsv(array_slice($ids, 0, BulkAction::MAX_BATCH));
-        if (count($ids) > BulkAction::MAX_BATCH) {
-            $url .= '&selected=' . count($ids);
+        // The whole selection goes into the session; the page takes it
+        // MAX_BATCH at a time. send_email comes from a results page ("Retry
+        // failed"), so the next page keeps the admin's choice.
+        $sendEmail = isset($_REQUEST['send_email']) ? TypeCoerce::toString($_REQUEST['send_email']) === 'Y' : null;
+        $token = fn_fgo_invoicing_bulk_remember($bulkAction, $ids, $sendEmail);
+        if ($token === '') {
+            fn_set_notification('E', __('error'), __('fgo_invoicing.bulk_selection_expired'));
+            return [CONTROLLER_STATUS_REDIRECT, 'orders.manage'];
         }
-        return [CONTROLLER_STATUS_REDIRECT, $url];
+
+        return [CONTROLLER_STATUS_REDIRECT, 'fgo_invoicing.bulk?token=' . $token];
     }
 
     // ── One order of a bulk run (the pre-check page's script, AJAX) ──
     if ($mode === 'bulk_run') {
         $bulkAction = BulkAction::tryFrom(TypeCoerce::toString($_REQUEST['action'] ?? ''));
         if (!defined('AJAX_REQUEST')) {
-            // Only the page script sends this; a plain form post goes back to
-            // the pre-check, which acts on nothing by itself.
-            return [
-                CONTROLLER_STATUS_REDIRECT,
-                $bulkAction !== null && $orderId > 0
-                    ? 'fgo_invoicing.bulk?action=' . $bulkAction->value . '&order_ids=' . $orderId
-                    : 'orders.manage',
-            ];
+            // Only the page script sends this; a plain form post acts on
+            // nothing and goes back to the list.
+            return [CONTROLLER_STATUS_REDIRECT, 'orders.manage'];
         }
 
+        // What the page showed for the row: a warning it did not show stops
+        // the order (BulkRunner). Absent means "showed nothing".
+        $seenReasons = array_values(array_filter(
+            array_map('trim', explode(',', TypeCoerce::toString($_REQUEST['seen_reasons'] ?? ''))),
+            static fn (string $code): bool => $code !== '',
+        ));
         $result = $bulkAction === null
             ? new BulkRunResult($orderId, BulkRunResult::OUTCOME_FAILED, '', [
                 new PrecheckReason('unknown_action', PrecheckReason::LEVEL_BLOCK),
@@ -170,6 +184,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $bulkAction,
                 $orderId,
                 TypeCoerce::toString($_REQUEST['send_email'] ?? 'N') === 'Y',
+                TypeCoerce::toString($_REQUEST['seen_verdict'] ?? ''),
+                $seenReasons,
             );
 
         // No fn_set_notification() here: $.ceAjax would pop one toast per
@@ -181,8 +197,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // ── ZIP of the invoice PDFs (context menu, and the results page) ──
     if ($mode === 'm_download_pdfs') {
-        $ids = array_slice(OrderIdList::parse($_REQUEST['order_ids'] ?? []), 0, BulkAction::MAX_BATCH);
-        unset($_REQUEST['redirect_url'], $_REQUEST['page']);
+        // redirect_url is KEPT here: from the orders list, an error goes back
+        // to the list as the admin had filtered it. The results page posts
+        // into a new tab, so an error never replaces its results.
+        $selected = OrderIdList::parse($_REQUEST['order_ids'] ?? []);
+        $ids = array_slice($selected, 0, BulkAction::MAX_BATCH);
+        $overCap = array_slice($selected, BulkAction::MAX_BATCH);
 
         if ($ids === []) {
             fn_set_notification('W', __('warning'), __('fgo_invoicing.bulk_nothing_selected'));
@@ -191,6 +211,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!InvoicePdfZipper::isAvailable()) {
             fn_set_notification('E', __('error'), __('fgo_invoicing.zip_unavailable'));
             return [CONTROLLER_STATUS_REDIRECT, 'orders.manage'];
+        }
+        if ($overCap !== []) {
+            // Shown on the next page the admin opens (this response is the file).
+            fn_set_notification('W', __('warning'), __('fgo_invoicing.zip_truncated', [
+                '[selected]' => count($selected),
+                '[max]' => BulkAction::MAX_BATCH,
+            ]));
         }
 
         $invoices = [];
@@ -206,26 +233,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return [CONTROLLER_STATUS_REDIRECT, 'orders.manage'];
         }
 
-        // Up to MAX_BATCH downloads of up to 20 s each, one after the other.
+        // The downloads stop after InvoicePdfZipper::TIME_BUDGET_SECONDS; the
+        // limit is lifted so the archive can still be written and sent. A
+        // closed tab must not leave a half-built archive behind: the request
+        // runs to its end, whose shutdown function removes the files.
         if (function_exists('set_time_limit')) {
             @set_time_limit(0);
         }
+        ignore_user_abort(true);
         $fetcher = new PdfFetcher();
         try {
-            $zip = fn_fgo_invoicing_build_pdf_zip($invoices, $fetcher->fetch(...));
+            $zip = fn_fgo_invoicing_build_pdf_zip($invoices, $fetcher->fetch(...), InvoicePdfZipper::TIME_BUDGET_SECONDS, null, $overCap);
         } catch (\Throwable $e) {
             fn_set_notification('E', __('error'), TypeCoerce::toString(__('fgo_invoicing.zip_failed')) . ': ' . $e->getMessage());
             return [CONTROLLER_STATUS_REDIRECT, 'orders.manage'];
         }
 
-        $failedList = implode(', ', array_map(static fn (int $id): string => '#' . $id, array_keys($zip['failed'])));
+        $failedList = fn_fgo_invoicing_order_list(array_keys($zip['failed']));
         if ($zip['path'] === '') {
             fn_set_notification('E', __('error'), __('fgo_invoicing.zip_all_failed', ['[orders]' => $failedList]));
             return [CONTROLLER_STATUS_REDIRECT, 'orders.manage'];
         }
         if ($zip['failed'] !== []) {
-            // Shown on the next page the admin opens: this response is the file.
             fn_set_notification('W', __('warning'), __('fgo_invoicing.zip_some_failed', ['[orders]' => $failedList]));
+        }
+        if ($zip['unfetched'] !== []) {
+            fn_set_notification('W', __('warning'), __('fgo_invoicing.zip_time_budget', [
+                '[seconds]' => InvoicePdfZipper::TIME_BUDGET_SECONDS,
+                '[count]' => count($zip['unfetched']),
+                '[orders]' => fn_fgo_invoicing_order_list($zip['unfetched']),
+            ]));
         }
 
         fn_get_file($zip['path'], 'fgo-invoices-' . date('Ymd-His') . '.zip', true);
@@ -288,26 +325,21 @@ if ($mode === 'view') {
 
 // ── The pre-check page ─────────────────────────────────────────────────
 if ($mode === 'bulk') {
-    $bulkAction = BulkAction::tryFrom(TypeCoerce::toString($_REQUEST['action'] ?? ''));
-    if ($bulkAction === null) {
-        fn_set_notification('E', __('error'), __('fgo_invoicing.pc_unknown_action'));
+    // Only a selection this admin made (m_* POST) can be opened: no order
+    // ids are read from the URL.
+    $selection = fn_fgo_invoicing_bulk_recall(TypeCoerce::toString($_REQUEST['token'] ?? ''));
+    if ($selection === null) {
+        fn_set_notification('W', __('warning'), __('fgo_invoicing.bulk_selection_expired'));
         return [CONTROLLER_STATUS_REDIRECT, 'orders.manage'];
     }
+    $bulkAction = $selection->action;
+    $token = TypeCoerce::toString($_REQUEST['token'] ?? '');
 
-    $requested = OrderIdList::parse($_REQUEST['order_ids'] ?? '');
-    $ids = array_slice($requested, 0, BulkAction::MAX_BATCH);
-    if ($ids === []) {
-        fn_set_notification('W', __('warning'), __('fgo_invoicing.bulk_nothing_selected'));
-        return [CONTROLLER_STATUS_REDIRECT, 'orders.manage'];
-    }
-    $selectedTotal = max(count($requested), TypeCoerce::toInt($_REQUEST['selected'] ?? 0));
-    $truncated = $selectedTotal > count($ids);
-    if ($truncated) {
-        fn_set_notification('W', __('warning'), __('fgo_invoicing.bulk_truncated', [
-            '[selected]' => $selectedTotal,
-            '[max]' => BulkAction::MAX_BATCH,
-        ]));
-    }
+    $selectedTotal = count($selection->orderIds);
+    $offset = max(0, TypeCoerce::toInt($_REQUEST['offset'] ?? 0));
+    $offset = $offset < $selectedTotal ? $offset - ($offset % BulkAction::MAX_BATCH) : 0;
+    $ids = array_slice($selection->orderIds, $offset, BulkAction::MAX_BATCH);
+    $nextOffset = $offset + BulkAction::MAX_BATCH < $selectedTotal ? $offset + BulkAction::MAX_BATCH : 0;
 
     $statusNames = fn_fgo_invoicing_order_status_names();
     $invoices = $repo->findByOrderIds($ids);
@@ -347,9 +379,15 @@ if ($mode === 'bulk') {
             'summary' => $summary->toArray(),
             'start_label' => BulkUi::startLabel($bulkAction, $summary->toProcess, $translate),
             'statuses' => $statusNames,
+            // Announced on the page only (no notification): which slice of
+            // the selection this is, and the link to the next one.
             'selected_total' => $selectedTotal,
+            'batch_from' => $offset + 1,
+            'batch_to' => $offset + count($ids),
+            'truncated' => $selectedTotal > count($ids),
+            'next_url' => $nextOffset > 0 ? 'fgo_invoicing.bulk?token=' . $token . '&offset=' . $nextOffset : '',
+            'next_count' => $nextOffset > 0 ? min(BulkAction::MAX_BATCH, $selectedTotal - $nextOffset) : 0,
             'max_batch' => BulkAction::MAX_BATCH,
-            'truncated' => $truncated,
             'missing' => $missing,
             'sandbox' => ConfigProvider::isSandbox(),
             'api_host' => is_string($apiHost) ? $apiHost : '',
@@ -359,12 +397,13 @@ if ($mode === 'bulk') {
                 'series' => ConfigProvider::invoiceSeries(),
                 'currency' => ConfigProvider::primaryCurrency(),
             ],
-            'email_default' => ConfigProvider::autoEmailPdf(),
+            'email_default' => $selection->sendEmail ?? ConfigProvider::autoEmailPdf(),
             // FGO takes about one request a second; the PHP throttle is per
             // process, so the page itself must space the requests out.
             'interval_ms' => max(1000, ConfigProvider::minCallIntervalMs()),
             'zip_enabled' => $bulkAction->issues() || $bulkAction === BulkAction::Email,
-            'retry_action' => $bulkAction->retryAction()->value,
+            // "Retry failed" posts the failed ids back through this menu mode.
+            'retry_mode' => $bulkAction->retryAction()->menuMode(),
             'i18n_json' => (string) json_encode(
                 BulkUi::jsStrings($bulkAction, $translate),
                 JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR,

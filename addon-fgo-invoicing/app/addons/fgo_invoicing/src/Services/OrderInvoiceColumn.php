@@ -100,6 +100,29 @@ final class OrderInvoiceColumn
     }
 
     /**
+     * What the order details panel gets as $order_info['fgo_invoice'] (the
+     * get_order_info hook): the summary columns only, never the request /
+     * response payloads, which hold the customer's data as sent to FGO and
+     * would travel with the order into every consumer of fn_get_order_info().
+     * Raw values (the panel shows the full error), the PDF link https only.
+     *
+     * @param array<string, mixed> $row a ?:fgo_invoices row
+     *
+     * @return array{status: string, invoice_series: string, invoice_number: string, pdf_link: string, last_error: string, updated_at: string}
+     */
+    public static function summary(array $row): array
+    {
+        return [
+            'status' => strtolower(trim(TypeCoerce::toString($row['status'] ?? ''))),
+            'invoice_series' => trim(TypeCoerce::toString($row['invoice_series'] ?? '')),
+            'invoice_number' => trim(TypeCoerce::toString($row['invoice_number'] ?? '')),
+            'pdf_link' => self::safeLink(TypeCoerce::toString($row['pdf_link'] ?? '')),
+            'last_error' => TypeCoerce::toString($row['last_error'] ?? ''),
+            'updated_at' => TypeCoerce::toString($row['updated_at'] ?? ''),
+        ];
+    }
+
+    /**
      * The link is rendered as an <a href>: only an https URL is, so whatever
      * a response stored there can never become a javascript: link.
      */

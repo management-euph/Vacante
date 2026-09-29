@@ -170,6 +170,132 @@ final class BulkFunctionsTest extends TestCase
             throw new \RuntimeException('timed out');
         });
 
-        self::assertSame(['path' => '', 'added' => 0, 'failed' => [1 => 'timed out']], $zip);
+        self::assertSame(['path' => '', 'added' => 0, 'failed' => [1 => 'timed out'], 'unfetched' => []], $zip);
+    }
+
+    /**
+     * Past the time budget no download starts: the rest is listed as not
+     * downloaded, in the result and in missing-pdfs.txt, next to the orders
+     * over the batch cap. The archive is readable by its owner only.
+     */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
+    #[RequiresPhpExtension('zip')]
+    public function testDownloadsStopAtTheTimeBudgetAndTheRestIsListed(): void
+    {
+        self::boot();
+        $files = sys_get_temp_dir() . '/fgo-files-' . bin2hex(random_bytes(4));
+        mkdir($files);
+        Registry::set('config.dir.files', $files . '/');
+        $now = 100.0;
+        $fetched = [];
+
+        $zip = fn_fgo_invoicing_build_pdf_zip(
+            [
+                1 => ['pdf_link' => 'https://api.fgo.ro/p/1', 'invoice_series' => 'F', 'invoice_number' => '1'],
+                2 => ['pdf_link' => 'https://api.fgo.ro/p/2', 'invoice_series' => 'F', 'invoice_number' => '2'],
+                3 => ['pdf_link' => 'https://api.fgo.ro/p/3', 'invoice_series' => 'F', 'invoice_number' => '3'],
+            ],
+            static function (string $url) use (&$now, &$fetched): string {
+                $fetched[] = $url;
+                $now += 30.0; // a slow FGO
+
+                return '%PDF-1.4';
+            },
+            45,
+            static function () use (&$now): float {
+                return $now;
+            },
+            [900, 901],
+        );
+
+        self::assertSame(['https://api.fgo.ro/p/1', 'https://api.fgo.ro/p/2'], $fetched, 'no download starts after 45 s');
+        self::assertSame(2, $zip['added']);
+        self::assertSame([3], $zip['unfetched']);
+        self::assertSame(0600, fileperms($zip['path']) & 0777);
+        $archive = new \ZipArchive();
+        self::assertTrue($archive->open($zip['path']));
+        $note = (string) $archive->getFromName('missing-pdfs.txt');
+        self::assertStringContainsString('#3: <fgo_invoicing.zip_note_time_budget> 45', $note);
+        self::assertStringContainsString('#900: <fgo_invoicing.zip_note_over_cap> 250', $note);
+        self::assertStringContainsString('#901:', $note);
+        $archive->close();
+
+        unlink($zip['path']);
+        rmdir($files . '/fgo_invoicing');
+        rmdir($files);
+    }
+
+    /**
+     * A request killed mid-way cleans nothing up itself: every build first
+     * removes this add-on's archives and scratch PDFs older than an hour, and
+     * nothing else.
+     */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
+    public function testOldArchivesAndScratchFilesArePurged(): void
+    {
+        self::boot();
+        $dir = sys_get_temp_dir() . '/fgo-purge-' . bin2hex(random_bytes(4));
+        mkdir($dir);
+        $old = time() - 7200;
+        foreach (['fgo-invoices-aa.zip', 'fgo-pdf-bb', 'unrelated.zip'] as $name) {
+            touch($dir . '/' . $name, $old);
+        }
+        touch($dir . '/fgo-invoices-new.zip');
+
+        self::assertSame(2, fn_fgo_invoicing_bulk_purge_temp($dir));
+        self::assertFileDoesNotExist($dir . '/fgo-invoices-aa.zip');
+        self::assertFileDoesNotExist($dir . '/fgo-pdf-bb');
+        self::assertFileExists($dir . '/unrelated.zip');
+        self::assertFileExists($dir . '/fgo-invoices-new.zip', 'a fresh one may still be streaming');
+
+        array_map('unlink', glob($dir . '/*') ?: []);
+        rmdir($dir);
+    }
+
+    /**
+     * The selection lives in the admin's session: remembered under a token,
+     * recalled by it, unknown for any other token or session.
+     */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
+    public function testASelectionIsKeptInTheSessionUnderAToken(): void
+    {
+        self::boot();
+        require_once dirname(__DIR__, 2) . '/Fixtures/tygh_app_stub.php';
+        \Tygh::$app = new \ArrayObject(['session' => new \ArrayObject()]);
+
+        $token = fn_fgo_invoicing_bulk_remember(BulkAction::Delete, [7, 3], false);
+
+        self::assertMatchesRegularExpression('/^[0-9a-f]{32}$/', $token);
+        $selection = fn_fgo_invoicing_bulk_recall($token);
+        self::assertNotNull($selection);
+        self::assertSame(BulkAction::Delete, $selection->action);
+        self::assertSame([7, 3], $selection->orderIds);
+        self::assertFalse($selection->sendEmail);
+        self::assertNull(fn_fgo_invoicing_bulk_recall(str_repeat('0', 32)));
+        self::assertNull(fn_fgo_invoicing_bulk_recall('1,2,3'));
+
+        \Tygh::$app = new \ArrayObject(['session' => new \ArrayObject()]);
+        self::assertNull(fn_fgo_invoicing_bulk_recall($token), 'another session knows nothing of it');
+
+        \Tygh::$app = new \ArrayObject([]);
+        self::assertSame('', fn_fgo_invoicing_bulk_remember(BulkAction::Issue, [1]), 'no session, no token');
+    }
+
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
+    public function testARowViewCarriesTheReasonCodesItShows(): void
+    {
+        self::boot();
+        ConfigProvider::seed([]);
+        $row = (new BulkPrecheck(new BillingMapper('RON')))->check(
+            BulkAction::Issue,
+            ['order_id' => 3, 'status' => 'N', 'total' => 0, 'b_firstname' => 'Ion', 'b_country' => 'RO'],
+            null,
+        );
+
+        self::assertSame('order_status,zero_total', fn_fgo_invoicing_bulk_row_view($row)['reason_codes']);
     }
 }

@@ -8,10 +8,11 @@ namespace Tygh\Addons\FgoInvoicing\Helpers;
  * Parses the order ids a bulk action arrives with.
  *
  * They come in two shapes: the orders list posts its checkboxes as
- * `order_ids[]` (an array), while the pre-check page, the "Retry failed" link
- * and the ZIP download pass them as one comma-separated string in the query
- * or a $.performPostRequest() form. Both, and a mix (an array element that is
- * itself a CSV), yield the same list.
+ * `order_ids[]` (an array), while the results page's "Retry failed" and ZIP
+ * buttons post them as one comma-separated string in a
+ * $.performPostRequest() form. Both, and a mix (an array element that is
+ * itself a CSV), yield the same list. (The pre-check page itself takes no
+ * ids at all, only a selection token.)
  *
  * Only positive integers survive: an id is a digit string, so "1.5", "-3",
  * "0", "7abc" or an array smuggled into an element are dropped instead of

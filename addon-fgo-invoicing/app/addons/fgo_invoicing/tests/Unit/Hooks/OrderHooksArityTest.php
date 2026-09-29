@@ -281,11 +281,12 @@ final class OrderHooksArityTest extends TestCase
                     throw new \RuntimeException('table ?:fgo_invoices is missing');
                 }
 
-                return ['id' => 1, 'isExisting' => false, 'status' => Constants::STATUS_PENDING];
+                return ['id' => 1, 'isExisting' => false, 'status' => Constants::STATUS_PENDING, 'claimed' => true];
             }
 
-            public function markFailed(int $orderId, string $err, array $form, ?array $raw = null): void
+            public function markFailed(int $orderId, string $err, array $form, ?array $raw = null): bool
             {
+                return true;
             }
         };
     }

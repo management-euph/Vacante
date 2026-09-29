@@ -41,16 +41,23 @@ final class BulkActionTest extends TestCase
         self::assertFalse(BulkAction::Issue->actsOnIssuedInvoice());
     }
 
-    public function testRetryFailedRetriesIssuesAndRepeatsTheRest(): void
+    /**
+     * "Retry failed" re-runs failed ISSUES through Issue: an order that
+     * failed without a `failed` row (no answer, a run-time block) is ready
+     * there, while Retry would skip it as "no failed attempt".
+     */
+    public function testRetryFailedReissuesAsIssueAndRepeatsTheRest(): void
     {
-        self::assertSame(BulkAction::Retry, BulkAction::Issue->retryAction());
-        self::assertSame(BulkAction::Retry, BulkAction::Retry->retryAction());
+        self::assertSame(BulkAction::Issue, BulkAction::Issue->retryAction());
+        self::assertSame(BulkAction::Issue, BulkAction::Retry->retryAction());
         self::assertSame(BulkAction::Cancel, BulkAction::Cancel->retryAction());
         self::assertSame(BulkAction::Email, BulkAction::Email->retryAction());
+        self::assertSame('m_issue', BulkAction::Retry->retryAction()->menuMode());
     }
 
-    public function testTheBatchIsCappedAtOneHundred(): void
+    /** The orders list's largest page size: a whole page fits in one run. */
+    public function testTheBatchIsCappedAtTheLargestListPage(): void
     {
-        self::assertSame(100, BulkAction::MAX_BATCH);
+        self::assertSame(250, BulkAction::MAX_BATCH);
     }
 }

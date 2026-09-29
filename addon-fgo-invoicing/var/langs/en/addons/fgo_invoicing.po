@@ -369,6 +369,10 @@ msgctxt "Languages::fgo_invoicing.invoice_failed"
 msgid "fgo_invoicing.invoice_failed"
 msgstr "FGO issue failed"
 
+msgctxt "Languages::fgo_invoicing.invoice_in_progress"
+msgid "fgo_invoicing.invoice_in_progress"
+msgstr "This invoice is being issued right now by another request; nothing was sent. Reload the page in a minute."
+
 msgctxt "Languages::fgo_invoicing.action_succeeded"
 msgid "fgo_invoicing.action_succeeded"
 msgstr "FGO action completed."
@@ -408,7 +412,6 @@ msgstr "Response payload"
 msgctxt "Languages::fgo_invoicing.profile_field_auto_detect"
 msgid "fgo_invoicing.profile_field_auto_detect"
 msgstr "Auto-detect by field name"
-
 
 msgctxt "Languages::fgo_invoicing.email_subject"
 msgid "fgo_invoicing.email_subject"
@@ -544,11 +547,15 @@ msgstr "Production"
 
 msgctxt "Languages::fgo_invoicing.bulk_intro"
 msgid "fgo_invoicing.bulk_intro"
-msgstr "Selected orders: [count]. Review the pre-check before anything is sent to FGO."
+msgstr "Selected orders: [count]. Nothing is sent to FGO until you start: read the pre-check below first."
 
 msgctxt "Languages::fgo_invoicing.bulk_truncated"
 msgid "fgo_invoicing.bulk_truncated"
-msgstr "Selected orders: [selected]. One run handles only the first [max]: run the action again for the rest."
+msgstr "Selected orders: [selected]. This page handles orders [from] to [to]; one run takes at most [max]."
+
+msgctxt "Languages::fgo_invoicing.bulk_next_batch"
+msgid "fgo_invoicing.bulk_next_batch"
+msgstr "Continue with the next batch ([count])"
 
 msgctxt "Languages::fgo_invoicing.bulk_missing"
 msgid "fgo_invoicing.bulk_missing"
@@ -561,6 +568,14 @@ msgstr "Select at least one order first."
 msgctxt "Languages::fgo_invoicing.bulk_nothing_found"
 msgid "fgo_invoicing.bulk_nothing_found"
 msgstr "None of the selected orders could be loaded."
+
+msgctxt "Languages::fgo_invoicing.bulk_selection_expired"
+msgid "fgo_invoicing.bulk_selection_expired"
+msgstr "This selection has expired. Select the orders again."
+
+msgctxt "Languages::fgo_invoicing.bulk_script_missing"
+msgid "fgo_invoicing.bulk_script_missing"
+msgstr "This page's script did not load, so nothing can be started from here. Clear the cache and reload the page; on the Docker dev store, re-run docker/fullstore/link-addons.sh or restart the app container."
 
 msgctxt "Languages::fgo_invoicing.chip_to_process"
 msgid "fgo_invoicing.chip_to_process"
@@ -594,6 +609,10 @@ msgctxt "Languages::fgo_invoicing.chip_remaining"
 msgid "fgo_invoicing.chip_remaining"
 msgstr "[count] remaining"
 
+msgctxt "Languages::fgo_invoicing.chip_not_processed"
+msgid "fgo_invoicing.chip_not_processed"
+msgstr "[count] not processed"
+
 msgctxt "Languages::fgo_invoicing.snap_document_type"
 msgid "fgo_invoicing.snap_document_type"
 msgstr "Document type"
@@ -624,7 +643,7 @@ msgstr "[currency] (store primary currency)"
 
 msgctxt "Languages::fgo_invoicing.select_all"
 msgid "fgo_invoicing.select_all"
-msgstr "Select all orders that can be processed"
+msgstr "Select all ready"
 
 msgctxt "Languages::fgo_invoicing.th_order"
 msgid "fgo_invoicing.th_order"
@@ -788,7 +807,15 @@ msgstr "Issued, but the e-mail to the customer was not sent"
 
 msgctxt "Languages::fgo_invoicing.run_transport_error"
 msgid "fgo_invoicing.run_transport_error"
-msgstr "No valid answer from the server (network error or expired session). Check the order before retrying."
+msgstr "No valid answer from the server (network error, timeout or server error). Check the order before retrying."
+
+msgctxt "Languages::fgo_invoicing.run_session_expired"
+msgid "fgo_invoicing.run_session_expired"
+msgstr "Your session expired, so the run stopped. Log in again, then retry the failed orders from the orders list."
+
+msgctxt "Languages::fgo_invoicing.run_log_in"
+msgid "fgo_invoicing.run_log_in"
+msgstr "Log in again"
 
 msgctxt "Languages::fgo_invoicing.run_leave_warning"
 msgid "fgo_invoicing.run_leave_warning"
@@ -822,9 +849,17 @@ msgctxt "Languages::fgo_invoicing.pc_last_error"
 msgid "fgo_invoicing.pc_last_error"
 msgstr "Last attempt failed: [error]"
 
-msgctxt "Languages::fgo_invoicing.pc_pending"
-msgid "fgo_invoicing.pc_pending"
-msgstr "A previous attempt is still marked as in progress and may still be running: wait a minute before retrying."
+msgctxt "Languages::fgo_invoicing.pc_in_progress"
+msgid "fgo_invoicing.pc_in_progress"
+msgstr "Being issued right now by another request (for example the automatic issue on a status change): nothing to do here."
+
+msgctxt "Languages::fgo_invoicing.pc_stale_pending"
+msgid "fgo_invoicing.pc_stale_pending"
+msgstr "A previous attempt started more than 10 minutes ago and never finished: retrying takes it over. Check in FGO that no invoice was issued for this order meanwhile."
+
+msgctxt "Languages::fgo_invoicing.pc_reissue_of"
+msgid "fgo_invoicing.pc_reissue_of"
+msgstr "Re-issue: replaces the invoice [invoice]."
 
 msgctxt "Languages::fgo_invoicing.pc_previously_canceled"
 msgid "fgo_invoicing.pc_previously_canceled"
@@ -890,6 +925,10 @@ msgctxt "Languages::fgo_invoicing.pc_no_pdf_link"
 msgid "fgo_invoicing.pc_no_pdf_link"
 msgstr "FGO returned no PDF link for this invoice."
 
+msgctxt "Languages::fgo_invoicing.pc_recently_emailed"
+msgid "fgo_invoicing.pc_recently_emailed"
+msgstr "Already e-mailed to the customer at [time] (less than 24 hours ago)."
+
 msgctxt "Languages::fgo_invoicing.pc_already_canceled"
 msgid "fgo_invoicing.pc_already_canceled"
 msgstr "The invoice [invoice] is already canceled."
@@ -914,6 +953,10 @@ msgctxt "Languages::fgo_invoicing.pc_unknown_action"
 msgid "fgo_invoicing.pc_unknown_action"
 msgstr "Unknown FGO bulk action."
 
+msgctxt "Languages::fgo_invoicing.pc_changed_since_precheck"
+msgid "fgo_invoicing.pc_changed_since_precheck"
+msgstr "The order changed since the pre-check and needs another look: nothing was sent. Select it again on the orders list."
+
 msgctxt "Languages::fgo_invoicing.zip_unavailable"
 msgid "fgo_invoicing.zip_unavailable"
 msgstr "The PHP zip extension (ZipArchive) is not available on this server, so no ZIP can be built."
@@ -934,9 +977,25 @@ msgctxt "Languages::fgo_invoicing.zip_some_failed"
 msgid "fgo_invoicing.zip_some_failed"
 msgstr "Some PDFs could not be downloaded and are missing from the ZIP (see missing-pdfs.txt inside it): [orders]"
 
+msgctxt "Languages::fgo_invoicing.zip_truncated"
+msgid "fgo_invoicing.zip_truncated"
+msgstr "Only the first [max] of the [selected] selected orders were put in the ZIP."
+
+msgctxt "Languages::fgo_invoicing.zip_time_budget"
+msgid "fgo_invoicing.zip_time_budget"
+msgstr "The [seconds]-second limit was reached: [count] PDFs were not downloaded ([orders]). Download them in a second ZIP."
+
 msgctxt "Languages::fgo_invoicing.zip_missing_note"
 msgid "fgo_invoicing.zip_missing_note"
 msgstr "These invoice PDFs could not be downloaded from FGO:"
+
+msgctxt "Languages::fgo_invoicing.zip_note_time_budget"
+msgid "fgo_invoicing.zip_note_time_budget"
+msgstr "not downloaded: the [seconds]-second limit was reached"
+
+msgctxt "Languages::fgo_invoicing.zip_note_over_cap"
+msgid "fgo_invoicing.zip_note_over_cap"
+msgstr "not included: one ZIP holds at most [max] orders"
 
 msgctxt "Languages::fgo_invoicing.diagnostics_title"
 msgid "fgo_invoicing.diagnostics_title"

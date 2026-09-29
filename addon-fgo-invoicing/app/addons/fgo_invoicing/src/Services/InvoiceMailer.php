@@ -22,6 +22,11 @@ use Tygh\Addons\FgoInvoicing\Repository\InvoiceRepository;
  * Never throws: an e-mail that cannot be sent is reported, it must not undo
  * an invoice FGO has already issued.
  *
+ * A sent e-mail is stamped on the invoice row (`emailed_at`), so the bulk
+ * "Email invoice to customer" pre-check can hold back a second copy within
+ * the day. The stamp is best-effort: failing to write it does not turn a
+ * sent e-mail into a failed one.
+ *
  * @phpstan-type InvoiceEmailPayload array{
  *     to: string,
  *     order_id: int,
@@ -126,9 +131,16 @@ final class InvoiceMailer
             return ['status' => self::STATUS_FAILED, 'error' => '[' . $e::class . '] ' . $e->getMessage()];
         }
 
-        return $sent
-            ? ['status' => self::STATUS_SENT]
-            : ['status' => self::STATUS_FAILED, 'error' => 'The store mailer did not send the e-mail for order ' . $orderId];
+        if (!$sent) {
+            return ['status' => self::STATUS_FAILED, 'error' => 'The store mailer did not send the e-mail for order ' . $orderId];
+        }
+        try {
+            $this->repo->markEmailed($orderId);
+        } catch (\Throwable) {
+            // See the class docblock: the customer has the e-mail either way.
+        }
+
+        return ['status' => self::STATUS_SENT];
     }
 
     /**

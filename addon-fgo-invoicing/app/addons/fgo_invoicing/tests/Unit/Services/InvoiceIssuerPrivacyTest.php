@@ -228,20 +228,22 @@ final class RecordingRepository extends InMemoryInvoiceRepository
     public ?array $failedRaw = null;
 
     #[\Override]
-    public function markIssued(int $orderId, IssueInvoiceResponse $response, array $requestForm): void
+    public function markIssued(int $orderId, IssueInvoiceResponse $response, array $requestForm): bool
     {
         $this->issuedForm = $requestForm;
         $this->issuedRaw = $response->raw;
-        parent::markIssued($orderId, $response, $requestForm);
+
+        return parent::markIssued($orderId, $response, $requestForm);
     }
 
     #[\Override]
-    public function markFailed(int $orderId, string $errorMessage, array $requestForm, ?array $rawResponse = null): void
+    public function markFailed(int $orderId, string $errorMessage, array $requestForm, ?array $rawResponse = null): bool
     {
         $this->failedForm = $requestForm;
         $this->failedMessage = $errorMessage;
         $this->failedRaw = $rawResponse;
-        parent::markFailed($orderId, $errorMessage, $requestForm, $rawResponse);
+
+        return parent::markFailed($orderId, $errorMessage, $requestForm, $rawResponse);
     }
 }
 

@@ -2,7 +2,14 @@
   FGO Invoicing — order details panel.
   Renders below the existing CS-Cart order detail blocks via the
   `orders.details` template hook.
+
+  $order_info.fgo_invoice is the summary the get_order_info hook attaches
+  (OrderInvoiceColumn::summary: status, series, number, https PDF link, last
+  error, updated_at), and only where fn_fgo_invoicing_shows_invoice_data()
+  allows it; the panel hides on the same terms, so a restricted admin or a
+  selected storefront never sees "no invoice yet" for an invoiced order.
 *}
+{if !"RESTRICTED_ADMIN"|defined && !$runtime.company_id}
 {if $order_info.fgo_invoice}
     <div class="object-group">
         <h4>{__("fgo_invoicing.invoice")}</h4>
@@ -61,4 +68,5 @@
             </button>
         </form>
     </div>
+{/if}
 {/if}

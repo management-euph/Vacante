@@ -6,6 +6,12 @@
   in data-ca-fgo-* attributes of #fgo_bulk: no inline script block, which
   CS-Cart rewrites. The script runs the ticked orders one at a time through
   fgo_invoicing.bulk_run, which pre-checks each order again server-side.
+  Each row carries the verdict and reason codes shown (data-fgo-verdict,
+  data-fgo-reasons): bulk_run stops an order that warns about anything else.
+
+  Without the script the page cannot act: the start button is rendered
+  disabled and an alert (core classes only, styles.css may be missing too)
+  says so; bulk.js enables the one and REMOVES the other once it is bound.
 *}
 {capture name="mainbox"}
 {$b = $fgo_bulk}
@@ -16,11 +22,13 @@
      data-ca-fgo-action="{$b.action}"
      data-ca-fgo-run-url="{"fgo_invoicing.bulk_run"|fn_url}"
      data-ca-fgo-zip-url="{"fgo_invoicing.m_download_pdfs"|fn_url}"
-     data-ca-fgo-retry-url="{"fgo_invoicing.bulk?action=`$b.retry_action`"|fn_url}"
+     data-ca-fgo-retry-url="{"fgo_invoicing.`$b.retry_mode`"|fn_url}"
      data-ca-fgo-interval="{$b.interval_ms}"
      data-ca-fgo-zip="{if $b.zip_enabled}Y{else}N{/if}"
      data-ca-fgo-i18n="{$b.i18n_json}"
 >
+
+    <div class="alert alert-error" data-fgo-script-missing>{__("fgo_invoicing.bulk_script_missing")}</div>
 
     <div class="alert {if $b.sandbox}alert-warning{else}alert-error{/if} fgo-bulk__env">
         <strong>{if $b.sandbox}{__("fgo_invoicing.env_sandbox")}{else}{__("fgo_invoicing.env_production")}{/if}</strong>
@@ -29,7 +37,12 @@
     </div>
 
     {if $b.truncated}
-        <div class="alert alert-warning">{__("fgo_invoicing.bulk_truncated", ["[selected]" => $b.selected_total, "[max]" => $b.max_batch])}</div>
+        <div class="alert alert-warning">
+            {__("fgo_invoicing.bulk_truncated", ["[selected]" => $b.selected_total, "[from]" => $b.batch_from, "[to]" => $b.batch_to, "[max]" => $b.max_batch])}
+            {if $b.next_url}
+                <a href="{$b.next_url|fn_url}">{__("fgo_invoicing.bulk_next_batch", ["[count]" => $b.next_count])}</a>
+            {/if}
+        </div>
     {/if}
     {if $b.missing}
         <div class="alert alert-warning">{__("fgo_invoicing.bulk_missing", ["[count]" => $b.missing])}</div>
@@ -74,6 +87,7 @@
             <thead>
                 <tr>
                     <th width="1%" class="center">
+                        {* Ticks the ready / retry rows only: a warn row is ticked one by one. *}
                         <input type="checkbox" data-fgo-select-all
                                title="{__("fgo_invoicing.select_all")}" aria-label="{__("fgo_invoicing.select_all")}"
                                {if !$b.summary.actionable}disabled="disabled"{/if} />
@@ -92,6 +106,7 @@
                     data-fgo-row
                     data-fgo-order-id="{$row.order_id}"
                     data-fgo-verdict="{$row.verdict}"
+                    data-fgo-reasons="{$row.reason_codes}"
                     data-fgo-actionable="{if $row.actionable}Y{else}N{/if}"
                     data-fgo-has-invoice="{if $row.invoice_status == "issued" && $row.pdf_link}Y{else}N{/if}"
                 >
@@ -150,8 +165,9 @@
     </div>
 
     <div class="fgo-bulk__actions" data-fgo-precheck-actions>
-        <a class="btn" href="{"orders.manage"|fn_url}">{__("cancel")}</a>
-        <button type="button" class="btn btn-primary" data-fgo-start {if !$b.summary.to_process}disabled="disabled"{/if}>{$b.start_label}</button>
+        <a class="btn" href="{"orders.manage"|fn_url}">{__("fgo_invoicing.btn_back_to_orders")}</a>
+        {* Disabled until bulk.js is bound: a button without its script does nothing. *}
+        <button type="button" class="btn btn-primary" data-fgo-start disabled="disabled">{$b.start_label}</button>
     </div>
 
     <div class="fgo-bulk__progress hidden" data-fgo-progress>
@@ -160,6 +176,7 @@
         </div>
         <p class="fgo-bulk__progress-label" aria-live="polite" data-fgo-progress-label></p>
         <div class="fgo-bulk__chips" data-fgo-run-chips></div>
+        <div class="alert alert-error hidden" role="alert" data-fgo-session-expired></div>
         <p class="muted fgo-bulk__note">{__("fgo_invoicing.bulk_keep_open")}</p>
         <div class="fgo-bulk__actions">
             <button type="button" class="btn" data-fgo-stop>{__("fgo_invoicing.btn_stop")}</button>

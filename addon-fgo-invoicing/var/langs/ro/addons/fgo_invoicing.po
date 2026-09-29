@@ -368,6 +368,10 @@ msgctxt "Languages::fgo_invoicing.invoice_failed"
 msgid "fgo_invoicing.invoice_failed"
 msgstr "Emiterea FGO a eșuat"
 
+msgctxt "Languages::fgo_invoicing.invoice_in_progress"
+msgid "fgo_invoicing.invoice_in_progress"
+msgstr "Această factură se emite chiar acum dintr-o altă cerere; nu s-a trimis nimic. Reîncărcați pagina peste un minut."
+
 msgctxt "Languages::fgo_invoicing.action_succeeded"
 msgid "fgo_invoicing.action_succeeded"
 msgstr "Acțiune FGO finalizată."
@@ -542,11 +546,15 @@ msgstr "Producție"
 
 msgctxt "Languages::fgo_invoicing.bulk_intro"
 msgid "fgo_invoicing.bulk_intro"
-msgstr "Comenzi selectate: [count]. Verificați pre-verificarea înainte ca ceva să fie trimis către FGO."
+msgstr "Comenzi selectate: [count]. Nimic nu este trimis către FGO până nu porniți: citiți mai întâi rezultatul verificării de mai jos."
 
 msgctxt "Languages::fgo_invoicing.bulk_truncated"
 msgid "fgo_invoicing.bulk_truncated"
-msgstr "Comenzi selectate: [selected]. O rulare le procesează doar pe primele [max]: rulați din nou acțiunea pentru restul."
+msgstr "Comenzi selectate: [selected]. Această pagină le procesează pe cele de la [from] la [to]; o rulare preia cel mult [max]."
+
+msgctxt "Languages::fgo_invoicing.bulk_next_batch"
+msgid "fgo_invoicing.bulk_next_batch"
+msgstr "Continuați cu lotul următor ([count])"
 
 msgctxt "Languages::fgo_invoicing.bulk_missing"
 msgid "fgo_invoicing.bulk_missing"
@@ -559,6 +567,14 @@ msgstr "Selectați mai întâi cel puțin o comandă."
 msgctxt "Languages::fgo_invoicing.bulk_nothing_found"
 msgid "fgo_invoicing.bulk_nothing_found"
 msgstr "Niciuna dintre comenzile selectate nu a putut fi încărcată."
+
+msgctxt "Languages::fgo_invoicing.bulk_selection_expired"
+msgid "fgo_invoicing.bulk_selection_expired"
+msgstr "Această selecție a expirat. Selectați din nou comenzile."
+
+msgctxt "Languages::fgo_invoicing.bulk_script_missing"
+msgid "fgo_invoicing.bulk_script_missing"
+msgstr "Scriptul acestei pagini nu s-a încărcat, deci de aici nu se poate porni nimic. Goliți cache-ul și reîncărcați pagina; pe magazinul Docker de dezvoltare, rulați din nou docker/fullstore/link-addons.sh sau reporniți containerul aplicației."
 
 msgctxt "Languages::fgo_invoicing.chip_to_process"
 msgid "fgo_invoicing.chip_to_process"
@@ -592,6 +608,10 @@ msgctxt "Languages::fgo_invoicing.chip_remaining"
 msgid "fgo_invoicing.chip_remaining"
 msgstr "Rămase: [count]"
 
+msgctxt "Languages::fgo_invoicing.chip_not_processed"
+msgid "fgo_invoicing.chip_not_processed"
+msgstr "Neprocesate: [count]"
+
 msgctxt "Languages::fgo_invoicing.snap_document_type"
 msgid "fgo_invoicing.snap_document_type"
 msgstr "Tip document"
@@ -622,7 +642,7 @@ msgstr "[currency] (moneda principală a magazinului)"
 
 msgctxt "Languages::fgo_invoicing.select_all"
 msgid "fgo_invoicing.select_all"
-msgstr "Selectează toate comenzile care pot fi procesate"
+msgstr "Selectează toate cele pregătite"
 
 msgctxt "Languages::fgo_invoicing.th_order"
 msgid "fgo_invoicing.th_order"
@@ -762,11 +782,11 @@ msgstr "Emisă"
 
 msgctxt "Languages::fgo_invoicing.run_state_done"
 msgid "fgo_invoicing.run_state_done"
-msgstr "Finalizat"
+msgstr "Finalizată"
 
 msgctxt "Languages::fgo_invoicing.run_state_failed"
 msgid "fgo_invoicing.run_state_failed"
-msgstr "Eșuat"
+msgstr "Eșuată"
 
 msgctxt "Languages::fgo_invoicing.run_state_skipped"
 msgid "fgo_invoicing.run_state_skipped"
@@ -786,7 +806,15 @@ msgstr "Emisă, dar e-mailul către client nu a fost trimis"
 
 msgctxt "Languages::fgo_invoicing.run_transport_error"
 msgid "fgo_invoicing.run_transport_error"
-msgstr "Niciun răspuns valid de la server (eroare de rețea sau sesiune expirată). Verificați comanda înainte de reîncercare."
+msgstr "Niciun răspuns valid de la server (eroare de rețea, timp expirat sau eroare a serverului). Verificați comanda înainte de reîncercare."
+
+msgctxt "Languages::fgo_invoicing.run_session_expired"
+msgid "fgo_invoicing.run_session_expired"
+msgstr "Sesiunea a expirat, așa că rularea s-a oprit. Autentificați-vă din nou, apoi reîncercați comenzile eșuate din lista de comenzi."
+
+msgctxt "Languages::fgo_invoicing.run_log_in"
+msgid "fgo_invoicing.run_log_in"
+msgstr "Autentificați-vă din nou"
 
 msgctxt "Languages::fgo_invoicing.run_leave_warning"
 msgid "fgo_invoicing.run_leave_warning"
@@ -820,9 +848,17 @@ msgctxt "Languages::fgo_invoicing.pc_last_error"
 msgid "fgo_invoicing.pc_last_error"
 msgstr "Ultima încercare a eșuat: [error]"
 
-msgctxt "Languages::fgo_invoicing.pc_pending"
-msgid "fgo_invoicing.pc_pending"
-msgstr "O încercare anterioară apare încă în curs și poate rula încă: așteptați un minut înainte de reîncercare."
+msgctxt "Languages::fgo_invoicing.pc_in_progress"
+msgid "fgo_invoicing.pc_in_progress"
+msgstr "Se emite chiar acum dintr-o altă cerere (de exemplu emiterea automată la schimbarea stării): nu este nimic de făcut aici."
+
+msgctxt "Languages::fgo_invoicing.pc_stale_pending"
+msgid "fgo_invoicing.pc_stale_pending"
+msgstr "O încercare anterioară a început acum mai bine de 10 minute și nu s-a încheiat: reîncercarea o preia. Verificați în FGO că nu s-a emis între timp nicio factură pentru această comandă."
+
+msgctxt "Languages::fgo_invoicing.pc_reissue_of"
+msgid "fgo_invoicing.pc_reissue_of"
+msgstr "Reemitere: înlocuiește factura [invoice]."
 
 msgctxt "Languages::fgo_invoicing.pc_previously_canceled"
 msgid "fgo_invoicing.pc_previously_canceled"
@@ -888,6 +924,10 @@ msgctxt "Languages::fgo_invoicing.pc_no_pdf_link"
 msgid "fgo_invoicing.pc_no_pdf_link"
 msgstr "FGO nu a returnat un link PDF pentru această factură."
 
+msgctxt "Languages::fgo_invoicing.pc_recently_emailed"
+msgid "fgo_invoicing.pc_recently_emailed"
+msgstr "Trimisă deja clientului pe e-mail la [time] (acum mai puțin de 24 de ore)."
+
 msgctxt "Languages::fgo_invoicing.pc_already_canceled"
 msgid "fgo_invoicing.pc_already_canceled"
 msgstr "Factura [invoice] este deja anulată."
@@ -912,6 +952,10 @@ msgctxt "Languages::fgo_invoicing.pc_unknown_action"
 msgid "fgo_invoicing.pc_unknown_action"
 msgstr "Acțiune FGO în masă necunoscută."
 
+msgctxt "Languages::fgo_invoicing.pc_changed_since_precheck"
+msgid "fgo_invoicing.pc_changed_since_precheck"
+msgstr "Comanda s-a schimbat de la pre-verificare și trebuie verificată din nou: nu s-a trimis nimic. Selectați-o din nou în lista de comenzi."
+
 msgctxt "Languages::fgo_invoicing.zip_unavailable"
 msgid "fgo_invoicing.zip_unavailable"
 msgstr "Extensia PHP zip (ZipArchive) nu este disponibilă pe acest server, deci nu se poate crea arhiva ZIP."
@@ -932,9 +976,25 @@ msgctxt "Languages::fgo_invoicing.zip_some_failed"
 msgid "fgo_invoicing.zip_some_failed"
 msgstr "Unele PDF-uri nu au putut fi descărcate și lipsesc din ZIP (vedeți missing-pdfs.txt din arhivă): [orders]"
 
+msgctxt "Languages::fgo_invoicing.zip_truncated"
+msgid "fgo_invoicing.zip_truncated"
+msgstr "În ZIP au intrat doar primele [max] din cele [selected] comenzi selectate."
+
+msgctxt "Languages::fgo_invoicing.zip_time_budget"
+msgid "fgo_invoicing.zip_time_budget"
+msgstr "Limita de [seconds] de secunde a fost atinsă: [count] PDF-uri nu au fost descărcate ([orders]). Descărcați-le într-un al doilea ZIP."
+
 msgctxt "Languages::fgo_invoicing.zip_missing_note"
 msgid "fgo_invoicing.zip_missing_note"
 msgstr "Aceste PDF-uri de facturi nu au putut fi descărcate din FGO:"
+
+msgctxt "Languages::fgo_invoicing.zip_note_time_budget"
+msgid "fgo_invoicing.zip_note_time_budget"
+msgstr "nedescărcat: limita de [seconds] de secunde a fost atinsă"
+
+msgctxt "Languages::fgo_invoicing.zip_note_over_cap"
+msgid "fgo_invoicing.zip_note_over_cap"
+msgstr "neinclus: un ZIP cuprinde cel mult [max] comenzi"
 
 msgctxt "Languages::fgo_invoicing.diagnostics_title"
 msgid "fgo_invoicing.diagnostics_title"

@@ -6,12 +6,21 @@ namespace Tygh\Addons\FgoInvoicing\Services;
 
 use Tygh\Addons\FgoInvoicing\Api\FgoApiClient;
 use Tygh\Addons\FgoInvoicing\Api\FgoApiException;
+use Tygh\Addons\FgoInvoicing\Constants;
 use Tygh\Addons\FgoInvoicing\Helpers\TypeCoerce;
 use Tygh\Addons\FgoInvoicing\Repository\InvoiceRepository;
 
 /**
  * Wraps cancel / storno / delete / AWB admin actions. Unlike the issuer,
- * these never auto-fire — they're only invoked from the admin controller.
+ * these never auto-fire — they're only invoked from the admin controller
+ * (the invoice page and the bulk page).
+ *
+ * Cancel, storno and delete act on an `issued` invoice only, and record the
+ * new state only while the row is STILL `issued` (a conditional UPDATE):
+ * two admins cancelling the same invoice, or a cancel racing a storno, can
+ * both reach FGO, but only the first write lands. The other one is answered
+ * `conflict` with what FGO accepted and what the row holds now, instead of
+ * overwriting it.
  */
 final class InvoiceCanceler
 {
@@ -26,9 +35,9 @@ final class InvoiceCanceler
      */
     public function cancel(int $orderId): array
     {
-        return $this->actOnExisting($orderId, function (string $serie, string $numar): void {
+        return $this->actOnIssued($orderId, 'cancellation (Anulare)', function (string $serie, string $numar): void {
             $this->api->cancelInvoice($serie, $numar);
-        }, fn (int $oid) => $this->repo->markCanceled($oid));
+        }, fn (int $oid): bool => $this->repo->markCanceled($oid));
     }
 
     /**
@@ -36,9 +45,9 @@ final class InvoiceCanceler
      */
     public function storno(int $orderId): array
     {
-        return $this->actOnExisting($orderId, function (string $serie, string $numar): void {
+        return $this->actOnIssued($orderId, 'reversal (Storno)', function (string $serie, string $numar): void {
             $this->api->stornoInvoice($serie, $numar);
-        }, fn (int $oid) => $this->repo->markReversed($oid));
+        }, fn (int $oid): bool => $this->repo->markReversed($oid));
     }
 
     /**
@@ -46,9 +55,9 @@ final class InvoiceCanceler
      */
     public function delete(int $orderId): array
     {
-        return $this->actOnExisting($orderId, function (string $serie, string $numar): void {
+        return $this->actOnIssued($orderId, 'deletion', function (string $serie, string $numar): void {
             $this->api->deleteInvoice($serie, $numar);
-        }, fn (int $oid) => $this->repo->markDeleted($oid));
+        }, fn (int $oid): bool => $this->repo->markDeleted($oid));
     }
 
     /**
@@ -59,33 +68,75 @@ final class InvoiceCanceler
         if ($awb === '') {
             return ['status' => 'invalid', 'error' => 'AWB must not be empty'];
         }
-        return $this->actOnExisting($orderId, function (string $serie, string $numar) use ($awb): void {
+        $row = $this->repo->findByOrderId($orderId);
+        if ($row === null) {
+            return ['status' => 'invalid', 'error' => 'No FGO invoice exists for order ' . $orderId];
+        }
+        [$serie, $numar] = self::seriesNumber($row);
+        if ($serie === '' || $numar === '') {
+            return ['status' => 'invalid', 'error' => 'FGO invoice for order ' . $orderId . ' has no series/number'];
+        }
+        try {
             $this->api->attachAwb($serie, $numar, $awb);
-        }, fn (int $oid) => $this->repo->attachAwb($oid, $awb));
+        } catch (FgoApiException $e) {
+            return ['status' => 'failed', 'error' => $e->getMessage()];
+        }
+        $this->repo->attachAwb($orderId, $awb);
+
+        return ['status' => 'ok'];
     }
 
     /**
+     * @param string $what the action, for the conflict message
      * @param callable(string, string): void $apiCall
-     * @param callable(int): void $persistCall
+     * @param callable(int): bool $persistCall true when it wrote (the row was still `issued`)
+     *
      * @return array{status: string, error?: string}
      */
-    private function actOnExisting(int $orderId, callable $apiCall, callable $persistCall): array
+    private function actOnIssued(int $orderId, string $what, callable $apiCall, callable $persistCall): array
     {
         $row = $this->repo->findByOrderId($orderId);
         if ($row === null) {
             return ['status' => 'invalid', 'error' => 'No FGO invoice exists for order ' . $orderId];
         }
-        $serie = TypeCoerce::toString($row['invoice_series'] ?? '');
-        $numar = TypeCoerce::toString($row['invoice_number'] ?? '');
+        $status = strtolower(trim(TypeCoerce::toString($row['status'] ?? '')));
+        if ($status !== Constants::STATUS_ISSUED) {
+            return ['status' => 'invalid', 'error' => 'The FGO invoice of order ' . $orderId . ' is not issued (status: ' . ($status !== '' ? $status : 'unknown') . ')'];
+        }
+        [$serie, $numar] = self::seriesNumber($row);
         if ($serie === '' || $numar === '') {
             return ['status' => 'invalid', 'error' => 'FGO invoice for order ' . $orderId . ' has no series/number'];
         }
         try {
             $apiCall($serie, $numar);
-            $persistCall($orderId);
-            return ['status' => 'ok'];
         } catch (FgoApiException $e) {
             return ['status' => 'failed', 'error' => $e->getMessage()];
         }
+        if ($persistCall($orderId)) {
+            return ['status' => 'ok'];
+        }
+
+        $now = $this->repo->findByOrderId($orderId) ?? [];
+        $nowStatus = strtolower(trim(TypeCoerce::toString($now['status'] ?? '')));
+
+        return [
+            'status' => 'conflict',
+            'error' => 'FGO accepted the ' . $what . ' of invoice ' . $serie . ' ' . $numar . ' (order ' . $orderId . '),'
+                . ' but the invoice row changed meanwhile (now: ' . ($nowStatus !== '' ? $nowStatus : 'missing') . ')'
+                . ': another request acted on it at the same time, and its state was kept. Check the invoice in FGO.',
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     *
+     * @return array{0: string, 1: string}
+     */
+    private static function seriesNumber(array $row): array
+    {
+        return [
+            trim(TypeCoerce::toString($row['invoice_series'] ?? '')),
+            trim(TypeCoerce::toString($row['invoice_number'] ?? '')),
+        ];
     }
 }
