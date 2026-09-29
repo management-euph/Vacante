@@ -37,6 +37,11 @@ if ($mode === 'details') {
 
     if (!empty($processor) && $processor['processor_script'] === 'netopia_payments.php') {
         $view->assign('netopia_payment_link_available', true);
+        // The panel offers a payment link only while the order is unpaid.
+        $view->assign(
+            'netopia_payment_link_allowed',
+            in_array(is_string($order_info['status'] ?? null) ? $order_info['status'] : '', ['F', 'O', 'I', 'N', 'D'], true),
+        );
 
         // Refund-eligibility flag drives the "Refund via NETOPIA" button on
         // the order details template hook. The trigger (and the modal that
@@ -107,6 +112,12 @@ if ($mode === 'details') {
             $view->assign('netopia_refund_already_refunded_display', IpnHandler::formatAmount($already_refunded, $paid['currency']));
             $view->assign('netopia_refund_paid_display', IpnHandler::formatAmount($paid['value'], $paid['currency']));
             $view->assign('netopia_refund_currency', $paid['currency']);
+            // The order panel's bar: the refunded share of the paid amount.
+            $view->assign('netopia_refund_paid', $paid['value']);
+            $view->assign(
+                'netopia_refund_refunded_pct',
+                $paid['value'] > 0.0 ? min(100.0, round($already_refunded / $paid['value'] * 100, 1)) : 0.0,
+            );
             $view->assign('netopia_refund_history', fn_netopia_parse_refund_log($refund_log));
             // The original payment's NETOPIA-side order id (the
             // `<csCartId>-<retrySuffix>` value shown in NETOPIA's merchant

@@ -498,6 +498,32 @@ function fn_netopia_get_status_definitions($dummy = null): array
 }
 
 /**
+ * The settings screen's status table: common rows, rare rows, changed count.
+ *
+ * @param mixed $processor_params the saved processor_params (Smarty modifier input)
+ * @return array{common: list<array<string, mixed>>, rare: list<array<string, mixed>>, changed: int}
+ */
+function fn_netopia_status_table($processor_params = []): array
+{
+    return \Netopia\CsCart\Status\StatusTable::build(is_array($processor_params) ? Arr::stringKeys($processor_params) : []);
+}
+
+/**
+ * The key cards: per mode and key type, where the key comes from and its state.
+ *
+ * @param mixed $processor_params
+ * @param mixed $payment_id
+ * @return array<string, array<string, array<string, mixed>>>
+ */
+function fn_netopia_key_overview($processor_params = [], $payment_id = 0): array
+{
+    $params = is_array($processor_params) ? Arr::stringKeys($processor_params) : [];
+    $inspector = new \Netopia\CsCart\Key\KeyInspector(Bootstrap::instance()->keyStorage);
+
+    return $inspector->overview($params, is_numeric($payment_id) ? (int) $payment_id : 0, time());
+}
+
+/**
  * Map NETOPIA payment status code to CS-Cart order status.
  *
  * @param array<string, mixed> $processor_params

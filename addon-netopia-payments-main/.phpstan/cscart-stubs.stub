@@ -16,6 +16,7 @@ define('BOOTSTRAP', true);
 define('AREA', 'A');
 define('CONTROLLER_STATUS_NO_PAGE', '__status_no_page');
 define('CONTROLLER_STATUS_REDIRECT', '__status_redirect');
+define('CONTROLLER_STATUS_NO_CONTENT', '__status_no_content');
 define('PAYMENT_NOTIFICATION', true);
 define('DEVELOPMENT', false);
 define('CART_PRIMARY_CURRENCY', 'USD');
@@ -81,5 +82,7 @@ function db_get_row(string $query, mixed ...$params): array|false { return []; }
  * @return string|false
  */
 function db_get_field(string $query, mixed ...$params): string|false { return ''; }
+/** @return list<mixed> */
+function db_get_fields(string $query, mixed ...$params): array { return []; }
 
 function db_query(string $query, mixed ...$params): mixed { return null; }
