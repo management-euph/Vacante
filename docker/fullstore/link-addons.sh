@@ -18,6 +18,14 @@ set -euo pipefail
 DOCROOT="${DOCROOT:-/var/www/html}"
 REPO="${REPO:-/repo}"
 
+# Run on the host, every [ -e ] guard below fails and nothing is linked, yet
+# the script would still print "done". It belongs inside the app container.
+if [ ! -d "$REPO" ] || [ ! -d "$DOCROOT" ]; then
+    echo "[link-addons] $REPO or $DOCROOT not found: run this inside the app container:" >&2
+    echo "    docker compose exec app bash /usr/local/bin/link-addons.sh   (from docker/fullstore)" >&2
+    exit 1
+fi
+
 # addon-id -> repo top-level dir
 declare -A ADDONS=(
     [travel_core]=addon-travel-core

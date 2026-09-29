@@ -198,6 +198,34 @@ function fn_fgo_invoicing_ajax_assign(string $name, mixed $value): bool
 }
 
 /**
+ * Which of the bulk page's own files this store does not have, so the page
+ * can name them instead of only saying that its script did not run.
+ *
+ * The script and the styles live outside app/addons/, so a store can have
+ * the add-on's PHP and templates without them: a Docker dev store started
+ * before these folders existed (its links are made when the container
+ * starts), or an upload of app/ alone. Nothing is reported when the store
+ * root is unknown.
+ *
+ * @return list<string> store-root-relative paths
+ */
+function fn_fgo_invoicing_missing_page_assets(): array
+{
+    $root = TypeCoerce::toString(Registry::get('config.dir.root'));
+    if ($root === '') {
+        return [];
+    }
+
+    return array_values(array_filter(
+        [
+            'js/addons/fgo_invoicing/bulk.js',
+            'design/backend/css/addons/fgo_invoicing/styles.css',
+        ],
+        static fn (string $path): bool => !is_file(rtrim($root, '/') . '/' . $path),
+    ));
+}
+
+/**
  * Where the ZIP is assembled: CS-Cart's var/files (writable by design, and
  * inside open_basedir where the system temp dir may not be), else the system
  * temp dir.

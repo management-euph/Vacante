@@ -573,9 +573,13 @@ msgctxt "Languages::fgo_invoicing.bulk_selection_expired"
 msgid "fgo_invoicing.bulk_selection_expired"
 msgstr "This selection has expired. Select the orders again."
 
+msgctxt "Languages::fgo_invoicing.bulk_assets_missing"
+msgid "fgo_invoicing.bulk_assets_missing"
+msgstr "This store does not have the page's own files ([files]), so nothing can be started from here. On the Docker dev store, run docker compose exec app bash /usr/local/bin/link-addons.sh in docker/fullstore (or restart the app container), then clear the cache and reload the page. On any other store, upload the add-on's js/ and design/ folders as well as app/."
+
 msgctxt "Languages::fgo_invoicing.bulk_script_missing"
 msgid "fgo_invoicing.bulk_script_missing"
-msgstr "This page's script did not load, so nothing can be started from here. Clear the cache and reload the page; on the Docker dev store, re-run docker/fullstore/link-addons.sh or restart the app container."
+msgstr "This page's script did not run, so nothing can be started from here. Reload the page without the browser cache (Ctrl+F5); if this message stays, clear the store's cache and look for an error in the browser console."
 
 msgctxt "Languages::fgo_invoicing.chip_to_process"
 msgid "fgo_invoicing.chip_to_process"

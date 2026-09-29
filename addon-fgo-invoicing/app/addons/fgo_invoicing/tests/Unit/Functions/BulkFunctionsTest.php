@@ -255,6 +255,41 @@ final class BulkFunctionsTest extends TestCase
     }
 
     /**
+     * A store with the add-on's PHP and templates but without its js/ or
+     * design/backend/css/ folders gets the missing files named on the page.
+     */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
+    public function testThePageNamesTheScriptAndStylesTheStoreDoesNotHave(): void
+    {
+        self::boot();
+        $root = sys_get_temp_dir() . '/fgo-assets-' . bin2hex(random_bytes(4));
+        mkdir($root . '/js/addons/fgo_invoicing', 0777, true);
+        Registry::set('config.dir.root', $root . '/');
+
+        self::assertSame(
+            ['js/addons/fgo_invoicing/bulk.js', 'design/backend/css/addons/fgo_invoicing/styles.css'],
+            fn_fgo_invoicing_missing_page_assets(),
+        );
+
+        touch($root . '/js/addons/fgo_invoicing/bulk.js');
+        self::assertSame(['design/backend/css/addons/fgo_invoicing/styles.css'], fn_fgo_invoicing_missing_page_assets());
+
+        mkdir($root . '/design/backend/css/addons/fgo_invoicing', 0777, true);
+        touch($root . '/design/backend/css/addons/fgo_invoicing/styles.css');
+        self::assertSame([], fn_fgo_invoicing_missing_page_assets());
+
+        Registry::set('config.dir.root', '');
+        self::assertSame([], fn_fgo_invoicing_missing_page_assets(), 'an unknown store root reports nothing');
+
+        unlink($root . '/js/addons/fgo_invoicing/bulk.js');
+        unlink($root . '/design/backend/css/addons/fgo_invoicing/styles.css');
+        foreach (['js/addons/fgo_invoicing', 'js/addons', 'js', 'design/backend/css/addons/fgo_invoicing', 'design/backend/css/addons', 'design/backend/css', 'design/backend', 'design', ''] as $sub) {
+            rmdir(rtrim($root . '/' . $sub, '/'));
+        }
+    }
+
+    /**
      * The selection lives in the admin's session: remembered under a token,
      * recalled by it, unknown for any other token or session.
      */

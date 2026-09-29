@@ -359,9 +359,13 @@ return [
         'en' => 'This selection has expired. Select the orders again.',
         'ro' => 'Această selecție a expirat. Selectați din nou comenzile.',
     ],
+    'fgo_invoicing.bulk_assets_missing' => [
+        'en' => 'This store does not have the page\'s own files ([files]), so nothing can be started from here. On the Docker dev store, run docker compose exec app bash /usr/local/bin/link-addons.sh in docker/fullstore (or restart the app container), then clear the cache and reload the page. On any other store, upload the add-on\'s js/ and design/ folders as well as app/.',
+        'ro' => 'Acest magazin nu are fișierele proprii ale paginii ([files]), deci de aici nu se poate porni nimic. Pe magazinul Docker de dezvoltare, rulați docker compose exec app bash /usr/local/bin/link-addons.sh în docker/fullstore (sau reporniți containerul aplicației), apoi goliți cache-ul și reîncărcați pagina. Pe orice alt magazin, încărcați și folderele js/ și design/ ale modulului, nu doar app/.',
+    ],
     'fgo_invoicing.bulk_script_missing' => [
-        'en' => 'This page\'s script did not load, so nothing can be started from here. Clear the cache and reload the page; on the Docker dev store, re-run docker/fullstore/link-addons.sh or restart the app container.',
-        'ro' => 'Scriptul acestei pagini nu s-a încărcat, deci de aici nu se poate porni nimic. Goliți cache-ul și reîncărcați pagina; pe magazinul Docker de dezvoltare, rulați din nou docker/fullstore/link-addons.sh sau reporniți containerul aplicației.',
+        'en' => 'This page\'s script did not run, so nothing can be started from here. Reload the page without the browser cache (Ctrl+F5); if this message stays, clear the store\'s cache and look for an error in the browser console.',
+        'ro' => 'Scriptul acestei pagini nu a rulat, deci de aici nu se poate porni nimic. Reîncărcați pagina fără cache-ul browserului (Ctrl+F5); dacă mesajul rămâne, goliți cache-ul magazinului și căutați o eroare în consola browserului.',
     ],
     'fgo_invoicing.chip_to_process' => [
         'en' => '[count] will be processed',

@@ -404,6 +404,8 @@ if ($mode === 'bulk') {
             'zip_enabled' => $bulkAction->issues() || $bulkAction === BulkAction::Email,
             // "Retry failed" posts the failed ids back through this menu mode.
             'retry_mode' => $bulkAction->retryAction()->menuMode(),
+            // Named on the page: without them it can do nothing.
+            'missing_assets' => implode(', ', fn_fgo_invoicing_missing_page_assets()),
             'i18n_json' => (string) json_encode(
                 BulkUi::jsStrings($bulkAction, $translate),
                 JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR,
