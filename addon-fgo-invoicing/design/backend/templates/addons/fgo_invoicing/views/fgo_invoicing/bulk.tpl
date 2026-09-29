@@ -12,6 +12,8 @@
   Without the script the page cannot act: the start button is rendered
   disabled and an alert (core classes only, styles.css may be missing too)
   says so; bulk.js enables the one and REMOVES the other once it is bound.
+  When the store does not even have the script or the styles on disk
+  ($b.missing_assets), the alert names those files instead and stays.
 *}
 {capture name="mainbox"}
 {$b = $fgo_bulk}
@@ -28,7 +30,11 @@
      data-ca-fgo-i18n="{$b.i18n_json}"
 >
 
-    <div class="alert alert-error" data-fgo-script-missing>{__("fgo_invoicing.bulk_script_missing")}</div>
+    {if $b.missing_assets}
+        <div class="alert alert-error" data-fgo-assets-missing>{__("fgo_invoicing.bulk_assets_missing", ["[files]" => $b.missing_assets])}</div>
+    {else}
+        <div class="alert alert-error" data-fgo-script-missing>{__("fgo_invoicing.bulk_script_missing")}</div>
+    {/if}
 
     <div class="alert {if $b.sandbox}alert-warning{else}alert-error{/if} fgo-bulk__env">
         <strong>{if $b.sandbox}{__("fgo_invoicing.env_sandbox")}{else}{__("fgo_invoicing.env_production")}{/if}</strong>

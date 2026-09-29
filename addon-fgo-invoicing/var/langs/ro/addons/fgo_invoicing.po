@@ -572,9 +572,13 @@ msgctxt "Languages::fgo_invoicing.bulk_selection_expired"
 msgid "fgo_invoicing.bulk_selection_expired"
 msgstr "Această selecție a expirat. Selectați din nou comenzile."
 
+msgctxt "Languages::fgo_invoicing.bulk_assets_missing"
+msgid "fgo_invoicing.bulk_assets_missing"
+msgstr "Acest magazin nu are fișierele proprii ale paginii ([files]), deci de aici nu se poate porni nimic. Pe magazinul Docker de dezvoltare, rulați docker compose exec app bash /usr/local/bin/link-addons.sh în docker/fullstore (sau reporniți containerul aplicației), apoi goliți cache-ul și reîncărcați pagina. Pe orice alt magazin, încărcați și folderele js/ și design/ ale modulului, nu doar app/."
+
 msgctxt "Languages::fgo_invoicing.bulk_script_missing"
 msgid "fgo_invoicing.bulk_script_missing"
-msgstr "Scriptul acestei pagini nu s-a încărcat, deci de aici nu se poate porni nimic. Goliți cache-ul și reîncărcați pagina; pe magazinul Docker de dezvoltare, rulați din nou docker/fullstore/link-addons.sh sau reporniți containerul aplicației."
+msgstr "Scriptul acestei pagini nu a rulat, deci de aici nu se poate porni nimic. Reîncărcați pagina fără cache-ul browserului (Ctrl+F5); dacă mesajul rămâne, goliți cache-ul magazinului și căutați o eroare în consola browserului."
 
 msgctxt "Languages::fgo_invoicing.chip_to_process"
 msgid "fgo_invoicing.chip_to_process"
