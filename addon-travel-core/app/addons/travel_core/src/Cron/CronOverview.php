@@ -25,7 +25,7 @@ final class CronOverview
     public const string CORE_JOB = 'exchange_rates';
 
     /** Every mode Travel Core's cron entry points record under 'travel_core'. */
-    public const array CORE_MODES = ['exchange_rates', 'expire_alternative_requests'];
+    public const array CORE_MODES = ['exchange_rates', 'expire_alternative_requests', 'balances'];
 
     /**
      * The command that runs Travel Core's job, in both forms.

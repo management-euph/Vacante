@@ -928,6 +928,66 @@
     color: #0f172a;
 }
 
+/* "Pay in full" / "Pay a deposit" choice (same partial, with ps_form) */
+.travel-booking-page .travel-paymode {
+    display: grid;
+    gap: 8px;
+    margin: 12px 0 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+}
+.travel-booking-page .travel-paymode__opt {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 0;
+    padding: 10px 12px;
+    border: 1.5px solid #d5deea;
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1.35;
+    color: #1e293b;
+    text-align: left;
+}
+.travel-booking-page .travel-paymode__opt:has(input:checked) {
+    border-color: #0b5ed7;
+    background: #f0f6ff;
+    box-shadow: 0 0 0 3px rgba(11, 94, 215, .12);
+}
+.travel-booking-page .travel-paymode__opt:has(input:focus-visible) {
+    outline: 2px solid #0b5ed7;
+    outline-offset: 2px;
+}
+.travel-booking-page .travel-paymode__opt input {
+    margin: 3px 0 0;
+    accent-color: #0b5ed7;
+    flex: none;
+}
+.travel-booking-page .travel-paymode__text {
+    flex: 1;
+    min-width: 0;
+}
+.travel-booking-page .travel-paymode__name {
+    display: block;
+    font-weight: 700;
+    font-size: 15px;
+}
+.travel-booking-page .travel-paymode__hint {
+    display: block;
+    margin-top: 2px;
+    font-size: 12px;
+    color: #64748b;
+}
+.travel-booking-page .travel-paymode__amt {
+    flex: none;
+    font-weight: 700;
+    font-size: 15px;
+    white-space: nowrap;
+}
+
 /* Desktop: no inner scrollbar — the page scrolls as one. The aside stretches
    to the form's height and only its price + cancellation cards
    (.travel-bsidebar__sticky) stay pinned beside the form while the guest
@@ -1537,4 +1597,81 @@ body.travel-conditions-open {
     .travel-booking-page .travel-form-actions.travel-form-actions--cta { flex-direction: column-reverse; padding: 0; }
     .travel-booking-page .travel-form-actions--cta .travel-btn--primary { width: 100%; }
     .travel-booking-page .travel-cta-note { text-align: center; margin-right: 0; }
+}
+
+/* ── Deposit bookings: cart line, balance line, order details ──────────── */
+/* components/cart_booking_details.tpl + order_deposit_details.tpl. Not
+   scoped to .travel-booking-page: they render on cart, checkout and the
+   customer's order pages. */
+.travel-bcard-deposit,
+.travel-order-deposit {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    margin-top: 10px;
+    padding: 10px 12px;
+    border: 1px dashed #c9d6ea;
+    border-radius: 8px;
+    background: #f8fbff;
+    font-size: 13px;
+    line-height: 1.45;
+    color: #334155;
+}
+.travel-order-deposit {
+    flex-direction: column;
+    align-items: flex-start;
+}
+.travel-bcard-deposit strong,
+.travel-order-deposit strong {
+    color: #0f172a;
+}
+.travel-bcard-deposit__note,
+.travel-order-deposit__note {
+    flex-basis: 100%;
+    font-size: 12px;
+    color: #64748b;
+}
+.travel-order-deposit__title {
+    font-weight: 700;
+    color: #0f172a;
+}
+.travel-order-deposit__pay {
+    margin-top: 6px;
+}
+.travel-order-deposit__state--paid {
+    color: #15803d;
+    font-weight: 600;
+}
+
+/* Order summary with a deposit (components/deposit_totals.tpl) */
+.travel-deposit-totals {
+    margin: 12px 0;
+    padding: 10px 12px;
+    border: 1.5px solid #0b5ed7;
+    border-radius: 10px;
+    background: #f0f6ff;
+    font-size: 14px;
+    color: #1e293b;
+}
+.travel-deposit-totals__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 3px 0;
+}
+.travel-deposit-totals__row--total {
+    font-size: 16px;
+    font-weight: 700;
+    border-bottom: 1px solid #c9d6ea;
+    padding-bottom: 6px;
+    margin-bottom: 3px;
+}
+.travel-deposit-totals__row--now {
+    font-weight: 700;
+    color: #0b3d91;
+}
+.travel-deposit-totals__note {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #64748b;
 }

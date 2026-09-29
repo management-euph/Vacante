@@ -714,6 +714,18 @@ msgctxt "SettingsTooltips::travel_core::geocoding_endpoint"
 msgid "Base URL of the Nominatim server. Change only if you run your own instance (removes the 1 request/second limit of the public server)."
 msgstr "URL-ul de bază al serverului Nominatim. Schimbați doar dacă rulați propria instanță (elimină limita de 1 cerere/secundă a serverului public)."
 
+msgctxt "SettingsOptions::travel_core::deposit_header"
+msgid "Deposit payments"
+msgstr "Plata cu avans"
+
+msgctxt "SettingsOptions::travel_core::deposit_enabled"
+msgid "Let guests pay a deposit"
+msgstr "Permite plata unui avans"
+
+msgctxt "SettingsTooltips::travel_core::deposit_enabled"
+msgid "When the supplier's payment terms split the price (Sphinx, Novoton) and the balance is due at least 7 days later, the booking page offers \"Pay a deposit\". Checkout then charges only the deposit; the guest pays the balance later from a link in the order and reminder emails."
+msgstr "Când termenii de plată ai furnizorului împart prețul (Sphinx, Novoton) și restul se plătește cu cel puțin 7 zile mai târziu, pagina de rezervare oferă „Plătește un avans”. La finalizarea comenzii se încasează doar avansul; clientul plătește restul mai târziu, din linkul din comandă și din emailurile de reamintire."
+
 msgctxt "SettingsOptions::travel_core::show_booking_form"
 msgid "Show Booking Form on Product Pages"
 msgstr "Afișare Formular Rezervare pe Paginile Produselor"
@@ -1885,6 +1897,114 @@ msgstr "Avans"
 msgctxt "Languages::travel_core.split_balance"
 msgid "Balance"
 msgstr "Rest de plată"
+
+msgctxt "Languages::travel_core.pay_mode_legend"
+msgid "How would you like to pay?"
+msgstr "Cum doriți să plătiți?"
+
+msgctxt "Languages::travel_core.pay_in_full"
+msgid "Pay in full"
+msgstr "Plătiți integral"
+
+msgctxt "Languages::travel_core.pay_in_full_hint"
+msgid "Nothing more to pay"
+msgstr "Nu mai aveți nimic de plată"
+
+msgctxt "Languages::travel_core.pay_deposit"
+msgid "Pay a deposit"
+msgstr "Plătiți un avans"
+
+msgctxt "Languages::travel_core.pay_deposit_hint"
+msgid "Balance [balance] by [date], with any of our payment methods. We email you the payment link."
+msgstr "Restul de [balance] până la [date], prin oricare dintre metodele noastre de plată. Vă trimitem linkul de plată pe email."
+
+msgctxt "Languages::travel_core.deposit_unavailable"
+msgid "A deposit is no longer possible for this booking (the supplier's payment terms changed), so the full price applies."
+msgstr "Pentru această rezervare nu mai este posibilă plata unui avans (termenii de plată ai furnizorului s-au schimbat), așa că se aplică prețul integral."
+
+msgctxt "Languages::travel_core.deposit_cart_note"
+msgid "Paid now: the deposit. You pay the balance later from the link in your order and in our reminder emails."
+msgstr "Acum plătiți avansul. Restul îl plătiți mai târziu, din linkul din comandă și din emailurile de reamintire."
+
+msgctxt "Languages::travel_core.paid_with_deposit"
+msgid "Paid with a deposit"
+msgstr "Plătit cu avans"
+
+msgctxt "Languages::travel_core.pay_balance_btn"
+msgid "Pay balance"
+msgstr "Plătiți restul"
+
+msgctxt "Languages::travel_core.pay_balance_note"
+msgid "You choose how to pay at checkout."
+msgstr "Alegeți modul de plată la finalizarea comenzii."
+
+msgctxt "Languages::travel_core.balance_paid"
+msgid "Balance paid (order #[order_id])"
+msgstr "Rest achitat (comanda #[order_id])"
+
+msgctxt "Languages::travel_core.balance_cancelled"
+msgid "Balance cancelled"
+msgstr "Rest anulat"
+
+msgctxt "Languages::travel_core.balance_open"
+msgid "Balance not paid yet"
+msgstr "Restul nu a fost încă plătit"
+
+msgctxt "Languages::travel_core.balance_overdue"
+msgid "Overdue"
+msgstr "Termen depășit"
+
+msgctxt "Languages::travel_core.balance_pay_link"
+msgid "Customer pay link"
+msgstr "Link de plată pentru client"
+
+msgctxt "Languages::travel_core.balance_payment_for"
+msgid "Balance payment for order #[order_id]"
+msgstr "Plata restului pentru comanda #[order_id]"
+
+msgctxt "Languages::travel_core.balance_added_to_cart"
+msgid "The balance of order #[order_id] is ready to pay. Choose how you want to pay."
+msgstr "Restul de plată pentru comanda #[order_id] este pregătit. Alegeți modul de plată."
+
+msgctxt "Languages::travel_core.balance_link_invalid"
+msgid "This payment link is not valid."
+msgstr "Acest link de plată nu este valid."
+
+msgctxt "Languages::travel_core.balance_already_settled"
+msgid "This balance has already been paid or is no longer due."
+msgstr "Acest rest a fost deja plătit sau nu mai este datorat."
+
+msgctxt "Languages::travel_core.balance_order_inactive"
+msgid "The booking of this balance is no longer active. Please contact us."
+msgstr "Rezervarea pentru acest rest nu mai este activă. Vă rugăm să ne contactați."
+
+msgctxt "Languages::travel_core.balance_reminder_subject"
+msgid "Reminder: balance of [amount] for [hotel] due by [date]"
+msgstr "Reamintire: restul de [amount] pentru [hotel] până la [date]"
+
+msgctxt "Languages::travel_core.balance_reminder_body"
+msgid "Hello [name],\n\nThank you for your booking at [hotel] (order #[order_id]).\n\nTotal: [total]\nDeposit paid: [deposit]\nBalance: [amount], due by [date]\n\nPay it here, with any of our payment methods:\n[link]\n\nIf you have already paid, please ignore this email."
+msgstr "Bună ziua, [name],\n\nVă mulțumim pentru rezervarea la [hotel] (comanda #[order_id]).\n\nTotal: [total]\nAvans plătit: [deposit]\nRest de plată: [amount], până la [date]\n\nÎl puteți plăti aici, prin oricare dintre metodele noastre de plată:\n[link]\n\nDacă ați plătit deja, vă rugăm să ignorați acest email."
+
+msgctxt "Languages::travel_core.split_total"
+msgid "Total"
+msgstr "Total"
+
+msgctxt "Languages::travel_core.deposit_order_total"
+msgid "Order total"
+msgstr "Total comandă"
+
+msgctxt "Languages::travel_core.deposit_paid_now"
+msgid "Deposit — paid now"
+msgstr "Avans — plătit acum"
+
+msgctxt "Languages::travel_core.deposit_balance_by"
+msgid "Balance — by [date]"
+msgstr "Rest de plată — până la [date]"
+
+msgctxt "Languages::travel_core.deposit_pay_now_btn"
+msgid "pay [amount] now"
+msgstr "plătiți acum [amount]"
 
 msgctxt "Languages::travel_core.dest_only_sold"
 msgid "Show sold countries only"

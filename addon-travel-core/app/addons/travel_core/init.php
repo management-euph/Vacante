@@ -110,4 +110,6 @@ fn_register_hooks(
     'calculate_cart_items_post',       // Ensure rooms_data preserved as array
     'dispatch_before_display',         // CSS loading for booking pages
     'get_order_info',                   // Format booking data in order view
+    'place_order_post',                 // Deposit orders: record the balance owed
+    'change_order_status',              // Balance paid / deposit order cancelled
 );

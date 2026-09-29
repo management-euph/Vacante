@@ -198,6 +198,20 @@
                         </variants>
                     </item>
 
+                    <!-- Pay a deposit: when the supplier's payment terms split
+                         the price (sphinx, novoton), the guest may pay only
+                         the part due on booking; checkout charges that, the
+                         balance is paid later from a link (DepositPolicy). -->
+                    <item id="deposit_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="deposit_enabled">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                        <variants/>
+                    </item>
+
                     <!-- Product-page booking form display: ONE policy for all
                          provider addons (novoton + sphinx) — consumed by the
                          shared dispatch_before_display injection -->
@@ -254,6 +268,30 @@
         </sections>
     </settings>
 
+    <!-- Order emails (Twig email templates): the full order total, deposit
+         paid now and balance. Add {{ snippet("travel_deposit_totals") }} to
+         Design -> Email templates -> order notification, under the totals. -->
+    <email_templates>
+        <snippets>
+            <item>
+                <code><![CDATA[travel_deposit_totals]]></code>
+                <name>
+                    <en><![CDATA[Travel: order total with deposit]]></en>
+                    <ro><![CDATA[Travel: total comandă cu avans]]></ro>
+                </name>
+                <default_template><![CDATA[{% set dt = order_info.travel_deposit_totals|default([]) %}
+{% if dt %}
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:12px 0;border:1.5px solid #0b5ed7;border-radius:8px;background:#f0f6ff;">
+  <tr><td style="padding:10px 12px 4px;font-size:16px;font-weight:bold;">{{ __("travel_core.deposit_order_total") }}</td><td align="right" style="padding:10px 12px 4px;font-size:16px;font-weight:bold;">{{ dt.total_formatted }}</td></tr>
+  <tr><td style="padding:2px 12px;font-weight:bold;color:#0b3d91;">{{ __("travel_core.deposit_paid_now") }}</td><td align="right" style="padding:2px 12px;font-weight:bold;color:#0b3d91;">{{ dt.now_formatted }}</td></tr>
+  <tr><td style="padding:2px 12px 10px;">{{ __("travel_core.deposit_balance_by", {"[date]": dt.balance_due_formatted}) }}</td><td align="right" style="padding:2px 12px 10px;">{{ dt.balance_formatted }}</td></tr>
+</table>
+{% endif %}]]></default_template>
+                <status><![CDATA[A]]></status>
+                <addon><![CDATA[travel_core]]></addon>
+            </item>
+        </snippets>
+    </email_templates>
     <queries>
         <!-- Shared feature mapping table: canonical definitions -->
         <item>
@@ -405,12 +443,66 @@
              not run. The provider-still-active veto lives in the PHP function,
              which CS-Cart invokes BEFORE these queries — a vetoed uninstall
              never reaches them. -->
+        <!-- Balances still owed on bookings paid with a deposit (BalanceRepository) -->
+        <item>
+            CREATE TABLE IF NOT EXISTS `?:travel_balances` (
+        `balance_id`          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        `order_id`            INT UNSIGNED  NOT NULL COMMENT 'The deposit order',
+        `item_id`             VARCHAR(64)   NOT NULL COMMENT 'Order item (cart id)',
+        `product_id`          INT UNSIGNED  NOT NULL DEFAULT 0,
+        `user_id`             INT UNSIGNED  NOT NULL DEFAULT 0,
+        `provider`            VARCHAR(50)   NOT NULL DEFAULT '',
+        `hotel_name`          VARCHAR(255)  DEFAULT NULL,
+        `check_in`            DATE          DEFAULT NULL,
+        `check_out`           DATE          DEFAULT NULL,
+        `full_amount`         DECIMAL(12,2) NOT NULL DEFAULT 0,
+        `deposit_amount`      DECIMAL(12,2) NOT NULL DEFAULT 0,
+        `amount`              DECIMAL(12,2) NOT NULL COMMENT 'Balance, primary currency',
+        `due_date`            DATE          NOT NULL,
+        `status`              VARCHAR(12)   NOT NULL DEFAULT 'open' COMMENT 'open, paid, cancelled',
+        `balance_order_id`    INT UNSIGNED  DEFAULT NULL COMMENT 'Order that pays the balance',
+        `reminders_sent`      VARCHAR(20)   NOT NULL DEFAULT '' COMMENT 'Days-before marks already emailed, e.g. 7,2',
+        `overdue_notified_at` DATETIME      DEFAULT NULL,
+        `paid_at`             DATETIME      DEFAULT NULL,
+        `created_at`          DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY `uq_order_item` (`order_id`, `item_id`),
+        KEY `idx_status_due` (`status`, `due_date`),
+        KEY `idx_balance_order` (`balance_order_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        </item>
+        <item for="upgrade">
+            CREATE TABLE IF NOT EXISTS `?:travel_balances` (
+        `balance_id`          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        `order_id`            INT UNSIGNED  NOT NULL COMMENT 'The deposit order',
+        `item_id`             VARCHAR(64)   NOT NULL COMMENT 'Order item (cart id)',
+        `product_id`          INT UNSIGNED  NOT NULL DEFAULT 0,
+        `user_id`             INT UNSIGNED  NOT NULL DEFAULT 0,
+        `provider`            VARCHAR(50)   NOT NULL DEFAULT '',
+        `hotel_name`          VARCHAR(255)  DEFAULT NULL,
+        `check_in`            DATE          DEFAULT NULL,
+        `check_out`           DATE          DEFAULT NULL,
+        `full_amount`         DECIMAL(12,2) NOT NULL DEFAULT 0,
+        `deposit_amount`      DECIMAL(12,2) NOT NULL DEFAULT 0,
+        `amount`              DECIMAL(12,2) NOT NULL COMMENT 'Balance, primary currency',
+        `due_date`            DATE          NOT NULL,
+        `status`              VARCHAR(12)   NOT NULL DEFAULT 'open' COMMENT 'open, paid, cancelled',
+        `balance_order_id`    INT UNSIGNED  DEFAULT NULL COMMENT 'Order that pays the balance',
+        `reminders_sent`      VARCHAR(20)   NOT NULL DEFAULT '' COMMENT 'Days-before marks already emailed, e.g. 7,2',
+        `overdue_notified_at` DATETIME      DEFAULT NULL,
+        `paid_at`             DATETIME      DEFAULT NULL,
+        `created_at`          DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY `uq_order_item` (`order_id`, `item_id`),
+        KEY `idx_status_due` (`status`, `due_date`),
+        KEY `idx_balance_order` (`balance_order_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        </item>
         <item for="uninstall">DELETE FROM ?:language_values WHERE name LIKE 'travel_core.%'</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:travel_api_alias`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:travel_unmapped_values`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:travel_bookings`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:travel_feature_map`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:travel_alternative_requests`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:travel_balances`</item>
     </queries>
 
     <language_variables>

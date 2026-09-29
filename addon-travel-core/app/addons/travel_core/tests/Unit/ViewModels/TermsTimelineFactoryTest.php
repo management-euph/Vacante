@@ -160,7 +160,7 @@ final class TermsTimelineFactoryTest extends TestCase
             ['due' => '2026-10-20', 'percent' => 70],
         ], 360.0);
 
-        self::assertSame(['deposit' => '108,00 €', 'balance' => '252,00 €', 'balance_due' => '10/20/2026'], $split);
+        self::assertSame(['full' => '360,00 €', 'deposit' => '108,00 €', 'balance' => '252,00 €', 'balance_due' => '10/20/2026'], $split);
     }
 
     public function testSplitTakesTheLastBalanceDate(): void

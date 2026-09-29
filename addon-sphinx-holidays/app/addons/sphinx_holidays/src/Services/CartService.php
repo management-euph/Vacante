@@ -10,6 +10,8 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\CartSkipPolicy;
 use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
+use Tygh\Addons\TravelCore\Services\DepositCartLine;
+use Tygh\Addons\TravelCore\Services\DepositPlan;
 use Tygh\Addons\TravelCore\Services\GuestDataService;
 use Tygh\Addons\TravelCore\TravelConstants;
 
@@ -248,6 +250,7 @@ final class CartService implements CartServiceInterface
         array $productExtra,
         string $successMessage,
         ?string $redirectUrl = null,
+        ?DepositPlan $deposit = null,
     ): array {
         $primaryCurrency = defined('CART_PRIMARY_CURRENCY') ? CART_PRIMARY_CURRENCY : 'EUR';
         $currencyService = new CurrencyService($apiCurrency);
@@ -257,7 +260,7 @@ final class CartService implements CartServiceInterface
 
         // Write the assembled row into the session cart via the allowlisted
         // functions/ boundary — keeps Tygh::\$app out of this service class.
-        fn_sphinx_holidays_write_cart_row($cartId, [
+        $row = [
             'product_id' => $productId,
             'amount' => 1,
             'price' => $cartPrice,
@@ -265,7 +268,8 @@ final class CartService implements CartServiceInterface
             'original_price' => $cartPrice,
             'extra' => $productExtra,
             'stored_price' => 'Y',
-        ]);
+        ];
+        fn_sphinx_holidays_write_cart_row($cartId, $deposit !== null ? DepositCartLine::apply($row, $deposit) : $row);
 
         fn_set_notification('N', __('notice'), $successMessage);
 

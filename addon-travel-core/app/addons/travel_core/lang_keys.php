@@ -1069,6 +1069,140 @@ return [
         'en' => 'Balance',
         'ro' => 'Rest de plată',
     ],
+    // Booking page: "Pay in full / Pay a deposit" choice (DepositPolicy).
+    'travel_core.pay_mode_legend' => [
+        'en' => 'How would you like to pay?',
+        'ro' => 'Cum doriți să plătiți?',
+    ],
+    'travel_core.pay_in_full' => [
+        'en' => 'Pay in full',
+        'ro' => 'Plătiți integral',
+    ],
+    'travel_core.pay_in_full_hint' => [
+        'en' => 'Nothing more to pay',
+        'ro' => 'Nu mai aveți nimic de plată',
+    ],
+    'travel_core.pay_deposit' => [
+        'en' => 'Pay a deposit',
+        'ro' => 'Plătiți un avans',
+    ],
+    'travel_core.pay_deposit_hint' => [
+        'en' => 'Balance [balance] by [date], with any of our payment methods. We email you the payment link.',
+        'ro' => 'Restul de [balance] până la [date], prin oricare dintre metodele noastre de plată. Vă trimitem linkul de plată pe email.',
+    ],
+    'travel_core.deposit_unavailable' => [
+        'en' => 'A deposit is no longer possible for this booking (the supplier\'s payment terms changed), so the full price applies.',
+        'ro' => 'Pentru această rezervare nu mai este posibilă plata unui avans (termenii de plată ai furnizorului s-au schimbat), așa că se aplică prețul integral.',
+    ],
+    // Deposit bookings: cart, order, emails, pay-balance page (BalanceService).
+    'travel_core.deposit_cart_note' => [
+        'en' => 'Paid now: the deposit. You pay the balance later from the link in your order and in our reminder emails.',
+        'ro' => 'Acum plătiți avansul. Restul îl plătiți mai târziu, din linkul din comandă și din emailurile de reamintire.',
+    ],
+    'travel_core.paid_with_deposit' => [
+        'en' => 'Paid with a deposit',
+        'ro' => 'Plătit cu avans',
+    ],
+    'travel_core.pay_balance_btn' => [
+        'en' => 'Pay balance',
+        'ro' => 'Plătiți restul',
+    ],
+    'travel_core.pay_balance_note' => [
+        'en' => 'You choose how to pay at checkout.',
+        'ro' => 'Alegeți modul de plată la finalizarea comenzii.',
+    ],
+    'travel_core.balance_paid' => [
+        'en' => 'Balance paid (order #[order_id])',
+        'ro' => 'Rest achitat (comanda #[order_id])',
+    ],
+    'travel_core.balance_cancelled' => [
+        'en' => 'Balance cancelled',
+        'ro' => 'Rest anulat',
+    ],
+    'travel_core.balance_open' => [
+        'en' => 'Balance not paid yet',
+        'ro' => 'Restul nu a fost încă plătit',
+    ],
+    'travel_core.balance_overdue' => [
+        'en' => 'Overdue',
+        'ro' => 'Termen depășit',
+    ],
+    'travel_core.balance_pay_link' => [
+        'en' => 'Customer pay link',
+        'ro' => 'Link de plată pentru client',
+    ],
+    'travel_core.balance_payment_for' => [
+        'en' => 'Balance payment for order #[order_id]',
+        'ro' => 'Plata restului pentru comanda #[order_id]',
+    ],
+    'travel_core.balance_added_to_cart' => [
+        'en' => 'The balance of order #[order_id] is ready to pay. Choose how you want to pay.',
+        'ro' => 'Restul de plată pentru comanda #[order_id] este pregătit. Alegeți modul de plată.',
+    ],
+    'travel_core.balance_link_invalid' => [
+        'en' => 'This payment link is not valid.',
+        'ro' => 'Acest link de plată nu este valid.',
+    ],
+    'travel_core.balance_already_settled' => [
+        'en' => 'This balance has already been paid or is no longer due.',
+        'ro' => 'Acest rest a fost deja plătit sau nu mai este datorat.',
+    ],
+    'travel_core.balance_order_inactive' => [
+        'en' => 'The booking of this balance is no longer active. Please contact us.',
+        'ro' => 'Rezervarea pentru acest rest nu mai este activă. Vă rugăm să ne contactați.',
+    ],
+    'travel_core.balance_reminder_subject' => [
+        'en' => 'Reminder: balance of [amount] for [hotel] due by [date]',
+        'ro' => 'Reamintire: restul de [amount] pentru [hotel] până la [date]',
+    ],
+    'travel_core.balance_reminder_body' => [
+        'en' => 'Hello [name],
+
+Thank you for your booking at [hotel] (order #[order_id]).
+
+Total: [total]
+Deposit paid: [deposit]
+Balance: [amount], due by [date]
+
+Pay it here, with any of our payment methods:
+[link]
+
+If you have already paid, please ignore this email.',
+        'ro' => 'Bună ziua, [name],
+
+Vă mulțumim pentru rezervarea la [hotel] (comanda #[order_id]).
+
+Total: [total]
+Avans plătit: [deposit]
+Rest de plată: [amount], până la [date]
+
+Îl puteți plăti aici, prin oricare dintre metodele noastre de plată:
+[link]
+
+Dacă ați plătit deja, vă rugăm să ignorați acest email.',
+    ],
+    // Deposit bookings: the full price beside Deposit / Balance.
+    'travel_core.split_total' => [
+        'en' => 'Total',
+        'ro' => 'Total',
+    ],
+    // Order summary with a deposit (components/deposit_totals.tpl).
+    'travel_core.deposit_order_total' => [
+        'en' => 'Order total',
+        'ro' => 'Total comandă',
+    ],
+    'travel_core.deposit_paid_now' => [
+        'en' => 'Deposit — paid now',
+        'ro' => 'Avans — plătit acum',
+    ],
+    'travel_core.deposit_balance_by' => [
+        'en' => 'Balance — by [date]',
+        'ro' => 'Rest de plată — până la [date]',
+    ],
+    'travel_core.deposit_pay_now_btn' => [
+        'en' => 'pay [amount] now',
+        'ro' => 'plătiți acum [amount]',
+    ],
     // Destination picker (components/destination_picker.tpl + destination-picker.js) and the dashboard Destinations card.
     'travel_core.dest_only_sold' => [
         'en' => 'Show sold countries only',

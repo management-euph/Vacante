@@ -7,6 +7,7 @@ namespace Tygh\Addons\SphinxHolidays\Hooks;
 use Tygh\Addons\SphinxHolidays\Services\BookingPayloadFactory;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Services\DepositCartLine;
 use Tygh\Addons\TravelCore\TravelConstants;
 
 /**
@@ -110,14 +111,22 @@ final class OrderHooks
                 }
                 $newPrice = TypeCoerce::toFloat($correction['api_price'] ?? 0);
                 $lineExtra = is_array($line['extra'] ?? null) ? $line['extra'] : [];
-                // Keep the old price for "Old vs New" display before overwriting
-                $lineExtra['price_before_correction'] = $line['price'] ?? null;
+                // Keep the old price for "Old vs New" display before overwriting —
+                // the old FULL price, in the same (API) currency as total_price
+                // (the line price is converted, and only the deposit on a deposit line).
+                $lineExtra['price_before_correction'] = $lineExtra['total_price'] ?? $line['price'] ?? null;
                 $lineExtra['total_price'] = $newPrice;
                 $line['extra'] = $lineExtra;
-                $line['price'] = $newPrice;
-                $line['base_price'] = $newPrice;
-                $line['original_price'] = $newPrice;
-                $products[$cartId] = $line;
+                // extra.total_price is in the API currency; the line is in
+                // the store's primary currency (CartService converts the same
+                // way). A deposit line keeps charging its deposit, rescaled.
+                $primaryCurrency = defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : 'EUR';
+                $apiCurrency = TypeCoerce::toString($lineExtra['currency'] ?? '');
+                $currencyService = new \Tygh\Addons\TravelCore\Services\CurrencyService($apiCurrency !== '' ? $apiCurrency : 'EUR');
+                $products[$cartId] = DepositCartLine::reprice(
+                    TypeCoerce::toStringMap($line),
+                    $currencyService->convertFromApiCurrency($newPrice, $primaryCurrency),
+                );
             }
             $cart['products'] = $products;
         }

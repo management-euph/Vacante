@@ -158,4 +158,9 @@
             <a href="{$booking_fallback_url|fn_url}">{__("`$_bp`.view_booking")}</a>
         </div>
     {/if}
+
+    {* Paid with a deposit: the balance and its pay link *}
+    {if $booking_extra.travel_deposit.deposit|default:0 > 0}
+        {include file="addons/travel_core/components/order_deposit_details.tpl" od=$booking_extra.travel_deposit od_balances=$order_info.travel_balances|default:[]}
+    {/if}
 {/if}

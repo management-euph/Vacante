@@ -81,7 +81,7 @@
            whose variable was never assigned, and a terms section whose
            variables were never assigned either — went with it. *}
         <div class="travel-booking-layout">
-            {include file="addons/travel_core/components/booking_sidebar.tpl"}
+            {include file="addons/travel_core/components/booking_sidebar.tpl" tbs_deposit_addon="novoton_holidays" tbs_deposit_form="novoton-booking-form"}
 
             <div class="travel-booking-col-main">
 

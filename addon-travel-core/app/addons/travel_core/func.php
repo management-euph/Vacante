@@ -66,6 +66,7 @@ function fn_travel_core_uninstall(): bool
     db_query('DROP TABLE IF EXISTS ?:travel_unmapped_values');
     db_query('DROP TABLE IF EXISTS ?:travel_bookings');
     db_query('DROP TABLE IF EXISTS ?:travel_alternative_requests');
+    db_query('DROP TABLE IF EXISTS ?:travel_balances');
     db_query('DROP TABLE IF EXISTS ?:travel_feature_map');
 
     // Remove language variables
@@ -182,6 +183,10 @@ function fn_travel_core_ensure_schema(): void
             UNIQUE KEY `uq_source_type_value` (`api_source`, `feature_type`, `api_value`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
     );
+    // Balances owed on deposit bookings (the storefront also creates it lazily).
+    // Required by path: post_install runs before the PSR-4 autoloader.
+    require_once __DIR__ . '/src/Repository/BalanceRepository.php';
+    db_query(\Tygh\Addons\TravelCore\Repository\BalanceRepository::CREATE_SQL);
 }
 
 /**
@@ -300,6 +305,41 @@ function fn_settings_variants_addons_travel_core_default_currency(): array
     }
 
     return $result;
+}
+
+/**
+ * Order summary of a cart / order with deposit lines — Order total (full),
+ * Deposit paid now, Balance by date (DepositCartLine::totals). Called from
+ * components/deposit_totals.tpl.
+ *
+ * @param mixed $products
+ * @return array<string, float|string>
+ */
+function fn_travel_core_deposit_totals(mixed $products, mixed $chargedTotal): array
+{
+    return \Tygh\Addons\TravelCore\Services\DepositCartLine::totals(
+        is_array($products) ? $products : [],
+        \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toFloat($chargedTotal),
+    );
+}
+
+/**
+ * A Y-m-d date in the store's date format (deposit / balance lines in the
+ * cart, order and email templates).
+ */
+function fn_travel_core_store_date(mixed $iso): string
+{
+    return \Tygh\Addons\TravelCore\Services\DateHelper::formatStoreDate(\Tygh\Addons\TravelCore\Helpers\TypeCoerce::toString($iso));
+}
+
+/**
+ * Whether a provider's booking page offers "Pay a deposit" (Settings ->
+ * Travel Core -> "Let guests pay a deposit"; sphinx and novoton only).
+ * Called from booking_sidebar.tpl.
+ */
+function fn_travel_core_deposit_offered(string $addon): bool
+{
+    return \Tygh\Addons\TravelCore\Services\DepositPolicy::current()->offers($addon);
 }
 
 /**

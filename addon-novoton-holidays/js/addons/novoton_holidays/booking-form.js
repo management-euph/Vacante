@@ -648,15 +648,29 @@ function renderCancellationPolicy(data) {
 }
 
 /**
- * Deposit / balance line under the total (travel_core
- * booking_payment_split.tpl, server-rendered as split_html). Single room
- * only: a multi-room quote is ONE room's terms, not the booking's.
+ * Deposit / balance under the total (travel_core booking_payment_split.tpl,
+ * server-rendered). Where the page offers the choice (data-deposit-form) it
+ * is the "Pay in full / Pay a deposit" radios (split_choice_html), keeping
+ * the guest's pick across re-prices; otherwise the information line
+ * (split_html). Single room only: a multi-room quote is ONE room's terms,
+ * not the booking's.
  */
 function renderPaymentSplit(data, isMultiRoom) {
     var box = document.getElementById('travel-price-split');
     if (!box) return;
+    var choice = box.getAttribute('data-deposit-form');
+    var picked = box.querySelector('input[name="pay_mode"]:checked');
+    var mode = picked ? picked.value : '';
+    var html = '';
+    if (!isMultiRoom && data) {
+        html = (choice ? data.split_choice_html : data.split_html) || '';
+    }
     // Trusted server markup (Smarty-escaped partial).
-    box.innerHTML = (!isMultiRoom && data && data.split_html) || '';
+    box.innerHTML = html;
+    if (mode) {
+        var again = box.querySelector('input[name="pay_mode"][value="' + mode + '"]');
+        if (again) again.checked = true;
+    }
 }
 
 /**
