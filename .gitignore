@@ -67,3 +67,8 @@ dist/
 # inside Docker, they crash CS-Cart's template scan. Never commit them.
 ~BROMIUM/
 ~BROMIUM
+
+# NETOPIA key files uploaded in the dev store's admin: the store's addon dir
+# is a symlink into this checkout, so KeyStorage writes them here. Private
+# keys must never reach the repo.
+addon-netopia-payments-main/app/addons/netopia_payments/keys/
