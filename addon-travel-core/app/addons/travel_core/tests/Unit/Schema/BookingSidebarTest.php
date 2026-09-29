@@ -256,6 +256,28 @@ final class BookingSidebarTest extends TestCase
                     continue;
                 }
                 $ro = (string) ($translations['ro'] ?? '');
+                if (self::braced($en)) {
+                    // DestinationPicker::plurals(): English groups keep two forms;
+                    // the group after a number lists Romanian's three, "de" last.
+                    preg_match_all('/\\{([^{}]*)\\}/u', $en, $enGroups);
+                    preg_match_all('/\\d*\\]?\\s*\\{([^{}]*)\\}/u', $ro, $roGroups);
+                    foreach ($enGroups[1] as $group) {
+                        if (count(explode('|', $group)) !== 2) {
+                            $wrong[] = $key . ': English {…} groups keep two forms — ' . $en;
+                        }
+                    }
+                    foreach ($roGroups[1] as $group) {
+                        if (count(explode('|', $group)) !== 3) {
+                            $wrong[] = $key . ': Romanian {…} groups need 3 forms — ' . $ro;
+                        }
+                    }
+                    $first = explode('|', $roGroups[1][0] ?? '');
+                    if (!str_starts_with($first[2] ?? '', 'de ')) {
+                        $wrong[] = $key . ': the third form after the number must read "de …" — ' . $ro;
+                    }
+
+                    continue;
+                }
                 $forms = explode('|', $ro);
 
                 if (count($forms) !== 3) {
@@ -275,6 +297,16 @@ final class BookingSidebarTest extends TestCase
         }
 
         self::assertSame([], $wrong, "Romanian plural forms are wrong:\n" . implode("\n", $wrong));
+    }
+
+    /**
+     * "{a|b}" plurals (DestinationPicker::plurals(), for labels with several
+     * counts): their "|" sits only inside braces, and __() never sees a
+     * positional count, so the CS-Cart plural rules do not apply to them.
+     */
+    private static function braced(string $text): bool
+    {
+        return str_contains($text, '{') && !str_contains((string) preg_replace('/\{[^{}]*\}/u', '', $text), '|');
     }
 
     /**
@@ -298,7 +330,8 @@ final class BookingSidebarTest extends TestCase
             /** @var array<string, array<string, string>> $vars */
             $vars = require $path;
             foreach ($vars as $key => $translations) {
-                if (str_contains((string) ($translations['en'] ?? ''), '|')) {
+                $en = (string) ($translations['en'] ?? '');
+                if (str_contains($en, '|') && !self::braced($en)) {
                     $keys[] = $key;
                 }
             }

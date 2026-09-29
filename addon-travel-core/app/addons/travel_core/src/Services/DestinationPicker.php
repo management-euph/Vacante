@@ -337,6 +337,37 @@ final class DestinationPicker
     }
 
     /**
+     * Plural forms for labels built with __() and named placeholders, where
+     * CS-Cart's own plural (the count passed as [$n]) does not reach: several
+     * counts, or [n] next to [country]. Once __() has put the numbers in,
+     * each {a|b} takes the number closest before it:
+     * "[hotels] {hotel|hotels} · [priced] with prices" -> "1 hotel · 0 with prices",
+     * "[n] new {city is|cities are} waiting; tick {it|them}" -> "1 new city is waiting; tick it".
+     * Two forms: 1 or not. Three are Romanian's: 1, then 0 and 2–19 (mod 100),
+     * then "de" ({hotel|hoteluri|de hoteluri}).
+     */
+    public static function plurals(string $text): string
+    {
+        if ((int) preg_match_all('/\{([^{}|]*(?:\|[^{}|]*)+)\}/u', $text, $found, PREG_OFFSET_CAPTURE | PREG_SET_ORDER) === 0) {
+            return $text;
+        }
+        foreach (array_reverse($found) as $m) {
+            [$whole, $at] = $m[0];
+            $n = (int) preg_match_all('/\d+/', substr($text, 0, $at), $nums) > 0 ? (int) end($nums[0]) : 0;
+            $forms = explode('|', $m[1][0]);
+            if (count($forms) >= 3) {
+                $rest = $n % 100;
+                $form = $n === 1 ? $forms[0] : ($n === 0 || ($rest > 0 && $rest < 20) ? $forms[1] : $forms[2]);
+            } else {
+                $form = $n === 1 ? $forms[0] : $forms[1];
+            }
+            $text = substr_replace($text, $form, $at, strlen($whole));
+        }
+
+        return $text;
+    }
+
+    /**
      * @param list<array{value: string, badge: string}> $modes
      */
     private static function badge(array $modes, string $mode): string

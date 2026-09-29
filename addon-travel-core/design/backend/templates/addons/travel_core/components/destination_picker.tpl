@@ -47,13 +47,13 @@
 
     {foreach $_d.notices as $_notice}
         <div class="alert alert-{$_notice.kind|default:"warning"} travel-dest__notice">
-            <span>{$_notice.text}</span>
+            <span>{$_notice.text nofilter}</span>
             {if $_notice.button}<button type="button" class="btn btn-small" data-dest-show-new aria-pressed="false">{$_notice.button}</button>{/if}
         </div>
     {/foreach}
 
     {if $_d.intro}<p class="muted travel-dest__intro">{$_d.intro}</p>{/if}
-    {if $dest_top}{$dest_top}{/if}
+    {if $dest_top}{$dest_top nofilter}{/if}
 
     <div class="travel-dest__cols">
         <form action="{$_d.save_url}" method="post" id="{$_d.id}-dest-form" class="travel-dest__main" data-dest-form

@@ -870,16 +870,16 @@ return [
         'ro' => 'Mai jos este ce se vinde cu setările actuale: țările selectate, fără stațiunile excluse. Nimic nu se schimbă până nu apăsați Salvează; de atunci, această pagină decide ce se sincronizează și ce devine produs.',
     ],
     'novoton_holidays.dest_new_alert' => [
-        'en' => '[n] new resorts appeared in the hotel sync. Their countries are set to "Only selected", so they are not sold until you tick them.',
-        'ro' => '[n] stațiuni noi au apărut la sincronizarea hotelurilor. Țările lor sunt pe „Doar cele alese”, deci nu se vând până nu le bifați.',
+        'en' => '[n] new {resort|resorts} appeared in the hotel sync. {Its country is|Their countries are} set to "Only selected", so {it is|they are} not sold until you tick {it|them}.',
+        'ro' => '[n] {stațiune nouă a apărut|stațiuni noi au apărut|de stațiuni noi au apărut} la sincronizarea hotelurilor. {Țara ei este|Țările lor sunt|Țările lor sunt} pe „Doar cele alese”, deci nu se {vinde|vând|vând} până nu {o bifați|le bifați|le bifați}.',
     ],
     'novoton_holidays.dest_show_new' => [
         'en' => 'Show new resorts',
         'ro' => 'Arată stațiunile noi',
     ],
     'novoton_holidays.dest_gone_alert' => [
-        'en' => '[n] ticked resorts are no longer in the Novoton feed (shown crossed out). They stay ticked until you untick them.',
-        'ro' => '[n] stațiuni bifate nu mai apar în fluxul Novoton (tăiate). Rămân bifate până le debifați.',
+        'en' => '[n] ticked {resort is|resorts are} no longer in the Novoton feed (shown crossed out). {It stays|They stay} ticked until you untick {it|them}.',
+        'ro' => '[n] {stațiune bifată nu mai apare|stațiuni bifate nu mai apar|de stațiuni bifate nu mai apar} în fluxul Novoton (tăiate). {Rămâne bifată până o debifați|Rămân bifate până le debifați|Rămân bifate până le debifați}.',
     ],
     'novoton_holidays.dest_intro' => [
         'en' => 'Choose what we sell from Novoton. Only hotels in these destinations are synced and made into products (hotels with live products keep syncing until you disable them). "All resorts" includes resorts Novoton adds later; "Only selected" waits for you to tick them.',
@@ -922,8 +922,8 @@ return [
         'ro' => 'Nicio țară sau stațiune nu se potrivește.',
     ],
     'novoton_holidays.dest_country_meta' => [
-        'en' => '[resorts] resorts · [hotels] hotels',
-        'ro' => '[resorts] stațiuni · [hotels] hoteluri',
+        'en' => '[resorts] {resort|resorts} · [hotels] {hotel|hotels}',
+        'ro' => '[resorts] {stațiune|stațiuni|de stațiuni} · [hotels] {hotel|hoteluri|de hoteluri}',
     ],
     'novoton_holidays.dest_mode_off' => [
         'en' => 'Not sold',

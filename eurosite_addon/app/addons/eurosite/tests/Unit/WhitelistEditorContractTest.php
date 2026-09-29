@@ -111,4 +111,18 @@ final class WhitelistEditorContractTest extends TestCase
         $xml = (string) file_get_contents(self::ADDON . '/addon.xml');
         self::assertStringContainsString("`selection_type` ENUM('all','own','specific')", $xml);
     }
+
+    /**
+     * The init.php heal is stamp-gated and skips a failed ALTER quietly, so
+     * the page cannot rely on it for cities.first_seen_at and the 'own'
+     * selection type: the controller applies the deltas before any mode.
+     */
+    public function testTheControllerAppliesTheSchemaBeforeAnyMode(): void
+    {
+        $src = self::controller();
+        $ensure = strpos($src, 'fn_eurosite_ensure_schema();');
+
+        self::assertIsInt($ensure);
+        self::assertLessThan(strpos($src, "if (\$mode === 'save_whitelist') {"), $ensure);
+    }
 }

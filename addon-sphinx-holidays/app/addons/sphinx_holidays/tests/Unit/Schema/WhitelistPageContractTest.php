@@ -75,4 +75,19 @@ final class WhitelistPageContractTest extends TestCase
         self::assertStringContainsString("UPDATE ?:products SET status = 'D' WHERE product_id IN (?n) AND status = 'A'", $repo);
         self::assertStringNotContainsString('DELETE FROM ?:products', $repo);
     }
+
+    /**
+     * The init.php heal is stamp-gated and skips a failed ALTER quietly, so
+     * the page cannot rely on it: a store opened it with "Unknown column
+     * 'first_seen_at'". The controller applies the deltas before any mode.
+     */
+    public function testTheControllerAppliesTheSchemaBeforeReadingNewColumns(): void
+    {
+        $src = self::controller();
+        $ensure = strpos($src, 'fn_sphinx_holidays_ensure_schema();');
+
+        self::assertIsInt($ensure);
+        self::assertLessThan(strpos($src, "if (\$mode === 'save_whitelist') {"), $ensure);
+        self::assertStringContainsString("'first_seen_at' =>", (string) file_get_contents(dirname(__DIR__, 3) . '/src/Install/SchemaMigrator.php'));
+    }
 }

@@ -1145,36 +1145,36 @@ msgid "<strong>No whitelist saved yet.</strong> Nothing is synced or sold from E
 msgstr "<strong>No whitelist saved yet.</strong> Nothing is synced or sold from Eurosite until you choose at least one country and save."
 
 msgctxt "Languages::eurosite.dest_new_alert"
-msgid "[n] new cities appeared in the cities sync. They are not sold until you tick them."
-msgstr "[n] new cities appeared in the cities sync. They are not sold until you tick them."
+msgid "[n] new {city|cities} appeared in the cities sync. {It is|They are} not sold until you tick {it|them}."
+msgstr "[n] new {city|cities} appeared in the cities sync. {It is|They are} not sold until you tick {it|them}."
 
 msgctxt "Languages::eurosite.dest_show_new"
 msgid "Show new cities"
 msgstr "Show new cities"
 
 msgctxt "Languages::eurosite.dest_gone_alert"
-msgid "[n] ticked cities are no longer in the Eurosite catalog (crossed out). They stay ticked until you untick them."
-msgstr "[n] ticked cities are no longer in the Eurosite catalog (crossed out). They stay ticked until you untick them."
+msgid "[n] ticked {city is|cities are} no longer in the Eurosite catalog (crossed out). {It stays|They stay} ticked until you untick {it|them}."
+msgstr "[n] ticked {city is|cities are} no longer in the Eurosite catalog (crossed out). {It stays|They stay} ticked until you untick {it|them}."
 
 msgctxt "Languages::eurosite.dest_intro"
 msgid "Choose what we sell from Eurosite. Only hotels in these destinations are synced and shown on the storefront; hotels outside are hidden at the next hotel sync, and live products stay until you disable them. \"All cities\" and \"Own cities\" include cities Eurosite adds later; \"Only selected\" waits for you to tick them."
 msgstr "Choose what we sell from Eurosite. Only hotels in these destinations are synced and shown on the storefront; hotels outside are hidden at the next hotel sync, and live products stay until you disable them. \"All cities\" and \"Own cities\" include cities Eurosite adds later; \"Only selected\" waits for you to tick them."
 
 msgctxt "Languages::eurosite.dest_country_meta"
-msgid "[cities] cities · [hotels] hotels"
-msgstr "[cities] cities · [hotels] hotels"
+msgid "[cities] {city|cities} · [hotels] {hotel|hotels}"
+msgstr "[cities] {city|cities} · [hotels] {hotel|hotels}"
 
 msgctxt "Languages::eurosite.dest_country_meta_none"
-msgid "[cities] cities · hotels not synced yet"
-msgstr "[cities] cities · hotels not synced yet"
+msgid "[cities] {city|cities} · hotels not synced yet"
+msgstr "[cities] {city|cities} · hotels not synced yet"
 
 msgctxt "Languages::eurosite.dest_no_cities"
 msgid "No cities are synced for [country] yet. Choose \"All cities\" and the next cities sync brings them in."
 msgstr "No cities are synced for [country] yet. Choose \"All cities\" and the next cities sync brings them in."
 
 msgctxt "Languages::eurosite.dest_city_meta"
-msgid "[hotels] hotels · [priced] with prices · [instant] instant"
-msgstr "[hotels] hotels · [priced] with prices · [instant] instant"
+msgid "[hotels] {hotel|hotels} · [priced] with prices · [instant] instant"
+msgstr "[hotels] {hotel|hotels} · [priced] with prices · [instant] instant"
 
 msgctxt "Languages::eurosite.dest_city_not_synced"
 msgid "Hotels not synced yet"
@@ -1281,13 +1281,13 @@ msgid "cities"
 msgstr "cities"
 
 msgctxt "Languages::eurosite.dest_alert_new"
-msgid "[n] new cities in [country] wait for review."
-msgstr "[n] new cities in [country] wait for review."
+msgid "[n] new {city|cities} in [country] {waits|wait} for review."
+msgstr "[n] new {city|cities} in [country] {waits|wait} for review."
 
 msgctxt "Languages::eurosite.dest_alert_gone"
-msgid "[n] sold cities are no longer in the Eurosite catalog."
-msgstr "[n] sold cities are no longer in the Eurosite catalog."
+msgid "[n] sold {city is|cities are} no longer in the Eurosite catalog."
+msgstr "[n] sold {city is|cities are} no longer in the Eurosite catalog."
 
 msgctxt "Languages::eurosite.dest_alert_outside"
-msgid "[n] live products are outside the destination whitelist."
-msgstr "[n] live products are outside the destination whitelist."
+msgid "[n] live {product is|products are} outside the destination whitelist."
+msgstr "[n] live {product is|products are} outside the destination whitelist."

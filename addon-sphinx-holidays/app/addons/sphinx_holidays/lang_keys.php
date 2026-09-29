@@ -965,8 +965,8 @@ return [
         'ro' => '<strong>Nicio listă salvată încă.</strong> Nu se sincronizează și nu se vinde nimic de la Sphinx până nu alegeți cel puțin o țară și salvați.',
     ],
     'sphinx_holidays.dest_new_alert' => [
-        'en' => '[n] new destinations appeared in the destinations sync. They are not sold until you tick them.',
-        'ro' => '[n] destinații noi au apărut la sincronizarea destinațiilor. Nu se vând până nu le bifați.',
+        'en' => '[n] new {destination|destinations} appeared in the destinations sync. {It is|They are} not sold until you tick {it|them}.',
+        'ro' => '[n] {destinație nouă a apărut|destinații noi au apărut|de destinații noi au apărut} la sincronizarea destinațiilor. Nu se {vinde|vând|vând} până nu {o bifați|le bifați|le bifați}.',
     ],
     'sphinx_holidays.dest_show_new' => [
         'en' => 'Show new destinations',
@@ -985,20 +985,20 @@ return [
         'ro' => 'Salvarea adaugă și regiunile vândute în Feature Mappings, pentru filtrul de regiuni din magazin.',
     ],
     'sphinx_holidays.dest_country_meta' => [
-        'en' => '[regions] regions · [cities] cities · [hotels] hotels',
-        'ro' => '[regions] regiuni · [cities] orașe · [hotels] hoteluri',
+        'en' => '[regions] {region|regions} · [cities] {city|cities} · [hotels] {hotel|hotels}',
+        'ro' => '[regions] {regiune|regiuni|de regiuni} · [cities] {oraș|orașe|de orașe} · [hotels] {hotel|hoteluri|de hoteluri}',
     ],
     'sphinx_holidays.dest_country_meta_none' => [
-        'en' => '[regions] regions · [cities] cities · hotels not synced yet',
-        'ro' => '[regions] regiuni · [cities] orașe · hoteluri nesincronizate încă',
+        'en' => '[regions] {region|regions} · [cities] {city|cities} · hotels not synced yet',
+        'ro' => '[regions] {regiune|regiuni|de regiuni} · [cities] {oraș|orașe|de orașe} · hoteluri nesincronizate încă',
     ],
     'sphinx_holidays.dest_region_meta' => [
-        'en' => '[cities] cities · [hotels] hotels',
-        'ro' => '[cities] orașe · [hotels] hoteluri',
+        'en' => '[cities] {city|cities} · [hotels] {hotel|hotels}',
+        'ro' => '[cities] {oraș|orașe|de orașe} · [hotels] {hotel|hoteluri|de hoteluri}',
     ],
     'sphinx_holidays.dest_city_meta' => [
-        'en' => '[hotels] hotels',
-        'ro' => '[hotels] hoteluri',
+        'en' => '[hotels] {hotel|hotels}',
+        'ro' => '[hotels] {hotel|hoteluri|de hoteluri}',
     ],
     'sphinx_holidays.dest_city_not_synced' => [
         'en' => 'Hotels not synced yet',
@@ -1069,11 +1069,11 @@ return [
         'ro' => 'Produse active',
     ],
     'sphinx_holidays.dest_alert_new' => [
-        'en' => '[n] new destinations in [country] wait for review.',
-        'ro' => '[n] destinații noi din [country] așteaptă verificarea.',
+        'en' => '[n] new {destination|destinations} in [country] {waits|wait} for review.',
+        'ro' => '[n] {destinație nouă|destinații noi|de destinații noi} din [country] {așteaptă|așteaptă|așteaptă} verificarea.',
     ],
     'sphinx_holidays.dest_alert_outside' => [
-        'en' => '[n] live products are outside the destination whitelist.',
-        'ro' => '[n] produse active sunt în afara listei de destinații.',
+        'en' => '[n] live {product is|products are} outside the destination whitelist.',
+        'ro' => '[n] {produs activ este|produse active sunt|de produse active sunt} în afara listei de destinații.',
     ],
 ];

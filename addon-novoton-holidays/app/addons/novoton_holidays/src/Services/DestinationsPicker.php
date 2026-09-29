@@ -186,7 +186,8 @@ final class DestinationsPicker
     /** @param array<int|string, mixed> $params */
     private static function t(string $key, array $params = []): string
     {
-        return TypeCoerce::toString(__($key, $params));
+        // Labels with several counts carry {one|many} after each number.
+        return DestinationPicker::plurals(TypeCoerce::toString(__($key, $params)));
     }
 
     private static function str(mixed $v): string

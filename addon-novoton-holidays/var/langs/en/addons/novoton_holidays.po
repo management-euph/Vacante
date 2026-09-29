@@ -4165,16 +4165,16 @@ msgid "Shown below is what today's settings sell: the selected countries, minus 
 msgstr "Shown below is what today's settings sell: the selected countries, minus the excluded resorts. Nothing changes until you press Save; from then on this page decides what is synced and made into products."
 
 msgctxt "Languages::novoton_holidays.dest_new_alert"
-msgid "[n] new resorts appeared in the hotel sync. Their countries are set to \"Only selected\", so they are not sold until you tick them."
-msgstr "[n] new resorts appeared in the hotel sync. Their countries are set to \"Only selected\", so they are not sold until you tick them."
+msgid "[n] new {resort|resorts} appeared in the hotel sync. {Its country is|Their countries are} set to \"Only selected\", so {it is|they are} not sold until you tick {it|them}."
+msgstr "[n] new {resort|resorts} appeared in the hotel sync. {Its country is|Their countries are} set to \"Only selected\", so {it is|they are} not sold until you tick {it|them}."
 
 msgctxt "Languages::novoton_holidays.dest_show_new"
 msgid "Show new resorts"
 msgstr "Show new resorts"
 
 msgctxt "Languages::novoton_holidays.dest_gone_alert"
-msgid "[n] ticked resorts are no longer in the Novoton feed (shown crossed out). They stay ticked until you untick them."
-msgstr "[n] ticked resorts are no longer in the Novoton feed (shown crossed out). They stay ticked until you untick them."
+msgid "[n] ticked {resort is|resorts are} no longer in the Novoton feed (shown crossed out). {It stays|They stay} ticked until you untick {it|them}."
+msgstr "[n] ticked {resort is|resorts are} no longer in the Novoton feed (shown crossed out). {It stays|They stay} ticked until you untick {it|them}."
 
 msgctxt "Languages::novoton_holidays.dest_intro"
 msgid "Choose what we sell from Novoton. Only hotels in these destinations are synced and made into products (hotels with live products keep syncing until you disable them). \"All resorts\" includes resorts Novoton adds later; \"Only selected\" waits for you to tick them."
@@ -4217,8 +4217,8 @@ msgid "No country or resort matches."
 msgstr "No country or resort matches."
 
 msgctxt "Languages::novoton_holidays.dest_country_meta"
-msgid "[resorts] resorts · [hotels] hotels"
-msgstr "[resorts] resorts · [hotels] hotels"
+msgid "[resorts] {resort|resorts} · [hotels] {hotel|hotels}"
+msgstr "[resorts] {resort|resorts} · [hotels] {hotel|hotels}"
 
 msgctxt "Languages::novoton_holidays.dest_mode_off"
 msgid "Not sold"

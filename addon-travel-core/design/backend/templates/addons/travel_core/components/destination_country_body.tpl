@@ -75,7 +75,7 @@
             {/if}
             <div class="travel-dest-grid" data-dest-grid{if $_keyed && !$_g.open} hidden{/if}>
                 {foreach $_g.items as $_i}
-                    <label class="travel-dest-item{if $_i.gone} is-gone{/if}" data-label="{$_i.label|escape:html}" data-search="{$_i.search|escape:html}"
+                    <label class="travel-dest-item{if $_i.gone} is-gone{/if}" title="{$_i.label|escape:html}" data-label="{$_i.label|escape:html}" data-search="{$_i.search|escape:html}"
                            data-hotels="{$_i.hotels|default:0}" data-priced="{$_i.priced|default:0}" data-instant="{$_i.instant|default:0}" data-live="{$_i.live|default:0}"{if $_i.new} data-new="1"{/if}{if $_i.gone} data-gone="1"{/if}{foreach $_i.flags as $_fk => $_fv}{if $_fv} data-flag-{$_fk}="1"{/if}{/foreach}>
                         <input type="checkbox" name="dest[{$_c.key|escape:html}][items][]" value="{$_i.value|escape:html}"{if $_i.selected} checked{/if}>
                         <span class="travel-dest-item__text">

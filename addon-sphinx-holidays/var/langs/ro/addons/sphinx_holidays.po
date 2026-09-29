@@ -1437,8 +1437,8 @@ msgid "<strong>No whitelist saved yet.</strong> Nothing is synced or sold from S
 msgstr "<strong>Nicio listă salvată încă.</strong> Nu se sincronizează și nu se vinde nimic de la Sphinx până nu alegeți cel puțin o țară și salvați."
 
 msgctxt "Languages::sphinx_holidays.dest_new_alert"
-msgid "[n] new destinations appeared in the destinations sync. They are not sold until you tick them."
-msgstr "[n] destinații noi au apărut la sincronizarea destinațiilor. Nu se vând până nu le bifați."
+msgid "[n] new {destination|destinations} appeared in the destinations sync. {It is|They are} not sold until you tick {it|them}."
+msgstr "[n] {destinație nouă a apărut|destinații noi au apărut|de destinații noi au apărut} la sincronizarea destinațiilor. Nu se {vinde|vând|vând} până nu {o bifați|le bifați|le bifați}."
 
 msgctxt "Languages::sphinx_holidays.dest_show_new"
 msgid "Show new destinations"
@@ -1457,20 +1457,20 @@ msgid "Saving also adds the sold regions to Feature Mappings, for the storefront
 msgstr "Salvarea adaugă și regiunile vândute în Feature Mappings, pentru filtrul de regiuni din magazin."
 
 msgctxt "Languages::sphinx_holidays.dest_country_meta"
-msgid "[regions] regions · [cities] cities · [hotels] hotels"
-msgstr "[regions] regiuni · [cities] orașe · [hotels] hoteluri"
+msgid "[regions] {region|regions} · [cities] {city|cities} · [hotels] {hotel|hotels}"
+msgstr "[regions] {regiune|regiuni|de regiuni} · [cities] {oraș|orașe|de orașe} · [hotels] {hotel|hoteluri|de hoteluri}"
 
 msgctxt "Languages::sphinx_holidays.dest_country_meta_none"
-msgid "[regions] regions · [cities] cities · hotels not synced yet"
-msgstr "[regions] regiuni · [cities] orașe · hoteluri nesincronizate încă"
+msgid "[regions] {region|regions} · [cities] {city|cities} · hotels not synced yet"
+msgstr "[regions] {regiune|regiuni|de regiuni} · [cities] {oraș|orașe|de orașe} · hoteluri nesincronizate încă"
 
 msgctxt "Languages::sphinx_holidays.dest_region_meta"
-msgid "[cities] cities · [hotels] hotels"
-msgstr "[cities] orașe · [hotels] hoteluri"
+msgid "[cities] {city|cities} · [hotels] {hotel|hotels}"
+msgstr "[cities] {oraș|orașe|de orașe} · [hotels] {hotel|hoteluri|de hoteluri}"
 
 msgctxt "Languages::sphinx_holidays.dest_city_meta"
-msgid "[hotels] hotels"
-msgstr "[hotels] hoteluri"
+msgid "[hotels] {hotel|hotels}"
+msgstr "[hotels] {hotel|hoteluri|de hoteluri}"
 
 msgctxt "Languages::sphinx_holidays.dest_city_not_synced"
 msgid "Hotels not synced yet"
@@ -1541,9 +1541,9 @@ msgid "Live products"
 msgstr "Produse active"
 
 msgctxt "Languages::sphinx_holidays.dest_alert_new"
-msgid "[n] new destinations in [country] wait for review."
-msgstr "[n] destinații noi din [country] așteaptă verificarea."
+msgid "[n] new {destination|destinations} in [country] {waits|wait} for review."
+msgstr "[n] {destinație nouă|destinații noi|de destinații noi} din [country] {așteaptă|așteaptă|așteaptă} verificarea."
 
 msgctxt "Languages::sphinx_holidays.dest_alert_outside"
-msgid "[n] live products are outside the destination whitelist."
-msgstr "[n] produse active sunt în afara listei de destinații."
+msgid "[n] live {product is|products are} outside the destination whitelist."
+msgstr "[n] {produs activ este|produse active sunt|de produse active sunt} în afara listei de destinații."

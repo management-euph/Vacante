@@ -1015,36 +1015,36 @@ return [
         'ro' => '<strong>Nicio listă salvată încă.</strong> Nu se sincronizează și nu se vinde nimic de la Eurosite până nu alegeți cel puțin o țară și salvați.',
     ],
     'eurosite.dest_new_alert' => [
-        'en' => '[n] new cities appeared in the cities sync. They are not sold until you tick them.',
-        'ro' => '[n] orașe noi au apărut la sincronizarea orașelor. Nu se vând până nu le bifați.',
+        'en' => '[n] new {city|cities} appeared in the cities sync. {It is|They are} not sold until you tick {it|them}.',
+        'ro' => '[n] {oraș nou a apărut|orașe noi au apărut|de orașe noi au apărut} la sincronizarea orașelor. Nu se {vinde|vând|vând} până nu {îl bifați|le bifați|le bifați}.',
     ],
     'eurosite.dest_show_new' => [
         'en' => 'Show new cities',
         'ro' => 'Arată orașele noi',
     ],
     'eurosite.dest_gone_alert' => [
-        'en' => '[n] ticked cities are no longer in the Eurosite catalog (crossed out). They stay ticked until you untick them.',
-        'ro' => '[n] orașe bifate nu mai sunt în catalogul Eurosite (tăiate). Rămân bifate până le debifați.',
+        'en' => '[n] ticked {city is|cities are} no longer in the Eurosite catalog (crossed out). {It stays|They stay} ticked until you untick {it|them}.',
+        'ro' => '[n] {oraș bifat nu mai este|orașe bifate nu mai sunt|de orașe bifate nu mai sunt} în catalogul Eurosite (tăiate). {Rămâne bifat până îl debifați|Rămân bifate până le debifați|Rămân bifate până le debifați}.',
     ],
     'eurosite.dest_intro' => [
         'en' => 'Choose what we sell from Eurosite. Only hotels in these destinations are synced and shown on the storefront; hotels outside are hidden at the next hotel sync, and live products stay until you disable them. "All cities" and "Own cities" include cities Eurosite adds later; "Only selected" waits for you to tick them.',
         'ro' => 'Alegeți ce vindem de la Eurosite. Doar hotelurile din aceste destinații se sincronizează și apar în magazin; cele din afară se ascund la următoarea sincronizare a hotelurilor, iar produsele active rămân până le dezactivați. „Toate orașele" și „Orașe proprii" includ și orașele adăugate ulterior de Eurosite; „Doar cele bifate" așteaptă să le bifați.',
     ],
     'eurosite.dest_country_meta' => [
-        'en' => '[cities] cities · [hotels] hotels',
-        'ro' => '[cities] orașe · [hotels] hoteluri',
+        'en' => '[cities] {city|cities} · [hotels] {hotel|hotels}',
+        'ro' => '[cities] {oraș|orașe|de orașe} · [hotels] {hotel|hoteluri|de hoteluri}',
     ],
     'eurosite.dest_country_meta_none' => [
-        'en' => '[cities] cities · hotels not synced yet',
-        'ro' => '[cities] orașe · hoteluri nesincronizate încă',
+        'en' => '[cities] {city|cities} · hotels not synced yet',
+        'ro' => '[cities] {oraș|orașe|de orașe} · hoteluri nesincronizate încă',
     ],
     'eurosite.dest_no_cities' => [
         'en' => 'No cities are synced for [country] yet. Choose "All cities" and the next cities sync brings them in.',
         'ro' => 'Nu există încă orașe sincronizate pentru [country]. Alegeți „Toate orașele" și următoarea sincronizare le aduce.',
     ],
     'eurosite.dest_city_meta' => [
-        'en' => '[hotels] hotels · [priced] with prices · [instant] instant',
-        'ro' => '[hotels] hoteluri · [priced] cu prețuri · [instant] imediat',
+        'en' => '[hotels] {hotel|hotels} · [priced] with prices · [instant] instant',
+        'ro' => '[hotels] {hotel|hoteluri|de hoteluri} · [priced] cu prețuri · [instant] imediat',
     ],
     'eurosite.dest_city_not_synced' => [
         'en' => 'Hotels not synced yet',
@@ -1151,15 +1151,15 @@ return [
         'ro' => 'orașe',
     ],
     'eurosite.dest_alert_new' => [
-        'en' => '[n] new cities in [country] wait for review.',
-        'ro' => '[n] orașe noi din [country] așteaptă verificarea.',
+        'en' => '[n] new {city|cities} in [country] {waits|wait} for review.',
+        'ro' => '[n] {oraș nou|orașe noi|de orașe noi} din [country] {așteaptă|așteaptă|așteaptă} verificarea.',
     ],
     'eurosite.dest_alert_gone' => [
-        'en' => '[n] sold cities are no longer in the Eurosite catalog.',
-        'ro' => '[n] orașe vândute nu mai sunt în catalogul Eurosite.',
+        'en' => '[n] sold {city is|cities are} no longer in the Eurosite catalog.',
+        'ro' => '[n] {oraș vândut nu mai este|orașe vândute nu mai sunt|de orașe vândute nu mai sunt} în catalogul Eurosite.',
     ],
     'eurosite.dest_alert_outside' => [
-        'en' => '[n] live products are outside the destination whitelist.',
-        'ro' => '[n] produse active sunt în afara listei de destinații.',
+        'en' => '[n] live {product is|products are} outside the destination whitelist.',
+        'ro' => '[n] {produs activ este|produse active sunt|de produse active sunt} în afara listei de destinații.',
     ],
 ];
