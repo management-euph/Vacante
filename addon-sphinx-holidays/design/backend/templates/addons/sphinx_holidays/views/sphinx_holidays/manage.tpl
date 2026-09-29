@@ -44,14 +44,7 @@
             </button>
         </form>
 
-        {if $selected_countries}
-            <span class="muted">
-                {__("sphinx_holidays.sync_targets")}: <code>{', '|implode:$selected_countries}</code>
-            </span>
-            <a href="{"sphinx_holidays.whitelist"|fn_url}" class="btn btn-micro">
-                <i class="icon-cog"></i> {__("sphinx_holidays.destination_whitelist")}
-            </a>
-        {else}
+        {if !$selected_countries}
             <span class="text-warning">
                 <i class="icon-warning-sign"></i> {__("sphinx_holidays.no_sync_targets")}
             </span>
@@ -60,6 +53,11 @@
             </a>
         {/if}
     </div>
+
+    {* ── Destinations: what we sell, per country (Travel Core's shared card) ── *}
+    {if $sphinx_dest_card}
+        {include file="addons/travel_core/components/destinations_card.tpl" card=$sphinx_dest_card}
+    {/if}
 
     {* ── Destination Stats ── *}
     <h4>{__("sphinx_holidays.destinations")}</h4>

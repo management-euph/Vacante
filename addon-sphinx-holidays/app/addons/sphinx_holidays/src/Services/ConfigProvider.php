@@ -321,39 +321,51 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
     /**
      * Resolve whitelist table entries into a flat set of destination IDs.
      *
-     * For entries with selection_type='all' (country-level), includes all
-     * destinations under that country. For 'specific', includes only the
-     * explicitly listed destinations.
+     *   country 'all'       every destination of that country, new ones included
+     *   country 'specific'  itself (the marker of an "Only selected" country)
+     *   region 'all'        the whole region: itself and every destination
+     *                       under it, including cities Sphinx adds later
+     *   region 'specific'   itself only (saved before whole regions existed;
+     *                       its cities were saved one by one next to it)
+     *   city / destination  itself and the destinations under it (a city's
+     *                       resorts come with it)
      *
      * @param list<array<string, mixed>> $entries Rows from sphinx_destination_whitelist
      * @return list<int> Deduplicated destination IDs
      */
     private static function resolveWhitelistEntries(array $entries): array
     {
+        $wlRepo = new DestinationWhitelistRepository();
         $allIds = [];
-        $countryLookupIds = [];
+        foreach ($entries as $entry) {
+            $allIds[] = TypeCoerce::toInt($entry['destination_id']);
+        }
+        $types = $wlRepo->getTypesForDestinations($allIds);
 
-        // Collect all destination IDs and identify which need country expansion
+        $countryIds = [];
+        $expand = [];
         foreach ($entries as $entry) {
             $destId = TypeCoerce::toInt($entry['destination_id']);
-            $allIds[] = $destId;
-
-            if ($entry['selection_type'] === 'all') {
-                $countryLookupIds[] = $destId;
+            $type = $types[$destId] ?? '';
+            $whole = $entry['selection_type'] === 'all';
+            if ($type === 'country') {
+                if ($whole) {
+                    $countryIds[] = $destId;
+                }
+            } elseif ($whole || $type !== 'region') {
+                $expand[] = $destId;
             }
         }
 
-        // Batch-fetch country codes for all "all" entries (1 query instead of N)
-        if (!empty($countryLookupIds)) {
-            $wlRepo = new DestinationWhitelistRepository();
-            $destToCountry = $wlRepo->getCountryCodesForDestinations($countryLookupIds);
-
-            $countryCodes = array_unique(array_filter(array_values($destToCountry)));
-            if (!empty($countryCodes)) {
-                // Batch-fetch all child destinations for these countries (1 query instead of N)
-                $childIds = $wlRepo->getDestinationIdsByCountry($countryCodes);
-                $allIds = array_merge($allIds, $childIds);
+        // Batch-fetch country codes for the whole countries (1 query instead of N)
+        if ($countryIds !== []) {
+            $countryCodes = array_values(array_unique(array_filter(array_values($wlRepo->getCountryCodesForDestinations($countryIds)))));
+            if ($countryCodes !== []) {
+                $allIds = array_merge($allIds, $wlRepo->getDestinationIdsByCountry($countryCodes));
             }
+        }
+        if ($expand !== []) {
+            $allIds = array_merge($allIds, $wlRepo->getDescendantIds($expand));
         }
 
         return array_values(array_unique($allIds));

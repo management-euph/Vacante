@@ -21,7 +21,7 @@ class UpsertBatchTest extends TestCase
 {
     /** 28 tuple positions per hotel row, minus the literal 'active' sync_status = 27 bound params. */
     private const HOTEL_PARAMS_PER_ROW = 28;
-    private const DESTINATION_PARAMS_PER_ROW = 10;
+    private const DESTINATION_PARAMS_PER_ROW = 11;
 
     /** @var list<array{query: string, params: list<mixed>}> */
     private array $calls = [];

@@ -34,7 +34,7 @@ final class DestinationPicker
      * Whether an item is sold under a rule. Gone items (no longer in the
      * supplier's feed) are never sold.
      *
-     * @param array<string, mixed> $item
+     * @param array<mixed> $item
      */
     public static function sold(string $rule, array $item, bool $groupWhole = false): bool
     {
@@ -153,7 +153,9 @@ final class DestinationPicker
             }
             $country['stats'] = $stats;
             $country['new'] = $new;
-            $country['empty'] = $listed === 0;
+            // Nothing listed at all. A Sphinx region with no city yet is
+            // still there to tick (a whole region takes cities added later).
+            $country['empty'] = $groups === [] || ($listed === 0 && $named === 0);
             $country['groups'] = $groups;
         }
 

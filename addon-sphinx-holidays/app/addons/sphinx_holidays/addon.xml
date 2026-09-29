@@ -319,6 +319,7 @@
                 `latitude`          DECIMAL(10,8) DEFAULT NULL,
                 `longitude`         DECIMAL(11,8) DEFAULT NULL,
                 `hotel_count`       INT UNSIGNED DEFAULT 0,
+                `first_seen_at`     DATETIME DEFAULT NULL COMMENT 'First destinations sync that listed it: new since the last whitelist Save',
                 `last_synced_at`    DATETIME DEFAULT NULL,
                 KEY `idx_type` (`type`),
                 KEY `idx_parent` (`parent_id`),
@@ -474,6 +475,13 @@
                 `expires_at`    INT UNSIGNED NOT NULL COMMENT 'Unix timestamp',
                 KEY `idx_expires` (`expires_at`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
+        <!-- Upgrade: when a destination was first listed (the whitelist's "new" flag) -->
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_destinations`
+                ADD COLUMN `first_seen_at` DATETIME DEFAULT NULL
+                COMMENT 'First destinations sync that listed it: new since the last whitelist Save'
+                AFTER `hotel_count`;
         </item>
         <!-- Upgrade: add contact/address columns to sphinx_hotels (added in hotel detail enrichment) -->
         <item for="upgrade">
@@ -1022,30 +1030,14 @@
         <item lang="ro" id="sphinx_holidays.destination_whitelist"><![CDATA[Listă Albă Destinații]]></item>
         <item lang="en" id="sphinx_holidays.addon_settings"><![CDATA[Settings]]></item>
         <item lang="ro" id="sphinx_holidays.addon_settings"><![CDATA[Setări]]></item>
-        <item lang="en" id="sphinx_holidays.whitelist_description"><![CDATA[Select countries and regions to sync. Hotels, circuits, experiences and package routes will only sync for whitelisted destinations.]]></item>
-        <item lang="ro" id="sphinx_holidays.whitelist_description"><![CDATA[Selectați țările și regiunile de sincronizat. Hotelurile, circuitele, experiențele și rutele de pachete se vor sincroniza doar pentru destinațiile din lista albă.]]></item>
-        <item lang="en" id="sphinx_holidays.select_all_children"><![CDATA[All regions/cities]]></item>
-        <item lang="ro" id="sphinx_holidays.select_all_children"><![CDATA[Toate regiunile/orașele]]></item>
-        <item lang="en" id="sphinx_holidays.specific_regions"><![CDATA[Specific regions only]]></item>
-        <item lang="ro" id="sphinx_holidays.specific_regions"><![CDATA[Doar regiuni specifice]]></item>
         <item lang="en" id="sphinx_holidays.whitelist_saved"><![CDATA[Destination whitelist saved successfully]]></item>
         <item lang="ro" id="sphinx_holidays.whitelist_saved"><![CDATA[Lista albă de destinații a fost salvată cu succes]]></item>
-        <item lang="en" id="sphinx_holidays.whitelist_summary"><![CDATA[Whitelist Summary]]></item>
-        <item lang="ro" id="sphinx_holidays.whitelist_summary"><![CDATA[Sumar Listă Albă]]></item>
-        <item lang="en" id="sphinx_holidays.whitelisted_countries"><![CDATA[Whitelisted countries]]></item>
-        <item lang="ro" id="sphinx_holidays.whitelisted_countries"><![CDATA[Țări în lista albă]]></item>
-        <item lang="en" id="sphinx_holidays.whitelisted_regions"><![CDATA[Whitelisted regions/cities]]></item>
-        <item lang="ro" id="sphinx_holidays.whitelisted_regions"><![CDATA[Regiuni/orașe în lista albă]]></item>
         <item lang="en" id="sphinx_holidays.search_destinations"><![CDATA[Search countries or regions...]]></item>
         <item lang="ro" id="sphinx_holidays.search_destinations"><![CDATA[Căutați țări sau regiuni...]]></item>
         <item lang="en" id="sphinx_holidays.no_destinations_synced"><![CDATA[No destinations synced yet. Run the destinations sync first.]]></item>
         <item lang="ro" id="sphinx_holidays.no_destinations_synced"><![CDATA[Nicio destinație sincronizată. Rulați mai întâi sincronizarea destinațiilor.]]></item>
         <item lang="en" id="sphinx_holidays.save_whitelist"><![CDATA[Save Whitelist]]></item>
         <item lang="ro" id="sphinx_holidays.save_whitelist"><![CDATA[Salvează Lista Albă]]></item>
-        <item lang="en" id="sphinx_holidays.remove_all_whitelist"><![CDATA[Remove All Whitelist]]></item>
-        <item lang="ro" id="sphinx_holidays.remove_all_whitelist"><![CDATA[Elimină Toată Lista Albă]]></item>
-        <item lang="en" id="sphinx_holidays.show_whitelisted_only"><![CDATA[Show whitelisted only]]></item>
-        <item lang="ro" id="sphinx_holidays.show_whitelisted_only"><![CDATA[Arată doar cele din whitelist]]></item>
         <item lang="en" id="sphinx_holidays.classification"><![CDATA[Classification]]></item>
         <item lang="ro" id="sphinx_holidays.classification"><![CDATA[Clasificare]]></item>
         <item lang="en" id="sphinx_holidays.link_status"><![CDATA[Link Status]]></item>
@@ -1164,8 +1156,6 @@
         <item lang="ro" id="sphinx_holidays.expand"><![CDATA[Expandează]]></item>
         <item lang="en" id="sphinx_holidays.collapse"><![CDATA[Restrânge]]></item>
         <item lang="ro" id="sphinx_holidays.collapse"><![CDATA[Restrânge]]></item>
-        <item lang="en" id="sphinx_holidays.select_all"><![CDATA[Select all]]></item>
-        <item lang="ro" id="sphinx_holidays.select_all"><![CDATA[Selectează tot]]></item>
     </language_variables>
 
     <functions>
