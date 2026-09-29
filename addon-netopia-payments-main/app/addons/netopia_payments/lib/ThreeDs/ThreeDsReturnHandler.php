@@ -34,6 +34,10 @@ use Throwable;
 final class ThreeDsReturnHandler
 {
     /**
+     * @param ThreeDsSessionStore $session             the order remembered before the bank redirect
+     * @param PayloadBuilder      $payloadBuilder      builds the verify-auth request
+     * @param StatusMapper        $statusMapper        NETOPIA status to CS-Cart order status
+     * @param StatusMessage       $statusMessage       customer-facing text for a status
      * @param OrderLookup         $orderLookup
      * @param ProcessorDataLookup $processorDataLookup
      * @param PaymentInfoUpdater  $paymentInfoUpdater
@@ -41,6 +45,7 @@ final class ThreeDsReturnHandler
      * @param PlacementRouter     $placementRouter
      * @param CheckoutRedirect    $checkoutRedirect
      * @param ApiClientFactory    $apiClientFactory
+     * @param LoggerInterface     $logger              receives the 3DS audit trail
      */
     public function __construct(
         private readonly ThreeDsSessionStore $session,

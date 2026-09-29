@@ -2,6 +2,8 @@
 
 /**
  * CS-Cart stubs for Psalm static analysis.
+ *
+ * A .stub, not .php, for the reason given in .phpstan/cscart-stubs.stub.
  */
 
 namespace Tygh {

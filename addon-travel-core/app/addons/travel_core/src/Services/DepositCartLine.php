@@ -109,7 +109,7 @@ final class DepositCartLine
                 continue;
             }
             $balance += $a['balance'];
-            $due = $a['balance_due'] > $due ? $a['balance_due'] : $due;
+            $due = max($due, $a['balance_due']);
         }
         if ($balance <= 0) {
             return [];

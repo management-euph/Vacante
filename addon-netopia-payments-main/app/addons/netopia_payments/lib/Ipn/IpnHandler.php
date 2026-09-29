@@ -34,12 +34,17 @@ use Psr\Log\NullLogger;
 final class IpnHandler
 {
     /**
+     * @param IpnVerifier         $verifier            checks the IPN's JWT signature
+     * @param KeyStorage          $keyStorage          loads the public key the JWT is checked against
+     * @param StatusMapper        $statusMapper        NETOPIA status to CS-Cart order status
+     * @param StatusMessage       $statusMessage       customer-facing text for a status
      * @param OrderLookup         $orderLookup
      * @param ProcessorDataLookup $processorDataLookup
      * @param PaymentInfoUpdater  $paymentInfoUpdater
      * @param PaymentFinalizer    $paymentFinalizer
      * @param OrderStatusChanger  $orderStatusChanger
      * @param Responder           $responder
+     * @param LoggerInterface     $logger              receives the IPN audit trail
      */
     public function __construct(
         private readonly IpnVerifier $verifier,

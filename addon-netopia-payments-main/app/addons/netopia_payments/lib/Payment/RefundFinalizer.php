@@ -39,9 +39,12 @@ use Psr\Log\NullLogger;
 final class RefundFinalizer
 {
     /**
+     * @param StatusMapper          $statusMapper       NETOPIA status to CS-Cart order status
      * @param PaymentInfoUpdater    $paymentInfoUpdater
      * @param OrderStatusChanger    $orderStatusChanger
      * @param RefundEmailDispatcher $refundEmailSender
+     * @param ClockInterface        $clock              stamps the refund log entry
+     * @param LoggerInterface       $logger             receives the refund audit trail
      */
     public function __construct(
         private readonly StatusMapper $statusMapper,

@@ -1,6 +1,8 @@
 <?php
 /**
  * CS-Cart Tygh namespace stubs for PHPStan static analysis.
+ *
+ * A .stub, not .php, for the reason given in cscart-stubs.stub.
  */
 
 namespace Tygh;

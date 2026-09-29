@@ -9,7 +9,7 @@
     findUnusedCode="false"
 >
     <stubs>
-        <file name="psalm-stubs.php"/>
+        <file name="psalm-stubs.stub"/>
     </stubs>
     <projectFiles>
         <directory name="app/addons/netopia_payments/lib"/>
