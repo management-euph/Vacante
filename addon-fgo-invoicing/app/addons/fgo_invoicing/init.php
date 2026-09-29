@@ -77,10 +77,15 @@ if (
     });
 }
 
+// dispatch_before_display runs the SETTINGS self-heal (see
+// functions/settings_heal.php): it cannot run from this file, which CS-Cart
+// requires before CART_LANGUAGE exists and the Settings API needs it.
 fn_register_hooks(
     'place_order_post',
     'change_order_status',
     'get_order_info',
+    'get_orders_post',
     'profile_fields_get_fields',
     'update_profile_fields_post',
+    'dispatch_before_display',
 );

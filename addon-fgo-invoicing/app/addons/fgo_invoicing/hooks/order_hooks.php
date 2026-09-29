@@ -9,29 +9,64 @@ if (!defined('BOOTSTRAP')) {
 use Tygh\Addons\FgoInvoicing\Helpers\TypeCoerce;
 use Tygh\Addons\FgoInvoicing\Services\ConfigProvider;
 use Tygh\Addons\FgoInvoicing\Services\Container;
+use Tygh\Addons\FgoInvoicing\Services\OrderInvoiceColumn;
 
 /**
  * Hook: place_order_post — issue the invoice immediately when configured for "onOrder".
  *
- * @param int|string $order_id
- * @param string $action
- * @param string $order_status
+ * The signature is CS-Cart 4.20's (app/functions/fn.cart.php, fn_place_order):
+ *
+ *     fn_set_hook('place_order_post', $cart, $auth, $action, $issuer_id,
+ *                 $parent_order_id, $order_id, $order_status,
+ *                 $short_order_data, $notification_rules);
+ *
+ * $cart comes FIRST and $order_id is the SIXTH argument. This hook used to be
+ * declared ($order_id, $action, $order_status, $cart, $auth) — the argument
+ * order of the separate 'place_order' hook — so it received the cart array as
+ * $order_id, read 0 and returned: "Place order" mode never issued anything.
+ *
+ * Every parameter after the first has a default, for the same reason as
+ * fn_fgo_invoicing_change_order_status() below: a build that passes fewer
+ * arguments must not turn checkout into an ArgumentCountError. And nothing
+ * may escape from here: this runs inside the customer's "Place order"
+ * request, after the order row is written; the invoice can be issued again
+ * from the admin, a crashed checkout cannot be undone.
+ *
  * @param array<string, mixed> $cart
  * @param array<string, mixed> $auth
+ * @param string $action
+ * @param int|null $issuer_id
+ * @param int $parent_order_id
+ * @param int|string $order_id
+ * @param string $order_status
+ * @param array<string, mixed> $short_order_data
+ * @param array<string, mixed> $notification_rules
  */
 function fn_fgo_invoicing_place_order_post(
-    &$order_id,
-    &$action = '',
-    &$order_status = '',
-    &$cart = [],
+    &$cart,
     &$auth = [],
-): void
-{
+    &$action = '',
+    &$issuer_id = null,
+    &$parent_order_id = 0,
+    &$order_id = 0,
+    &$order_status = '',
+    &$short_order_data = [],
+    &$notification_rules = [],
+): void {
     $oid = TypeCoerce::toInt($order_id);
     if (ConfigProvider::apiCall() !== 'onOrder' || $oid <= 0) {
         return;
     }
-    Container::getInstance()->issuer()->issueForOrder($oid);
+    try {
+        Container::getInstance()->issuer()->issueForOrder($oid);
+    } catch (\Throwable $e) {
+        if (function_exists('fn_log_event')) {
+            fn_log_event('fgo_invoicing', 'runtime', [
+                'message' => '[error] place-order-post',
+                'context' => ['order_id' => $oid, 'exception' => $e::class, 'message' => $e->getMessage()],
+            ]);
+        }
+    }
 }
 
 /**
@@ -104,5 +139,47 @@ function fn_fgo_invoicing_get_order_info(&$order, $additional_data = []): void
     $row = Container::getInstance()->repository()->findByOrderId($orderId);
     if ($row !== null) {
         $order['fgo_invoice'] = $row;
+    }
+}
+
+/**
+ * Hook: get_orders_post — the FGO column of the admin orders list.
+ *
+ * CS-Cart 4.20 (fn.cart.php, fn_get_orders()) fires
+ *
+ *     fn_set_hook('get_orders_post', $params, $orders);
+ *
+ * right after the SELECT, for EVERY fn_get_orders() caller, storefront
+ * included: hence the admin-area gate, one query for the whole page
+ * (OrderInvoiceColumn / InvoiceRepository::findByOrderIds) and nothing for
+ * admins the FGO pages deny anyway (RESTRICTED_ADMIN; the column templates
+ * hide the column for them too).
+ *
+ * $orders is the only argument touched, and it gets a default like every
+ * parameter after the first (see fn_fgo_invoicing_change_order_status()).
+ * Nothing may escape: a missing ?:fgo_invoices table must not take the
+ * orders list down with it. The cell then shows "—" (no fgo_invoice key)
+ * instead of a wrong "Not invoiced".
+ *
+ * @param array<string, mixed> $params
+ * @param mixed $orders fn_get_orders() rows; checked, as hook arguments arrive untyped
+ */
+function fn_fgo_invoicing_get_orders_post($params, &$orders = []): void
+{
+    if (!defined('AREA') || AREA !== 'A' || (defined('RESTRICTED_ADMIN') && RESTRICTED_ADMIN)) {
+        return;
+    }
+    if (!is_array($orders) || $orders === []) {
+        return;
+    }
+    try {
+        $orders = OrderInvoiceColumn::attach($orders, Container::getInstance()->repository());
+    } catch (\Throwable $e) {
+        if (function_exists('fn_log_event')) {
+            fn_log_event('fgo_invoicing', 'runtime', [
+                'message' => '[error] orders-list-column',
+                'context' => ['exception' => $e::class, 'message' => $e->getMessage()],
+            ]);
+        }
     }
 }

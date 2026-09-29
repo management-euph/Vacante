@@ -9,6 +9,11 @@ if (!defined('BOOTSTRAP')) {
 require_once __DIR__ . '/functions/install.php';
 require_once __DIR__ . '/functions/profile_fields.php';
 require_once __DIR__ . '/functions/email.php';
+require_once __DIR__ . '/functions/bulk.php';
+// Self-sufficient (no add-on classes): CS-Cart calls these while building the
+// settings form of an add-on whose init.php — and autoloader — has not run.
+require_once __DIR__ . '/functions/settings_variants.php';
+require_once __DIR__ . '/functions/settings_heal.php';
 
 /**
  * Force-seed every fgo language key. Entry point for dev/tools/seed-langs.php.
@@ -41,4 +46,17 @@ function fn_fgo_invoicing_language_variables(): array
 function fn_fgo_invoicing_language_seed_hash(): string
 {
     return \Tygh\Addons\FgoInvoicing\Install\LanguageSeeder::seedHash();
+}
+
+/**
+ * Mask a CNP for anything stored outside the order: 13 digits keep the
+ * first 5 and the last 2 ("19805******56"); any other length becomes
+ * "INVALID_LENGTH_<n>"; '' stays ''. Non-digits are ignored.
+ *
+ * Procedural entry point for templates and other add-ons; the add-on itself
+ * uses \Tygh\Addons\FgoInvoicing\Helpers\CnpMasker directly.
+ */
+function fn_fgo_invoicing_mask_cnp(?string $cnp): string
+{
+    return \Tygh\Addons\FgoInvoicing\Helpers\CnpMasker::mask($cnp);
 }

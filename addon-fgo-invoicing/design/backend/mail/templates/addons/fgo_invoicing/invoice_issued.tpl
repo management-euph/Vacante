@@ -1,6 +1,7 @@
 {include file="common/letter_header.tpl"}
 
-<p>{__("fgo_invoicing.email_greeting")}{if $company_name}, {$company_name}{/if},</p>
+{* $customer_name, not $company_name: CS-Cart's mailer sets $company_name to the STORE's name. *}
+<p>{__("fgo_invoicing.email_greeting")}{if $customer_name}, {$customer_name}{/if},</p>
 
 <p>{__("fgo_invoicing.email_body_intro")} <strong>#{$order_id}</strong>.</p>
 

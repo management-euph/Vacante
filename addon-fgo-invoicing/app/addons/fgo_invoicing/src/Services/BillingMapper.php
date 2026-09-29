@@ -4,24 +4,45 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\FgoInvoicing\Services;
 
+use Tygh\Addons\FgoInvoicing\Api\FgoSigner;
 use Tygh\Addons\FgoInvoicing\Constants;
 use Tygh\Addons\FgoInvoicing\Dto\Billing\BillingParty;
 use Tygh\Addons\FgoInvoicing\Dto\Invoice\InvoiceLine;
 use Tygh\Addons\FgoInvoicing\Dto\Invoice\IssueInvoiceRequest;
 use Tygh\Addons\FgoInvoicing\Dto\Invoice\VatRate;
+use Tygh\Addons\FgoInvoicing\Helpers\RomanianTaxId;
 use Tygh\Addons\FgoInvoicing\Helpers\TypeCoerce;
 
 /**
  * Translates a CS-Cart `$order_info` array (the standard structure returned
  * by `fn_get_order_info`) into an `IssueInvoiceRequest`.
  *
+ * The `fgo_billing_*` keys (CIF, Reg. Com., CNP) are not CS-Cart's: run the
+ * order through BillingExtrasResolver first, which fills them from the
+ * store's custom profile fields. InvoiceIssuer does.
+ *
  * Rules of thumb:
  *
- *   - PJ (company) when the order's billing block carries either a
- *     `company` name or an `fgo_billing_cui` (CIF). Otherwise PF.
- *   - `RO`-prefixed CIFs are stripped of the prefix and the customer is
- *     marked `PlatitorTVA=true`.
+ *   - PJ (company) when the order carries a company name (`fgo_billing_company`,
+ *     `b_company` or CS-Cart's `company`, first non-blank) or a CIF
+ *     (`fgo_billing_cui`). Otherwise PF. `fgo_billing_tip` (1 = PJ, 2 = PF)
+ *     overrides both.
+ *   - The CIF is compacted ("RO 123 456 78" -> "RO12345678") and counts only
+ *     when it holds a digit 1-9: what customers type into a required CUI
+ *     field when they have none ("N/A", "nu e cazul", "0", "RO") is no CIF,
+ *     and must neither make them a company nor reach FGO as CodUnic.
+ *   - An `RO` prefix is stripped and marks the customer `PlatitorTVA=true`;
+ *     leading zeros are dropped from Romanian ids only (a Belgian 0123456789
+ *     is a different number without its zero). Any other EU VAT prefix
+ *     (EU_VAT_PREFIXES) also marks `PlatitorTVA=true`: a VIES VAT id means a
+ *     VAT-registered company. It is sent as typed, prefix included.
+ *   - A company with a CIF is `Client[IdExtern]` = the CIF's digits (as the
+ *     reference WooCommerce plugin does), so guest checkouts — all user_id 0 —
+ *     do not share one client record in FGO. Individuals keep their user_id.
+ *   - PF customers send their CNP (`fgo_billing_cnp`) as `CodUnic`.
  *   - Foreign customers (`b_country !== 'RO'`) carry `Strain=true`.
+ *   - `Valuta` is the store's primary currency: CS-Cart keeps every order
+ *     amount in it, whatever currency the shopper was browsing in.
  *   - VAT per line is computed from `subtotal` vs `subtotal_tax` and
  *     snapped to {0,5,9,11,21}. Discounts ride as a single negative-qty
  *     line; shipping rides as a service line with VAT decided by the
@@ -32,8 +53,24 @@ use Tygh\Addons\FgoInvoicing\Helpers\TypeCoerce;
  */
 final class BillingMapper
 {
-    public function __construct()
-    {
+    /**
+     * VAT number prefixes of the EU member states (VIES). Greece's official
+     * prefix is EL; GR is what customers type, so it counts too. XI is
+     * Northern Ireland, which keeps EU VAT numbers for goods. RO is handled
+     * separately (its prefix is stripped).
+     */
+    private const EU_VAT_PREFIXES = [
+        'AT', 'BE', 'BG', 'CY', 'CZ', 'DE', 'DK', 'EE', 'EL', 'ES', 'FI', 'FR', 'GR', 'HR',
+        'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'MT', 'NL', 'PL', 'PT', 'SE', 'SI', 'SK', 'XI',
+    ];
+
+    /**
+     * $primaryCurrency is the store's primary currency code. Null reads
+     * ConfigProvider::primaryCurrency() at mapping time; tests pin it here.
+     */
+    public function __construct(
+        private readonly ?string $primaryCurrency = null,
+    ) {
     }
 
     /**
@@ -73,7 +110,7 @@ final class BillingMapper
         return new IssueInvoiceRequest(
             client:    $client,
             continut:  $continut,
-            valuta:    $this->resolveCurrency($orderInfo),
+            valuta:    $this->resolveCurrency(),
             tipFactura:ConfigProvider::invoiceType(),
             idExtern:  $orderId,
             requestId: $this->buildRequestId($orderId),
@@ -90,13 +127,17 @@ final class BillingMapper
      */
     private function buildClient(array $o): BillingParty
     {
-        // Prefer explicit fgo_billing_company, fall back to b_company / company.
-        $company = trim(TypeCoerce::toString($o['fgo_billing_company'] ?? $o['b_company'] ?? $o['company'] ?? ''));
+        // First NON-BLANK, not `??`: fn_get_order_info() sets every column the
+        // add-on added to ?:user_profiles (fgo_billing_company among them) to
+        // '' on every order, so a `??` chain stopped at that blank and never
+        // reached CS-Cart's own `company`.
+        $company = self::firstFilled($o, 'fgo_billing_company', 'b_company', 'company');
         $first = trim(TypeCoerce::toString($o['b_firstname'] ?? $o['firstname'] ?? ''));
         $last = trim(TypeCoerce::toString($o['b_lastname'] ?? $o['lastname'] ?? ''));
         $personName = trim($first . ' ' . $last);
 
-        $cifRaw = trim(TypeCoerce::toString($o['fgo_billing_cui'] ?? ''));
+        $cifRaw = self::usableId(RomanianTaxId::compact(TypeCoerce::toString($o['fgo_billing_cui'] ?? '')));
+        $cnp = self::usableId(RomanianTaxId::compact(TypeCoerce::toString($o['fgo_billing_cnp'] ?? '')));
         $regComStr = trim(TypeCoerce::toString($o['fgo_billing_reg'] ?? ''));
         $regCom = $regComStr !== '' ? $regComStr : null;
         $tipExplicit = isset($o['fgo_billing_tip']) ? TypeCoerce::toInt($o['fgo_billing_tip']) : 0;
@@ -107,10 +148,10 @@ final class BillingMapper
             ? ($company !== '' ? $company : ($personName !== '' ? $personName : 'Client'))
             : ($personName !== '' ? $personName : 'Client');
 
-        [$cif, $platitorTva] = $this->normalizeCif($cifRaw);
-
         $country = strtoupper(TypeCoerce::toString($o['b_country'] ?? 'RO'));
         $strain = $country !== '' && $country !== 'RO';
+
+        [$cif, $platitorTva] = $this->normalizeCif($cifRaw, !$strain);
         $email = trim(TypeCoerce::toString($o['email'] ?? ''));
         $phone = trim(TypeCoerce::toString($o['phone'] ?? ''));
         $county = trim(TypeCoerce::toString($o['b_state'] ?? ''));
@@ -121,6 +162,12 @@ final class BillingMapper
             $address = $address === '' ? $address2 : $address . ', ' . $address2;
         }
         $idExtern = TypeCoerce::toInt($o['user_id'] ?? 0);
+        if ($isCompany && $cif !== '') {
+            $idFromCif = self::clientIdFromCif($cif);
+            if ($idFromCif > 0) {
+                $idExtern = $idFromCif;
+            }
+        }
 
         return new BillingParty(
             denumire:   $denumire,
@@ -133,28 +180,98 @@ final class BillingMapper
             localitate: $city,
             adresa:     $address,
             strain:     $strain,
-            codUnic:    $isCompany ? ($cif !== '' ? $cif : null) : ($cifRaw !== '' ? $cifRaw : null),
+            // PF: the CNP; failing that, whatever the legacy CUI column held
+            // for an explicit PF (it doubled as the CNP slot).
+            codUnic:    $isCompany
+                ? ($cif !== '' ? $cif : null)
+                : ($cnp !== '' ? $cnp : ($cifRaw !== '' ? $cifRaw : null)),
             nrRegCom:   $isCompany ? $regCom : null,
             platitorTva:$isCompany && $platitorTva,
         );
     }
 
     /**
-     * Strip a leading "RO" from a CIF and report whether it was present
-     * (meaning the customer is a VAT-payer).
-     *
-     * @return array{0: string, 1: bool} [cleanedCif, hadRoPrefix]
+     * @param array<string, mixed> $o
      */
-    private function normalizeCif(string $cifRaw): array
+    private static function firstFilled(array $o, string ...$keys): string
     {
-        $upper = strtoupper(trim($cifRaw));
-        if ($upper === '') {
+        foreach ($keys as $key) {
+            $value = trim(TypeCoerce::toString($o[$key] ?? ''));
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * An identifier only when it holds a digit 1-9; '' otherwise.
+     *
+     * @param string $compacted already compacted (RomanianTaxId::compact)
+     */
+    private static function usableId(string $compacted): string
+    {
+        return preg_match('/[1-9]/', $compacted) === 1 ? $compacted : '';
+    }
+
+    /**
+     * Strip a leading "RO" from a CIF and report whether the id marks a
+     * VAT payer: an RO prefix, or any other EU VAT prefix (kept, the id is
+     * sent as typed). Leading zeros are dropped only from a Romanian id (RO
+     * prefix, or a customer in Romania): elsewhere a leading zero is part of
+     * the number.
+     *
+     * @param string $cifRaw already compacted and usable (usableId)
+     *
+     * @return array{0: string, 1: bool} [cleanedCif, isVatPayer]
+     */
+    private function normalizeCif(string $cifRaw, bool $romanianCustomer): array
+    {
+        if ($cifRaw === '') {
             return ['', false];
         }
-        if (str_starts_with($upper, 'RO')) {
-            return [ltrim(substr($upper, 2), '0'), true];
+        if (str_starts_with($cifRaw, 'RO')) {
+            return [ltrim(substr($cifRaw, 2), '0'), true];
         }
-        return [ltrim($upper, '0'), false];
+        if (self::hasEuVatPrefix($cifRaw)) {
+            return [$cifRaw, true];
+        }
+        return [$romanianCustomer ? ltrim($cifRaw, '0') : $cifRaw, false];
+    }
+
+    /**
+     * True for an EU VAT number: a member-state prefix followed by a body
+     * that holds a digit ("DE123456789", "ATU12345678", "NL123456789B01").
+     */
+    private static function hasEuVatPrefix(string $id): bool
+    {
+        return strlen($id) > 2
+            && in_array(substr($id, 0, 2), self::EU_VAT_PREFIXES, true)
+            && preg_match('/\d/', substr($id, 2)) === 1;
+    }
+
+    /**
+     * Client[IdExtern] for a company, from its CIF — the reference
+     * WooCommerce plugin's rule: drop a two-letter country prefix, keep the
+     * digits, drop leading zeros, keep the last 9 digits of anything longer
+     * than 10, then FgoSigner::normalizeCustomerId() (int32). 0 when no digit
+     * is left, and the caller then keeps the user_id.
+     *
+     * @param string $cif normalised (normalizeCif)
+     */
+    private static function clientIdFromCif(string $cif): int
+    {
+        $body = preg_match('/^[A-Z]{2}/', $cif) === 1 ? substr($cif, 2) : $cif;
+        $digits = ltrim((string) preg_replace('/\D/', '', $body), '0');
+        if ($digits === '') {
+            return 0;
+        }
+        if (strlen($digits) > 10) {
+            $digits = substr($digits, -9);
+        }
+
+        return FgoSigner::normalizeCustomerId($digits);
     }
 
     /**
@@ -306,12 +423,19 @@ final class BillingMapper
     }
 
     /**
-     * @param array<string, mixed> $o
+     * The store's primary currency, always.
+     *
+     * NOT $order_info['secondary_currency']: that is the currency the shopper
+     * was BROWSING in (CS-Cart saves it in ?:order_data for display), while
+     * every amount of the order is stored in the primary currency. Reading it
+     * labelled RON amounts as EUR whenever the customer had switched the
+     * storefront to euro. Core sets no 'currency' key at all.
      */
-    private function resolveCurrency(array $o): string
+    private function resolveCurrency(): string
     {
-        $cur = TypeCoerce::toString($o['secondary_currency'] ?? $o['currency'] ?? 'RON');
-        return strtoupper($cur !== '' ? $cur : 'RON');
+        $cur = strtoupper(trim($this->primaryCurrency ?? ConfigProvider::primaryCurrency()));
+
+        return $cur !== '' ? $cur : 'RON';
     }
 
     /**
