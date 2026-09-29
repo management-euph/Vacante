@@ -411,9 +411,9 @@ return [
         'en' => 'Series',
         'ro' => 'Serie',
     ],
-    'fgo_invoicing.snap_series_default' => [
-        'en' => 'FGO default series',
-        'ro' => 'Seria implicită din FGO',
+    'fgo_invoicing.snap_series_missing' => [
+        'en' => 'Not set (FGO requires one)',
+        'ro' => 'Nesetată (FGO o cere)',
     ],
     'fgo_invoicing.snap_issue_date' => [
         'en' => 'Issue date',
@@ -620,8 +620,8 @@ return [
         'ro' => 'Pregătită',
     ],
     'fgo_invoicing.verdict_retry' => [
-        'en' => 'Retry',
-        'ro' => 'Reîncercare',
+        'en' => 'Ready to retry',
+        'ro' => 'Pregătită pentru reîncercare',
     ],
     'fgo_invoicing.verdict_warn' => [
         'en' => 'Check first',
@@ -700,6 +700,10 @@ return [
     'fgo_invoicing.pc_zero_total' => [
         'en' => 'The order total is 0.',
         'ro' => 'Totalul comenzii este 0.',
+    ],
+    'fgo_invoicing.pc_no_invoice_series' => [
+        'en' => 'No invoice series is set, and FGO requires one. Set it in the FGO Invoicing add-on settings.',
+        'ro' => 'Nu este setată nicio serie de facturare, iar FGO o cere. Setați-o în setările modulului FGO Invoicing.',
     ],
     'fgo_invoicing.pc_mapping_failed' => [
         'en' => 'The order cannot be turned into an FGO invoice: [error]',

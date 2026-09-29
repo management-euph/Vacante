@@ -624,9 +624,9 @@ msgctxt "Languages::fgo_invoicing.snap_series"
 msgid "fgo_invoicing.snap_series"
 msgstr "Serie"
 
-msgctxt "Languages::fgo_invoicing.snap_series_default"
-msgid "fgo_invoicing.snap_series_default"
-msgstr "Seria implicită din FGO"
+msgctxt "Languages::fgo_invoicing.snap_series_missing"
+msgid "fgo_invoicing.snap_series_missing"
+msgstr "Nesetată (FGO o cere)"
 
 msgctxt "Languages::fgo_invoicing.snap_issue_date"
 msgid "fgo_invoicing.snap_issue_date"
@@ -830,7 +830,7 @@ msgstr "Pregătită"
 
 msgctxt "Languages::fgo_invoicing.verdict_retry"
 msgid "fgo_invoicing.verdict_retry"
-msgstr "Reîncercare"
+msgstr "Pregătită pentru reîncercare"
 
 msgctxt "Languages::fgo_invoicing.verdict_warn"
 msgid "fgo_invoicing.verdict_warn"
@@ -907,6 +907,10 @@ msgstr "CNP-ul nu trece verificarea cifrei de control."
 msgctxt "Languages::fgo_invoicing.pc_zero_total"
 msgid "fgo_invoicing.pc_zero_total"
 msgstr "Totalul comenzii este 0."
+
+msgctxt "Languages::fgo_invoicing.pc_no_invoice_series"
+msgid "fgo_invoicing.pc_no_invoice_series"
+msgstr "Nu este setată nicio serie de facturare, iar FGO o cere. Setați-o în setările modulului FGO Invoicing."
 
 msgctxt "Languages::fgo_invoicing.pc_mapping_failed"
 msgid "fgo_invoicing.pc_mapping_failed"

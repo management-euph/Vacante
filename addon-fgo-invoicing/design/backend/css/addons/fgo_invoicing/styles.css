@@ -108,11 +108,13 @@
     font-weight: 600;
 }
 .fgo-bulk__verdict--ready,
+.fgo-bulk__verdict--retry,
 .fgo-bulk__state--issued,
 .fgo-bulk__state--done {
     color: var(--cs-success-text, #14602a);
 }
-.fgo-bulk__verdict--retry,
+/* A status, not a link: the retry verdict shares the ready colour; its
+   icon and the "last attempt failed" line tell the two apart. */
 .fgo-bulk__state--running {
     color: var(--cs-info-text, #0f4c96);
 }
@@ -120,7 +122,8 @@
     color: var(--cs-warning-text, #7a4300);
 }
 .fgo-bulk__verdict--block,
-.fgo-bulk__state--failed {
+.fgo-bulk__state--failed,
+.fgo-bulk__snap-missing {
     color: var(--cs-error-text, #8c1d18);
 }
 .fgo-bulk__verdict--skip,

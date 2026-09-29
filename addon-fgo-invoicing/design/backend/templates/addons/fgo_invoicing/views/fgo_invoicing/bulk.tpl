@@ -75,7 +75,7 @@
             </div>
             <div>
                 <dt>{__("fgo_invoicing.snap_series")}</dt>
-                <dd>{if $b.settings.series}{$b.settings.series}{else}{__("fgo_invoicing.snap_series_default")}{/if}</dd>
+                <dd>{if $b.settings.series}{$b.settings.series}{else}<span class="fgo-bulk__snap-missing">{__("fgo_invoicing.snap_series_missing")}</span>{/if}</dd>
             </div>
             <div>
                 <dt>{__("fgo_invoicing.snap_issue_date")}</dt>

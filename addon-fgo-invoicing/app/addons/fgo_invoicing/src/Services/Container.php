@@ -230,9 +230,10 @@ final class Container
     }
 
     /**
-     * The bulk pre-check with this store's facts: the identity settings, and
+     * The bulk pre-check with this store's facts: the identity settings,
      * whether the store has a profile field a CIF / CNP could be typed into
-     * (the same condition InvoiceIssuer blocks on). Not cached: it is cheap,
+     * (the same condition InvoiceIssuer blocks on), and whether an invoice
+     * series is set (FGO requires one). Not cached: it is cheap,
      * and the settings are read when it is built.
      *
      * @param array<string, string> $statusNames order status code => name
@@ -248,6 +249,7 @@ final class Container
             hasCifSource:      $resolver->hasSourceFor(BillingExtrasResolver::KEY_CIF),
             hasCnpSource:      $resolver->hasSourceFor(BillingExtrasResolver::KEY_CNP),
             statusNames:       $statusNames,
+            seriesConfigured:  ConfigProvider::invoiceSeries() !== '',
         );
     }
 
