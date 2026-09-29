@@ -62,3 +62,8 @@ NovotonBeforeSplit/
 Thumbs.db
 addon-*.zip
 dist/
+
+# HP Sure Click (Bromium) isolation markers on Windows checkouts: unreadable
+# inside Docker, they crash CS-Cart's template scan. Never commit them.
+~BROMIUM/
+~BROMIUM
