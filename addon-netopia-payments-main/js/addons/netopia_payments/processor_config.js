@@ -1,9 +1,10 @@
 // NETOPIA Payments — payment method settings screen.
 //
 // Drives views/payments/components/cc_processors/netopia_payments.tpl: the
-// four tabs, the Sandbox/Live switch (Live asks first), show/hide for the
-// secrets, "Test connection", the installments pair, the order description
-// preview, the status table (changed rows, reset) and the key cards.
+// four tabs, the Sandbox/Live switch (Live asks first), the per-mode API key
+// and POS signature, show/hide for the secrets, "Check settings", the
+// installments pair, the order description preview, the status table
+// (changed rows, reset) and the key cards.
 //
 // The settings arrive in a dialog loaded by AJAX, so every screen is set up
 // on ce.commoninit as well as on load, once per screen (data-np-ready).
@@ -62,10 +63,6 @@
                 label.classList.toggle('is-checked', m === mode);
             }
         });
-        var used = root.querySelector('[data-np-used-for]');
-        if (used) {
-            used.textContent = txt(root, 'used-for-' + mode);
-        }
         all(root, '[data-np-keys-intro]').forEach(function (el) {
             el.hidden = el.getAttribute('data-np-keys-intro') !== mode;
         });
@@ -86,6 +83,11 @@
             }
             // Not live until the admin says so: keep Sandbox checked meanwhile.
             sandbox.checked = true;
+            var liveKey = root.querySelector('#netopia_live_api_key');
+            var credsMissing = root.querySelector('[data-np-live-creds-missing]');
+            if (credsMissing) {
+                credsMissing.hidden = !!(liveKey && liveKey.value.trim() !== '');
+            }
             if (confirmBox) {
                 confirmBox.hidden = false;
             } else {
@@ -270,6 +272,13 @@
                 }
             });
         });
+        var showCreds = root.querySelector('[data-np-show-all-creds]');
+        if (showCreds) {
+            showCreds.addEventListener('click', function (e) {
+                e.preventDefault();
+                root.classList.toggle('is-showing-all-creds');
+            });
+        }
         var showAll = root.querySelector('[data-np-show-all-keys]');
         if (showAll) {
             showAll.addEventListener('click', function (e) {
@@ -279,7 +288,7 @@
         }
     }
 
-    // ── Test connection ───────────────────────────────────────────────
+    // ── Check settings ───────────────────────────────────────────────
     function readPickedKey(root, mode) {
         var input = root.querySelector('[data-np-key="' + mode + '_public_key"] input[type="file"]');
         var file = input && input.files && input.files.length > 0 ? input.files[0] : null;
@@ -354,8 +363,10 @@
                 renderTest(root, result);
             };
             readPickedKey(root, mode).then(function (publicKey) {
-                var api = root.querySelector('#netopia_api_key');
-                var pos = root.querySelector('#netopia_pos_signature');
+                // The selected mode's pair: NETOPIA issues one per mode.
+                var api = root.querySelector('#netopia_' + mode + '_api_key');
+                var pos = root.querySelector('#netopia_' + mode + '_pos_signature');
+                var other = root.querySelector('#netopia_' + (mode === 'live' ? 'sandbox' : 'live') + '_api_key');
                 $.ceAjax('request', root.getAttribute('data-test-url'), {
                     method: 'post',
                     hidden: true,
@@ -364,6 +375,7 @@
                         payment_id: root.getAttribute('data-payment-id') || '0',
                         api_key: api ? api.value : '',
                         pos_signature: pos ? pos.value : '',
+                        other_api_key: other ? other.value : '',
                         public_key: publicKey,
                     },
                     callback: function (data) {

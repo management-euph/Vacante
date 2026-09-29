@@ -120,6 +120,14 @@ function fn_netopia_payments_update_payment_post(array $payment_data, int $payme
     $params = fn_netopia_load_processor_params($payment_id);
     $updated = false;
 
+    // The runtime reads the plain api_key / pos_signature: make them the
+    // selected mode's pair (Config\Credentials).
+    $active = \Netopia\CsCart\Config\Credentials::applyActive($params);
+    if ($active !== $params) {
+        $params = $active;
+        $updated = true;
+    }
+
     $key_slots = [
         'sandbox_public_key' => 'netopia_sandbox_public_key_file',
         'sandbox_private_key' => 'netopia_sandbox_private_key_file',
@@ -506,6 +514,21 @@ function fn_netopia_get_status_definitions($dummy = null): array
 function fn_netopia_status_table($processor_params = []): array
 {
     return \Netopia\CsCart\Status\StatusTable::build(is_array($processor_params) ? Arr::stringKeys($processor_params) : []);
+}
+
+/**
+ * The API key and POS signature a mode uses (settings screen).
+ *
+ * @param mixed $processor_params
+ * @param mixed $mode 'sandbox' or 'live'
+ * @return array{api_key: string, pos_signature: string}
+ */
+function fn_netopia_credentials($processor_params = [], $mode = 'sandbox'): array
+{
+    return \Netopia\CsCart\Config\Credentials::forMode(
+        is_array($processor_params) ? Arr::stringKeys($processor_params) : [],
+        PaymentMode::fromMixed($mode),
+    );
 }
 
 /**

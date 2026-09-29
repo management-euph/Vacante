@@ -9,7 +9,7 @@ use Netopia\Payment2\Enum\PaymentMode;
 
 /**
  * Tells the admin what state each key is in, for the settings screen's key
- * cards and the "Test connection" check.
+ * cards and the "Check settings".
  *
  * Only NETOPIA's public key is used by the addon: IpnVerifier checks every
  * IPN's signature with it, so a missing, unreadable or expired public key

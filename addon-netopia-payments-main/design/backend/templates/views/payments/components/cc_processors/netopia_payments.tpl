@@ -3,7 +3,7 @@
    Four tabs (Connection, Checkout, Order statuses, Keys) over ONE form: every
    field stays in the DOM, a tab only hides it, so Save sends them all.
    js/addons/netopia_payments/processor_config.js drives the tabs, the mode
-   switch, the key cards, "Test connection", the status table and the
+   switch, the key cards, "Check settings", the status table and the
    description preview. Without it the page still works: every section shows,
    mode is a real radio input, and nothing depends on script to submit. *}
 
@@ -78,6 +78,8 @@
 .netopia-keyset { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin-bottom:12px; }
 .netopia-cfg[data-mode="sandbox"] .netopia-keyset--live, .netopia-cfg[data-mode="live"] .netopia-keyset--sandbox { display:none; }
 .netopia-cfg.is-showing-all-keys .netopia-keyset { display:grid; }
+.netopia-cfg[data-mode="sandbox"] .netopia-creds--live, .netopia-cfg[data-mode="live"] .netopia-creds--sandbox { display:none; }
+.netopia-cfg.is-showing-all-creds .netopia-creds { display:block; }
 .netopia-key { border:1px solid var(--np-line); border-radius:4px; padding:12px; display:flex; flex-direction:column; gap:8px; min-width:0; }
 .netopia-key__top { display:flex; justify-content:space-between; gap:8px; align-items:center; }
 .netopia-key__file { font-family:Menlo,Consolas,monospace; font-size:12px; background:var(--np-soft); padding:5px 8px; border-radius:3px; display:flex; justify-content:space-between; gap:8px; align-items:center; overflow-wrap:anywhere; }
@@ -101,7 +103,7 @@
 {literal}
 <script>
 (function () {
-    var el = document.getElementById('netopia_cfg') || document.getElementById('netopia_pos_signature');
+    var el = document.getElementById('netopia_cfg') || document.getElementById('netopia_sandbox_pos_signature');
     var form = el ? el.closest('form') : null;
     if (form) { form.setAttribute('enctype', 'multipart/form-data'); form.encoding = 'multipart/form-data'; }
 })();
@@ -124,8 +126,6 @@
      data-txt-hide="{__("netopia_hide")|escape:"html"}"
      data-txt-testing="{__("netopia_test_running")|escape:"html"}"
      data-txt-test-failed="{__("netopia_test_request_failed")|escape:"html"}"
-     data-txt-used-for-sandbox="{__("netopia_used_for_sandbox")|escape:"html"}"
-     data-txt-used-for-live="{__("netopia_used_for_live")|escape:"html"}"
      data-txt-remove-marked="{__("netopia_key_remove_marked")|escape:"html"}">
 
     <div class="netopia-tabs" role="tablist" aria-label="NETOPIA">
@@ -158,6 +158,7 @@
                 <div class="netopia-confirm" data-np-live-confirm hidden>
                     <b>{__("netopia_live_confirm_title")}</b>
                     <div class="muted">{__("netopia_live_confirm_text")}</div>
+                    <p class="muted" data-np-live-creds-missing hidden><span class="netopia-pill netopia-pill--bad">{__("netopia_key_missing")}</span> {__("netopia_live_confirm_no_api_key")}</p>
                     <p class="muted" data-np-live-keys-missing {if !$np_blocked_live}hidden{/if}><span class="netopia-pill netopia-pill--bad">{__("netopia_key_missing")}</span> {__("netopia_live_confirm_no_key")}</p>
                     <button type="button" class="btn btn-primary" data-np-live-yes>{__("netopia_live_confirm_yes")}</button>
                     <button type="button" class="btn" data-np-live-no>{__("netopia_live_confirm_no")}</button>
@@ -165,27 +166,34 @@
             </div>
         </div>
 
-        <div class="control-group">
-            <label class="control-label" for="netopia_pos_signature">{__("netopia_pos_signature")}:</label>
-            <div class="controls">
-                <div class="netopia-secret">
-                    <input type="password" name="payment_data[processor_params][pos_signature]" id="netopia_pos_signature" value="{$processor_params.pos_signature|escape:"html"}" size="40" autocomplete="off" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" />
-                    <button type="button" class="btn" data-np-reveal="netopia_pos_signature" aria-controls="netopia_pos_signature">{__("netopia_show")}</button>
+        {* One API key + POS signature per mode (Config\Credentials). Only the
+           selected mode's pair shows; the other is kept and sent on Save. *}
+        {foreach from=["sandbox","live"] item="m"}
+        {$cred = $processor_params|fn_netopia_credentials:$m}
+        <div class="netopia-creds netopia-creds--{$m}" data-np-creds="{$m}">
+            <div class="control-group">
+                <label class="control-label" for="netopia_{$m}_pos_signature">{__("netopia_`$m`_pos_signature")}:</label>
+                <div class="controls">
+                    <div class="netopia-secret">
+                        <input type="password" name="payment_data[processor_params][{$m}_pos_signature]" id="netopia_{$m}_pos_signature" value="{$cred.pos_signature|escape:"html"}" size="40" autocomplete="off" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" />
+                        <button type="button" class="btn" data-np-reveal="netopia_{$m}_pos_signature" aria-controls="netopia_{$m}_pos_signature">{__("netopia_show")}</button>
+                    </div>
+                    <p class="muted description">{__("netopia_`$m`_pos_signature_description")}</p>
                 </div>
-                <p class="muted description">{__("netopia_pos_signature_description")}</p>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="netopia_{$m}_api_key">{__("netopia_`$m`_api_key")}:</label>
+                <div class="controls">
+                    <div class="netopia-secret">
+                        <input type="password" name="payment_data[processor_params][{$m}_api_key]" id="netopia_{$m}_api_key" value="{$cred.api_key|escape:"html"}" size="40" autocomplete="off" placeholder="ApiKey_XXXXXXXX" />
+                        <button type="button" class="btn" data-np-reveal="netopia_{$m}_api_key" aria-controls="netopia_{$m}_api_key">{__("netopia_show")}</button>
+                    </div>
+                    <p class="muted description">{__("netopia_`$m`_api_key_description")}</p>
+                </div>
             </div>
         </div>
-
-        <div class="control-group">
-            <label class="control-label" for="netopia_api_key">{__("netopia_api_key")}:</label>
-            <div class="controls">
-                <div class="netopia-secret">
-                    <input type="password" name="payment_data[processor_params][api_key]" id="netopia_api_key" value="{$processor_params.api_key|escape:"html"}" size="40" autocomplete="off" placeholder="ApiKey_XXXXXXXX" />
-                    <button type="button" class="btn" data-np-reveal="netopia_api_key" aria-controls="netopia_api_key">{__("netopia_show")}</button>
-                </div>
-                <p class="muted description">{__("netopia_api_key_description")} <span class="netopia-pill netopia-pill--info" data-np-used-for>{if $np_mode == "live"}{__("netopia_used_for_live")}{else}{__("netopia_used_for_sandbox")}{/if}</span></p>
-            </div>
-        </div>
+        {/foreach}
+        <p class="muted description" style="margin-left:0"><a href="#" data-np-show-all-creds>{__("netopia_creds_show_all")}</a></p>
 
         <div class="control-group">
             <div class="controls">

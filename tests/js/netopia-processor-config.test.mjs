@@ -6,8 +6,9 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
  *
  * What must not break: every field stays in the one form (tabs only hide),
  * Live is never selected without a confirmation, the maximum installments
- * field stays submittable while installments are off, and "Test connection"
+ * field stays submittable while installments are off, and "Check settings"
  * sends what the form holds NOW, for the mode that is selected.
+ * "Check settings" never calls NETOPIA; it only checks what was typed.
  */
 
 const MARKUP = `
@@ -18,7 +19,7 @@ const MARKUP = `
      data-sample-order-id="1001" data-sample-total="250.00" data-sample-currency="RON"
      data-sample-email="client@example.ro" data-sample-site-url="shop.example.ro"
      data-txt-show="Show" data-txt-hide="Hide" data-txt-testing="Testing…" data-txt-test-failed="The test could not run."
-     data-txt-used-for-sandbox="Used for Sandbox" data-txt-used-for-live="Used for Live" data-txt-remove-marked="Removed">
+     data-txt-remove-marked="Removed">
   <div class="netopia-tabs">
     <button type="button" data-np-tab="conn" aria-selected="true">Connection</button>
     <button type="button" data-np-tab="chk" aria-selected="false">Checkout</button>
@@ -29,14 +30,21 @@ const MARKUP = `
     <input type="radio" name="payment_data[processor_params][mode]" id="netopia_mode_sandbox" value="sandbox" checked>
     <input type="radio" name="payment_data[processor_params][mode]" id="netopia_mode" value="live">
     <div data-np-live-confirm hidden>
+      <p data-np-live-creds-missing hidden>no live api key</p>
       <p data-np-live-keys-missing hidden>missing</p>
       <button type="button" data-np-live-yes>Switch</button><button type="button" data-np-live-no>Stay</button>
     </div>
-    <input type="password" id="netopia_pos_signature" value="AB12-CD34-EF56-GH78-IJ90">
-    <button type="button" data-np-reveal="netopia_pos_signature">Show</button>
-    <input type="password" id="netopia_api_key" value="ApiKey_1">
-    <span data-np-used-for>Used for Sandbox</span>
-    <button type="button" data-np-test-run>Test connection</button>
+    <div class="netopia-creds netopia-creds--sandbox">
+      <input type="password" id="netopia_sandbox_pos_signature" value="AB12-CD34-EF56-GH78-IJ90">
+      <button type="button" data-np-reveal="netopia_sandbox_pos_signature">Show</button>
+      <input type="password" id="netopia_sandbox_api_key" value="ApiKey_sandbox">
+    </div>
+    <div class="netopia-creds netopia-creds--live">
+      <input type="password" id="netopia_live_pos_signature" value="LIVE-POS1-AAAA-BBBB-CCCC">
+      <input type="password" id="netopia_live_api_key" value="">
+    </div>
+    <a href="#" data-np-show-all-creds>both</a>
+    <button type="button" data-np-test-run>Check settings</button>
     <div data-np-test-intro>intro</div><div data-np-test-summary hidden></div><ul data-np-test-list hidden></ul>
   </div>
   <div class="netopia-panel" data-np-panel="chk">
@@ -95,7 +103,7 @@ describe('netopia processor config', () => {
         $('[data-np-tab="st"]').click();
         expect($('[data-np-panel="st"]').classList.contains('is-active')).toBe(true);
         expect($('[data-np-panel="conn"]').classList.contains('is-active')).toBe(false);
-        expect($('form').contains($('#netopia_api_key'))).toBe(true);
+        expect($('form').contains($('#netopia_live_api_key'))).toBe(true);
         expect($('form').getAttribute('enctype')).toBe('multipart/form-data');
     });
 
@@ -106,6 +114,8 @@ describe('netopia processor config', () => {
         expect($('#netopia_mode_sandbox').checked).toBe(true);
         expect($('[data-np-live-confirm]').hidden).toBe(false);
         expect($('[data-np-live-keys-missing]').hidden).toBe(false);
+        // The live API key is empty: the confirmation says so.
+        expect($('[data-np-live-creds-missing]').hidden).toBe(false);
         $('[data-np-live-no]').click();
         expect($('#netopia_cfg').getAttribute('data-mode')).toBe('sandbox');
         expect($('[data-np-live-confirm]').hidden).toBe(true);
@@ -118,7 +128,6 @@ describe('netopia processor config', () => {
         $('[data-np-live-yes]').click();
         expect(live.checked).toBe(true);
         expect($('#netopia_cfg').getAttribute('data-mode')).toBe('live');
-        expect($('[data-np-used-for]').textContent).toBe('Used for Live');
         expect($('[data-np-keys-intro="live"]').hidden).toBe(false);
         // The live public key is missing: the Keys tab shows a dot.
         expect($('[data-np-keys-dot]').hidden).toBe(false);
@@ -132,10 +141,10 @@ describe('netopia processor config', () => {
     it('shows and hides a secret', () => {
         const btn = $('[data-np-reveal]');
         btn.click();
-        expect($('#netopia_pos_signature').type).toBe('text');
+        expect($('#netopia_sandbox_pos_signature').type).toBe('text');
         expect(btn.textContent).toBe('Hide');
         btn.click();
-        expect($('#netopia_pos_signature').type).toBe('password');
+        expect($('#netopia_sandbox_pos_signature').type).toBe('password');
     });
 
     it('keeps max installments submittable (readonly, never disabled)', () => {
@@ -175,7 +184,7 @@ describe('netopia processor config', () => {
                 { id: 'public_key', state: 'bad', text: 'No public key' },
             ],
         };
-        $('#netopia_api_key').value = 'ApiKey_typed';
+        $('#netopia_sandbox_api_key').value = 'ApiKey_typed';
         $('[data-np-test-run]').click();
         await flush();
 
@@ -185,6 +194,7 @@ describe('netopia processor config', () => {
             payment_id: '7',
             api_key: 'ApiKey_typed',
             pos_signature: 'AB12-CD34-EF56-GH78-IJ90',
+            other_api_key: '',
             public_key: 'SANDBOX-PEM',
         });
         expect($('[data-np-test-summary]').textContent).toBe('Not ready');
@@ -193,6 +203,25 @@ describe('netopia processor config', () => {
         expect(items[1].textContent).toContain('No public key');
         expect(items[1].querySelector('.netopia-pill--bad')).not.toBeNull();
         expect($('[data-np-test-run]').disabled).toBe(false);
+    });
+
+    it('tests the live pair when Live is selected', async () => {
+        reply = { ready: true, summary: 'Ready', checks: [] };
+        $('#netopia_live_api_key').value = 'ApiKey_live';
+        const live = $('#netopia_mode');
+        live.checked = true;
+        change(live);
+        $('[data-np-live-yes]').click();
+        $('[data-np-test-run]').click();
+        await flush();
+        expect(requests[0].data.mode).toBe('live');
+        expect(requests[0].data.api_key).toBe('ApiKey_live');
+        expect(requests[0].data.pos_signature).toBe('LIVE-POS1-AAAA-BBBB-CCCC');
+        expect(requests[0].data.public_key).toBe('LIVE-PEM');
+        // The sandbox key goes along, to catch the same key in both modes.
+        expect(requests[0].data.other_api_key).toBe('ApiKey_typed');
+        $('#netopia_mode_sandbox').checked = true;
+        change($('#netopia_mode_sandbox'));
     });
 
     it('says so when the test request fails', async () => {

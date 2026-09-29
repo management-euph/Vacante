@@ -4,22 +4,24 @@
  * NETOPIA Payments — admin helpers for the payment method settings screen.
  *
  * Routes:
- *   POST dispatch=netopia_config.test (AJAX) — "Test connection": checks the
- *        API key, POS signature and public key typed into the form, before
- *        they are saved. -> data.netopia_test
+ *   POST dispatch=netopia_config.test (AJAX) — "Check settings": checks the
+ *        selected mode's API key, POS signature and public key as typed into
+ *        the form, before they are saved. -> data.netopia_test
  *
- *        mode, api_key, pos_signature   what the form holds now
+ *        mode, api_key, pos_signature   what the form holds now for that mode
+ *        other_api_key                  the other mode's key (same-key warning)
  *        public_key                     a key pasted or picked in the form ('' = the saved one)
- *        payment_id                     the payment method, for the saved keys and api key
+ *        payment_id                     the payment method, for the saved values
  *
- * Read-only: nothing is saved, and the only NETOPIA call is operation/status
- * for an order that does not exist (see ConnectionTester).
+ * Nothing is saved and NETOPIA is not called: its API documents no way to
+ * validate a key without a payment (see Config\SettingsCheck).
  *
  * @package NetopiaPayments
  */
 
 use Netopia\CsCart\Bootstrap;
-use Netopia\CsCart\Config\ConnectionTester;
+use Netopia\CsCart\Config\Credentials;
+use Netopia\CsCart\Config\SettingsCheck;
 use Netopia\CsCart\Support\Arr;
 use Netopia\Payment2\Enum\PaymentMode;
 use Tygh\Tygh;
@@ -37,13 +39,15 @@ $payment_id = Arr::int($request, 'payment_id');
 $saved = $payment_id > 0 ? fn_netopia_load_processor_params($payment_id) : [];
 $payment_mode = PaymentMode::fromMixed($request['mode'] ?? ($saved['mode'] ?? null));
 
+// What the form holds for the selected mode; the saved pair when a field is empty.
+$saved_pair = Credentials::forMode($saved, $payment_mode);
 $api_key = trim(Arr::string($request, 'api_key'));
 if ($api_key === '') {
-    $api_key = Arr::string($saved, 'api_key');
+    $api_key = $saved_pair['api_key'];
 }
 $pos_signature = trim(Arr::string($request, 'pos_signature'));
 if ($pos_signature === '') {
-    $pos_signature = Arr::string($saved, 'pos_signature');
+    $pos_signature = $saved_pair['pos_signature'];
 }
 
 $bootstrap = Bootstrap::instance();
@@ -52,10 +56,14 @@ if ($public_key === '' && $payment_id > 0) {
     $public_key = $bootstrap->keyStorage->load($saved, 'public_key', $payment_id, $payment_mode);
 }
 
-$tester = new ConnectionTester(
-    apiClientFactory: static fn (string $key, PaymentMode $m) => $bootstrap->apiClientFor($key, $m),
-);
-$result = $tester->run($api_key, $pos_signature, $payment_mode, $public_key, time());
+// The other mode's key, to catch the same key pasted into both modes.
+$other_mode = $payment_mode === PaymentMode::Live ? PaymentMode::Sandbox : PaymentMode::Live;
+$other_api_key = trim(Arr::string($request, 'other_api_key'));
+if ($other_api_key === '') {
+    $other_api_key = Credentials::forMode($saved, $other_mode)['api_key'];
+}
+
+$result = SettingsCheck::run($api_key, $other_api_key, $pos_signature, $payment_mode, $public_key, time());
 
 $checks = [];
 foreach ($result['checks'] as $check) {
