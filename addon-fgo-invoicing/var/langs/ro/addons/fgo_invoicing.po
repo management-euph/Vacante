@@ -935,3 +935,52 @@ msgstr "Unele PDF-uri nu au putut fi descărcate și lipsesc din ZIP (vedeți mi
 msgctxt "Languages::fgo_invoicing.zip_missing_note"
 msgid "fgo_invoicing.zip_missing_note"
 msgstr "Aceste PDF-uri de facturi nu au putut fi descărcate din FGO:"
+
+msgctxt "Languages::fgo_invoicing.diagnostics_title"
+msgid "fgo_invoicing.diagnostics_title"
+msgstr "Încercări de emitere"
+
+msgctxt "Languages::fgo_invoicing.diagnostics_intro"
+msgid "fgo_invoicing.diagnostics_intro"
+msgstr "Fiecare încercare de emitere a acestei facturi, cele mai recente primele. CNP-ul este stocat mascat; valoarea completă rămâne pe comandă."
+
+msgctxt "Languages::fgo_invoicing.diag_date"
+msgid "fgo_invoicing.diag_date"
+msgstr "Data"
+
+msgctxt "Languages::fgo_invoicing.diag_response_code"
+msgid "fgo_invoicing.diag_response_code"
+msgstr "Răspuns FGO"
+
+msgctxt "Languages::fgo_invoicing.diag_cnp_length"
+msgid "fgo_invoicing.diag_cnp_length"
+msgstr "Lungime CNP"
+
+msgctxt "Languages::fgo_invoicing.diag_cnp_checksum"
+msgid "fgo_invoicing.diag_cnp_checksum"
+msgstr "Cifra de control CNP"
+
+msgctxt "Languages::fgo_invoicing.diag_error_message"
+msgid "fgo_invoicing.diag_error_message"
+msgstr "Mesaj"
+
+msgctxt "Languages::fgo_invoicing.diag_checksum_ok"
+msgid "fgo_invoicing.diag_checksum_ok"
+msgstr "validă"
+
+msgctxt "Languages::fgo_invoicing.diag_checksum_bad"
+msgid "fgo_invoicing.diag_checksum_bad"
+msgstr "invalidă"
+
+msgctxt "Languages::fgo_invoicing.diag_no_cnp"
+msgid "fgo_invoicing.diag_no_cnp"
+msgstr "fără CNP trimis"
+
+msgctxt "Languages::fgo_invoicing.diag_none"
+msgid "fgo_invoicing.diag_none"
+msgstr "Nicio încercare de emitere înregistrată încă."
+
+msgctxt "Languages::fgo_invoicing.diag_payload"
+msgid "fgo_invoicing.diag_payload"
+msgstr "Cerere trimisă (CNP mascat)"
+

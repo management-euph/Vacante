@@ -47,3 +47,16 @@ function fn_fgo_invoicing_language_seed_hash(): string
 {
     return \Tygh\Addons\FgoInvoicing\Install\LanguageSeeder::seedHash();
 }
+
+/**
+ * Mask a CNP for anything stored outside the order: 13 digits keep the
+ * first 5 and the last 2 ("19805******56"); any other length becomes
+ * "INVALID_LENGTH_<n>"; '' stays ''. Non-digits are ignored.
+ *
+ * Procedural entry point for templates and other add-ons; the add-on itself
+ * uses \Tygh\Addons\FgoInvoicing\Helpers\CnpMasker directly.
+ */
+function fn_fgo_invoicing_mask_cnp(?string $cnp): string
+{
+    return \Tygh\Addons\FgoInvoicing\Helpers\CnpMasker::mask($cnp);
+}

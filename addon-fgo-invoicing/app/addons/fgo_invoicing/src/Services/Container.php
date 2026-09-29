@@ -6,6 +6,7 @@ namespace Tygh\Addons\FgoInvoicing\Services;
 
 use Tygh\Addons\FgoInvoicing\Api\FgoApiClient;
 use Tygh\Addons\FgoInvoicing\Api\FgoHttpClient;
+use Tygh\Addons\FgoInvoicing\Repository\DiagnosticLogRepository;
 use Tygh\Addons\FgoInvoicing\Repository\InvoiceRepository;
 use Tygh\Addons\FgoInvoicing\Repository\ProfileFieldCatalog;
 use Tygh\Addons\FgoInvoicing\Repository\ProfileFieldRepository;
@@ -34,6 +35,7 @@ final class Container
     private ?InvoiceIssuer $issuer = null;
     private ?InvoiceCanceler $canceler = null;
     private ?InvoiceMailer $mailer = null;
+    private ?DiagnosticLogRepository $diagnostics = null;
 
     public static function getInstance(): self
     {
@@ -86,6 +88,13 @@ final class Container
     public function withMailer(InvoiceMailer $mailer): self
     {
         $this->mailer = $mailer;
+        $this->issuer = null;
+        return $this;
+    }
+
+    public function withDiagnostics(DiagnosticLogRepository $diagnostics): self
+    {
+        $this->diagnostics = $diagnostics;
         $this->issuer = null;
         return $this;
     }
@@ -155,6 +164,14 @@ final class Container
         return $this->repo;
     }
 
+    public function diagnostics(): DiagnosticLogRepository
+    {
+        if ($this->diagnostics === null) {
+            $this->diagnostics = new DiagnosticLogRepository();
+        }
+        return $this->diagnostics;
+    }
+
     public function mapper(): BillingMapper
     {
         if ($this->mapper === null) {
@@ -206,6 +223,7 @@ final class Container
                 $this->mapper(),
                 $this->billingExtrasResolver(),
                 $this->mailer(),
+                $this->diagnostics(),
             );
         }
         return $this->issuer;

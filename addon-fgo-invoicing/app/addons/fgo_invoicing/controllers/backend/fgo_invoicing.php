@@ -273,6 +273,16 @@ if ($mode === 'view') {
                 JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
             ),
         );
+        // Every issue attempt (CNP masked), newest first.
+        $attempts = [];
+        foreach ($container->diagnostics()->listForOrder($orderId) as $attempt) {
+            $payload = json_decode(TypeCoerce::toString($attempt['request_payload'] ?? ''), true);
+            $attempt['request_pretty'] = is_array($payload) && $payload !== []
+                ? (string) json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+                : '';
+            $attempts[] = $attempt;
+        }
+        $view->assign('fgo_attempts', $attempts);
     }
 }
 

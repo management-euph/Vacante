@@ -731,4 +731,54 @@ return [
         'en' => 'These invoice PDFs could not be downloaded from FGO:',
         'ro' => 'Aceste PDF-uri de facturi nu au putut fi descărcate din FGO:',
     ],
+
+    // ── Admin: invoice page — issue attempts (?:fgo_diagnostic_logs) ─────
+    'fgo_invoicing.diagnostics_title' => [
+        'en' => 'Issue attempts',
+        'ro' => 'Încercări de emitere',
+    ],
+    'fgo_invoicing.diagnostics_intro' => [
+        'en' => 'Every attempt to issue this invoice, newest first. The CNP is stored masked; the full value stays on the order.',
+        'ro' => 'Fiecare încercare de emitere a acestei facturi, cele mai recente primele. CNP-ul este stocat mascat; valoarea completă rămâne pe comandă.',
+    ],
+    'fgo_invoicing.diag_date' => [
+        'en' => 'Date',
+        'ro' => 'Data',
+    ],
+    'fgo_invoicing.diag_response_code' => [
+        'en' => 'FGO response',
+        'ro' => 'Răspuns FGO',
+    ],
+    'fgo_invoicing.diag_cnp_length' => [
+        'en' => 'CNP length',
+        'ro' => 'Lungime CNP',
+    ],
+    'fgo_invoicing.diag_cnp_checksum' => [
+        'en' => 'CNP checksum',
+        'ro' => 'Cifra de control CNP',
+    ],
+    'fgo_invoicing.diag_error_message' => [
+        'en' => 'Message',
+        'ro' => 'Mesaj',
+    ],
+    'fgo_invoicing.diag_checksum_ok' => [
+        'en' => 'valid',
+        'ro' => 'validă',
+    ],
+    'fgo_invoicing.diag_checksum_bad' => [
+        'en' => 'invalid',
+        'ro' => 'invalidă',
+    ],
+    'fgo_invoicing.diag_no_cnp' => [
+        'en' => 'no CNP sent',
+        'ro' => 'fără CNP trimis',
+    ],
+    'fgo_invoicing.diag_none' => [
+        'en' => 'No issue attempts recorded yet.',
+        'ro' => 'Nicio încercare de emitere înregistrată încă.',
+    ],
+    'fgo_invoicing.diag_payload' => [
+        'en' => 'Request sent (CNP masked)',
+        'ro' => 'Cerere trimisă (CNP mascat)',
+    ],
 ];

@@ -938,3 +938,51 @@ msgctxt "Languages::fgo_invoicing.zip_missing_note"
 msgid "fgo_invoicing.zip_missing_note"
 msgstr "These invoice PDFs could not be downloaded from FGO:"
 
+msgctxt "Languages::fgo_invoicing.diagnostics_title"
+msgid "fgo_invoicing.diagnostics_title"
+msgstr "Issue attempts"
+
+msgctxt "Languages::fgo_invoicing.diagnostics_intro"
+msgid "fgo_invoicing.diagnostics_intro"
+msgstr "Every attempt to issue this invoice, newest first. The CNP is stored masked; the full value stays on the order."
+
+msgctxt "Languages::fgo_invoicing.diag_date"
+msgid "fgo_invoicing.diag_date"
+msgstr "Date"
+
+msgctxt "Languages::fgo_invoicing.diag_response_code"
+msgid "fgo_invoicing.diag_response_code"
+msgstr "FGO response"
+
+msgctxt "Languages::fgo_invoicing.diag_cnp_length"
+msgid "fgo_invoicing.diag_cnp_length"
+msgstr "CNP length"
+
+msgctxt "Languages::fgo_invoicing.diag_cnp_checksum"
+msgid "fgo_invoicing.diag_cnp_checksum"
+msgstr "CNP checksum"
+
+msgctxt "Languages::fgo_invoicing.diag_error_message"
+msgid "fgo_invoicing.diag_error_message"
+msgstr "Message"
+
+msgctxt "Languages::fgo_invoicing.diag_checksum_ok"
+msgid "fgo_invoicing.diag_checksum_ok"
+msgstr "valid"
+
+msgctxt "Languages::fgo_invoicing.diag_checksum_bad"
+msgid "fgo_invoicing.diag_checksum_bad"
+msgstr "invalid"
+
+msgctxt "Languages::fgo_invoicing.diag_no_cnp"
+msgid "fgo_invoicing.diag_no_cnp"
+msgstr "no CNP sent"
+
+msgctxt "Languages::fgo_invoicing.diag_none"
+msgid "fgo_invoicing.diag_none"
+msgstr "No issue attempts recorded yet."
+
+msgctxt "Languages::fgo_invoicing.diag_payload"
+msgid "fgo_invoicing.diag_payload"
+msgstr "Request sent (CNP masked)"
+

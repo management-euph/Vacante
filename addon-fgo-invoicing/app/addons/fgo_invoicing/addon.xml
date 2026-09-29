@@ -322,7 +322,25 @@
                 KEY `idx_invoice_number` (`invoice_number`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='FGO issued invoices, one row per CS-Cart order'
         </item>
+        <!-- One row per issue attempt, CNP masked. Stores installed before this
+             table existed get it from DiagnosticLogRepository::ensureTable(),
+             whose CREATE_SQL must stay identical to this query (a test checks). -->
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:fgo_diagnostic_logs` (
+                `log_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                `order_id` int(11) unsigned NOT NULL,
+                `is_cnp_checksum_valid` TINYINT(1) NULL COMMENT '1 checksum passed, 0 failed, NULL no CNP sent',
+                `cnp_length` TINYINT unsigned NULL COMMENT 'length of the CNP as typed, NULL no CNP sent',
+                `fgo_response_code` VARCHAR(32) NOT NULL DEFAULT '' COMMENT 'success, rejected/&lt;http&gt;, http/&lt;code&gt;, network, blocked, error',
+                `fgo_error_message` TEXT NULL COMMENT 'FGO Message or local error, CNP masked',
+                `request_payload` MEDIUMTEXT NULL COMMENT 'JSON form sent to FGO, CNP masked',
+                `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (`log_id`),
+                KEY `idx_order_id` (`order_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='FGO issue attempts, CNP masked'
+        </item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:fgo_invoices`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:fgo_diagnostic_logs`</item>
         <item for="uninstall">DELETE FROM ?:language_values WHERE name LIKE 'fgo_invoicing.%'</item>
     </queries>
 
