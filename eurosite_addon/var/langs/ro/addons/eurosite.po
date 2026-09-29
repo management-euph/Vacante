@@ -1064,6 +1064,10 @@ msgctxt "Languages::eurosite.probe_none_hint"
 msgid "No Immediate hotel on the configured dates. Find dates with offers below, then add them to the peak-season dates."
 msgstr "Niciun hotel Imediat la datele configurate. Găsiți mai jos date cu oferte, apoi adăugați-le la datele de sezon."
 
+msgctxt "Languages::eurosite.probe_cities_all"
+msgid "empty = all synced"
+msgstr "gol = toate sincronizate"
+
 msgctxt "Languages::eurosite.dest_mode_off"
 msgid "Not sold"
 msgstr "Nu se vinde"
