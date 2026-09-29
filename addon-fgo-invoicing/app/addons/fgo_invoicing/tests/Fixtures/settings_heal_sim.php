@@ -39,7 +39,7 @@ foreach ($xml->xpath('/addon/settings/sections/section/items/item[@id]') ?: [] a
     $type = $typeMap[(string) $item->type] ?? 'I';
     $default = (string) $item->default_value;
     $GLOBALS['sim']['declared'][$name] = ['type' => $type, 'default' => $default];
-    if ($mode === 'in-sync' || !in_array($name, ['cif_field', 'reg_com_field', 'cnp_field'], true)) {
+    if ($mode === 'in-sync' || !in_array($name, ['platform_url', 'cif_field', 'reg_com_field', 'cnp_field'], true)) {
         $GLOBALS['sim']['settings'][$name] = ['type' => $type, 'value' => $default];
     }
 }

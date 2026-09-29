@@ -213,13 +213,24 @@ final class ConfigProvider
     // ── Platform metadata (read-through to global config) ────────────────
 
     /**
-     * `PlatformaUrl` field on every FGO request — the storefront URL.
-     * Reads `config.http_location` (or `current_location`) from the global
-     * Registry. ConfigProvider is the addon's allowlisted Registry boundary,
-     * so the static-analysis disallowed-calls rule permits this here.
+     * `PlatformaUrl` field on every FGO request. FGO accepts only a platform
+     * URL registered in the account (Setari -> eCommerce -> Setari API) and
+     * otherwise answers "Platforma ... nu este inregistrata in FGO".
+     *
+     * The platform_url setting, when filled in, wins: a dev or staging store
+     * (http://localhost:8080) can send the URL the account has registered.
+     * Its trailing slash is dropped, as CS-Cart's own locations have none.
+     * Otherwise the storefront URL: `config.http_location` (or
+     * `current_location`) from the global Registry. ConfigProvider is the
+     * addon's allowlisted Registry boundary, so the static-analysis
+     * disallowed-calls rule permits this here.
      */
     public static function platformUrl(): string
     {
+        $configured = rtrim(trim(TypeCoerce::toString(self::settings()['platform_url'] ?? '')), '/');
+        if ($configured !== '') {
+            return $configured;
+        }
         $http = Registry::get('config.http_location');
         if (is_string($http) && $http !== '') {
             return $http;

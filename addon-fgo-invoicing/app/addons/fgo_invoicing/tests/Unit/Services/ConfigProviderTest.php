@@ -339,6 +339,17 @@ final class ConfigProviderTest extends TestCase
         self::assertSame('', ConfigProvider::platformUrl());
     }
 
+    public function testAConfiguredPlatformUrlWinsOverTheStoreLocation(): void
+    {
+        Registry::set('config.http_location', 'http://localhost:8080');
+
+        ConfigProvider::seed(['platform_url' => '  https://shop.example.ro/  ']);
+        self::assertSame('https://shop.example.ro', ConfigProvider::platformUrl(), 'trimmed, without the trailing slash');
+
+        ConfigProvider::seed(['platform_url' => '']);
+        self::assertSame('http://localhost:8080', ConfigProvider::platformUrl(), 'empty: the store\'s own URL');
+    }
+
     public function testPlatformAndAddonVersionsFallBackWhenUnknown(): void
     {
         Registry::set('config.product_version', '4.21.0');

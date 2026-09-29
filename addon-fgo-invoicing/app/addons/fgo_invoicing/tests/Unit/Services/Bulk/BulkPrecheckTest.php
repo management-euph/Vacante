@@ -53,8 +53,9 @@ final class BulkPrecheckTest extends TestCase
         bool $cifSource = false,
         bool $cnpSource = false,
         array $statusNames = [],
+        bool $seriesConfigured = true,
     ): BulkPrecheck {
-        return new BulkPrecheck(new BillingMapper('RON'), $vatRequired, $cnpRequired, $cifSource, $cnpSource, $statusNames);
+        return new BulkPrecheck(new BillingMapper('RON'), $vatRequired, $cnpRequired, $cifSource, $cnpSource, $statusNames, $seriesConfigured);
     }
 
     /**
@@ -150,6 +151,32 @@ final class BulkPrecheckTest extends TestCase
         self::assertSame(249.9, $row->total);
         self::assertSame('P', $row->orderStatus);
         self::assertSame('', $row->invoiceStatus);
+    }
+
+    /**
+     * FGO refuses an invoice without a series ("Campul 'Serie' este
+     * obligatoriu"), so with none set nothing is sent: a new order and a
+     * failed one are blocked, and say where to set it. An invoiced order is
+     * still only skipped.
+     */
+    public function testWithoutAnInvoiceSeriesNothingIsSent(): void
+    {
+        $precheck = self::precheck(seriesConfigured: false);
+
+        $new = $precheck->check(BulkAction::Issue, self::order(), null);
+        self::assertSame(PrecheckVerdict::Block, $new->verdict);
+        self::assertFalse($new->selected);
+        self::assertFalse($new->actionable());
+        self::assertSame(['no_invoice_series'], self::codes($new));
+        self::assertSame(PrecheckReason::LEVEL_BLOCK, $new->reasons[0]->level);
+
+        $failed = $precheck->check(BulkAction::Issue, self::order(), self::invoice('failed', '', '', '', "Campul 'Serie' este obligatoriu"));
+        self::assertSame(PrecheckVerdict::Block, $failed->verdict);
+        self::assertSame(['last_error', 'no_invoice_series'], self::codes($failed));
+
+        $issued = $precheck->check(BulkAction::Issue, self::order(), self::invoice('issued'));
+        self::assertSame(PrecheckVerdict::Skip, $issued->verdict);
+        self::assertSame(['already_invoiced'], self::codes($issued));
     }
 
     public function testAnIssuedOrderIsSkippedWithItsInvoiceNumber(): void

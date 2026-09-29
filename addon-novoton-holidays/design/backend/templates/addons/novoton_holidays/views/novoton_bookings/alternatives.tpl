@@ -155,4 +155,4 @@
 
 {* /capture - DISABLED *}
 
-{* include file="common/mainbox.tpl" title="Alternative Hotels" content=$smarty.capture.mainbox}
+{* include file="common/mainbox.tpl" title="Alternative Hotels" content=$smarty.capture.mainbox - DISABLED *}

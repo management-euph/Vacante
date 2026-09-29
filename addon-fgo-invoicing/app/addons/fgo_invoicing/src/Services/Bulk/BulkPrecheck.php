@@ -64,6 +64,7 @@ final class BulkPrecheck
 
     /**
      * @param array<string, string> $statusNames CS-Cart order status code => name, for the messages
+     * @param bool $seriesConfigured whether the invoice series setting is filled in
      */
     public function __construct(
         private readonly BillingMapper $mapper,
@@ -72,6 +73,7 @@ final class BulkPrecheck
         private readonly bool $hasCifSource = false,
         private readonly bool $hasCnpSource = false,
         private readonly array $statusNames = [],
+        private readonly bool $seriesConfigured = true,
     ) {
     }
 
@@ -170,6 +172,12 @@ final class BulkPrecheck
             $reasons[] = self::reason('mapping_failed', PrecheckReason::LEVEL_BLOCK, ['[error]' => self::excerpt($mappingError)]);
 
             return [PrecheckVerdict::Block, $reasons, false];
+        }
+
+        if (!$this->seriesConfigured) {
+            // FGO rejects an invoice without a series ("Campul 'Serie' este
+            // obligatoriu"): nothing would be issued, so nothing is sent.
+            $reasons[] = self::reason('no_invoice_series', PrecheckReason::LEVEL_BLOCK);
         }
 
         $orderStatus = strtoupper(trim(TypeCoerce::toString($orderInfo['status'] ?? '')));

@@ -119,7 +119,8 @@ final class ContainerTest extends TestCase
     /**
      * The pre-check blocks on a missing CIF only when the setting requires
      * it AND the store has a field for it: both facts must come from the
-     * same places InvoiceIssuer reads them.
+     * same places InvoiceIssuer reads them. It blocks, too, when no invoice
+     * series is set.
      */
     public function testTheBulkPrecheckCarriesTheStoreFacts(): void
     {
@@ -132,7 +133,7 @@ final class ContainerTest extends TestCase
             'b_country' => 'RO',
         ];
 
-        ConfigProvider::seed(['client_vat_required' => 'Y']);
+        ConfigProvider::seed(['client_vat_required' => 'Y', 'invoice_series' => 'F']);
         $container = Container::getInstance()->withProfileFieldCatalog(InMemoryProfileFieldCatalog::withDescriptions([5 => 'CIF']));
         $withField = $container->bulkPrecheck(['P' => 'Processed'])->check(BulkAction::Issue, $order, null);
         self::assertSame(PrecheckVerdict::Block, $withField->verdict);
@@ -141,9 +142,14 @@ final class ContainerTest extends TestCase
         $withoutField = $container->bulkPrecheck()->check(BulkAction::Issue, $order, null);
         self::assertSame(PrecheckVerdict::Warn, $withoutField->verdict);
 
-        ConfigProvider::seed([]);
+        ConfigProvider::seed(['invoice_series' => 'F']);
         $container->withProfileFieldCatalog(InMemoryProfileFieldCatalog::withDescriptions([5 => 'CIF']));
         self::assertSame(PrecheckVerdict::Warn, $container->bulkPrecheck()->check(BulkAction::Issue, $order, null)->verdict);
+
+        ConfigProvider::seed([]);
+        $noSeries = $container->bulkPrecheck()->check(BulkAction::Issue, $order, null);
+        self::assertSame(PrecheckVerdict::Block, $noSeries->verdict);
+        self::assertContains('no_invoice_series', array_map(static fn ($r) => $r->code, $noSeries->reasons));
     }
 
     public function testTheBulkRunnerIsWiredToTheContainersServices(): void

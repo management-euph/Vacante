@@ -40,6 +40,7 @@ final readonly class PrecheckReason
         'cnp_required_no_field',
         'cnp_invalid',
         'zero_total',
+        'no_invoice_series',
         'mapping_failed',
         'not_failed',
         'not_invoiced',

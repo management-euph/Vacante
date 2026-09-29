@@ -82,13 +82,14 @@ final class SettingsHealTest extends TestCase
                 'UPDATE ?:settings_objects SET value = ?s, ty', // restore what it rewrote
                 'UPDATE ?:settings_objects SET value = ?s, ty',
                 'UPDATE ?:settings_objects SET value = ?s, ty',
-                'SELECT name, position FROM ?:settings_object', // placement after creation
+                'SELECT name, position FROM ?:settings_object', // placement after creation:
+                'SELECT name, position FROM ?:settings_object', // one read per group of late settings
                 'SELECT object_id, name FROM ?:settings_objec', // labels mirrored last
             ],
             $queries,
         );
 
-        foreach (['cif_field', 'reg_com_field', 'cnp_field'] as $created) {
+        foreach (['platform_url', 'cif_field', 'reg_com_field', 'cnp_field'] as $created) {
             self::assertArrayHasKey($created, $out['settings'], "{$created} is created");
         }
     }

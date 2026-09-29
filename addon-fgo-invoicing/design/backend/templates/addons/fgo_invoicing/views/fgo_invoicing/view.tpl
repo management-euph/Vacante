@@ -165,4 +165,5 @@
 </div>
 
 {/capture}
-{include file="common/mainbox.tpl" title=__("fgo_invoicing.invoice_for_order"):" #":$fgo_invoice.order_id content=$smarty.capture.mainbox}
+{$fgo_title = __("fgo_invoicing.invoice_for_order")|cat:" #"|cat:$fgo_invoice.order_id}
+{include file="common/mainbox.tpl" title=$fgo_title content=$smarty.capture.mainbox}

@@ -32,6 +32,10 @@ msgctxt "SettingsOptions::fgo_invoicing::sandbox"
 msgid "Use sandbox (api-testuat.fgo.ro)"
 msgstr "Use sandbox (api-testuat.fgo.ro)"
 
+msgctxt "SettingsOptions::fgo_invoicing::platform_url"
+msgid "Platform URL registered in FGO (empty: this store's URL)"
+msgstr "Platform URL registered in FGO (empty: this store's URL)"
+
 msgctxt "SettingsOptions::fgo_invoicing::behaviour_header"
 msgid "Trigger & Behaviour"
 msgstr "Trigger & Behaviour"
@@ -625,9 +629,9 @@ msgctxt "Languages::fgo_invoicing.snap_series"
 msgid "fgo_invoicing.snap_series"
 msgstr "Series"
 
-msgctxt "Languages::fgo_invoicing.snap_series_default"
-msgid "fgo_invoicing.snap_series_default"
-msgstr "FGO default series"
+msgctxt "Languages::fgo_invoicing.snap_series_missing"
+msgid "fgo_invoicing.snap_series_missing"
+msgstr "Not set (FGO requires one)"
 
 msgctxt "Languages::fgo_invoicing.snap_issue_date"
 msgid "fgo_invoicing.snap_issue_date"
@@ -831,7 +835,7 @@ msgstr "Ready"
 
 msgctxt "Languages::fgo_invoicing.verdict_retry"
 msgid "fgo_invoicing.verdict_retry"
-msgstr "Retry"
+msgstr "Ready to retry"
 
 msgctxt "Languages::fgo_invoicing.verdict_warn"
 msgid "fgo_invoicing.verdict_warn"
@@ -908,6 +912,10 @@ msgstr "The CNP fails the check digit."
 msgctxt "Languages::fgo_invoicing.pc_zero_total"
 msgid "fgo_invoicing.pc_zero_total"
 msgstr "The order total is 0."
+
+msgctxt "Languages::fgo_invoicing.pc_no_invoice_series"
+msgid "fgo_invoicing.pc_no_invoice_series"
+msgstr "No invoice series is set, and FGO requires one. Set it in the FGO Invoicing add-on settings."
 
 msgctxt "Languages::fgo_invoicing.pc_mapping_failed"
 msgid "fgo_invoicing.pc_mapping_failed"
