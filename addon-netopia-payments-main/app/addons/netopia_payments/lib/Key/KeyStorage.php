@@ -47,6 +47,8 @@ final class KeyStorage
      *
      * @param array<string, mixed> $processorParams
      * @param 'public_key'|'private_key' $keyType
+     * @param int $paymentId the payment method whose key directory is read
+     * @param PaymentMode $mode picks the live_* or sandbox_* key
      */
     public function load(array $processorParams, string $keyType, int $paymentId, PaymentMode $mode): string
     {

@@ -77,13 +77,13 @@ final class StatusMessage
      */
     private static function looksLikeInsufficientFunds(string $netopiaMessage): bool
     {
-        $needle = strtolower(trim($netopiaMessage));
-        if ($needle === '') {
+        $message = strtolower(trim($netopiaMessage));
+        if ($message === '') {
             return false;
         }
 
-        return str_contains($needle, 'insufficient funds')
-            || str_contains($needle, 'fonduri insuficiente');
+        return str_contains($message, 'insufficient funds')
+            || str_contains($message, 'fonduri insuficiente');
     }
 
     private function translate(string $key): string

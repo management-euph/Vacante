@@ -83,12 +83,16 @@ enum PaymentStatus: int
     {
         return match ($this) {
             self::Paid, self::Confirmed => 'success',
-            self::New, self::Opened, self::Pending, self::PendingAuth,
-            self::ThreeDAuth, self::PendingAny => 'pending',
             self::Credit => 'refund',
             self::Canceled, self::Reversed => 'cancel',
             self::Error, self::Declined, self::Fraud, self::Expired => 'fail',
-            default => 'pending',
+            // In flight, plus the scheduled / chargeback / recurring / trial
+            // codes, which settle nothing for a CS-Cart order on their own.
+            self::New, self::Opened, self::Pending, self::PendingAuth,
+            self::ThreeDAuth, self::PendingAny, self::Scheduled,
+            self::ChargebackInit, self::ChargebackAccept, self::ChargebackRepresentment,
+            self::ProgrammedRecurrentPayment, self::CanceledProgrammedRecurrent,
+            self::TrialPending, self::Trial => 'pending',
         };
     }
 

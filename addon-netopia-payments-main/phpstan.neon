@@ -6,8 +6,8 @@ parameters:
     scanDirectories:
         - app/addons/netopia_payments/lib
     bootstrapFiles:
-        - .phpstan/cscart-stubs.php
-        - .phpstan/tygh-stubs.php
+        - .phpstan/cscart-stubs.stub
+        - .phpstan/tygh-stubs.stub
     dynamicConstantNames:
         - DEVELOPMENT
     excludePaths:

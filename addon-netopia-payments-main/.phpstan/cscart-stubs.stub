@@ -3,6 +3,11 @@
  * CS-Cart global stubs for PHPStan static analysis.
  *
  * Constants and global functions the addon depends on at runtime.
+ *
+ * The .stub extension keeps IDEs and Qodana from indexing these placeholder
+ * bodies as the real CS-Cart functions (a `{ return true; }` body reads as a
+ * pure function, so every call whose result is ignored gets flagged).
+ * PHPStan loads the file through bootstrapFiles, whatever its extension.
  */
 
 // ── Constants ────────────────────────────────────────────────────────
@@ -33,7 +38,12 @@ function fn_get_order_info(int $order_id): array|false { return []; }
 
 function fn_update_order_payment_info(int $order_id, array $extra_info): void {}
 
-function fn_change_order_status(int $order_id, string $status_to, string $reason = '', bool $notify = true): bool { return true; }
+/**
+ * The 3rd argument is the order's PREVIOUS status code, not a reason text.
+ *
+ * @param array<string, bool>|bool $force_notification
+ */
+function fn_change_order_status(int $order_id, string $status_to, string $status_from = '', array|bool $force_notification = [], bool $place_order = false): bool { return true; }
 
 /**
  * @param array<string, string> $data

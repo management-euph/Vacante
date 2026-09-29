@@ -74,6 +74,8 @@ function fn_netopia_get_keys_dir(int $payment_id): string
  *
  * @param array<string, mixed> $processor_params
  * @param 'public_key'|'private_key' $key_type
+ * @param int $payment_id the payment method whose key directory is read
+ * @param string $mode 'live' or 'sandbox'; '' uses $processor_params['mode']
  */
 function fn_netopia_load_key(array $processor_params, string $key_type, int $payment_id, string $mode = ''): string
 {
@@ -329,7 +331,6 @@ function fn_netopia_handle_ipn(): void
             ['remote_ip' => $remoteIp],
         );
         fn_netopia_ipn_response(2, 1, 'Missing Verification-Token header');
-        return;
     }
 
     $handler = Bootstrap::instance()->ipnHandler(
@@ -449,9 +450,9 @@ function fn_netopia_handle_hosted_return(): void
 }
 
 /**
- * Send a JSON response back to NETOPIA IPN.
+ * Send a JSON response back to NETOPIA IPN and end the request.
  */
-function fn_netopia_ipn_response(int $error_type, int $error_code, string $message): void
+function fn_netopia_ipn_response(int $error_type, int $error_code, string $message): never
 {
     header('Content-Type: application/json');
     echo json_encode([
@@ -531,7 +532,7 @@ function fn_netopia_parse_refund_log(string $log): array
         }
         if (
             !preg_match(
-                '/^\[(?P<date>[^\]]+)\] (?P<amount>.+?) — (?P<kind>full refund|partial refund) \((?P<ntp_id>[^)]+)\) \[(?P<origin>[^\]]+)\]$/u',
+                '/^\[(?P<date>[^]]+)] (?P<amount>.+?) — (?P<kind>full refund|partial refund) \((?P<ntp_id>[^)]+)\) \[(?P<origin>[^]]+)]$/u',
                 $line,
                 $m,
             )

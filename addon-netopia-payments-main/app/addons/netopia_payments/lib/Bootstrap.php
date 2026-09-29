@@ -250,7 +250,7 @@ final class Bootstrap
             paymentFinalizer:    $paymentFinalizer,
             placementRouter:     $placementRouter,
             checkoutRedirect:    $checkoutRedirect,
-            apiClientFactory:    Closure::fromCallable([$this, 'apiClientFor']),
+            apiClientFactory:    $this->apiClientFor(...),
             logger:              $this->logger,
         );
     }
@@ -261,7 +261,7 @@ final class Bootstrap
         return new PaymentLinkService(
             payloadBuilder:      $this->payloadBuilder,
             threeDsFactory:      $this->threeDsFactory,
-            apiClientFactory:    Closure::fromCallable([$this, 'apiClientFor']),
+            apiClientFactory:    $this->apiClientFor(...),
             paymentInfoUpdater:  $paymentInfoUpdater,
             logger:              $this->logger,
         );

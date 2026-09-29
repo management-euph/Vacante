@@ -257,16 +257,10 @@ switch ($flow) {
         exit;
 
     case 'approved':
-        fn_update_order_payment_info($order_id, $paymentInfoUpdate);
-        $pp_response = [
-            'order_status' => $bootstrap->statusMapper->map($ntpStatus, $params),
-            'reason_text' => $bootstrap->statusMessage->forCustomer($status, Arr::string($errorBlock, 'message')),
-            'transaction_id' => $ntpId,
-        ];
-        break;
-
     case 'failed':
     default:
+        // Approved and failed payments are recorded the same way: the status
+        // mapper turns NETOPIA's status into the order status for both.
         fn_update_order_payment_info($order_id, $paymentInfoUpdate);
         $pp_response = [
             'order_status' => $bootstrap->statusMapper->map($ntpStatus, $params),

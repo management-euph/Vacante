@@ -23,7 +23,7 @@
     <!-- Type stubs: shape-only declarations for the static analysers
          (Psalm/PHPStan), with deliberately empty bodies and unused
          parameters. Not real source. -->
-    <exclude-pattern>psalm-stubs.php</exclude-pattern>
+    <exclude-pattern>psalm-stubs.stub</exclude-pattern>
     <exclude-pattern>.phpstan/.*</exclude-pattern>
 
     <!-- cleancode minus rules that fight CS-Cart's procedural shape. -->

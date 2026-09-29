@@ -313,6 +313,7 @@ function fn_settings_variants_addons_travel_core_default_currency(): array
  * components/deposit_totals.tpl.
  *
  * @param mixed $products
+ * @param mixed $chargedTotal the cart / order total, i.e. what is charged now
  * @return array<string, float|string>
  */
 function fn_travel_core_deposit_totals(mixed $products, mixed $chargedTotal): array

@@ -106,6 +106,11 @@ exclude:
       - addon-sphinx-holidays/app/addons/sphinx_holidays/tests
       - addon-fgo-invoicing/app/addons/fgo_invoicing/tests
       - eurosite_addon/app/addons/eurosite/tests
+      - addon-netopia-payments-main/tests
+      # Vendored psr/log copy (namespace Psr\Log under lib/, loaded by the
+      # addon's own autoloader); netopia's PHPStan / Psalm / php-cs-fixer
+      # configs skip it for the same reason.
+      - addon-netopia-payments-main/app/addons/netopia_payments/lib/Psr
 
 include:
   - name: CheckDependencyLicenses
