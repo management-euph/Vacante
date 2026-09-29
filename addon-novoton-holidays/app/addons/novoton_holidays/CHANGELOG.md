@@ -3,6 +3,9 @@
 ## 4.1.0 — Destination whitelist
 
 - **NEW:** Novoton → Destinations: per country Not sold / All resorts / Only selected, replacing the dashboard's Excluded resorts and the "Selected countries" setting once saved. New and vanished resorts are flagged; "Disable products outside the whitelist" is its own confirmed step.
+- **CHANGED:** the Destinations page runs on Travel Core's shared destination picker (the one Eurosite and Sphinx move to next): chips and a filter inside a country, live products as a pill, the countries with no hotels folded into one line, products outside the whitelist grouped by resort, and Save in the summary and in a bar that appears once something is unsaved (no longer in the top row with the page links).
+- **FIXED:** every country row read "Array resorts · 1121 hotels", and the dashboard card "ALL Array resorts" / "71 of Array": the resort list and the resort count shared a key.
+- **FIXED:** a country with no hotels showed two messages when opened.
 - **CHANGED:** every product creator (add_hotels_as_products, offers_update, admin run_cron) and the per-hotel API syncs (hotelinfo, priceinfo, facilities, room_price) follow the whitelist, plus hotels with live products.
 - **FIXED:** compute_prices and the per-hotel price update wrote `?:products.price`, a column CS-Cart 4 does not have ("Unknown column 'price' (1054)" per hotel); catalog prices now go to the base row of `?:product_prices`.
 - **FIXED:** offers_update and incremental hotelinfo read only the first `<Offer>`.

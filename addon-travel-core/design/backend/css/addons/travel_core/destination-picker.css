@@ -1,0 +1,699 @@
+/* ─── Travel Core — the destination picker (components/destination_picker.tpl) ───
+   What we sell from each supplier: countries on the left, the summary on the
+   right, the tiles above (Travel Core's travel-cron-tile). Badges read in words
+   and colour: green ALL, amber "n of m", grey NOT SOLD, violet NEW. Loaded by
+   the component itself ({style} inside the mainbox capture). */
+
+.travel-dest [hidden] {
+    display: none !important;
+}
+
+.travel-dest-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+.travel-dest__tiles {
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+.travel-dest__notice {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    align-items: center;
+}
+
+.travel-dest__intro {
+    max-width: 80ch;
+    margin: 0 0 12px;
+}
+
+.travel-dest__cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 24px;
+    align-items: start;
+}
+
+.travel-dest__main {
+    min-width: 0;
+    margin: 0;
+}
+
+.travel-dest__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.travel-dest__search {
+    position: relative;
+    flex: 1 1 260px;
+    min-width: 0;
+}
+
+.travel-dest__search input[type="search"] {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+}
+
+.travel-dest__results {
+    position: absolute;
+    z-index: 100;
+    left: 0;
+    right: 0;
+    top: 100%;
+    max-height: 400px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-top: 0;
+    border-radius: 0 0 6px 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.travel-dest__hit {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    width: 100%;
+    padding: 6px 12px 6px 24px;
+    border: 0;
+    border-bottom: 1px solid #f2f2f2;
+    background: none;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+}
+
+.travel-dest__hit:hover,
+.travel-dest__hit:focus {
+    background: #f0f7ff;
+    outline: none;
+}
+
+.travel-dest__hit--country {
+    padding-left: 12px;
+    background: #f4f5f7;
+    font-weight: 600;
+}
+
+.travel-dest__hit--group {
+    padding-left: 18px;
+}
+
+.travel-dest__hitside {
+    margin-left: auto;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.travel-dest__nohit,
+.travel-dest__empty {
+    padding: 12px;
+    color: #777;
+}
+
+.travel-dest__check {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    margin: 0;
+    cursor: pointer;
+}
+
+.travel-dest__check input,
+.travel-dest__check select {
+    margin: 0;
+}
+
+.travel-dest-country {
+    border-bottom: 1px solid #eceff2;
+}
+
+.travel-dest-country__head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    align-items: center;
+    padding: 8px 2px;
+}
+
+.travel-dest-country__toggle {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    min-width: 140px;
+    padding: 2px 4px;
+    border: 0;
+    background: none;
+    font: inherit;
+    cursor: pointer;
+    text-align: left;
+}
+
+.travel-dest-country__arrow {
+    width: 14px;
+    color: #888;
+    font-size: 10px;
+}
+
+.travel-dest-country__meta {
+    font-size: 12px;
+}
+
+.travel-dest-code {
+    padding: 0 4px;
+    border: 0;
+    border-radius: 3px;
+    background: #f1f3f5;
+    color: #4a5360;
+    font-size: 11px;
+    font-weight: 400;
+}
+
+.travel-dest-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+.travel-dest-badge--s {
+    padding: 1px 6px;
+    font-size: 10.5px;
+}
+
+.travel-dest-badge--all {
+    background: #28a745;
+    color: #fff;
+}
+
+.travel-dest-badge--specific {
+    background: #e67e22;
+    color: #fff;
+}
+
+.travel-dest-badge--off {
+    background: #e4e7eb;
+    color: #555;
+}
+
+.travel-dest-badge--new {
+    background: #ece7fa;
+    color: #5b3fb0;
+}
+
+/* Flags an add-on puts next to a name (Eurosite: ★ own). */
+.travel-dest-flag {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: #eef1f4;
+    color: #4a5360;
+    font-size: 10.5px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.travel-dest-flag--own {
+    background: #fff3d6;
+    color: #8a5a00;
+}
+
+.travel-dest-type {
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.travel-dest-type--country {
+    background: #607d8b;
+}
+
+.travel-dest-type--group {
+    background: #2196f3;
+}
+
+.travel-dest-type--item {
+    background: #8bc34a;
+}
+
+.travel-dest-mode {
+    display: inline-flex;
+    margin: 0 0 0 auto;
+    padding: 0;
+    border: 1px solid #cfd5dc;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.travel-dest-mode__opt {
+    position: relative;
+    margin: 0;
+    cursor: pointer;
+}
+
+.travel-dest-mode__opt input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+}
+
+.travel-dest-mode__opt span {
+    display: block;
+    padding: 4px 10px;
+    border-right: 1px solid #cfd5dc;
+    background: #fff;
+    color: #555;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.travel-dest-mode__opt:last-child span {
+    border-right: 0;
+}
+
+.travel-dest-mode__opt input:checked + span {
+    background: #0b7fc7;
+    color: #fff;
+    font-weight: 600;
+}
+
+.travel-dest-mode__opt input:focus-visible + span {
+    outline: 2px solid #0b7fc7;
+    outline-offset: -2px;
+}
+
+.travel-dest-country__body {
+    padding: 10px 12px 14px 26px;
+    background: #fafbfc;
+    border-top: 1px solid #eceff2;
+}
+
+.travel-dest-country__hint {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 12px;
+}
+
+.travel-dest-country__bulk {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.travel-dest-tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.travel-dest-chips {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.travel-dest-chip {
+    padding: 2px 9px;
+    border: 1px solid #d3d9e0;
+    border-radius: 11px;
+    background: #fff;
+    color: #4a5360;
+    font: inherit;
+    font-size: 11.5px;
+    cursor: pointer;
+}
+
+.travel-dest-chip b {
+    margin-left: 2px;
+    font-weight: 600;
+}
+
+.travel-dest-chip[aria-pressed="true"] {
+    border-color: #2f3640;
+    background: #2f3640;
+    color: #fff;
+}
+
+.travel-dest-filter,
+.travel-dest-sort {
+    margin: 0;
+    font-size: 12px;
+}
+
+.travel-dest-filter {
+    flex: 0 1 180px;
+    min-width: 120px;
+}
+
+.travel-dest-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
+    gap: 6px;
+}
+
+.travel-dest-item {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    min-width: 0;
+    margin: 0;
+    padding: 6px 9px;
+    border: 1px solid #dde1e6;
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.travel-dest-item input {
+    flex-shrink: 0;
+    margin: 3px 0 0;
+}
+
+.travel-dest-item.is-sold {
+    border-color: #9fd3ad;
+    background: #eef8f1;
+}
+
+.travel-dest-item.is-gone .travel-dest-item__label {
+    color: #888;
+    text-decoration: line-through;
+}
+
+.travel-dest-item.is-flash,
+.travel-dest-group.is-flash,
+.travel-dest-country.is-flash {
+    box-shadow: 0 0 0 3px #f5c542;
+}
+
+.travel-dest-country.is-locked .travel-dest-item {
+    cursor: default;
+}
+
+.travel-dest-country.is-locked .travel-dest-item input,
+.travel-dest-country.is-locked .travel-dest-group__head input {
+    visibility: hidden;
+}
+
+.travel-dest-item__text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.travel-dest-item__name {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px 6px;
+    align-items: center;
+    font-weight: 600;
+}
+
+.travel-dest-item__meta {
+    color: #4a5360;
+    font-size: 11.5px;
+}
+
+.travel-dest-item__meta.is-muted {
+    color: #8a929c;
+    font-style: italic;
+}
+
+.travel-dest-item__dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 4px;
+    background: #c77700;
+}
+
+/* Live products: a pill on the name line, so the card stays two lines. */
+.travel-dest-live {
+    margin-left: auto;
+    padding: 1px 6px;
+    border-radius: 9px;
+    background: #28a745;
+    color: #fff;
+    font-size: 10.5px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.travel-dest-group {
+    margin-bottom: 8px;
+}
+
+.travel-dest-group__head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 8px;
+    align-items: center;
+    padding: 5px 8px;
+    background: #e8f4fd;
+    border-left: 3px solid #2196f3;
+    border-radius: 0 4px 4px 0;
+}
+
+.travel-dest-group__head input {
+    margin: 0;
+}
+
+.travel-dest-group__name {
+    margin: 0;
+    color: #1565c0;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.travel-dest-group__fold {
+    display: inline-grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 0;
+    border-radius: 3px;
+    background: #d0e8f7;
+    color: #1565c0;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.travel-dest-group__meta {
+    margin-left: auto;
+    font-size: 11.5px;
+}
+
+.travel-dest-group .travel-dest-grid {
+    padding: 6px 0 2px 26px;
+}
+
+.travel-dest-group:not([data-group]) .travel-dest-grid {
+    padding: 0;
+}
+
+.travel-dest-more {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    margin-top: 10px;
+    font-size: 12px;
+}
+
+.travel-dest__nomatch,
+.travel-dest__emptytext {
+    margin: 0;
+}
+
+.travel-dest__error {
+    margin: 0;
+    color: #b3261e;
+}
+
+.travel-dest__fold {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    padding: 10px 4px;
+    border-bottom: 1px solid #eceff2;
+    color: #6b7480;
+    font-size: 12.5px;
+}
+
+.travel-dest__pager {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+    font-size: 12.5px;
+}
+
+.travel-dest__pageinfo {
+    min-width: 90px;
+    text-align: center;
+}
+
+.travel-dest__summary {
+    position: sticky;
+    top: 80px;
+    display: grid;
+    gap: 8px;
+    padding: 16px;
+    border: 1px solid #dde1e6;
+    border-radius: 6px;
+    background: #fafbfc;
+}
+
+.travel-dest__summary h4 {
+    margin: 0 0 4px;
+}
+
+.travel-dest__srow,
+.travel-dest__slist > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.travel-dest__slist {
+    display: grid;
+    gap: 4px;
+    padding-top: 8px;
+    border-top: 1px solid #e4e7eb;
+    font-size: 12px;
+}
+
+.travel-dest__slist:empty {
+    display: none;
+}
+
+.travel-dest__pending {
+    min-height: 1.4em;
+    color: #a45f00;
+    font-size: 12px;
+}
+
+.travel-dest__pending.is-clean {
+    color: #6b7480;
+}
+
+.travel-dest__wide {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.travel-dest__outside {
+    display: grid;
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px solid #e4e7eb;
+}
+
+.travel-dest__confirm {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+}
+
+.travel-dest__confirm p {
+    margin: 0;
+}
+
+.travel-dest__outlist {
+    max-height: 220px;
+    overflow-y: auto;
+    margin: 0;
+    padding-left: 18px;
+    font-size: 12px;
+}
+
+.travel-dest__note {
+    margin: 0;
+    font-size: 12px;
+}
+
+/* Once something is unsaved: a bar at the bottom of the window, with Save. */
+.travel-dest__savebar {
+    position: sticky;
+    bottom: 0;
+    z-index: 50;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-top: 1px solid #d99a00;
+    background: #fff8e6;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.travel-dest__savebar-text {
+    margin-right: auto;
+    color: #a45f00;
+    font-weight: 600;
+}
+
+/* Dashboard: the Destinations card (components/destinations_card.tpl) */
+.travel-dest-card__table td,
+.travel-dest-card__table th {
+    white-space: nowrap;
+}
+
+@media (max-width: 1100px) {
+    .travel-dest__cols {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .travel-dest__summary {
+        position: static;
+    }
+}
+
+@media (max-width: 768px) {
+    .travel-dest-mode {
+        margin-left: 0;
+    }
+
+    .travel-dest-country__body {
+        padding-left: 12px;
+    }
+
+    .travel-dest-group .travel-dest-grid {
+        padding-left: 0;
+    }
+}
