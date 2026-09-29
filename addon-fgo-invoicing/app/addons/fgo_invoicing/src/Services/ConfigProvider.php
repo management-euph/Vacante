@@ -114,14 +114,57 @@ final class ConfigProvider
         return (self::settings()['sanitize_vat'] ?? 'N') === 'Y';
     }
 
+    /**
+     * "Do not issue for company customers without a CIF" — InvoiceIssuer
+     * refuses to call FGO for a PJ customer whose CIF resolved empty.
+     */
     public static function clientVatRequired(): bool
     {
         return (self::settings()['client_vat_required'] ?? 'N') === 'Y';
     }
 
+    /**
+     * "Do not issue for individuals without a CNP" — InvoiceIssuer refuses to
+     * call FGO for a Romanian PF customer with no CNP.
+     */
     public static function clientCnpRequired(): bool
     {
         return (self::settings()['client_cnp_required'] ?? 'N') === 'Y';
+    }
+
+    /** Custom profile field holding the company CIF; 0 = auto-detect by field name. */
+    public static function cifFieldId(): int
+    {
+        return self::profileFieldId('cif_field');
+    }
+
+    /** Custom profile field holding the Reg. Com. number; 0 = auto-detect by field name. */
+    public static function regComFieldId(): int
+    {
+        return self::profileFieldId('reg_com_field');
+    }
+
+    /** Custom profile field holding the CNP; 0 = auto-detect by field name. */
+    public static function cnpFieldId(): int
+    {
+        return self::profileFieldId('cnp_field');
+    }
+
+    /**
+     * A profile-field selector: a positive field id, else 0 ("Auto-detect by
+     * field name"). 0 is also what a store runs on when the setting row does
+     * not exist — CS-Cart creates settings only at install, so every store
+     * installed before these selectors must keep working without them.
+     */
+    private static function profileFieldId(string $key): int
+    {
+        $raw = self::settings()[$key] ?? '';
+        if (is_int($raw)) {
+            return max(0, $raw);
+        }
+        $value = trim(TypeCoerce::toString($raw));
+
+        return preg_match('/^\d{1,9}$/', $value) === 1 ? (int) $value : 0;
     }
 
     // ── Lines / Codes ────────────────────────────────────────────────────
@@ -190,6 +233,25 @@ final class ConfigProvider
     {
         $v = Registry::get('config.product_version');
         return is_string($v) && $v !== '' ? $v : '4.20.1';
+    }
+
+    /**
+     * The store's primary currency — the currency EVERY amount of a CS-Cart
+     * order is stored in (totals, prices, shipping, discounts). Amounts are
+     * only converted for display, so this, and not the currency the shopper
+     * was browsing in, is the invoice's `Valuta`.
+     *
+     * CART_PRIMARY_CURRENCY is defined by fn_init_currency(), i.e. on every
+     * real request after init; 'RON' covers partial bootstraps and tests.
+     */
+    public static function primaryCurrency(): string
+    {
+        $code = '';
+        if (defined('CART_PRIMARY_CURRENCY')) {
+            $code = strtoupper(trim(TypeCoerce::toString(CART_PRIMARY_CURRENCY)));
+        }
+
+        return $code !== '' ? $code : 'RON';
     }
 
     /** `VersiuneAddon` field — this addon's version (set in init.php). */

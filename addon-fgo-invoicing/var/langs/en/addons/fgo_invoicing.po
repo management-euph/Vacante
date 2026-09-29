@@ -85,12 +85,24 @@ msgid "Validate Romanian CIF (ValideazaCodUnicRo)"
 msgstr "Validate Romanian CIF (ValideazaCodUnicRo)"
 
 msgctxt "SettingsOptions::fgo_invoicing::client_vat_required"
-msgid "Require CIF for company customers at checkout"
-msgstr "Require CIF for company customers at checkout"
+msgid "Do not issue for company customers without a CIF"
+msgstr "Do not issue for company customers without a CIF"
 
 msgctxt "SettingsOptions::fgo_invoicing::client_cnp_required"
-msgid "Require CNP for individuals at checkout"
-msgstr "Require CNP for individuals at checkout"
+msgid "Do not issue for individuals without a CNP"
+msgstr "Do not issue for individuals without a CNP"
+
+msgctxt "SettingsOptions::fgo_invoicing::cif_field"
+msgid "Profile field holding the CIF (company tax ID)"
+msgstr "Profile field holding the CIF (company tax ID)"
+
+msgctxt "SettingsOptions::fgo_invoicing::reg_com_field"
+msgid "Profile field holding the Reg. Com. number"
+msgstr "Profile field holding the Reg. Com. number"
+
+msgctxt "SettingsOptions::fgo_invoicing::cnp_field"
+msgid "Profile field holding the CNP (individuals)"
+msgstr "Profile field holding the CNP (individuals)"
 
 msgctxt "SettingsOptions::fgo_invoicing::lines_header"
 msgid "Invoice Lines & Codes"
@@ -392,6 +404,10 @@ msgstr "Request payload"
 msgctxt "Languages::fgo_invoicing.response_payload"
 msgid "fgo_invoicing.response_payload"
 msgstr "Response payload"
+
+msgctxt "Languages::fgo_invoicing.profile_field_auto_detect"
+msgid "fgo_invoicing.profile_field_auto_detect"
+msgstr "Auto-detect by field name"
 
 
 msgctxt "Languages::fgo_invoicing.email_subject"

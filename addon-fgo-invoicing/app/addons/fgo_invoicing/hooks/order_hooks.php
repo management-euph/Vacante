@@ -13,25 +13,59 @@ use Tygh\Addons\FgoInvoicing\Services\Container;
 /**
  * Hook: place_order_post — issue the invoice immediately when configured for "onOrder".
  *
- * @param int|string $order_id
- * @param string $action
- * @param string $order_status
+ * The signature is CS-Cart 4.20's (app/functions/fn.cart.php, fn_place_order):
+ *
+ *     fn_set_hook('place_order_post', $cart, $auth, $action, $issuer_id,
+ *                 $parent_order_id, $order_id, $order_status,
+ *                 $short_order_data, $notification_rules);
+ *
+ * $cart comes FIRST and $order_id is the SIXTH argument. This hook used to be
+ * declared ($order_id, $action, $order_status, $cart, $auth) — the argument
+ * order of the separate 'place_order' hook — so it received the cart array as
+ * $order_id, read 0 and returned: "Place order" mode never issued anything.
+ *
+ * Every parameter after the first has a default, for the same reason as
+ * fn_fgo_invoicing_change_order_status() below: a build that passes fewer
+ * arguments must not turn checkout into an ArgumentCountError. And nothing
+ * may escape from here: this runs inside the customer's "Place order"
+ * request, after the order row is written; the invoice can be issued again
+ * from the admin, a crashed checkout cannot be undone.
+ *
  * @param array<string, mixed> $cart
  * @param array<string, mixed> $auth
+ * @param string $action
+ * @param int|null $issuer_id
+ * @param int $parent_order_id
+ * @param int|string $order_id
+ * @param string $order_status
+ * @param array<string, mixed> $short_order_data
+ * @param array<string, mixed> $notification_rules
  */
 function fn_fgo_invoicing_place_order_post(
-    &$order_id,
-    &$action = '',
-    &$order_status = '',
-    &$cart = [],
+    &$cart,
     &$auth = [],
-): void
-{
+    &$action = '',
+    &$issuer_id = null,
+    &$parent_order_id = 0,
+    &$order_id = 0,
+    &$order_status = '',
+    &$short_order_data = [],
+    &$notification_rules = [],
+): void {
     $oid = TypeCoerce::toInt($order_id);
     if (ConfigProvider::apiCall() !== 'onOrder' || $oid <= 0) {
         return;
     }
-    Container::getInstance()->issuer()->issueForOrder($oid);
+    try {
+        Container::getInstance()->issuer()->issueForOrder($oid);
+    } catch (\Throwable $e) {
+        if (function_exists('fn_log_event')) {
+            fn_log_event('fgo_invoicing', 'runtime', [
+                'message' => '[error] place-order-post',
+                'context' => ['order_id' => $oid, 'exception' => $e::class, 'message' => $e->getMessage()],
+            ]);
+        }
+    }
 }
 
 /**

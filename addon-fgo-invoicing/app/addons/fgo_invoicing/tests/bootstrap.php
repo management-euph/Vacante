@@ -54,7 +54,7 @@ if (!defined('BOOTSTRAP')) {
 if (!function_exists('fn_log_event')) {
     function fn_log_event(string $type, string $action, array $data = []): void
     {
-        // no-op in tests
+        \Tygh\Addons\FgoInvoicing\Tests\Support\LogStub::record($type, $action, $data);
     }
 }
 if (!function_exists('db_get_field')) {

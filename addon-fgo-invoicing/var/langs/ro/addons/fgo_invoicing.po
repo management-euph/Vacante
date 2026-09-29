@@ -85,12 +85,24 @@ msgid "Validează CIF românesc (ValideazaCodUnicRo)"
 msgstr "Validează CIF românesc (ValideazaCodUnicRo)"
 
 msgctxt "SettingsOptions::fgo_invoicing::client_vat_required"
-msgid "Solicită CIF la finalizare pentru persoane juridice"
-msgstr "Solicită CIF la finalizare pentru persoane juridice"
+msgid "Nu emite factura pentru persoane juridice fără CIF"
+msgstr "Nu emite factura pentru persoane juridice fără CIF"
 
 msgctxt "SettingsOptions::fgo_invoicing::client_cnp_required"
-msgid "Solicită CNP la finalizare pentru persoane fizice"
-msgstr "Solicită CNP la finalizare pentru persoane fizice"
+msgid "Nu emite factura pentru persoane fizice fără CNP"
+msgstr "Nu emite factura pentru persoane fizice fără CNP"
+
+msgctxt "SettingsOptions::fgo_invoicing::cif_field"
+msgid "Câmpul de profil cu CIF-ul (cod fiscal firmă)"
+msgstr "Câmpul de profil cu CIF-ul (cod fiscal firmă)"
+
+msgctxt "SettingsOptions::fgo_invoicing::reg_com_field"
+msgid "Câmpul de profil cu Nr. Reg. Com."
+msgstr "Câmpul de profil cu Nr. Reg. Com."
+
+msgctxt "SettingsOptions::fgo_invoicing::cnp_field"
+msgid "Câmpul de profil cu CNP-ul (persoane fizice)"
+msgstr "Câmpul de profil cu CNP-ul (persoane fizice)"
 
 msgctxt "SettingsOptions::fgo_invoicing::lines_header"
 msgid "Linii factură & Coduri"
@@ -391,6 +403,10 @@ msgstr "Payload cerere"
 msgctxt "Languages::fgo_invoicing.response_payload"
 msgid "fgo_invoicing.response_payload"
 msgstr "Payload răspuns"
+
+msgctxt "Languages::fgo_invoicing.profile_field_auto_detect"
+msgid "fgo_invoicing.profile_field_auto_detect"
+msgstr "Detectare automată după numele câmpului"
 
 msgctxt "Languages::fgo_invoicing.email_subject"
 msgid "fgo_invoicing.email_subject"

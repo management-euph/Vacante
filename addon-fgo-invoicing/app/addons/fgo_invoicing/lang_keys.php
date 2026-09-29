@@ -180,6 +180,14 @@ return [
         'ro' => 'Payload răspuns',
     ],
 
+    // ── Admin: settings form (runtime-built options, not settings labels) ─
+    // The empty option of the cif_field / reg_com_field / cnp_field selectors,
+    // rendered by functions/settings_variants.php.
+    'fgo_invoicing.profile_field_auto_detect' => [
+        'en' => 'Auto-detect by field name',
+        'ro' => 'Detectare automată după numele câmpului',
+    ],
+
     // ── Customer e-mail ─────────────────────────────────────────────────
     'fgo_invoicing.email_subject' => [
         'en' => 'Your invoice',

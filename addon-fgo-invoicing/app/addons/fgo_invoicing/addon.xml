@@ -158,15 +158,41 @@
                         <variants/>
                     </item>
                     <item id="client_vat_required">
-                        <name>Require CIF for company customers at checkout</name>
+                        <name>Do not issue for company customers without a CIF</name>
                         <type>checkbox</type>
                         <default_value>N</default_value>
                         <variants/>
                     </item>
                     <item id="client_cnp_required">
-                        <name>Require CNP for individuals at checkout</name>
+                        <name>Do not issue for individuals without a CNP</name>
                         <type>checkbox</type>
                         <default_value>N</default_value>
+                        <variants/>
+                    </item>
+                    <!-- Which custom profile field (Administration > Profile fields)
+                         holds each identifier. Options come from
+                         fn_settings_variants_addons_fgo_invoicing_<id>()
+                         (functions/settings_variants.php), hence the empty
+                         <variants/>. The default '' is "Auto-detect by field
+                         name", which is also how a store without these rows
+                         behaves (ConfigProvider). Keep them at the END of this
+                         header: SettingsPlacement moves healed rows back here. -->
+                    <item id="cif_field">
+                        <name>Profile field holding the CIF (company tax ID)</name>
+                        <type>selectbox</type>
+                        <default_value></default_value>
+                        <variants/>
+                    </item>
+                    <item id="reg_com_field">
+                        <name>Profile field holding the Reg. Com. number</name>
+                        <type>selectbox</type>
+                        <default_value></default_value>
+                        <variants/>
+                    </item>
+                    <item id="cnp_field">
+                        <name>Profile field holding the CNP (individuals)</name>
+                        <type>selectbox</type>
+                        <default_value></default_value>
                         <variants/>
                     </item>
 
@@ -355,10 +381,16 @@
         <!-- Customer / VAT -->
         <item lang="en" id="fgo_invoicing.sanitize_vat"><![CDATA[Validate Romanian CIF (ValideazaCodUnicRo)]]></item>
         <item lang="ro" id="fgo_invoicing.sanitize_vat"><![CDATA[Validează CIF românesc (ValideazaCodUnicRo)]]></item>
-        <item lang="en" id="fgo_invoicing.client_vat_required"><![CDATA[Require CIF for company customers at checkout]]></item>
-        <item lang="ro" id="fgo_invoicing.client_vat_required"><![CDATA[Solicită CIF la finalizare pentru persoane juridice]]></item>
-        <item lang="en" id="fgo_invoicing.client_cnp_required"><![CDATA[Require CNP for individuals at checkout]]></item>
-        <item lang="ro" id="fgo_invoicing.client_cnp_required"><![CDATA[Solicită CNP la finalizare pentru persoane fizice]]></item>
+        <item lang="en" id="fgo_invoicing.client_vat_required"><![CDATA[Do not issue for company customers without a CIF]]></item>
+        <item lang="ro" id="fgo_invoicing.client_vat_required"><![CDATA[Nu emite factura pentru persoane juridice fără CIF]]></item>
+        <item lang="en" id="fgo_invoicing.client_cnp_required"><![CDATA[Do not issue for individuals without a CNP]]></item>
+        <item lang="ro" id="fgo_invoicing.client_cnp_required"><![CDATA[Nu emite factura pentru persoane fizice fără CNP]]></item>
+        <item lang="en" id="fgo_invoicing.cif_field"><![CDATA[Profile field holding the CIF (company tax ID)]]></item>
+        <item lang="ro" id="fgo_invoicing.cif_field"><![CDATA[Câmpul de profil cu CIF-ul (cod fiscal firmă)]]></item>
+        <item lang="en" id="fgo_invoicing.reg_com_field"><![CDATA[Profile field holding the Reg. Com. number]]></item>
+        <item lang="ro" id="fgo_invoicing.reg_com_field"><![CDATA[Câmpul de profil cu Nr. Reg. Com.]]></item>
+        <item lang="en" id="fgo_invoicing.cnp_field"><![CDATA[Profile field holding the CNP (individuals)]]></item>
+        <item lang="ro" id="fgo_invoicing.cnp_field"><![CDATA[Câmpul de profil cu CNP-ul (persoane fizice)]]></item>
 
         <!-- Lines -->
         <item lang="en" id="fgo_invoicing.article_id_field"><![CDATA[Article identifier (CodArticol)]]></item>

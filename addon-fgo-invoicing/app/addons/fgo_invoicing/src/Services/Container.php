@@ -7,6 +7,8 @@ namespace Tygh\Addons\FgoInvoicing\Services;
 use Tygh\Addons\FgoInvoicing\Api\FgoApiClient;
 use Tygh\Addons\FgoInvoicing\Api\FgoHttpClient;
 use Tygh\Addons\FgoInvoicing\Repository\InvoiceRepository;
+use Tygh\Addons\FgoInvoicing\Repository\ProfileFieldCatalog;
+use Tygh\Addons\FgoInvoicing\Repository\ProfileFieldRepository;
 
 /**
  * Tiny static-singleton DI container.
@@ -25,6 +27,8 @@ final class Container
     private ?FgoApiClient $api = null;
     private ?InvoiceRepository $repo = null;
     private ?BillingMapper $mapper = null;
+    private ?ProfileFieldCatalog $profileFields = null;
+    private ?BillingExtrasResolver $resolver = null;
     private ?InvoiceIssuer $issuer = null;
     private ?InvoiceCanceler $canceler = null;
 
@@ -82,6 +86,22 @@ final class Container
         return $this;
     }
 
+    public function withProfileFieldCatalog(ProfileFieldCatalog $catalog): self
+    {
+        $this->profileFields = $catalog;
+        // the resolver (and the issuer holding it) must see the new catalog
+        $this->resolver = null;
+        $this->issuer = null;
+        return $this;
+    }
+
+    public function withResolver(BillingExtrasResolver $resolver): self
+    {
+        $this->resolver = $resolver;
+        $this->issuer = null;
+        return $this;
+    }
+
     // ── Service accessors ────────────────────────────────────────────────
 
     public function http(): FgoHttpClient
@@ -127,15 +147,42 @@ final class Container
     public function mapper(): BillingMapper
     {
         if ($this->mapper === null) {
-            $this->mapper = new BillingMapper();
+            $this->mapper = new BillingMapper(ConfigProvider::primaryCurrency());
         }
         return $this->mapper;
+    }
+
+    public function profileFieldCatalog(): ProfileFieldCatalog
+    {
+        if ($this->profileFields === null) {
+            $this->profileFields = new ProfileFieldRepository();
+        }
+        return $this->profileFields;
+    }
+
+    public function billingExtrasResolver(): BillingExtrasResolver
+    {
+        if ($this->resolver === null) {
+            $this->resolver = new BillingExtrasResolver(
+                catalog:       $this->profileFieldCatalog(),
+                legacyLookup:  BillingExtrasResolver::userProfileLookup(),
+                cifFieldId:    ConfigProvider::cifFieldId(),
+                regComFieldId: ConfigProvider::regComFieldId(),
+                cnpFieldId:    ConfigProvider::cnpFieldId(),
+            );
+        }
+        return $this->resolver;
     }
 
     public function issuer(): InvoiceIssuer
     {
         if ($this->issuer === null) {
-            $this->issuer = new InvoiceIssuer($this->api(), $this->repository(), $this->mapper());
+            $this->issuer = new InvoiceIssuer(
+                $this->api(),
+                $this->repository(),
+                $this->mapper(),
+                $this->billingExtrasResolver(),
+            );
         }
         return $this->issuer;
     }
