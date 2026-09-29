@@ -32,6 +32,10 @@ msgctxt "SettingsOptions::fgo_invoicing::sandbox"
 msgid "Folosește sandbox (api-testuat.fgo.ro)"
 msgstr "Folosește sandbox (api-testuat.fgo.ro)"
 
+msgctxt "SettingsOptions::fgo_invoicing::platform_url"
+msgid "URL-ul platformei înregistrat în FGO (gol: adresa acestui magazin)"
+msgstr "URL-ul platformei înregistrat în FGO (gol: adresa acestui magazin)"
+
 msgctxt "SettingsOptions::fgo_invoicing::behaviour_header"
 msgid "Declanșare & Comportament"
 msgstr "Declanșare & Comportament"

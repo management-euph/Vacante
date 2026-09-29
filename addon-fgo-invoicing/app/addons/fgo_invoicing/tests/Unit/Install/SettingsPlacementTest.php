@@ -44,24 +44,32 @@ final class SettingsPlacementTest extends TestCase
     public function testSettingsAppendedByTheHealAreMovedUnderTheirHeader(): void
     {
         DbStub::$rows = [
+            ['name' => 'sandbox', 'position' => '30'],
+            ['name' => 'behaviour_header', 'position' => '40'],
             ['name' => 'client_cnp_required', 'position' => '150'],
             ['name' => 'lines_header', 'position' => '160'],
             ['name' => 'debug_logging', 'position' => '300'],
             ['name' => 'cif_field', 'position' => '310'],
             ['name' => 'reg_com_field', 'position' => '320'],
             ['name' => 'cnp_field', 'position' => '330'],
+            ['name' => 'platform_url', 'position' => '340'],
         ];
 
-        self::assertSame(3, SettingsPlacement::apply());
-        self::assertSame(['cif_field' => 152, 'reg_com_field' => 154, 'cnp_field' => 156], self::movedTo());
+        self::assertSame(4, SettingsPlacement::apply());
+        self::assertSame(
+            ['platform_url' => 35, 'cif_field' => 152, 'reg_com_field' => 154, 'cnp_field' => 156],
+            self::movedTo(),
+            'the platform URL under the API credentials, the field selectors under the customer settings',
+        );
 
         $update = DbStub::calls('UPDATE ?:settings_objects SET position')[0];
         self::assertSame('fgo_invoicing', $update['params'][2], 'scoped to this add-on section');
-        $select = DbStub::calls('SELECT name, position')[0];
-        self::assertSame('fgo_invoicing', $select['params'][0]);
+        $selects = DbStub::calls('SELECT name, position');
+        self::assertSame('fgo_invoicing', $selects[0]['params'][0]);
+        self::assertSame(['sandbox', 'behaviour_header', 'platform_url'], $selects[0]['params'][1]);
         self::assertSame(
             ['client_cnp_required', 'lines_header', 'cif_field', 'reg_com_field', 'cnp_field'],
-            $select['params'][1],
+            $selects[1]['params'][1],
         );
     }
 

@@ -81,6 +81,12 @@
                         <default_value>Y</default_value>
                         <variants/>
                     </item>
+                    <item id="platform_url">
+                        <name>Platform URL registered in FGO (empty: this store's URL)</name>
+                        <type>input</type>
+                        <default_value></default_value>
+                        <variants/>
+                    </item>
 
                     <!-- Trigger / Behaviour -->
                     <item id="behaviour_header">
@@ -378,6 +384,8 @@
         <item lang="ro" id="fgo_invoicing.private_key"><![CDATA[Cheie privată API FGO]]></item>
         <item lang="en" id="fgo_invoicing.sandbox"><![CDATA[Use sandbox (api-testuat.fgo.ro)]]></item>
         <item lang="ro" id="fgo_invoicing.sandbox"><![CDATA[Folosește sandbox (api-testuat.fgo.ro)]]></item>
+        <item lang="en" id="fgo_invoicing.platform_url"><![CDATA[Platform URL registered in FGO (empty: this store's URL)]]></item>
+        <item lang="ro" id="fgo_invoicing.platform_url"><![CDATA[URL-ul platformei înregistrat în FGO (gol: adresa acestui magazin)]]></item>
 
         <!-- Trigger -->
         <item lang="en" id="fgo_invoicing.api_call"><![CDATA[Issue invoice on]]></item>
