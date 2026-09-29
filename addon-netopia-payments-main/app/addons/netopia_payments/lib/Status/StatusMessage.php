@@ -50,6 +50,15 @@ final class StatusMessage
         return $this->forCustomer($status, $netopiaMessage) . ' (status: ' . $rawStatus . ')';
     }
 
+    /**
+     * The language key of the text a customer sees for a status (the
+     * generic one; "insufficient funds" depends on NETOPIA's message).
+     */
+    public static function customerKeyFor(PaymentStatus $status): string
+    {
+        return self::customerLangKey($status, '');
+    }
+
     private static function customerLangKey(?PaymentStatus $status, string $netopiaMessage): string
     {
         if ($status === null) {

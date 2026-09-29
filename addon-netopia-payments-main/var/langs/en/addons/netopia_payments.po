@@ -52,13 +52,21 @@ msgctxt "SettingsVariants::netopia_payments::auto_send_retry_email::N"
 msgid "No"
 msgstr "No"
 
-msgctxt "Languages::netopia_setup_instructions"
-msgid "Create a payment method under Administration → Payment methods with the processor \"NETOPIA Payments\", then enter the POS signature, the API key and the sandbox/live public and private keys in its Configure tab."
-msgstr "Create a payment method under Administration → Payment methods with the processor \"NETOPIA Payments\", then enter the POS signature, the API key and the sandbox/live public and private keys in its Configure tab."
+msgctxt "Languages::netopia_3ds_session_expired"
+msgid "The card verification session expired. Please place the payment again."
+msgstr "The card verification session expired. Please place the payment again."
 
 msgctxt "Languages::netopia_allow_installments"
 msgid "Allow installments"
 msgstr "Allow installments"
+
+msgctxt "Languages::netopia_allow_installments_label"
+msgid "Let customers pay in installments"
+msgstr "Let customers pay in installments"
+
+msgctxt "Languages::netopia_amount"
+msgid "Amount"
+msgstr "Amount"
 
 msgctxt "Languages::netopia_api_key"
 msgid "API key"
@@ -68,9 +76,33 @@ msgctxt "Languages::netopia_api_key_description"
 msgid "The API key generated in the NETOPIA admin panel (Profile → Security)."
 msgstr "The API key generated in the NETOPIA admin panel (Profile → Security)."
 
+msgctxt "Languages::netopia_auth_token"
+msgid "3D Secure token"
+msgstr "3D Secure token"
+
+msgctxt "Languages::netopia_banner_live_text"
+msgid "Customers are charged, and refunds send real money back."
+msgstr "Customers are charged, and refunds send real money back."
+
+msgctxt "Languages::netopia_banner_live_title"
+msgid "Real card payments"
+msgstr "Real card payments"
+
+msgctxt "Languages::netopia_banner_sandbox_text"
+msgid "Cards are not charged. Pay with NETOPIA's sandbox test cards."
+msgstr "Cards are not charged. Pay with NETOPIA's sandbox test cards."
+
+msgctxt "Languages::netopia_banner_sandbox_title"
+msgid "Test payments only"
+msgstr "Test payments only"
+
 msgctxt "Languages::netopia_configuration_error"
 msgid "Card payment is not configured correctly. Please choose another payment method or contact us."
 msgstr "Card payment is not configured correctly. Please choose another payment method or contact us."
+
+msgctxt "Languages::netopia_creds_show_all"
+msgid "Show the keys of both modes"
+msgstr "Show the keys of both modes"
 
 msgctxt "Languages::netopia_currency"
 msgid "Payment currency"
@@ -83,6 +115,30 @@ msgstr "The currency the customer is charged in."
 msgctxt "Languages::netopia_current_file"
 msgid "Current file"
 msgstr "Current file"
+
+msgctxt "Languages::netopia_customer_msg_approved"
+msgid "Your payment was approved. Thank you!"
+msgstr "Your payment was approved. Thank you!"
+
+msgctxt "Languages::netopia_customer_msg_canceled"
+msgid "The payment was cancelled."
+msgstr "The payment was cancelled."
+
+msgctxt "Languages::netopia_customer_msg_declined"
+msgid "The transaction was declined by the bank."
+msgstr "The transaction was declined by the bank."
+
+msgctxt "Languages::netopia_customer_msg_declined_insufficient_funds"
+msgid "The transaction was declined: insufficient funds."
+msgstr "The transaction was declined: insufficient funds."
+
+msgctxt "Languages::netopia_customer_msg_error"
+msgid "The payment could not be processed. Please try again or choose another payment method."
+msgstr "The payment could not be processed. Please try again or choose another payment method."
+
+msgctxt "Languages::netopia_customer_msg_pending"
+msgid "Your payment is being processed. We will confirm it by email."
+msgstr "Your payment is being processed. We will confirm it by email."
 
 msgctxt "Languages::netopia_customer_msg_refunded"
 msgid "Your payment has been refunded."
@@ -124,29 +180,137 @@ msgctxt "Languages::netopia_full_payment"
 msgid "Full payment"
 msgstr "Full payment"
 
+msgctxt "Languages::netopia_hide"
+msgid "Hide"
+msgstr "Hide"
+
 msgctxt "Languages::netopia_installments_label"
 msgid "Installments"
 msgstr "Installments"
+
+msgctxt "Languages::netopia_installments_months"
+msgid "installments"
+msgstr "installments"
 
 msgctxt "Languages::netopia_installments_suffix"
 msgid "installments"
 msgstr "installments"
 
+msgctxt "Languages::netopia_installments_up_to"
+msgid "up to"
+msgstr "up to"
+
 msgctxt "Languages::netopia_key_delete_failed"
 msgid "The key file could not be deleted."
 msgstr "The key file could not be deleted."
+
+msgctxt "Languages::netopia_key_drop"
+msgid "Drop the file here, or click to choose it"
+msgstr "Drop the file here, or click to choose it"
+
+msgctxt "Languages::netopia_key_drop_replace"
+msgid "Drop a new file here to replace it"
+msgstr "Drop a new file here to replace it"
+
+msgctxt "Languages::netopia_key_expired"
+msgid "Expired"
+msgstr "Expired"
+
+msgctxt "Languages::netopia_key_expires_soon"
+msgid "Expires soon"
+msgstr "Expires soon"
+
+msgctxt "Languages::netopia_key_invalid"
+msgid "Unreadable"
+msgstr "Unreadable"
+
+msgctxt "Languages::netopia_key_loaded"
+msgid "Loaded"
+msgstr "Loaded"
+
+msgctxt "Languages::netopia_key_missing"
+msgid "Missing"
+msgstr "Missing"
+
+msgctxt "Languages::netopia_key_not_set"
+msgid "Not set"
+msgstr "Not set"
+
+msgctxt "Languages::netopia_key_remove_marked"
+msgid "Removed when you save"
+msgstr "Removed when you save"
 
 msgctxt "Languages::netopia_key_uploaded"
 msgid "Key file uploaded: [key]"
 msgstr "Key file uploaded: [key]"
 
+msgctxt "Languages::netopia_key_valid_until"
+msgid "Valid until [date]"
+msgstr "Valid until [date]"
+
+msgctxt "Languages::netopia_keys_intro_live"
+msgid "Keys for Live. The sandbox keys are kept, and shown when you switch to Sandbox."
+msgstr "Keys for Live. The sandbox keys are kept, and shown when you switch to Sandbox."
+
+msgctxt "Languages::netopia_keys_intro_sandbox"
+msgid "Keys for Sandbox. The live keys are kept, and shown when you switch to Live."
+msgstr "Keys for Sandbox. The live keys are kept, and shown when you switch to Live."
+
+msgctxt "Languages::netopia_keys_show_all"
+msgid "Show both"
+msgstr "Show both"
+
+msgctxt "Languages::netopia_keys_where"
+msgid "Download the keys from your NETOPIA account: Points of sale → Technical settings. Public key: .cer or .pem. Private key: .key."
+msgstr "Download the keys from your NETOPIA account: Points of sale → Technical settings. Public key: .cer or .pem. Private key: .key."
+
 msgctxt "Languages::netopia_live"
 msgid "Live"
 msgstr "Live"
 
+msgctxt "Languages::netopia_live_api_key"
+msgid "Live API key"
+msgstr "Live API key"
+
+msgctxt "Languages::netopia_live_api_key_description"
+msgid "From your NETOPIA live account: Profile → Security → API keys. Not the same as the sandbox key."
+msgstr "From your NETOPIA live account: Profile → Security → API keys. Not the same as the sandbox key."
+
+msgctxt "Languages::netopia_live_confirm_no"
+msgid "Stay in Sandbox"
+msgstr "Stay in Sandbox"
+
+msgctxt "Languages::netopia_live_confirm_no_api_key"
+msgid "The live API key is empty: fill it in above, or payments will be refused."
+msgstr "The live API key is empty: fill it in above, or payments will be refused."
+
+msgctxt "Languages::netopia_live_confirm_no_key"
+msgid "The live public key is not uploaded yet: add it on the Keys tab, or no order will be confirmed."
+msgstr "The live public key is not uploaded yet: add it on the Keys tab, or no order will be confirmed."
+
+msgctxt "Languages::netopia_live_confirm_text"
+msgid "Customers will be charged for real once you save."
+msgstr "Customers will be charged for real once you save."
+
+msgctxt "Languages::netopia_live_confirm_title"
+msgid "Switch to Live?"
+msgstr "Switch to Live?"
+
+msgctxt "Languages::netopia_live_confirm_yes"
+msgid "Switch to Live"
+msgstr "Switch to Live"
+
 msgctxt "Languages::netopia_live_keys_section"
 msgid "Live keys"
 msgstr "Live keys"
+
+msgctxt "Languages::netopia_live_pos_signature"
+msgid "Live POS signature"
+msgstr "Live POS signature"
+
+msgctxt "Languages::netopia_live_pos_signature_description"
+msgid "Live account › Points of sale › your POS › Signature."
+msgstr "Live account › Points of sale › your POS › Signature."
 
 msgctxt "Languages::netopia_live_private_key"
 msgid "Live private key"
@@ -176,6 +340,106 @@ msgctxt "Languages::netopia_mode"
 msgid "Mode"
 msgstr "Mode"
 
+msgctxt "Languages::netopia_ntp_status_1"
+msgid "New"
+msgstr "New"
+
+msgctxt "Languages::netopia_ntp_status_10"
+msgid "Chargeback accepted"
+msgstr "Chargeback accepted"
+
+msgctxt "Languages::netopia_ntp_status_11"
+msgid "Error"
+msgstr "Error"
+
+msgctxt "Languages::netopia_ntp_status_12"
+msgid "Declined"
+msgstr "Declined"
+
+msgctxt "Languages::netopia_ntp_status_13"
+msgid "Fraud suspected"
+msgstr "Fraud suspected"
+
+msgctxt "Languages::netopia_ntp_status_14"
+msgid "Awaiting authorisation"
+msgstr "Awaiting authorisation"
+
+msgctxt "Languages::netopia_ntp_status_15"
+msgid "3D Secure check"
+msgstr "3D Secure check"
+
+msgctxt "Languages::netopia_ntp_status_16"
+msgid "Chargeback contested"
+msgstr "Chargeback contested"
+
+msgctxt "Languages::netopia_ntp_status_17"
+msgid "Reversed"
+msgstr "Reversed"
+
+msgctxt "Languages::netopia_ntp_status_18"
+msgid "Pending (other)"
+msgstr "Pending (other)"
+
+msgctxt "Languages::netopia_ntp_status_19"
+msgid "Recurring payment scheduled"
+msgstr "Recurring payment scheduled"
+
+msgctxt "Languages::netopia_ntp_status_2"
+msgid "Opened"
+msgstr "Opened"
+
+msgctxt "Languages::netopia_ntp_status_20"
+msgid "Recurring payment cancelled"
+msgstr "Recurring payment cancelled"
+
+msgctxt "Languages::netopia_ntp_status_21"
+msgid "Trial pending"
+msgstr "Trial pending"
+
+msgctxt "Languages::netopia_ntp_status_22"
+msgid "Trial"
+msgstr "Trial"
+
+msgctxt "Languages::netopia_ntp_status_23"
+msgid "Expired"
+msgstr "Expired"
+
+msgctxt "Languages::netopia_ntp_status_3"
+msgid "Paid"
+msgstr "Paid"
+
+msgctxt "Languages::netopia_ntp_status_4"
+msgid "Cancelled"
+msgstr "Cancelled"
+
+msgctxt "Languages::netopia_ntp_status_5"
+msgid "Confirmed"
+msgstr "Confirmed"
+
+msgctxt "Languages::netopia_ntp_status_6"
+msgid "Pending"
+msgstr "Pending"
+
+msgctxt "Languages::netopia_ntp_status_7"
+msgid "Scheduled"
+msgstr "Scheduled"
+
+msgctxt "Languages::netopia_ntp_status_8"
+msgid "Refunded"
+msgstr "Refunded"
+
+msgctxt "Languages::netopia_ntp_status_8_full"
+msgid "Refunded in full"
+msgstr "Refunded in full"
+
+msgctxt "Languages::netopia_ntp_status_8_partial"
+msgid "Refunded in part"
+msgstr "Refunded in part"
+
+msgctxt "Languages::netopia_ntp_status_9"
+msgid "Chargeback opened"
+msgstr "Chargeback opened"
+
 msgctxt "Languages::netopia_or_paste_key"
 msgid "or paste the key"
 msgstr "or paste the key"
@@ -188,13 +452,45 @@ msgctxt "Languages::netopia_order_description_help"
 msgid "Shown to the customer on the NETOPIA payment page."
 msgstr "Shown to the customer on the NETOPIA payment page."
 
+msgctxt "Languages::netopia_order_description_insert"
+msgid "Insert a placeholder"
+msgstr "Insert a placeholder"
+
+msgctxt "Languages::netopia_order_description_preview"
+msgid "Customers see"
+msgstr "Customers see"
+
+msgctxt "Languages::netopia_order_id"
+msgid "Payment ID"
+msgstr "Payment ID"
+
 msgctxt "Languages::netopia_order_not_found"
 msgid "Order not found."
 msgstr "Order not found."
 
+msgctxt "Languages::netopia_order_panel_title"
+msgid "NETOPIA card payment"
+msgstr "NETOPIA card payment"
+
+msgctxt "Languages::netopia_order_payment_link_hint"
+msgid "Payment failed or not finished?"
+msgstr "Payment failed or not finished?"
+
+msgctxt "Languages::netopia_order_refund_unavailable"
+msgid "Refunds become available here once NETOPIA confirms the payment."
+msgstr "Refunds become available here once NETOPIA confirms the payment."
+
 msgctxt "Languages::netopia_pay_now_button"
 msgid "Pay now"
 msgstr "Pay now"
+
+msgctxt "Languages::netopia_payment_link"
+msgid "Payment link"
+msgstr "Payment link"
+
+msgctxt "Languages::netopia_payment_link_at"
+msgid "Payment link time"
+msgstr "Payment link time"
 
 msgctxt "Languages::netopia_payment_link_email_failed"
 msgid "The payment link was created but the email could not be sent."
@@ -240,6 +536,10 @@ msgctxt "Languages::netopia_payment_retry_email_subject"
 msgid "Complete the payment for order #[order]"
 msgstr "Complete the payment for order #[order]"
 
+msgctxt "Languages::netopia_payments"
+msgid "NETOPIA Payments"
+msgstr "NETOPIA Payments"
+
 msgctxt "Languages::netopia_pos_signature"
 msgid "POS signature"
 msgstr "POS signature"
@@ -247,6 +547,10 @@ msgstr "POS signature"
 msgctxt "Languages::netopia_pos_signature_description"
 msgid "The POS signature (XXXX-XXXX-XXXX-XXXX-XXXX) from the NETOPIA admin panel."
 msgstr "The POS signature (XXXX-XXXX-XXXX-XXXX-XXXX) from the NETOPIA admin panel."
+
+msgctxt "Languages::netopia_private_key_optional"
+msgid "Optional: the addon does not use the private key, so it does not stop payments."
+msgstr "Optional: the addon does not use the private key, so it does not stop payments."
 
 msgctxt "Languages::netopia_public_key_missing_warning"
 msgid "No public key is set for [mode] mode: payment notifications (IPN) cannot be verified."
@@ -259,6 +563,10 @@ msgstr "Refund"
 msgctxt "Languages::netopia_refund_admin_reason"
 msgid "Refund of [amount] issued from the admin panel."
 msgstr "Refund of [amount] issued from the admin panel."
+
+msgctxt "Languages::netopia_refund_all"
+msgid "All"
+msgstr "All"
 
 msgctxt "Languages::netopia_refund_already_failed"
 msgid "This refund has already failed; start a new one."
@@ -280,6 +588,10 @@ msgctxt "Languages::netopia_refund_amount_exceeds_remaining"
 msgid "The amount is more than what can still be refunded ([remaining])."
 msgstr "The amount is more than what can still be refunded ([remaining])."
 
+msgctxt "Languages::netopia_refund_amount_exceeds_remaining_short"
+msgid "That is more than can be refunded ([amount])."
+msgstr "That is more than can be refunded ([amount])."
+
 msgctxt "Languages::netopia_refund_amount_help_currency"
 msgid "In [currency], the currency the customer paid in."
 msgstr "In [currency], the currency the customer paid in."
@@ -287,6 +599,26 @@ msgstr "In [currency], the currency the customer paid in."
 msgctxt "Languages::netopia_refund_api_error"
 msgid "NETOPIA refused the refund: [error]"
 msgstr "NETOPIA refused the refund: [error]"
+
+msgctxt "Languages::netopia_refund_bar_label"
+msgid "[pct]% of the payment refunded"
+msgstr "[pct]% of the payment refunded"
+
+msgctxt "Languages::netopia_refund_button"
+msgid "Refund [amount]"
+msgstr "Refund [amount]"
+
+msgctxt "Languages::netopia_refund_confirm_full"
+msgid "This can't be undone. The order gets the \"Refunded in full\" status."
+msgstr "This can't be undone. The order gets the \"Refunded in full\" status."
+
+msgctxt "Languages::netopia_refund_confirm_partial"
+msgid "This can't be undone. The order gets the \"Refunded in part\" status."
+msgstr "This can't be undone. The order gets the \"Refunded in part\" status."
+
+msgctxt "Languages::netopia_refund_confirm_title"
+msgid "Refund [amount] to the customer's card?"
+msgstr "Refund [amount] to the customer's card?"
 
 msgctxt "Languages::netopia_refund_email_footer_note"
 msgid "The amount will appear on your card within a few business days, depending on your bank."
@@ -352,9 +684,17 @@ msgctxt "Languages::netopia_refund_invalid_amount"
 msgid "Enter a valid refund amount."
 msgstr "Enter a valid refund amount."
 
+msgctxt "Languages::netopia_refund_keep"
+msgid "Keep the payment"
+msgstr "Keep the payment"
+
 msgctxt "Languages::netopia_refund_local_update_failed"
 msgid "NETOPIA accepted the refund, but the order could not be updated in the store. Check the order and its status."
 msgstr "NETOPIA accepted the refund, but the order could not be updated in the store. Check the order and its status."
+
+msgctxt "Languages::netopia_refund_log"
+msgid "Refund history"
+msgstr "Refund history"
 
 msgctxt "Languages::netopia_refund_missing_ntp_id"
 msgid "This order has no NETOPIA transaction ID, so it cannot be refunded here."
@@ -393,12 +733,16 @@ msgid "Can still be refunded"
 msgstr "Can still be refunded"
 
 msgctxt "Languages::netopia_refund_submit"
-msgid "Refund"
-msgstr "Refund"
+msgid "Yes, refund"
+msgstr "Yes, refund"
 
 msgctxt "Languages::netopia_refund_success"
 msgid "Refunded [amount] ([is_full]). Order status: [status]."
 msgstr "Refunded [amount] ([is_full]). Order status: [status]."
+
+msgctxt "Languages::netopia_refunded_amount"
+msgid "Refunded amount"
+msgstr "Refunded amount"
 
 msgctxt "Languages::netopia_retry_payment_message"
 msgid "Your card payment did not go through. You can pay again with the link below."
@@ -408,9 +752,25 @@ msgctxt "Languages::netopia_sandbox"
 msgid "Sandbox (test)"
 msgstr "Sandbox (test)"
 
+msgctxt "Languages::netopia_sandbox_api_key"
+msgid "Sandbox API key"
+msgstr "Sandbox API key"
+
+msgctxt "Languages::netopia_sandbox_api_key_description"
+msgid "From your NETOPIA sandbox account: Profile → Security → API keys."
+msgstr "From your NETOPIA sandbox account: Profile → Security → API keys."
+
 msgctxt "Languages::netopia_sandbox_keys_section"
 msgid "Sandbox keys"
 msgstr "Sandbox keys"
+
+msgctxt "Languages::netopia_sandbox_pos_signature"
+msgid "Sandbox POS signature"
+msgstr "Sandbox POS signature"
+
+msgctxt "Languages::netopia_sandbox_pos_signature_description"
+msgid "Sandbox account › Points of sale › your POS › Signature."
+msgstr "Sandbox account › Points of sale › your POS › Signature."
 
 msgctxt "Languages::netopia_sandbox_private_key"
 msgid "Sandbox private key"
@@ -427,6 +787,38 @@ msgstr "Sandbox public key"
 msgctxt "Languages::netopia_sandbox_public_key_description"
 msgid "The public certificate (.cer) for the sandbox POS."
 msgstr "The public certificate (.cer) for the sandbox POS."
+
+msgctxt "Languages::netopia_setup_instructions"
+msgid "Create a payment method under Administration → Payment methods with the processor \"NETOPIA Payments\", then enter the POS signature, the API key and the sandbox/live public and private keys in its Configure tab."
+msgstr "Create a payment method under Administration → Payment methods with the processor \"NETOPIA Payments\", then enter the POS signature, the API key and the sandbox/live public and private keys in its Configure tab."
+
+msgctxt "Languages::netopia_show"
+msgid "Show"
+msgstr "Show"
+
+msgctxt "Languages::netopia_start_amount"
+msgid "Charged amount"
+msgstr "Charged amount"
+
+msgctxt "Languages::netopia_status_changed_hint"
+msgid "Rows you changed from the default are marked on the left."
+msgstr "Rows you changed from the default are marked on the left."
+
+msgctxt "Languages::netopia_status_col_customer"
+msgid "Customer sees"
+msgstr "Customer sees"
+
+msgctxt "Languages::netopia_status_col_group"
+msgid "Treated as"
+msgstr "Treated as"
+
+msgctxt "Languages::netopia_status_col_order_status"
+msgid "Order status"
+msgstr "Order status"
+
+msgctxt "Languages::netopia_status_col_result"
+msgid "NETOPIA result"
+msgstr "NETOPIA result"
 
 msgctxt "Languages::netopia_status_group_cancel"
 msgid "Cancelled"
@@ -455,6 +847,102 @@ msgstr "Which order status each NETOPIA payment result sets."
 msgctxt "Languages::netopia_status_mapping_section"
 msgid "Order statuses"
 msgstr "Order statuses"
+
+msgctxt "Languages::netopia_status_rare_toggle"
+msgid "Show [count] rare statuses (chargebacks, recurring payments, trials, 3D Secure steps)"
+msgstr "Show [count] rare statuses (chargebacks, recurring payments, trials, 3D Secure steps)"
+
+msgctxt "Languages::netopia_status_reset"
+msgid "Reset to defaults"
+msgstr "Reset to defaults"
+
+msgctxt "Languages::netopia_tab_checkout"
+msgid "Checkout"
+msgstr "Checkout"
+
+msgctxt "Languages::netopia_tab_connection"
+msgid "Connection"
+msgstr "Connection"
+
+msgctxt "Languages::netopia_tab_keys"
+msgid "Keys"
+msgstr "Keys"
+
+msgctxt "Languages::netopia_tab_statuses"
+msgid "Order statuses"
+msgstr "Order statuses"
+
+msgctxt "Languages::netopia_test_api_key_missing"
+msgid "The API key is empty."
+msgstr "The API key is empty."
+
+msgctxt "Languages::netopia_test_api_key_same_as_other"
+msgid "The [mode] API key is the same as the other mode's. NETOPIA issues a different key for Sandbox and Live."
+msgstr "The [mode] API key is the same as the other mode's. NETOPIA issues a different key for Sandbox and Live."
+
+msgctxt "Languages::netopia_test_api_key_set"
+msgid "The [mode] API key is filled in. NETOPIA checks it on the first payment."
+msgstr "The [mode] API key is filled in. NETOPIA checks it on the first payment."
+
+msgctxt "Languages::netopia_test_button"
+msgid "Check settings"
+msgstr "Check settings"
+
+msgctxt "Languages::netopia_test_intro"
+msgid "Checks the selected mode's API key, POS signature and public key as typed, without saving them. NETOPIA offers no way to test an API key without a payment, so place a sandbox test order to confirm it."
+msgstr "Checks the selected mode's API key, POS signature and public key as typed, without saving them. NETOPIA offers no way to test an API key without a payment, so place a sandbox test order to confirm it."
+
+msgctxt "Languages::netopia_test_not_ready"
+msgid "The [mode] settings are not complete yet: fix the items marked ✕."
+msgstr "The [mode] settings are not complete yet: fix the items marked ✕."
+
+msgctxt "Languages::netopia_test_pos_format"
+msgid "The POS signature does not look like XXXX-XXXX-XXXX-XXXX-XXXX. Copy it again from NETOPIA."
+msgstr "The POS signature does not look like XXXX-XXXX-XXXX-XXXX-XXXX. Copy it again from NETOPIA."
+
+msgctxt "Languages::netopia_test_pos_missing"
+msgid "The POS signature is empty."
+msgstr "The POS signature is empty."
+
+msgctxt "Languages::netopia_test_pos_ok"
+msgid "The POS signature has the right format."
+msgstr "The POS signature has the right format."
+
+msgctxt "Languages::netopia_test_public_key_expired"
+msgid "The [mode] public key expired on [date]. Download a new one from NETOPIA."
+msgstr "The [mode] public key expired on [date]. Download a new one from NETOPIA."
+
+msgctxt "Languages::netopia_test_public_key_expires_soon"
+msgid "The [mode] public key expires on [date]. Download a new one from NETOPIA soon."
+msgstr "The [mode] public key expires on [date]. Download a new one from NETOPIA soon."
+
+msgctxt "Languages::netopia_test_public_key_invalid"
+msgid "The [mode] public key cannot be read. Upload the .cer file from NETOPIA again."
+msgstr "The [mode] public key cannot be read. Upload the .cer file from NETOPIA again."
+
+msgctxt "Languages::netopia_test_public_key_missing"
+msgid "No [mode] public key: payment confirmations from NETOPIA cannot be verified."
+msgstr "No [mode] public key: payment confirmations from NETOPIA cannot be verified."
+
+msgctxt "Languages::netopia_test_public_key_ok"
+msgid "The [mode] public key is readable."
+msgstr "The [mode] public key is readable."
+
+msgctxt "Languages::netopia_test_ready"
+msgid "The [mode] settings are complete. A [mode] test payment confirms that NETOPIA accepts the API key."
+msgstr "The [mode] settings are complete. A [mode] test payment confirms that NETOPIA accepts the API key."
+
+msgctxt "Languages::netopia_test_request_failed"
+msgid "The check could not run. Reload the page and try again."
+msgstr "The check could not run. Reload the page and try again."
+
+msgctxt "Languages::netopia_test_running"
+msgid "Checking…"
+msgstr "Checking…"
+
+msgctxt "Languages::netopia_test_title"
+msgid "Settings check"
+msgstr "Settings check"
 
 msgctxt "Languages::netopia_upload_key_file"
 msgid "Upload key file"

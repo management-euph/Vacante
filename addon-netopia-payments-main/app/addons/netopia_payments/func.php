@@ -120,6 +120,14 @@ function fn_netopia_payments_update_payment_post(array $payment_data, int $payme
     $params = fn_netopia_load_processor_params($payment_id);
     $updated = false;
 
+    // The runtime reads the plain api_key / pos_signature: make them the
+    // selected mode's pair (Config\Credentials).
+    $active = \Netopia\CsCart\Config\Credentials::applyActive($params);
+    if ($active !== $params) {
+        $params = $active;
+        $updated = true;
+    }
+
     $key_slots = [
         'sandbox_public_key' => 'netopia_sandbox_public_key_file',
         'sandbox_private_key' => 'netopia_sandbox_private_key_file',
@@ -495,6 +503,47 @@ function fn_netopia_extract_verification_token(): ?string
 function fn_netopia_get_status_definitions($dummy = null): array
 {
     return Bootstrap::instance()->statusMapper->definitions();
+}
+
+/**
+ * The settings screen's status table: common rows, rare rows, changed count.
+ *
+ * @param mixed $processor_params the saved processor_params (Smarty modifier input)
+ * @return array{common: list<array<string, mixed>>, rare: list<array<string, mixed>>, changed: int}
+ */
+function fn_netopia_status_table($processor_params = []): array
+{
+    return \Netopia\CsCart\Status\StatusTable::build(is_array($processor_params) ? Arr::stringKeys($processor_params) : []);
+}
+
+/**
+ * The API key and POS signature a mode uses (settings screen).
+ *
+ * @param mixed $processor_params
+ * @param mixed $mode 'sandbox' or 'live'
+ * @return array{api_key: string, pos_signature: string}
+ */
+function fn_netopia_credentials($processor_params = [], $mode = 'sandbox'): array
+{
+    return \Netopia\CsCart\Config\Credentials::forMode(
+        is_array($processor_params) ? Arr::stringKeys($processor_params) : [],
+        PaymentMode::fromMixed($mode),
+    );
+}
+
+/**
+ * The key cards: per mode and key type, where the key comes from and its state.
+ *
+ * @param mixed $processor_params
+ * @param mixed $payment_id
+ * @return array<string, array<string, array<string, mixed>>>
+ */
+function fn_netopia_key_overview($processor_params = [], $payment_id = 0): array
+{
+    $params = is_array($processor_params) ? Arr::stringKeys($processor_params) : [];
+    $inspector = new \Netopia\CsCart\Key\KeyInspector(Bootstrap::instance()->keyStorage);
+
+    return $inspector->overview($params, is_numeric($payment_id) ? (int) $payment_id : 0, time());
 }
 
 /**

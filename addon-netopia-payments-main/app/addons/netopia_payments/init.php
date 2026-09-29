@@ -40,3 +40,35 @@ try {
     // Swallow deliberately; the Seeder already catches its own errors,
     // this is a belt-and-braces guard against any future regression.
 }
+
+// Language variables added by a `git pull` deploy: CS-Cart imports the
+// addon's .po only at install, so load any new ones (admin requests only,
+// and only when the .po files changed — see LangPackSync).
+// @phpstan-ignore identical.alwaysTrue (AREA is per request; the stub pins it to 'A')
+if (defined('AREA') && AREA === 'A' && function_exists('fn_get_storage_data') && function_exists('fn_set_storage_data')) {
+    try {
+        $netopia_langs_dir = Tygh\Registry::get('config.dir.lang_packs');
+        if (!is_string($netopia_langs_dir)) {
+            $netopia_root = defined('DIR_ROOT') ? constant('DIR_ROOT') : '';
+            $netopia_langs_dir = is_string($netopia_root) && $netopia_root !== '' ? $netopia_root . '/var/langs/' : '';
+            unset($netopia_root);
+        }
+        if ($netopia_langs_dir !== '') {
+            (new Netopia\CsCart\Install\LangPackSync(
+                langsDir:           $netopia_langs_dir,
+                dbQuery:            static fn (string $sql, mixed ...$params): mixed => db_query($sql, ...$params),
+                installedLanguages: static fn (): array => array_values(array_filter(
+                    array_map(static fn (mixed $c): string => is_string($c) ? $c : '', (array) db_get_fields('SELECT lang_code FROM ?:languages')),
+                    static fn (string $c): bool => $c !== '',
+                )),
+                readStamp:          static fn (string $key): string => is_string($v = fn_get_storage_data($key)) ? $v : '',
+                writeStamp:         static function (string $key, string $value): void {
+                    fn_set_storage_data($key, $value);
+                },
+            ))->syncIfChanged();
+        }
+        unset($netopia_langs_dir);
+    } catch (\Throwable $e) {
+        // Never block the admin over a language sync.
+    }
+}

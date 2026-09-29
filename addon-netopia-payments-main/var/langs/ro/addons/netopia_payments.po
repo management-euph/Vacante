@@ -52,13 +52,21 @@ msgctxt "SettingsVariants::netopia_payments::auto_send_retry_email::N"
 msgid "No"
 msgstr "Nu"
 
-msgctxt "Languages::netopia_setup_instructions"
-msgid "Create a payment method under Administration → Payment methods with the processor \"NETOPIA Payments\", then enter the POS signature, the API key and the sandbox/live public and private keys in its Configure tab."
-msgstr "Creați o metodă de plată în Administrare → Metode de plată cu procesatorul „NETOPIA Payments”, apoi completați semnătura POS, cheia API și cheile publice și private sandbox/live în fila Configurare."
+msgctxt "Languages::netopia_3ds_session_expired"
+msgid "The card verification session expired. Please place the payment again."
+msgstr "Sesiunea de verificare a cardului a expirat. Vă rugăm să reluați plata."
 
 msgctxt "Languages::netopia_allow_installments"
 msgid "Allow installments"
 msgstr "Permite plata în rate"
+
+msgctxt "Languages::netopia_allow_installments_label"
+msgid "Let customers pay in installments"
+msgstr "Clienții pot plăti în rate"
+
+msgctxt "Languages::netopia_amount"
+msgid "Amount"
+msgstr "Sumă"
 
 msgctxt "Languages::netopia_api_key"
 msgid "API key"
@@ -68,9 +76,33 @@ msgctxt "Languages::netopia_api_key_description"
 msgid "The API key generated in the NETOPIA admin panel (Profile → Security)."
 msgstr "Cheia API generată în panoul NETOPIA (Profil → Securitate)."
 
+msgctxt "Languages::netopia_auth_token"
+msgid "3D Secure token"
+msgstr "Token 3D Secure"
+
+msgctxt "Languages::netopia_banner_live_text"
+msgid "Customers are charged, and refunds send real money back."
+msgstr "Clienții sunt debitați, iar rambursările trimit bani reali înapoi."
+
+msgctxt "Languages::netopia_banner_live_title"
+msgid "Real card payments"
+msgstr "Plăți reale cu cardul"
+
+msgctxt "Languages::netopia_banner_sandbox_text"
+msgid "Cards are not charged. Pay with NETOPIA's sandbox test cards."
+msgstr "Cardurile nu sunt debitate. Plătiți cu cardurile de test NETOPIA pentru sandbox."
+
+msgctxt "Languages::netopia_banner_sandbox_title"
+msgid "Test payments only"
+msgstr "Doar plăți de test"
+
 msgctxt "Languages::netopia_configuration_error"
 msgid "Card payment is not configured correctly. Please choose another payment method or contact us."
 msgstr "Plata cu cardul nu este configurată corect. Alegeți altă metodă de plată sau contactați-ne."
+
+msgctxt "Languages::netopia_creds_show_all"
+msgid "Show the keys of both modes"
+msgstr "Arată cheile ambelor moduri"
 
 msgctxt "Languages::netopia_currency"
 msgid "Payment currency"
@@ -83,6 +115,30 @@ msgstr "Moneda în care este debitat clientul."
 msgctxt "Languages::netopia_current_file"
 msgid "Current file"
 msgstr "Fișier curent"
+
+msgctxt "Languages::netopia_customer_msg_approved"
+msgid "Your payment was approved. Thank you!"
+msgstr "Plata a fost aprobată. Vă mulțumim!"
+
+msgctxt "Languages::netopia_customer_msg_canceled"
+msgid "The payment was cancelled."
+msgstr "Plata a fost anulată."
+
+msgctxt "Languages::netopia_customer_msg_declined"
+msgid "The transaction was declined by the bank."
+msgstr "Tranzacția a fost respinsă de bancă."
+
+msgctxt "Languages::netopia_customer_msg_declined_insufficient_funds"
+msgid "The transaction was declined: insufficient funds."
+msgstr "Tranzacția a fost respinsă: fonduri insuficiente."
+
+msgctxt "Languages::netopia_customer_msg_error"
+msgid "The payment could not be processed. Please try again or choose another payment method."
+msgstr "Plata nu a putut fi procesată. Încercați din nou sau alegeți altă metodă de plată."
+
+msgctxt "Languages::netopia_customer_msg_pending"
+msgid "Your payment is being processed. We will confirm it by email."
+msgstr "Plata este în curs de procesare. Vă vom confirma prin e-mail."
 
 msgctxt "Languages::netopia_customer_msg_refunded"
 msgid "Your payment has been refunded."
@@ -124,29 +180,137 @@ msgctxt "Languages::netopia_full_payment"
 msgid "Full payment"
 msgstr "Plată integrală"
 
+msgctxt "Languages::netopia_hide"
+msgid "Hide"
+msgstr "Ascunde"
+
 msgctxt "Languages::netopia_installments_label"
 msgid "Installments"
 msgstr "Rate"
+
+msgctxt "Languages::netopia_installments_months"
+msgid "installments"
+msgstr "rate"
 
 msgctxt "Languages::netopia_installments_suffix"
 msgid "installments"
 msgstr "rate"
 
+msgctxt "Languages::netopia_installments_up_to"
+msgid "up to"
+msgstr "până la"
+
 msgctxt "Languages::netopia_key_delete_failed"
 msgid "The key file could not be deleted."
 msgstr "Fișierul cheii nu a putut fi șters."
+
+msgctxt "Languages::netopia_key_drop"
+msgid "Drop the file here, or click to choose it"
+msgstr "Trageți fișierul aici sau dați clic pentru a-l alege"
+
+msgctxt "Languages::netopia_key_drop_replace"
+msgid "Drop a new file here to replace it"
+msgstr "Trageți aici un fișier nou pentru a-l înlocui"
+
+msgctxt "Languages::netopia_key_expired"
+msgid "Expired"
+msgstr "Expirată"
+
+msgctxt "Languages::netopia_key_expires_soon"
+msgid "Expires soon"
+msgstr "Expiră curând"
+
+msgctxt "Languages::netopia_key_invalid"
+msgid "Unreadable"
+msgstr "Nu poate fi citită"
+
+msgctxt "Languages::netopia_key_loaded"
+msgid "Loaded"
+msgstr "Încărcată"
+
+msgctxt "Languages::netopia_key_missing"
+msgid "Missing"
+msgstr "Lipsește"
+
+msgctxt "Languages::netopia_key_not_set"
+msgid "Not set"
+msgstr "Nesetată"
+
+msgctxt "Languages::netopia_key_remove_marked"
+msgid "Removed when you save"
+msgstr "Se șterge la salvare"
 
 msgctxt "Languages::netopia_key_uploaded"
 msgid "Key file uploaded: [key]"
 msgstr "Fișierul cheii a fost încărcat: [key]"
 
+msgctxt "Languages::netopia_key_valid_until"
+msgid "Valid until [date]"
+msgstr "Valabilă până la [date]"
+
+msgctxt "Languages::netopia_keys_intro_live"
+msgid "Keys for Live. The sandbox keys are kept, and shown when you switch to Sandbox."
+msgstr "Chei pentru Live. Cheile sandbox sunt păstrate și apar când treceți pe Sandbox."
+
+msgctxt "Languages::netopia_keys_intro_sandbox"
+msgid "Keys for Sandbox. The live keys are kept, and shown when you switch to Live."
+msgstr "Chei pentru Sandbox. Cheile live sunt păstrate și apar când treceți pe Live."
+
+msgctxt "Languages::netopia_keys_show_all"
+msgid "Show both"
+msgstr "Arată ambele"
+
+msgctxt "Languages::netopia_keys_where"
+msgid "Download the keys from your NETOPIA account: Points of sale → Technical settings. Public key: .cer or .pem. Private key: .key."
+msgstr "Descărcați cheile din contul NETOPIA: Puncte de vânzare → Setări tehnice. Cheia publică: .cer sau .pem. Cheia privată: .key."
+
 msgctxt "Languages::netopia_live"
 msgid "Live"
 msgstr "Live"
 
+msgctxt "Languages::netopia_live_api_key"
+msgid "Live API key"
+msgstr "Cheie API live"
+
+msgctxt "Languages::netopia_live_api_key_description"
+msgid "From your NETOPIA live account: Profile → Security → API keys. Not the same as the sandbox key."
+msgstr "Din contul NETOPIA live: Profil → Securitate → Chei API. Diferită de cheia sandbox."
+
+msgctxt "Languages::netopia_live_confirm_no"
+msgid "Stay in Sandbox"
+msgstr "Rămâi pe Sandbox"
+
+msgctxt "Languages::netopia_live_confirm_no_api_key"
+msgid "The live API key is empty: fill it in above, or payments will be refused."
+msgstr "Cheia API live este goală: completați-o mai sus, altfel plățile vor fi refuzate."
+
+msgctxt "Languages::netopia_live_confirm_no_key"
+msgid "The live public key is not uploaded yet: add it on the Keys tab, or no order will be confirmed."
+msgstr "Cheia publică live nu este încărcată: adăugați-o în tabul Chei, altfel nicio comandă nu va fi confirmată."
+
+msgctxt "Languages::netopia_live_confirm_text"
+msgid "Customers will be charged for real once you save."
+msgstr "După salvare, clienții vor fi debitați real."
+
+msgctxt "Languages::netopia_live_confirm_title"
+msgid "Switch to Live?"
+msgstr "Treceți pe Live?"
+
+msgctxt "Languages::netopia_live_confirm_yes"
+msgid "Switch to Live"
+msgstr "Treci pe Live"
+
 msgctxt "Languages::netopia_live_keys_section"
 msgid "Live keys"
 msgstr "Chei live"
+
+msgctxt "Languages::netopia_live_pos_signature"
+msgid "Live POS signature"
+msgstr "Semnătură POS live"
+
+msgctxt "Languages::netopia_live_pos_signature_description"
+msgid "Live account › Points of sale › your POS › Signature."
+msgstr "Contul live › Puncte de vânzare › POS-ul dvs. › Semnătură."
 
 msgctxt "Languages::netopia_live_private_key"
 msgid "Live private key"
@@ -176,6 +340,106 @@ msgctxt "Languages::netopia_mode"
 msgid "Mode"
 msgstr "Mod"
 
+msgctxt "Languages::netopia_ntp_status_1"
+msgid "New"
+msgstr "Nouă"
+
+msgctxt "Languages::netopia_ntp_status_10"
+msgid "Chargeback accepted"
+msgstr "Chargeback acceptat"
+
+msgctxt "Languages::netopia_ntp_status_11"
+msgid "Error"
+msgstr "Eroare"
+
+msgctxt "Languages::netopia_ntp_status_12"
+msgid "Declined"
+msgstr "Respinsă"
+
+msgctxt "Languages::netopia_ntp_status_13"
+msgid "Fraud suspected"
+msgstr "Suspiciune de fraudă"
+
+msgctxt "Languages::netopia_ntp_status_14"
+msgid "Awaiting authorisation"
+msgstr "Așteaptă autorizarea"
+
+msgctxt "Languages::netopia_ntp_status_15"
+msgid "3D Secure check"
+msgstr "Verificare 3D Secure"
+
+msgctxt "Languages::netopia_ntp_status_16"
+msgid "Chargeback contested"
+msgstr "Chargeback contestat"
+
+msgctxt "Languages::netopia_ntp_status_17"
+msgid "Reversed"
+msgstr "Stornată"
+
+msgctxt "Languages::netopia_ntp_status_18"
+msgid "Pending (other)"
+msgstr "În așteptare (altele)"
+
+msgctxt "Languages::netopia_ntp_status_19"
+msgid "Recurring payment scheduled"
+msgstr "Plată recurentă programată"
+
+msgctxt "Languages::netopia_ntp_status_2"
+msgid "Opened"
+msgstr "Deschisă"
+
+msgctxt "Languages::netopia_ntp_status_20"
+msgid "Recurring payment cancelled"
+msgstr "Plată recurentă anulată"
+
+msgctxt "Languages::netopia_ntp_status_21"
+msgid "Trial pending"
+msgstr "Perioadă de probă în așteptare"
+
+msgctxt "Languages::netopia_ntp_status_22"
+msgid "Trial"
+msgstr "Perioadă de probă"
+
+msgctxt "Languages::netopia_ntp_status_23"
+msgid "Expired"
+msgstr "Expirată"
+
+msgctxt "Languages::netopia_ntp_status_3"
+msgid "Paid"
+msgstr "Plătită"
+
+msgctxt "Languages::netopia_ntp_status_4"
+msgid "Cancelled"
+msgstr "Anulată"
+
+msgctxt "Languages::netopia_ntp_status_5"
+msgid "Confirmed"
+msgstr "Confirmată"
+
+msgctxt "Languages::netopia_ntp_status_6"
+msgid "Pending"
+msgstr "În așteptare"
+
+msgctxt "Languages::netopia_ntp_status_7"
+msgid "Scheduled"
+msgstr "Programată"
+
+msgctxt "Languages::netopia_ntp_status_8"
+msgid "Refunded"
+msgstr "Rambursată"
+
+msgctxt "Languages::netopia_ntp_status_8_full"
+msgid "Refunded in full"
+msgstr "Rambursată integral"
+
+msgctxt "Languages::netopia_ntp_status_8_partial"
+msgid "Refunded in part"
+msgstr "Rambursată parțial"
+
+msgctxt "Languages::netopia_ntp_status_9"
+msgid "Chargeback opened"
+msgstr "Chargeback inițiat"
+
 msgctxt "Languages::netopia_or_paste_key"
 msgid "or paste the key"
 msgstr "sau lipiți cheia"
@@ -188,13 +452,45 @@ msgctxt "Languages::netopia_order_description_help"
 msgid "Shown to the customer on the NETOPIA payment page."
 msgstr "Afișată clientului pe pagina de plată NETOPIA."
 
+msgctxt "Languages::netopia_order_description_insert"
+msgid "Insert a placeholder"
+msgstr "Inserează un marcaj"
+
+msgctxt "Languages::netopia_order_description_preview"
+msgid "Customers see"
+msgstr "Clienții văd"
+
+msgctxt "Languages::netopia_order_id"
+msgid "Payment ID"
+msgstr "ID plată"
+
 msgctxt "Languages::netopia_order_not_found"
 msgid "Order not found."
 msgstr "Comanda nu a fost găsită."
 
+msgctxt "Languages::netopia_order_panel_title"
+msgid "NETOPIA card payment"
+msgstr "Plată cu cardul NETOPIA"
+
+msgctxt "Languages::netopia_order_payment_link_hint"
+msgid "Payment failed or not finished?"
+msgstr "Plata a eșuat sau nu a fost finalizată?"
+
+msgctxt "Languages::netopia_order_refund_unavailable"
+msgid "Refunds become available here once NETOPIA confirms the payment."
+msgstr "Rambursările devin disponibile aici după ce NETOPIA confirmă plata."
+
 msgctxt "Languages::netopia_pay_now_button"
 msgid "Pay now"
 msgstr "Plătește acum"
+
+msgctxt "Languages::netopia_payment_link"
+msgid "Payment link"
+msgstr "Link plată"
+
+msgctxt "Languages::netopia_payment_link_at"
+msgid "Payment link time"
+msgstr "Oră link plată"
 
 msgctxt "Languages::netopia_payment_link_email_failed"
 msgid "The payment link was created but the email could not be sent."
@@ -240,6 +536,10 @@ msgctxt "Languages::netopia_payment_retry_email_subject"
 msgid "Complete the payment for order #[order]"
 msgstr "Finalizați plata pentru comanda #[order]"
 
+msgctxt "Languages::netopia_payments"
+msgid "NETOPIA Payments"
+msgstr "NETOPIA Payments"
+
 msgctxt "Languages::netopia_pos_signature"
 msgid "POS signature"
 msgstr "Semnătură POS"
@@ -247,6 +547,10 @@ msgstr "Semnătură POS"
 msgctxt "Languages::netopia_pos_signature_description"
 msgid "The POS signature (XXXX-XXXX-XXXX-XXXX-XXXX) from the NETOPIA admin panel."
 msgstr "Semnătura POS (XXXX-XXXX-XXXX-XXXX-XXXX) din panoul NETOPIA."
+
+msgctxt "Languages::netopia_private_key_optional"
+msgid "Optional: the addon does not use the private key, so it does not stop payments."
+msgstr "Opțională: modulul nu folosește cheia privată, deci lipsa ei nu oprește plățile."
 
 msgctxt "Languages::netopia_public_key_missing_warning"
 msgid "No public key is set for [mode] mode: payment notifications (IPN) cannot be verified."
@@ -259,6 +563,10 @@ msgstr "Rambursare"
 msgctxt "Languages::netopia_refund_admin_reason"
 msgid "Refund of [amount] issued from the admin panel."
 msgstr "Rambursare de [amount] emisă din panoul de administrare."
+
+msgctxt "Languages::netopia_refund_all"
+msgid "All"
+msgstr "Tot"
 
 msgctxt "Languages::netopia_refund_already_failed"
 msgid "This refund has already failed; start a new one."
@@ -280,6 +588,10 @@ msgctxt "Languages::netopia_refund_amount_exceeds_remaining"
 msgid "The amount is more than what can still be refunded ([remaining])."
 msgstr "Suma depășește cât se mai poate rambursa ([remaining])."
 
+msgctxt "Languages::netopia_refund_amount_exceeds_remaining_short"
+msgid "That is more than can be refunded ([amount])."
+msgstr "Suma depășește cât se mai poate rambursa ([amount])."
+
 msgctxt "Languages::netopia_refund_amount_help_currency"
 msgid "In [currency], the currency the customer paid in."
 msgstr "În [currency], moneda în care a plătit clientul."
@@ -287,6 +599,26 @@ msgstr "În [currency], moneda în care a plătit clientul."
 msgctxt "Languages::netopia_refund_api_error"
 msgid "NETOPIA refused the refund: [error]"
 msgstr "NETOPIA a refuzat rambursarea: [error]"
+
+msgctxt "Languages::netopia_refund_bar_label"
+msgid "[pct]% of the payment refunded"
+msgstr "[pct]% din plată rambursat"
+
+msgctxt "Languages::netopia_refund_button"
+msgid "Refund [amount]"
+msgstr "Rambursează [amount]"
+
+msgctxt "Languages::netopia_refund_confirm_full"
+msgid "This can't be undone. The order gets the \"Refunded in full\" status."
+msgstr "Operațiunea nu poate fi anulată. Comanda primește statusul „Rambursată integral”."
+
+msgctxt "Languages::netopia_refund_confirm_partial"
+msgid "This can't be undone. The order gets the \"Refunded in part\" status."
+msgstr "Operațiunea nu poate fi anulată. Comanda primește statusul „Rambursată parțial”."
+
+msgctxt "Languages::netopia_refund_confirm_title"
+msgid "Refund [amount] to the customer's card?"
+msgstr "Rambursați [amount] pe cardul clientului?"
 
 msgctxt "Languages::netopia_refund_email_footer_note"
 msgid "The amount will appear on your card within a few business days, depending on your bank."
@@ -352,9 +684,17 @@ msgctxt "Languages::netopia_refund_invalid_amount"
 msgid "Enter a valid refund amount."
 msgstr "Introduceți o sumă de rambursare validă."
 
+msgctxt "Languages::netopia_refund_keep"
+msgid "Keep the payment"
+msgstr "Păstrează plata"
+
 msgctxt "Languages::netopia_refund_local_update_failed"
 msgid "NETOPIA accepted the refund, but the order could not be updated in the store. Check the order and its status."
 msgstr "NETOPIA a acceptat rambursarea, dar comanda nu a putut fi actualizată în magazin. Verificați comanda și statusul ei."
+
+msgctxt "Languages::netopia_refund_log"
+msgid "Refund history"
+msgstr "Istoric rambursări"
 
 msgctxt "Languages::netopia_refund_missing_ntp_id"
 msgid "This order has no NETOPIA transaction ID, so it cannot be refunded here."
@@ -393,12 +733,16 @@ msgid "Can still be refunded"
 msgstr "Se mai poate rambursa"
 
 msgctxt "Languages::netopia_refund_submit"
-msgid "Refund"
-msgstr "Rambursează"
+msgid "Yes, refund"
+msgstr "Da, rambursează"
 
 msgctxt "Languages::netopia_refund_success"
 msgid "Refunded [amount] ([is_full]). Order status: [status]."
 msgstr "S-au rambursat [amount] ([is_full]). Status comandă: [status]."
+
+msgctxt "Languages::netopia_refunded_amount"
+msgid "Refunded amount"
+msgstr "Sumă rambursată"
 
 msgctxt "Languages::netopia_retry_payment_message"
 msgid "Your card payment did not go through. You can pay again with the link below."
@@ -408,9 +752,25 @@ msgctxt "Languages::netopia_sandbox"
 msgid "Sandbox (test)"
 msgstr "Sandbox (test)"
 
+msgctxt "Languages::netopia_sandbox_api_key"
+msgid "Sandbox API key"
+msgstr "Cheie API sandbox"
+
+msgctxt "Languages::netopia_sandbox_api_key_description"
+msgid "From your NETOPIA sandbox account: Profile → Security → API keys."
+msgstr "Din contul NETOPIA sandbox: Profil → Securitate → Chei API."
+
 msgctxt "Languages::netopia_sandbox_keys_section"
 msgid "Sandbox keys"
 msgstr "Chei sandbox"
+
+msgctxt "Languages::netopia_sandbox_pos_signature"
+msgid "Sandbox POS signature"
+msgstr "Semnătură POS sandbox"
+
+msgctxt "Languages::netopia_sandbox_pos_signature_description"
+msgid "Sandbox account › Points of sale › your POS › Signature."
+msgstr "Contul sandbox › Puncte de vânzare › POS-ul dvs. › Semnătură."
 
 msgctxt "Languages::netopia_sandbox_private_key"
 msgid "Sandbox private key"
@@ -427,6 +787,38 @@ msgstr "Cheie publică sandbox"
 msgctxt "Languages::netopia_sandbox_public_key_description"
 msgid "The public certificate (.cer) for the sandbox POS."
 msgstr "Certificatul public (.cer) pentru POS-ul sandbox."
+
+msgctxt "Languages::netopia_setup_instructions"
+msgid "Create a payment method under Administration → Payment methods with the processor \"NETOPIA Payments\", then enter the POS signature, the API key and the sandbox/live public and private keys in its Configure tab."
+msgstr "Creați o metodă de plată în Administrare → Metode de plată cu procesatorul „NETOPIA Payments”, apoi completați semnătura POS, cheia API și cheile publice și private sandbox/live în fila Configurare."
+
+msgctxt "Languages::netopia_show"
+msgid "Show"
+msgstr "Arată"
+
+msgctxt "Languages::netopia_start_amount"
+msgid "Charged amount"
+msgstr "Sumă plătită"
+
+msgctxt "Languages::netopia_status_changed_hint"
+msgid "Rows you changed from the default are marked on the left."
+msgstr "Rândurile modificate față de implicit sunt marcate în stânga."
+
+msgctxt "Languages::netopia_status_col_customer"
+msgid "Customer sees"
+msgstr "Clientul vede"
+
+msgctxt "Languages::netopia_status_col_group"
+msgid "Treated as"
+msgstr "Tratat ca"
+
+msgctxt "Languages::netopia_status_col_order_status"
+msgid "Order status"
+msgstr "Status comandă"
+
+msgctxt "Languages::netopia_status_col_result"
+msgid "NETOPIA result"
+msgstr "Rezultat NETOPIA"
 
 msgctxt "Languages::netopia_status_group_cancel"
 msgid "Cancelled"
@@ -455,6 +847,102 @@ msgstr "Ce status de comandă setează fiecare rezultat al plății NETOPIA."
 msgctxt "Languages::netopia_status_mapping_section"
 msgid "Order statuses"
 msgstr "Statusuri comandă"
+
+msgctxt "Languages::netopia_status_rare_toggle"
+msgid "Show [count] rare statuses (chargebacks, recurring payments, trials, 3D Secure steps)"
+msgstr "Arată [count] statusuri rare (chargeback, plăți recurente, perioade de probă, pași 3D Secure)"
+
+msgctxt "Languages::netopia_status_reset"
+msgid "Reset to defaults"
+msgstr "Revino la implicit"
+
+msgctxt "Languages::netopia_tab_checkout"
+msgid "Checkout"
+msgstr "Checkout"
+
+msgctxt "Languages::netopia_tab_connection"
+msgid "Connection"
+msgstr "Conexiune"
+
+msgctxt "Languages::netopia_tab_keys"
+msgid "Keys"
+msgstr "Chei"
+
+msgctxt "Languages::netopia_tab_statuses"
+msgid "Order statuses"
+msgstr "Statusuri comandă"
+
+msgctxt "Languages::netopia_test_api_key_missing"
+msgid "The API key is empty."
+msgstr "Cheia API este goală."
+
+msgctxt "Languages::netopia_test_api_key_same_as_other"
+msgid "The [mode] API key is the same as the other mode's. NETOPIA issues a different key for Sandbox and Live."
+msgstr "Cheia API [mode] este identică cu cea a celuilalt mod. NETOPIA emite chei diferite pentru Sandbox și Live."
+
+msgctxt "Languages::netopia_test_api_key_set"
+msgid "The [mode] API key is filled in. NETOPIA checks it on the first payment."
+msgstr "Cheia API [mode] este completată. NETOPIA o verifică la prima plată."
+
+msgctxt "Languages::netopia_test_button"
+msgid "Check settings"
+msgstr "Verifică setările"
+
+msgctxt "Languages::netopia_test_intro"
+msgid "Checks the selected mode's API key, POS signature and public key as typed, without saving them. NETOPIA offers no way to test an API key without a payment, so place a sandbox test order to confirm it."
+msgstr "Verifică cheia API, semnătura POS și cheia publică ale modului ales, așa cum sunt introduse, fără să le salveze. NETOPIA nu oferă o metodă de a testa cheia API fără o plată, așa că plasați o comandă de test în sandbox pentru confirmare."
+
+msgctxt "Languages::netopia_test_not_ready"
+msgid "The [mode] settings are not complete yet: fix the items marked ✕."
+msgstr "Setările [mode] nu sunt încă complete: corectați punctele marcate cu ✕."
+
+msgctxt "Languages::netopia_test_pos_format"
+msgid "The POS signature does not look like XXXX-XXXX-XXXX-XXXX-XXXX. Copy it again from NETOPIA."
+msgstr "Semnătura POS nu are forma XXXX-XXXX-XXXX-XXXX-XXXX. Copiați-o din nou din NETOPIA."
+
+msgctxt "Languages::netopia_test_pos_missing"
+msgid "The POS signature is empty."
+msgstr "Semnătura POS este goală."
+
+msgctxt "Languages::netopia_test_pos_ok"
+msgid "The POS signature has the right format."
+msgstr "Semnătura POS are formatul corect."
+
+msgctxt "Languages::netopia_test_public_key_expired"
+msgid "The [mode] public key expired on [date]. Download a new one from NETOPIA."
+msgstr "Cheia publică [mode] a expirat pe [date]. Descărcați una nouă din NETOPIA."
+
+msgctxt "Languages::netopia_test_public_key_expires_soon"
+msgid "The [mode] public key expires on [date]. Download a new one from NETOPIA soon."
+msgstr "Cheia publică [mode] expiră pe [date]. Descărcați curând una nouă din NETOPIA."
+
+msgctxt "Languages::netopia_test_public_key_invalid"
+msgid "The [mode] public key cannot be read. Upload the .cer file from NETOPIA again."
+msgstr "Cheia publică [mode] nu poate fi citită. Încărcați din nou fișierul .cer din NETOPIA."
+
+msgctxt "Languages::netopia_test_public_key_missing"
+msgid "No [mode] public key: payment confirmations from NETOPIA cannot be verified."
+msgstr "Nu există cheie publică [mode]: confirmările de plată NETOPIA nu pot fi verificate."
+
+msgctxt "Languages::netopia_test_public_key_ok"
+msgid "The [mode] public key is readable."
+msgstr "Cheia publică [mode] poate fi citită."
+
+msgctxt "Languages::netopia_test_ready"
+msgid "The [mode] settings are complete. A [mode] test payment confirms that NETOPIA accepts the API key."
+msgstr "Setările [mode] sunt complete. O plată de test [mode] confirmă că NETOPIA acceptă cheia API."
+
+msgctxt "Languages::netopia_test_request_failed"
+msgid "The check could not run. Reload the page and try again."
+msgstr "Verificarea nu a putut rula. Reîncărcați pagina și încercați din nou."
+
+msgctxt "Languages::netopia_test_running"
+msgid "Checking…"
+msgstr "Se verifică…"
+
+msgctxt "Languages::netopia_test_title"
+msgid "Settings check"
+msgstr "Verificare setări"
 
 msgctxt "Languages::netopia_upload_key_file"
 msgid "Upload key file"
