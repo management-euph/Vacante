@@ -38,6 +38,55 @@ class InvoiceRepository
     }
 
     /**
+     * The invoice rows of many orders in ONE query, keyed by order_id; orders
+     * without a row are absent.
+     *
+     * For the orders list (every admin page load of it, through the
+     * get_orders_post hook) and the bulk pre-check, so only the columns those
+     * show are read: the request/response payloads are kilobytes of JSON per
+     * row that neither needs. findByOrderId() still returns the whole row.
+     *
+     * @param list<int> $orderIds
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function findByOrderIds(array $orderIds): array
+    {
+        $ids = [];
+        foreach ($orderIds as $id) {
+            if ($id > 0) {
+                $ids[$id] = $id;
+            }
+        }
+        if ($ids === []) {
+            return [];
+        }
+
+        $rows = db_get_array(
+            'SELECT order_id, status, invoice_series, invoice_number, pdf_link, payment_link, last_error, retry_count, updated_at'
+            . ' FROM ?:fgo_invoices WHERE order_id IN (?n)',
+            array_values($ids),
+        );
+        if (!is_array($rows)) {
+            return [];
+        }
+
+        $byOrder = [];
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            /** @var array<string, mixed> $row */
+            $orderId = TypeCoerce::toInt($row['order_id'] ?? 0);
+            if ($orderId > 0) {
+                $byOrder[$orderId] = $row;
+            }
+        }
+
+        return $byOrder;
+    }
+
+    /**
      * Insert a `pending` row, or — if one already exists — return its id
      * unchanged. Returns the row id and a flag indicating whether the row
      * already existed.

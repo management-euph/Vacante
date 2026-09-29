@@ -9,6 +9,8 @@ use Tygh\Addons\FgoInvoicing\Api\FgoHttpClient;
 use Tygh\Addons\FgoInvoicing\Repository\InvoiceRepository;
 use Tygh\Addons\FgoInvoicing\Repository\ProfileFieldCatalog;
 use Tygh\Addons\FgoInvoicing\Repository\ProfileFieldRepository;
+use Tygh\Addons\FgoInvoicing\Services\Bulk\BulkPrecheck;
+use Tygh\Addons\FgoInvoicing\Services\Bulk\BulkRunner;
 
 /**
  * Tiny static-singleton DI container.
@@ -31,6 +33,7 @@ final class Container
     private ?BillingExtrasResolver $resolver = null;
     private ?InvoiceIssuer $issuer = null;
     private ?InvoiceCanceler $canceler = null;
+    private ?InvoiceMailer $mailer = null;
 
     public static function getInstance(): self
     {
@@ -76,6 +79,14 @@ final class Container
         $this->repo = $repo;
         $this->issuer = null;
         $this->canceler = null;
+        $this->mailer = null;
+        return $this;
+    }
+
+    public function withMailer(InvoiceMailer $mailer): self
+    {
+        $this->mailer = $mailer;
+        $this->issuer = null;
         return $this;
     }
 
@@ -174,6 +185,18 @@ final class Container
         return $this->resolver;
     }
 
+    public function mailer(): InvoiceMailer
+    {
+        if ($this->mailer === null) {
+            $this->mailer = new InvoiceMailer(
+                $this->repository(),
+                InvoiceMailer::productionSender(),
+                OrderInfoSource::core(),
+            );
+        }
+        return $this->mailer;
+    }
+
     public function issuer(): InvoiceIssuer
     {
         if ($this->issuer === null) {
@@ -182,9 +205,47 @@ final class Container
                 $this->repository(),
                 $this->mapper(),
                 $this->billingExtrasResolver(),
+                $this->mailer(),
             );
         }
         return $this->issuer;
+    }
+
+    /**
+     * The bulk pre-check with this store's facts: the identity settings, and
+     * whether the store has a profile field a CIF / CNP could be typed into
+     * (the same condition InvoiceIssuer blocks on). Not cached: it is cheap,
+     * and the settings are read when it is built.
+     *
+     * @param array<string, string> $statusNames order status code => name
+     */
+    public function bulkPrecheck(array $statusNames = []): BulkPrecheck
+    {
+        $resolver = $this->billingExtrasResolver();
+
+        return new BulkPrecheck(
+            mapper:            $this->mapper(),
+            clientVatRequired: ConfigProvider::clientVatRequired(),
+            clientCnpRequired: ConfigProvider::clientCnpRequired(),
+            hasCifSource:      $resolver->hasSourceFor(BillingExtrasResolver::KEY_CIF),
+            hasCnpSource:      $resolver->hasSourceFor(BillingExtrasResolver::KEY_CNP),
+            statusNames:       $statusNames,
+        );
+    }
+
+    /**
+     * @param array<string, string> $statusNames order status code => name
+     */
+    public function bulkRunner(array $statusNames = []): BulkRunner
+    {
+        return new BulkRunner(
+            precheck: $this->bulkPrecheck($statusNames),
+            resolver: $this->billingExtrasResolver(),
+            repo:     $this->repository(),
+            issuer:   $this->issuer(),
+            canceler: $this->canceler(),
+            mailer:   $this->mailer(),
+        );
     }
 
     public function canceler(): InvoiceCanceler

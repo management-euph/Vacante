@@ -8,11 +8,17 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\PreserveGlobalState;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
+use Tygh\Addons\FgoInvoicing\Repository\InvoiceRepository;
 use Tygh\Addons\FgoInvoicing\Repository\ProfileFieldRepository;
 use Tygh\Addons\FgoInvoicing\Services\BillingExtrasResolver;
+use Tygh\Addons\FgoInvoicing\Services\Bulk\BulkAction;
+use Tygh\Addons\FgoInvoicing\Services\Bulk\BulkRunResult;
+use Tygh\Addons\FgoInvoicing\Services\Bulk\PrecheckVerdict;
 use Tygh\Addons\FgoInvoicing\Services\ConfigProvider;
 use Tygh\Addons\FgoInvoicing\Services\Container;
+use Tygh\Addons\FgoInvoicing\Services\InvoiceMailer;
 use Tygh\Addons\FgoInvoicing\Tests\Support\DbStub;
+use Tygh\Addons\FgoInvoicing\Tests\Support\InMemoryInvoiceRepository;
 use Tygh\Addons\FgoInvoicing\Tests\Support\InMemoryProfileFieldCatalog;
 
 /**
@@ -81,6 +87,77 @@ final class ContainerTest extends TestCase
         $resolver = new BillingExtrasResolver(new InMemoryProfileFieldCatalog());
 
         self::assertSame($resolver, Container::getInstance()->withResolver($resolver)->billingExtrasResolver());
+    }
+
+    public function testTheIssuerAndTheBulkPagesShareOneMailer(): void
+    {
+        ConfigProvider::seed([]);
+        $container = Container::getInstance();
+
+        self::assertSame($container->mailer(), $container->mailer());
+        self::assertSame($container->issuer(), $container->issuer());
+
+        $mailer = new InvoiceMailer(new InvoiceRepository(), static fn (array $p): bool => true, static fn (int $id): ?array => null);
+        $issuerBefore = $container->issuer();
+        $container->withMailer($mailer);
+
+        self::assertSame($mailer, $container->mailer());
+        self::assertNotSame($issuerBefore, $container->issuer(), 'the issuer is rebuilt around the new mailer');
+    }
+
+    public function testSwappingTheRepositoryRebuildsTheMailer(): void
+    {
+        ConfigProvider::seed([]);
+        $container = Container::getInstance();
+        $before = $container->mailer();
+
+        $container->withRepository(new InvoiceRepository());
+
+        self::assertNotSame($before, $container->mailer());
+    }
+
+    /**
+     * The pre-check blocks on a missing CIF only when the setting requires
+     * it AND the store has a field for it: both facts must come from the
+     * same places InvoiceIssuer reads them.
+     */
+    public function testTheBulkPrecheckCarriesTheStoreFacts(): void
+    {
+        $order = [
+            'order_id' => 3,
+            'status' => 'P',
+            'total' => 10,
+            'company' => 'SC ACME SRL',
+            'b_firstname' => 'Ion',
+            'b_country' => 'RO',
+        ];
+
+        ConfigProvider::seed(['client_vat_required' => 'Y']);
+        $container = Container::getInstance()->withProfileFieldCatalog(InMemoryProfileFieldCatalog::withDescriptions([5 => 'CIF']));
+        $withField = $container->bulkPrecheck(['P' => 'Processed'])->check(BulkAction::Issue, $order, null);
+        self::assertSame(PrecheckVerdict::Block, $withField->verdict);
+
+        $container->withProfileFieldCatalog(new InMemoryProfileFieldCatalog());
+        $withoutField = $container->bulkPrecheck()->check(BulkAction::Issue, $order, null);
+        self::assertSame(PrecheckVerdict::Warn, $withoutField->verdict);
+
+        ConfigProvider::seed([]);
+        $container->withProfileFieldCatalog(InMemoryProfileFieldCatalog::withDescriptions([5 => 'CIF']));
+        self::assertSame(PrecheckVerdict::Warn, $container->bulkPrecheck()->check(BulkAction::Issue, $order, null)->verdict);
+    }
+
+    public function testTheBulkRunnerIsWiredToTheContainersServices(): void
+    {
+        ConfigProvider::seed([]);
+        $repo = new InMemoryInvoiceRepository();
+        $container = Container::getInstance()->withRepository($repo)->withProfileFieldCatalog(new InMemoryProfileFieldCatalog());
+
+        // No fn_get_order_info() in the unit bootstrap: the order is "gone".
+        $result = $container->bulkRunner()->run(BulkAction::Issue, 7);
+
+        self::assertSame(BulkRunResult::OUTCOME_FAILED, $result->outcome);
+        self::assertSame('order_not_found', $result->reasons[0]->code);
+        self::assertSame([], $repo->rows, 'nothing was attempted');
     }
 
     /**

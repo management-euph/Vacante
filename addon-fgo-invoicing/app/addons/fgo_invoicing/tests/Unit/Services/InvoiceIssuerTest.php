@@ -16,6 +16,7 @@ use Tygh\Addons\FgoInvoicing\Services\BillingExtrasResolver;
 use Tygh\Addons\FgoInvoicing\Services\BillingMapper;
 use Tygh\Addons\FgoInvoicing\Services\ConfigProvider;
 use Tygh\Addons\FgoInvoicing\Services\InvoiceIssuer;
+use Tygh\Addons\FgoInvoicing\Services\InvoiceMailer;
 use Tygh\Addons\FgoInvoicing\Tests\Support\InMemoryProfileFieldCatalog;
 use Tygh\Addons\FgoInvoicing\Tests\Support\LogStub;
 
@@ -401,6 +402,103 @@ final class InvoiceIssuerTest extends TestCase
         $result = $issuer->issueForOrder(1234, $this->order());
 
         self::assertSame(Constants::STATUS_ISSUED, $result['status'], 'the CIF rule is about companies only');
+    }
+
+    // ── Customer e-mail after issuing ───────────────────────────────────
+
+    /**
+     * @param list<array<string, mixed>> $sent
+     */
+    private function issuerWithMailer(FgoApiClient $api, InvoiceRepository $repo, array &$sent, bool $accepts = true): InvoiceIssuer
+    {
+        $mailer = new InvoiceMailer(
+            $repo,
+            static function (array $payload) use (&$sent, $accepts): bool {
+                $sent[] = $payload;
+
+                return $accepts;
+            },
+            static fn (int $id): ?array => null,
+        );
+
+        return new InvoiceIssuer($api, $repo, new BillingMapper('RON'), self::resolver(), $mailer);
+    }
+
+    public function testTheSettingDecidesWhenTheCallerDoesNot(): void
+    {
+        $sent = [];
+        self::seed(['auto_email_pdf' => 'Y']);
+        $result = $this->issuerWithMailer($this->successApi(), $this->fakeRepository(), $sent)->issueForOrder(1234, $this->order());
+
+        self::assertSame('sent', $result['email_status'] ?? null);
+        self::assertCount(1, $sent);
+        self::assertSame('ion@example.ro', $sent[0]['to']);
+        self::assertSame('https://files.fgo.ro/x.pdf', $sent[0]['pdf_link']);
+        self::assertSame('INV-1', $sent[0]['invoice_number']);
+        self::assertSame(1234, $sent[0]['order_id']);
+
+        $sent = [];
+        self::seed(['auto_email_pdf' => 'N']);
+        $off = $this->issuerWithMailer($this->successApi(), $this->fakeRepository(), $sent)->issueForOrder(1234, $this->order());
+        self::assertSame('off', $off['email_status'] ?? null);
+        self::assertSame([], $sent);
+    }
+
+    /**
+     * The bulk page's "Email the PDF link" box overrides auto_email_pdf in
+     * both directions.
+     */
+    public function testTheCallerOverridesTheSetting(): void
+    {
+        $sent = [];
+        self::seed(['auto_email_pdf' => 'N']);
+        $on = $this->issuerWithMailer($this->successApi(), $this->fakeRepository(), $sent)->issueForOrder(1234, $this->order(), true);
+        self::assertSame('sent', $on['email_status'] ?? null);
+        self::assertCount(1, $sent);
+
+        $sent = [];
+        self::seed(['auto_email_pdf' => 'Y']);
+        $off = $this->issuerWithMailer($this->successApi(), $this->fakeRepository(), $sent)->issueForOrder(1234, $this->order(), false);
+        self::assertSame('off', $off['email_status'] ?? null);
+        self::assertSame([], $sent);
+    }
+
+    /**
+     * The invoice exists on FGO's side: an e-mail that cannot be sent is
+     * reported and logged, the issue still succeeds.
+     */
+    public function testAFailedEmailDoesNotFailTheInvoice(): void
+    {
+        $sent = [];
+        $result = $this->issuerWithMailer($this->successApi(), $this->fakeRepository(), $sent, false)
+            ->issueForOrder(1234, $this->order(), true);
+
+        self::assertSame(Constants::STATUS_ISSUED, $result['status']);
+        self::assertSame('failed', $result['email_status'] ?? null);
+        self::assertContains('[warn] email-send-failed', LogStub::messages());
+    }
+
+    public function testNoEmailIsAttemptedWhenIssuingFails(): void
+    {
+        $sent = [];
+        $result = $this->issuerWithMailer($this->failingApi('boom'), $this->fakeRepository(), $sent)
+            ->issueForOrder(1234, $this->order(), true);
+
+        self::assertSame(Constants::STATUS_FAILED, $result['status']);
+        self::assertArrayNotHasKey('email_status', $result);
+        self::assertSame([], $sent);
+    }
+
+    /**
+     * Without an injected mailer the issuer builds the production one, which
+     * outside CS-Cart (no functions/email.php) reports "failed", never throws.
+     */
+    public function testTheDefaultMailerNeverBreaksIssuing(): void
+    {
+        $result = $this->issuer($this->successApi(), $this->fakeRepository())->issueForOrder(1234, $this->order(), true);
+
+        self::assertSame(Constants::STATUS_ISSUED, $result['status']);
+        self::assertSame('failed', $result['email_status'] ?? null);
     }
 
     private static function loggedContextMessage(string $event): string

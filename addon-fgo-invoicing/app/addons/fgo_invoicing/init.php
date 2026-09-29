@@ -84,6 +84,7 @@ fn_register_hooks(
     'place_order_post',
     'change_order_status',
     'get_order_info',
+    'get_orders_post',
     'profile_fields_get_fields',
     'update_profile_fields_post',
     'dispatch_before_display',

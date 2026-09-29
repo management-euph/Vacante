@@ -9,7 +9,6 @@ use Tygh\Addons\FgoInvoicing\Api\FgoApiException;
 use Tygh\Addons\FgoInvoicing\Constants;
 use Tygh\Addons\FgoInvoicing\Dto\Invoice\IssueInvoiceRequest;
 use Tygh\Addons\FgoInvoicing\Dto\Invoice\IssueInvoiceResponse;
-use Tygh\Addons\FgoInvoicing\Helpers\TypeCoerce;
 use Tygh\Addons\FgoInvoicing\Repository\InvoiceRepository;
 
 /**
@@ -37,26 +36,38 @@ use Tygh\Addons\FgoInvoicing\Repository\InvoiceRepository;
  *     on without such a field; blocking there would stop every invoice at
  *     deploy for something no customer could supply. Those orders are issued
  *     as before and a warning is logged instead.
- *   - On success, if `auto_email_pdf` is on, the customer e-mail is sent
- *     with the signed PDF link. Failure to send the e-mail does NOT roll
- *     back issuance — the invoice has already been emitted on FGO's side.
+ *   - On success the customer e-mail with the signed PDF link goes out
+ *     through InvoiceMailer when `auto_email_pdf` is on, or when the caller
+ *     says so ($sendEmail: the bulk page's "Email the PDF link" box, which
+ *     overrides the setting either way). Failure to send the e-mail does NOT
+ *     roll back issuance — the invoice has already been emitted on FGO's
+ *     side; the result reports it as `email_status`.
  */
 final class InvoiceIssuer
 {
+    private readonly InvoiceMailer $mailer;
+
+    /**
+     * $mailer defaults to the production one (CS-Cart's mailer); the bulk
+     * page and the hooks get the Container's.
+     */
     public function __construct(
         private readonly FgoApiClient $api,
         private readonly InvoiceRepository $repo,
         private readonly BillingMapper $mapper,
         private readonly BillingExtrasResolver $resolver,
+        ?InvoiceMailer $mailer = null,
     ) {
+        $this->mailer = $mailer ?? new InvoiceMailer($repo, InvoiceMailer::productionSender(), OrderInfoSource::core());
     }
 
     /**
      * @param array<string, mixed>|null $orderInfo Pre-fetched order_info; fetched lazily when null.
+     * @param bool|null $sendEmail E-mail the PDF link after issuing; null follows the auto_email_pdf setting.
      *
-     * @return array{status: string, invoice_id?: string, error?: string}
+     * @return array{status: string, invoice_id?: string, error?: string, email_status?: string}
      */
-    public function issueForOrder(int $orderId, ?array $orderInfo = null): array
+    public function issueForOrder(int $orderId, ?array $orderInfo = null, ?bool $sendEmail = null): array
     {
         if ($orderId <= 0) {
             return ['status' => 'invalid', 'error' => 'orderId must be positive'];
@@ -94,7 +105,7 @@ final class InvoiceIssuer
             $response = IssueInvoiceResponse::fromApiResponse($rawResponse);
 
             $this->repo->markIssued($orderId, $response, $form);
-            $this->maybeEmail($orderInfo, $response);
+            $emailStatus = $this->maybeEmail($orderId, $orderInfo, $response, $sendEmail ?? ConfigProvider::autoEmailPdf());
             $this->logEvent('info', 'issued', [
                 'order_id' => $orderId,
                 'invoice_number' => $response->invoiceNumber,
@@ -103,6 +114,7 @@ final class InvoiceIssuer
             return [
                 'status' => Constants::STATUS_ISSUED,
                 'invoice_id' => (string) ($response->invoiceNumber ?? ''),
+                'email_status' => $emailStatus,
             ];
         } catch (FgoApiException $e) {
             $form ??= [];
@@ -181,63 +193,35 @@ final class InvoiceIssuer
      */
     private function loadOrderInfo(int $orderId): ?array
     {
-        if (!function_exists('fn_get_order_info')) {
-            return null;
-        }
-        /** @var array<string, mixed>|null $info */
-        $info = fn_get_order_info($orderId);
-        return is_array($info) && $info !== [] ? $info : null;
+        return OrderInfoSource::core()($orderId);
     }
 
     /**
      * @param array<string, mixed> $orderInfo
-     */
-    private function maybeEmail(array $orderInfo, IssueInvoiceResponse $response): void
-    {
-        if (!ConfigProvider::autoEmailPdf()) {
-            return;
-        }
-        if ($response->pdfLink === null || $response->pdfLink === '') {
-            return;
-        }
-        $email = trim(TypeCoerce::toString($orderInfo['email'] ?? ''));
-        if ($email === '' || !function_exists('fn_fgo_invoicing_send_invoice_email')) {
-            return;
-        }
-        try {
-            fn_fgo_invoicing_send_invoice_email([
-                'to' => $email,
-                'order_id' => TypeCoerce::toInt($orderInfo['order_id'] ?? 0),
-                'invoice_number' => $response->invoiceNumber ?? '',
-                'invoice_series' => $response->invoiceSeries ?? '',
-                'pdf_link' => $response->pdfLink,
-                'payment_link' => $response->paymentLink ?? '',
-                'company_name' => $this->companyName($orderInfo),
-            ]);
-        } catch (\Throwable $e) {
-            $this->logEvent('warn', 'email-send-failed', [
-                'order_id' => TypeCoerce::toInt($orderInfo['order_id'] ?? 0),
-                'message' => $e->getMessage(),
-            ]);
-        }
-    }
-
-    /**
-     * First non-blank of the keys BillingMapper uses: `??` would stop at the
-     * '' fn_get_order_info() puts in fgo_billing_company on every order.
      *
-     * @param array<string, mixed> $orderInfo
+     * @return string InvoiceMailer status, or 'off' when no e-mail was wanted
      */
-    private function companyName(array $orderInfo): string
+    private function maybeEmail(int $orderId, array $orderInfo, IssueInvoiceResponse $response, bool $wanted): string
     {
-        foreach (['fgo_billing_company', 'b_company', 'company'] as $key) {
-            $name = trim(TypeCoerce::toString($orderInfo[$key] ?? ''));
-            if ($name !== '') {
-                return $name;
-            }
+        if (!$wanted) {
+            return 'off';
+        }
+        $orderInfo['order_id'] = $orderId;
+        $result = $this->mailer->send(
+            $orderInfo,
+            $response->invoiceSeries ?? '',
+            $response->invoiceNumber ?? '',
+            $response->pdfLink ?? '',
+            $response->paymentLink ?? '',
+        );
+        if ($result['status'] === InvoiceMailer::STATUS_FAILED) {
+            $this->logEvent('warn', 'email-send-failed', [
+                'order_id' => $orderId,
+                'message' => $result['error'] ?? '',
+            ]);
         }
 
-        return '';
+        return $result['status'];
     }
 
     /**

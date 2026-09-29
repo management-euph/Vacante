@@ -64,7 +64,8 @@ final class OrderHooksArityTest extends TestCase
      * 4.20.1 fn_place_order(), $cart first and $order_id sixth). The two profile
      * hooks are listed at 1: their core arity is not pinned down for every
      * build, so they are simply required to tolerate a one-argument call.
-     * dispatch_before_display is fired with no arguments at all.
+     * dispatch_before_display is fired with no arguments at all;
+     * get_orders_post with ($params, $orders) by 4.20.1 fn_get_orders().
      *
      * @return array<string, array{string, int}> hook fn => args the core passes
      */
@@ -74,6 +75,7 @@ final class OrderHooksArityTest extends TestCase
             'place_order_post'          => ['fn_fgo_invoicing_place_order_post', 9],
             'change_order_status'       => ['fn_fgo_invoicing_change_order_status', 6],
             'get_order_info'            => ['fn_fgo_invoicing_get_order_info', 2],
+            'get_orders_post'           => ['fn_fgo_invoicing_get_orders_post', 2],
             'profile_fields_get_fields' => ['fn_fgo_invoicing_profile_fields_get_fields', 1],
             'update_profile_fields_post' => ['fn_fgo_invoicing_update_profile_fields_post', 1],
             'dispatch_before_display'   => ['fn_fgo_invoicing_dispatch_before_display', 0],

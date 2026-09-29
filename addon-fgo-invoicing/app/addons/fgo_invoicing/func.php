@@ -9,6 +9,7 @@ if (!defined('BOOTSTRAP')) {
 require_once __DIR__ . '/functions/install.php';
 require_once __DIR__ . '/functions/profile_fields.php';
 require_once __DIR__ . '/functions/email.php';
+require_once __DIR__ . '/functions/bulk.php';
 // Self-sufficient (no add-on classes): CS-Cart calls these while building the
 // settings form of an add-on whose init.php — and autoloader — has not run.
 require_once __DIR__ . '/functions/settings_variants.php';
