@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\FgoInvoicing\Services;
 
+use Tygh\Addons\FgoInvoicing\Api\FgoSigner;
 use Tygh\Addons\FgoInvoicing\Constants;
 use Tygh\Addons\FgoInvoicing\Dto\Billing\BillingParty;
 use Tygh\Addons\FgoInvoicing\Dto\Invoice\InvoiceLine;
@@ -32,8 +33,12 @@ use Tygh\Addons\FgoInvoicing\Helpers\TypeCoerce;
  *     and must neither make them a company nor reach FGO as CodUnic.
  *   - An `RO` prefix is stripped and marks the customer `PlatitorTVA=true`;
  *     leading zeros are dropped from Romanian ids only (a Belgian 0123456789
- *     is a different number without its zero). Only `RO` sets PlatitorTVA,
- *     as before: an EU VAT id is sent as typed.
+ *     is a different number without its zero). Any other EU VAT prefix
+ *     (EU_VAT_PREFIXES) also marks `PlatitorTVA=true`: a VIES VAT id means a
+ *     VAT-registered company. It is sent as typed, prefix included.
+ *   - A company with a CIF is `Client[IdExtern]` = the CIF's digits (as the
+ *     reference WooCommerce plugin does), so guest checkouts — all user_id 0 —
+ *     do not share one client record in FGO. Individuals keep their user_id.
  *   - PF customers send their CNP (`fgo_billing_cnp`) as `CodUnic`.
  *   - Foreign customers (`b_country !== 'RO'`) carry `Strain=true`.
  *   - `Valuta` is the store's primary currency: CS-Cart keeps every order
@@ -48,6 +53,17 @@ use Tygh\Addons\FgoInvoicing\Helpers\TypeCoerce;
  */
 final class BillingMapper
 {
+    /**
+     * VAT number prefixes of the EU member states (VIES). Greece's official
+     * prefix is EL; GR is what customers type, so it counts too. XI is
+     * Northern Ireland, which keeps EU VAT numbers for goods. RO is handled
+     * separately (its prefix is stripped).
+     */
+    private const EU_VAT_PREFIXES = [
+        'AT', 'BE', 'BG', 'CY', 'CZ', 'DE', 'DK', 'EE', 'EL', 'ES', 'FI', 'FR', 'GR', 'HR',
+        'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'MT', 'NL', 'PL', 'PT', 'SE', 'SI', 'SK', 'XI',
+    ];
+
     /**
      * $primaryCurrency is the store's primary currency code. Null reads
      * ConfigProvider::primaryCurrency() at mapping time; tests pin it here.
@@ -146,6 +162,12 @@ final class BillingMapper
             $address = $address === '' ? $address2 : $address . ', ' . $address2;
         }
         $idExtern = TypeCoerce::toInt($o['user_id'] ?? 0);
+        if ($isCompany && $cif !== '') {
+            $idFromCif = self::clientIdFromCif($cif);
+            if ($idFromCif > 0) {
+                $idExtern = $idFromCif;
+            }
+        }
 
         return new BillingParty(
             denumire:   $denumire,
@@ -194,14 +216,15 @@ final class BillingMapper
     }
 
     /**
-     * Strip a leading "RO" from a CIF and report whether it was present
-     * (meaning the customer is a VAT-payer). Leading zeros are dropped only
-     * from a Romanian id (RO prefix, or a customer in Romania): elsewhere a
-     * leading zero is part of the number.
+     * Strip a leading "RO" from a CIF and report whether the id marks a
+     * VAT payer: an RO prefix, or any other EU VAT prefix (kept, the id is
+     * sent as typed). Leading zeros are dropped only from a Romanian id (RO
+     * prefix, or a customer in Romania): elsewhere a leading zero is part of
+     * the number.
      *
      * @param string $cifRaw already compacted and usable (usableId)
      *
-     * @return array{0: string, 1: bool} [cleanedCif, hadRoPrefix]
+     * @return array{0: string, 1: bool} [cleanedCif, isVatPayer]
      */
     private function normalizeCif(string $cifRaw, bool $romanianCustomer): array
     {
@@ -211,7 +234,44 @@ final class BillingMapper
         if (str_starts_with($cifRaw, 'RO')) {
             return [ltrim(substr($cifRaw, 2), '0'), true];
         }
+        if (self::hasEuVatPrefix($cifRaw)) {
+            return [$cifRaw, true];
+        }
         return [$romanianCustomer ? ltrim($cifRaw, '0') : $cifRaw, false];
+    }
+
+    /**
+     * True for an EU VAT number: a member-state prefix followed by a body
+     * that holds a digit ("DE123456789", "ATU12345678", "NL123456789B01").
+     */
+    private static function hasEuVatPrefix(string $id): bool
+    {
+        return strlen($id) > 2
+            && in_array(substr($id, 0, 2), self::EU_VAT_PREFIXES, true)
+            && preg_match('/\d/', substr($id, 2)) === 1;
+    }
+
+    /**
+     * Client[IdExtern] for a company, from its CIF — the reference
+     * WooCommerce plugin's rule: drop a two-letter country prefix, keep the
+     * digits, drop leading zeros, keep the last 9 digits of anything longer
+     * than 10, then FgoSigner::normalizeCustomerId() (int32). 0 when no digit
+     * is left, and the caller then keeps the user_id.
+     *
+     * @param string $cif normalised (normalizeCif)
+     */
+    private static function clientIdFromCif(string $cif): int
+    {
+        $body = preg_match('/^[A-Z]{2}/', $cif) === 1 ? substr($cif, 2) : $cif;
+        $digits = ltrim((string) preg_replace('/\D/', '', $body), '0');
+        if ($digits === '') {
+            return 0;
+        }
+        if (strlen($digits) > 10) {
+            $digits = substr($digits, -9);
+        }
+
+        return FgoSigner::normalizeCustomerId($digits);
     }
 
     /**

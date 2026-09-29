@@ -327,23 +327,32 @@ final class BillingMapperTest extends TestCase
     /**
      * Foreign VAT ids go out as typed (compacted): a letter prefix is part of
      * them, and so is a leading zero (Belgium's 0123456789 is a different
-     * number without it). Only a Romanian id loses its leading zeros, and
-     * only RO flags PlatitorTVA, as before.
+     * number without it). Only a Romanian id loses its leading zeros.
      *
-     * @return array<string, array{string, string, string}>
+     * An EU member-state prefix marks a VAT-registered company, so it sets
+     * PlatitorTVA like RO does. A non-EU prefix (GB since Brexit, CH) or no
+     * prefix at all does not.
+     *
+     * @return array<string, array{string, string, string, bool}>
      */
     public static function foreignVatIds(): array
     {
         return [
-            'DE'                => ['DE', 'DE123456789', 'DE123456789'],
-            'DE spaced'         => ['DE', 'DE 123 456 789', 'DE123456789'],
-            'BG with zero'      => ['BG', 'BG0123456789', 'BG0123456789'],
-            'BE without prefix' => ['BE', '0123.456.789', '0123456789'],
+            'DE'                  => ['DE', 'DE123456789', 'DE123456789', true],
+            'DE spaced'           => ['DE', 'DE 123 456 789', 'DE123456789', true],
+            'BG with zero'        => ['BG', 'BG0123456789', 'BG0123456789', true],
+            'AT with U'           => ['AT', 'ATU12345678', 'ATU12345678', true],
+            'NL with B suffix'    => ['NL', 'NL123456789B01', 'NL123456789B01', true],
+            'Greece EL'           => ['GR', 'EL123456789', 'EL123456789', true],
+            'Greece typed as GR'  => ['GR', 'GR123456789', 'GR123456789', true],
+            'BE without prefix'   => ['BE', '0123.456.789', '0123456789', false],
+            'GB is not EU'        => ['GB', 'GB123456789', 'GB123456789', false],
+            'CH is not EU'        => ['CH', 'CHE123456789', 'CHE123456789', false],
         ];
     }
 
     #[DataProvider('foreignVatIds')]
-    public function testForeignVatIdsAreSentAsTyped(string $country, string $typed, string $codUnic): void
+    public function testForeignVatIdsAreSentAsTyped(string $country, string $typed, string $codUnic, bool $platitorTva): void
     {
         $req = (new BillingMapper())->mapOrderInfo($this->baseOrder([
             'b_country' => $country,
@@ -354,7 +363,78 @@ final class BillingMapperTest extends TestCase
         self::assertSame(Constants::TIP_COMPANY, $req->client->tip);
         self::assertTrue($req->client->strain);
         self::assertSame($codUnic, $req->client->codUnic);
-        self::assertFalse($req->client->platitorTva);
+        self::assertSame($platitorTva, $req->client->platitorTva);
+    }
+
+    public function testARomanianCustomerWithAnEuVatIdIsAVatPayer(): void
+    {
+        $req = (new BillingMapper())->mapOrderInfo($this->baseOrder([
+            'company' => 'ACME GmbH',
+            'fgo_billing_cui' => 'DE123456789',
+        ]));
+
+        self::assertFalse($req->client->strain);
+        self::assertSame('DE123456789', $req->client->codUnic);
+        self::assertTrue($req->client->platitorTva);
+    }
+
+    /**
+     * Client[IdExtern] for a company is its CIF's digits (the WooCommerce
+     * plugin's rule), not the user_id: every guest checkout has user_id 0, so
+     * all guest companies used to share one client record in FGO.
+     *
+     * @return array<string, array{string, string, int}>
+     */
+    public static function companyClientIds(): array
+    {
+        return [
+            'RO prefix'              => ['RO', 'RO12345678', 12345678],
+            'no prefix'              => ['RO', '12345678', 12345678],
+            'RO leading zeros'       => ['RO', 'RO0012345678', 12345678],
+            'DE'                     => ['DE', 'DE123456789', 123456789],
+            'AT drops the U'         => ['AT', 'ATU12345678', 12345678],
+            'NL longer than 10'      => ['NL', 'NL123456789B01', 345678901],
+            'BE keeps value, no 0'   => ['BE', '0123.456.789', 123456789],
+        ];
+    }
+
+    #[DataProvider('companyClientIds')]
+    public function testACompanyWithACifIsIdentifiedByIt(string $country, string $typed, int $idExtern): void
+    {
+        foreach ([0, 7] as $userId) {
+            $req = (new BillingMapper())->mapOrderInfo($this->baseOrder([
+                'user_id' => $userId,
+                'b_country' => $country,
+                'company' => 'ACME SRL',
+                'fgo_billing_cui' => $typed,
+            ]));
+
+            self::assertSame(Constants::TIP_COMPANY, $req->client->tip);
+            self::assertSame($idExtern, $req->client->idExtern, "user_id {$userId}");
+            self::assertSame($idExtern, $req->toFormFields()['Client[IdExtern]']);
+        }
+    }
+
+    public function testTwoGuestCompaniesNoLongerShareAClientId(): void
+    {
+        $a = (new BillingMapper())->mapOrderInfo($this->baseOrder(['user_id' => 0, 'company' => 'A SRL', 'fgo_billing_cui' => 'RO12345678']));
+        $b = (new BillingMapper())->mapOrderInfo($this->baseOrder(['user_id' => 0, 'company' => 'B SRL', 'fgo_billing_cui' => 'RO87654321']));
+
+        self::assertNotSame($a->client->idExtern, $b->client->idExtern);
+    }
+
+    public function testIndividualsAndCompaniesWithoutACifKeepTheirUserId(): void
+    {
+        $person = (new BillingMapper())->mapOrderInfo($this->baseOrder([
+            'user_id' => 7,
+            'fgo_billing_cnp' => '1960101123456',
+        ]));
+        self::assertSame(Constants::TIP_PERSON, $person->client->tip);
+        self::assertSame(7, $person->client->idExtern, 'never the CNP');
+
+        $company = (new BillingMapper())->mapOrderInfo($this->baseOrder(['user_id' => 7, 'company' => 'ACME SRL']));
+        self::assertSame(Constants::TIP_COMPANY, $company->client->tip);
+        self::assertSame(7, $company->client->idExtern);
     }
 
     public function testRegComGoesToNrRegComForACompanyOnly(): void
