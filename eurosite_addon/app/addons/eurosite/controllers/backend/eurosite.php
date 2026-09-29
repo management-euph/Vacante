@@ -47,6 +47,16 @@ if (!defined('BOOTSTRAP')) {
 /** @var \Smarty $view */
 $view = Tygh::$app['view'];
 
+// The init.php schema self-heal is stamp-gated and, by design, skips a failed
+// ALTER quietly: a store can reach this controller without the columns its
+// pages read (the whitelist's first_seen_at). Apply the deltas here too, like
+// the cron controller does. SchemaMigrator::ensure() runs once per request and
+// only ALTERs what is missing (two INFORMATION_SCHEMA reads). An ALTER that
+// fails now stops the page with its own error instead of "Unknown column".
+if (function_exists('fn_eurosite_ensure_schema')) {
+    fn_eurosite_ensure_schema();
+}
+
 /**
  * The destination whitelist as DestinationsPicker::build() sees it: every
  * country (or one), its synced cities with their figures, the saved rows and

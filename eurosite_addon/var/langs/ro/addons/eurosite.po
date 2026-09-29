@@ -1145,36 +1145,36 @@ msgid "<strong>No whitelist saved yet.</strong> Nothing is synced or sold from E
 msgstr "<strong>Nicio listă salvată încă.</strong> Nu se sincronizează și nu se vinde nimic de la Eurosite până nu alegeți cel puțin o țară și salvați."
 
 msgctxt "Languages::eurosite.dest_new_alert"
-msgid "[n] new cities appeared in the cities sync. They are not sold until you tick them."
-msgstr "[n] orașe noi au apărut la sincronizarea orașelor. Nu se vând până nu le bifați."
+msgid "[n] new {city|cities} appeared in the cities sync. {It is|They are} not sold until you tick {it|them}."
+msgstr "[n] {oraș nou a apărut|orașe noi au apărut|de orașe noi au apărut} la sincronizarea orașelor. Nu se {vinde|vând|vând} până nu {îl bifați|le bifați|le bifați}."
 
 msgctxt "Languages::eurosite.dest_show_new"
 msgid "Show new cities"
 msgstr "Arată orașele noi"
 
 msgctxt "Languages::eurosite.dest_gone_alert"
-msgid "[n] ticked cities are no longer in the Eurosite catalog (crossed out). They stay ticked until you untick them."
-msgstr "[n] orașe bifate nu mai sunt în catalogul Eurosite (tăiate). Rămân bifate până le debifați."
+msgid "[n] ticked {city is|cities are} no longer in the Eurosite catalog (crossed out). {It stays|They stay} ticked until you untick {it|them}."
+msgstr "[n] {oraș bifat nu mai este|orașe bifate nu mai sunt|de orașe bifate nu mai sunt} în catalogul Eurosite (tăiate). {Rămâne bifat până îl debifați|Rămân bifate până le debifați|Rămân bifate până le debifați}."
 
 msgctxt "Languages::eurosite.dest_intro"
 msgid "Choose what we sell from Eurosite. Only hotels in these destinations are synced and shown on the storefront; hotels outside are hidden at the next hotel sync, and live products stay until you disable them. \"All cities\" and \"Own cities\" include cities Eurosite adds later; \"Only selected\" waits for you to tick them."
 msgstr "Alegeți ce vindem de la Eurosite. Doar hotelurile din aceste destinații se sincronizează și apar în magazin; cele din afară se ascund la următoarea sincronizare a hotelurilor, iar produsele active rămân până le dezactivați. „Toate orașele\" și „Orașe proprii\" includ și orașele adăugate ulterior de Eurosite; „Doar cele bifate\" așteaptă să le bifați."
 
 msgctxt "Languages::eurosite.dest_country_meta"
-msgid "[cities] cities · [hotels] hotels"
-msgstr "[cities] orașe · [hotels] hoteluri"
+msgid "[cities] {city|cities} · [hotels] {hotel|hotels}"
+msgstr "[cities] {oraș|orașe|de orașe} · [hotels] {hotel|hoteluri|de hoteluri}"
 
 msgctxt "Languages::eurosite.dest_country_meta_none"
-msgid "[cities] cities · hotels not synced yet"
-msgstr "[cities] orașe · hoteluri nesincronizate încă"
+msgid "[cities] {city|cities} · hotels not synced yet"
+msgstr "[cities] {oraș|orașe|de orașe} · hoteluri nesincronizate încă"
 
 msgctxt "Languages::eurosite.dest_no_cities"
 msgid "No cities are synced for [country] yet. Choose \"All cities\" and the next cities sync brings them in."
 msgstr "Nu există încă orașe sincronizate pentru [country]. Alegeți „Toate orașele\" și următoarea sincronizare le aduce."
 
 msgctxt "Languages::eurosite.dest_city_meta"
-msgid "[hotels] hotels · [priced] with prices · [instant] instant"
-msgstr "[hotels] hoteluri · [priced] cu prețuri · [instant] imediat"
+msgid "[hotels] {hotel|hotels} · [priced] with prices · [instant] instant"
+msgstr "[hotels] {hotel|hoteluri|de hoteluri} · [priced] cu prețuri · [instant] imediat"
 
 msgctxt "Languages::eurosite.dest_city_not_synced"
 msgid "Hotels not synced yet"
@@ -1281,13 +1281,13 @@ msgid "cities"
 msgstr "orașe"
 
 msgctxt "Languages::eurosite.dest_alert_new"
-msgid "[n] new cities in [country] wait for review."
-msgstr "[n] orașe noi din [country] așteaptă verificarea."
+msgid "[n] new {city|cities} in [country] {waits|wait} for review."
+msgstr "[n] {oraș nou|orașe noi|de orașe noi} din [country] {așteaptă|așteaptă|așteaptă} verificarea."
 
 msgctxt "Languages::eurosite.dest_alert_gone"
-msgid "[n] sold cities are no longer in the Eurosite catalog."
-msgstr "[n] orașe vândute nu mai sunt în catalogul Eurosite."
+msgid "[n] sold {city is|cities are} no longer in the Eurosite catalog."
+msgstr "[n] {oraș vândut nu mai este|orașe vândute nu mai sunt|de orașe vândute nu mai sunt} în catalogul Eurosite."
 
 msgctxt "Languages::eurosite.dest_alert_outside"
-msgid "[n] live products are outside the destination whitelist."
-msgstr "[n] produse active sunt în afara listei de destinații."
+msgid "[n] live {product is|products are} outside the destination whitelist."
+msgstr "[n] {produs activ este|produse active sunt|de produse active sunt} în afara listei de destinații."

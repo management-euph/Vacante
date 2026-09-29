@@ -42,6 +42,16 @@ if (!defined('BOOTSTRAP')) {
 /** @var \Smarty $view */
 $view = Tygh::$app['view'];
 
+// The init.php schema self-heal is stamp-gated and, by design, skips a failed
+// ALTER quietly: a store can reach this controller without the columns its
+// pages read (the whitelist's first_seen_at). Apply the deltas here too, like
+// the cron controller does. SchemaMigrator::ensure() runs once per request and
+// only ALTERs what is missing (two INFORMATION_SCHEMA reads). An ALTER that
+// fails now stops the page with its own error instead of "Unknown column".
+if (function_exists('fn_sphinx_holidays_ensure_schema')) {
+    fn_sphinx_holidays_ensure_schema();
+}
+
 /**
  * The destination whitelist page (fn_travel_core_dest_page()) around a
  * WhitelistPageLoader::built(): every country's body loads on open ($lazy),

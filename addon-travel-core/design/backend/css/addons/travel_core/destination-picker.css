@@ -448,10 +448,33 @@
 
 .travel-dest-item__name {
     display: flex;
-    flex-wrap: wrap;
     gap: 3px 6px;
     align-items: center;
+    min-width: 0;
     font-weight: 600;
+}
+
+/* One line whatever the name's length: the code gives way first, then the
+   name is cut with an ellipsis (its full text is the card's title); the
+   flags and the live pill keep their size. */
+.travel-dest-item__name > * {
+    flex-shrink: 0;
+}
+
+.travel-dest-item__label,
+.travel-dest-item__name .travel-dest-code {
+    overflow: hidden;
+    min-width: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.travel-dest-item__label {
+    flex-shrink: 1;
+}
+
+.travel-dest-item__name .travel-dest-code {
+    flex-shrink: 4;
 }
 
 .travel-dest-item__meta {

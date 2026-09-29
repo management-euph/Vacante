@@ -167,4 +167,16 @@ final class DestinationPickerTest extends TestCase
         self::assertSame('1,2,9', $out['ids']);
         self::assertSame([['label' => 'Oradea, Romania', 'n' => 2], ['label' => 'Lisbon, Portugal', 'n' => 1]], $out['groups']);
     }
+
+    /** Labels with several counts, or [n] beside [country]: each {a|b} follows the number before it. */
+    public function testPluralsFollowTheNumberBeforeThem(): void
+    {
+        self::assertSame('1 hotel · 0 with prices · 3 cities', DestinationPicker::plurals('1 {hotel|hotels} · 0 with prices · 3 {city|cities}'));
+        self::assertSame('1 new city is waiting; tick it', DestinationPicker::plurals('1 new {city is|cities are} waiting; tick {it|them}'));
+        self::assertSame(
+            '1 hotel, 0 hoteluri, 19 hoteluri, 20 de hoteluri, 119 hoteluri',
+            DestinationPicker::plurals('1 {hotel|hoteluri|de hoteluri}, 0 {hotel|hoteluri|de hoteluri}, 19 {hotel|hoteluri|de hoteluri}, 20 {hotel|hoteluri|de hoteluri}, 119 {hotel|hoteluri|de hoteluri}'),
+        );
+        self::assertSame('Save [n] {x}', DestinationPicker::plurals('Save [n] {x}'), 'no choice, nothing to do');
+    }
 }
