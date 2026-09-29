@@ -1,7 +1,7 @@
 # Full-store CS-Cart sandbox
 
 A disposable, local CS-Cart 4.20.1 store on **MariaDB 10.11** (matching the
-production server) with all four repo addons linked in for live testing —
+production server) with the repo addons (travel core, Novoton, Sphinx, FGO, Eurosite and Netopia payments) linked in for live testing —
 install/uninstall, crons, booking flows, templates, and emails — without
 touching devx.
 
@@ -84,6 +84,27 @@ touching devx.
   restart. If a probe 404s, the mount just isn't in your container yet —
   `docker compose up -d` recreates it to pick up the mount (no image rebuild;
   DB/docroot volumes persist).
+
+## Netopia payments (card payments)
+
+`addon-netopia-payments-main` is linked like the other addons, plus the two
+files a payment processor keeps outside `app/addons`: `app/payments/netopia_payments.php`
+and the admin form `views/payments/components/cc_processors/netopia_payments.tpl`.
+It ships responsive-theme templates only; on a nova_theme store they are linked
+into nova_theme too.
+
+1. Link it (the link script is baked into the image, so run the repo copy, or rebuild):
+   ```bash
+   docker compose exec app bash /repo/docker/fullstore/link-addons.sh
+   ```
+2. Admin → **Add-ons** → Manage add-ons → **Netopia Payments** → Install.
+   Installing registers the "Netopia Payments" payment processor.
+3. Admin → **Administration → Payment methods** → add a method, processor
+   **Netopia Payments**. In its Configure tab set Mode = sandbox, the POS
+   signature, the API key and the sandbox public/private key files. Keep real
+   keys in the store only, never in the repo.
+4. Check out a test booking and pay with a Netopia sandbox card; the IPN lands
+   on the store, so for a public return URL use a tunnel (the store is on localhost).
 
 ## Getting your changes to show up (update & verify)
 

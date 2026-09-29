@@ -34,6 +34,15 @@ node_modules/
 
 # QA tool caches and reports (PHPStan, Psalm, PHP CS Fixer, PHPUnit)
 var/
+# ...but an addon's language packs (var/langs/*/addons/*.po) are deployable
+# source: without this, a new addon's .po files are silently left out (the
+# Netopia packs were never committed and the addon had no name in the admin).
+!/addon-*/var/
+/addon-*/var/*
+!/addon-*/var/langs/
+!/eurosite_addon/var/
+/eurosite_addon/var/*
+!/eurosite_addon/var/langs/
 phpcs.cache
 .phpunit.result.cache
 .phpunit.cache/

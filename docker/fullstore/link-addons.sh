@@ -36,6 +36,17 @@ declare -A ADDONS=(
     # installing stays a manual admin action, and its API credentials are the
     # spec placeholders until an operator fills real ones in its settings.
     [eurosite]=eurosite_addon
+    # Payment processor: install it from Add-ons, then Administration ->
+    # Payment methods -> add a method with processor "Netopia Payments" and
+    # fill in its sandbox signature/API key there (never in the repo).
+    [netopia_payments]=addon-netopia-payments-main
+)
+
+# Addons that ship templates for the responsive theme only: link those into
+# nova_theme too, so a nova_theme store still renders their hooks (the travel
+# addons keep real nova_theme copies, see scripts/mirror-themes.php).
+declare -A RESPONSIVE_ONLY=(
+    [netopia_payments]=1
 )
 
 link() { # $1 = source under /repo, $2 = destination under docroot
@@ -61,9 +72,20 @@ for id in "${!ADDONS[@]}"; do
     for theme in responsive nova_theme; do
         # Only link into a theme the kit actually ships.
         [ -d "$DOCROOT/design/themes/$theme" ] || continue
-        link "$base/design/themes/$theme/templates/addons/$id" "$DOCROOT/design/themes/$theme/templates/addons/$id"
-        link "$base/design/themes/$theme/css/addons/$id"       "$DOCROOT/design/themes/$theme/css/addons/$id"
+        src_theme="$theme"
+        if [ -n "${RESPONSIVE_ONLY[$id]:-}" ] && [ ! -d "$base/design/themes/$theme" ]; then
+            src_theme=responsive
+        fi
+        link "$base/design/themes/$src_theme/templates/addons/$id"      "$DOCROOT/design/themes/$theme/templates/addons/$id"
+        link "$base/design/themes/$src_theme/css/addons/$id"            "$DOCROOT/design/themes/$theme/css/addons/$id"
+        link "$base/design/themes/$src_theme/mail/templates/addons/$id" "$DOCROOT/design/themes/$theme/mail/templates/addons/$id"
     done
+
+    # Payment processors live OUTSIDE app/addons: the processor script CS-Cart
+    # runs for the payment method, and its settings form in the admin.
+    link "$base/app/payments/$id.php" "$DOCROOT/app/payments/$id.php"
+    link "$base/design/backend/templates/views/payments/components/cc_processors/$id.tpl" \
+         "$DOCROOT/design/backend/templates/views/payments/components/cc_processors/$id.tpl"
 
     link "$base/js/addons/$id" "$DOCROOT/js/addons/$id"
 

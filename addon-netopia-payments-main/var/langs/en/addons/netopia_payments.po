@@ -1,0 +1,465 @@
+msgid ""
+msgstr "Project-Id-Version: cs-cart-latest\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language-Team: English\n"
+"Language: en_US"
+
+msgctxt "Addons::name::netopia_payments"
+msgid "NETOPIA Payments"
+msgstr "NETOPIA Payments"
+
+msgctxt "Addons::description::netopia_payments"
+msgid "Card payments through NETOPIA Payments (API v2): 3-D Secure, installments, payment links and refunds from the order page."
+msgstr "Card payments through NETOPIA Payments (API v2): 3-D Secure, installments, payment links and refunds from the order page."
+
+msgctxt "SettingsSections::netopia_payments::general"
+msgid "General"
+msgstr "General"
+
+msgctxt "SettingsOptions::netopia_payments::setup_instructions"
+msgid "Setup"
+msgstr "Setup"
+
+msgctxt "SettingsOptions::netopia_payments::auto_payment_link"
+msgid "Send a payment link automatically when a payment fails"
+msgstr "Send a payment link automatically when a payment fails"
+
+msgctxt "SettingsVariants::netopia_payments::auto_payment_link::Y"
+msgid "Yes"
+msgstr "Yes"
+
+msgctxt "SettingsVariants::netopia_payments::auto_payment_link::N"
+msgid "No"
+msgstr "No"
+
+msgctxt "SettingsOptions::netopia_payments::auto_payment_link_statuses"
+msgid "Order statuses that trigger the payment link"
+msgstr "Order statuses that trigger the payment link"
+
+msgctxt "SettingsTooltips::netopia_payments::auto_payment_link_statuses"
+msgid "Comma-separated status codes, e.g. F,D (Failed, Declined)."
+msgstr "Comma-separated status codes, e.g. F,D (Failed, Declined)."
+
+msgctxt "SettingsOptions::netopia_payments::auto_send_retry_email"
+msgid "Email the customer a retry link"
+msgstr "Email the customer a retry link"
+
+msgctxt "SettingsVariants::netopia_payments::auto_send_retry_email::Y"
+msgid "Yes"
+msgstr "Yes"
+
+msgctxt "SettingsVariants::netopia_payments::auto_send_retry_email::N"
+msgid "No"
+msgstr "No"
+
+msgctxt "Languages::netopia_setup_instructions"
+msgid "Create a payment method under Administration → Payment methods with the processor \"NETOPIA Payments\", then enter the POS signature, the API key and the sandbox/live public and private keys in its Configure tab."
+msgstr "Create a payment method under Administration → Payment methods with the processor \"NETOPIA Payments\", then enter the POS signature, the API key and the sandbox/live public and private keys in its Configure tab."
+
+msgctxt "Languages::netopia_allow_installments"
+msgid "Allow installments"
+msgstr "Allow installments"
+
+msgctxt "Languages::netopia_api_key"
+msgid "API key"
+msgstr "API key"
+
+msgctxt "Languages::netopia_api_key_description"
+msgid "The API key generated in the NETOPIA admin panel (Profile → Security)."
+msgstr "The API key generated in the NETOPIA admin panel (Profile → Security)."
+
+msgctxt "Languages::netopia_configuration_error"
+msgid "Card payment is not configured correctly. Please choose another payment method or contact us."
+msgstr "Card payment is not configured correctly. Please choose another payment method or contact us."
+
+msgctxt "Languages::netopia_currency"
+msgid "Payment currency"
+msgstr "Payment currency"
+
+msgctxt "Languages::netopia_currency_description"
+msgid "The currency the customer is charged in."
+msgstr "The currency the customer is charged in."
+
+msgctxt "Languages::netopia_current_file"
+msgid "Current file"
+msgstr "Current file"
+
+msgctxt "Languages::netopia_customer_msg_refunded"
+msgid "Your payment has been refunded."
+msgstr "Your payment has been refunded."
+
+msgctxt "Languages::netopia_delete_key_file"
+msgid "Delete key file"
+msgstr "Delete key file"
+
+msgctxt "Languages::netopia_email_order_id_label"
+msgid "Order"
+msgstr "Order"
+
+msgctxt "Languages::netopia_email_order_total_label"
+msgid "Order total"
+msgstr "Order total"
+
+msgctxt "Languages::netopia_email_refund_amount_label"
+msgid "Refunded amount"
+msgstr "Refunded amount"
+
+msgctxt "Languages::netopia_email_refund_date_label"
+msgid "Refund date"
+msgstr "Refund date"
+
+msgctxt "Languages::netopia_email_remaining_paid_label"
+msgid "Remaining paid"
+msgstr "Remaining paid"
+
+msgctxt "Languages::netopia_email_total_refunded_label"
+msgid "Total refunded"
+msgstr "Total refunded"
+
+msgctxt "Languages::netopia_email_transaction_id_label"
+msgid "Transaction ID"
+msgstr "Transaction ID"
+
+msgctxt "Languages::netopia_full_payment"
+msgid "Full payment"
+msgstr "Full payment"
+
+msgctxt "Languages::netopia_installments_label"
+msgid "Installments"
+msgstr "Installments"
+
+msgctxt "Languages::netopia_installments_suffix"
+msgid "installments"
+msgstr "installments"
+
+msgctxt "Languages::netopia_key_delete_failed"
+msgid "The key file could not be deleted."
+msgstr "The key file could not be deleted."
+
+msgctxt "Languages::netopia_key_uploaded"
+msgid "Key file uploaded: [key]"
+msgstr "Key file uploaded: [key]"
+
+msgctxt "Languages::netopia_live"
+msgid "Live"
+msgstr "Live"
+
+msgctxt "Languages::netopia_live_keys_section"
+msgid "Live keys"
+msgstr "Live keys"
+
+msgctxt "Languages::netopia_live_private_key"
+msgid "Live private key"
+msgstr "Live private key"
+
+msgctxt "Languages::netopia_live_private_key_description"
+msgid "The private key (.key) for the live POS, downloaded from the NETOPIA admin panel."
+msgstr "The private key (.key) for the live POS, downloaded from the NETOPIA admin panel."
+
+msgctxt "Languages::netopia_live_public_key"
+msgid "Live public key"
+msgstr "Live public key"
+
+msgctxt "Languages::netopia_live_public_key_description"
+msgid "The public certificate (.cer) for the live POS, downloaded from the NETOPIA admin panel."
+msgstr "The public certificate (.cer) for the live POS, downloaded from the NETOPIA admin panel."
+
+msgctxt "Languages::netopia_max_installments"
+msgid "Maximum installments"
+msgstr "Maximum installments"
+
+msgctxt "Languages::netopia_max_installments_description"
+msgid "The largest number of installments the customer can choose."
+msgstr "The largest number of installments the customer can choose."
+
+msgctxt "Languages::netopia_mode"
+msgid "Mode"
+msgstr "Mode"
+
+msgctxt "Languages::netopia_or_paste_key"
+msgid "or paste the key"
+msgstr "or paste the key"
+
+msgctxt "Languages::netopia_order_description"
+msgid "Order description"
+msgstr "Order description"
+
+msgctxt "Languages::netopia_order_description_help"
+msgid "Shown to the customer on the NETOPIA payment page."
+msgstr "Shown to the customer on the NETOPIA payment page."
+
+msgctxt "Languages::netopia_order_not_found"
+msgid "Order not found."
+msgstr "Order not found."
+
+msgctxt "Languages::netopia_pay_now_button"
+msgid "Pay now"
+msgstr "Pay now"
+
+msgctxt "Languages::netopia_payment_link_email_failed"
+msgid "The payment link was created but the email could not be sent."
+msgstr "The payment link was created but the email could not be sent."
+
+msgctxt "Languages::netopia_payment_link_error"
+msgid "The payment link could not be created: [error]"
+msgstr "The payment link could not be created: [error]"
+
+msgctxt "Languages::netopia_payment_link_generate_only"
+msgid "Create link only"
+msgstr "Create link only"
+
+msgctxt "Languages::netopia_payment_link_generated"
+msgid "Payment link created: [url]"
+msgstr "Payment link created: [url]"
+
+msgctxt "Languages::netopia_payment_link_no_order"
+msgid "No order selected."
+msgstr "No order selected."
+
+msgctxt "Languages::netopia_payment_link_send_email"
+msgid "Create and email to the customer"
+msgstr "Create and email to the customer"
+
+msgctxt "Languages::netopia_payment_link_sent"
+msgid "Payment link sent to [email]."
+msgstr "Payment link sent to [email]."
+
+msgctxt "Languages::netopia_payment_retry_email_footer_note"
+msgid "If you have already paid, please ignore this message."
+msgstr "If you have already paid, please ignore this message."
+
+msgctxt "Languages::netopia_payment_retry_email_heading"
+msgid "Complete the payment for order #[order]"
+msgstr "Complete the payment for order #[order]"
+
+msgctxt "Languages::netopia_payment_retry_email_intro"
+msgid "The card payment for order #[order] did not go through. You can try again using the button below."
+msgstr "The card payment for order #[order] did not go through. You can try again using the button below."
+
+msgctxt "Languages::netopia_payment_retry_email_subject"
+msgid "Complete the payment for order #[order]"
+msgstr "Complete the payment for order #[order]"
+
+msgctxt "Languages::netopia_pos_signature"
+msgid "POS signature"
+msgstr "POS signature"
+
+msgctxt "Languages::netopia_pos_signature_description"
+msgid "The POS signature (XXXX-XXXX-XXXX-XXXX-XXXX) from the NETOPIA admin panel."
+msgstr "The POS signature (XXXX-XXXX-XXXX-XXXX-XXXX) from the NETOPIA admin panel."
+
+msgctxt "Languages::netopia_public_key_missing_warning"
+msgid "No public key is set for [mode] mode: payment notifications (IPN) cannot be verified."
+msgstr "No public key is set for [mode] mode: payment notifications (IPN) cannot be verified."
+
+msgctxt "Languages::netopia_refund_action"
+msgid "Refund"
+msgstr "Refund"
+
+msgctxt "Languages::netopia_refund_admin_reason"
+msgid "Refund of [amount] issued from the admin panel."
+msgstr "Refund of [amount] issued from the admin panel."
+
+msgctxt "Languages::netopia_refund_already_failed"
+msgid "This refund has already failed; start a new one."
+msgstr "This refund has already failed; start a new one."
+
+msgctxt "Languages::netopia_refund_already_refunded_label"
+msgid "Already refunded"
+msgstr "Already refunded"
+
+msgctxt "Languages::netopia_refund_already_succeeded"
+msgid "This refund was already completed."
+msgstr "This refund was already completed."
+
+msgctxt "Languages::netopia_refund_amount"
+msgid "Refund amount"
+msgstr "Refund amount"
+
+msgctxt "Languages::netopia_refund_amount_exceeds_remaining"
+msgid "The amount is more than what can still be refunded ([remaining])."
+msgstr "The amount is more than what can still be refunded ([remaining])."
+
+msgctxt "Languages::netopia_refund_amount_help_currency"
+msgid "In [currency], the currency the customer paid in."
+msgstr "In [currency], the currency the customer paid in."
+
+msgctxt "Languages::netopia_refund_api_error"
+msgid "NETOPIA refused the refund: [error]"
+msgstr "NETOPIA refused the refund: [error]"
+
+msgctxt "Languages::netopia_refund_email_footer_note"
+msgid "The amount will appear on your card within a few business days, depending on your bank."
+msgstr "The amount will appear on your card within a few business days, depending on your bank."
+
+msgctxt "Languages::netopia_refund_email_heading"
+msgid "Refund for order #[order]"
+msgstr "Refund for order #[order]"
+
+msgctxt "Languages::netopia_refund_email_intro_full"
+msgid "Hello [customer_name], we have fully refunded order #[order]: [amount]."
+msgstr "Hello [customer_name], we have fully refunded order #[order]: [amount]."
+
+msgctxt "Languages::netopia_refund_email_intro_partial"
+msgid "Hello [customer_name], we have refunded [amount] for order #[order]."
+msgstr "Hello [customer_name], we have refunded [amount] for order #[order]."
+
+msgctxt "Languages::netopia_refund_email_subject"
+msgid "Refund for order #[order]"
+msgstr "Refund for order #[order]"
+
+msgctxt "Languages::netopia_refund_full"
+msgid "full refund"
+msgstr "full refund"
+
+msgctxt "Languages::netopia_refund_fully_refunded_notice"
+msgid "This order has been fully refunded."
+msgstr "This order has been fully refunded."
+
+msgctxt "Languages::netopia_refund_history_amount"
+msgid "Amount"
+msgstr "Amount"
+
+msgctxt "Languages::netopia_refund_history_date"
+msgid "Date"
+msgstr "Date"
+
+msgctxt "Languages::netopia_refund_history_kind"
+msgid "Type"
+msgstr "Type"
+
+msgctxt "Languages::netopia_refund_history_ntp_id"
+msgid "NETOPIA ID"
+msgstr "NETOPIA ID"
+
+msgctxt "Languages::netopia_refund_history_origin"
+msgid "Origin"
+msgstr "Origin"
+
+msgctxt "Languages::netopia_refund_history_payment_id"
+msgid "Payment ID"
+msgstr "Payment ID"
+
+msgctxt "Languages::netopia_refund_history_title"
+msgid "Refund history"
+msgstr "Refund history"
+
+msgctxt "Languages::netopia_refund_in_flight"
+msgid "A refund was started [seconds] seconds ago and is still being processed; wait for it before starting another."
+msgstr "A refund was started [seconds] seconds ago and is still being processed; wait for it before starting another."
+
+msgctxt "Languages::netopia_refund_invalid_amount"
+msgid "Enter a valid refund amount."
+msgstr "Enter a valid refund amount."
+
+msgctxt "Languages::netopia_refund_local_update_failed"
+msgid "NETOPIA accepted the refund, but the order could not be updated in the store. Check the order and its status."
+msgstr "NETOPIA accepted the refund, but the order could not be updated in the store. Check the order and its status."
+
+msgctxt "Languages::netopia_refund_missing_ntp_id"
+msgid "This order has no NETOPIA transaction ID, so it cannot be refunded here."
+msgstr "This order has no NETOPIA transaction ID, so it cannot be refunded here."
+
+msgctxt "Languages::netopia_refund_missing_paid_currency"
+msgid "The currency of the payment is unknown, so it cannot be refunded here."
+msgstr "The currency of the payment is unknown, so it cannot be refunded here."
+
+msgctxt "Languages::netopia_refund_missing_payment_id"
+msgid "This order has no NETOPIA payment ID, so it cannot be refunded here."
+msgstr "This order has no NETOPIA payment ID, so it cannot be refunded here."
+
+msgctxt "Languages::netopia_refund_not_netopia_order"
+msgid "This order was not paid through NETOPIA."
+msgstr "This order was not paid through NETOPIA."
+
+msgctxt "Languages::netopia_refund_nothing_left"
+msgid "Nothing is left to refund on this order."
+msgstr "Nothing is left to refund on this order."
+
+msgctxt "Languages::netopia_refund_paid_amount"
+msgid "Paid"
+msgstr "Paid"
+
+msgctxt "Languages::netopia_refund_partial"
+msgid "partial refund"
+msgstr "partial refund"
+
+msgctxt "Languages::netopia_refund_processor_unconfigured"
+msgid "The NETOPIA payment method is not configured, so refunds cannot be sent."
+msgstr "The NETOPIA payment method is not configured, so refunds cannot be sent."
+
+msgctxt "Languages::netopia_refund_remaining"
+msgid "Can still be refunded"
+msgstr "Can still be refunded"
+
+msgctxt "Languages::netopia_refund_submit"
+msgid "Refund"
+msgstr "Refund"
+
+msgctxt "Languages::netopia_refund_success"
+msgid "Refunded [amount] ([is_full]). Order status: [status]."
+msgstr "Refunded [amount] ([is_full]). Order status: [status]."
+
+msgctxt "Languages::netopia_retry_payment_message"
+msgid "Your card payment did not go through. You can pay again with the link below."
+msgstr "Your card payment did not go through. You can pay again with the link below."
+
+msgctxt "Languages::netopia_sandbox"
+msgid "Sandbox (test)"
+msgstr "Sandbox (test)"
+
+msgctxt "Languages::netopia_sandbox_keys_section"
+msgid "Sandbox keys"
+msgstr "Sandbox keys"
+
+msgctxt "Languages::netopia_sandbox_private_key"
+msgid "Sandbox private key"
+msgstr "Sandbox private key"
+
+msgctxt "Languages::netopia_sandbox_private_key_description"
+msgid "The private key (.key) for the sandbox POS."
+msgstr "The private key (.key) for the sandbox POS."
+
+msgctxt "Languages::netopia_sandbox_public_key"
+msgid "Sandbox public key"
+msgstr "Sandbox public key"
+
+msgctxt "Languages::netopia_sandbox_public_key_description"
+msgid "The public certificate (.cer) for the sandbox POS."
+msgstr "The public certificate (.cer) for the sandbox POS."
+
+msgctxt "Languages::netopia_status_group_cancel"
+msgid "Cancelled"
+msgstr "Cancelled"
+
+msgctxt "Languages::netopia_status_group_fail"
+msgid "Failed"
+msgstr "Failed"
+
+msgctxt "Languages::netopia_status_group_pending"
+msgid "Pending"
+msgstr "Pending"
+
+msgctxt "Languages::netopia_status_group_refund"
+msgid "Refunded"
+msgstr "Refunded"
+
+msgctxt "Languages::netopia_status_group_success"
+msgid "Paid"
+msgstr "Paid"
+
+msgctxt "Languages::netopia_status_mapping_description"
+msgid "Which order status each NETOPIA payment result sets."
+msgstr "Which order status each NETOPIA payment result sets."
+
+msgctxt "Languages::netopia_status_mapping_section"
+msgid "Order statuses"
+msgstr "Order statuses"
+
+msgctxt "Languages::netopia_upload_key_file"
+msgid "Upload key file"
+msgstr "Upload key file"
+
+msgctxt "Languages::netopia_use_primary_currency"
+msgid "Order currency"
+msgstr "Order currency"
