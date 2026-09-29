@@ -111,7 +111,7 @@ $cart['products'][$cart_id] = [
 $user_data = is_array($cart['user_data'] ?? null) ? $cart['user_data'] : [];
 if (empty($user_data['email'])) {
     foreach ($order as $field => $value) {
-        if (is_scalar($value) && preg_match('/^(email|firstname|lastname|phone|company|[bs]_(firstname|lastname|address|address_2|city|county|state|country|zipcode|phone))$/', (string) $field)) {
+        if (is_scalar($value) && preg_match('/^(email|firstname|lastname|phone|company|[bs]_(firstname|lastname|address|address_2|city|county|state|country|zipcode|phone))$/', (string) $field) === 1) {
             $user_data[$field] = $value;
         }
     }

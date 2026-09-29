@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Repository;
 
+use Tygh\Addons\TravelCore\Helpers\RegistryCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
@@ -154,7 +155,7 @@ class BalanceRepository
         }
         $exists = TypeCoerce::toInt(db_get_field(
             'SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?s',
-            TypeCoerce::toString(\Tygh\Registry::get('config.table_prefix')) . 'travel_balances',
+            RegistryCoerce::string('config.table_prefix') . 'travel_balances',
         )) > 0;
         if ($exists) {
             self::$ensured = true;

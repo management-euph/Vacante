@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Services;
 
+use Tygh\Addons\TravelCore\Helpers\RegistryCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Repository\BalanceRepository;
 
@@ -141,7 +142,7 @@ class BalanceService
         if ($this->secret !== '') {
             return $this->secret;
         }
-        $configured = class_exists('\Tygh\Registry') ? TypeCoerce::toString(\Tygh\Registry::get('config.crypt_key')) : '';
+        $configured = class_exists('\Tygh\Registry') ? RegistryCoerce::string('config.crypt_key') : '';
 
         return $configured !== '' ? $configured : 'travel_core_balance';
     }
