@@ -189,6 +189,7 @@ theme's anchors fire). Interpret it top-down:
 | Symptom in `[travel_debug]` | Cause → fix |
 |---|---|
 | no `[travel_debug]` in console at all | travel_core's theme overlay isn't linked — `docker compose restart app`, then Clear cache |
+| storefront error `RecursiveDirectoryIterator ... ~BROMIUM: Failed to open directory` | HP Sure Click (Windows) left hidden `~BROMIUM` entries in folders that came from downloaded archives. `link-addons.sh` skips them in template trees: run `docker compose exec app bash /repo/docker/fullstore/link-addons.sh` (or `up -d --build`), then Clear cache. For good: remove them from an Administrator PowerShell and exclude the repo folder from Sure Click |
 | `product.is_hotel: false`, `provider: none` | No provider claims the product. Sphinx: `sphinx_hotels.product_id` link missing — re-run the sphinx `add_products` cron (it re-links existing products by code). Novoton: code must be `NVT<hotel_id>` with a matching `novoton_hotels` row. |
 | `registered_providers` empty / missing resolver | The provider addon is inactive — activate it in Add-ons |
 | `settings.show_booking_form: N` | Master kill-switch off — enable it in Travel Core settings |

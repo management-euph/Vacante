@@ -58,15 +58,45 @@ link() { # $1 = source under /repo, $2 = destination under docroot
     echo "    $dest -> $src"
 }
 
+# Windows checkouts under HP Sure Click get a hidden ~BROMIUM entry in folders
+# that came from downloaded archives. Through the bind mount it is listed but
+# cannot be opened, and CS-Cart's template scan (SmartyEngine
+# templateExistsViaSnapshot, a RecursiveDirectoryIterator) throws on it: the
+# storefront dies with "Failed to open directory ... ~BROMIUM".
+#
+# link_tpl links a TEMPLATE tree like link(), unless the tree holds such an
+# entry: then it builds real directories in the docroot and links each file
+# one by one, leaving ~BROMIUM out. Edits still show live; a template file
+# ADDED later needs this script re-run (or a container restart).
+link_tpl() { # $1 = source dir under /repo, $2 = destination under docroot
+    local src="$1" dest="$2"
+    [ -e "$src" ] || return 0
+    if [ ! -d "$src" ] || [ -z "$(find "$src" -name '~BROMIUM*' -print -quit 2>/dev/null)" ]; then
+        link "$src" "$dest"
+        return 0
+    fi
+    mkdir -p "$(dirname "$dest")"
+    rm -rf "$dest"
+    mkdir -p "$dest"
+    local rel
+    while IFS= read -r -d '' rel; do
+        mkdir -p "$dest/${rel#./}"
+    done < <(cd "$src" && find . -name '~BROMIUM*' -prune -o -type d -print0 2>/dev/null)
+    while IFS= read -r -d '' rel; do
+        ln -s "$src/${rel#./}" "$dest/${rel#./}"
+    done < <(cd "$src" && find . -name '~BROMIUM*' -prune -o \( -type f -o -type l \) -print0 2>/dev/null)
+    echo "    $dest -> $src (per file: skipped HP Sure Click ~BROMIUM entries)"
+}
+
 for id in "${!ADDONS[@]}"; do
     base="$REPO/${ADDONS[$id]}"
     echo "[link-addons] $id"
 
     link "$base/app/addons/$id"                           "$DOCROOT/app/addons/$id"
-    link "$base/design/backend/templates/addons/$id"      "$DOCROOT/design/backend/templates/addons/$id"
+    link_tpl "$base/design/backend/templates/addons/$id"      "$DOCROOT/design/backend/templates/addons/$id"
     link "$base/design/backend/css/addons/$id"            "$DOCROOT/design/backend/css/addons/$id"
     link "$base/design/backend/js/addons/$id"             "$DOCROOT/design/backend/js/addons/$id"
-    link "$base/design/backend/mail/templates/addons/$id" "$DOCROOT/design/backend/mail/templates/addons/$id"
+    link_tpl "$base/design/backend/mail/templates/addons/$id" "$DOCROOT/design/backend/mail/templates/addons/$id"
     link "$base/design/backend/media/images/addons/$id"   "$DOCROOT/design/backend/media/images/addons/$id"
 
     for theme in responsive nova_theme; do
@@ -76,9 +106,9 @@ for id in "${!ADDONS[@]}"; do
         if [ -n "${RESPONSIVE_ONLY[$id]:-}" ] && [ ! -d "$base/design/themes/$theme" ]; then
             src_theme=responsive
         fi
-        link "$base/design/themes/$src_theme/templates/addons/$id"      "$DOCROOT/design/themes/$theme/templates/addons/$id"
+        link_tpl "$base/design/themes/$src_theme/templates/addons/$id"      "$DOCROOT/design/themes/$theme/templates/addons/$id"
         link "$base/design/themes/$src_theme/css/addons/$id"            "$DOCROOT/design/themes/$theme/css/addons/$id"
-        link "$base/design/themes/$src_theme/mail/templates/addons/$id" "$DOCROOT/design/themes/$theme/mail/templates/addons/$id"
+        link_tpl "$base/design/themes/$src_theme/mail/templates/addons/$id" "$DOCROOT/design/themes/$theme/mail/templates/addons/$id"
     done
 
     # Payment processors live OUTSIDE app/addons: the processor script CS-Cart
