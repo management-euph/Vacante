@@ -2269,3 +2269,39 @@ msgstr "No country is sold."
 msgctxt "Languages::travel_core.dest_card_review"
 msgid "Review destinations"
 msgstr "Review destinations"
+
+msgctxt "Languages::travel_core.price_per_night"
+msgid "[price] / night"
+msgstr "[price] / night"
+
+msgctxt "Languages::travel_core.edit_guests"
+msgid "Edit guests"
+msgstr "Edit guests"
+
+msgctxt "Languages::travel_core.lead_guest"
+msgid "Lead guest"
+msgstr "Lead guest"
+
+msgctxt "Languages::travel_core.guest_n"
+msgid "Guest [n]"
+msgstr "Guest [n]"
+
+msgctxt "Languages::travel_core.how_you_pay"
+msgid "How you pay"
+msgstr "How you pay"
+
+msgctxt "Languages::travel_core.split_today"
+msgid "Today"
+msgstr "Today"
+
+msgctxt "Languages::travel_core.cancel_then_pay"
+msgid "After that, cancelling costs [amount]"
+msgstr "After that, cancelling costs [amount]"
+
+msgctxt "Languages::travel_core.cancel_now_costs"
+msgid "Cancelling now costs [amount]"
+msgstr "Cancelling now costs [amount]"
+
+msgctxt "Languages::travel_core.cancel_now_full"
+msgid "Cancelling now costs the full price"
+msgstr "Cancelling now costs the full price"

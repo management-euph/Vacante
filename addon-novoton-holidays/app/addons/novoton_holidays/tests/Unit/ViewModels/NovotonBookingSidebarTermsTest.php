@@ -47,4 +47,37 @@ final class NovotonBookingSidebarTermsTest extends TestCase
             ['due' => '2026-10-01', 'percent' => 70.0],
         ], $installments);
     }
+
+    /**
+     * The cart booking card reads the quote's XML the cart line keeps, with
+     * the formatted lines as the prose fallback.
+     */
+    public function testCartLineTermsComeFromTheStoredQuoteXml(): void
+    {
+        $terms = NovotonBookingSidebarBuilder::cartTerms([
+            'check_in' => '2026-10-05',
+            'terms_of_cancellation_raw' => '<TermsOfCancellation><Penalty tillDate="2026-10-01" Type="Percent">FREE</Penalty>'
+                . '<Penalty tillDate="2026-10-04" Type="Percent">50</Penalty><Penalty Type="Percent">100</Penalty></TermsOfCancellation>',
+            'terms_of_payment_raw' => '<TermsOfPayment><Percent>100</Percent></TermsOfPayment>',
+            'terms_of_cancellation' => "Free until 01.10.2026\n50% until 04.10.2026",
+            'terms_of_payment' => '',
+        ]);
+
+        // The parser sorts by tillDate, so the dateless no-show rule comes
+        // first; TermsTimelineFactory puts it last again.
+        self::assertTrue($terms['cancel_windows'][0]['no_show']);
+        self::assertSame(['to' => '2026-10-01', 'percent' => 0.0, 'nights' => null, 'no_show' => false], $terms['cancel_windows'][1]);
+        self::assertSame(['to' => '2026-10-04', 'percent' => 50.0, 'nights' => null, 'no_show' => false], $terms['cancel_windows'][2]);
+        self::assertSame([['due' => null, 'percent' => 100.0]], $terms['payment_rows']);
+        self::assertSame(['Free until 01.10.2026', '50% until 04.10.2026'], $terms['cancel_lines']);
+        self::assertSame([], $terms['payment_lines']);
+    }
+
+    public function testCartLineWithoutTermsGetsNone(): void
+    {
+        self::assertSame(
+            ['cancel_windows' => [], 'payment_rows' => [], 'cancel_lines' => [], 'payment_lines' => []],
+            NovotonBookingSidebarBuilder::cartTerms([]),
+        );
+    }
 }

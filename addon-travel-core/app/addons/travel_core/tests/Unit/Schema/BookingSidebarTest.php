@@ -439,15 +439,17 @@ final class BookingSidebarTest extends TestCase
     public function testTimelineColoursCurrentStepAmberAndFreeGreen(): void
     {
         $css = self::css();
-        $start = strpos($css, '.travel-booking-page .travel-timeline__step--current::before {');
+        // The cart / checkout card renders the same partial, so the rules are
+        // shared through :is().
+        $start = strpos($css, ':is(.travel-booking-page, .travel-ccard) .travel-timeline__step--current::before {');
         self::assertNotFalse($start);
         $rule = substr($css, $start, (int) strpos($css, '}', $start) - $start);
         self::assertStringContainsString('#f59e0b', $rule);
         self::assertStringNotContainsString('danger', $rule);
-        self::assertStringContainsString('.travel-booking-page .travel-timeline__step--free .travel-timeline__what { color: #15803d;', $css);
+        self::assertStringContainsString(':is(.travel-booking-page, .travel-ccard) .travel-timeline__step--free .travel-timeline__what { color: #15803d;', $css);
 
         // Legacy prose fallback keeps its green free-until line.
-        $start = strpos($css, '.travel-booking-page .travel-bsidebar-freecancel {');
+        $start = strpos($css, ':is(.travel-booking-page, .travel-ccard) .travel-bsidebar-freecancel {');
         self::assertNotFalse($start);
         $rule = substr($css, $start, (int) strpos($css, '}', $start) - $start);
         self::assertStringContainsString('--nvt-success-strong', $rule);
@@ -498,15 +500,19 @@ final class BookingSidebarTest extends TestCase
             self::assertStringContainsString('DateHelper::formatStoreDate(', $src, $formatter);
         }
 
-        // The cart/checkout card too — it used to print "%a %d %b %Y".
+        // The cart/checkout card too — it used to print "%a %d %b %Y", then
+        // the raw setting through |date_format. Its dates now come formatted
+        // from CartBookingCardFactory, which gets the store's format.
         foreach (['responsive', 'nova_theme'] as $theme) {
             $card = (string) file_get_contents(
                 self::repoRoot() . '/addon-travel-core/design/themes/' . $theme
                 . '/templates/addons/travel_core/components/cart_booking_details.tpl',
             );
-            self::assertStringContainsString('date_format:$settings.Appearance.date_format', $card, $theme);
-            self::assertStringNotContainsString('date_format:"%a %d %b %Y"', $card, $theme);
+            self::assertStringNotContainsString('date_format', $card, $theme);
+            self::assertStringContainsString('{$tcc.check_in.date|escape:html}', $card, $theme);
         }
+        $cardFn = (string) file_get_contents(self::repoRoot() . '/addon-travel-core/app/addons/travel_core/functions/cart_card.php');
+        self::assertStringContainsString('TravelCoreConfig::getDateFormat()', $cardFn);
     }
 
     /**

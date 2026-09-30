@@ -116,6 +116,14 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
         'novoton',
         new \Tygh\Addons\NovotonHolidays\Providers\NovotonHotelProductProvider()
     );
+    // Cancellation & payment terms of novoton cart lines, for travel_core's
+    // cart / checkout booking card.
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setCartTermsResolver(
+        'novoton',
+        static fn (array $extra): array => !empty($extra['novoton_booking'])
+            ? \Tygh\Addons\NovotonHolidays\ViewModels\NovotonBookingSidebarBuilder::cartTerms($extra)
+            : []
+    );
 }
 
 // Seed SEO defaults on first admin load (mirrors sphinx pattern)

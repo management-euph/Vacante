@@ -2269,3 +2269,39 @@ msgstr "Nicio țară nu este vândută."
 msgctxt "Languages::travel_core.dest_card_review"
 msgid "Review destinations"
 msgstr "Verifică destinațiile"
+
+msgctxt "Languages::travel_core.price_per_night"
+msgid "[price] / night"
+msgstr "[price] / noapte"
+
+msgctxt "Languages::travel_core.edit_guests"
+msgid "Edit guests"
+msgstr "Modifică turiștii"
+
+msgctxt "Languages::travel_core.lead_guest"
+msgid "Lead guest"
+msgstr "Titular rezervare"
+
+msgctxt "Languages::travel_core.guest_n"
+msgid "Guest [n]"
+msgstr "Turist [n]"
+
+msgctxt "Languages::travel_core.how_you_pay"
+msgid "How you pay"
+msgstr "Cum plătiți"
+
+msgctxt "Languages::travel_core.split_today"
+msgid "Today"
+msgstr "Astăzi"
+
+msgctxt "Languages::travel_core.cancel_then_pay"
+msgid "After that, cancelling costs [amount]"
+msgstr "După aceea, anularea costă [amount]"
+
+msgctxt "Languages::travel_core.cancel_now_costs"
+msgid "Cancelling now costs [amount]"
+msgstr "Anularea acum costă [amount]"
+
+msgctxt "Languages::travel_core.cancel_now_full"
+msgid "Cancelling now costs the full price"
+msgstr "Anularea acum costă prețul integral"

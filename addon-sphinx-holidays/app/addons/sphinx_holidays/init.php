@@ -75,6 +75,14 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
         'sphinx',
         new \Tygh\Addons\SphinxHolidays\Providers\SphinxHotelProductProvider()
     );
+    // Cancellation & payment terms of sphinx cart lines, for travel_core's
+    // cart / checkout booking card.
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setCartTermsResolver(
+        'sphinx',
+        static fn (array $extra): array => ($extra['travel_provider'] ?? null) === 'sphinx'
+            ? \Tygh\Addons\SphinxHolidays\ViewModels\SphinxBookingSidebarBuilder::cartTerms($extra)
+            : []
+    );
     \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setStatusCallbacks(
         'sphinx',
         function () {

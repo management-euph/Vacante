@@ -201,4 +201,28 @@ final class SphinxBookingSidebarBuilder
 
         return [$windows, $installments];
     }
+
+    /**
+     * A sphinx cart line's terms for travel_core's cart / checkout booking
+     * card (hook travel_core_cart_booking_card): the raw API terms the line
+     * keeps in terms_raw, normalised as for the booking page, plus the
+     * formatted lines as the prose fallback. Circuit and package lines keep
+     * no terms and get none.
+     *
+     * @param array<string, mixed> $extra
+     * @return array{cancel_windows: list<array<string, mixed>>, payment_rows: list<array<string, mixed>>, cancel_lines: list<string>, payment_lines: list<string>}
+     */
+    public static function cartTerms(array $extra): array
+    {
+        $raw = json_decode(TypeCoerce::toString($extra['terms_raw'] ?? ''), true);
+        $raw = is_array($raw) ? $raw : [];
+        [$windows, $installments] = self::terms($raw['cancellation'] ?? null, $raw['payment'] ?? null);
+
+        return [
+            'cancel_windows' => $windows,
+            'payment_rows' => $installments,
+            'cancel_lines' => TypeCoerce::toStringList($extra['cancellation_fees'] ?? []),
+            'payment_lines' => TypeCoerce::toStringList($extra['payment_terms'] ?? []),
+        ];
+    }
 }

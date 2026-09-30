@@ -53,4 +53,37 @@ final class SphinxBookingSidebarTermsTest extends TestCase
         self::assertSame([[], []], SphinxBookingSidebarBuilder::terms(['text' => 'Non-refundable'], ['20% on booking']));
         self::assertSame([[], []], SphinxBookingSidebarBuilder::terms(null, null));
     }
+
+    /**
+     * The cart booking card reads the raw API terms the cart line keeps in
+     * terms_raw; circuit / package lines keep none.
+     */
+    public function testCartLineTermsComeFromTermsRaw(): void
+    {
+        $terms = SphinxBookingSidebarBuilder::cartTerms([
+            'terms_raw' => (string) json_encode([
+                'cancellation' => ['is_loaded' => true, 'is_free' => false, 'rules' => [
+                    ['since' => '2026-10-01', 'value' => 1144],
+                    ['since' => '2026-10-04', 'value' => 3813],
+                ]],
+                'payment' => ['is_loaded' => true, 'rules' => [['until' => '2026-09-26', 'value' => 3813]]],
+            ]),
+            'cancellation_fees' => ['30% from 10/01/2026'],
+            'payment_terms' => ['100% until 09/26/2026'],
+        ]);
+
+        self::assertSame([
+            ['from' => '2026-10-01', 'percent' => 30.0],
+            ['from' => '2026-10-04', 'percent' => 100.0],
+        ], $terms['cancel_windows']);
+        self::assertSame([['due' => '2026-09-26', 'percent' => 100.0]], $terms['payment_rows']);
+        self::assertSame(['30% from 10/01/2026'], $terms['cancel_lines']);
+        self::assertSame(['100% until 09/26/2026'], $terms['payment_lines']);
+
+        self::assertSame(
+            ['cancel_windows' => [], 'payment_rows' => [], 'cancel_lines' => [], 'payment_lines' => []],
+            SphinxBookingSidebarBuilder::cartTerms(['travel_provider' => 'sphinx']),
+            'circuit / package lines keep no terms',
+        );
+    }
 }

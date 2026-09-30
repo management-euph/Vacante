@@ -1468,4 +1468,43 @@ Dacă ați plătit deja, vă rugăm să ignorați acest email.',
         'en' => 'Review destinations',
         'ro' => 'Verifică destinațiile',
     ],
+
+    // Cart / checkout booking card (components/cart_booking_details.tpl,
+    // ViewModels/CartBookingCardFactory).
+    'travel_core.price_per_night' => [
+        'en' => '[price] / night',
+        'ro' => '[price] / noapte',
+    ],
+    'travel_core.edit_guests' => [
+        'en' => 'Edit guests',
+        'ro' => 'Modifică turiștii',
+    ],
+    'travel_core.lead_guest' => [
+        'en' => 'Lead guest',
+        'ro' => 'Titular rezervare',
+    ],
+    'travel_core.guest_n' => [
+        'en' => 'Guest [n]',
+        'ro' => 'Turist [n]',
+    ],
+    'travel_core.how_you_pay' => [
+        'en' => 'How you pay',
+        'ro' => 'Cum plătiți',
+    ],
+    'travel_core.split_today' => [
+        'en' => 'Today',
+        'ro' => 'Astăzi',
+    ],
+    'travel_core.cancel_then_pay' => [
+        'en' => 'After that, cancelling costs [amount]',
+        'ro' => 'După aceea, anularea costă [amount]',
+    ],
+    'travel_core.cancel_now_costs' => [
+        'en' => 'Cancelling now costs [amount]',
+        'ro' => 'Anularea acum costă [amount]',
+    ],
+    'travel_core.cancel_now_full' => [
+        'en' => 'Cancelling now costs the full price',
+        'ro' => 'Anularea acum costă prețul integral',
+    ],
 ];
