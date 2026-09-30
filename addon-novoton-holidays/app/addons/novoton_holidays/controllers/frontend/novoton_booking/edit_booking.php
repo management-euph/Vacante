@@ -192,7 +192,8 @@ use Tygh\Addons\NovotonHolidays\ViewModels\NovotonBookingSidebarBuilder;
     $novoton_display_currency = CurrencyService::getDisplayCurrency();
     $currenciesMap = TypeCoerce::toStringMap(\Tygh\Registry::get('currencies'));
     $currencyEntry = TypeCoerce::toStringMap($currenciesMap[$novoton_display_currency] ?? []);
-    $novoton_display_coefficient = TypeCoerce::toFloat($currencyEntry['coefficient'] ?? 1.0);
+    // API amount -> display currency (the price the cart will charge, shown in the shopper's currency).
+    $novoton_display_coefficient = _nvt_currency_service()->displayFactor($novoton_display_currency);
     $novoton_display_symbol = TypeCoerce::toString($currencyEntry['symbol'] ?? $novoton_display_currency);
 
     $view->assign('novoton_display_currency', $novoton_display_currency);

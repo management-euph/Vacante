@@ -295,7 +295,7 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
         $currenciesRaw = Registry::get('currencies');
         $currencies = is_array($currenciesRaw) ? $currenciesRaw : [];
         $currencyEntry = is_array($currencies[$display_currency_code] ?? null) ? $currencies[$display_currency_code] : [];
-        $display_coefficient = PriceInfoFormatter::toFloat($currencyEntry['coefficient'] ?? 1.0);
+        $display_coefficient = _nvt_currency_service()->displayFactor($display_currency_code);
         $display_symbol = PriceInfoFormatter::toScalar($currencyEntry['symbol'] ?? $display_currency_code);
         $formatted_price = fn_novoton_holidays_format_price($new_price, $display_coefficient, $display_symbol);
 

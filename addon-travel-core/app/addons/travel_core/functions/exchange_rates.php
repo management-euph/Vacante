@@ -136,35 +136,46 @@ function fn_travel_core_parse_bnr_xml($xml_content, $currencies = ['EUR', 'USD',
 /**
  * Calculate CS-Cart currency coefficients from BNR rates
  *
- * Assumes EUR is the primary currency in CS-Cart.
- * Converts BNR rates (RON-based) to EUR-based coefficients.
+ * CS-Cart's convention (fn_format_price_by_currency): a coefficient is what
+ * ONE unit of the currency is worth in the store's PRIMARY currency (primary =
+ * 1). BNR publishes RON per unit, so with RON itself at 1:
+ *   coefficient(X) = rate(X) / rate(primary)
+ * e.g. on a USD store 1 EUR = 4.975 / 4.58 = 1.0862 USD.
+ *
+ * The commission makes the shopper pay more in a foreign currency: a price
+ * shown in X is primary / coefficient(X), so the coefficient is divided by
+ * (1 + commission).
+ *
+ * (Earlier builds assumed EUR primary and wrote "units per EUR" — the inverse
+ * — so CS-Cart divided where it had to multiply.)
  *
  * @param array<int|string, mixed> $bnr_rates Rates from BNR (currency => RON rate)
  * @param float $commission Commission percentage to add (e.g., 2 for 2%)
- * @return array<string, float> Currency coefficients for CS-Cart
+ * @param string $primary The store's primary currency code
+ * @return array<string, float> currency => coefficient, primary excluded; [] when the primary has no rate
  */
-function fn_travel_core_calculate_currency_coefficients($bnr_rates, $commission = 0): array
+function fn_travel_core_calculate_currency_coefficients($bnr_rates, $commission = 0, string $primary = 'EUR'): array
 {
-    $coefficients = [];
-
-    if (empty($bnr_rates['EUR'])) {
-        return $coefficients;
+    $rates = ['RON' => 1.0];
+    foreach ($bnr_rates as $code => $rate) {
+        $value = TypeCoerce::toFloat($rate);
+        if (is_string($code) && $value > 0) {
+            $rates[$code] = $value;
+        }
     }
 
-    $eur_rate = TypeCoerce::toFloat($bnr_rates['EUR']);
+    $primary = strtoupper($primary);
+    if (!isset($rates[$primary]) || count($rates) < 2) {
+        return [];
+    }
+
     $commission_multiplier = 1 + ($commission / 100);
-
-    // RON coefficient = EUR rate from BNR (1 EUR = X RON)
-    $coefficients['RON'] = round($eur_rate * $commission_multiplier, 4);
-
-    // USD coefficient = EUR/USD cross rate
-    if (!empty($bnr_rates['USD'])) {
-        $coefficients['USD'] = round(($eur_rate / TypeCoerce::toFloat($bnr_rates['USD'])) * $commission_multiplier, 4);
-    }
-
-    // GBP coefficient = EUR/GBP cross rate
-    if (!empty($bnr_rates['GBP'])) {
-        $coefficients['GBP'] = round(($eur_rate / TypeCoerce::toFloat($bnr_rates['GBP'])) * $commission_multiplier, 4);
+    $coefficients = [];
+    foreach ($rates as $code => $rate) {
+        if ($code === $primary) {
+            continue;
+        }
+        $coefficients[$code] = round($rate / $rates[$primary] / $commission_multiplier, 5);
     }
 
     return $coefficients;
@@ -199,7 +210,7 @@ function fn_travel_core_update_cscart_currencies($coefficients): array
             continue;
         }
 
-        // Skip primary currency (EUR should have coefficient = 1)
+        // Skip the primary currency (its coefficient is always 1)
         if (($currency['is_primary'] ?? '') === 'Y') {
             $results[$currency_code] = [
                 'success' => true,
@@ -334,8 +345,11 @@ function fn_travel_core_update_exchange_rates(float $commission = 0.0, bool $ret
     }
     $result['bnr_rates'] = $bnr_rates;
 
-    // Step 3: Calculate coefficients (EUR is primary)
-    $coefficients = fn_travel_core_calculate_currency_coefficients($bnr_rates, $commission);
+    // Step 3: Calculate coefficients relative to the store's primary currency
+    $primary = defined('CART_PRIMARY_CURRENCY')
+        ? TypeCoerce::toString(CART_PRIMARY_CURRENCY)
+        : TypeCoerce::toString(db_get_field("SELECT currency_code FROM ?:currencies WHERE is_primary = 'Y'"));
+    $coefficients = fn_travel_core_calculate_currency_coefficients($bnr_rates, $commission, $primary !== '' ? $primary : 'EUR');
     if (empty($coefficients)) {
         $result['message'] = 'Failed to calculate currency coefficients';
         return $return_details ? $result : false;
@@ -366,10 +380,13 @@ function fn_travel_core_update_exchange_rates(float $commission = 0.0, bool $ret
 
     fn_log_event('general', 'runtime', [
         'message' => sprintf(
-            'Exchange rates updated: RON=%s, USD=%s, GBP=%s (commission: %s%%)',
-            $coefficients['RON'] ?? 'N/A',
-            $coefficients['USD'] ?? 'N/A',
-            $coefficients['GBP'] ?? 'N/A',
+            'Exchange rates updated (per 1 unit, in %s): %s (commission: %s%%)',
+            $primary,
+            implode(', ', array_map(
+                static fn (string $code, float $coefficient): string => $code . '=' . $coefficient,
+                array_keys($coefficients),
+                $coefficients,
+            )),
             $commission
         )
     ]);

@@ -31,6 +31,12 @@ interface CurrencyServiceInterface
     public function convertFromApiCurrency(float $apiPrice, ?string $targetCurrency = null): float;
 
     /**
+     * What an API amount is multiplied by to show it in $currency (null =
+     * display currency): coefficient(api) / coefficient(currency).
+     */
+    public function displayFactor(?string $currency = null): float;
+
+    /**
      * Convert all price fields in a search results array from API currency to display currency.
      *
      * @param array<string, mixed> $results Search results array

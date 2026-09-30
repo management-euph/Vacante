@@ -59,12 +59,14 @@ class CurrencyService implements CurrencyServiceInterface
     /**
      * Convert a price from the API currency to a target currency.
      *
-     * Uses CS-Cart's currency coefficients from the currencies table.
-     * In CS-Cart, coefficient converts from primary currency to that currency:
-     *   amount_in_currency = amount_in_primary * coefficient
+     * CS-Cart's convention (fn_format_price_by_currency): a currency's
+     * coefficient is what ONE unit of it is worth in the PRIMARY currency
+     * (primary = 1). On a USD store with EUR at 1.28, 1 EUR = 1.28 USD, so:
+     *   amount_in_primary = amount * coefficient(source)
+     *   amount_in_target  = amount_in_primary / coefficient(target)
      *
-     * To convert from source to target:
-     *   target_price = source_price * (target_coefficient / source_coefficient)
+     * The reverse maths turned a 795 EUR offer into $621.09 (795 / 1.28)
+     * instead of $1,017.60.
      *
      * @param float $apiPrice Price from API (in api_currency)
      * @param string|null $targetCurrency Target currency code (null = display currency)
@@ -73,40 +75,56 @@ class CurrencyService implements CurrencyServiceInterface
     #[\Override]
     public function convertFromApiCurrency(float $apiPrice, ?string $targetCurrency = null): float
     {
-        $source = $this->apiCurrency;
-        $target = $targetCurrency ?? self::getDisplayCurrency();
+        return round($apiPrice * $this->factor($targetCurrency ?? self::getDisplayCurrency()), 2);
+    }
 
+    /**
+     * What an API amount is multiplied by to show it in the display currency
+     * (or $currency): coefficient(api) / coefficient(display). 1.0 when the
+     * currencies are the same or a coefficient is unknown.
+     *
+     * Search cards, the booking form and its JS multiply raw API amounts by
+     * this factor; it is the same conversion convertFromApiCurrency() applies.
+     */
+    #[\Override]
+    public function displayFactor(?string $currency = null): float
+    {
+        return $this->factor($currency ?? self::getDisplayCurrency());
+    }
+
+    private function factor(string $target): float
+    {
+        $source = $this->apiCurrency;
         if ($source === $target) {
-            return $apiPrice;
+            return 1.0;
         }
 
+        $sourceCoefficient = self::coefficient($source);
+        $targetCoefficient = self::coefficient($target);
+        if ($sourceCoefficient === null || $targetCoefficient === null) {
+            return 1.0;
+        }
+
+        return $sourceCoefficient / $targetCoefficient;
+    }
+
+    /**
+     * The store's coefficient for a currency; null when the currency is not
+     * in the store or its coefficient is not positive.
+     */
+    private static function coefficient(string $code): ?float
+    {
         $currencies = TravelCoreConfig::getCurrencies();
         if (empty($currencies) && function_exists('fn_get_currencies')) {
             $currencies = fn_get_currencies();
         }
-        if (empty($currencies)) {
-            return $apiPrice;
+        $row = TypeCoerce::toStringMap(TypeCoerce::toStringMap($currencies)[$code] ?? null);
+        if (!isset($row['coefficient'])) {
+            return null;
         }
+        $coefficient = TypeCoerce::toFloat($row['coefficient']);
 
-        $currencyMap = TypeCoerce::toStringMap($currencies);
-        $sourceRow = TypeCoerce::toStringMap($currencyMap[$source] ?? null);
-        $targetRow = TypeCoerce::toStringMap($currencyMap[$target] ?? null);
-
-        $sourceCoefficient = 1.0;
-        if (isset($sourceRow['coefficient'])) {
-            $sourceCoefficient = TypeCoerce::toFloat($sourceRow['coefficient']);
-        }
-
-        $targetCoefficient = 1.0;
-        if (isset($targetRow['coefficient'])) {
-            $targetCoefficient = TypeCoerce::toFloat($targetRow['coefficient']);
-        }
-
-        if ($sourceCoefficient <= 0) {
-            $sourceCoefficient = 1.0;
-        }
-
-        return round($apiPrice / $sourceCoefficient * $targetCoefficient, 2);
+        return $coefficient > 0 ? $coefficient : null;
     }
 
     /**

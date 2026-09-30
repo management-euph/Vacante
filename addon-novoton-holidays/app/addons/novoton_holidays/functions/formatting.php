@@ -187,9 +187,9 @@ function fn_novoton_holidays_format_payment_terms_with_amounts($xml_string, $tot
         } else {
             $currency_symbol = $currency_code;
         }
-        // Also resolve coefficient from registry if still default
-        if ($coefficient === 1.0 && !empty($currency['coefficient'])) {
-            $coefficient = TypeCoerce::toFloat($currency['coefficient']);
+        // Also resolve the API -> display factor if still default
+        if ($coefficient === 1.0) {
+            $coefficient = _nvt_currency_service()->displayFactor($currency_code);
         }
     }
 

@@ -157,7 +157,9 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         $currency = defined('CART_SECONDARY_CURRENCY') ? TypeCoerce::toString(CART_SECONDARY_CURRENCY) : 'EUR';
         $currencies = ConfigProvider::getCurrencies();
         $entry = is_array($currencies[$currency] ?? null) ? $currencies[$currency] : [];
-        $coefficient = is_numeric($entry['coefficient'] ?? null) ? (float) $entry['coefficient'] : 1.0;
+        // What an API (EUR) amount is multiplied by to show it in $currency —
+        // the same conversion the cart applies, so card and cart agree.
+        $coefficient = Container::getInstance()->currencyService()->displayFactor($currency);
         $symbol = is_string($entry['symbol'] ?? null) && $entry['symbol'] !== '' ? $entry['symbol'] : $currency;
 
         $view->assign('novoton_display_currency', $currency);
