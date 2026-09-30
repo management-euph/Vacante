@@ -115,6 +115,8 @@ final class CartBookingCardFactory
             'check_out' => $this->date($extra['check_out'] ?? null),
             'show_weekday' => !DateHelper::formatHasWeekday($this->dateFormat),
             'nights' => $nights,
+            // What the stay costs (the full price on a deposit line).
+            'price' => $stayTotal > 0 ? $this->money->format($stayTotal) : '',
             'per_night' => $perNight !== null ? $this->money->formatDisplay($perNight) : '',
             'rooms' => $numRooms,
             'adults' => $adults,

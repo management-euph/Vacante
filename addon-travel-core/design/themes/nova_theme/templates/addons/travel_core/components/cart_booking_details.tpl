@@ -15,8 +15,12 @@
                    stars, destination), and booking-pages.css hides the core
                    product name / "1 x price" line above the card, which would
                    repeat both;
+                   "summary" — inside the stay-summary block at the top of the
+                   checkout (blocks/stay_summary.tpl), whose bar already shows
+                   the hotel: no header, no frame;
                    "cart" (default) — cart page and mini cart, whose rows
                    already show the product.
+      tcc_card     optional: the prepared card, when the caller already has it.
 
     The collapsibles (guests, rooms, full terms) are native <details>: no JS.
     Styling: booking-pages.css .travel-ccard*.
@@ -24,10 +28,15 @@
     Usage (travel_core's checkout hooks):
       {include file="addons/travel_core/components/cart_booking_details.tpl" product=$product key=$key tcc_context="sidebar"}
 *}
-{$tcc = fn_travel_core_cart_booking_card($product|default:[], $key|default:'')}
-{$tcc_sidebar = ($tcc_context|default:"cart") == "sidebar"}
+{if $tcc_card|default:false}
+    {$tcc = $tcc_card}
+{else}
+    {$tcc = fn_travel_core_cart_booking_card($product|default:[], $key|default:'')}
+{/if}
+{$tcc_context = $tcc_context|default:"cart"}
+{$tcc_sidebar = $tcc_context == "sidebar"}
 {if $tcc}
-<div class="travel-ccard{if $tcc_sidebar} travel-ccard--sidebar{/if}">
+<div class="travel-ccard travel-ccard--{$tcc_context}">
 
     {* The pre-order verifier corrected this line's price. *}
     {if $tcc.price_change}
@@ -68,7 +77,7 @@
                 {/if}
             </div>
         </div>
-    {else}
+    {elseif $tcc_context == "cart"}
         <div class="travel-ccard-title">{__("travel_core.your_booking_details")}</div>
     {/if}
 

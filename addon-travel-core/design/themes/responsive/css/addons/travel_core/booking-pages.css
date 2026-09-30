@@ -1270,6 +1270,67 @@
    theme class names are assumed. */
 :where(li, div) > :not(li, .travel-ccard):has(~ .travel-ccard--sidebar) { display: none; }
 
+/* ── Stay summary block (blocks/stay_summary.tpl) ─────────────────────────
+   Top of the checkout on phones: a collapsed bar per booking that opens into
+   the card ("summary" form: no header or frame of its own). */
+.travel-stay-summary {
+    margin: 0 0 16px;
+    border: 1px solid var(--nvt-field-border, #e0e7ef);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--nvt-text, #1f2937);
+    text-align: left;
+}
+.travel-stay-summary__bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #f6f8fb;
+    cursor: pointer;
+    list-style: none;
+}
+.travel-stay-summary__bar::-webkit-details-marker { display: none; }
+.travel-stay-summary__bar::marker { content: ""; }
+.travel-stay-summary__bar:focus-visible { outline: 2px solid var(--nvt-info, #0071c2); outline-offset: -2px; }
+.travel-stay-summary[open] > .travel-stay-summary__bar { border-bottom: 1px solid var(--nvt-field-border, #e0e7ef); }
+.travel-stay-summary__photo {
+    flex: 0 0 48px;
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #dfe6ee;
+    color: #5b6b7e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.travel-stay-summary__photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.travel-stay-summary__text { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0; }
+.travel-stay-summary__name { font-size: 15px; font-weight: 700; color: #0f172a; }
+.travel-stay-summary__text > span { font-size: 12px; color: #4b5563; }
+.travel-stay-summary__side { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; white-space: nowrap; }
+.travel-stay-summary__side strong { font-size: 15px; font-weight: 700; color: #0f172a; }
+.travel-stay-summary__toggle { display: flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; color: var(--nvt-info, #0071c2); }
+.travel-stay-summary__close,
+.travel-stay-summary[open] .travel-stay-summary__open { display: none; }
+.travel-stay-summary[open] .travel-stay-summary__close { display: inline; }
+.travel-stay-summary[open] .travel-ccard-chevron { transform: rotate(180deg); }
+.travel-ccard--summary { margin: 0; border: 0; border-radius: 0; }
+.travel-ccard--summary .travel-ccard-dates { margin-top: 12px; }
+/* Order summary beside the form: the block is not needed. Order summary
+   below the form (phones): the block replaces the sidebar's copy. */
+@media (min-width: 768px) {
+    .travel-stay-summary { display: none; }
+}
+@media (max-width: 767px) {
+    body:has(.travel-stay-summary) .travel-ccard--sidebar { display: none; }
+}
+
 @container (max-width: 360px) {
     .travel-ccard-hotel__photo { flex-basis: 60px; width: 60px; height: 60px; }
     .travel-ccard-dates { padding: 10px; gap: 6px; }

@@ -2305,3 +2305,15 @@ msgstr "Cancelling now costs [amount]"
 msgctxt "Languages::travel_core.cancel_now_full"
 msgid "Cancelling now costs the full price"
 msgstr "Cancelling now costs the full price"
+
+msgctxt "Languages::block_travel_stay_summary"
+msgid "Travel: stay summary (checkout, phones)"
+msgstr "Travel: stay summary (checkout, phones)"
+
+msgctxt "Languages::travel_core.stay_details"
+msgid "Details"
+msgstr "Details"
+
+msgctxt "Languages::travel_core.stay_hide"
+msgid "Hide"
+msgstr "Hide"

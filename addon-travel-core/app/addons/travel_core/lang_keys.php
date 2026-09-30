@@ -1507,4 +1507,18 @@ Dacă ați plătit deja, vă rugăm să ignorați acest email.',
         'en' => 'Cancelling now costs the full price',
         'ro' => 'Anularea acum costă prețul integral',
     ],
+    // Stay summary block at the top of the checkout (blocks/stay_summary.tpl).
+    // block_<type> is CS-Cart's Block Manager display name, hence no prefix.
+    'block_travel_stay_summary' => [
+        'en' => 'Travel: stay summary (checkout, phones)',
+        'ro' => 'Travel: rezumat sejur (checkout, telefon)',
+    ],
+    'travel_core.stay_details' => [
+        'en' => 'Details',
+        'ro' => 'Detalii',
+    ],
+    'travel_core.stay_hide' => [
+        'en' => 'Hide',
+        'ro' => 'Ascunde',
+    ],
 ];
