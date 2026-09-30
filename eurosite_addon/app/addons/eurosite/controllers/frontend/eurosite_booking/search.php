@@ -51,6 +51,10 @@ $roomCount = count($occupancy);
 // travel_core's booking form sends the hotel's code (hotel_id) instead of a
 // destination: search that hotel's city and show that hotel only.
 $onlyHotel = strtoupper((string) preg_replace('/[^A-Za-z0-9_]/', '', RequestCoerce::string($_REQUEST, 'hotel_id')));
+// The product page's own id (travel_core sends it with hotel_id): a booking
+// made here goes into the cart on that product (BookingCartProduct). Kept
+// only when it is this hotel's product, so the URL cannot point it elsewhere.
+$cartProductIds = [];
 if ($onlyHotel !== '') {
     $hotelRow = Container::hotels()->findByProductCode($onlyHotel);
     if ($hotelRow === null) {
@@ -58,6 +62,11 @@ if ($onlyHotel !== '') {
     } else {
         $country = $country !== '' ? $country : strtoupper(TypeCoerce::toString($hotelRow['country_code'] ?? ''));
         $city = $city !== '' ? $city : strtoupper(TypeCoerce::toString($hotelRow['city_code'] ?? ''));
+        $pageProductId = RequestCoerce::int($_REQUEST, 'product_id');
+        $pageHotel = $pageProductId > 0 ? Container::hotels()->findByProductId($pageProductId) : null;
+        if ($pageHotel !== null && strtoupper(TypeCoerce::toString($pageHotel['product_code'] ?? '')) === $onlyHotel) {
+            $cartProductIds[$onlyHotel] = $pageProductId;
+        }
     }
 }
 
@@ -174,7 +183,7 @@ if ($country !== '' && $city !== '' && $checkIn !== '' && $checkOut !== '') {
                 'adults'          => $adults,
                 'children_ages'   => $childrenAges,
                 'rooms_occupancy' => $occupancy,
-            ]);
+            ], $cartProductIds);
 
             // Group offers per hotel; enrich the card from the product-info
             // cache (lazy-fill a handful per request, spec-mandated cache).

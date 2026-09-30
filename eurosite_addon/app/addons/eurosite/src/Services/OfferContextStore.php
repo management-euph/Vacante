@@ -27,9 +27,11 @@ final class OfferContextStore
     /**
      * @param list<HotelOffer> $offers
      * @param array{adults: int, children_ages: list<int>, rooms_occupancy?: list<array{adults: int, children_ages: list<int>}>} $occupancy
+     * @param array<string, int> $cartProductIds hotel code => the product_id of the product page the
+     *                                           guest searched from (BookingCartProduct: the cart line goes on it)
      * @return array<int, string> map: offer index => snapshot key
      */
-    public static function remember(array $offers, array $occupancy): array
+    public static function remember(array $offers, array $occupancy, array $cartProductIds = []): array
     {
         $snapshots = [];
         $keys = [];
@@ -43,6 +45,7 @@ final class OfferContextStore
             $keys[$i] = $key;
             $snapshots[$key] = [
                 'product_code' => $offer->productCode,
+                'cart_product_id' => max(0, $cartProductIds[strtoupper($offer->productCode)] ?? 0),
                 'product_name' => $offer->productName,
                 'country_code' => $offer->countryCode,
                 'city_code' => $offer->cityCode,

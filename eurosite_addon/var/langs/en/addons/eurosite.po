@@ -468,6 +468,10 @@ msgctxt "Languages::eurosite.carrier_missing"
 msgid "Booking checkout is not fully configured yet — please contact us to finish this reservation."
 msgstr "Booking checkout is not fully configured yet — please contact us to finish this reservation."
 
+msgctxt "Languages::eurosite.carrier_missing_admin"
+msgid "The hidden \"Eurosite booking\" product could not be created, so hotels that are not store products cannot be booked. Check Administration → Logs for the reason."
+msgstr "The hidden \"Eurosite booking\" product could not be created, so hotels that are not store products cannot be booked. Check Administration → Logs for the reason."
+
 msgctxt "Languages::eurosite.added_to_cart"
 msgid "Your stay was added to the cart — complete checkout to confirm the reservation."
 msgstr "Your stay was added to the cart — complete checkout to confirm the reservation."

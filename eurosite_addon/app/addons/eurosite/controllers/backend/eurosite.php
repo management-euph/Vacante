@@ -653,6 +653,9 @@ if ($mode === 'manage' || empty($mode)) {
     $view->assign('eurosite_api_url', ConfigProvider::getApiUrl());
     $view->assign('eurosite_api_user', $apiUser);
     $view->assign('eurosite_is_configured', $apiUser !== '' && $apiUser !== 'YourUser');
+    // The carrier product a booking falls back to when its hotel has no
+    // product: created here if the install step never did (0 = still missing).
+    $view->assign('eurosite_carrier_ok', function_exists('fn_eurosite_ensure_carrier_product') && fn_eurosite_ensure_carrier_product() > 0);
 
     return;
 }
