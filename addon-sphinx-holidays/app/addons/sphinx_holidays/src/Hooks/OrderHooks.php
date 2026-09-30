@@ -200,6 +200,15 @@ final class OrderHooks
             $booking_id = TypeCoerce::toInt($extra['travel_booking_id']);
             $offer_id = TypeCoerce::toString($extra['offer_id'] ?? '');
 
+            // CS-Cart runs place_order_post again for the same cart (order
+            // edits, the parent after its vendor sub-orders). A booking already
+            // linked to an order was submitted then: resending would book it
+            // twice and relinking would reset its confirmed status to pending.
+            $existing = $repo->findById($booking_id);
+            if (TypeCoerce::toInt($existing['order_id'] ?? 0) > 0) {
+                continue;
+            }
+
             $contact = [
                 'email' => $orderContact['email'] !== ''
                     ? $orderContact['email']

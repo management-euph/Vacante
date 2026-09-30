@@ -36,11 +36,14 @@ class PriceVerificationService implements PriceVerificationServiceInterface
     /**
      * Verify price via room_price API and extract terms.
      *
-     * Calls the Novoton room_price API with the given parameters,
-     * validates that a price is returned, applies commission, and
-     * extracts terms of payment/cancellation from the response.
+     * Calls the Novoton room_price API with the given parameters, takes the
+     * price of the offer being booked (same room, board and — when given —
+     * package, as PreOrderPriceVerifier::lineOffer picks it), applies
+     * commission, and extracts terms of payment/cancellation from the response.
+     * The first <Price> of the answer can belong to another package, so a
+     * booking whose own offer is gone fails instead of taking that price.
      *
-     * @param array<string, mixed> $params {hotel_id, room_id, board_id, check_in, check_out, adults, children_ages: int[]}
+     * @param array<string, mixed> $params {hotel_id, room_id, board_id, check_in, check_out, adults, children_ages: int[], package_name?: string}
      * @return array{success: bool, total_price: float, base_price: float, terms_of_payment: string, terms_of_cancellation: string, remark: string, important: string, error: string}
      */
     #[\Override]
@@ -58,11 +61,15 @@ class PriceVerificationService implements PriceVerificationServiceInterface
         ];
 
         $priceData = $this->pricing->getRoomPrice($priceParams);
+        $offer = $priceData instanceof \SimpleXMLElement
+            ? PreOrderPriceVerifier::lineOffer(RoomOfferRows::fromXml($priceData), $params)['row']
+            : null;
 
-        if (!(bool) $priceData || !isset($priceData->Price)) {
+        if (!$priceData instanceof \SimpleXMLElement || $offer === null) {
             $this->log('Price verification failed', [
                 'hotel_id' => $params['hotel_id'],
                 'room_id' => $params['room_id'] ?? '',
+                'package_name' => $params['package_name'] ?? '',
                 'children_ages' => $params['children_ages'] ?? [],
             ]);
             return [
@@ -77,29 +84,20 @@ class PriceVerificationService implements PriceVerificationServiceInterface
             ];
         }
 
-        $rawPrice = (float) (string) $priceData->Price;
+        $rawPrice = $offer['price'];
         $totalPrice = $this->pricing->applyCommission($rawPrice);
 
-        // Extract terms
-        $termsOfPayment = '';
-        $termsOfCancellation = '';
-        $tp = $priceData->xpath('//TermsOfPayment');
-        $tc = $priceData->xpath('//TermsOfCancellation');
-        if (!empty($tp[0])) {
-            $termsOfPayment = (string) $tp[0]->asXML();
-        }
-        if (!empty($tc[0])) {
-            $termsOfCancellation = (string) $tc[0]->asXML();
-        }
+        // The booked offer's own terms, not the first offer's.
+        $terms = RoomOfferRows::terms($priceData, $offer);
 
         return [
             'success' => true,
             'total_price' => $totalPrice,
             'base_price' => $rawPrice,
-            'terms_of_payment' => $termsOfPayment,
-            'terms_of_cancellation' => $termsOfCancellation,
-            'remark' => isset($priceData->remark) ? (string) $priceData->remark : '',
-            'important' => isset($priceData->Important) ? (string) $priceData->Important : '',
+            'terms_of_payment' => $terms['terms_of_payment'],
+            'terms_of_cancellation' => $terms['terms_of_cancellation'],
+            'remark' => $terms['remark'],
+            'important' => $terms['important'],
             'error' => '',
         ];
     }

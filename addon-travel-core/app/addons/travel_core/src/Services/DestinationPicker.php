@@ -348,7 +348,7 @@ final class DestinationPicker
      */
     public static function plurals(string $text): string
     {
-        if ((int) preg_match_all('/\{([^{}|]*(?:\|[^{}|]*)+)\}/u', $text, $found, PREG_OFFSET_CAPTURE | PREG_SET_ORDER) === 0) {
+        if ((int) preg_match_all('/\{([^{}|]*(?:\|[^{}|]*)+)}/u', $text, $found, PREG_OFFSET_CAPTURE | PREG_SET_ORDER) === 0) {
             return $text;
         }
         foreach (array_reverse($found) as $m) {

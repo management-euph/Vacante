@@ -61,6 +61,26 @@ final class OrderLinkSelfHealTest extends TestCase
         self::assertStringContainsString('OrderHooks::orderInfoLoaded($order)', $shells);
     }
 
+    public function testABookingAlreadyLinkedToAnOrderIsNotSubmittedAgain(): void
+    {
+        // place_order_post fires again for the same cart (order edits, the
+        // parent after its vendor sub-orders): the guard must skip a linked
+        // booking BEFORE it is relinked as pending and re-sent to the API.
+        $source = self::orderHooks();
+        $start = strpos($source, 'public static function placeOrderPost');
+        self::assertNotFalse($start);
+        $body = substr($source, $start);
+
+        $guard = strpos($body, "TypeCoerce::toInt(\$existing['order_id'] ?? 0) > 0");
+        $relink = strpos($body, '$repo->linkToOrder($booking_id, $resolved_order_id, TravelConstants::STATUS_PENDING)');
+        $submit = strpos($body, '$api->bookHotel($payload)');
+        self::assertNotFalse($guard, 'the already-linked guard exists');
+        self::assertNotFalse($relink);
+        self::assertNotFalse($submit);
+        self::assertLessThan($relink, $guard, 'the guard runs before the pending relink');
+        self::assertLessThan($submit, $guard, 'the guard runs before the API submission');
+    }
+
     public function testPrePlaceOrderDeletesTheBookingOfARemovedUnavailableOffer(): void
     {
         // When pre_place_order drops an unavailable offer from the cart, its

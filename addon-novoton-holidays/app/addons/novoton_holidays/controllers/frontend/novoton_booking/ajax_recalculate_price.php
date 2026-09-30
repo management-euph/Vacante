@@ -157,6 +157,17 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
         $matched_board = '';
         $room_id_decoded = $room_id;  // Keep as-is from form (already has + not %2b)
 
+        // The offer the customer clicked: same room + board AND package — the
+        // cheapest row of any package re-priced a clicked 795 "+BEACH" card to
+        // another package's 600 (see BookedOffer). No such offer: no price.
+        $pickOffer = static fn (\SimpleXMLElement $xml): ?array => \Tygh\Addons\NovotonHolidays\Services\BookedOffer::pick(
+            $xml,
+            $room_id_decoded,
+            $board_id,
+            $package_name,
+            ['source' => 'ajax_recalculate_price', 'hotel_id' => $hotel_id, 'check_in' => $check_in],
+        );
+
         // =====================================================================
         // PRIMARY: Send actual room_id/board_id (same approach as add_to_cart)
         // This is the proven path that works for the booking flow
@@ -181,23 +192,16 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
         $rawResponse = $api->getLastResponse();
         $debug_log('API Last Response (first 2000 chars)', substr($rawResponse, 0, 2000));
 
-        // Direct Price element — filter by board_id to avoid reading a different board's price
-        if ($response instanceof \SimpleXMLElement && isset($response->Price)) {
-            $minMatch = fn_novoton_min_price_from_xml($response, $room_id_decoded, $board_id);
-            if ($minMatch !== null && $minMatch['price'] > 0) {
-                $new_price    = $minMatch['price'];
-                $price_found  = true;
+        // No offer of this room/board(/package) is "no price" — never the
+        // answer's first <Price>, which can be another room or package.
+        if ($response instanceof \SimpleXMLElement) {
+            $minMatch = $pickOffer($response);
+            if ($minMatch !== null) {
+                $new_price     = $minMatch['price'];
+                $price_found   = true;
                 $matched_room  = $minMatch['room'];
                 $matched_board = $minMatch['board'];
-                $debug_log('Found min price (board-filtered) from specific room/board query', $new_price);
-            } else {
-                $new_price = (float)((string)$response->Price);
-                if ($new_price > 0) {
-                    $price_found  = true;
-                    $matched_room  = rawurldecode((string)($response->IdRoom ?? $room_id));
-                    $matched_board = (string)($response->IdBoard ?? $board_id);
-                    $debug_log('Found direct Price (fallback) from specific room/board query', $new_price);
-                }
+                $debug_log('Found price of the booked offer from specific room/board query', $minMatch);
             }
         }
 
@@ -222,81 +226,18 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
                 ]);
             }
 
-            // Method 1: Try standard structure first (with hotel wrapper)
-            if (isset($response->hotel)) {
-                $debug_log('Standard structure detected (hotel wrapper)');
-                $hotel = $response->hotel;
-                $rooms = isset($hotel->rooms->IdRoom) ? [$hotel->rooms] : ($hotel->rooms ?? []);
-
-                foreach ($rooms as $room) {
-                    $roomId = rawurldecode((string)($room->IdRoom ?? ''));
-                    if (!empty($room_id) && strcasecmp($roomId, $room_id_decoded) !== 0) {
-                        continue;
-                    }
-
-                    $boardsList = isset($room->board->IdBoard) ? [$room->board] : ($room->board ?? []);
-                    foreach ($boardsList as $board) {
-                        $boardIdVal = (string)($board->IdBoard ?? '');
-                        if (!empty($board_id) && strcasecmp($boardIdVal, $board_id) !== 0) {
-                            continue;
-                        }
-
-                        $price = (float)((string)($board->Price ?? $board->TotalPrice ?? 0));
-                        if ($price > 0) {
-                            $new_price = $price;
-                            $price_found = true;
-                            $matched_room = $roomId;
-                            $matched_board = $boardIdVal;
-                            $debug_log('Found price (standard structure)', $price);
-                            break 2;
-                        }
-                    }
-                }
-            }
-
-            // Method 2: Parse flat structure (direct fields under room_price)
-            if (!$price_found) {
-                $debug_log('Trying flat structure parsing');
-
-                $flatMatch = fn_novoton_match_price_from_xml($response, $room_id_decoded, $board_id);
-                if ($flatMatch !== null) {
-                    $new_price = $flatMatch['price'];
-                    $price_found = true;
-                    $matched_room = $flatMatch['room'];
-                    $matched_board = $flatMatch['board'];
-                    $debug_log('MATCH FOUND (flat)!', $flatMatch);
-                }
-
-                // Fallback: use first available price from response
-                if (!$price_found) {
-                    $prices = $response->xpath('//Price');
-                    $idRooms = $response->xpath('//IdRoom');
-                    $idBoards = $response->xpath('//IdBoard') ?: $response->xpath('//Board');
-                    if (!empty($prices) && !empty($idRooms) && !empty($idBoards)) {
-                        $new_price = (float)((string)$prices[0]);
-                        $matched_room = rawurldecode((string)$idRooms[0]);
-                        $matched_board = (string)$idBoards[0];
-                        if ($new_price > 0) {
-                            $price_found = true;
-                            $debug_log('Using first available price as fallback', [
-                                'price' => $new_price,
-                                'room' => $matched_room,
-                                'board' => $matched_board
-                            ]);
-                        }
-                    }
-                }
-            }
-
-            // Method 3: Direct Price element at root (from all-combinations response)
-            if (!$price_found && isset($response->Price)) {
-                $new_price = (float)((string)$response->Price);
-                if ($new_price > 0) {
-                    $price_found = true;
-                    $matched_room = rawurldecode((string)($response->IdRoom ?? ''));
-                    $matched_board = (string)($response->IdBoard ?? '');
-                    $debug_log('Found direct Price element from fallback', $new_price);
-                }
+            // Same pick as the primary query. RoomOfferRows reads every layout
+            // the API answers with (flat rows under <room_price>, one element
+            // per offer, <hotel><rooms><board> nesting), and only the booked
+            // room + board (+ package) may set the price: the old "first
+            // available price" fallbacks quoted whatever room came first.
+            $fallbackMatch = $pickOffer($response);
+            if ($fallbackMatch !== null) {
+                $new_price     = $fallbackMatch['price'];
+                $price_found   = true;
+                $matched_room  = $fallbackMatch['room'];
+                $matched_board = $fallbackMatch['board'];
+                $debug_log('Found price of the booked offer from all-combinations query', $fallbackMatch);
             }
         }
 

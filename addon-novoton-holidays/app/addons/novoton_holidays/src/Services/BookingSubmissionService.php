@@ -89,6 +89,23 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
             $bookingData = $extra;
             $originalBookingId = PriceInfoFormatter::toInt($bookingData['novoton_booking_id'] ?? 0);
 
+            // Once submitted, a booking is linked to its order. CS-Cart runs
+            // place_order_post again for the same cart (order edits, the parent
+            // after its vendor sub-orders): a second reservation would be a
+            // duplicate at the hotel, so a linked booking is never resent.
+            $linkedOrderId = $this->linkedOrderId($originalBookingId);
+            if ($linkedOrderId > 0) {
+                if ($debugLogging) {
+                    fn_log_event('general', 'runtime', [
+                        'message' => 'Novoton - Booking already submitted, skipped',
+                        'booking_id' => $originalBookingId,
+                        'linked_order_id' => $linkedOrderId,
+                        'order_id' => $orderId,
+                    ]);
+                }
+                continue;
+            }
+
             // 1. Hydrate booking data from DB (single source of truth)
             $bookingData = $this->hydrateBookingFromDb($bookingData, $originalBookingId, $debugLogging);
 
@@ -249,6 +266,20 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
     // =========================================================================
     // PRIVATE PIPELINE METHODS
     // =========================================================================
+
+    /**
+     * The order a cart booking is already linked to; 0 when it is not (or
+     * has no row yet).
+     */
+    private function linkedOrderId(int $bookingId): int
+    {
+        if ($bookingId <= 0) {
+            return 0;
+        }
+        $row = $this->bookingRepo->findById($bookingId);
+
+        return PriceInfoFormatter::toInt($row['order_id'] ?? 0);
+    }
 
     /**
      * Hydrate booking data from the canonical DB record.

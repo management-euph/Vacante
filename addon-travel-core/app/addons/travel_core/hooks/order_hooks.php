@@ -11,6 +11,7 @@ declare(strict_types=1);
  * @since 1.0.0
  */
 
+use Tygh\Addons\TravelCore\Helpers\PlaceOrderPostArgs;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\BalanceService;
 use Tygh\Addons\TravelCore\Services\DateHelper;
@@ -116,19 +117,35 @@ function fn_travel_core_order_has_deposit(array $order): bool
  * Hook: place_order_post — record the balance of a deposit order, or link a
  * balance order to the balance it pays (BalanceService).
  *
- * @param int|string $order_id
- * @param string $action
- * @param string $order_status
- * @param array<string, mixed> $cart
- * @param array<string, mixed> $auth
+ * The nine parameters are anonymous, optional and by-reference ON PURPOSE.
+ * CS-Cart 4.20 fires this hook as ($cart, $auth, $action, $issuer_id,
+ * $parent_order_id, $order_id, $order_status, $short_order_data,
+ * $notification_rules), older builds as ($order_id, $action, $order_status,
+ * $cart, $auth). Declared in the old order, this hook read the 4.20 cart as
+ * the order id, got 0 and never recorded a balance. PlaceOrderPostArgs reads
+ * either order; the slots only have to accept whatever arrives.
+ *
+ * Nothing may escape from here: this runs inside the customer's "Place order"
+ * request, after the order row is written.
  */
-function fn_travel_core_place_order_post(&$order_id, &$action = '', &$order_status = '', &$cart = [], &$auth = []): void
-{
-    $oid = TypeCoerce::toInt($order_id);
-    if ($oid <= 0 || !fn_travel_core_order_has_deposit($cart)) {
-        return;
-    }
+function fn_travel_core_place_order_post(
+    mixed &$arg1 = null,
+    mixed &$arg2 = null,
+    mixed &$arg3 = null,
+    mixed &$arg4 = null,
+    mixed &$arg5 = null,
+    mixed &$arg6 = null,
+    mixed &$arg7 = null,
+    mixed &$arg8 = null,
+    mixed &$arg9 = null,
+): void {
+    $oid = 0;
     try {
+        $args = PlaceOrderPostArgs::resolve([$arg1, $arg2, $arg3, $arg4, $arg5, $arg6, $arg7, $arg8, $arg9]);
+        $oid = $args['order_id'];
+        if ($oid <= 0 || !fn_travel_core_order_has_deposit($args['cart'] ?? [])) {
+            return;
+        }
         $info = fn_get_order_info($oid);
         if (is_array($info)) {
             (new BalanceService())->onOrderPlaced($oid, TypeCoerce::toStringMap($info));

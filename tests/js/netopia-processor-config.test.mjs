@@ -19,7 +19,9 @@ const MARKUP = `
      data-sample-order-id="1001" data-sample-total="250.00" data-sample-currency="RON"
      data-sample-email="client@example.ro" data-sample-site-url="shop.example.ro"
      data-txt-show="Show" data-txt-hide="Hide" data-txt-testing="Testing…" data-txt-test-failed="The test could not run."
-     data-txt-remove-marked="Removed">
+     data-txt-remove-marked="Removed"
+     data-txt-mode-sandbox="Sandbox" data-txt-mode-live="Live"
+     data-txt-key-wrong-mode="This is a [file_mode] key file: it will not be saved in the [slot_mode] slot.">
   <div class="netopia-tabs">
     <button type="button" data-np-tab="conn" aria-selected="true">Connection</button>
     <button type="button" data-np-tab="chk" aria-selected="false">Checkout</button>
@@ -41,6 +43,7 @@ const MARKUP = `
     </div>
     <div class="netopia-creds netopia-creds--live">
       <input type="password" id="netopia_live_pos_signature" value="LIVE-POS1-AAAA-BBBB-CCCC">
+      <p data-np-pos-note="live" hidden>From your key file</p>
       <input type="password" id="netopia_live_api_key" value="">
     </div>
     <a href="#" data-np-show-all-creds>both</a>
@@ -65,7 +68,7 @@ const MARKUP = `
     <span data-np-keys-intro="sandbox">sandbox keys</span><span data-np-keys-intro="live" hidden>live keys</span>
     <div data-np-key="sandbox_public_key"><label data-np-drop><input type="file" id="f_sb"><span data-np-chosen hidden></span></label>
       <textarea id="netopia_sandbox_public_key">SANDBOX-PEM</textarea></div>
-    <div data-np-key="live_public_key"><label data-np-drop><input type="file" id="f_lv"><span data-np-chosen hidden></span></label>
+    <div data-np-key="live_public_key"><label data-np-drop><input type="file" id="f_lv"><span data-np-chosen hidden></span><span data-np-wrong-mode hidden></span></label>
       <textarea id="netopia_live_public_key">LIVE-PEM</textarea></div>
   </div>
 </div>
@@ -95,6 +98,10 @@ beforeEach(() => {
 
 const $ = (sel) => document.querySelector(sel);
 const change = (el) => el.dispatchEvent(new Event('change', { bubbles: true }));
+const pick = (input, name) => {
+    Object.defineProperty(input, 'files', { value: [{ name }], configurable: true });
+    change(input);
+};
 const flush = () => new Promise((r) => setTimeout(r, 0));
 
 describe('netopia processor config', () => {
@@ -229,5 +236,26 @@ describe('netopia processor config', () => {
         $('[data-np-test-run]').click();
         await flush();
         expect($('[data-np-test-summary]').textContent).toBe('The test could not run.');
+    });
+    it('warns when a sandbox key file is picked for a Live slot, and does not take its signature', () => {
+        $('#netopia_live_pos_signature').value = '';
+        pick($('#f_lv'), 'sandbox.39EG-NK6H-N6LV-IVP3-SLJC.2048.public.txt');
+        const warn = $('[data-np-key="live_public_key"] [data-np-wrong-mode]');
+        expect(warn.hidden).toBe(false);
+        expect(warn.textContent).toBe('This is a Sandbox key file: it will not be saved in the Live slot.');
+        expect($('#netopia_live_pos_signature').value).toBe('');
+    });
+
+    it('fills an empty POS signature from the picked key file name', () => {
+        $('#netopia_live_pos_signature').value = '';
+        pick($('#f_lv'), 'live.ab12-cd34-ef56-gh78-ij90.public.cer');
+        expect($('[data-np-key="live_public_key"] [data-np-wrong-mode]').hidden).toBe(true);
+        expect($('#netopia_live_pos_signature').value).toBe('AB12-CD34-EF56-GH78-IJ90');
+        expect($('[data-np-pos-note="live"]').hidden).toBe(false);
+
+        // A typed signature is never overwritten.
+        $('#netopia_live_pos_signature').value = 'TYPE-DIN1-AAAA-BBBB-CCCC';
+        pick($('#f_lv'), 'live.ZZZZ-ZZZZ-ZZZZ-ZZZZ-ZZZZ.public.cer');
+        expect($('#netopia_live_pos_signature').value).toBe('TYPE-DIN1-AAAA-BBBB-CCCC');
     });
 });

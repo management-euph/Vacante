@@ -291,15 +291,11 @@ function fn_novoton_holidays_send_price_alert_email(array $data): bool
 }
 
 /**
- * Send a price discrepancy notification email to admin.
+ * Price discrepancy email to the admin, from the pre_place_order hook:
+ * price_lower | price_higher use the template, price_absorbed |
+ * offer_missing use PriceOutcomeEmail.
  *
- * Used by the pre_place_order hook when the form price diverges from the
- * live API price. Handles both "lower" (blocked) and "higher" (allowed) cases.
- *
- * @param array<string, mixed> $data Associative array with keys:
- *   type (price_lower|price_higher), hotel_id, hotel_name, room_id, board_id,
- *   check_in, check_out, adults, children, children_ages, form_price,
- *   api_price, api_price_raw, difference, percent
+ * @param array<string, mixed> $data type, hotel_id, hotel_name, room_id, board_id, package_name, check_in, check_out, adults, children, children_ages, form_price, api_price, api_price_raw, difference, percent
  * @return bool
  */
 function fn_novoton_holidays_send_price_discrepancy_email(array $data): bool
@@ -313,6 +309,10 @@ function fn_novoton_holidays_send_price_discrepancy_email(array $data): bool
 
     $pif = \Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter::class;
     $type = $pif::toScalar($data['type'] ?? 'price_lower');
+    if ($type === 'offer_missing' || $type === 'price_absorbed') {
+        return \Tygh\Addons\NovotonHolidays\Services\PriceOutcomeEmail::send($type, $data, $admin_email, static fn (array $mail): bool => ($mailer = Tygh::$app['mailer']) instanceof \Tygh\Mailer\Mailer && (bool) $mailer->send($mail, 'A', CART_LANGUAGE));
+    }
+
     $isPriceLower = ($type === 'price_lower');
 
     $subject_prefix = $isPriceLower

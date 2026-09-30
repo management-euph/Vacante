@@ -237,6 +237,32 @@
         }
     }
 
+    // NETOPIA names its key files "<mode>.<POS signature>…", e.g.
+    // sandbox.39EG-NK6H-N6LV-IVP3-SLJC.public.cer (KeyFileName.php server side).
+    function keyFileMode(name) {
+        var m = /^(sandbox|live)\./i.exec(String(name || '').replace(/^.*[\\/]/, ''));
+        return m ? m[1].toLowerCase() : '';
+    }
+
+    function keyFileSignature(name) {
+        var m = /(?:^|[./])([A-Z0-9]{4}(?:-[A-Z0-9]{4}){4})/i.exec(String(name || ''));
+        return m ? m[1].toUpperCase() : '';
+    }
+
+    // An empty POS signature is filled in from the picked key file's name.
+    function fillPosSignature(root, mode, fileName) {
+        var input = root.querySelector('#netopia_' + mode + '_pos_signature');
+        var signature = keyFileSignature(fileName);
+        if (!input || signature === '' || input.value.trim() !== '') {
+            return;
+        }
+        input.value = signature;
+        var note = root.querySelector('[data-np-pos-note="' + mode + '"]');
+        if (note) {
+            note.hidden = false;
+        }
+    }
+
     function setupKeys(root) {
         all(root, '[data-np-drop]').forEach(function (drop) {
             var input = drop.querySelector('input[type="file"]');
@@ -244,11 +270,28 @@
             if (!input) {
                 return;
             }
+            var warn = drop.querySelector('[data-np-wrong-mode]');
+            var card = drop.closest('[data-np-key]');
+            var slotMode = card ? String(card.getAttribute('data-np-key') || '').split('_')[0] : '';
             input.addEventListener('change', function () {
                 var name = input.files && input.files.length > 0 ? input.files[0].name : '';
                 if (chosen) {
                     chosen.textContent = name;
                     chosen.hidden = name === '';
+                }
+                var fileMode = keyFileMode(name);
+                var wrong = fileMode !== '' && slotMode !== '' && fileMode !== slotMode;
+                if (warn) {
+                    // The server refuses it on Save; say so before the admin saves.
+                    warn.textContent = wrong
+                        ? txt(root, 'key-wrong-mode')
+                            .replace('[file_mode]', txt(root, 'mode-' + fileMode))
+                            .replace('[slot_mode]', txt(root, 'mode-' + slotMode))
+                        : '';
+                    warn.hidden = !wrong;
+                }
+                if (!wrong && slotMode !== '') {
+                    fillPosSignature(root, slotMode, name);
                 }
                 refreshKeysDot(root);
             });
@@ -417,7 +460,7 @@
         });
     }
 
-    window.NetopiaProcessorConfig = { init: init, descriptionPreview: descriptionPreview };
+    window.NetopiaProcessorConfig = { init: init, descriptionPreview: descriptionPreview, keyFileMode: keyFileMode, keyFileSignature: keyFileSignature };
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function () {

@@ -39,12 +39,18 @@ use Tygh\Addons\TravelCore\TravelConstants;
  *   - Form price < API price → CORRECT cart price to API price, send admin notification + email
  *   - Form price > API price by > threshold% → ALLOW order, send admin notification + email
  *   - Prices match → ALLOW order silently
+ *   - The booked package is no longer offered → ALLOW order at the shown
+ *     price (never another package's price), send admin email
  *
  * If the price increased within the absorb allowance, the customer pays the
  * price they were shown (merchant absorbs the difference). Beyond it, the cart
  * is corrected to the live API price and THIS order click is blocked so the
  * customer reviews and re-confirms the new total (EU CRD: the amount charged
  * must be the amount shown at the order button). Admin is notified either way.
+ *
+ * A correction is written everywhere the price lives — the cart line, the
+ * saved cart, the booking record and the Silent Sync entry — so the second
+ * click sees the corrected price instead of re-querying (and re-correcting).
  *
  * @param array<string, mixed> $cart
  * @param bool $allow
@@ -54,9 +60,11 @@ function fn_novoton_holidays_pre_place_order(&$cart, &$allow, &$product_groups):
 {
     $verifier = Container::getInstance()->preOrderPriceVerifier();
     $result = $verifier->verify($cart);
+    $session = new \Tygh\Addons\TravelCore\Helpers\SessionAccessor();
 
     // Apply price corrections: bump cart prices to the current API price
     $corrections = $result['corrections'];
+    $corrected = false;
     if (!empty($corrections) && is_array($cart['products'] ?? null)) {
         foreach ($corrections as $cartId => $correction) {
             if (!is_array($correction) || !isset($cart['products'][$cartId]) || !is_array($cart['products'][$cartId])) {
@@ -64,6 +72,7 @@ function fn_novoton_holidays_pre_place_order(&$cart, &$allow, &$product_groups):
             }
 
             $newPrice = PriceInfoFormatter::toFloat($correction['api_price'] ?? 0);
+            $rawPrice = PriceInfoFormatter::toFloat($correction['api_price_raw'] ?? 0);
             /** @var array<string, mixed> $existingProduct */
             $existingProduct = $cart['products'][$cartId];
             /** @var array<string, mixed> $existingExtra */
@@ -85,10 +94,53 @@ function fn_novoton_holidays_pre_place_order(&$cart, &$allow, &$product_groups):
                 _nvt_currency_service()->convertFromApiCurrency($newPrice, $primaryCurrency),
             );
             $cart['products'][$cartId]         = $existingProduct;
+            $corrected = true;
+
+            // The booking record holds the price too (admin grid, the
+            // Novoton submission, travel_bookings); left alone it kept the
+            // pre-correction price while the order charged the new one.
+            $bookingId = PriceInfoFormatter::toInt($existingExtra['novoton_booking_id'] ?? 0);
+            if ($bookingId > 0) {
+                $bookingPrices = ['total_price' => $newPrice];
+                if ($rawPrice > 0) {
+                    $bookingPrices['base_price'] = $rawPrice; // raw API price, before commission
+                }
+                try {
+                    Container::getInstance()->bookingRepository()->update($bookingId, $bookingPrices);
+                } catch (\Throwable $e) {
+                    // The cart is already corrected; a failed record update
+                    // must not stop the customer from re-confirming.
+                    fn_log_event('general', 'runtime', [
+                        'message' => '[Novoton] pre_place_order: booking price update failed',
+                        'booking_id' => $bookingId,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+
+            // Refresh the Silent Sync entry with the corrected price: the
+            // second click then trusts it instead of re-querying the API.
+            $priceCache = $session->get(\Tygh\Addons\NovotonHolidays\Services\PreOrderPriceVerifier::PRICE_CACHE_SESSION_KEY);
+            $priceCache = is_array($priceCache) ? $priceCache : [];
+            $priceCache[\Tygh\Addons\NovotonHolidays\Services\PreOrderPriceVerifier::priceCacheKey($existingExtra)] = [
+                'api_price'     => $newPrice,
+                'api_price_raw' => $rawPrice,
+                'form_price'    => $newPrice,
+                'timestamp'     => time(),
+            ];
+            $session->set(\Tygh\Addons\NovotonHolidays\Services\PreOrderPriceVerifier::PRICE_CACHE_SESSION_KEY, $priceCache);
         }
     }
 
-    // Send email notifications for any price discrepancies (lower OR higher)
+    // Persist the corrected cart (as add_to_cart does): the session copy is
+    // not the only one — a reload restoring the saved cart would bring the
+    // old price back.
+    if ($corrected && function_exists('fn_save_cart_content')) {
+        fn_save_cart_content($cart, TypeCoerce::toInt($session->auth()['user_id'] ?? 0));
+    }
+
+    // Send email notifications for any price discrepancies (lower, higher,
+    // absorbed, or the booked offer no longer offered)
     foreach ($result['notifications'] as $notification) {
         fn_novoton_holidays_send_price_discrepancy_email($notification);
     }
@@ -117,43 +169,77 @@ function fn_novoton_holidays_pre_place_order(&$cart, &$allow, &$product_groups):
  * Must be place_order_post (not place_order) because $order_id is only
  * available after the order record has been created.
  *
- * CS-Cart signature: fn_set_hook('place_order_post', $order_id, $action, $order_status, $cart, $auth)
+ * The nine parameters are anonymous, optional and by-reference ON PURPOSE:
+ * the argument order depends on the CS-Cart build. 4.20 (fn_place_order) fires
+ *
+ *     fn_set_hook('place_order_post', $cart, $auth, $action, $issuer_id,
+ *                 $parent_order_id, $order_id, $order_status,
+ *                 $short_order_data, $notification_rules);
+ *
+ * while older builds pass ($order_id, $action, $order_status, $cart, $auth).
+ * Declared in the old order, this hook received the 4.20 cart as $order_id,
+ * read 0 and returned: the booking was never sent to Novoton nor linked to
+ * the order. travel_core's PlaceOrderPostArgs reads either order (and
+ * Multi-Vendor's parent + child id list, parent first).
+ *
+ * Nothing may escape from here: this runs inside the customer's "Place order"
+ * request, after the order row is written. A failed submission is visible on
+ * the booking and can be resubmitted from the admin; a crashed checkout
+ * cannot be undone.
  *
  * Delegates entirely to BookingSubmissionService which encapsulates:
  *   1. DB hydration, room/guest resolution, room grouping
  *   2. API payload construction, DB upsert, API submission
- *
- * @param int|list<int> $order_id
- * @param string $action
- * @param string $order_status
- * @param array<string, mixed>|null $cart
- * @param array<string, mixed> $auth
  */
-function fn_novoton_holidays_place_order_post(&$order_id, &$action, &$order_status, &$cart, &$auth): void
-{
-    // CS-Cart Multi-Vendor passes $order_id as array (parent + child order IDs).
-    // Normalize to the parent (first) order ID for booking submission.
-    $resolved_order_id = (int) (is_array($order_id) ? reset($order_id) : $order_id);
+function fn_novoton_holidays_place_order_post(
+    mixed &$arg1 = null,
+    mixed &$arg2 = null,
+    mixed &$arg3 = null,
+    mixed &$arg4 = null,
+    mixed &$arg5 = null,
+    mixed &$arg6 = null,
+    mixed &$arg7 = null,
+    mixed &$arg8 = null,
+    mixed &$arg9 = null,
+): void {
+    $resolved_order_id = 0;
+    try {
+        $args = \Tygh\Addons\TravelCore\Helpers\PlaceOrderPostArgs::resolve(
+            [$arg1, $arg2, $arg3, $arg4, $arg5, $arg6, $arg7, $arg8, $arg9],
+        );
+        $resolved_order_id = $args['order_id'];
+        if ($resolved_order_id <= 0) {
+            return;
+        }
 
-    if (empty($resolved_order_id)) {
-        return;
-    }
+        // Primary path: use cart data when available (full booking submission with API call)
+        $cart = $args['cart'];
+        if ($cart !== null && !empty($cart['products'])) {
+            try {
+                Container::getInstance()->bookingSubmissionService()->submitOrder($resolved_order_id, $cart);
+            } catch (\Throwable $e) {
+                // Logged here so the self-heal below still links the booking.
+                fn_log_event('general', 'runtime', [
+                    'message' => "[Novoton] place_order_post submit, order {$resolved_order_id}: "
+                        . $e::class . ': ' . $e->getMessage(),
+                ]);
+            }
+        }
 
-    // Primary path: use cart data when available (full booking submission with API call)
-    if (is_array($cart) && !empty($cart['products'])) {
-        Container::getInstance()->bookingSubmissionService()->submitOrder($resolved_order_id, $cart);
-        // Self-heal: submitOrder writes order_id on every branch it reaches,
-        // but a cart item it skipped (gate mismatch, pre-persist throw) would
-        // leave its booking orphaned forever — the admin grid then shows
-        // "Order ID: -" although the order exists. The reconciler is
-        // idempotent and cheap, so always run it after submission.
+        // Self-heal, on both paths: submitOrder writes order_id on every branch
+        // it reaches, but a cart item it skipped (gate mismatch, pre-persist
+        // throw) or a submission that threw would leave its booking orphaned
+        // forever; the admin grid then shows "Order ID: -" although the order
+        // exists. Without a cart (payment callbacks, order status re-triggers)
+        // this is the whole job: link by looking up the order's products. The
+        // reconciler is idempotent and cheap, so always run it.
         fn_novoton_holidays_link_order_bookings($resolved_order_id);
-        return;
+    } catch (\Throwable $e) {
+        fn_log_event('general', 'runtime', [
+            'message' => "[Novoton] place_order_post, order {$resolved_order_id}: "
+                . $e::class . ': ' . $e->getMessage(),
+        ]);
     }
-
-    // Fallback path: $cart is null/empty (payment callbacks, order status
-    // re-triggers) — link by looking up the order's products.
-    fn_novoton_holidays_link_order_bookings($resolved_order_id);
 }
 
 /**

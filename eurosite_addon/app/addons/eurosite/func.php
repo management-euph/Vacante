@@ -191,21 +191,52 @@ function fn_eurosite_pre_place_order(array &$cart, &$allow, &$product_groups): v
  * place_order_post — link the order's eurosite bookings and submit them to
  * the Eurosite API (AddBookingRequest); idempotent on re-fire.
  *
- * @param int|array<int> $order_id
+ * The nine parameters are anonymous, optional and by-reference ON PURPOSE:
+ * CS-Cart 4.20 passes ($cart, $auth, $action, $issuer_id, $parent_order_id,
+ * $order_id, $order_status, $short_order_data, $notification_rules), older
+ * builds ($order_id, $action, $order_status, $cart, $auth). Declared in the
+ * old order, this hook took the 4.20 cart for the order id and walked the
+ * cart's VALUES as order ids (a non-empty array casts to 1), so the placed
+ * order's bookings were never submitted and unrelated orders were looked up.
+ * travel_core's PlaceOrderPostArgs reads either order; every order id it finds
+ * (Multi-Vendor: the parent, then its vendor sub-orders) is handled as before.
+ *
+ * Nothing may escape from here: this runs inside the customer's "Place order"
+ * request, after the order row is written. A failed order is logged and the
+ * next one still runs; a failed booking stays retryable from the admin grid.
  */
-function fn_eurosite_place_order_post(&$order_id, mixed $cart = null): void
-{
-    $ids = is_array($order_id) ? $order_id : [$order_id];
+function fn_eurosite_place_order_post(
+    mixed &$arg1 = null,
+    mixed &$arg2 = null,
+    mixed &$arg3 = null,
+    mixed &$arg4 = null,
+    mixed &$arg5 = null,
+    mixed &$arg6 = null,
+    mixed &$arg7 = null,
+    mixed &$arg8 = null,
+    mixed &$arg9 = null,
+): void {
+    try {
+        $ids = \Tygh\Addons\TravelCore\Helpers\PlaceOrderPostArgs::resolve(
+            [$arg1, $arg2, $arg3, $arg4, $arg5, $arg6, $arg7, $arg8, $arg9],
+        )['order_ids'];
+    } catch (\Throwable $e) {
+        fn_log_event('general', 'runtime', ['message' => 'Eurosite place_order_post: ' . $e::class . ': ' . $e->getMessage()]);
+
+        return;
+    }
     foreach ($ids as $id) {
-        $id = (int) $id;
-        if ($id <= 0) {
-            continue;
+        try {
+            $orderInfo = TypeCoerce::toStringMap(function_exists('fn_get_order_info') ? fn_get_order_info($id) : null);
+            if ($orderInfo === []) {
+                continue;
+            }
+            (new \Tygh\Addons\Eurosite\Services\BookingSubmissionService())->submitOrder($id, $orderInfo);
+        } catch (\Throwable $e) {
+            fn_log_event('general', 'runtime', [
+                'message' => "Eurosite place_order_post, order {$id}: " . $e::class . ': ' . $e->getMessage(),
+            ]);
         }
-        $orderInfo = TypeCoerce::toStringMap(function_exists('fn_get_order_info') ? fn_get_order_info($id) : null);
-        if ($orderInfo === []) {
-            continue;
-        }
-        (new \Tygh\Addons\Eurosite\Services\BookingSubmissionService())->submitOrder($id, $orderInfo);
     }
 }
 
