@@ -90,6 +90,7 @@ final class CartBookingCardFactoryTest extends TestCase
         self::assertSame(['date' => '10/11/2026', 'weekday' => 'Sunday'], $card['check_out']);
         self::assertTrue($card['show_weekday']);
         self::assertSame(6, $card['nights']);
+        self::assertSame('$468.75', $card['price']);
         self::assertSame('$78.13', $card['per_night']);
 
         // One party line, supplier codes split off the names.
@@ -265,6 +266,7 @@ final class CartBookingCardFactoryTest extends TestCase
             'balance_due' => '06/12/2027',
             'percent' => 30,
         ], $card['deposit']);
+        self::assertSame('$1,286.40', $card['price'], 'the stay, not the deposit');
         self::assertSame('$214.40', $card['per_night'], 'per night of the stay, not of the deposit');
     }
 

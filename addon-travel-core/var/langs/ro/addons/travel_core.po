@@ -2305,3 +2305,15 @@ msgstr "Anularea acum costă [amount]"
 msgctxt "Languages::travel_core.cancel_now_full"
 msgid "Cancelling now costs the full price"
 msgstr "Anularea acum costă prețul integral"
+
+msgctxt "Languages::block_travel_stay_summary"
+msgid "Travel: stay summary (checkout, phones)"
+msgstr "Travel: rezumat sejur (checkout, telefon)"
+
+msgctxt "Languages::travel_core.stay_details"
+msgid "Details"
+msgstr "Detalii"
+
+msgctxt "Languages::travel_core.stay_hide"
+msgid "Hide"
+msgstr "Ascunde"

@@ -69,8 +69,21 @@ function fn_travel_core_uninstall(): bool
     db_query('DROP TABLE IF EXISTS ?:travel_balances');
     db_query('DROP TABLE IF EXISTS ?:travel_feature_map');
 
+    // Placed stay-summary blocks (dedicated type travel_stay_summary), with
+    // their descriptions and layout placements: without the schema and
+    // template they would break the checkout layout.
+    $block_ids = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toIntList(
+        db_get_fields("SELECT block_id FROM ?:bm_blocks WHERE type = 'travel_stay_summary'"),
+    );
+    if ($block_ids !== []) {
+        db_query('DELETE FROM ?:bm_blocks_descriptions WHERE block_id IN (?n)', $block_ids);
+        db_query('DELETE FROM ?:bm_snapping WHERE block_id IN (?n)', $block_ids);
+        db_query('DELETE FROM ?:bm_blocks WHERE block_id IN (?n)', $block_ids);
+    }
+
     // Remove language variables
     db_query("DELETE FROM ?:language_values WHERE name LIKE 'travel_core.%'");
+    db_query("DELETE FROM ?:language_values WHERE name = 'block_travel_stay_summary'");
 
     return true;
 }
