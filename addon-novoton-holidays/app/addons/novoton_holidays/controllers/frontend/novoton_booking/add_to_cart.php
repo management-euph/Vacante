@@ -149,8 +149,8 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
         ? implode(',', $all_child_ages)
         : TypeCoerce::toString($bookingData['children_ages'] ?? '');
 
-    // Get package name
-    $package_name = TypeCoerce::toString($bookingData['package_name'] ?? '');
+    // Package of the clicked card; the price below is pinned to it (BookedOffer)
+    $package_name = $booked_package = TypeCoerce::toString($bookingData['package_name'] ?? '');
     if ($package_name === '' && $bdHotelId !== '') {
         // V3: Get first package from novoton_hotel_packages table
         $packageRepo = Container::getInstance()->hotelPackageRepository();
@@ -178,15 +178,20 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 
     $api = fn_novoton_holidays_get_api();
     $priceData = $api !== null ? $api->pricing()->getRoomPrice($priceParams) : null;
+    // The booked offer: same room + board AND the clicked package. Never the first <Price> of the answer.
+    $offerMatch = $priceData instanceof \SimpleXMLElement ? \Tygh\Addons\NovotonHolidays\Services\BookedOffer::pick($priceData,
+        rawurldecode(TypeCoerce::toString($bookingData['room_id'])), TypeCoerce::toString($bookingData['board_id'] ?? ''),
+        $booked_package, ['source' => 'add_to_cart', 'hotel_id' => $bdHotelId]) : null;
 
     // A80: Server-side price validation - safety net
-    // If we have children and API returns no data, abort booking
+    // If we have children and API returns no data (or no offer of this room/board), abort booking
     // This prevents bookings with incorrect prices when room doesn't accept certain child ages
-    if (!($priceData instanceof \SimpleXMLElement) || !isset($priceData->Price)) {
+    if ($offerMatch === null) {
         fn_log_event('general', 'runtime', [
-            'message' => 'Novoton add_to_cart: PRICE VERIFICATION FAILED - API returned no price',
+            'message' => 'Novoton add_to_cart: PRICE VERIFICATION FAILED - API returned no price for this room/board',
             'hotel_id' => $bdHotelId,
             'room_id' => TypeCoerce::toString($bookingData['room_id']),
+            'package_name' => $booked_package,
             'children_ages' => $all_child_ages,
             'adults' => TypeCoerce::toInt($bookingData['adults'] ?? 2)
         ]);
@@ -217,96 +222,91 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
     $terms_of_cancellation = '';
     $remark = '';
     $important = '';
-    $base_price = 0; // API price before commission
+    if ($booked_package === '' && $offerMatch['package'] !== '') {
+        $package_name = $offerMatch['package']; // label the booking with the package its price comes from
+    }
+    $rawPrice = $offerMatch['price'];
+    $base_price = $rawPrice; // API price before commission
+    $api_price = fn_novoton_holidays_get_api()->pricing()->applyCommission($rawPrice);
 
-    // Update price if we got one from API
-    if (isset($priceData->Price)) {
-        $room_id_for_match  = rawurldecode(TypeCoerce::toString($bookingData['room_id']));
-        $board_id_for_match = TypeCoerce::toString($bookingData['board_id'] ?? '');
-        $minPriceMatch = fn_novoton_min_price_from_xml($priceData, $room_id_for_match, $board_id_for_match);
-        $rawPrice = $minPriceMatch !== null ? $minPriceMatch['price'] : (float)((string)$priceData->Price);
-        $base_price = $rawPrice;
-        $api_price = fn_novoton_holidays_get_api()->pricing()->applyCommission($rawPrice);
+    // Remember the price the customer saw on the form before any correction
+    $customer_visible_price = $total_price;
 
-        // Remember the price the customer saw on the form before any correction
-        $customer_visible_price = $total_price;
+    // ALWAYS use API price when children are involved (ages affect pricing)
+    if (!empty($all_child_ages)) {
+        $total_price = $api_price;
+    }
 
-        // ALWAYS use API price when children are involved (ages affect pricing)
-        if (!empty($all_child_ages)) {
-            $total_price = $api_price;
+    // Price floor: final price must NEVER be lower than real-time room_price API
+    // Protects against stale priceinfo data, calculation bugs, or cache issues
+    if ($total_price <= 0 || $total_price < $api_price) {
+        if ($total_price > 0 && $total_price < $api_price) {
+            $price_diff = round($api_price - $total_price, 2);
+            fn_log_event('general', 'runtime', [
+                'message' => 'Novoton PRICE FLOOR: form price below real-time API room_price — using API price',
+                'hotel_id' => $bdHotelId,
+                'room_id' => TypeCoerce::toString($bookingData['room_id']),
+                'form_price' => $total_price,
+                'api_price' => $api_price,
+                'api_price_raw' => $rawPrice,
+                'difference' => $price_diff,
+            ]);
+
+            // Send email alert to admin with price discrepancy details
+            fn_novoton_holidays_send_price_alert_email([
+                'hotel_id'      => $bdHotelId,
+                'hotel_name'    => TypeCoerce::toString($hotel_info['hotel_name'] ?? ''),
+                'room_id'       => TypeCoerce::toString($bookingData['room_id']),
+                'board_id'      => TypeCoerce::toString($bookingData['board_id'] ?? ''),
+                'check_in'      => TypeCoerce::toString($bookingData['check_in'] ?? ''),
+                'check_out'     => TypeCoerce::toString($bookingData['check_out'] ?? ''),
+                'adults'        => TypeCoerce::toInt($bookingData['adults'] ?? 2),
+                'children'      => TypeCoerce::toInt($bookingData['children'] ?? 0),
+                'children_ages' => $children_ages,
+                'form_price'    => $total_price,
+                'api_price'     => $api_price,
+                'api_price_raw' => $rawPrice,
+                'difference'    => $price_diff,
+            ]);
         }
+        $total_price = $api_price;
+    }
 
-        // Price floor: final price must NEVER be lower than real-time room_price API
-        // Protects against stale priceinfo data, calculation bugs, or cache issues
-        if ($total_price <= 0 || $total_price < $api_price) {
-            if ($total_price > 0 && $total_price < $api_price) {
-                $price_diff = round($api_price - $total_price, 2);
-                fn_log_event('general', 'runtime', [
-                    'message' => 'Novoton PRICE FLOOR: form price below real-time API room_price — using API price',
-                    'hotel_id' => $bdHotelId,
-                    'room_id' => TypeCoerce::toString($bookingData['room_id']),
-                    'form_price' => $total_price,
-                    'api_price' => $api_price,
-                    'api_price_raw' => $rawPrice,
-                    'difference' => $price_diff,
-                ]);
+    // "No Surprises" policy: detect and communicate price changes to the user.
+    // Uses Price Tolerance: changes < threshold (default 1%) are silent.
+    if ($customer_visible_price > 0) {
+        $detector = Container::getInstance()->priceChangeDetector();
+        $changeInfo = $detector->analyse(
+            $customer_visible_price,
+            $total_price,
+            ConfigProvider::getApiCurrency(),
+            'add_to_cart',
+            [
+                'hotel_name' => TypeCoerce::toString($hotel_info['hotel_name'] ?? ''),
+                'hotel_id'   => $bdHotelId,
+                'room_id'    => TypeCoerce::toString($bookingData['room_id']),
+            ]
+        );
 
-                // Send email alert to admin with price discrepancy details
-                fn_novoton_holidays_send_price_alert_email([
-                    'hotel_id'      => $bdHotelId,
-                    'hotel_name'    => TypeCoerce::toString($hotel_info['hotel_name'] ?? ''),
-                    'room_id'       => TypeCoerce::toString($bookingData['room_id']),
-                    'board_id'      => TypeCoerce::toString($bookingData['board_id'] ?? ''),
-                    'check_in'      => TypeCoerce::toString($bookingData['check_in'] ?? ''),
-                    'check_out'     => TypeCoerce::toString($bookingData['check_out'] ?? ''),
-                    'adults'        => TypeCoerce::toInt($bookingData['adults'] ?? 2),
-                    'children'      => TypeCoerce::toInt($bookingData['children'] ?? 0),
-                    'children_ages' => $children_ages,
-                    'form_price'    => $total_price,
-                    'api_price'     => $api_price,
-                    'api_price_raw' => $rawPrice,
-                    'difference'    => $price_diff,
-                ]);
-            }
-            $total_price = $api_price;
-        }
+        if ($changeInfo['significant']) {
+            // Store alert in session — template will render it on the cart page
+            $detector->storeAlert($changeInfo);
 
-        // "No Surprises" policy: detect and communicate price changes to the user.
-        // Uses Price Tolerance: changes < threshold (default 1%) are silent.
-        if ($customer_visible_price > 0) {
-            $detector = Container::getInstance()->priceChangeDetector();
-            $changeInfo = $detector->analyse(
-                $customer_visible_price,
-                $total_price,
-                ConfigProvider::getApiCurrency(),
-                'add_to_cart',
-                [
-                    'hotel_name' => TypeCoerce::toString($hotel_info['hotel_name'] ?? ''),
-                    'hotel_id'   => $bdHotelId,
-                    'room_id'    => TypeCoerce::toString($bookingData['room_id']),
-                ]
-            );
-
-            if ($changeInfo['significant']) {
-                // Store alert in session — template will render it on the cart page
-                $detector->storeAlert($changeInfo);
-
-                // User-facing notification via CS-Cart toast
-                if ($changeInfo['direction'] === 'increase') {
-                    fn_set_notification('W', __('novoton_holidays.price_change'),
-                        __('novoton_holidays.price_updated_from_to', [
-                            '[old_price]' => fn_format_price($customer_visible_price),
-                            '[new_price]' => fn_format_price($total_price),
-                        ])
-                    );
-                } else {
-                    // Price decrease — a "win" for the customer
-                    fn_set_notification('N', __('novoton_holidays.price_dropped'),
-                        __('novoton_holidays.price_dropped_to', [
-                            '[new_price]' => fn_format_price($total_price),
-                        ])
-                    );
-                }
+            // User-facing toast; amounts (API currency) written exactly as the cart line shows them
+            if ($changeInfo['direction'] === 'increase') {
+                fn_set_notification('W', __('novoton_holidays.price_change'),
+                    __('novoton_holidays.price_updated_from_to', [
+                        '[old_price]' => fn_novoton_holidays_format_api_amount_for_shopper($customer_visible_price),
+                        '[new_price]' => fn_novoton_holidays_format_api_amount_for_shopper($total_price),
+                    ])
+                );
+            } else {
+                // Price decrease — a "win" for the customer
+                fn_set_notification('N', __('novoton_holidays.price_dropped'),
+                    __('novoton_holidays.price_dropped_to', [
+                        '[new_price]' => fn_novoton_holidays_format_api_amount_for_shopper($total_price),
+                    ])
+                );
             }
         }
     }
@@ -390,7 +390,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
         if (is_string($rawChildrenAges) && $rawChildrenAges !== '') {
             $children_ages_arr = array_map(
                 static fn (string $v): int => (int) $v,
-                array_filter(explode(',', $rawChildrenAges), static fn ($v) => $v !== ''),
+                array_filter(explode(',', $rawChildrenAges), static fn ($v): bool => $v !== ''),
             );
         } elseif (is_array($rawChildrenAges)) {
             $children_ages_arr = array_map(
@@ -440,7 +440,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 
         if (!empty($room['childrenAges']) && is_array($room['childrenAges'])) {
             // Filter out null values and format
-            $valid_ages = TypeCoerce::toStringList(array_filter($room['childrenAges'], static fn ($age) => $age !== null && $age !== ''));
+            $valid_ages = TypeCoerce::toStringList(array_filter($room['childrenAges'], static fn ($age): bool => $age !== null && $age !== ''));
             $room['children_ages_str'] = !empty($valid_ages) ? implode(', ', $valid_ages) . ' ' . TypeCoerce::toString(__('novoton_holidays.years_old')) : '';
         } else {
             $room['children_ages_str'] = '';
@@ -677,17 +677,9 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 
     // Cache verified API price in session for pre_place_order "Silent Sync".
     // If the cached price is fresh enough (< TTL), the pre-order check can
-    // skip the API call and make checkout feel instant.
-    if (isset($api_price) && $api_price > 0) {
-        $cache_key = md5(implode('|', [
-            $bdHotelId,
-            $room_id_str,
-            TypeCoerce::toString($bookingData['board_id'] ?? ''),
-            $check_in,
-            $check_out,
-            (string) TypeCoerce::toInt($bookingData['adults'] ?? 2),
-            $children_ages,
-        ]));
+    // skip the API call and make checkout feel instant. The verifier's own key recipe (package included).
+    if ($api_price > 0) {
+        $cache_key = \Tygh\Addons\NovotonHolidays\Services\PreOrderPriceVerifier::priceCacheKey($product['extra']);
         // Ensure the cache bag is an array before writing the keyed entry
         // ($_SESSION is the authoritative session store — see SessionAccessor).
         $price_cache = &$_SESSION['novoton_price_cache'];

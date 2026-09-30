@@ -67,7 +67,7 @@ if ($processor_script !== 'netopia_payments.php') {
     return [CONTROLLER_STATUS_REDIRECT, $redirect_url];
 }
 
-$processor_data = fn_get_payment_method_data($payment_id);
+$processor_data = fn_netopia_get_payment_method_data($payment_id);
 $processor_params = is_array($processor_data['processor_params'] ?? null) ? $processor_data['processor_params'] : [];
 $processor_params = Arr::stringKeys($processor_params);
 if ($processor_params === []) {

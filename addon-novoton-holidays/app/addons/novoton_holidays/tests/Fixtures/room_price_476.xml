@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<room_price>
+  <agent>TESTAGENT</agent>
+  <IdHotel>476</IdHotel>
+  <idcont>1280335</idcont>
+  <PackageName>ADMIRAL ***** +BEACH</PackageName>
+  <Price>795.00</Price>
+  <IdRoom>DBL 2+0 DELUXE NO BALCONY</IdRoom>
+  <IdStar>5*</IdStar>
+  <RoomPrice>No</RoomPrice>
+  <Board>ULTRA ALL INCL</Board>
+  <ExtBoard/>
+  <early_booking/>
+  <EBToDate/>
+  <extras/>
+  <TermsOfPayment>
+    <Percent tillDate="2026-09-30">100</Percent>
+  </TermsOfPayment>
+  <TermsOfCancellation>
+    <Penalty tillDate="2026-10-01" Type="Over Nights">0</Penalty>
+    <Penalty tillDate="2026-10-04" Type="Over Nights">2</Penalty>
+    <Penalty tillDate="2026-10-05" Type="Percent">100</Penalty>
+  </TermsOfCancellation>
+  <remark>&lt;p&gt;ADMIRAL ***** BB/HB [STAY 22.09 - 19.12] / 25.06.2026 - 18.12.2026&lt;br /&gt;
+MIN 3 NIGHTS STAY in 22.09.2026 - 31.10.2026&lt;br /&gt;MIN 3 NIGHTS STAY in 01.11.2026 - 30.11.2026&lt;br /&gt;MIN 2 NIGHTS STAY in 01.12.2026 - 19.12.2026&lt;br /&gt;
+&lt;/p&gt;</remark>
+  <MoreInfo>Beach included</MoreInfo>
+  <Important/>
+  <agent>TESTAGENT</agent>
+  <IdHotel>476</IdHotel>
+  <idcont>1296501</idcont>
+  <PackageName>ADMIRAL ***** +BEACH [STAY 18.09 - 31.10]</PackageName>
+  <Price>600.00</Price>
+  <IdRoom>DBL 2+0 DELUXE NO BALCONY</IdRoom>
+  <IdStar>5*</IdStar>
+  <RoomPrice>No</RoomPrice>
+  <Board>ULTRA ALL INCL</Board>
+  <ExtBoard/>
+  <early_booking>25</early_booking>
+  <EBToDate>2026-09-30</EBToDate>
+  <extras/>
+  <TermsOfPayment>
+    <Percent tillDate="2026-09-30">100</Percent>
+  </TermsOfPayment>
+  <TermsOfCancellation>
+    <Penalty tillDate="2026-10-01" Type="Over Nights">0</Penalty>
+    <Penalty tillDate="2026-10-04" Type="Over Nights">2</Penalty>
+    <Penalty tillDate="2026-10-05" Type="Percent">100</Penalty>
+  </TermsOfCancellation>
+  <remark>&lt;p&gt;ADMIRAL ***** BB/HB [STAY 22.09 - 19.12] / 25.06.2026 - 18.12.2026&lt;br /&gt;
+MIN 3 NIGHTS STAY in 22.09.2026 - 31.10.2026&lt;br /&gt;MIN 3 NIGHTS STAY in 01.11.2026 - 30.11.2026&lt;br /&gt;MIN 2 NIGHTS STAY in 01.12.2026 - 19.12.2026&lt;br /&gt;
+&lt;/p&gt;</remark>
+  <MoreInfo>Beach included</MoreInfo>
+  <Important/>
+  <agent>TESTAGENT</agent>
+  <IdHotel>476</IdHotel>
+  <idcont>1292618</idcont>
+  <PackageName>ADMIRAL ***** BB/HB [STAY 22.09 - 19.12]</PackageName>
+  <Price>675.00</Price>
+  <IdRoom>DBL 2+0 DELUXE NO BALCONY</IdRoom>
+  <IdStar>5*</IdStar>
+  <RoomPrice>No</RoomPrice>
+  <Board>BB</Board>
+  <ExtBoard>HB</ExtBoard>
+  <early_booking/>
+  <EBToDate/>
+  <extras/>
+  <TermsOfPayment>
+    <Percent tillDate="2026-09-30">100</Percent>
+  </TermsOfPayment>
+  <TermsOfCancellation>
+    <Penalty tillDate="2026-10-01" Type="Over Nights">0</Penalty>
+    <Penalty tillDate="2026-10-04" Type="Over Nights">2</Penalty>
+    <Penalty tillDate="2026-10-05" Type="Percent">100</Penalty>
+  </TermsOfCancellation>
+  <remark>&lt;p&gt;ADMIRAL ***** BB/HB [STAY 22.09 - 19.12] / 25.06.2026 - 18.12.2026&lt;br /&gt;
+MIN 3 NIGHTS STAY in 22.09.2026 - 31.10.2026&lt;br /&gt;MIN 3 NIGHTS STAY in 01.11.2026 - 30.11.2026&lt;br /&gt;MIN 2 NIGHTS STAY in 01.12.2026 - 19.12.2026&lt;br /&gt;
+&lt;/p&gt;</remark>
+  <MoreInfo/>
+  <Important/>
+</room_price>
+

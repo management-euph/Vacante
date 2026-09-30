@@ -120,14 +120,6 @@ function fn_netopia_payments_update_payment_post(array $payment_data, int $payme
     $params = fn_netopia_load_processor_params($payment_id);
     $updated = false;
 
-    // The runtime reads the plain api_key / pos_signature: make them the
-    // selected mode's pair (Config\Credentials).
-    $active = \Netopia\CsCart\Config\Credentials::applyActive($params);
-    if ($active !== $params) {
-        $params = $active;
-        $updated = true;
-    }
-
     $key_slots = [
         'sandbox_public_key' => 'netopia_sandbox_public_key_file',
         'sandbox_private_key' => 'netopia_sandbox_private_key_file',
@@ -147,6 +139,19 @@ function fn_netopia_payments_update_payment_post(array $payment_data, int $payme
             'size' => is_numeric($raw['size'] ?? null) ? (int) $raw['size'] : 0,
             'error' => Arr::int($raw, 'error'),
         ];
+
+        // A sandbox.* file in a live slot (or the other way round) would make
+        // that mode verify NETOPIA's notifications with the wrong key.
+        $slot_mode = PaymentMode::fromMixed(strtok($param_key, '_'));
+        $file_mode = \Netopia\CsCart\Key\KeyFileName::wrongMode($upload['name'], $slot_mode);
+        if ($file_mode !== null) {
+            fn_set_notification('W', __('warning'), __('netopia_key_wrong_mode', [
+                '[file]' => $upload['name'],
+                '[file_mode]' => __('netopia_' . $file_mode->value),
+                '[slot_mode]' => __('netopia_' . $slot_mode->value),
+            ]));
+            continue;
+        }
 
         try {
             $keyStorage->secureDir($keys_dir);
@@ -182,6 +187,32 @@ function fn_netopia_payments_update_payment_post(array $payment_data, int $payme
             $params[$param_key] = '';
             $updated = true;
         }
+    }
+
+    // NETOPIA's key files carry the POS signature in their names: store it for
+    // a mode whose POS signature was left empty, so it never has to be typed.
+    foreach (PaymentMode::cases() as $mode) {
+        $pos_field = $mode->value . '_pos_signature';
+        if (trim(Arr::string($params, $pos_field)) !== '') {
+            continue;
+        }
+        $from_key = \Netopia\CsCart\Config\Credentials::posSignatureFromKeyFiles($params, $mode);
+        if ($from_key !== '') {
+            $params[$pos_field] = $from_key;
+            $updated = true;
+            fn_set_notification('N', __('notice'), __('netopia_pos_signature_from_key', [
+                '[mode]' => __('netopia_' . $mode->value),
+                '[signature]' => $from_key,
+            ]));
+        }
+    }
+
+    // The runtime reads the plain api_key / pos_signature: make them the
+    // selected mode's pair (Config\Credentials).
+    $active = \Netopia\CsCart\Config\Credentials::applyActive($params);
+    if ($active !== $params) {
+        $params = $active;
+        $updated = true;
     }
 
     if ($updated) {
@@ -234,6 +265,25 @@ function fn_netopia_load_processor_params(int $payment_id): array
         }
     }
     return $result;
+}
+
+/**
+ * CS-Cart's payment method data with the NETOPIA credentials resolved
+ * (Config\Credentials::applyActive): the selected mode's API key and POS
+ * signature, the signature taken from the key file names when it was left
+ * empty. Every runtime reader goes through this, so a configuration saved
+ * before a credentials rule changed still pays and verifies correctly.
+ *
+ * @return array<string, mixed>
+ */
+function fn_netopia_get_payment_method_data(int $payment_id): array
+{
+    $data = Arr::stringKeys(fn_get_payment_method_data($payment_id));
+    if (is_array($data['processor_params'] ?? null)) {
+        $data['processor_params'] = \Netopia\CsCart\Config\Credentials::applyActive(Arr::stringKeys($data['processor_params']));
+    }
+
+    return $data;
 }
 
 /**
@@ -344,7 +394,7 @@ function fn_netopia_handle_ipn(): void
 
     $handler = Bootstrap::instance()->ipnHandler(
         orderLookup:         static fn (int $orderId): ?array => fn_get_order_info($orderId) ?: null,
-        processorDataLookup: static fn (int $paymentId): ?array => fn_get_payment_method_data($paymentId) ?: null,
+        processorDataLookup: static fn (int $paymentId): ?array => (fn_netopia_get_payment_method_data($paymentId) ?: null),
         paymentInfoUpdater:  static function (int $orderId, array $info): void {
             fn_update_order_payment_info($orderId, Arr::stringKeys($info));
         },
@@ -383,7 +433,7 @@ function fn_netopia_handle_3ds_return(): void
     $handler = Bootstrap::instance()->threeDsReturnHandler(
         session:             $session,
         orderLookup:         static fn (int $orderId): ?array => fn_get_order_info($orderId) ?: null,
-        processorDataLookup: static fn (int $paymentId): ?array => fn_get_payment_method_data($paymentId) ?: null,
+        processorDataLookup: static fn (int $paymentId): ?array => (fn_netopia_get_payment_method_data($paymentId) ?: null),
         paymentInfoUpdater:  static function (int $orderId, array $info): void {
             fn_update_order_payment_info($orderId, Arr::stringKeys($info));
         },
@@ -430,7 +480,7 @@ function fn_netopia_handle_hosted_return(): void
             $orderInfo = fn_get_order_info($candidateOrderId);
             if (is_array($orderInfo) && !empty($orderInfo['payment_id'])) {
                 $paymentId = is_numeric($orderInfo['payment_id']) ? (int) $orderInfo['payment_id'] : 0;
-                $processorData = fn_get_payment_method_data($paymentId);
+                $processorData = fn_netopia_get_payment_method_data($paymentId);
                 $apiKey = Arr::string(Arr::array($processorData, 'processor_params'), 'api_key');
                 if (
                     $apiKey !== ''
@@ -526,6 +576,21 @@ function fn_netopia_status_table($processor_params = []): array
 function fn_netopia_credentials($processor_params = [], $mode = 'sandbox'): array
 {
     return \Netopia\CsCart\Config\Credentials::forMode(
+        is_array($processor_params) ? Arr::stringKeys($processor_params) : [],
+        PaymentMode::fromMixed($mode),
+    );
+}
+
+/**
+ * Where the settings screen's POS signature comes from: 'typed', 'key_file'
+ * (read from the uploaded key file's name) or ''.
+ *
+ * @param mixed $processor_params
+ * @param mixed $mode 'sandbox' or 'live'
+ */
+function fn_netopia_pos_signature_source($processor_params = [], $mode = 'sandbox'): string
+{
+    return \Netopia\CsCart\Config\Credentials::posSignatureSource(
         is_array($processor_params) ? Arr::stringKeys($processor_params) : [],
         PaymentMode::fromMixed($mode),
     );
@@ -680,7 +745,7 @@ function fn_netopia_payments_change_order_status(
     }
 
     $paymentId = is_numeric($order_info_fresh['payment_id'] ?? null) ? (int) $order_info_fresh['payment_id'] : 0;
-    $processor_data = fn_get_payment_method_data($paymentId);
+    $processor_data = fn_netopia_get_payment_method_data($paymentId);
     if (empty($processor_data['processor_params'])) {
         return;
     }
@@ -734,7 +799,7 @@ function fn_netopia_generate_payment_link(int $order_id): array
     }
 
     $paymentId = is_numeric($order_info['payment_id'] ?? null) ? (int) $order_info['payment_id'] : 0;
-    $processor_data = fn_get_payment_method_data($paymentId);
+    $processor_data = fn_netopia_get_payment_method_data($paymentId);
 
     // If the order's payment method link is broken (e.g. after addon reinstall),
     // find the current active NETOPIA payment method.
@@ -747,7 +812,7 @@ function fn_netopia_generate_payment_link(int $order_id): array
             'A',
         );
         if ($activePaymentId > 0) {
-            $processor_data = fn_get_payment_method_data($activePaymentId);
+            $processor_data = fn_netopia_get_payment_method_data($activePaymentId);
         }
     }
 

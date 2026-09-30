@@ -58,17 +58,36 @@ if (empty($processor_data) || empty($order_info)) {
     return;
 }
 
-$params = Arr::array($processor_data, 'processor_params');
+// The selected mode's API key and POS signature (the signature read from the
+// key file names when it was left empty) — see Config\Credentials.
+$params = \Netopia\CsCart\Config\Credentials::applyActive(Arr::stringKeys(Arr::array($processor_data, 'processor_params')));
+$paymentMode = PaymentMode::fromMixed($params['mode'] ?? null);
 
-if (empty($params['pos_signature']) || empty($params['api_key'])) {
+$missing = \Netopia\CsCart\Config\Credentials::missing(
+    \Netopia\CsCart\Config\Credentials::forMode($params, $paymentMode),
+);
+if ($missing !== []) {
+    // Say exactly what is missing, for which mode: "API key and POS
+    // signature are required" misled an admin whose API key was filled in.
+    $missingText = implode(', ', array_map(
+        static fn (string $field): string => (string) __('netopia_missing_' . $field),
+        $missing,
+    ));
+    $reason = (string) __('netopia_not_configured_missing', [
+        '[mode]' => __('netopia_' . $paymentMode->value),
+        '[missing]' => $missingText,
+    ]);
+    Bootstrap::instance()->logger->error('NETOPIA checkout aborted: ' . $reason, [
+        'order_id' => $order_id,
+        'mode' => $paymentMode->value,
+        'missing' => $missing,
+    ]);
     $pp_response = [
         'order_status' => 'F',
-        'reason_text' => 'NETOPIA Payments is not configured. POS Signature and API Key are required.',
+        'reason_text' => $reason,
     ];
     return;
 }
-
-$paymentMode = PaymentMode::fromMixed($params['mode'] ?? null);
 
 // Pre-flight: NETOPIA signs every IPN with JWT and we verify using the
 // merchant's public key. If the key for the selected mode hasn't been

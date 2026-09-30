@@ -91,8 +91,13 @@ final class KeyInspector
     /**
      * Everything the key cards show, per mode and key type.
      *
+     * `wrong_mode` is the mode the stored file's name is for when that is not
+     * the slot's mode (a sandbox.* file in a live slot): '' when it fits.
+     * Files stored before uploads were checked (KeyFileName) can still sit in
+     * the wrong slot, and the card says so.
+     *
      * @param array<string, mixed> $params the saved processor_params
-     * @return array<string, array<string, array{slot: string, file: string, source: string, state: string, expires_at: int, expires_soon: bool, required: bool}>>
+     * @return array<string, array<string, array{slot: string, file: string, source: string, state: string, expires_at: int, expires_soon: bool, required: bool, wrong_mode: string}>>
      */
     public function overview(array $params, int $paymentId, int $now): array
     {
@@ -114,6 +119,7 @@ final class KeyInspector
                     'expires_at' => $inspected['expires_at'],
                     'expires_soon' => $inspected['expires_soon'],
                     'required' => $public,
+                    'wrong_mode' => KeyFileName::wrongMode(Arr::string($params, $slot . '_file'), $mode)->value ?? '',
                 ];
             }
         }

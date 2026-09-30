@@ -402,40 +402,38 @@ function fn_novoton_match_price_from_xml(\SimpleXMLElement $xml, ?string $room_i
 }
 
 /**
- * Return the minimum price for a room/board combination from a flat room_price XML.
- * Filters by both room_id and board_id so other boards' prices are excluded.
+ * Return the lowest price of a room/board (and package) from a room_price XML.
+ *
+ * Reads whole offers (RoomOfferRows), not the parallel //Price, //IdRoom and
+ * //Board lists: a row missing one of them used to slide every later value
+ * onto the wrong price. Pass the booked package so the price stays the one
+ * of the card the customer clicked — without it the cheapest row of ANY
+ * package wins (a "+BEACH" 795 card came back as another package's 600).
  *
  * @param \SimpleXMLElement $xml
  * @param string|null $room_id  URL-decoded room ID, or null/empty to match any
  * @param string|null $board_id Board ID, or null/empty to match any
- * @return array{price: float, room: string, board: string}|null Null when no matching room/board price is found
+ * @param string      $package  Package name, or '' to match any package
+ * @return array{price: float, room: string, board: string, package: string}|null Null when no matching offer is found
  */
-function fn_novoton_min_price_from_xml(\SimpleXMLElement $xml, ?string $room_id, ?string $board_id): ?array
+function fn_novoton_min_price_from_xml(\SimpleXMLElement $xml, ?string $room_id, ?string $board_id, string $package = ''): ?array
 {
-    $prices   = $xml->xpath('//Price');
-    $idRooms  = $xml->xpath('//IdRoom');
-    $idBoards = $xml->xpath('//IdBoard');
-    if (empty($idBoards)) {
-        $idBoards = $xml->xpath('//Board');
-    }
-    if (empty($prices) || empty($idRooms) || empty($idBoards)) {
+    $row = \Tygh\Addons\NovotonHolidays\Services\RoomOfferRows::cheapest(
+        \Tygh\Addons\NovotonHolidays\Services\RoomOfferRows::fromXml($xml),
+        $room_id,
+        $board_id,
+        $package,
+    );
+    if ($row === null) {
         return null;
     }
-    $numResults = min(count($prices), count($idRooms), count($idBoards));
-    $best = null;
-    for ($i = 0; $i < $numResults; $i++) {
-        $p = (float)((string)$prices[$i]);
-        $r = rawurldecode((string)$idRooms[$i]);
-        $b = (string)$idBoards[$i];
-        $roomMatches  = empty($room_id)  || strcasecmp($r, $room_id)  === 0;
-        $boardMatches = empty($board_id) || strcasecmp($b, $board_id) === 0;
-        if ($roomMatches && $boardMatches && $p > 0) {
-            if ($best === null || $p < $best['price']) {
-                $best = ['price' => $p, 'room' => $r, 'board' => $b];
-            }
-        }
-    }
-    return $best;
+
+    return [
+        'price'   => $row['price'],
+        'room'    => $row['room'],
+        'board'   => $row['board'],
+        'package' => $row['package'],
+    ];
 }
 
 // ============================================================================

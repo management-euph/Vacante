@@ -87,7 +87,7 @@ if ($mode === 'details') {
         $already_refunded = $refunded_str === '' ? 0.0 : IpnHandler::parseAmount($refunded_str);
         $refundable_remaining = max(0.0, $paid['value'] - $already_refunded);
 
-        $processor_data = fn_get_payment_method_data(Arr::int($order_info, 'payment_id'));
+        $processor_data = fn_netopia_get_payment_method_data(Arr::int($order_info, 'payment_id'));
         $processor_params = is_array($processor_data['processor_params'] ?? null)
             ? Arr::stringKeys($processor_data['processor_params'])
             : [];

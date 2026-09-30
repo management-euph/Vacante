@@ -88,6 +88,7 @@
 .netopia-drop.is-over { border-color:var(--np-info); background:var(--np-info-bg); }
 .netopia-drop input[type=file] { position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; }
 .netopia-drop__chosen { display:block; color:#222; font-weight:600; margin-top:4px; overflow-wrap:anywhere; }
+.netopia-drop__warn, .netopia-key__warn { display:block; color:var(--np-bad); font-weight:600; margin-top:4px; }
 .netopia-key textarea { width:100%; box-sizing:border-box; font-family:Menlo,Consolas,monospace; font-size:11px; margin-top:6px; }
 .netopia-key summary { cursor:pointer; color:var(--np-info); font-size:12px; }
 .netopia-key__note { color:var(--np-muted); font-size:12px; margin:0; }
@@ -126,7 +127,10 @@
      data-txt-hide="{__("netopia_hide")|escape:"html"}"
      data-txt-testing="{__("netopia_test_running")|escape:"html"}"
      data-txt-test-failed="{__("netopia_test_request_failed")|escape:"html"}"
-     data-txt-remove-marked="{__("netopia_key_remove_marked")|escape:"html"}">
+     data-txt-remove-marked="{__("netopia_key_remove_marked")|escape:"html"}"
+     data-txt-mode-sandbox="{__("netopia_sandbox")|escape:"html"}"
+     data-txt-mode-live="{__("netopia_live")|escape:"html"}"
+     data-txt-key-wrong-mode="{__("netopia_key_pick_wrong_mode")|escape:"html"}">
 
     <div class="netopia-tabs" role="tablist" aria-label="NETOPIA">
         <button type="button" class="netopia-tab" role="tab" data-np-tab="conn" aria-selected="true">{__("netopia_tab_connection")}</button>
@@ -178,6 +182,7 @@
                         <input type="password" name="payment_data[processor_params][{$m}_pos_signature]" id="netopia_{$m}_pos_signature" value="{$cred.pos_signature|escape:"html"}" size="40" autocomplete="off" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" />
                         <button type="button" class="btn" data-np-reveal="netopia_{$m}_pos_signature" aria-controls="netopia_{$m}_pos_signature">{__("netopia_show")}</button>
                     </div>
+                    <p class="muted description" data-np-pos-note="{$m}" {if ($processor_params|fn_netopia_pos_signature_source:$m) != "key_file"}hidden{/if}>{__("netopia_pos_signature_from_key_hint")}</p>
                     <p class="muted description">{__("netopia_`$m`_pos_signature_description")}</p>
                 </div>
             </div>
@@ -344,12 +349,16 @@
                         <span>{$k.file|escape:"html"}</span>
                         <label><input type="checkbox" name="delete_netopia_{$k.slot}" value="1" data-np-remove /> {__("netopia_delete_key_file")}</label>
                     </div>
+                    {if $k.wrong_mode}
+                        <span class="netopia-key__warn">{__("netopia_key_in_wrong_slot", ["[file_mode]" => __("netopia_`$k.wrong_mode`"), "[slot_mode]" => __("netopia_`$m`")])}</span>
+                    {/if}
                 {/if}
 
                 <label class="netopia-drop" data-np-drop>
                     <input type="file" name="netopia_{$k.slot}_file" id="netopia_{$k.slot}_file" accept=".pem,.key,.cer,.crt,.pub,.txt" />
                     {if $k.file}{__("netopia_key_drop_replace")}{else}{__("netopia_key_drop")}{/if}
                     <span class="netopia-drop__chosen" data-np-chosen hidden></span>
+                    <span class="netopia-drop__warn" data-np-wrong-mode hidden></span>
                 </label>
 
                 <p class="netopia-key__note">

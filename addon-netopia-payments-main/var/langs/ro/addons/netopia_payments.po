@@ -220,6 +220,10 @@ msgctxt "Languages::netopia_key_expires_soon"
 msgid "Expires soon"
 msgstr "Expiră curând"
 
+msgctxt "Languages::netopia_key_in_wrong_slot"
+msgid "This file is a [file_mode] key, stored in the [slot_mode] slot. Remove it and upload the [slot_mode] key."
+msgstr "Acest fișier este o cheie [file_mode], salvată în slotul [slot_mode]. Ștergeți-o și încărcați cheia [slot_mode]."
+
 msgctxt "Languages::netopia_key_invalid"
 msgid "Unreadable"
 msgstr "Nu poate fi citită"
@@ -236,6 +240,10 @@ msgctxt "Languages::netopia_key_not_set"
 msgid "Not set"
 msgstr "Nesetată"
 
+msgctxt "Languages::netopia_key_pick_wrong_mode"
+msgid "This is a [file_mode] key file: it will not be saved in the [slot_mode] slot."
+msgstr "Acesta este un fișier de cheie [file_mode]: nu va fi salvat în slotul [slot_mode]."
+
 msgctxt "Languages::netopia_key_remove_marked"
 msgid "Removed when you save"
 msgstr "Se șterge la salvare"
@@ -247,6 +255,10 @@ msgstr "Fișierul cheii a fost încărcat: [key]"
 msgctxt "Languages::netopia_key_valid_until"
 msgid "Valid until [date]"
 msgstr "Valabilă până la [date]"
+
+msgctxt "Languages::netopia_key_wrong_mode"
+msgid "[file] is a [file_mode] key file, so it was not saved in the [slot_mode] slot. Upload it in the [file_mode] slot."
+msgstr "[file] este un fișier de cheie [file_mode], așa că nu a fost salvat în slotul [slot_mode]. Încărcați-l în slotul [file_mode]."
 
 msgctxt "Languages::netopia_keys_intro_live"
 msgid "Keys for Live. The sandbox keys are kept, and shown when you switch to Sandbox."
@@ -336,9 +348,21 @@ msgctxt "Languages::netopia_max_installments_description"
 msgid "The largest number of installments the customer can choose."
 msgstr "Cel mai mare număr de rate pe care îl poate alege clientul."
 
+msgctxt "Languages::netopia_missing_api_key"
+msgid "the API key"
+msgstr "cheia API"
+
+msgctxt "Languages::netopia_missing_pos_signature"
+msgid "the POS signature"
+msgstr "semnătura POS"
+
 msgctxt "Languages::netopia_mode"
 msgid "Mode"
 msgstr "Mod"
+
+msgctxt "Languages::netopia_not_configured_missing"
+msgid "NETOPIA Payments is not fully set up for [mode] (missing: [missing]). Choose another payment method or contact the store."
+msgstr "NETOPIA Payments nu este configurat complet pentru [mode] (lipsește: [missing]). Alegeți altă metodă de plată sau contactați magazinul."
 
 msgctxt "Languages::netopia_ntp_status_1"
 msgid "New"
@@ -547,6 +571,14 @@ msgstr "Semnătură POS"
 msgctxt "Languages::netopia_pos_signature_description"
 msgid "The POS signature (XXXX-XXXX-XXXX-XXXX-XXXX) from the NETOPIA admin panel."
 msgstr "Semnătura POS (XXXX-XXXX-XXXX-XXXX-XXXX) din panoul NETOPIA."
+
+msgctxt "Languages::netopia_pos_signature_from_key"
+msgid "[mode] POS signature [signature] filled in from your key file."
+msgstr "Semnătura POS [mode] [signature] a fost completată din fișierul cheii."
+
+msgctxt "Languages::netopia_pos_signature_from_key_hint"
+msgid "Filled in from your key file name."
+msgstr "Completată din numele fișierului cheii."
 
 msgctxt "Languages::netopia_private_key_optional"
 msgid "Optional: the addon does not use the private key, so it does not stop payments."

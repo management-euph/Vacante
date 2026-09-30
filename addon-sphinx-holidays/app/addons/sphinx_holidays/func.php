@@ -319,19 +319,19 @@ function fn_sphinx_holidays_pre_place_order(&$cart, &$allow, &$product_groups): 
 }
 
 /**
- * Hook: place_order_post
- * Submit the placed order's bookings to the Sphinx API and self-heal
- * booking–order links on both paths. Body in Hooks\OrderHooks.
- *
- * @param mixed $order_id     Order id (Multi-Vendor may pass an array)
- * @param mixed $action       Unused (hook signature)
- * @param mixed $order_status Unused (hook signature)
- * @param mixed $cart         Cart array (by ref)
- * @param mixed $auth         Unused (hook signature)
+ * Hook: place_order_post — submit the order's bookings to the Sphinx API and self-heal
+ * booking–order links (body in Hooks\OrderHooks). CS-Cart 4.20 passes ($cart, $auth, $action,
+ * $issuer_id, $parent_order_id, $order_id, ...), older cores ($order_id, $action, $order_status,
+ * $cart, $auth): nine optional by-ref slots, PlaceOrderPostArgs reads either. Never throws.
  */
-function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_status, &$cart, &$auth): void
+function fn_sphinx_holidays_place_order_post(mixed &$a1 = null, mixed &$a2 = null, mixed &$a3 = null, mixed &$a4 = null, mixed &$a5 = null, mixed &$a6 = null, mixed &$a7 = null, mixed &$a8 = null, mixed &$a9 = null): void
 {
-    \Tygh\Addons\SphinxHolidays\Hooks\OrderHooks::placeOrderPost($order_id, $cart);
+    try { // inside the customer's "Place order" request, after the order row is written
+        ['order_id' => $order_id, 'cart' => $cart] = \Tygh\Addons\TravelCore\Helpers\PlaceOrderPostArgs::resolve([$a1, $a2, $a3, $a4, $a5, $a6, $a7, $a8, $a9]);
+        \Tygh\Addons\SphinxHolidays\Hooks\OrderHooks::placeOrderPost($order_id, $cart);
+    } catch (\Throwable $e) {
+        fn_log_event('general', 'runtime', ['message' => 'Sphinx place_order_post, order ' . ($order_id ?? 0) . ': ' . $e::class . ': ' . $e->getMessage()]);
+    }
 }
 
 /**

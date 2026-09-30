@@ -310,3 +310,23 @@ function fn_novoton_holidays_format_price($amount, $coefficient = 1.0, string $s
 {
     return DisplayFormatter::formatPrice($amount, $coefficient, $symbol);
 }
+
+/**
+ * An amount in the API currency (a booking's total_price), written exactly as
+ * the cart shows the same booking to the shopper.
+ *
+ * add_to_cart converts the API price to the store's primary currency for the
+ * cart line; the cart then shows it in the header currency. A price-change
+ * toast built with fn_format_price() on the raw API amount skipped the first
+ * step, so it quoted a different figure than the cart for the same stay.
+ *
+ * @param float $amount Amount in the API currency (e.g. EUR)
+ */
+function fn_novoton_holidays_format_api_amount_for_shopper(float $amount): string
+{
+    $primary = defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : 'EUR';
+
+    return \Tygh\Addons\TravelCore\Services\MoneyFormatter::forStore()->format(
+        _nvt_currency_service()->convertFromApiCurrency($amount, $primary),
+    );
+}

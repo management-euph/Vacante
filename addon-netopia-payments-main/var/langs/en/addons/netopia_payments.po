@@ -220,6 +220,10 @@ msgctxt "Languages::netopia_key_expires_soon"
 msgid "Expires soon"
 msgstr "Expires soon"
 
+msgctxt "Languages::netopia_key_in_wrong_slot"
+msgid "This file is a [file_mode] key, stored in the [slot_mode] slot. Remove it and upload the [slot_mode] key."
+msgstr "This file is a [file_mode] key, stored in the [slot_mode] slot. Remove it and upload the [slot_mode] key."
+
 msgctxt "Languages::netopia_key_invalid"
 msgid "Unreadable"
 msgstr "Unreadable"
@@ -236,6 +240,10 @@ msgctxt "Languages::netopia_key_not_set"
 msgid "Not set"
 msgstr "Not set"
 
+msgctxt "Languages::netopia_key_pick_wrong_mode"
+msgid "This is a [file_mode] key file: it will not be saved in the [slot_mode] slot."
+msgstr "This is a [file_mode] key file: it will not be saved in the [slot_mode] slot."
+
 msgctxt "Languages::netopia_key_remove_marked"
 msgid "Removed when you save"
 msgstr "Removed when you save"
@@ -247,6 +255,10 @@ msgstr "Key file uploaded: [key]"
 msgctxt "Languages::netopia_key_valid_until"
 msgid "Valid until [date]"
 msgstr "Valid until [date]"
+
+msgctxt "Languages::netopia_key_wrong_mode"
+msgid "[file] is a [file_mode] key file, so it was not saved in the [slot_mode] slot. Upload it in the [file_mode] slot."
+msgstr "[file] is a [file_mode] key file, so it was not saved in the [slot_mode] slot. Upload it in the [file_mode] slot."
 
 msgctxt "Languages::netopia_keys_intro_live"
 msgid "Keys for Live. The sandbox keys are kept, and shown when you switch to Sandbox."
@@ -336,9 +348,21 @@ msgctxt "Languages::netopia_max_installments_description"
 msgid "The largest number of installments the customer can choose."
 msgstr "The largest number of installments the customer can choose."
 
+msgctxt "Languages::netopia_missing_api_key"
+msgid "the API key"
+msgstr "the API key"
+
+msgctxt "Languages::netopia_missing_pos_signature"
+msgid "the POS signature"
+msgstr "the POS signature"
+
 msgctxt "Languages::netopia_mode"
 msgid "Mode"
 msgstr "Mode"
+
+msgctxt "Languages::netopia_not_configured_missing"
+msgid "NETOPIA Payments is not fully set up for [mode] (missing: [missing]). Choose another payment method or contact the store."
+msgstr "NETOPIA Payments is not fully set up for [mode] (missing: [missing]). Choose another payment method or contact the store."
 
 msgctxt "Languages::netopia_ntp_status_1"
 msgid "New"
@@ -547,6 +571,14 @@ msgstr "POS signature"
 msgctxt "Languages::netopia_pos_signature_description"
 msgid "The POS signature (XXXX-XXXX-XXXX-XXXX-XXXX) from the NETOPIA admin panel."
 msgstr "The POS signature (XXXX-XXXX-XXXX-XXXX-XXXX) from the NETOPIA admin panel."
+
+msgctxt "Languages::netopia_pos_signature_from_key"
+msgid "[mode] POS signature [signature] filled in from your key file."
+msgstr "[mode] POS signature [signature] filled in from your key file."
+
+msgctxt "Languages::netopia_pos_signature_from_key_hint"
+msgid "Filled in from your key file name."
+msgstr "Filled in from your key file name."
 
 msgctxt "Languages::netopia_private_key_optional"
 msgid "Optional: the addon does not use the private key, so it does not stop payments."
