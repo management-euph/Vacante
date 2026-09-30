@@ -236,6 +236,10 @@ msgctxt "Languages::netopia_key_missing"
 msgid "Missing"
 msgstr "Lipsește"
 
+msgctxt "Languages::netopia_key_moved_to_slot"
+msgid "[file] is a [file_mode] key file: it was moved from the [slot_mode] slot to the [file_mode] slot."
+msgstr "[file] este un fișier de cheie [file_mode]: a fost mutat din slotul [slot_mode] în slotul [file_mode]."
+
 msgctxt "Languages::netopia_key_not_set"
 msgid "Not set"
 msgstr "Nesetată"

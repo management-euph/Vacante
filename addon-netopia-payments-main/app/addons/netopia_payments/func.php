@@ -195,6 +195,20 @@ function fn_netopia_payments_update_payment_post(array $payment_data, int $payme
         }
     }
 
+    // Key files stored in the other mode's slot (a sandbox.* file in a live
+    // slot, saved before uploads were checked) move to their own mode's slot.
+    foreach (\Netopia\CsCart\Key\KeySlots::moves($params) as $move) {
+        $from_mode = PaymentMode::fromMixed(strtok($move['from'], '_'));
+        $to_mode = PaymentMode::fromMixed(strtok($move['to'], '_'));
+        fn_set_notification('N', __('notice'), __('netopia_key_moved_to_slot', [
+            '[file]' => htmlspecialchars($move['file'], ENT_QUOTES, 'UTF-8'),
+            '[file_mode]' => __('netopia_' . $to_mode->value),
+            '[slot_mode]' => __('netopia_' . $from_mode->value),
+        ]));
+        $updated = true;
+    }
+    $params = \Netopia\CsCart\Key\KeySlots::relocate($params);
+
     // NETOPIA's key files carry the POS signature in their names: store it for
     // a mode whose POS signature was left empty, so it never has to be typed.
     // A key uploaded now for another POS replaces the stored signature: the

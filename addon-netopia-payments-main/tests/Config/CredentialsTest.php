@@ -103,4 +103,27 @@ final class CredentialsTest extends TestCase
         self::assertSame('ApiKey_old', $resolved['api_key']);
         self::assertSame('39EG-NK6H-N6LV-IVP3-SLJC', $resolved['pos_signature']);
     }
+
+    public function testSandboxKeysStoredInTheLiveSlotsStillSetUpSandbox(): void
+    {
+        // The dev store: sandbox key files uploaded into the live slots before
+        // uploads were checked; Sandbox mode then reported "missing: POS signature".
+        $params = [
+            'mode' => 'sandbox',
+            'sandbox_api_key' => 'ApiKey_sandbox',
+            'live_public_key_file' => 'sandbox.39EG-NK6H-N6LV-IVP3-SLJC.public.cer',
+            'live_public_key' => 'PEM-PUBLIC',
+            'live_private_key_file' => 'sandbox.39EG-NK6H-N6LV-IVP3-SLJCprivate.key',
+        ];
+
+        $pair = Credentials::forMode($params, PaymentMode::Sandbox);
+        self::assertSame('39EG-NK6H-N6LV-IVP3-SLJC', $pair['pos_signature']);
+        self::assertSame([], Credentials::missing($pair));
+
+        $resolved = Credentials::applyActive($params);
+        self::assertSame('39EG-NK6H-N6LV-IVP3-SLJC', $resolved['pos_signature']);
+        self::assertSame('sandbox.39EG-NK6H-N6LV-IVP3-SLJC.public.cer', $resolved['sandbox_public_key_file']);
+        self::assertSame('PEM-PUBLIC', $resolved['sandbox_public_key'], 'the stored key moves with its file');
+        self::assertSame('', $resolved['live_public_key_file']);
+    }
 }

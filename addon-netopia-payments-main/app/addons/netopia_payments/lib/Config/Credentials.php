@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Netopia\CsCart\Config;
 
 use Netopia\CsCart\Key\KeyFileName;
+use Netopia\CsCart\Key\KeySlots;
 use Netopia\CsCart\Support\Arr;
 use Netopia\Payment2\Enum\PaymentMode;
 
@@ -25,7 +26,8 @@ use Netopia\Payment2\Enum\PaymentMode;
  *
  * NETOPIA requires the POS signature on every payment, but it never has to
  * be typed: NETOPIA's key files carry it in their names (Key\KeyFileName),
- * so an empty POS signature is taken from the mode's uploaded key file.
+ * so an empty POS signature is taken from the mode's uploaded key file —
+ * also one stored in the other mode's slot (Key\KeySlots).
  *
  * Installs from before the split have only the plain pair; forMode() then
  * falls back to it for the mode that was saved, so nothing is lost.
@@ -51,6 +53,7 @@ final class Credentials
      */
     public static function forMode(array $params, PaymentMode $mode): array
     {
+        $params = KeySlots::relocate($params);
         $posSignature = self::typed($params, $mode, 'pos_signature');
         if ($posSignature === '') {
             $posSignature = self::posSignatureFromKeyFiles($params, $mode);
@@ -126,6 +129,9 @@ final class Credentials
      */
     public static function applyActive(array $params): array
     {
+        // Key files stored in the other mode's slot move to their own first:
+        // the POS signature and the keys are then read from the right slot.
+        $params = KeySlots::relocate($params);
         $active = self::forMode($params, PaymentMode::fromMixed($params['mode'] ?? null));
         if (self::hasSplitFields($params)) {
             return array_merge($params, $active);
