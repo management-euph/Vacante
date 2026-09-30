@@ -345,14 +345,14 @@
     gap: 12px;
 }
 /* Cancellation card */
-.travel-booking-page .travel-bsidebar-cancelrow {
+:is(.travel-booking-page, .travel-ccard) .travel-bsidebar-cancelrow {
     display: flex;
     justify-content: space-between;
     gap: 12px;
     font-size: 13.5px;
     margin-bottom: 8px;
 }
-.travel-booking-page .travel-bsidebar-cancelhl {
+:is(.travel-booking-page, .travel-ccard) .travel-bsidebar-cancelhl {
     background: var(--nvt-danger-light, #fdecea);
     color: var(--nvt-danger, #c0392b);
     font-weight: 600;
@@ -360,13 +360,13 @@
     padding: 1px 4px;
 }
 /* Free until <date> — green, like the search-results card promises it. */
-.travel-booking-page .travel-bsidebar-freecancel {
+:is(.travel-booking-page, .travel-ccard) .travel-bsidebar-freecancel {
     margin-bottom: 8px;
     font-size: 13px;
     font-weight: 600;
     color: var(--nvt-success-strong, #1e7e34);
 }
-.travel-booking-page .travel-bsidebar-cancel {
+:is(.travel-booking-page, .travel-ccard) .travel-bsidebar-cancel {
     margin: 0;
     padding: 0 0 0 18px;
     font-size: 13px;
@@ -1012,198 +1012,269 @@
     }
 }
 
-/* ── Cart booking-details card (components/cart_booking_details.tpl) ────── */
-/* De-inlined from the card markup (InlineStyleRatchet): shared by both
-   providers' cart/checkout lines. */
-.travel-bcard {
-    margin-top: 15px;
-    border: 1px solid #e0e7ef;
-    border-radius: 8px;
+/* ── Cart / checkout booking card (components/cart_booking_details.tpl) ── */
+/* Shared by every provider's cart page, mini cart and checkout summary
+   lines; not scoped to .travel-booking-page. The --sidebar form (checkout
+   summary) opens with the hotel; the cart form with a small title. */
+.travel-ccard {
+    margin-top: 12px;
+    border: 1px solid var(--nvt-field-border, #e0e7ef);
+    border-radius: 14px;
     overflow: hidden;
+    background: #fff;
     font-size: 14px;
+    line-height: 1.4;
+    color: var(--nvt-text, #1f2937);
+    text-align: left;
+    /* Narrow layout below follows the card's own width (a slim sidebar on
+       a wide screen), not the viewport. */
+    container-type: inline-size;
 }
-.travel-bcard-accent {
-    height: 4px;
-    background: linear-gradient(90deg, var(--nvt-primary, #003580), #0071c2);
-}
-.travel-bcard-head {
-    padding: 16px;
-    background: #f8fafc;
-    border-bottom: 1px solid #e0e7ef;
-}
-.travel-bcard-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: #1a1a1a;
-    margin-bottom: 12px;
-}
-.travel-bcard-dates {
-    display: flex;
-    gap: 30px;
-    flex-wrap: wrap;
-}
-.travel-bcard-date-label {
-    font-size: 12px;
-    color: #666;
-    margin-bottom: 4px;
-}
-.travel-bcard-date-value {
-    font-weight: 600;
-    color: var(--nvt-primary, #003580);
-}
-.travel-bcard-date-value--plain {
-    color: #1a1a1a;
-}
-.travel-bcard-summary {
-    padding: 12px 16px;
-    background: #fff;
-    border-bottom: 1px solid #e0e7ef;
-    font-weight: 600;
-    color: #1a1a1a;
-}
-.travel-bcard-room {
-    border-bottom: 1px solid #e0e7ef;
-}
-.travel-bcard-room-head {
-    padding: 12px 16px;
-    background: #fff;
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.travel-bcard-room-name {
-    flex: 1;
-    font-weight: 600;
-    color: #1a1a1a;
-}
-.travel-bcard-room-price {
-    color: var(--nvt-primary, #003580);
-    font-weight: 600;
-    margin-left: 15px;
-    margin-right: 10px;
-    white-space: nowrap;
-}
-.travel-bcard-chevron {
-    font-size: 18px;
-    color: #666;
-}
-.travel-bcard-chevron svg {
-    transition: transform 0.3s;
-}
-.travel-bcard-chevron--open svg {
-    transform: rotate(180deg);
-}
-.travel-bcard-room-body {
-    padding: 0 16px 16px;
-    background: #fff;
-}
-.travel-bcard-room-single {
-    padding: 16px;
-    background: #fff;
-}
-.travel-bcard-room-title {
-    font-weight: 600;
-    color: #1a1a1a;
-    margin-bottom: 12px;
+.travel-ccard-icon { flex: 0 0 18px; margin-top: 1px; }
+.travel-ccard-title {
+    padding: 14px 16px 12px;
     font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
 }
-.travel-bcard-footer {
-    padding: 12px 16px;
-    background: #f8fafc;
-    border-top: 1px solid #e0e7ef;
-    text-align: center;
-}
-.travel-bcard-edit-link {
-    color: var(--nvt-info, #0071c2);
-    font-size: 13px;
-    text-decoration: none;
-}
-.travel-bcard-price-change {
+
+/* Hotel: photo, stars, name, destination */
+.travel-ccard-hotel { display: flex; gap: 14px; align-items: center; padding: 16px; }
+.travel-ccard-hotel__photo {
+    flex: 0 0 76px;
+    width: 76px;
+    height: 76px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #dfe6ee;
+    color: #5b6b7e;
     display: flex;
     align-items: center;
-    gap: 6px;
-    margin: 10px 16px;
-    padding: 8px 10px;
-    border-radius: 6px;
-    background: #fafafa;
-    border: 1px dashed #ddd;
-    font-size: 13px;
-    flex-wrap: wrap;
+    justify-content: center;
 }
-.travel-bcard-price-change__old {
-    text-decoration: line-through;
-    color: #999;
-    font-weight: 500;
+.travel-ccard-hotel__photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.travel-ccard-hotel__text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.travel-ccard-stars { font-size: 13px; letter-spacing: 1px; color: var(--nvt-stars, #f5a623); line-height: 1; }
+.travel-ccard-hotel__name { font-size: 17px; font-weight: 700; line-height: 1.25; color: #0f172a; }
+.travel-ccard-hotel__name a { color: inherit; text-decoration: none; }
+.travel-ccard-hotel__name a:hover { text-decoration: underline; }
+.travel-ccard-hotel__location { display: flex; align-items: center; gap: 4px; font-size: 13px; color: #4b5563; }
+.travel-ccard-hotel__location svg { flex: 0 0 14px; }
+
+/* Check-in → nights → check-out */
+.travel-ccard-dates {
+    margin: 0 16px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    border: 1px solid var(--nvt-field-border, #e0e7ef);
+    border-radius: 12px;
 }
-.travel-bcard-price-change__arrow {
-    color: #888;
+.travel-ccard-date { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.travel-ccard-date--end { align-items: flex-end; text-align: right; }
+.travel-ccard-date__label { font-size: 12px; color: #4b5563; }
+.travel-ccard-date__value { font-size: 15px; font-weight: 700; color: var(--nvt-primary, #003580); }
+.travel-ccard-date__weekday { font-size: 12px; color: #6b7280; }
+.travel-ccard-dates__stay { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #9aa8b8; }
+.travel-ccard-nights {
     font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--nvt-primary, #003580);
+    background: #e9eff8;
+    padding: 3px 10px;
+    border-radius: 999px;
 }
-.travel-bcard-price-change__new {
-    font-weight: 700;
-    color: #1a1a1a;
+.travel-ccard-pernight { font-size: 11px; color: #4b5563; white-space: nowrap; }
+
+/* Room, meal plan, party */
+.travel-ccard-facts { list-style: none; margin: 0; padding: 8px 16px 6px; }
+.travel-ccard-fact { display: flex; gap: 12px; align-items: center; padding: 8px 0; }
+.travel-ccard-fact__icon {
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: #f1f5fa;
+    color: var(--nvt-primary, #003580);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
-.travel-bcard-price-change__badge {
-    display: inline-block;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    padding: 2px 6px;
-    border-radius: 3px;
-    margin-left: 4px;
-}
-.travel-bcard-price-change__badge--warning {
-    background: #f0a830;
-    color: #fff;
-}
-.travel-bcard-price-change__badge--success {
-    background: #4caf50;
-    color: #fff;
-}
-.travel-bcard-line {
-    margin-bottom: 10px;
-}
-.travel-bcard-key {
-    font-size: 12px;
-    color: #666;
-    text-transform: uppercase;
-}
-.travel-bcard-key--block {
-    display: block;
-    margin-bottom: 6px;
-}
-.travel-bcard-val {
-    margin-left: 8px;
-}
-.travel-bcard-guest {
-    margin-left: 10px;
-    margin-bottom: 4px;
-}
-.travel-bcard-muted {
-    color: #666;
-}
-.travel-bcard-room-ref {
-    color: #999;
-    font-size: 11px;
-    margin-left: 5px;
-}
-.travel-bcard-holder {
-    background: var(--nvt-primary, #003580);
-    color: #fff;
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 3px;
-    margin-left: 5px;
-}
-.travel-bcard-meal {
-    background: #f0f7ff;
-    padding: 10px;
-    border-radius: 6px;
+.travel-ccard-fact__text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.travel-ccard-fact__text strong { font-weight: 600; color: #0f172a; }
+.travel-ccard-fact__text span,
+.travel-ccard-code { font-size: 12px; color: #6b7280; }
+
+/* Guests / rooms: native <details>, the chevron turns when open */
+.travel-ccard-guests,
+.travel-ccard-rooms { border-top: 1px solid var(--nvt-field-border, #e0e7ef); }
+.travel-ccard-guests { position: relative; }
+.travel-ccard-rooms .travel-ccard-disclosure + .travel-ccard-disclosure { border-top: 1px solid var(--nvt-field-border, #e0e7ef); }
+.travel-ccard-disclosure__summary {
     display: flex;
     align-items: center;
     gap: 10px;
+    min-height: 52px;
+    padding: 8px 16px;
+    cursor: pointer;
+    list-style: none;
+    color: #0f172a;
+}
+.travel-ccard-disclosure__summary::-webkit-details-marker { display: none; }
+.travel-ccard-disclosure__summary::marker { content: ""; }
+.travel-ccard-disclosure__summary:focus-visible { outline: 2px solid var(--nvt-info, #0071c2); outline-offset: -2px; }
+.travel-ccard-disclosure__summary--static { cursor: default; }
+.travel-ccard-disclosure__text { display: flex; flex-direction: column; gap: 1px; flex: 1 1 auto; min-width: 0; }
+.travel-ccard-disclosure__text strong { font-weight: 600; }
+.travel-ccard-disclosure__text span { font-size: 12px; color: #6b7280; }
+.travel-ccard-disclosure__price { font-weight: 600; white-space: nowrap; color: var(--nvt-primary, #003580); }
+.travel-ccard-chevron { flex: 0 0 18px; color: #4b5563; transition: transform 0.2s; }
+.travel-ccard-disclosure[open] > .travel-ccard-disclosure__summary .travel-ccard-chevron { transform: rotate(180deg); }
+.travel-ccard-disclosure__body { display: flex; flex-direction: column; gap: 8px; padding: 0 16px 14px; }
+/* The edit link sits in the guests row, just left of the chevron, but
+   outside the <summary> (a link inside it would toggle the row). The text
+   column keeps room for the longest label ("Modifică turiștii"). */
+.travel-ccard-guests .travel-ccard-disclosure__text { padding-right: 12em; }
+.travel-ccard-guests__edit { position: absolute; top: 0; right: 44px; height: 52px; }
+.travel-ccard-guests .travel-ccard-disclosure__summary--static + .travel-ccard-guests__edit { right: 16px; }
+.travel-ccard-edit {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--nvt-info, #0071c2);
+    text-decoration: none;
+}
+.travel-ccard-edit:hover { text-decoration: underline; }
+.travel-ccard-rooms__footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px 16px;
+    border-top: 1px solid var(--nvt-field-border, #e0e7ef);
+}
+.travel-ccard-guestlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.travel-ccard-guest { display: flex; align-items: center; gap: 10px; }
+.travel-ccard-guest__num {
+    flex: 0 0 22px;
+    height: 22px;
+    border-radius: 999px;
+    background: #f1f5fa;
+    color: var(--nvt-primary, #003580);
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.travel-ccard-guest__name { font-weight: 600; color: #0f172a; min-width: 0; overflow-wrap: anywhere; }
+.travel-ccard-guest__type { display: inline-block; margin-left: auto; font-size: 12px; color: #6b7280; white-space: nowrap; }
+.travel-ccard-guest__type::first-letter { text-transform: uppercase; }
+.travel-ccard-badge {
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--nvt-primary, #003580);
+    background: #e6edf7;
+    padding: 2px 7px;
+    border-radius: 4px;
+}
+
+/* Deposit: today / later / total, with a bar of the share paid now */
+.travel-ccard-split {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 12px 16px;
+    padding: 14px;
+    border: 1px solid var(--nvt-field-border, #e0e7ef);
+    border-radius: 12px;
+}
+.travel-ccard-split__title { font-size: 13px; font-weight: 700; color: #0f172a; }
+.travel-ccard-split__row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; color: #374151; }
+.travel-ccard-split__row > span:first-child { display: flex; align-items: center; gap: 8px; }
+.travel-ccard-split__row--now { color: #0f172a; font-weight: 600; }
+.travel-ccard-split__row--total { padding-top: 10px; border-top: 1px solid var(--nvt-field-border, #e0e7ef); font-size: 13px; color: #4b5563; }
+.travel-ccard-split__key { flex: 0 0 10px; width: 10px; height: 10px; border-radius: 3px; background: var(--nvt-primary, #003580); }
+.travel-ccard-split__key--later { background: #d5dde8; border: 1px solid #aab6c5; box-sizing: border-box; }
+.travel-ccard-split__note { font-size: 12px; color: #4b5563; }
+.travel-ccard-split__bar {
+    display: block;
+    width: 100%;
+    height: 8px;
+    border: 0;
+    border-radius: 999px;
+    overflow: hidden;
+    background: #d5dde8;
+    -webkit-appearance: none;
+    appearance: none;
+}
+.travel-ccard-split__bar::-webkit-meter-bar { height: 8px; border: 0; border-radius: 999px; background: #d5dde8; }
+.travel-ccard-split__bar::-webkit-meter-optimum-value,
+.travel-ccard-split__bar::-webkit-meter-suboptimum-value,
+.travel-ccard-split__bar::-webkit-meter-even-less-good-value { border-radius: 999px; background: var(--nvt-primary, #003580); }
+.travel-ccard-split__bar::-moz-meter-bar { border-radius: 999px; background: var(--nvt-primary, #003580); }
+.travel-ccard--balance .travel-ccard-split { margin: 0; border: 0; }
+
+/* Supplier price correction */
+.travel-ccard-pricechange {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px 16px;
+    background: #ecfdf3;
+    border-bottom: 1px solid #b7e4c7;
+    color: #14532d;
+}
+.travel-ccard-pricechange--up { background: #fff4e5; border-bottom-color: #f1d6ad; color: #7a3b00; }
+.travel-ccard-pricechange__text { display: flex; flex-direction: column; gap: 3px; font-size: 13px; }
+.travel-ccard-pricechange__text > span { color: #1f2937; }
+.travel-ccard-pricechange__old { color: #6b5640; }
+
+/* Cancellation headline + full terms */
+.travel-ccard-policy {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 4px 16px 16px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #f6f8fb;
+    color: #1f2937;
+}
+.travel-ccard-policy--free { background: #eef7f1; color: #14532d; }
+.travel-ccard-policy--partial,
+.travel-ccard-policy--full { background: #fff7ed; color: #7a3b00; }
+.travel-ccard-policy__row { display: flex; gap: 10px; align-items: flex-start; }
+.travel-ccard-policy__text { display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.travel-ccard-policy__text strong { font-weight: 600; }
+.travel-ccard-policy__text span { font-size: 12px; opacity: 0.9; }
+.travel-ccard-terms__summary {
+    display: inline-block;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: inherit;
+    text-decoration: underline;
+}
+.travel-ccard-terms__summary:focus-visible { outline: 2px solid var(--nvt-info, #0071c2); outline-offset: 2px; }
+.travel-ccard-terms__body { margin-top: 12px; padding: 12px; border-radius: 8px; background: #fff; color: #1f2937; }
+.travel-ccard-terms__body .travel-timeline { margin-bottom: 8px; }
+
+/* Checkout summary: the card opens with the hotel and the stay, so the core
+   product line above it ("Admiral Hotel", "1 x $468.75") would repeat both.
+   Only the card's own preceding siblings in its line are hidden, so no
+   theme class names are assumed. */
+:where(li, div) > :not(li, .travel-ccard):has(~ .travel-ccard--sidebar) { display: none; }
+
+@container (max-width: 360px) {
+    .travel-ccard-hotel__photo { flex-basis: 60px; width: 60px; height: 60px; }
+    .travel-ccard-dates { padding: 10px; gap: 6px; }
+    .travel-ccard-guests .travel-ccard-disclosure__text { padding-right: 0; }
+    .travel-ccard-guests__edit { position: static; height: auto; padding: 0 16px 12px; }
 }
 
 /* ── Travel Core product template (blocks/product_templates/travelcore_template.tpl) ──
@@ -1521,29 +1592,29 @@ body.travel-conditions-open {
 .travel-booking-page .travel-bsidebar-pernight { font-size: 13px; color: #4b5563; margin-top: 6px; }
 
 /* Cancellation & payment timeline (items 1, 7, 11) */
-.travel-booking-page .travel-timeline { list-style: none; margin: 2px 0 14px; padding: 0 0 0 20px; border-left: 2px solid #e5e7eb; }
-.travel-booking-page .travel-timeline__step { position: relative; padding: 0 0 14px 12px; }
-.travel-booking-page .travel-timeline__step:last-child { padding-bottom: 2px; }
-.travel-booking-page .travel-timeline__step::before {
+:is(.travel-booking-page, .travel-ccard) .travel-timeline { list-style: none; margin: 2px 0 14px; padding: 0 0 0 20px; border-left: 2px solid #e5e7eb; }
+:is(.travel-booking-page, .travel-ccard) .travel-timeline__step { position: relative; padding: 0 0 14px 12px; }
+:is(.travel-booking-page, .travel-ccard) .travel-timeline__step:last-child { padding-bottom: 2px; }
+:is(.travel-booking-page, .travel-ccard) .travel-timeline__step::before {
     content: ""; position: absolute; left: -29px; top: 3px; width: 12px; height: 12px; border-radius: 50%;
     background: #fff; border: 2px solid #cbd5e1;
 }
-.travel-booking-page .travel-timeline__step--free::before { border-color: #16a34a; }
-.travel-booking-page .travel-timeline__step--current::before { background: #f59e0b; border-color: #f59e0b; box-shadow: 0 0 0 4px #fef3c7; }
-.travel-booking-page .travel-timeline__step--current.travel-timeline__step--free::before { background: #16a34a; border-color: #16a34a; box-shadow: 0 0 0 4px #dcfce7; }
-.travel-booking-page .travel-timeline__when { display: block; font-size: 12px; color: #6b7280; }
-.travel-booking-page .travel-timeline__what { display: block; font-size: 14px; color: #1f2937; margin-top: 1px; }
-.travel-booking-page .travel-timeline__what strong { font-weight: 700; }
-.travel-booking-page .travel-timeline__step--free .travel-timeline__what { color: #15803d; font-weight: 600; }
-.travel-booking-page .travel-timeline__tag {
+:is(.travel-booking-page, .travel-ccard) .travel-timeline__step--free::before { border-color: #16a34a; }
+:is(.travel-booking-page, .travel-ccard) .travel-timeline__step--current::before { background: #f59e0b; border-color: #f59e0b; box-shadow: 0 0 0 4px #fef3c7; }
+:is(.travel-booking-page, .travel-ccard) .travel-timeline__step--current.travel-timeline__step--free::before { background: #16a34a; border-color: #16a34a; box-shadow: 0 0 0 4px #dcfce7; }
+:is(.travel-booking-page, .travel-ccard) .travel-timeline__when { display: block; font-size: 12px; color: #6b7280; }
+:is(.travel-booking-page, .travel-ccard) .travel-timeline__what { display: block; font-size: 14px; color: #1f2937; margin-top: 1px; }
+:is(.travel-booking-page, .travel-ccard) .travel-timeline__what strong { font-weight: 700; }
+:is(.travel-booking-page, .travel-ccard) .travel-timeline__step--free .travel-timeline__what { color: #15803d; font-weight: 600; }
+:is(.travel-booking-page, .travel-ccard) .travel-timeline__tag {
     display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 600; vertical-align: 1px;
     color: #92400e; background: #fef3c7; border-radius: 3px; padding: 1px 6px;
 }
-.travel-booking-page .travel-timeline__step--free .travel-timeline__tag { color: #166534; background: #dcfce7; }
-.travel-booking-page .travel-bsidebar-payment { background: #f8fafc; border: 1px solid #eef2f6; border-radius: 8px; padding: 10px 12px; }
-.travel-booking-page .travel-bsidebar-payment__title { display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 4px; }
-.travel-booking-page .travel-bsidebar-payment ul { margin: 0; padding-left: 16px; font-size: 14px; color: #1f2937; }
-.travel-booking-page .travel-bsidebar-payment li + li { margin-top: 3px; }
+:is(.travel-booking-page, .travel-ccard) .travel-timeline__step--free .travel-timeline__tag { color: #166534; background: #dcfce7; }
+:is(.travel-booking-page, .travel-ccard) .travel-bsidebar-payment { background: #f8fafc; border: 1px solid #eef2f6; border-radius: 8px; padding: 10px 12px; }
+:is(.travel-booking-page, .travel-ccard) .travel-bsidebar-payment__title { display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 4px; }
+:is(.travel-booking-page, .travel-ccard) .travel-bsidebar-payment ul { margin: 0; padding-left: 16px; font-size: 14px; color: #1f2937; }
+:is(.travel-booking-page, .travel-ccard) .travel-bsidebar-payment li + li { margin-top: 3px; }
 .travel-booking-page .travel-bcard--cancel .travel-conditions-link { display: inline-block; margin-top: 12px; font-size: 13px; }
 
 /* Guest form (items 6, 12) */
@@ -1600,10 +1671,9 @@ body.travel-conditions-open {
 }
 
 /* ── Deposit bookings: cart line, balance line, order details ──────────── */
-/* components/cart_booking_details.tpl + order_deposit_details.tpl. Not
-   scoped to .travel-booking-page: they render on cart, checkout and the
-   customer's order pages. */
-.travel-bcard-deposit,
+/* components/order_deposit_details.tpl (the cart / checkout card has its
+   own .travel-ccard-split). Not scoped to .travel-booking-page: it renders
+   on the customer's order pages. */
 .travel-order-deposit {
     display: flex;
     flex-wrap: wrap;
@@ -1621,11 +1691,9 @@ body.travel-conditions-open {
     flex-direction: column;
     align-items: flex-start;
 }
-.travel-bcard-deposit strong,
 .travel-order-deposit strong {
     color: #0f172a;
 }
-.travel-bcard-deposit__note,
 .travel-order-deposit__note {
     flex-basis: 100%;
     font-size: 12px;

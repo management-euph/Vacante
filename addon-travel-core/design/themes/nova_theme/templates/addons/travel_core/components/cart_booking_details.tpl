@@ -1,172 +1,265 @@
 {*
-    Shared cart/checkout booking-details card — the ONE template that renders
-    a travel booking's details on cart lines for BOTH providers (novoton +
-    sphinx). Ported from novoton's hooks/checkout/product_info.post.tpl and
-    made provider-neutral:
+    Booking card on cart and checkout lines — ONE template for every provider
+    (novoton, sphinx, eurosite). Every value arrives prepared by
+    fn_travel_core_cart_booking_card() (ViewModels\CartBookingCardFactory):
+    names split from supplier codes, dates in the store format, the guest
+    list, the cancellation headline and timeline from the provider's own
+    terms, the deposit split. So there is no provider branch, no arithmetic
+    and no decoding in this markup, and a detail a provider does not supply
+    arrives empty and its block is skipped.
 
-    - gated on the provider-neutral $product.extra.travel_booking flag
-      (both providers' add_to_cart set it);
-    - every field renders only when its extra exists, so a provider that
-      lacks a detail (API doesn't supply it) simply omits the line;
-    - the edit link derives its dispatch from extra.travel_provider;
-    - labels come from travel_core.* keys (self-seeded);
-    - the room-collapse toggle lives in js/addons/travel_core/
-      cart-booking-details.js (no inline JS — InlineScriptRatchet);
-    - styling lives in booking-pages.css (.travel-bcard-*) — the only
-      inline style left is the JS-toggled display state (InlineStyleRatchet
-      permits display:none).
+    Parameters:
+      product      the cart line
+      key          its cart id (edit link)
+      tcc_context  "sidebar" — checkout summary: opens with the hotel (photo,
+                   stars, destination), and booking-pages.css hides the core
+                   product name / "1 x price" line above the card, which would
+                   repeat both;
+                   "cart" (default) — cart page and mini cart, whose rows
+                   already show the product.
 
-    Usage (from travel_core's checkout hooks):
-      {include file="addons/travel_core/components/cart_booking_details.tpl" product=$product key=$key}
+    The collapsibles (guests, rooms, full terms) are native <details>: no JS.
+    Styling: booking-pages.css .travel-ccard*.
+
+    Usage (travel_core's checkout hooks):
+      {include file="addons/travel_core/components/cart_booking_details.tpl" product=$product key=$key tcc_context="sidebar"}
 *}
-{if !empty($product.extra.travel_booking)}
-{$total_adults = 0}
-{$total_children = 0}
-{$total_rooms = $product.extra.num_rooms|default:1}
-{$nights_count = $product.extra.nights|default:7}
+{$tcc = fn_travel_core_cart_booking_card($product|default:[], $key|default:'')}
+{$tcc_sidebar = ($tcc_context|default:"cart") == "sidebar"}
+{if $tcc}
+<div class="travel-ccard{if $tcc_sidebar} travel-ccard--sidebar{/if}">
 
-{if $product.extra.rooms_data}
-    {foreach from=$product.extra.rooms_data item=room}
-        {$total_adults = $total_adults+$room.adults|default:2}
-        {$total_children = $total_children+$room.children|default:0}
-    {/foreach}
-{else}
-    {$total_adults = $product.extra.adults|default:2}
-    {$total_children = $product.extra.children|default:0}
-{/if}
+    {* The pre-order verifier corrected this line's price. *}
+    {if $tcc.price_change}
+        <div class="travel-ccard-pricechange{if $tcc.price_change.up} travel-ccard-pricechange--up{/if}" role="status">
+            <svg class="travel-ccard-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16.5v.01"></path></svg>
+            <span class="travel-ccard-pricechange__text">
+                <strong>{if $tcc.price_change.up}{__("travel_core.price_updated_badge")}{else}{__("travel_core.price_dropped_badge")}{/if}</strong>
+                <span><s class="travel-ccard-pricechange__old">{$tcc.price_change.old|escape:html}</s> &rarr; <strong>{$tcc.price_change.new|escape:html}</strong></span>
+            </span>
+        </div>
+    {/if}
 
-{if $product.extra.travel_provider == 'sphinx'}
-    {$_edit_dispatch = 'sphinx_booking.edit_booking'}
-{else}
-    {$_edit_dispatch = 'novoton_booking.edit_booking'}
-{/if}
-{$_edit_booking_id = $product.extra.travel_booking_id|default:$product.extra.novoton_booking_id|default:0}
-
-<div class="travel-booking-card travel-bcard">
-
-    {* Separator line *}
-    <div class="travel-bcard-accent"></div>
-
-    {* Header: Your booking details *}
-    <div class="travel-bcard-head">
-        <div class="travel-bcard-title">{__("travel_core.your_booking_details")|default:"Your booking details"}</div>
-
-        {* Check-in / Check-out dates *}
-        <div class="travel-bcard-dates">
-            <div>
-                <div class="travel-bcard-date-label">{__("travel_core.check_in")|default:"Check-in"}</div>
-                <div class="travel-bcard-date-value">
-                    {$product.extra.check_in|default:''|date_format:$settings.Appearance.date_format|default:"%d.%m.%Y"}
-                </div>
+    {if $tcc_sidebar}
+        <div class="travel-ccard-hotel">
+            <div class="travel-ccard-hotel__photo">
+                {if $tcc.hotel.image_pair}
+                    {include file="common/image.tpl" images=$tcc.hotel.image_pair image_width=152 image_height=152 no_ids=true}
+                {else}
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="9" cy="10" r="1.6"></circle><path d="M21 16l-5-5-8 8"></path></svg>
+                {/if}
             </div>
-            <div>
-                <div class="travel-bcard-date-label">{__("travel_core.check_out")|default:"Check-out"}</div>
-                <div class="travel-bcard-date-value">
-                    {$product.extra.check_out|default:''|date_format:$settings.Appearance.date_format|default:"%d.%m.%Y"}
-                </div>
-            </div>
-            <div>
-                <div class="travel-bcard-date-label">{__("travel_core.total_stay")|default:"Total stay"}</div>
-                <div class="travel-bcard-date-value travel-bcard-date-value--plain">
-                    {$nights_count} {if $nights_count == 1}{__("travel_core.night")|default:"night"}{else}{__("travel_core.nights")|default:"nights"}{/if}
-                </div>
+            <div class="travel-ccard-hotel__text">
+                {if $tcc.hotel.stars > 0}
+                    <span class="travel-ccard-stars" role="img" aria-label="{__("travel_core.stars_rating", ["[rating]" => $tcc.hotel.stars])|escape:html}">{"★"|str_repeat:$tcc.hotel.stars}</span>
+                {/if}
+                <span class="travel-ccard-hotel__name">
+                    {if $tcc.hotel.product_id}
+                        <a href="{"products.view?product_id=`$tcc.hotel.product_id`"|fn_url}">{$tcc.hotel.name|escape:html}</a>
+                    {else}
+                        {$tcc.hotel.name|escape:html}
+                    {/if}
+                </span>
+                {if $tcc.hotel.location}
+                    <span class="travel-ccard-hotel__location">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+                        {$tcc.hotel.location|escape:html}
+                    </span>
+                {/if}
             </div>
         </div>
-    </div>
-
-    {* Room + party summary *}
-    <div class="travel-bcard-summary">
-        {$total_rooms} {if $total_rooms == 1}{__("travel_core.room")|default:"room"}{else}{__("travel_core.rooms")|default:"rooms"}{/if} {__("travel_core.for")|default:"for"} {$total_adults} {if $total_adults == 1}{__("travel_core.adult")|default:"adult"}{else}{__("travel_core.adults")|default:"adults"}{/if}{if $total_children > 0}, {$total_children} {if $total_children == 1}{__("travel_core.child")|default:"child"}{else}{__("travel_core.children")|default:"children"}{/if}{/if}
-    </div>
-
-    {* Room cards *}
-    {if $product.extra.num_rooms > 1 && $product.extra.rooms_data}
-        {* Multi-room: first expanded, rest collapsed *}
-        {foreach from=$product.extra.rooms_data item=room key=idx}
-            {$room_number = $idx+1}
-            {$is_first = ($idx == 0)}
-            {$collapse_id = "room_collapse_`$key`_`$idx`"}
-
-            <div class="travel-room-card travel-bcard-room">
-                {* Room header — clickable for collapse (handler in cart-booking-details.js) *}
-                <div class="travel-bcard-room-head" onclick="travelToggleRoomCard('{$collapse_id}')">
-                    <div class="travel-bcard-room-name">
-                        <span>{__("travel_core.room")|default:"Room"} {$room_number}: {$room.room_type_display|default:$room.room_name|default:$room.room_id}</span>
-                    </div>
-                    <span class="travel-bcard-room-price">{$room.price|default:0|number_format:0} {$smarty.const.CART_PRIMARY_CURRENCY}</span>
-                    <span id="{$collapse_id}_icon" class="travel-bcard-chevron{if $is_first} travel-bcard-chevron--open{/if}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
-                </div>
-
-                {* Room details — collapsible (display state is JS-toggled) *}
-                <div id="{$collapse_id}" class="travel-bcard-room-body" {if !$is_first}style="display: none;"{/if}>
-                    {include file="addons/travel_core/components/cart_booking_room_body.tpl"
-                        cbd_room=$room
-                        cbd_room_number=$room_number
-                        cbd_extra=$product.extra}
-                </div>
-            </div>
-        {/foreach}
     {else}
-        {* Single room — always expanded *}
-        <div class="travel-room-card travel-bcard-room-single">
-            {if $product.extra.room_type_display || $product.extra.room_name || $product.extra.room_id}
-            <div class="travel-bcard-room-title">
-                {$product.extra.room_type_display|default:$product.extra.room_name|default:$product.extra.room_id}
+        <div class="travel-ccard-title">{__("travel_core.your_booking_details")}</div>
+    {/if}
+
+    {* Check-in → nights → check-out *}
+    <div class="travel-ccard-dates">
+        <div class="travel-ccard-date">
+            <span class="travel-ccard-date__label">{__("travel_core.check_in")}</span>
+            <span class="travel-ccard-date__value">{$tcc.check_in.date|escape:html}</span>
+            {if $tcc.show_weekday && $tcc.check_in.weekday}<span class="travel-ccard-date__weekday">{$tcc.check_in.weekday|escape:html}</span>{/if}
+        </div>
+        <div class="travel-ccard-dates__stay">
+            {if $tcc.nights > 0}<span class="travel-ccard-nights">{__("travel_core.n_nights", [$tcc.nights])}</span>{/if}
+            <svg width="40" height="10" viewBox="0 0 40 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 5h37M33 1l4 4-4 4"></path></svg>
+            {if $tcc.per_night}<span class="travel-ccard-pernight">{__("travel_core.price_per_night", ["[price]" => $tcc.per_night])}</span>{/if}
+        </div>
+        <div class="travel-ccard-date travel-ccard-date--end">
+            <span class="travel-ccard-date__label">{__("travel_core.check_out")}</span>
+            <span class="travel-ccard-date__value">{$tcc.check_out.date|escape:html}</span>
+            {if $tcc.show_weekday && $tcc.check_out.weekday}<span class="travel-ccard-date__weekday">{$tcc.check_out.weekday|escape:html}</span>{/if}
+        </div>
+    </div>
+
+    {* Room, meal plan, party *}
+    <ul class="travel-ccard-facts">
+        {if $tcc.room_list || $tcc.room.name}
+            <li class="travel-ccard-fact">
+                <span class="travel-ccard-fact__icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v7"></path><path d="M3 14h18"></path><path d="M7 9V7a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v2"></path><path d="M3 18v2M21 18v2"></path></svg></span>
+                <span class="travel-ccard-fact__text">
+                    {if $tcc.room_list}
+                        <strong>{__("travel_core.n_rooms", [$tcc.rooms])}</strong>
+                        <span>{foreach from=$tcc.room_lines item="tcc_line" name="tcc_lines"}{$tcc_line.qty}&times; {$tcc_line.name|escape:html}{if !$smarty.foreach.tcc_lines.last}, {/if}{/foreach}</span>
+                    {else}
+                        <strong>{$tcc.room.name|escape:html}</strong>
+                        {if $tcc.room.code}<span class="travel-ccard-code">{$tcc.room.code|escape:html}</span>{/if}
+                    {/if}
+                </span>
+            </li>
+        {/if}
+        {if $tcc.board}
+            <li class="travel-ccard-fact">
+                <span class="travel-ccard-fact__icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10"></path><path d="M17 21V3c-2 1.5-3 4-3 7h3"></path></svg></span>
+                <span class="travel-ccard-fact__text">
+                    <strong>{$tcc.board|escape:html}</strong>
+                    <span>{__("travel_core.meal_plan")}</span>
+                </span>
+            </li>
+        {/if}
+        {if $tcc.adults > 0}
+            <li class="travel-ccard-fact">
+                <span class="travel-ccard-fact__icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"></circle><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"></path><path d="M16 5.5a3 3 0 0 1 0 5M21 20c0-2.6-1.6-4.8-4-5.6"></path></svg></span>
+                <span class="travel-ccard-fact__text">
+                    <strong>{__("travel_core.n_adults", [$tcc.adults])}{if $tcc.children > 0}, {__("travel_core.n_children", [$tcc.children])}{/if}</strong>
+                    {if $tcc.children_ages}
+                        <span>{__("travel_core.childrens_ages")}: {$tcc.children_ages|escape:html}</span>
+                    {elseif !$tcc.room_list}
+                        <span>{__("travel_core.n_rooms", [$tcc.rooms])}</span>
+                    {/if}
+                </span>
+            </li>
+        {/if}
+    </ul>
+
+    {if $tcc.room_list}
+        {* Multi-room: one collapsible row per room, the first one open. *}
+        <div class="travel-ccard-rooms">
+            {foreach from=$tcc.room_list item="tcc_room" name="tcc_rooms"}
+                <details class="travel-ccard-disclosure"{if $smarty.foreach.tcc_rooms.first} open{/if}>
+                    <summary class="travel-ccard-disclosure__summary">
+                        <span class="travel-ccard-disclosure__text">
+                            <strong>{__("travel_core.room")} {$tcc_room.number}{if $tcc_room.name} &middot; {$tcc_room.name|escape:html}{/if}</strong>
+                            <span>{__("travel_core.n_adults", [$tcc_room.adults])}{if $tcc_room.children > 0}, {__("travel_core.n_children", [$tcc_room.children])}{if $tcc_room.children_ages} ({$tcc_room.children_ages|escape:html}){/if}{/if}{if $tcc_room.board} &middot; {$tcc_room.board|escape:html}{/if}</span>
+                        </span>
+                        {if $tcc_room.price}<span class="travel-ccard-disclosure__price">{$tcc_room.price|escape:html}</span>{/if}
+                        <svg class="travel-ccard-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </summary>
+                    <div class="travel-ccard-disclosure__body">
+                        {if $tcc_room.code}<span class="travel-ccard-code">{$tcc_room.code|escape:html}</span>{/if}
+                        {include file="addons/travel_core/components/cart_booking_room_body.tpl" cbr_guests=$tcc_room.guests}
+                    </div>
+                </details>
+            {/foreach}
+            {if $tcc.edit_url}
+                <div class="travel-ccard-rooms__footer">
+                    <a class="travel-ccard-edit" href="{$tcc.edit_url|fn_url}">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3z"></path><path d="M13.5 6.5l3 3"></path></svg>
+                        {__("travel_core.edit_guests")}
+                    </a>
+                </div>
+            {/if}
+        </div>
+    {elseif $tcc.guests || $tcc.lead_guest || $tcc.edit_url}
+        {* One room: the guests folded into one row, the edit link beside it. *}
+        <div class="travel-ccard-guests">
+            {if $tcc.guests}
+                <details class="travel-ccard-disclosure">
+                    <summary class="travel-ccard-disclosure__summary">
+                        <span class="travel-ccard-disclosure__text">
+                            <strong>{__("travel_core.guests")} ({$tcc.guest_count})</strong>
+                            <span>{$tcc.lead_guest|escape:html}{if $tcc.guest_count > 1} &middot; {__("travel_core.n_more", ["[n]" => $tcc.guest_count - 1])}{/if}</span>
+                        </span>
+                        <svg class="travel-ccard-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </summary>
+                    <div class="travel-ccard-disclosure__body">
+                        {include file="addons/travel_core/components/cart_booking_room_body.tpl" cbr_guests=$tcc.guests}
+                    </div>
+                </details>
+            {elseif $tcc.lead_guest}
+                <div class="travel-ccard-disclosure__summary travel-ccard-disclosure__summary--static">
+                    <span class="travel-ccard-disclosure__text">
+                        <strong>{__("travel_core.guests")}</strong>
+                        <span>{$tcc.lead_guest|escape:html}</span>
+                    </span>
+                </div>
+            {/if}
+            {if $tcc.edit_url}
+                <a class="travel-ccard-edit travel-ccard-guests__edit" href="{$tcc.edit_url|fn_url}">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3z"></path><path d="M13.5 6.5l3 3"></path></svg>
+                    {__("travel_core.edit_guests")}
+                </a>
+            {/if}
+        </div>
+    {/if}
+
+    {* Deposit bookings (DepositCartLine): this line charges the deposit, the
+       balance is paid later from the order's pay link. *}
+    {if $tcc.deposit}
+        <div class="travel-ccard-split">
+            <span class="travel-ccard-split__title">{__("travel_core.how_you_pay")}</span>
+            <meter class="travel-ccard-split__bar" min="0" max="100" value="{$tcc.deposit.percent}" aria-hidden="true"></meter>
+            <div class="travel-ccard-split__row travel-ccard-split__row--now">
+                <span><span class="travel-ccard-split__key" aria-hidden="true"></span>{__("travel_core.split_today")} &middot; {__("travel_core.split_deposit")}</span>
+                <strong>{$tcc.deposit.deposit|escape:html}</strong>
             </div>
+            <div class="travel-ccard-split__row">
+                <span><span class="travel-ccard-split__key travel-ccard-split__key--later" aria-hidden="true"></span>{__("travel_core.split_balance")}{if $tcc.deposit.balance_due} {__("travel_core.due_by", ["[date]" => $tcc.deposit.balance_due])}{/if}</span>
+                <span>{$tcc.deposit.balance|escape:html}</span>
+            </div>
+            <div class="travel-ccard-split__row travel-ccard-split__row--total">
+                <span>{__("travel_core.split_total")}</span>
+                <span>{$tcc.deposit.full|escape:html}</span>
+            </div>
+            <span class="travel-ccard-split__note">{__("travel_core.deposit_cart_note")}</span>
+        </div>
+    {/if}
+
+    {* Cancellation headline + the full cancellation & payment timeline. *}
+    {if $tcc.cancel.state || $tcc.has_terms}
+        <div class="travel-ccard-policy{if $tcc.cancel.state} travel-ccard-policy--{$tcc.cancel.state}{/if}">
+            {if $tcc.cancel.state == "free"}
+                <div class="travel-ccard-policy__row">
+                    <svg class="travel-ccard-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M8 12.5l2.5 2.5L16 9.5"></path></svg>
+                    <span class="travel-ccard-policy__text">
+                        <strong>{__("travel_core.free_cancellation_until")} {$tcc.cancel.free_until|escape:html}</strong>
+                        {if $tcc.cancel.then}
+                            {capture assign="tcc_then"}{if $tcc.cancel.then.nights > 0}{__("travel_core.n_nights", [$tcc.cancel.then.nights])}{else}{$tcc.cancel.then.percent_label|escape:html}{/if}{if $tcc.cancel.then.amount_label} ({$tcc.cancel.then.amount_label|escape:html}){/if}{/capture}
+                            <span>{__("travel_core.cancel_then_pay", ["[amount]" => $tcc_then])}</span>
+                        {/if}
+                    </span>
+                </div>
+            {elseif $tcc.cancel.state}
+                <div class="travel-ccard-policy__row">
+                    <svg class="travel-ccard-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+                    <span class="travel-ccard-policy__text">
+                        {if $tcc.cancel.state == "full"}
+                            <strong>{__("travel_core.cancel_now_full")}</strong>
+                        {else}
+                            {capture assign="tcc_now"}{if $tcc.cancel.now.nights > 0}{__("travel_core.n_nights", [$tcc.cancel.now.nights])}{else}{$tcc.cancel.now.percent_label|escape:html}{/if}{if $tcc.cancel.now.amount_label} ({$tcc.cancel.now.amount_label|escape:html}){/if}{/capture}
+                            <strong>{__("travel_core.cancel_now_costs", ["[amount]" => $tcc_now])}</strong>
+                        {/if}
+                    </span>
+                </div>
             {/if}
-            {include file="addons/travel_core/components/cart_booking_room_body.tpl"
-                cbd_room=null
-                cbd_room_number=0
-                cbd_extra=$product.extra}
-        </div>
-    {/if}
-
-    {* Paid with a deposit (travel_core DepositCartLine): this line charges
-       the deposit; the balance is paid later from the order's pay link. *}
-    {if !empty($product.extra.travel_deposit.deposit)}
-        <div class="travel-bcard-deposit">
-            <span class="travel-bcard-deposit__item">{__("travel_core.split_total")} <strong>{include file="common/price.tpl" value=$product.extra.travel_deposit.full}</strong></span>
-            <span class="travel-bcard-deposit__item">{__("travel_core.split_deposit")} <strong>{include file="common/price.tpl" value=$product.extra.travel_deposit.deposit}</strong></span>
-            <span class="travel-bcard-deposit__item">{__("travel_core.split_balance")} <strong>{include file="common/price.tpl" value=$product.extra.travel_deposit.balance}</strong> {__("travel_core.due_by", ["[date]" => fn_travel_core_store_date($product.extra.travel_deposit.balance_due)])}</span>
-            <span class="travel-bcard-deposit__note">{__("travel_core.deposit_cart_note")}</span>
-        </div>
-    {/if}
-
-    {* Line-item price change: the pre-order verifier corrected this line —
-       cross out the old price, show the new one (both providers write
-       extra.price_before_correction on correction). *}
-    {if !empty($product.extra.price_before_correction) && $product.extra.price_before_correction != $product.extra.total_price}
-        <div class="travel-bcard-price-change">
-            <span class="travel-bcard-price-change__old">{$product.extra.price_before_correction|fn_format_price} {$smarty.const.CART_PRIMARY_CURRENCY}</span>
-            <span class="travel-bcard-price-change__arrow">&rarr;</span>
-            <span class="travel-bcard-price-change__new">{$product.extra.total_price|fn_format_price} {$smarty.const.CART_PRIMARY_CURRENCY}</span>
-            {if $product.extra.total_price > $product.extra.price_before_correction}
-                <span class="travel-bcard-price-change__badge travel-bcard-price-change__badge--warning">{__("travel_core.price_updated_badge")|default:"Price Updated"}</span>
-            {else}
-                <span class="travel-bcard-price-change__badge travel-bcard-price-change__badge--success">{__("travel_core.price_dropped_badge")|default:"Price Dropped!"}</span>
+            {if $tcc.has_terms}
+                <details class="travel-ccard-terms">
+                    <summary class="travel-ccard-terms__summary">{__("travel_core.cancel_payment_title")}</summary>
+                    <div class="travel-ccard-terms__body">
+                        {include file="addons/travel_core/components/booking_terms_timeline.tpl" tt=$tcc.terms}
+                    </div>
+                </details>
             {/if}
-        </div>
-    {/if}
-
-    {* Edit link *}
-    {if $_edit_booking_id}
-        <div class="travel-bcard-footer">
-            <a href="{"`$_edit_dispatch`?booking_id=`$_edit_booking_id`&cart_id=`$key`"|fn_url}" class="travel-bcard-edit-link">
-                {__("travel_core.edit_guest_details")|default:"Edit guest details"}
-            </a>
         </div>
     {/if}
 </div>
-
-{script src="js/addons/travel_core/cart-booking-details.js"}
 {/if}
 
 {* The balance of an earlier deposit booking (travel_balance.pay) *}
 {if !empty($product.extra.travel_balance_id)}
-<div class="travel-booking-card travel-bcard travel-bcard--balance">
-    <div class="travel-bcard-deposit">
-        <span class="travel-bcard-deposit__item"><strong>{__("travel_core.balance_payment_for", ["[order_id]" => $product.extra.parent_order_id])}</strong></span>
-        {if $product.extra.hotel_name}<span class="travel-bcard-deposit__item">{$product.extra.hotel_name|escape:html}{if $product.extra.check_in} · {fn_travel_core_store_date($product.extra.check_in)}{/if}</span>{/if}
+<div class="travel-ccard travel-ccard--balance">
+    <div class="travel-ccard-split">
+        <span class="travel-ccard-split__title">{__("travel_core.balance_payment_for", ["[order_id]" => $product.extra.parent_order_id])}</span>
+        {if $product.extra.hotel_name}<span class="travel-ccard-split__note">{$product.extra.hotel_name|escape:html}{if $product.extra.check_in} &middot; {fn_travel_core_store_date($product.extra.check_in)}{/if}</span>{/if}
     </div>
 </div>
 {/if}

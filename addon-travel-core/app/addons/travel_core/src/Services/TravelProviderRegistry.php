@@ -31,6 +31,9 @@ class TravelProviderRegistry
     /** @var array<string, array{name: string, label: string, addon: string, dispatcher: class-string<CronDispatcherInterface>, dashboard: string, anchor: string}> */
     private static array $cron = [];
 
+    /** @var array<string, callable(array<string, mixed>): array<string, mixed>> provider name => cart-line terms resolver */
+    private static array $cartTerms = [];
+
     /**
      * Register a travel provider.
      */
@@ -143,6 +146,44 @@ class TravelProviderRegistry
     public static function getHotelProductProvider(string $name): ?HotelProductProviderInterface
     {
         return self::$providers[$name]['hotel_product_provider'] ?? null;
+    }
+
+    /**
+     * Register how a provider reads the cancellation & payment terms of its
+     * own cart lines, for the cart / checkout booking card
+     * (ViewModels\CartBookingCardFactory). The resolver gets the line's extra
+     * and returns [] for lines it does not own, else
+     * {cancel_windows, payment_rows, cancel_lines, payment_lines}.
+     *
+     * @param callable(array<string, mixed>): array<string, mixed> $resolver
+     */
+    public static function setCartTermsResolver(string $name, callable $resolver): void
+    {
+        if (isset(self::$providers[$name])) {
+            self::$cartTerms[$name] = $resolver;
+        }
+    }
+
+    /**
+     * The terms of a cart line from the provider that owns it; [] when no
+     * registered provider claims it (eurosite stores none on the line).
+     *
+     * @param array<string, mixed> $extra
+     * @return array<string, mixed>
+     */
+    public static function cartTerms(array $extra): array
+    {
+        foreach (self::$cartTerms as $name => $resolver) {
+            if (!isset(self::$providers[$name])) {
+                continue;
+            }
+            $terms = $resolver($extra);
+            if ($terms !== []) {
+                return $terms;
+            }
+        }
+
+        return [];
     }
 
     /**
@@ -299,5 +340,6 @@ class TravelProviderRegistry
     {
         self::$providers = [];
         self::$cron = [];
+        self::$cartTerms = [];
     }
 }

@@ -6,6 +6,7 @@ namespace Tygh\Addons\NovotonHolidays\ViewModels;
 
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
+use Tygh\Addons\NovotonHolidays\Services\TermsFormatter;
 use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\DateHelper;
@@ -303,5 +304,32 @@ final class NovotonBookingSidebarBuilder
         }
 
         return [$windows, $installments];
+    }
+
+    /**
+     * A novoton cart line's terms for travel_core's cart / checkout booking
+     * card (hook travel_core_cart_booking_card): the quote's own XML terms
+     * the line keeps (terms_of_*_raw), normalised as for the booking page,
+     * plus the formatted lines as the prose fallback.
+     *
+     * @param array<string, mixed> $extra
+     * @return array{cancel_windows: list<array<string, mixed>>, payment_rows: list<array<string, mixed>>, cancel_lines: list<string>, payment_lines: list<string>}
+     */
+    public static function cartTerms(array $extra): array
+    {
+        [$windows, $installments] = self::terms(
+            TermsFormatter::parseCancellationTerms(
+                TypeCoerce::toString($extra['terms_of_cancellation_raw'] ?? ''),
+                TypeCoerce::toString($extra['check_in'] ?? ''),
+            ),
+            TermsFormatter::parsePaymentTerms(TypeCoerce::toString($extra['terms_of_payment_raw'] ?? '')),
+        );
+
+        return [
+            'cancel_windows' => $windows,
+            'payment_rows' => $installments,
+            'cancel_lines' => BookingSidebarFactory::termLines(TypeCoerce::toString($extra['terms_of_cancellation'] ?? '')),
+            'payment_lines' => BookingSidebarFactory::termLines(TypeCoerce::toString($extra['terms_of_payment'] ?? '')),
+        ];
     }
 }
