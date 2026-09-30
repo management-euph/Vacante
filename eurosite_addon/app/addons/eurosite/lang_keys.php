@@ -326,13 +326,9 @@ return [
         'en' => 'Please provide a valid e-mail address and phone number.',
         'ro' => 'Introduceți o adresă de e-mail validă și un număr de telefon.',
     ],
-    'eurosite.carrier_missing' => [
-        'en' => 'Booking checkout is not fully configured yet — please contact us to finish this reservation.',
-        'ro' => 'Finalizarea rezervării nu este configurată complet — contactați-ne pentru a încheia rezervarea.',
-    ],
-    'eurosite.carrier_missing_admin' => [
-        'en' => 'The hidden "Eurosite booking" product could not be created, so hotels that are not store products cannot be booked. Check Administration → Logs for the reason.',
-        'ro' => 'Produsul ascuns „Eurosite booking” nu a putut fi creat, deci hotelurile care nu sunt produse în magazin nu pot fi rezervate. Verificați motivul în Administrare → Jurnale.',
+    'eurosite.hotel_not_bookable' => [
+        'en' => 'This hotel cannot be booked online yet — please contact us to book it.',
+        'ro' => 'Acest hotel nu poate fi rezervat online încă — contactați-ne pentru a-l rezerva.',
     ],
     'eurosite.added_to_cart' => [
         'en' => 'Your stay was added to the cart — complete checkout to confirm the reservation.',

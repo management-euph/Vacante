@@ -10,11 +10,11 @@ declare(strict_types=1);
  * shared travel_core field set; the POST layout stays byte-compatible with
  * the shared guest cards.
  *
- * The cart line goes on a product chosen by product_id (BookingCartProduct):
- * the hotel product page the guest booked from, else the hotel's own product,
- * else — for a hotel that has no product — the hidden carrier product, created
- * on the spot when missing. stored_price=Y keeps the booking's price; the
- * shared cart/order hooks key on the travel_booking extra, not the product.
+ * The cart line goes on the hotel's own product, chosen by product_id
+ * (BookingCartProduct): the product page the guest booked from, else the
+ * hotel's linked product. A hotel that is not a store product cannot be
+ * booked. stored_price=Y keeps the booking's price; the shared cart/order
+ * hooks key on the travel_booking extra, not the product.
  */
 
 use Tygh\Addons\Eurosite\Services\BookingCartProduct;
@@ -167,28 +167,21 @@ if (filter_var($guestEmail, FILTER_VALIDATE_EMAIL) === false) {
     $guestEmail = '';
 }
 
-// ── The product the cart line goes on (by product_id) ──
-$bookedHotel = Container::hotels()->findByProductCode(TypeCoerce::toString($snapshot['product_code']));
-$cartProduct = BookingCartProduct::resolve(
-    TypeCoerce::toInt($snapshot['cart_product_id'] ?? 0),
-    $bookedHotel !== null ? TypeCoerce::toInt($bookedHotel['product_id'] ?? 0) : 0,
-    static fn (int $productId): string => TypeCoerce::toString(db_get_field(
-        'SELECT status FROM ?:products WHERE product_id = ?i',
-        $productId,
-    )),
-    static fn (): int => fn_eurosite_ensure_carrier_product(),
-);
-$cartProductId = $cartProduct['product_id'];
+// ── The product the cart line goes on: the hotel's own, by product_id ──
+$cartProductId = BookingCartProduct::forSnapshot(
+    $snapshot,
+    Container::hotels()->findByProductCode(TypeCoerce::toString($snapshot['product_code'])),
+)['product_id'];
 if ($cartProductId <= 0) {
-    fn_set_notification('E', __('error'), __('eurosite.carrier_missing', [
-        '[default]' => 'Booking checkout is not fully configured yet — please contact us to finish this reservation.',
+    fn_set_notification('E', __('error'), __('eurosite.hotel_not_bookable', [
+        '[default]' => 'This hotel cannot be booked online yet — please contact us to book it.',
     ]));
     fn_log_event('general', 'runtime', ['message' => sprintf(
-        'Eurosite add_to_cart: hotel %s has no product that can be bought, and the booking carrier product could not be created',
+        'Eurosite add_to_cart: hotel %s has no store product that can be bought',
         TypeCoerce::toString($snapshot['product_code']),
     )]);
 
-    return [CONTROLLER_STATUS_REDIRECT, 'eurosite_booking.booking_form?offer_key=' . $offerKey];
+    return [CONTROLLER_STATUS_REDIRECT, 'eurosite_booking.search'];
 }
 
 // ── Persist the booking (mirror dual-write inside the repository) ──

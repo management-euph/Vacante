@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 use Tygh\Addons\Eurosite\Services\BookingSidebarBuilder;
 use Tygh\Addons\Eurosite\Services\ConfigProvider;
+use Tygh\Addons\Eurosite\Services\BookingCartProduct;
 use Tygh\Addons\Eurosite\Services\Container;
 use Tygh\Addons\Eurosite\Services\OfferContextStore;
 use Tygh\Addons\Eurosite\Services\RoomOccupancy;
@@ -49,6 +50,16 @@ if ($snapshot === null) {
 $occupancy = RoomOccupancy::fromSnapshot($snapshot);
 ['adults' => $adults, 'children_ages' => $childrenAges] = RoomOccupancy::totals($occupancy);
 $hotelRow = Container::hotels()->findByProductCode(TypeCoerce::toString($snapshot['product_code']));
+
+// A booking goes on the hotel's own product (add_to_cart): say so now, not
+// after the guest has filled in the form.
+if (BookingCartProduct::forSnapshot($snapshot, $hotelRow)['product_id'] <= 0) {
+    fn_set_notification('E', __('error'), __('eurosite.hotel_not_bookable', [
+        '[default]' => 'This hotel cannot be booked online yet — please contact us to book it.',
+    ]));
+
+    return [CONTROLLER_STATUS_REDIRECT, 'eurosite_booking.search'];
+}
 
 // Cancellation fees for the sidebar card + conditions modal (best effort —
 // the card stays hidden when the API has no schedule for us).

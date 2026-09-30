@@ -7,15 +7,16 @@ namespace Tygh\Addons\Eurosite\Services;
 /**
  * Which CS-Cart product a Eurosite booking's cart line goes on — by
  * product_id, never by product code (a code is optional in CS-Cart; every
- * product has an id).
+ * product has an id). As for Sphinx and Novoton, a booking always goes on the
+ * hotel's own product; there is no stand-in product.
  *
  * In order, the first product that exists and can be bought (status A or H;
  * CS-Cart drops a disabled product from the cart):
  *  1. the product page the guest booked from (its id rides in the server-side
  *     offer snapshot, so the form cannot change it);
  *  2. the hotel's own product (eurosite_hotels.product_id), for a booking
- *     started from a destination search;
- *  3. the hidden carrier product, only for a hotel that has no product.
+ *     started from a destination search.
+ * None: the hotel is not a store product, so it cannot be booked online.
  *
  * Downstream nothing keys on the line's product_id: the order hooks and the
  * booking submission read extra.eurosite_booking_id / extra.travel_booking.
@@ -26,17 +27,14 @@ final class BookingCartProduct
 
     public const SOURCE_HOTEL = 'hotel';
 
-    public const SOURCE_CARRIER = 'carrier';
-
     public const SOURCE_NONE = 'none';
 
     /**
      * @param callable(int): string $statusOf the product's status, '' when it doesn't exist
-     * @param callable(): int $ensureCarrier the carrier's id, created when missing; 0 on failure
      *
      * @return array{product_id: int, source: string}
      */
-    public static function resolve(int $pageProductId, int $hotelProductId, callable $statusOf, callable $ensureCarrier): array
+    public static function resolve(int $pageProductId, int $hotelProductId, callable $statusOf): array
     {
         $candidates = [self::SOURCE_PAGE => $pageProductId, self::SOURCE_HOTEL => $hotelProductId];
         $checked = [];
@@ -50,14 +48,35 @@ final class BookingCartProduct
             }
         }
 
-        $carrierId = $ensureCarrier();
-
-        return $carrierId > 0
-            ? ['product_id' => $carrierId, 'source' => self::SOURCE_CARRIER]
-            : ['product_id' => 0, 'source' => self::SOURCE_NONE];
+        return ['product_id' => 0, 'source' => self::SOURCE_NONE];
     }
 
-    /** Active, or hidden (a gate-hidden hotel or the carrier): both stay in a cart. */
+    /**
+     * The product for one offer snapshot: the page it was booked from, else
+     * the hotel's own product.
+     *
+     * @param array<string, mixed> $snapshot an OfferContextStore snapshot
+     * @param array<string, mixed>|null $hotelRow the offer's eurosite_hotels row
+     *
+     * @return array{product_id: int, source: string}
+     */
+    public static function forSnapshot(array $snapshot, ?array $hotelRow): array
+    {
+        $page = $snapshot['cart_product_id'] ?? 0;
+        $hotel = $hotelRow['product_id'] ?? 0;
+
+        return self::resolve(
+            is_numeric($page) ? (int) $page : 0,
+            is_numeric($hotel) ? (int) $hotel : 0,
+            static function (int $productId): string {
+                $status = db_get_field('SELECT status FROM ?:products WHERE product_id = ?i', $productId);
+
+                return is_string($status) ? $status : '';
+            },
+        );
+    }
+
+    /** Active, or hidden (the availability gate hides a hotel): both stay in a cart. */
     public static function canBeBought(string $status): bool
     {
         return in_array($status, ['A', 'H'], true);

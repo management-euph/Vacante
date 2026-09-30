@@ -2,14 +2,6 @@
 
 <div class="travel-admin-panel">
 
-    {* ── Booking checkout: the carrier product could not be created ── *}
-    {if !$eurosite_carrier_ok}
-        <div class="alert alert-error">
-            <i class="icon-warning-sign"></i>
-            {__("eurosite.carrier_missing_admin", ["[default]" => "The hidden “Eurosite booking” product could not be created, so hotels that are not store products cannot be booked. Check Administration → Logs for the reason."])}
-        </div>
-    {/if}
-
     {* ── API status ── *}
     {if !$eurosite_is_configured}
         <div class="alert alert-warning">

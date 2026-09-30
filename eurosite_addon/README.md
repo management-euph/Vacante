@@ -17,8 +17,8 @@ service — a distinct Touroperator platform, a sibling to the existing
 > modal (live getItemFees), a guest booking form (TGender/DOB pax data),
 > and the cart→order→AddBookingRequest pipeline. The cart line goes on the
 > hotel's own product, by product_id (the product page booked from, else the
-> hotel's linked product); only a hotel with no product falls back to a hidden
-> carrier product, created on the first booking that needs it.
+> hotel's linked product), as for Sphinx and Novoton; a hotel that is not a
+> store product cannot be booked online.
 > Placeholder pages cover the Pachete/Transport/Circuite modules.
 >
 > **Known items:** (1) live search verified working end-to-end 2026-08-05
