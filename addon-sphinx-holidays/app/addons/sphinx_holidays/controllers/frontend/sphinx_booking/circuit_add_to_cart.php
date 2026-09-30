@@ -71,6 +71,8 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
     $total_price   = TypeCoerce::toFloat($customizedPricing['selling_price'] ?? $storedQuote['selling_price']);
     $basePrice     = TypeCoerce::toFloat($customizedPricing['supplier_price'] ?? $total_price);
     $priceCurrency = TypeCoerce::toString($customizedPricing['currency'] ?? ($storedQuote['currency'] !== '' ? $storedQuote['currency'] : ConfigProvider::getDefaultCurrency()));
+    // The raw price for the checkout re-check (PreOrderPriceVerifier).
+    $cartService->rememberVerifiedPrice($offer_id, $total_price);
     $total_price   = $cartService->applyCommission($total_price);
 
     if ($total_price <= 0) {
@@ -182,6 +184,9 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         'travel_booking' => true, 'sphinx_booking' => true,
         'travel_booking_id' => $booking_id, 'travel_provider' => 'sphinx',
         'booking_type' => 'circuit',
+        // What the checkout re-quote needs (PreOrderPriceVerifier): circuits have no verify endpoint.
+        'departure_id' => RequestCoerce::int($_REQUEST, 'departure_id'),
+        'service_codes' => $selected_services,
         'hotel_id' => (string) $circuit_id, 'hotel_name' => $title, 'offer_id' => $offer_id,
         'room_id' => $rooms_data[0]['room_id'], 'room_name' => $rooms_data[0]['room_name'],
         'board_id' => $transport_type, 'board_name' => ucfirst($transport_type),

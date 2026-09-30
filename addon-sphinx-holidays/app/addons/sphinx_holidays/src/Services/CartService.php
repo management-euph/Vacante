@@ -171,6 +171,23 @@ final class CartService implements CartServiceInterface
     }
 
     /**
+     * Remember the provider's raw (pre-commission) price for an offer just
+     * priced at add-to-cart, for the checkout "Silent Sync"
+     * (PreOrderPriceVerifier): the same session entry hotel add-to-cart
+     * writes, so circuit and package lines skip a second provider call while
+     * it is fresh.
+     */
+    public function rememberVerifiedPrice(string $offerId, float $rawPrice): void
+    {
+        if ($offerId === '' || $rawPrice <= 0) {
+            return;
+        }
+        $cache = TypeCoerce::toStringMap($this->session->get('sphinx_price_cache'));
+        $cache[md5($offerId)] = ['api_price_raw' => $rawPrice, 'timestamp' => time()];
+        $this->session->set('sphinx_price_cache', $cache);
+    }
+
+    /**
      * The CS-Cart product a hotel booking goes on: the hotel's own product
      * in ?:sphinx_hotels (so it is that hotel's, and a Sphinx product), and
      * buyable — active, or hidden by the availability gate. A product_id in

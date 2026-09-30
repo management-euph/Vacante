@@ -85,6 +85,8 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
     $total_price   = TypeCoerce::toFloat($customizedPricing['selling_price'] ?? $verifiedPricing['selling_price'] ?? 0);
     $basePrice     = TypeCoerce::toFloat($customizedPricing['supplier_price'] ?? $verifiedPricing['supplier_price'] ?? $total_price);
     $priceCurrency = TypeCoerce::toString($customizedPricing['currency'] ?? $verifiedPricing['currency'] ?? ConfigProvider::getDefaultCurrency());
+    // The raw price for the checkout re-check (PreOrderPriceVerifier).
+    $cartService->rememberVerifiedPrice($offer_id, $total_price);
     $total_price   = $cartService->applyCommission($total_price);
 
     if ($total_price <= 0) {
