@@ -174,15 +174,17 @@
            selected mode's pair shows; the other is kept and sent on Save. *}
         {foreach from=["sandbox","live"] item="m"}
         {$cred = $processor_params|fn_netopia_credentials:$m}
+        {* Only what the admin typed is shown in the field; a signature read from the key file name is the placeholder. *}
+        {$pos_source = $processor_params|fn_netopia_pos_signature_source:$m}
         <div class="netopia-creds netopia-creds--{$m}" data-np-creds="{$m}">
             <div class="control-group">
                 <label class="control-label" for="netopia_{$m}_pos_signature">{__("netopia_`$m`_pos_signature")}:</label>
                 <div class="controls">
                     <div class="netopia-secret">
-                        <input type="password" name="payment_data[processor_params][{$m}_pos_signature]" id="netopia_{$m}_pos_signature" value="{$cred.pos_signature|escape:"html"}" size="40" autocomplete="off" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" />
+                        <input type="password" name="payment_data[processor_params][{$m}_pos_signature]" id="netopia_{$m}_pos_signature" value="{if $pos_source == "typed"}{$cred.pos_signature|escape:"html"}{/if}" size="40" autocomplete="off" placeholder="{if $pos_source == "key_file"}{$cred.pos_signature|escape:"html"}{else}XXXX-XXXX-XXXX-XXXX-XXXX{/if}" />
                         <button type="button" class="btn" data-np-reveal="netopia_{$m}_pos_signature" aria-controls="netopia_{$m}_pos_signature">{__("netopia_show")}</button>
                     </div>
-                    <p class="muted description" data-np-pos-note="{$m}" {if ($processor_params|fn_netopia_pos_signature_source:$m) != "key_file"}hidden{/if}>{__("netopia_pos_signature_from_key_hint")}</p>
+                    <p class="muted description" data-np-pos-note="{$m}" {if $pos_source != "key_file"}hidden{/if}>{__("netopia_pos_signature_from_key_hint")}</p>
                     <p class="muted description">{__("netopia_`$m`_pos_signature_description")}</p>
                 </div>
             </div>

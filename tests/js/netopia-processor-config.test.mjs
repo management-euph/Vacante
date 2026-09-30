@@ -246,11 +246,12 @@ describe('netopia processor config', () => {
         expect($('#netopia_live_pos_signature').value).toBe('');
     });
 
-    it('fills an empty POS signature from the picked key file name', () => {
+    it('shows the picked key file\'s POS signature as a hint, never as a value', () => {
         $('#netopia_live_pos_signature').value = '';
         pick($('#f_lv'), 'live.ab12-cd34-ef56-gh78-ij90.public.cer');
         expect($('[data-np-key="live_public_key"] [data-np-wrong-mode]').hidden).toBe(true);
-        expect($('#netopia_live_pos_signature').value).toBe('AB12-CD34-EF56-GH78-IJ90');
+        expect($('#netopia_live_pos_signature').value).toBe('');
+        expect($('#netopia_live_pos_signature').placeholder).toBe('AB12-CD34-EF56-GH78-IJ90');
         expect($('[data-np-pos-note="live"]').hidden).toBe(false);
 
         // A typed signature is never overwritten.
