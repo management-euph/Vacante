@@ -5,13 +5,20 @@ declare(strict_types=1);
 /**
  * Sphinx Holidays - Pre-Order Price Verifier
  *
- * Re-verifies Sphinx hotel offer prices at checkout (pre_place_order hook).
- * If the offer is no longer available or the price has changed, applies
- * corrections or blocks the order.
+ * Re-verifies Sphinx offer prices at checkout (pre_place_order hook), per
+ * booking type — each against its own endpoint:
+ *  - hotel: verifyHotelOffer;
+ *  - package: verifyPackageOffer (customizePackage when services were chosen);
+ *  - circuit: no verify endpoint exists, so a fresh getCircuitQuote for the
+ *    same departure and guests (customizeCircuit when services were chosen).
+ * Circuit and package offers used to be sent to the HOTEL endpoint, which
+ * does not know them: the line was dropped as "unavailable", or never
+ * checked. If the offer is no longer available or the price has changed,
+ * applies corrections or blocks the order.
  *
- * "Silent Sync" optimisation (same trust model as novoton): add_to_cart
- * verifies every offer against the live API moments before checkout and
- * caches the verified raw price in the session. While that entry is
+ * "Silent Sync" optimisation (same trust model as novoton): every add-to-cart
+ * (hotel, circuit, package) prices its offer from the provider moments before
+ * checkout and caches that raw price in the session. While that entry is
  * younger than the configurable TTL (default 180 s), this verifier trusts
  * it and skips its own API round-trip, so the Place Order click doesn't
  * pay a provider HTTP call per cart line.
@@ -94,12 +101,18 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                     }
                 }
 
+                $bookingType = TypeCoerce::toString($extra['booking_type'] ?? 'hotel');
                 try {
-                    $verifyResult = TypeCoerce::toStringMap($api->verifyHotelOffer($offerId));
+                    $live = match ($bookingType) {
+                        'package' => $this->livePackagePrice($api, $offerId, $extra),
+                        'circuit' => $this->liveCircuitPrice($api, $offerId, $extra),
+                        default => $this->liveHotelPrice($api, $offerId),
+                    };
                 } catch (\Throwable $e) {
                     fn_log_event('general', 'runtime', [
                         'message' => 'Sphinx PreOrderPriceVerifier: offer verify failed',
                         'offer_id' => $offerId,
+                        'booking_type' => $bookingType,
                         'error' => $e->getMessage(),
                     ]);
                     continue;
@@ -107,15 +120,11 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 
                 // If offer is no longer available, mark for removal instead of blocking the entire order.
                 // This allows mixed-provider carts (Novoton + Sphinx) to proceed with the available items.
-                // Tolerant availability semantics (verify responses may carry an explicit
-                // `available`, a `confirmation`, or just a priced offer) — OfferAvailability.
-                if (!OfferAvailability::isVerifiedAvailable(
-                    $verifyResult === [] ? null : $verifyResult,
-                    ConfigProvider::shouldRequireImmediateAvailability(),
-                )) {
+                if ($live['unavailable']) {
                     fn_log_event('general', 'runtime', [
                         'message' => 'Sphinx PreOrderPriceVerifier: offer unavailable — marking for removal',
                         'offer_id' => $offerId,
+                        'booking_type' => $bookingType,
                         'hotel_name' => $extra['hotel_name'] ?? '',
                     ]);
 
@@ -126,9 +135,8 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                     continue;
                 }
 
-                // Shared price chain: price / selling_price / pricing.selling_price
-                $apiPriceRaw = OfferAvailability::extractPrice($verifyResult);
-                if ($apiPriceRaw <= 0) {
+                $apiPriceRaw = $live['price'];
+                if ($apiPriceRaw === null || $apiPriceRaw <= 0) {
                     continue;
                 }
             }
@@ -199,6 +207,117 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
         }
 
         return $result;
+    }
+
+    /**
+     * The hotel offer as the provider prices it now (verifyHotelOffer).
+     * Tolerant availability semantics (verify responses may carry an explicit
+     * `available`, a `confirmation`, or just a priced offer) — OfferAvailability.
+     *
+     * @return array{unavailable: bool, price: float|null} raw price, before commission
+     */
+    private function liveHotelPrice(\Tygh\Addons\SphinxHolidays\SphinxApi $api, string $offerId): array
+    {
+        $verified = TypeCoerce::toStringMap($api->verifyHotelOffer($offerId));
+        if (!OfferAvailability::isVerifiedAvailable($verified === [] ? null : $verified, ConfigProvider::shouldRequireImmediateAvailability())) {
+            return ['unavailable' => true, 'price' => null];
+        }
+
+        // Shared price chain: price / selling_price / pricing.selling_price
+        return ['unavailable' => false, 'price' => OfferAvailability::extractPrice($verified)];
+    }
+
+    /**
+     * The package offer as the provider prices it now (verifyPackageOffer),
+     * with the chosen services re-priced by customizePackage. A customize
+     * failure is ours to log, never a reason to drop the line (price: null).
+     *
+     * @param array<string, mixed> $extra the cart line's extra
+     * @return array{unavailable: bool, price: float|null} raw price, before commission
+     */
+    private function livePackagePrice(\Tygh\Addons\SphinxHolidays\SphinxApi $api, string $offerId, array $extra): array
+    {
+        $verified = TypeCoerce::toStringMap($api->verifyPackageOffer($offerId));
+        if (!OfferAvailability::isVerifiedAvailable($verified === [] ? null : $verified, ConfigProvider::shouldRequireImmediateAvailability())) {
+            return ['unavailable' => true, 'price' => null];
+        }
+
+        $services = TypeCoerce::toStringList($extra['additional_services'] ?? []);
+        if ($services === []) {
+            return ['unavailable' => false, 'price' => OfferAvailability::extractPrice($verified)];
+        }
+
+        return ['unavailable' => false, 'price' => self::customizedPrice(
+            $api->customizePackage(['offer_id' => $offerId, 'service_codes' => $services]),
+        )];
+    }
+
+    /**
+     * The circuit as the provider prices it now. Circuits have no verify
+     * endpoint (as in BookingRetryService), so this is a fresh quote for the
+     * same departure and guests: none means the departure is gone. The quote
+     * for this offer_id when the provider returns it, else the first — the
+     * one the booking form offered. Chosen services are re-priced by
+     * customizeCircuit (price: null when that fails, never a removal).
+     *
+     * @param array<string, mixed> $extra the cart line's extra
+     * @return array{unavailable: bool, price: float|null} raw price, before commission
+     */
+    private function liveCircuitPrice(\Tygh\Addons\SphinxHolidays\SphinxApi $api, string $offerId, array $extra): array
+    {
+        $services = TypeCoerce::toStringList($extra['service_codes'] ?? []);
+        if ($services !== []) {
+            $price = self::customizedPrice($api->customizeCircuit(['offer_id' => $offerId, 'service_codes' => $services]));
+            if ($price !== null) {
+                return ['unavailable' => false, 'price' => $price];
+            }
+        }
+
+        $params = [
+            'circuit_id' => TypeCoerce::toInt($extra['hotel_id'] ?? 0),
+            'departure_date' => TypeCoerce::toString($extra['check_in'] ?? ''),
+            'occupancy' => [[
+                'adults' => max(1, TypeCoerce::toInt($extra['adults'] ?? 2)),
+                'children_ages' => TypeCoerce::toIntList(array_filter(
+                    explode(',', TypeCoerce::toString($extra['children_ages'] ?? '')),
+                    static fn (string $age): bool => $age !== '',
+                )),
+            ]],
+        ];
+        $departureId = TypeCoerce::toInt($extra['departure_id'] ?? 0);
+        if ($departureId > 0) {
+            $params['departure_id'] = $departureId;
+        }
+        if ($params['circuit_id'] <= 0 || $params['departure_date'] === '') {
+            return ['unavailable' => false, 'price' => null];
+        }
+
+        $quotes = TypeCoerce::toRowList($api->getCircuitQuote($params));
+        if ($quotes === []) {
+            return ['unavailable' => true, 'price' => null];
+        }
+        $quote = $quotes[0];
+        foreach ($quotes as $candidate) {
+            if (TypeCoerce::toString($candidate['offer_id'] ?? '') === $offerId) {
+                $quote = $candidate;
+                break;
+            }
+        }
+        if ($services !== []) {
+            // The services could not be re-priced: a base quote would compare wrong.
+            return ['unavailable' => false, 'price' => null];
+        }
+
+        return ['unavailable' => false, 'price' => OfferAvailability::extractPrice($quote)];
+    }
+
+    /** The selling price from a customize answer, null when it has none. */
+    private static function customizedPrice(mixed $customized): ?float
+    {
+        $pricing = TypeCoerce::toStringMap(TypeCoerce::toStringMap($customized)['pricing'] ?? null);
+        $price = TypeCoerce::toFloat($pricing['selling_price'] ?? 0);
+
+        return $price > 0 ? $price : null;
     }
 
     /**
