@@ -1,25 +1,6 @@
 /* Eurosite Touring — provider-specific classes layered over travel_core's
    shared search-results.css (.travel-offer-card zones etc.). */
 
-.eurosite-destination-picker {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 10px;
-}
-
-.eurosite-picker-field label {
-    display: block;
-    font-size: 12px;
-    font-weight: 600;
-    margin-bottom: 3px;
-}
-
-.eurosite-picker-field select {
-    min-width: 220px;
-    padding: 8px;
-}
-
 .eurosite-notice {
     margin: 14px 0;
     padding: 12px 14px;
@@ -28,7 +9,6 @@
     border: 1px solid #d7e2ec;
 }
 
-.eurosite-notice--warning { background: #fff8e6; border-color: #f0dda2; }
 .eurosite-notice--error   { background: #fdeeee; border-color: #eec3c3; }
 
 .eurosite-hotel-group { margin: 22px 0; }
@@ -106,7 +86,6 @@
 
 @media (max-width: 640px) {
     .eurosite-hotel-image { display: none; }
-    .eurosite-picker-field select { min-width: 100%; }
 }
 
 /* ── Booking form ── */

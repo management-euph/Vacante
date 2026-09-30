@@ -18,6 +18,7 @@ declare(strict_types=1);
 use Tygh\Addons\Eurosite\Services\BookingSidebarBuilder;
 use Tygh\Addons\Eurosite\Services\ConfigProvider;
 use Tygh\Addons\Eurosite\Services\BookingCartProduct;
+use Tygh\Addons\Eurosite\Services\BookingReturnUrl;
 use Tygh\Addons\Eurosite\Services\Container;
 use Tygh\Addons\Eurosite\Services\OfferContextStore;
 use Tygh\Addons\Eurosite\Services\RoomOccupancy;
@@ -44,21 +45,23 @@ if ($snapshot === null) {
         '[default]' => 'The selected offer has expired — please search again.',
     ]));
 
-    return [CONTROLLER_STATUS_REDIRECT, 'eurosite_booking.search'];
+    // Back to the product page, which restores the guest's last search.
+    return [CONTROLLER_STATUS_REDIRECT, BookingReturnUrl::forProduct(BookingReturnUrl::requestedProductId($_REQUEST))];
 }
 
 $occupancy = RoomOccupancy::fromSnapshot($snapshot);
-['adults' => $adults, 'children_ages' => $childrenAges] = RoomOccupancy::totals($occupancy);
 $hotelRow = Container::hotels()->findByProductCode(TypeCoerce::toString($snapshot['product_code']));
 
 // A booking goes on the hotel's own product (add_to_cart): say so now, not
 // after the guest has filled in the form.
-if (BookingCartProduct::forSnapshot($snapshot, $hotelRow)['product_id'] <= 0) {
+$cartProductId = BookingCartProduct::forSnapshot($snapshot, $hotelRow)['product_id'];
+if ($cartProductId <= 0) {
     fn_set_notification('E', __('error'), __('eurosite.hotel_not_bookable', [
         '[default]' => 'This hotel cannot be booked online yet — please contact us to book it.',
     ]));
 
-    return [CONTROLLER_STATUS_REDIRECT, 'eurosite_booking.search'];
+    // No product page to return to: it is disabled or gone.
+    return [CONTROLLER_STATUS_REDIRECT, BookingReturnUrl::HOME];
 }
 
 // Cancellation fees for the sidebar card + conditions modal (best effort —
@@ -155,19 +158,9 @@ $view->assign('eurosite_gender_options', [
 // add_to_cart re-reads every fact from the snapshot.
 $view->assign('eurosite_check_in', TypeCoerce::toString($snapshot['check_in']));
 $view->assign('eurosite_offer_key', $offerKey);
-$view->assign('eurosite_back_url', 'eurosite_booking.search?' . http_build_query([
-    'country'       => $countryCode,
-    'city'          => TypeCoerce::toString($snapshot['city_code']),
-    'check_in'      => TypeCoerce::toString($snapshot['check_in']),
-    'check_out'     => TypeCoerce::toString($snapshot['check_out']),
-    'adults'        => $adults,
-    'children_ages' => implode(',', $childrenAges),
-    'rooms'         => count($occupancy),
-    'rooms_data'    => (string) json_encode(array_map(
-        static fn (array $room): array => ['adults' => $room['adults'], 'children' => count($room['children_ages']), 'childrenAges' => $room['children_ages']],
-        $occupancy,
-    )),
-]));
+// Back = the product page with this stay: its engine re-runs the search.
+$view->assign('eurosite_back_url', BookingReturnUrl::forSnapshot($snapshot, $cartProductId, $occupancy));
+$view->assign('eurosite_return_product_id', $cartProductId);
 
 $pageTitle = TypeCoerce::toString(__('eurosite.complete_booking'));
 $view->assign('page_title', $pageTitle);

@@ -14,8 +14,8 @@ namespace Tygh\Addons\Eurosite\Services;
  * CS-Cart drops a disabled product from the cart):
  *  1. the product page the guest booked from (its id rides in the server-side
  *     offer snapshot, so the form cannot change it);
- *  2. the hotel's own product (eurosite_hotels.product_id), for a booking
- *     started from a destination search.
+ *  2. the hotel's own product (eurosite_hotels.product_id), when the page's
+ *     product is disabled or gone.
  * None: the hotel is not a store product, so it cannot be booked online.
  *
  * Downstream nothing keys on the line's product_id: the order hooks and the
@@ -63,10 +63,24 @@ final class BookingCartProduct
     public static function forSnapshot(array $snapshot, ?array $hotelRow): array
     {
         $page = $snapshot['cart_product_id'] ?? 0;
+
+        return self::forHotel(is_numeric($page) ? (int) $page : 0, $hotelRow);
+    }
+
+    /**
+     * The product for a hotel, before any offer exists: the search refuses a
+     * hotel with none, as it is not a store product.
+     *
+     * @param array<string, mixed>|null $hotelRow the eurosite_hotels row
+     *
+     * @return array{product_id: int, source: string}
+     */
+    public static function forHotel(int $pageProductId, ?array $hotelRow): array
+    {
         $hotel = $hotelRow['product_id'] ?? 0;
 
         return self::resolve(
-            is_numeric($page) ? (int) $page : 0,
+            $pageProductId,
             is_numeric($hotel) ? (int) $hotel : 0,
             static function (int $productId): string {
                 $status = db_get_field('SELECT status FROM ?:products WHERE product_id = ?i', $productId);

@@ -44,7 +44,7 @@ final class BookingCartProductTest extends TestCase
     {
         self::assertSame(['product_id' => 42, 'source' => 'hotel'], self::resolve(41, 42, [41 => 'D', 42 => 'A']));
         self::assertSame(['product_id' => 42, 'source' => 'hotel'], self::resolve(41, 42, [42 => 'A']), 'deleted: no status');
-        self::assertSame(['product_id' => 42, 'source' => 'hotel'], self::resolve(0, 42, [42 => 'A']), 'destination search: no page product');
+        self::assertSame(['product_id' => 42, 'source' => 'hotel'], self::resolve(0, 42, [42 => 'A']), 'no page product');
     }
 
     public function testAHotelWithoutAProductCannotBeBooked(): void
@@ -87,13 +87,17 @@ final class BookingCartProductTest extends TestCase
 
         // The guest learns it before filling in the form, not at checkout.
         $form = (string) file_get_contents(self::ROOT . '/controllers/frontend/eurosite_booking/booking_form.php');
-        self::assertStringContainsString("if (BookingCartProduct::forSnapshot(\$snapshot, \$hotelRow)['product_id'] <= 0) {", $form);
+        self::assertStringContainsString("\$cartProductId = BookingCartProduct::forSnapshot(\$snapshot, \$hotelRow)['product_id'];", $form);
 
         // search.php keeps the page's product_id only when it is that hotel's product.
         $search = (string) file_get_contents(self::ROOT . '/controllers/frontend/eurosite_booking/search.php');
         self::assertStringContainsString("\$pageProductId = RequestCoerce::int(\$_REQUEST, 'product_id');", $search);
         self::assertStringContainsString('Container::hotels()->findByProductId($pageProductId)', $search);
         self::assertStringContainsString('], $cartProductIds);', $search);
+
+        // Only a hotel that is a store product has a search page at all.
+        self::assertStringContainsString('$cartProductId = BookingCartProduct::forHotel($pageProductId, $hotelRow)', $search);
+        self::assertStringContainsString("return [CONTROLLER_STATUS_NO_PAGE];", $search);
 
         // No hidden EUROSITE-BOOKING product anywhere: not created, not looked up.
         foreach ([
@@ -106,6 +110,64 @@ final class BookingCartProductTest extends TestCase
             self::assertStringNotContainsString('EUROSITE-BOOKING', $src, $rel);
             self::assertStringNotContainsString('carrier', $src, $rel);
         }
+    }
+
+    public function testTheCartDroppingTheLineFailsTheBookingAndSaysSo(): void
+    {
+        $cart = (string) file_get_contents(self::ROOT . '/controllers/frontend/eurosite_booking/add_to_cart.php');
+        $calc = (int) strpos($cart, 'fn_calculate_cart_content($cart, $auth);');
+        $check = (int) strpos($cart, 'if (!isset($cart[\'products\'][$cartId])) {');
+
+        self::assertGreaterThan(0, $calc);
+        self::assertGreaterThan($calc, $check, 'checked after CS-Cart recalculated the cart');
+        $branch = substr($cart, $check, (int) strpos($cart, 'fn_save_cart_content($cart, $userId);', $check + 1) - $check + 600);
+        self::assertStringContainsString("'status'       => TravelConstants::STATUS_FAILED,", $branch);
+        self::assertStringContainsString("__('eurosite.cart_line_dropped'", $branch);
+        self::assertStringContainsString('BookingReturnUrl::forSnapshot($snapshot, $cartProductId)', $branch);
+        self::assertLessThan(
+            (int) strpos($cart, "__('eurosite.added_to_cart'"),
+            $check,
+            'no "added to the cart" notice for a dropped line',
+        );
+    }
+
+    public function testNoStepSendsTheGuestToAnEmptySearchPage(): void
+    {
+        foreach (['add_to_cart.php', 'booking_form.php'] as $file) {
+            $src = (string) file_get_contents(self::ROOT . '/controllers/frontend/eurosite_booking/' . $file);
+            self::assertStringNotContainsString("'eurosite_booking.search", $src, $file);
+            self::assertStringContainsString('BookingReturnUrl::', $src, $file);
+        }
+        $form = (string) file_get_contents(self::ROOT . '/controllers/frontend/eurosite_booking/booking_form.php');
+        self::assertStringContainsString("\$view->assign('eurosite_back_url', BookingReturnUrl::forSnapshot(", $form);
+    }
+
+    public function testThereIsNoDestinationSearchLeft(): void
+    {
+        $search = (string) file_get_contents(self::ROOT . '/controllers/frontend/eurosite_booking/search.php');
+        self::assertStringNotContainsString('eurosite_destinations', $search);
+        self::assertStringNotContainsString("RequestCoerce::string(\$_REQUEST, 'country')", $search);
+
+        $themes = self::ROOT . '/../../../design/themes/responsive/templates/addons/eurosite';
+        $tpl = (string) file_get_contents($themes . '/views/eurosite_booking/search.tpl');
+        self::assertStringNotContainsString('eurosite-country', $tpl);
+        self::assertStringNotContainsString('search-form.js', $tpl);
+        self::assertStringContainsString('&return_product_id=`$eurosite_return_product_id`', $tpl);
+        self::assertFileDoesNotExist(self::ROOT . '/../../../js/addons/eurosite/search-form.js');
+        self::assertFileDoesNotExist($themes . '/components/coming_soon.tpl');
+
+        $router = (string) file_get_contents(self::ROOT . '/controllers/frontend/eurosite_booking.php');
+        foreach (['packages', 'transport', 'circuits'] as $mode) {
+            self::assertStringNotContainsString("'{$mode}'", $router, $mode);
+            self::assertFileDoesNotExist(self::ROOT . "/controllers/frontend/eurosite_booking/{$mode}.php");
+        }
+
+        // No menu is seeded any more; the one older versions seeded is removed once.
+        self::assertStringNotContainsString('fn_eurosite_post_install', (string) file_get_contents(self::ROOT . '/addon.xml'));
+        $install = (string) file_get_contents(self::ROOT . '/functions/install.php');
+        self::assertStringNotContainsString('INSERT INTO ?:static_data', $install);
+        self::assertStringContainsString("fn_set_storage_data('eurosite_menu_removed', 'Y');", $install);
+        self::assertStringContainsString('fn_eurosite_remove_seeded_menu_once();', (string) file_get_contents(self::ROOT . '/func.php'));
     }
 
     private static function offer(string $code, string $variant): HotelOffer

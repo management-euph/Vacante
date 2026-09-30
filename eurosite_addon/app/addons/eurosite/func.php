@@ -41,6 +41,7 @@ function fn_eurosite_table_prefix(): string
 function fn_eurosite_ensure_schema(): void
 {
     \Tygh\Addons\Eurosite\Install\SchemaMigrator::ensure(fn_eurosite_table_prefix());
+    fn_eurosite_remove_seeded_menu_once();
 }
 
 /**

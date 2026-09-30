@@ -9,13 +9,10 @@ declare(strict_types=1);
  * routing truth; unknown modes 404 via CS-Cart's default handling.
  *
  * Modes:
- *   search       — destination-driven hotel search (Cazari individuale)
+ *   search       — a hotel product page's live price search (hotel_id)
  *   offer_terms  — AJAX JSON: cancellation fees + payment terms for an offer
  *   booking_form — guest booking form for a snapshotted offer
  *   add_to_cart  — persist booking + cart line (POST)
- *   packages     — Pachete Touroperator (placeholder)
- *   transport    — Transport Touroperator (placeholder)
- *   circuits     — Circuite Touroperator (placeholder)
  */
 
 if (!defined('BOOTSTRAP')) {
@@ -27,9 +24,6 @@ $allowed_modes = [
     'offer_terms'  => 'offer_terms.php',
     'booking_form' => 'booking_form.php',
     'add_to_cart'  => 'add_to_cart.php',
-    'packages'    => 'packages.php',
-    'transport'   => 'transport.php',
-    'circuits'    => 'circuits.php',
 ];
 
 $mode_name = is_string($mode ?? null) ? $mode : '';

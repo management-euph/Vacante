@@ -255,17 +255,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         return [CONTROLLER_STATUS_REDIRECT, 'eurosite.manage'];
     }
 
-    if ($mode === 'seed_menu') {
-        $created = function_exists('fn_eurosite_seed_storefront_menu') ? fn_eurosite_seed_storefront_menu() : 0;
-        if ($created > 0) {
-            fn_set_notification('N', __('notice'), "Storefront menu seeded ({$created} items). Review it under Design > Menus.");
-        } else {
-            fn_set_notification('W', __('warning'), 'Storefront menu items already exist (or seeding is unsupported on this build) — manage them under Design > Menus.');
-        }
-
-        return [CONTROLLER_STATUS_REDIRECT, 'eurosite.manage'];
-    }
-
     if ($mode === 'test_connection') {
         try {
             $rooms = Container::getApi()->getRoomTypes();

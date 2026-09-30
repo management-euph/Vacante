@@ -393,15 +393,11 @@ Diferența de 70% cu 21 de zile înainte de check-in.</default_value>
         <item for="uninstall">DELETE FROM ?:language_values WHERE name LIKE 'Addons::%::eurosite'</item>
         <item for="uninstall">DELETE FROM ?:language_values WHERE name LIKE 'Settings%::eurosite::%'</item>
         <item for="uninstall">DELETE FROM ?:language_values WHERE name LIKE 'eurosite.%'</item>
-        <!-- Remove the seeded storefront menu items (parent 'eurosite' + the
-             four eurosite_booking.* children) and their descriptions. -->
+        <!-- Remove the storefront menu items older versions seeded (parent
+             'eurosite' + four eurosite_booking.* children) and their descriptions. -->
         <item for="uninstall">DELETE sdd FROM ?:static_data_descriptions sdd JOIN ?:static_data sd ON sd.param_id = sdd.param_id WHERE sd.section = 'A' AND (sd.param LIKE 'index.php?dispatch=eurosite_booking%' OR sd.param = 'eurosite')</item>
         <item for="uninstall">DELETE FROM ?:static_data WHERE section = 'A' AND (param LIKE 'index.php?dispatch=eurosite_booking%' OR param = 'eurosite')</item>
     </queries>
-
-    <functions>
-        <item for="install">fn_eurosite_post_install</item>
-    </functions>
 
     <!-- No <uninstall><remove_files>: none of the sibling addons declare one,
          and in the dev store app/addons/eurosite is a SYMLINK into the repo

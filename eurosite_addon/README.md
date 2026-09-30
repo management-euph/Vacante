@@ -12,7 +12,7 @@ service — a distinct Touroperator platform, a sibling to the existing
 > persistence for all six static catalogs + cron sync (CLI + HTTP), a
 > sphinx-style destination whitelist, an admin dashboard, the unified
 > travel_bookings grid integration (mirror dual-write, status callbacks,
-> cancel/refresh-fees actions), a destination-driven storefront search with
+> cancel/refresh-fees actions), live prices on each hotel's product page via
 > the shared travel_core booking engine, the "Condiții de Anulare și Plată"
 > modal (live getItemFees), a guest booking form (TGender/DOB pax data),
 > and the cart→order→AddBookingRequest pipeline. The cart line goes on the
@@ -174,7 +174,16 @@ ID]* › country › destination, price converted to the store currency. Set
 **CS-Cart category ID for Eurosite hotels** (a category dropdown, like
 Sphinx's) in the add-on settings first: until it is set, no product is
 created. The product page gets Travel Core's booking form, which
-searches `eurosite_booking.search` with the hotel's code (`hotel_id`).
+searches `eurosite_booking.search` with the hotel's code (`hotel_id`) and
+shows the live offers inline.
+
+Hotels are static data in the store (synced within the whitelist); prices and
+availability are live. Guests only see hotels that are store products: there
+is no destination search, and `eurosite_booking.search` without a hotel that
+is a buyable product is a 404. A refused step (offer expired, stop sale,
+child ages changed, the cart would not take the line) sends the guest back
+to the product page with their stay, where the search runs again. If the
+cart drops the line, the booking is marked failed.
 
 **Eurosite → SEO Templates** (`eurosite.seo_templates`) sets each product's
 name, page title, meta description, keywords, URL and (optionally) full

@@ -1,5 +1,5 @@
 {*
- * Eurosite Touring — search results (Cazari individuale).
+ * Eurosite Touring — a hotel's live offers (its product page's search).
  *
  * Structure contract (travel_core shared search UI):
  *   .travel-search-results-page > .travel-search-form-wrapper >
@@ -8,10 +8,9 @@
  * the #info-modal shell lives INSIDE it and search-results.js re-arms via
  * delegated handlers.
  *
- * Destination picking: eurosite search is country/city-driven (no CS-Cart
- * hotel products). The selects write {country, city} into the engine
- * mount's data-extra-params (search-form.js) — the additive travel_core
- * engine contract.
+ * One hotel only: the product page's booking engine fetches this page with
+ * the hotel's code and product (hotel_id, product_id) and shows its results
+ * inline; there is no destination search.
  *}
 
 {include file="addons/travel_core/components/travel_i18n.tpl"}
@@ -19,35 +18,6 @@
 <div class="travel-search-results-page eurosite-search-results-page">
 
     <div class="travel-search-form-wrapper eurosite-search-form-wrapper">
-        <div class="eurosite-destination-picker">
-            <div class="eurosite-picker-field">
-                <label for="eurosite-country">{__("eurosite.country", ["[default]" => "Country"])}</label>
-                <select id="eurosite-country">
-                    <option value="">{__("eurosite.pick_country", ["[default]" => "— country —"])}</option>
-                    {foreach from=$eurosite_destinations item=dest}
-                        <option value="{$dest.code}" {if $dest.code == $eurosite_params.country}selected{/if}>{$dest.name|escape:html}</option>
-                    {/foreach}
-                </select>
-            </div>
-            <div class="eurosite-picker-field">
-                <label for="eurosite-city">{__("eurosite.city", ["[default]" => "City / resort"])}</label>
-                <select id="eurosite-city">
-                    <option value="">{__("eurosite.pick_city", ["[default]" => "— city —"])}</option>
-                    {foreach from=$eurosite_destinations item=dest}
-                        {foreach from=$dest.cities item=city}
-                            <option value="{$city.code}" data-country="{$dest.code}"
-                                    {if $city.code == $eurosite_params.city}selected{/if}
-                                    {if $dest.code != $eurosite_params.country}hidden{/if}>{$city.name|escape:html}</option>
-                        {/foreach}
-                    {/foreach}
-                </select>
-            </div>
-        </div>
-        {if !$eurosite_destinations}
-            <div class="eurosite-notice eurosite-notice--warning">
-                {__("eurosite.no_destinations_configured", ["[default]" => "No destinations are enabled yet. Please check back soon."])}
-            </div>
-        {/if}
         {$booking_engine_html nofilter}
     </div>
 
@@ -126,7 +96,7 @@
                         </div>
                         {if $offer.bookable}
                         <a class="ty-btn ty-btn__primary travel-offer-book-btn"
-                           href="{"eurosite_booking.booking_form?offer_key=`$offer.key`"|fn_url}">
+                           href="{"eurosite_booking.booking_form?offer_key=`$offer.key`&return_product_id=`$eurosite_return_product_id`"|fn_url}">
                             {__("eurosite.book_now", ["[default]" => "Rezervă"])}
                         </a>
                         {/if}
@@ -147,5 +117,4 @@
 
 </div>
 
-{script src="js/addons/eurosite/search-form.js"}
 {script src="js/addons/eurosite/search-results.js"}

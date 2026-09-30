@@ -159,12 +159,6 @@
             <i class="icon-refresh"></i> {__("eurosite.sync_full", ["[default]" => "Run full sync"])}
         </button>
     </form>
-    <form action="{""|fn_url}" method="post" style="display:inline;">
-        <input type="hidden" name="dispatch" value="eurosite.seed_menu" />
-        <button type="submit" class="btn">
-            <i class="icon-list"></i> {__("eurosite.seed_menu", ["[default]" => "Seed storefront menu"])}
-        </button>
-    </form>
 
     {* ── Destinations: what we sell, per country (Travel Core's shared card) ── *}
     {if $eurosite_dest_card}
