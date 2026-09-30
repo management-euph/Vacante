@@ -35,6 +35,7 @@ final class SchemaMigrator
             return;
         }
         self::$done = true;
+        RemovedBlocksCleanup::runOnce();
 
         // table (unprefixed) => column => ADD COLUMN definition
         $columns = [

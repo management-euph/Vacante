@@ -118,7 +118,6 @@ final class SphinxCacheServiceTest extends TestCase
             'controllers/frontend/sphinx_booking/search.php',
             'controllers/frontend/sphinx_booking/search_poll.php',
             'controllers/frontend/sphinx_booking/package_search.php',
-            'src/Services/CacheEndpointService.php',
         ] as $rel) {
             $src = (string) file_get_contents($root . '/' . $rel);
             foreach (['get', 'set', 'delete', 'cleanup'] as $method) {

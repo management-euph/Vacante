@@ -13,7 +13,7 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  * Executes the complete sync pipeline:
  *   destinations → hotels → assign_boards → package_routes → circuits →
  *   experiences → order_status → add_products → update_products →
- *   sync_images → process_image_queue → cache_refresh → cleanup
+ *   sync_images → process_image_queue → cleanup
  *
  * Note: discover_boards is excluded — it uses live API search per destination
  * and should run on its own cron schedule (mode=discover_boards).
@@ -40,8 +40,7 @@ class FullSyncCommand extends AbstractSyncCommand
      * (slow, ~15s each) and should run on its own cron schedule with batch resume.
      *
      * assign_boards runs after hotels to assign already-discovered boards as
-     * CS-Cart product features. add_products runs before cache_refresh so
-     * newly created products are included in cache rebuilds.
+     * CS-Cart product features.
      * update_products syncs changed hotel data to existing CS-Cart products.
      * sync_images populates the image queue from hotel DB records; the very
      * next step, process_image_queue, downloads and attaches those images so a
@@ -59,7 +58,6 @@ class FullSyncCommand extends AbstractSyncCommand
         'update_products',
         'sync_images',
         'process_image_queue',
-        'cache_refresh',
         'cleanup',
     ];
 

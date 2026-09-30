@@ -34,7 +34,6 @@ final class InlineStyleRatchetTest extends TestCase
         'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/hooks/orders/details.post.tpl' => 7,
         'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/hooks/orders/order_product_info.post.tpl' => 1,
         'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/hooks/orders/product_info.post.tpl' => 14,
-        'addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/blocks/best_deals.tpl' => 3,
         'addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/blocks/package_search.tpl' => 19,
         'addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/hooks/orders/details.post.tpl' => 7,
         'addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/hooks/orders/order_product_info.post.tpl' => 1,

@@ -88,7 +88,6 @@ final class CircuitVerticalTest extends TestCase
     public function testStorefrontEntryPointsExist(): void
     {
         $blocks = self::read('schemas/block_manager/blocks.post.php');
-        self::assertStringContainsString("'circuits' => 'sphinx_deals_circuits'", $blocks);
         self::assertStringContainsString("\$schema['sphinx_package_search']", $blocks);
 
         // The package form posts the two params package_search requires and
@@ -99,16 +98,13 @@ final class CircuitVerticalTest extends TestCase
         self::assertStringContainsString('name="departure_date" required', $pkgTpl);
         self::assertStringContainsString('type=package_routes', $pkgTpl);
 
-        // cache_deals serves both local-data types (no provider API calls).
+        // cache_deals serves only the package form's route options now (local
+        // data, no provider API call): the Best Deals block it also fed is gone.
         $cacheDeals = self::read('controllers/frontend/sphinx_booking/cache_deals.php');
         self::assertStringContainsString("'package_routes'", $cacheDeals);
-        self::assertStringContainsString("'circuits'", $cacheDeals);
-        self::assertStringContainsString('findSellable', $cacheDeals);
         self::assertStringContainsString('getRouteOptions', $cacheDeals);
-
-        // Circuit deal cards deep-link to their product page.
-        $bestDeals = (string) file_get_contents(self::designRoot() . '/blocks/best_deals.tpl');
-        self::assertStringContainsString('deal.url', $bestDeals);
+        self::assertStringNotContainsString('CacheEndpointService', $cacheDeals);
+        self::assertStringNotContainsString('findSellable', $cacheDeals);
     }
 
     public function testRouteOptionsComeFromTheSyncedCache(): void

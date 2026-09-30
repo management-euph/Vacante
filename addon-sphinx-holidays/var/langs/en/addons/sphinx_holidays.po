@@ -304,38 +304,6 @@ msgctxt "SettingsTooltips::sphinx_holidays::seo_full_description"
 msgid "Optional template to wrap or replace the API description. Leave empty to use the raw API description as-is."
 msgstr "Optional template to wrap or replace the API description. Leave empty to use the raw API description as-is."
 
-msgctxt "Languages::block_sphinx_booking_engine"
-msgid "Sphinx: Booking Form"
-msgstr "Sphinx: Booking Form"
-
-msgctxt "Languages::block_sphinx_best_deals"
-msgid "Sphinx: Best Deals"
-msgstr "Sphinx: Best Deals"
-
-msgctxt "Languages::deals_type"
-msgid "Deals type"
-msgstr "Deals type"
-
-msgctxt "Languages::deals_limit"
-msgid "Number of deals"
-msgstr "Number of deals"
-
-msgctxt "Languages::destination_id"
-msgid "Destination ID (0 = all destinations)"
-msgstr "Destination ID (0 = all destinations)"
-
-msgctxt "Languages::sphinx_deals_hotels"
-msgid "Hotels"
-msgstr "Hotels"
-
-msgctxt "Languages::sphinx_deals_packages"
-msgid "Packages"
-msgstr "Packages"
-
-msgctxt "Languages::sphinx_deals_circuits"
-msgid "Circuits"
-msgstr "Circuits"
-
 msgctxt "Languages::block_sphinx_package_search"
 msgid "Sphinx: Package Search"
 msgstr "Sphinx: Package Search"
@@ -1180,10 +1148,6 @@ msgctxt "Languages::sphinx_holidays.invalid_offer"
 msgid "Invalid offer selected."
 msgstr "Invalid offer selected."
 
-msgctxt "Languages::sphinx_holidays.loading_deals"
-msgid "Loading deals..."
-msgstr "Loading deals..."
-
 msgctxt "Languages::sphinx_holidays.mandatory"
 msgid "Mandatory"
 msgstr "Mandatory"
@@ -1203,10 +1167,6 @@ msgstr "No quotes available for this circuit. Please try different dates."
 msgctxt "Languages::sphinx_holidays.no_circuits_found"
 msgid "No circuits found. Please try different filters."
 msgstr "No circuits found. Please try different filters."
-
-msgctxt "Languages::sphinx_holidays.no_deals_available"
-msgid "No deals available at this time."
-msgstr "No deals available at this time."
 
 msgctxt "Languages::sphinx_holidays.no_experience_quotes"
 msgid "No quotes available for this experience. Please try a different date."

@@ -614,10 +614,6 @@ return [
         'en' => 'Invalid offer selected.',
         'ro' => 'Ofertă selectată invalidă.',
     ],
-    'sphinx_holidays.loading_deals' => [
-        'en' => 'Loading deals...',
-        'ro' => 'Se încarcă ofertele...',
-    ],
     'sphinx_holidays.mandatory' => [
         'en' => 'Mandatory',
         'ro' => 'Obligatoriu',
@@ -637,10 +633,6 @@ return [
     'sphinx_holidays.no_circuits_found' => [
         'en' => 'No circuits found. Please try different filters.',
         'ro' => 'Nu s-au găsit circuite. Încercați alte filtre.',
-    ],
-    'sphinx_holidays.no_deals_available' => [
-        'en' => 'No deals available at this time.',
-        'ro' => 'Nu există oferte disponibile momentan.',
     ],
     'sphinx_holidays.no_experience_quotes' => [
         'en' => 'No quotes available for this experience. Please try a different date.',

@@ -304,38 +304,6 @@ msgctxt "SettingsTooltips::sphinx_holidays::seo_full_description"
 msgid "Optional template to wrap or replace the API description. Leave empty to use the raw API description as-is."
 msgstr "Șablon opțional pentru a înfășura sau înlocui descrierea API. Lăsați gol pentru a folosi descrierea API în forma originală."
 
-msgctxt "Languages::block_sphinx_booking_engine"
-msgid "Sphinx: Booking Form"
-msgstr "Sphinx: Formular Rezervare"
-
-msgctxt "Languages::block_sphinx_best_deals"
-msgid "Sphinx: Best Deals"
-msgstr "Sphinx: Cele mai bune oferte"
-
-msgctxt "Languages::deals_type"
-msgid "Deals type"
-msgstr "Tip oferte"
-
-msgctxt "Languages::deals_limit"
-msgid "Number of deals"
-msgstr "Număr de oferte"
-
-msgctxt "Languages::destination_id"
-msgid "Destination ID (0 = all destinations)"
-msgstr "ID destinație (0 = toate destinațiile)"
-
-msgctxt "Languages::sphinx_deals_hotels"
-msgid "Hotels"
-msgstr "Hoteluri"
-
-msgctxt "Languages::sphinx_deals_packages"
-msgid "Packages"
-msgstr "Pachete"
-
-msgctxt "Languages::sphinx_deals_circuits"
-msgid "Circuits"
-msgstr "Circuite"
-
 msgctxt "Languages::block_sphinx_package_search"
 msgid "Sphinx: Package Search"
 msgstr "Sphinx: Căutare Pachete"
@@ -1180,10 +1148,6 @@ msgctxt "Languages::sphinx_holidays.invalid_offer"
 msgid "Invalid offer selected."
 msgstr "Ofertă selectată invalidă."
 
-msgctxt "Languages::sphinx_holidays.loading_deals"
-msgid "Loading deals..."
-msgstr "Se încarcă ofertele..."
-
 msgctxt "Languages::sphinx_holidays.mandatory"
 msgid "Mandatory"
 msgstr "Obligatoriu"
@@ -1203,10 +1167,6 @@ msgstr "Nu există oferte pentru acest circuit. Încercați alte date."
 msgctxt "Languages::sphinx_holidays.no_circuits_found"
 msgid "No circuits found. Please try different filters."
 msgstr "Nu s-au găsit circuite. Încercați alte filtre."
-
-msgctxt "Languages::sphinx_holidays.no_deals_available"
-msgid "No deals available at this time."
-msgstr "Nu există oferte disponibile momentan."
 
 msgctxt "Languages::sphinx_holidays.no_experience_quotes"
 msgid "No quotes available for this experience. Please try a different date."

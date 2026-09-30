@@ -59,7 +59,7 @@ try {
     $results = TypeCoerce::toRowList($pollResponse['results'] ?? []);
     $status = TypeCoerce::toString($pollResponse['status'] ?? 'completed');
 
-    // Narrow to the requested hotel for product-page searches. search.php stores
+    // Narrow to the requested hotel (every search is a product-page one). search.php stores
     // the hotel_id in the search session meta; because we search by destination
     // the API can return the whole destination, so drop other hotels' offers
     // before commission/slimming. No-op when the API already filtered by hotel.
@@ -72,7 +72,11 @@ try {
     }
     $searchMeta = TypeCoerce::toStringMap($session['sphinx_search_' . $searchId] ?? null);
     $filterHotelId = TypeCoerce::toString($searchMeta['filter_hotel_id'] ?? '');
-    if ($filterHotelId !== '' && !empty($results)) {
+    if ($filterHotelId === '') {
+        // No hotel in the meta (unknown or expired search): there is no
+        // destination browse, so never hand out a whole destination's offers.
+        $results = [];
+    } elseif (!empty($results)) {
         $results = array_values(array_filter(
             $results,
             // Match on hotel_id, falling back to id: the results endpoint is

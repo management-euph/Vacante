@@ -142,19 +142,4 @@ final class CircuitRepositoryTest extends TestCase
         self::assertStringContainsString('UPDATE ?:sphinx_circuits SET product_id = ?i WHERE circuit_id = ?i', $captured[0]);
         self::assertSame([777, 5], $captured[1]);
     }
-
-    public function testFindSellableRequiresLinkAndActiveStatus(): void
-    {
-        $captured = [];
-        DbStub::$getArray = static function (string $q, ...$p) use (&$captured): array {
-            $captured = [$q, $p];
-            return [];
-        };
-
-        $this->repo->findSellable(6);
-
-        self::assertStringContainsString("sync_status = 'active' AND product_id IS NOT NULL AND product_id > 0", $captured[0]);
-        self::assertStringContainsString('ORDER BY min_price ASC', $captured[0]);
-        self::assertSame(6, $captured[1][0]);
-    }
 }

@@ -174,8 +174,9 @@ hotel sync weekly, `cleanup` daily) via real cron on the server.
 - **Default search must stay the default search.** The header Search block is
   core CS-Cart; the addons never touch it. The booking widgets are **dedicated
   block types** — in Block Manager → Add block they appear as *Novoton:
-  Homepage Booking Search*, *Novoton: Booking Form*, *Sphinx: Booking Form*
-  and *Sphinx: Best Deals*. They can no longer be selected as the Search
+  Homepage Booking Search*, *Novoton: Booking Form* and *Sphinx: Package
+  Search* (Sphinx hotels are booked from their product pages only; its
+  *Booking Form* and *Best Deals* blocks are gone). They can no longer be selected as the Search
   block's template (that hijack is what previously made the product search
   box disappear).
 - Hotel product page renders the React booking engine (calendar, occupancy,

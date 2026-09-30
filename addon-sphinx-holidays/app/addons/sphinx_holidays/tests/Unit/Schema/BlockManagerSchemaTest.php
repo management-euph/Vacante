@@ -18,7 +18,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class BlockManagerSchemaTest extends TestCase
 {
-    private const DEDICATED_TYPES = ['sphinx_booking_engine', 'sphinx_best_deals'];
+    private const DEDICATED_TYPES = ['sphinx_package_search'];
 
     /** Core schema shape: 'templates' is a directory-scan string. */
     private const CORE_TEMPLATE_TYPE = [
@@ -84,19 +84,28 @@ final class BlockManagerSchemaTest extends TestCase
     }
 
     /**
-     * best_deals.tpl reads $block.properties.deals_type / deals_limit /
-     * destination_id — the block-type settings must keep those exact keys.
+     * Hotels are booked from their product pages only: the destination-browse
+     * "Booking Form" block and the "Best Deals" block (no store product behind
+     * their hotels) are gone, and placed ones are removed once on upgrade.
      */
-    public function testBestDealsSettingsMatchTemplateContract(): void
+    public function testTheNonProductHotelBlocksAreGone(): void
     {
         $schema = self::applySchema();
+        $templatesRoot = dirname(__DIR__, 6) . '/design/themes/responsive/templates/addons/sphinx_holidays/blocks/';
 
-        self::assertIsArray($schema['sphinx_best_deals']);
-        $settings = $schema['sphinx_best_deals']['settings'] ?? null;
-        self::assertIsArray($settings);
-        foreach (['deals_type', 'deals_limit', 'destination_id'] as $key) {
-            self::assertArrayHasKey($key, $settings, "best_deals.tpl reads \$block.properties.$key");
+        foreach (['sphinx_booking_engine', 'sphinx_best_deals'] as $type) {
+            self::assertArrayNotHasKey($type, $schema);
         }
+        self::assertFileDoesNotExist($templatesRoot . 'booking_engine.tpl');
+        self::assertFileDoesNotExist($templatesRoot . 'best_deals.tpl');
+
+        $cleanup = (string) file_get_contents(dirname(__DIR__, 3) . '/src/Install/RemovedBlocksCleanup.php');
+        self::assertStringContainsString("public const REMOVED_TYPES = ['sphinx_booking_engine', 'sphinx_best_deals'];", $cleanup);
+        self::assertStringContainsString('fn_set_storage_data(self::FLAG, \'Y\');', $cleanup);
+        self::assertStringContainsString(
+            'RemovedBlocksCleanup::runOnce();',
+            (string) file_get_contents(dirname(__DIR__, 3) . '/src/Install/SchemaMigrator.php'),
+        );
     }
 
     public function testNoTemplatesShipInAutoScannedStaticTemplatesDir(): void

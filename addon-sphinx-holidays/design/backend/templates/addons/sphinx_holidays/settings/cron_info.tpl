@@ -98,12 +98,6 @@
                     <td>Sync booking / order statuses with Sphinx</td>
                 </tr>
                 <tr>
-                    <td><strong>cache_refresh</strong></td>
-                    <td><code>{$cron_bin} access_key=YOUR_KEY mode=cache_refresh</code></td>
-                    <td>Daily (<code>0 6 * * *</code>)</td>
-                    <td>Clear and warm the API response cache</td>
-                </tr>
-                <tr>
                     <td><strong>cleanup</strong></td>
                     <td><code>{$cron_bin} access_key=YOUR_KEY mode=cleanup</code></td>
                     <td>Daily (<code>0 7 * * *</code>)</td>
