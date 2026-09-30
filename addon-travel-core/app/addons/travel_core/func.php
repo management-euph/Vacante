@@ -83,7 +83,7 @@ function fn_travel_core_uninstall(): bool
 
     // Remove language variables
     db_query("DELETE FROM ?:language_values WHERE name LIKE 'travel_core.%'");
-    db_query("DELETE FROM ?:language_values WHERE name = 'block_travel_stay_summary'");
+    db_query("DELETE FROM ?:language_values WHERE name IN ('block_travel_stay_summary', 'tmpl_travel_stay_summary')");
 
     return true;
 }

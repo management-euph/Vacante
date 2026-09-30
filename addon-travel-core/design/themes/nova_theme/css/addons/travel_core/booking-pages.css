@@ -1040,6 +1040,7 @@
 
 /* Hotel: photo, stars, name, destination */
 .travel-ccard-hotel { display: flex; gap: 14px; align-items: center; padding: 16px; }
+.travel-ccard-title + .travel-ccard-hotel { padding-top: 2px; }
 .travel-ccard-hotel__photo {
     flex: 0 0 76px;
     width: 76px;

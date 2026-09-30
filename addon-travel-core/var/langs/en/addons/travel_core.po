@@ -2317,3 +2317,7 @@ msgstr "Details"
 msgctxt "Languages::travel_core.stay_hide"
 msgid "Hide"
 msgstr "Hide"
+
+msgctxt "Languages::tmpl_travel_stay_summary"
+msgid "Stay summary (collapsible bar)"
+msgstr "Stay summary (collapsible bar)"

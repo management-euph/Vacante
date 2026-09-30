@@ -56,6 +56,32 @@ final class StaySummaryBlockTest extends TestCase
         self::design('templates/addons/travel_core/blocks/stay_summary.tpl');
     }
 
+    /**
+     * nova_theme does not simply inherit responsive (its own checkout
+     * templates wrap the responsive ones by full path), and the Layouts
+     * "Add block" list on a nova_theme store did not offer this type while
+     * its template lived under responsive only. Like novoton's block
+     * templates, it ships a real nova_theme copy, which composer mirror keeps
+     * byte-identical.
+     */
+    public function testBlockTemplateShipsForNovaThemeToo(): void
+    {
+        $root = dirname(__DIR__, 6) . '/design/themes/';
+        $rel = 'templates/addons/travel_core/blocks/stay_summary.tpl';
+        self::assertFileExists($root . 'nova_theme/' . $rel);
+        self::assertFileEquals($root . 'responsive/' . $rel, $root . 'nova_theme/' . $rel);
+    }
+
+    /**
+     * The Template dropdown names a block template by the language key on
+     * its first line; without it CS-Cart shows the file name as "_stay_summary".
+     */
+    public function testTemplateIsNamedByItsBlockDescription(): void
+    {
+        $first = strtok(self::design('templates/addons/travel_core/blocks/stay_summary.tpl'), "\n");
+        self::assertSame('{** block-description:tmpl_travel_stay_summary **}', $first);
+    }
+
     public function testBlockRendersTheSharedCardForEachTravelLine(): void
     {
         $tpl = (string) preg_replace('/\{\*.*?\*\}/s', '', self::design('templates/addons/travel_core/blocks/stay_summary.tpl'));
@@ -81,7 +107,7 @@ final class StaySummaryBlockTest extends TestCase
     {
         $vars = require dirname(__DIR__, 3) . '/lang_keys.php';
         self::assertIsArray($vars);
-        foreach (['block_travel_stay_summary', 'travel_core.stay_details', 'travel_core.stay_hide'] as $key) {
+        foreach (['block_travel_stay_summary', 'tmpl_travel_stay_summary', 'travel_core.stay_details', 'travel_core.stay_hide'] as $key) {
             self::assertArrayHasKey($key, $vars, $key);
         }
     }
@@ -97,6 +123,6 @@ final class StaySummaryBlockTest extends TestCase
         foreach (['bm_blocks_descriptions', 'bm_snapping', 'bm_blocks'] as $table) {
             self::assertStringContainsString('DELETE FROM ?:' . $table . ' WHERE block_id IN (?n)', $body, $table);
         }
-        self::assertStringContainsString("name = 'block_travel_stay_summary'", $body);
+        self::assertStringContainsString("name IN ('block_travel_stay_summary', 'tmpl_travel_stay_summary')", $body);
     }
 }

@@ -11,15 +11,15 @@
     Parameters:
       product      the cart line
       key          its cart id (edit link)
-      tcc_context  "sidebar" — checkout summary: opens with the hotel (photo,
+      tcc_context  "sidebar" — checkout summary: the title, then the hotel (photo,
                    stars, destination), and booking-pages.css hides the core
                    product name / "1 x price" line above the card, which would
                    repeat both;
                    "summary" — inside the stay-summary block at the top of the
                    checkout (blocks/stay_summary.tpl), whose bar already shows
-                   the hotel: no header, no frame;
+                   the hotel: no title, no header, no frame;
                    "cart" (default) — cart page and mini cart, whose rows
-                   already show the product.
+                   already show the product: the title only.
       tcc_card     optional: the prepared card, when the caller already has it.
 
     The collapsibles (guests, rooms, full terms) are native <details>: no JS.
@@ -37,6 +37,11 @@
 {$tcc_sidebar = $tcc_context == "sidebar"}
 {if $tcc}
 <div class="travel-ccard travel-ccard--{$tcc_context}">
+
+    {* The card's title. The stay-summary block's bar already names the stay. *}
+    {if $tcc_context != "summary"}
+        <div class="travel-ccard-title">{__("travel_core.your_booking_details")}</div>
+    {/if}
 
     {* The pre-order verifier corrected this line's price. *}
     {if $tcc.price_change}
@@ -77,8 +82,6 @@
                 {/if}
             </div>
         </div>
-    {elseif $tcc_context == "cart"}
-        <div class="travel-ccard-title">{__("travel_core.your_booking_details")}</div>
     {/if}
 
     {* Check-in → nights → check-out *}

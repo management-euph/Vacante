@@ -1513,6 +1513,11 @@ Dacă ați plătit deja, vă rugăm să ignorați acest email.',
         'en' => 'Travel: stay summary (checkout, phones)',
         'ro' => 'Travel: rezumat sejur (checkout, telefon)',
     ],
+    // Template name in the block's Template dropdown (stay_summary.tpl line 1).
+    'tmpl_travel_stay_summary' => [
+        'en' => 'Stay summary (collapsible bar)',
+        'ro' => 'Rezumat sejur (bară pliabilă)',
+    ],
     'travel_core.stay_details' => [
         'en' => 'Details',
         'ro' => 'Detalii',
