@@ -56,6 +56,22 @@ final class StaySummaryBlockTest extends TestCase
         self::design('templates/addons/travel_core/blocks/stay_summary.tpl');
     }
 
+    /**
+     * nova_theme does not simply inherit responsive (its own checkout
+     * templates wrap the responsive ones by full path), and the Layouts
+     * "Add block" list on a nova_theme store did not offer this type while
+     * its template lived under responsive only. Like novoton's block
+     * templates, it ships a real nova_theme copy, which composer mirror keeps
+     * byte-identical.
+     */
+    public function testBlockTemplateShipsForNovaThemeToo(): void
+    {
+        $root = dirname(__DIR__, 6) . '/design/themes/';
+        $rel = 'templates/addons/travel_core/blocks/stay_summary.tpl';
+        self::assertFileExists($root . 'nova_theme/' . $rel);
+        self::assertFileEquals($root . 'responsive/' . $rel, $root . 'nova_theme/' . $rel);
+    }
+
     public function testBlockRendersTheSharedCardForEachTravelLine(): void
     {
         $tpl = (string) preg_replace('/\{\*.*?\*\}/s', '', self::design('templates/addons/travel_core/blocks/stay_summary.tpl'));
