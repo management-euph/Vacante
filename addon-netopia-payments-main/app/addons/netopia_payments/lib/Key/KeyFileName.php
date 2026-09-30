@@ -28,7 +28,7 @@ use Netopia\Payment2\Enum\PaymentMode;
 final class KeyFileName
 {
     /** A POS signature at the start of the name or right after a "." or "/". */
-    private const string POS_SIGNATURE_PATTERN = '/(?:^|[.\/])([A-Z0-9]{4}(?:-[A-Z0-9]{4}){4})/i';
+    private const string POS_SIGNATURE_PATTERN = '~(?:^|[./])([A-Z0-9]{4}(?:-[A-Z0-9]{4}){4})~i';
 
     /**
      * The POS signature the name carries, upper-case; '' when it carries none.
