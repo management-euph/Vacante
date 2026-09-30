@@ -256,7 +256,9 @@
         if (!input || signature === '' || input.value.trim() !== '') {
             return;
         }
-        input.value = signature;
+        // Shown as the placeholder only: an empty field stays empty, the
+        // signature is read from the key file name at payment time.
+        input.placeholder = signature;
         var note = root.querySelector('[data-np-pos-note="' + mode + '"]');
         if (note) {
             note.hidden = false;

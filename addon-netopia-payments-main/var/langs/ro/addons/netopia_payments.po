@@ -577,12 +577,12 @@ msgid "The POS signature (XXXX-XXXX-XXXX-XXXX-XXXX) from the NETOPIA admin panel
 msgstr "Semnătura POS (XXXX-XXXX-XXXX-XXXX-XXXX) din panoul NETOPIA."
 
 msgctxt "Languages::netopia_pos_signature_from_key"
-msgid "[mode] POS signature [signature] filled in from your key file."
-msgstr "Semnătura POS [mode] [signature] a fost completată din fișierul cheii."
+msgid "[mode] POS signature updated to [signature], from the key file you uploaded."
+msgstr "Semnătura POS [mode] a fost actualizată la [signature], din fișierul cheii încărcat."
 
 msgctxt "Languages::netopia_pos_signature_from_key_hint"
-msgid "Filled in from your key file name."
-msgstr "Completată din numele fișierului cheii."
+msgid "Can stay empty: payments use the POS signature in your key file name (shown in grey)."
+msgstr "Poate rămâne gol: plățile folosesc semnătura POS din numele fișierului cheii (afișată cu gri)."
 
 msgctxt "Languages::netopia_private_key_optional"
 msgid "Optional: the addon does not use the private key, so it does not stop payments."

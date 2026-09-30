@@ -209,16 +209,14 @@ function fn_netopia_payments_update_payment_post(array $payment_data, int $payme
     }
     $params = \Netopia\CsCart\Key\KeySlots::relocate($params);
 
-    // NETOPIA's key files carry the POS signature in their names: store it for
-    // a mode whose POS signature was left empty, so it never has to be typed.
-    // A key uploaded now for another POS replaces the stored signature: the
-    // old one would sign payments for a POS whose keys are gone.
+    // An empty POS signature stays empty: payments read it from the key file
+    // name (Config\Credentials::forMode). Only a TYPED signature is replaced,
+    // when a key for another POS is uploaded now: the old one would sign
+    // payments for a POS whose keys are gone.
     foreach (PaymentMode::cases() as $mode) {
         $pos_field = $mode->value . '_pos_signature';
         $typed = trim(Arr::string($params, $pos_field));
-        $from_key = $typed === ''
-            ? \Netopia\CsCart\Config\Credentials::posSignatureFromKeyFiles($params, $mode)
-            : ($uploaded_signatures[$mode->value] ?? '');
+        $from_key = $typed !== '' ? ($uploaded_signatures[$mode->value] ?? '') : '';
         if ($from_key !== '' && $from_key !== $typed) {
             $params[$pos_field] = $from_key;
             $updated = true;
