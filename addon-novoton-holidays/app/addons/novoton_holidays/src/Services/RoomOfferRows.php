@@ -30,6 +30,9 @@ final class RoomOfferRows
     /** In a flat answer every offer opens with this element. */
     private const string ROW_START = 'agent';
 
+    /** Offer elements whose content is structured: kept as XML, not text. */
+    private const array TERM_ELEMENTS = ['TermsOfPayment', 'TermsOfCancellation'];
+
     /**
      * Every offer with a positive price, in document order.
      *
@@ -38,18 +41,69 @@ final class RoomOfferRows
     public static function fromXml(\SimpleXMLElement $xml): array
     {
         $rows = [];
-        foreach ($xml->xpath('//*[Price]') ?: [] as $holder) {
-            // One <Price> child: the element IS the offer (nested layout).
-            if (count($holder->Price) === 1) {
-                $rows[] = self::row(self::nestedFields($holder));
-                continue;
-            }
-            foreach (self::flatRuns($holder) as $fields) {
-                $rows[] = self::row($fields);
-            }
+        foreach (self::offers($xml) as [$fields]) {
+            $rows[] = self::row($fields);
         }
 
         return array_values(array_filter($rows, static fn (array $row): bool => $row['price'] > 0));
+    }
+
+    /**
+     * The terms that come with one offer of the answer: its own payment and
+     * cancellation terms (as XML, the shape DepositLine and the terms
+     * formatters read), remark and Important note.
+     *
+     * Every offer carries its own terms, so the deposit and the cancellation
+     * penalties of the booked package must come from that package's row, not
+     * from the first <TermsOfPayment> of the answer. Empty strings when the
+     * row is not in this answer.
+     *
+     * @param OfferRow $row a row fromXml() returned for this answer
+     * @return array{terms_of_payment: string, terms_of_cancellation: string, remark: string, important: string}
+     */
+    public static function terms(\SimpleXMLElement $xml, array $row): array
+    {
+        foreach (self::offers($xml) as [$fields, $xmlParts]) {
+            if (self::row($fields) === $row) {
+                return [
+                    'terms_of_payment' => $xmlParts['TermsOfPayment'] ?? '',
+                    'terms_of_cancellation' => $xmlParts['TermsOfCancellation'] ?? '',
+                    'remark' => trim($fields['remark'] ?? ''),
+                    'important' => trim($fields['Important'] ?? ''),
+                ];
+            }
+        }
+
+        return ['terms_of_payment' => '', 'terms_of_cancellation' => '', 'remark' => '', 'important' => ''];
+    }
+
+    /**
+     * Every offer of the answer as [element name => text, element name =>
+     * XML of the structured elements (TERM_ELEMENTS)], in document order.
+     *
+     * @return list<array{0: array<string, string>, 1: array<string, string>}>
+     */
+    private static function offers(\SimpleXMLElement $xml): array
+    {
+        $offers = [];
+        foreach ($xml->xpath('//*[Price]') ?: [] as $holder) {
+            // One <Price> child: the element IS the offer (nested layout).
+            if (count($holder->Price) === 1) {
+                $xmlParts = [];
+                foreach (self::TERM_ELEMENTS as $name) {
+                    if (isset($holder->{$name}[0])) {
+                        $xmlParts[$name] = (string) $holder->{$name}[0]->asXML();
+                    }
+                }
+                $offers[] = [self::nestedFields($holder), $xmlParts];
+                continue;
+            }
+            foreach (self::flatRuns($holder) as $run) {
+                $offers[] = $run;
+            }
+        }
+
+        return $offers;
     }
 
     /**
@@ -156,22 +210,27 @@ final class RoomOfferRows
      * (an answer without <agent>). Each offer keeps only its own values, so
      * one missing optional element cannot shift the offers after it.
      *
-     * @return list<array<string, string>>
+     * @return list<array{0: array<string, string>, 1: array<string, string>}>
      */
     private static function flatRuns(\SimpleXMLElement $holder): array
     {
         $runs = [];
         $run = [];
+        $xmlParts = [];
         foreach ($holder->children() as $child) {
             $name = $child->getName();
             if ($run !== [] && ($name === self::ROW_START || array_key_exists($name, $run))) {
-                $runs[] = $run;
+                $runs[] = [$run, $xmlParts];
                 $run = [];
+                $xmlParts = [];
             }
             $run[$name] = (string) $child;
+            if (in_array($name, self::TERM_ELEMENTS, true)) {
+                $xmlParts[$name] = (string) $child->asXML();
+            }
         }
         if ($run !== []) {
-            $runs[] = $run;
+            $runs[] = [$run, $xmlParts];
         }
 
         return $runs;

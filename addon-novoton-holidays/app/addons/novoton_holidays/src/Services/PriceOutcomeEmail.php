@@ -28,7 +28,7 @@ final class PriceOutcomeEmail
                 'subj' => $message['subject'],
                 'body' => $message['body'],
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             fn_log_event('general', 'runtime', 'Failed to send price discrepancy email: ' . $e->getMessage());
 
             return false;

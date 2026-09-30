@@ -127,6 +127,8 @@ function fn_netopia_payments_update_payment_post(array $payment_data, int $payme
         'live_private_key' => 'netopia_live_private_key_file',
     ];
 
+    /** @var array<string, string> $uploaded_signatures mode => POS signature in the name of a key uploaded now */
+    $uploaded_signatures = [];
     foreach ($key_slots as $param_key => $file_input_name) {
         $raw = $_FILES[$file_input_name] ?? null;
         if (!is_array($raw) || empty($raw['name']) || ($raw['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
@@ -146,7 +148,7 @@ function fn_netopia_payments_update_payment_post(array $payment_data, int $payme
         $file_mode = \Netopia\CsCart\Key\KeyFileName::wrongMode($upload['name'], $slot_mode);
         if ($file_mode !== null) {
             fn_set_notification('W', __('warning'), __('netopia_key_wrong_mode', [
-                '[file]' => $upload['name'],
+                '[file]' => htmlspecialchars($upload['name'], ENT_QUOTES, 'UTF-8'),
                 '[file_mode]' => __('netopia_' . $file_mode->value),
                 '[slot_mode]' => __('netopia_' . $slot_mode->value),
             ]));
@@ -167,6 +169,10 @@ function fn_netopia_payments_update_payment_post(array $payment_data, int $payme
             $params[$file_field] = $stored;
             $params[$param_key] = $content !== false ? trim($content) : '';
             $updated = true;
+            $uploaded_signature = \Netopia\CsCart\Key\KeyFileName::posSignature($upload['name']);
+            if ($uploaded_signature !== '') {
+                $uploaded_signatures[$slot_mode->value] = $uploaded_signature;
+            }
 
             fn_set_notification('N', __('notice'), __('netopia_key_uploaded', ['[key]' => $param_key]));
         } catch (KeyStorageException $e) {
@@ -191,13 +197,15 @@ function fn_netopia_payments_update_payment_post(array $payment_data, int $payme
 
     // NETOPIA's key files carry the POS signature in their names: store it for
     // a mode whose POS signature was left empty, so it never has to be typed.
+    // A key uploaded now for another POS replaces the stored signature: the
+    // old one would sign payments for a POS whose keys are gone.
     foreach (PaymentMode::cases() as $mode) {
         $pos_field = $mode->value . '_pos_signature';
-        if (trim(Arr::string($params, $pos_field)) !== '') {
-            continue;
-        }
-        $from_key = \Netopia\CsCart\Config\Credentials::posSignatureFromKeyFiles($params, $mode);
-        if ($from_key !== '') {
+        $typed = trim(Arr::string($params, $pos_field));
+        $from_key = $typed === ''
+            ? \Netopia\CsCart\Config\Credentials::posSignatureFromKeyFiles($params, $mode)
+            : ($uploaded_signatures[$mode->value] ?? '');
+        if ($from_key !== '' && $from_key !== $typed) {
             $params[$pos_field] = $from_key;
             $updated = true;
             fn_set_notification('N', __('notice'), __('netopia_pos_signature_from_key', [

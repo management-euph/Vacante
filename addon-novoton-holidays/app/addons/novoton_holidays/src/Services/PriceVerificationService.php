@@ -87,26 +87,17 @@ class PriceVerificationService implements PriceVerificationServiceInterface
         $rawPrice = $offer['price'];
         $totalPrice = $this->pricing->applyCommission($rawPrice);
 
-        // Extract terms
-        $termsOfPayment = '';
-        $termsOfCancellation = '';
-        $tp = $priceData->xpath('//TermsOfPayment');
-        $tc = $priceData->xpath('//TermsOfCancellation');
-        if (!empty($tp[0])) {
-            $termsOfPayment = (string) $tp[0]->asXML();
-        }
-        if (!empty($tc[0])) {
-            $termsOfCancellation = (string) $tc[0]->asXML();
-        }
+        // The booked offer's own terms, not the first offer's.
+        $terms = RoomOfferRows::terms($priceData, $offer);
 
         return [
             'success' => true,
             'total_price' => $totalPrice,
             'base_price' => $rawPrice,
-            'terms_of_payment' => $termsOfPayment,
-            'terms_of_cancellation' => $termsOfCancellation,
-            'remark' => isset($priceData->remark) ? (string) $priceData->remark : '',
-            'important' => isset($priceData->Important) ? (string) $priceData->Important : '',
+            'terms_of_payment' => $terms['terms_of_payment'],
+            'terms_of_cancellation' => $terms['terms_of_cancellation'],
+            'remark' => $terms['remark'],
+            'important' => $terms['important'],
             'error' => '',
         ];
     }

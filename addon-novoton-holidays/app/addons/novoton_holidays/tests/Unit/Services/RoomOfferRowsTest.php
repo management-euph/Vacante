@@ -175,6 +175,53 @@ final class RoomOfferRowsTest extends TestCase
         self::assertSame(800.0, RoomOfferRows::cheapest($rows, 'DBL', 'HB', 'Any package')['price'] ?? null);
     }
 
+    public function testEachOfferKeepsItsOwnTerms(): void
+    {
+        // Two packages with different deposits: the booked one's terms must
+        // be read, not the first <TermsOfPayment> of the answer.
+        $xml = new \SimpleXMLElement('<room_price>'
+            . '<agent>A</agent><PackageName>FIRST</PackageName><Price>795</Price><IdRoom>DBL</IdRoom><Board>UAI</Board>'
+            . '<TermsOfPayment><Percent tillDate="2026-09-30">100</Percent></TermsOfPayment>'
+            . '<TermsOfCancellation><Penalty tillDate="2026-10-01" Type="Percent">100</Penalty></TermsOfCancellation>'
+            . '<remark>first remark</remark><Important>first note</Important>'
+            . '<agent>A</agent><PackageName>EARLY</PackageName><Price>600</Price><IdRoom>DBL</IdRoom><Board>UAI</Board>'
+            . '<TermsOfPayment><Percent tillDate="2026-08-01">30</Percent></TermsOfPayment>'
+            . '<TermsOfCancellation><Penalty tillDate="2026-09-01" Type="Percent">50</Penalty></TermsOfCancellation>'
+            . '<remark>early remark</remark><Important>early note</Important>'
+            . '</room_price>');
+
+        $row = RoomOfferRows::cheapest(RoomOfferRows::fromXml($xml), 'DBL', 'UAI', 'EARLY');
+        self::assertNotNull($row);
+        $terms = RoomOfferRows::terms($xml, $row);
+
+        self::assertStringContainsString('>30</Percent>', $terms['terms_of_payment']);
+        self::assertStringContainsString('>50</Penalty>', $terms['terms_of_cancellation']);
+        self::assertSame('early remark', $terms['remark']);
+        self::assertSame('early note', $terms['important']);
+    }
+
+    public function testTheNestedLayoutKeepsTheOffersTerms(): void
+    {
+        $xml = new \SimpleXMLElement('<hotel><offer><PackageName>P</PackageName><Price>500</Price><IdRoom>DBL</IdRoom><Board>BB</Board>'
+            . '<TermsOfPayment><Percent>40</Percent></TermsOfPayment></offer></hotel>');
+
+        $rows = RoomOfferRows::fromXml($xml);
+        self::assertCount(1, $rows);
+
+        self::assertStringContainsString('>40</Percent>', RoomOfferRows::terms($xml, $rows[0])['terms_of_payment']);
+    }
+
+    public function testARowNotInTheAnswerHasNoTerms(): void
+    {
+        $row = RoomOfferRows::fromXml(self::fixture())[0];
+        $row['price'] = 1.0;
+
+        self::assertSame(
+            ['terms_of_payment' => '', 'terms_of_cancellation' => '', 'remark' => '', 'important' => ''],
+            RoomOfferRows::terms(self::fixture(), $row),
+        );
+    }
+
     public function testAnAnswerWithoutPricesHasNoRows(): void
     {
         self::assertSame([], RoomOfferRows::fromXml(new \SimpleXMLElement('<room_price><error>No availability</error></room_price>')));

@@ -222,8 +222,10 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
     $terms_of_cancellation = '';
     $remark = '';
     $important = '';
-    if ($booked_package === '' && $offerMatch['package'] !== '') {
-        $package_name = $offerMatch['package']; // label the booking with the package its price comes from
+    if ($offerMatch['package'] !== '') {
+        // Book the package the price comes from: the clicked one, or, when the
+        // answer no longer offers it, the one BookedOffer priced instead.
+        $package_name = $offerMatch['package'];
     }
     $rawPrice = $offerMatch['price'];
     $base_price = $rawPrice; // API price before commission
@@ -311,24 +313,14 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
         }
     }
 
-    // Extract terms from API response using xpath (more reliable than direct property access)
-    $termsPayment = $priceData->xpath('//TermsOfPayment');
-    $termsCancellation = $priceData->xpath('//TermsOfCancellation');
-
-    if (!empty($termsPayment[0])) {
-        $terms_of_payment = (string) $termsPayment[0]->asXML();
-    }
-    if (!empty($termsCancellation[0])) {
-        $terms_of_cancellation = (string) $termsCancellation[0]->asXML();
-    }
-
-    // Extract remark and important info
-    if (isset($priceData->remark)) {
-        $remark = (string)$priceData->remark;
-    }
-    if (isset($priceData->Important)) {
-        $important = (string)$priceData->Important;
-    }
+    // Terms, deposit and notes of the booked offer: every offer carries its
+    // own, so the first <TermsOfPayment> of the answer may be another package's.
+    [
+        'terms_of_payment' => $terms_of_payment,
+        'terms_of_cancellation' => $terms_of_cancellation,
+        'remark' => $remark,
+        'important' => $important,
+    ] = \Tygh\Addons\NovotonHolidays\Services\RoomOfferRows::terms($priceData, $offerMatch);
 
     if ($total_price <= 0) {
         fn_set_notification('E', __('error'), __('novoton_holidays.price_unavailable'));
@@ -350,9 +342,11 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
     }
 
     // Format board name for display
-    $board_id = TypeCoerce::toString($bookingData['board_id'] ?? 'BB');
+    $board_id = TypeCoerce::toString($bookingData['board_id'] ?? '');
     if ($board_id === '') {
-        $board_id = 'BB';
+        // No board asked for: the offer was priced on its cheapest board, so
+        // store that board — the Place-order check re-prices exactly it.
+        $board_id = $offerMatch['board'] !== '' ? $offerMatch['board'] : 'BB';
     }
     $board_name = fn_novoton_holidays_format_board_name($board_id);
 
