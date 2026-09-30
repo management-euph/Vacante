@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\SphinxHolidays\Contracts\CartServiceInterface;
+use Tygh\Addons\SphinxHolidays\Repository\HotelSkipRepository;
 use Tygh\Addons\TravelCore\Helpers\SessionAccessor;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\CartSkipPolicy;
@@ -13,6 +14,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
 use Tygh\Addons\TravelCore\Services\DepositCartLine;
 use Tygh\Addons\TravelCore\Services\DepositPlan;
 use Tygh\Addons\TravelCore\Services\GuestDataService;
+use Tygh\Addons\TravelCore\Services\ProviderCartProduct;
 use Tygh\Addons\TravelCore\TravelConstants;
 
 /**
@@ -169,46 +171,52 @@ final class CartService implements CartServiceInterface
     }
 
     /**
-     * Resolve a CS-Cart product_id from an entity ID (hotel_id, circuit_id, etc.).
-     * Falls back to a direct product_code lookup if no ID was provided by the form.
+     * The CS-Cart product a hotel booking goes on: the hotel's own product
+     * in ?:sphinx_hotels (so it is that hotel's, and a Sphinx product), and
+     * buyable — active, or hidden by the availability gate. A product_id in
+     * the request ($providedId) is accepted only when it is that same
+     * product; 0 means refuse (ProviderCartProduct).
      */
     #[\Override]
     public function resolveProductId(string $entityId, int $providedId = 0): int
     {
-        if ($providedId > 0) {
-            return $providedId;
-        }
-
         if ($entityId === '') {
             return 0;
         }
 
-        return TypeCoerce::toInt(db_get_field(
-            'SELECT product_id FROM ?:sphinx_hotels WHERE hotel_id = ?s',
+        $row = TypeCoerce::toStringMap(db_get_row(
+            'SELECT product_id, product_skip_reason FROM ?:sphinx_hotels WHERE hotel_id = ?s',
             $entityId,
         ));
+
+        return ProviderCartProduct::resolve(
+            max(0, $providedId),
+            TypeCoerce::toInt($row['product_id'] ?? 0),
+            ProviderCartProduct::productStatus(...),
+            TypeCoerce::toString($row['product_skip_reason'] ?? '') === HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY,
+        );
     }
 
     /**
-     * Resolve the CS-Cart product for a circuit. Circuits link products via
-     * sphinx_circuits.product_id (written by the add_circuit_products cron)
-     * — the hotel_id fallback in resolveProductId can never match a
-     * circuit_id, which is exactly how circuit add-to-cart used to dead-end.
+     * The CS-Cart product for a circuit: its own product in ?:sphinx_circuits
+     * (written by the add_circuit_products cron), for an active circuit, and
+     * active — circuits have no availability gate. A product_id in the
+     * request is accepted only when it is that same product.
      */
     public function resolveCircuitProductId(int $circuitId, int $providedId = 0): int
     {
-        if ($providedId > 0) {
-            return $providedId;
-        }
-
         if ($circuitId <= 0) {
             return 0;
         }
 
-        return TypeCoerce::toInt(db_get_field(
-            'SELECT product_id FROM ?:sphinx_circuits WHERE circuit_id = ?i',
-            $circuitId,
-        ));
+        return ProviderCartProduct::resolve(
+            max(0, $providedId),
+            TypeCoerce::toInt(db_get_field(
+                "SELECT product_id FROM ?:sphinx_circuits WHERE circuit_id = ?i AND sync_status = 'active'",
+                $circuitId,
+            )),
+            ProviderCartProduct::productStatus(...),
+        );
     }
 
     /**

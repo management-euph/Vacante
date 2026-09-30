@@ -12,6 +12,10 @@ declare(strict_types=1);
  *
  * Cached results (if any) are rendered inline for instant display.
  *
+ * One hotel only: the hotel product page's booking engine sends hotel_id and
+ * shows these results inline. There is no destination browse — without a
+ * synced hotel the page does not exist.
+ *
  * @package SphinxHolidays
  * @since   1.0.0
  */
@@ -52,15 +56,16 @@ try {
         $check_out = date('Y-m-d', (int) strtotime($check_in . " + {$nights} days"));
     }
 
-    // Resolve the hotel record once when this is a product-page search
-    // (hotel_id is set). Reused below for the destination_id and here for the
-    // page heading so the results page shows which hotel is being searched
-    // (mirrors the novoton results page).
+    // The hotel being searched: reused below for the destination_id and here
+    // for the page heading (mirrors the novoton results page).
     $hotelRow = $hotel_id !== ''
         ? Container::getHotelRepository()->findById($hotel_id)
         : null;
+    if ($hotelRow === null) {
+        return [CONTROLLER_STATUS_NO_PAGE];
+    }
 
-    $hotel_name = $hotelRow !== null ? TypeCoerce::toString($hotelRow['name'] ?? '') : '';
+    $hotel_name = TypeCoerce::toString($hotelRow['name'] ?? '');
     // The hotel-header view model is gone from this surface: results render
     // inline on the product page (or headerless standalone), so search.tpl
     // no longer includes the shared hotel_header component. Only the hotel
@@ -83,7 +88,7 @@ try {
     // Per-date "from" prices for the engine's calendar: raw values built by
     // the calendar_prices cron, commission applied at render time.
     $calendar_prices_json = '{}';
-    if ($hotelRow !== null && !empty($hotelRow['calendar_prices_raw'])) {
+    if (!empty($hotelRow['calendar_prices_raw'])) {
         $rawCalendar = json_decode(TypeCoerce::toString($hotelRow['calendar_prices_raw']), true);
         if (is_array($rawCalendar) && $rawCalendar !== []) {
             $cartServiceForCalendar = Container::getCartService();
@@ -221,20 +226,14 @@ try {
     // even alongside destination_id. Only a destination_id-only query runs the
     // live availability search. destination_id is always known for a synced
     // hotel (the hotels cron stores it on $hotelRow; findById() does SELECT *).
-    //
-    // Destination browse (no hotel_id): query by destination_id.
     if (!empty($hotel_id)) {
-        $hotelDestinationId = $hotelRow !== null
-            ? TypeCoerce::toInt($hotelRow['destination_id'] ?? 0)
-            : 0;
+        $hotelDestinationId = TypeCoerce::toInt($hotelRow['destination_id'] ?? 0);
         if ($hotelDestinationId <= 0) {
             $hotelDestinationId = $destination_id; // fall back to the request param
         }
         if ($hotelDestinationId > 0) {
             $searchParams['destination_id'] = $hotelDestinationId;
         }
-    } elseif ($destination_id > 0) {
-        $searchParams['destination_id'] = $destination_id;
     }
 
     $ignoreDomains = ConfigProvider::getIgnoreDomains();

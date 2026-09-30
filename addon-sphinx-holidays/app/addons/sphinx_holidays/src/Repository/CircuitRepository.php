@@ -99,25 +99,6 @@ class CircuitRepository
     }
 
     /**
-     * Sellable circuits (active + product linked) for storefront blocks,
-     * cheapest first.
-     *
-     * @return list<array<string, mixed>>
-     */
-    public function findSellable(int $limit = 6): array
-    {
-        return TypeCoerce::toRowList(db_get_array(
-            "SELECT circuit_id, name, duration_days, duration_nights, transport_type,
-                    destination_names, image_url, min_price, currency, product_id
-             FROM ?:sphinx_circuits
-             WHERE sync_status = 'active' AND product_id IS NOT NULL AND product_id > 0
-             ORDER BY min_price ASC, circuit_id ASC
-             LIMIT ?i",
-            $limit,
-        ));
-    }
-
-    /**
      * Paginated, sortable, filterable circuit listing for the admin grid.
      * Returns [$rows, $params] where $params carries total_items / page /
      * items_per_page — the CS-Cart pagination.tpl contract (mirrors

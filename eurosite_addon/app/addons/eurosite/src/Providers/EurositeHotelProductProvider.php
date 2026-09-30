@@ -19,7 +19,7 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  *
  * Owning a product is what puts travel_core's booking form on its page; that
  * form searches `eurosite_booking.search` with the hotel_id this returns
- * (the Eurosite hotel code), which narrows the search to that hotel.
+ * (the Eurosite hotel code): the search of that one hotel.
  */
 final class EurositeHotelProductProvider implements HotelProductProviderInterface
 {

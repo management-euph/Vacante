@@ -70,18 +70,6 @@ class CityRepository
     }
 
     /**
-     * @return list<array<string, mixed>>
-     */
-    public function getByCountry(string $countryCode, bool $ownOnly = false): array
-    {
-        return self::asRowList(db_get_array(
-            'SELECT * FROM ?:eurosite_cities WHERE country_code = ?s ?p ORDER BY name',
-            $countryCode,
-            $ownOnly ? "AND is_own = 'Y'" : '',
-        ));
-    }
-
-    /**
      * @return array<string, mixed>|null
      */
     public function findByCode(string $cityCode): ?array

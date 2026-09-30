@@ -23,7 +23,6 @@ final class CronModeRegistrationTest extends TestCase
         'assign_boards',
         'audit_facilities',
         'backfill_hotel_locations',
-        'cache_refresh',
         'calendar_prices',
         'circuits',
         'cleanup',

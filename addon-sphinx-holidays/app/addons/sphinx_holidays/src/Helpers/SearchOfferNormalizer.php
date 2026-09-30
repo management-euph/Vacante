@@ -26,7 +26,7 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  * Field sources mirror the existing readers already in the codebase:
  *   - pricing.selling_price / pricing.currency  (CircuitSyncService, ExperienceSyncService)
  *   - meal_type_name                            (DiscoverBoardsCommand)
- *   - destination_name                          (HotelSyncService, CacheEndpointService)
+ *   - destination_name                          (HotelSyncService)
  *
  * Each source also falls back to the legacy flat key, so already-flat
  * payloads (e.g. cached results) pass through unchanged and idempotently.

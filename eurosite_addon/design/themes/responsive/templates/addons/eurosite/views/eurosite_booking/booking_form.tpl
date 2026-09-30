@@ -30,6 +30,7 @@
 
     <form action="{"eurosite_booking.add_to_cart"|fn_url}" method="post" id="eurosite-booking-form">
         <input type="hidden" name="offer_key" value="{$eurosite_offer_key}" />
+        <input type="hidden" name="return_product_id" value="{$eurosite_return_product_id}" />
         {* Display-only, for the shared child-age guard; add_to_cart re-reads the snapshot. *}
         <input type="hidden" name="check_in" value="{$eurosite_check_in|escape:html}" />
 

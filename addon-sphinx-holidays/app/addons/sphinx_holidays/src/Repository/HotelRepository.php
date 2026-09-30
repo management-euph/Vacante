@@ -467,7 +467,7 @@ class HotelRepository implements HotelRepositoryInterface
     }
 
     /**
-     * Get hotel_id → hotel_id map for a given destination (for matching cache deals to hotels).
+     * Get hotel_id → hotel_id map for a given destination.
      *
      * @return array<string, string> hotel_id => hotel_id
      */

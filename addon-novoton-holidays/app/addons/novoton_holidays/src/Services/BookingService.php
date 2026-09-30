@@ -380,23 +380,15 @@ class BookingService implements BookingServiceInterface
     }
 
     /**
-     * Resolve the CS-Cart product ID for a given hotel ID.
+     * The hotel's own active Novoton product (HotelCartProduct).
      *
      * @param string $hotelId Novoton hotel ID
-     * @param int $fallbackProductId Product ID from form (fallback)
-     * @return int Product ID or 0 if not found
+     * @param int $fallbackProductId the form's product_id: accepted only when it is that same product
+     * @return int Product ID or 0 if the booking must be refused
      */
     public function resolveProductId(string $hotelId, int $fallbackProductId = 0): int
     {
-        $prefix = ConfigProvider::getFirstProductCodePrefix();
-        $productCode = $prefix . $hotelId;
-
-        $productId = TypeCoerce::toInt(db_get_field(
-            'SELECT product_id FROM ?:products WHERE product_code = ?s',
-            $productCode,
-        ));
-
-        return $productId ?: $fallbackProductId;
+        return HotelCartProduct::resolve($hotelId, $fallbackProductId);
     }
 
     /**

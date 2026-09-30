@@ -278,13 +278,6 @@
                     <td><a href="{$cron_urls.reassign_features}" target="_blank" class="btn btn-mini">Run</a></td>
                 </tr>
                 <tr>
-                    <td><strong>cache_refresh</strong></td>
-                    <td>Refresh cached search results</td>
-                    <td><code>*/30 * * * *</code> (every 30 min)</td>
-                    <td style="word-break:break-all; font-size:11px; overflow:hidden;"><code>{$cron_urls.cache_refresh}</code></td>
-                    <td><a href="{$cron_urls.cache_refresh}" target="_blank" class="btn btn-mini">Run</a></td>
-                </tr>
-                <tr>
                     <td><strong>cleanup</strong></td>
                     <td>Clean expired cache and old sync logs</td>
                     <td><code>0 5 * * *</code> (daily)</td>

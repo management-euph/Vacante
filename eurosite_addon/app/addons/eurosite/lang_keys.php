@@ -90,10 +90,6 @@ return [
         'en' => 'Run the full static-data sync now? This makes many API calls.',
         'ro' => 'Rulați acum sincronizarea completă a datelor statice? Se fac multe apeluri API.',
     ],
-    'eurosite.seed_menu' => [
-        'en' => 'Seed storefront menu',
-        'ro' => 'Creează meniul din storefront',
-    ],
     'eurosite.recent_bookings' => [
         'en' => 'Recent bookings',
         'ro' => 'Rezervări recente',
@@ -174,26 +170,6 @@ return [
         'en' => 'Save whitelist',
         'ro' => 'Salvează lista',
     ],
-    'eurosite.country' => [
-        'en' => 'Country',
-        'ro' => 'Țara',
-    ],
-    'eurosite.city' => [
-        'en' => 'City / resort',
-        'ro' => 'Oraș / stațiune',
-    ],
-    'eurosite.pick_country' => [
-        'en' => '— country —',
-        'ro' => '— țara —',
-    ],
-    'eurosite.pick_city' => [
-        'en' => '— city —',
-        'ro' => '— orașul —',
-    ],
-    'eurosite.no_destinations_configured' => [
-        'en' => 'No destinations are enabled yet. Please check back soon.',
-        'ro' => 'Nicio destinație activă momentan. Reveniți în curând.',
-    ],
     'eurosite.destination_not_available' => [
         'en' => 'This destination is not available for booking.',
         'ro' => 'Această destinație nu este disponibilă pentru rezervare.',
@@ -225,26 +201,6 @@ return [
     'eurosite.fees_confirmed_at_booking' => [
         'en' => 'Condițiile de anulare vor fi confirmate la rezervare.',
         'ro' => 'Condițiile de anulare vor fi confirmate la rezervare.',
-    ],
-    'eurosite.module_packages' => [
-        'en' => 'Pachete Touroperator',
-        'ro' => 'Pachete Touroperator',
-    ],
-    'eurosite.module_transport' => [
-        'en' => 'Transport Touroperator',
-        'ro' => 'Transport Touroperator',
-    ],
-    'eurosite.module_circuits' => [
-        'en' => 'Circuite Touroperator',
-        'ro' => 'Circuite Touroperator',
-    ],
-    'eurosite.module_coming_soon' => [
-        'en' => 'This Eurosite module is coming soon.',
-        'ro' => 'Acest modul Eurosite va fi disponibil în curând.',
-    ],
-    'eurosite.module_try_hotels' => [
-        'en' => 'Search hotel stays instead',
-        'ro' => 'Caută sejururi hoteliere',
     ],
     'eurosite.offer_expired' => [
         'en' => 'The selected offer has expired — please search again.',
@@ -326,9 +282,13 @@ return [
         'en' => 'Please provide a valid e-mail address and phone number.',
         'ro' => 'Introduceți o adresă de e-mail validă și un număr de telefon.',
     ],
-    'eurosite.carrier_missing' => [
-        'en' => 'Booking checkout is not fully configured yet — please contact us to finish this reservation.',
-        'ro' => 'Finalizarea rezervării nu este configurată complet — contactați-ne pentru a încheia rezervarea.',
+    'eurosite.hotel_not_bookable' => [
+        'en' => 'This hotel cannot be booked online yet — please contact us to book it.',
+        'ro' => 'Acest hotel nu poate fi rezervat online încă — contactați-ne pentru a-l rezerva.',
+    ],
+    'eurosite.cart_line_dropped' => [
+        'en' => 'This stay could not be added to the cart — please try again or contact us.',
+        'ro' => 'Acest sejur nu a putut fi adăugat în coș — încercați din nou sau contactați-ne.',
     ],
     'eurosite.added_to_cart' => [
         'en' => 'Your stay was added to the cart — complete checkout to confirm the reservation.',

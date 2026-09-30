@@ -53,12 +53,24 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         }
     }
 
-    // Pricing
+    // Pricing: the provider's price only — the quote the booking form stored
+    // on the server, or its customized price with the chosen services. Never
+    // the form's total_price (a guest could change it, and it already had
+    // commission added, which was then added a second time here).
+    $storedQuote = (new \Tygh\Addons\SphinxHolidays\Services\CircuitQuoteStore())->get($offer_id, $circuit_id, time());
     $customizedMap = TypeCoerce::toStringMap($customized);
     $customizedPricing = TypeCoerce::toStringMap($customizedMap['pricing'] ?? null);
-    $total_price   = TypeCoerce::toFloat($customizedPricing['selling_price'] ?? $bookingData['total_price'] ?? 0);
-    $basePrice     = TypeCoerce::toFloat($customizedPricing['supplier_price'] ?? $bookingData['base_price'] ?? $total_price);
-    $priceCurrency = TypeCoerce::toString($customizedPricing['currency'] ?? $bookingData['currency'] ?? ConfigProvider::getDefaultCurrency());
+    if ($storedQuote === null || ($selected_services !== [] && $customizedPricing === [])) {
+        fn_set_notification('W', __('warning'),
+            __('sphinx_holidays.offer_unavailable', ['[default]' => 'This offer is no longer available.']));
+        return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.circuit_booking_form?' . http_build_query([
+            'circuit_id' => $circuit_id,
+            'departure_date' => RequestCoerce::string($_REQUEST, 'departure_date'),
+        ])];
+    }
+    $total_price   = TypeCoerce::toFloat($customizedPricing['selling_price'] ?? $storedQuote['selling_price']);
+    $basePrice     = TypeCoerce::toFloat($customizedPricing['supplier_price'] ?? $total_price);
+    $priceCurrency = TypeCoerce::toString($customizedPricing['currency'] ?? ($storedQuote['currency'] !== '' ? $storedQuote['currency'] : ConfigProvider::getDefaultCurrency()));
     $total_price   = $cartService->applyCommission($total_price);
 
     if ($total_price <= 0) {
@@ -67,8 +79,9 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.circuit_search'];
     }
 
-    // Resolve product via the circuit link (sphinx_circuits.product_id,
-    // populated by the add_circuit_products cron).
+    // The circuit's own buyable Sphinx product (sphinx_circuits.product_id,
+    // populated by the add_circuit_products cron); the request's product_id
+    // only counts when it is that same product.
     $product_id = $cartService->resolveCircuitProductId($circuit_id, RequestCoerce::int($_REQUEST, 'product_id'));
     if (empty($product_id)) {
         fn_set_notification('E', __('error'),

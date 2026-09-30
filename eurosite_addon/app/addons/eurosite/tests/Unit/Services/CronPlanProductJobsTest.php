@@ -68,13 +68,13 @@ final class CronPlanProductJobsTest extends TestCase
         self::assertSame('  RO2M: 0 Immediate, 0 On request, 0 Stop sale, 5 no offer', AvailabilityCommand::cityLine('RO2M', '', ['NONE' => 5]));
     }
 
-    /** The product page's booking form sends hotel_id; the search narrows to that hotel. */
+    /** The product page's booking form sends hotel_id; the search is that hotel's only. */
     public function testTheStorefrontSearchCanNarrowToOneHotel(): void
     {
         $src = (string) file_get_contents(dirname(__DIR__, 3) . '/controllers/frontend/eurosite_booking/search.php');
 
         self::assertStringContainsString("RequestCoerce::string(\$_REQUEST, 'hotel_id')", $src);
-        self::assertStringContainsString("if (\$onlyHotel !== '' && strtoupper(\$pc) !== \$onlyHotel) {", $src);
+        self::assertStringContainsString('if (strtoupper($pc) !== $onlyHotel) {', $src);
         self::assertLessThan(strpos($src, '$whitelist->isCityAllowed($country, $city)'), strpos($src, '$onlyHotel = '), 'the hotel still has to be in a whitelisted city');
     }
 }

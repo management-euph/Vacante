@@ -228,10 +228,6 @@ msgctxt "Languages::eurosite.sync_full_confirm"
 msgid "Run the full static-data sync now? This makes many API calls."
 msgstr "Run the full static-data sync now? This makes many API calls."
 
-msgctxt "Languages::eurosite.seed_menu"
-msgid "Seed storefront menu"
-msgstr "Seed storefront menu"
-
 msgctxt "Languages::eurosite.recent_bookings"
 msgid "Recent bookings"
 msgstr "Recent bookings"
@@ -312,26 +308,6 @@ msgctxt "Languages::eurosite.save_whitelist"
 msgid "Save whitelist"
 msgstr "Save whitelist"
 
-msgctxt "Languages::eurosite.country"
-msgid "Country"
-msgstr "Country"
-
-msgctxt "Languages::eurosite.city"
-msgid "City / resort"
-msgstr "City / resort"
-
-msgctxt "Languages::eurosite.pick_country"
-msgid "— country —"
-msgstr "— country —"
-
-msgctxt "Languages::eurosite.pick_city"
-msgid "— city —"
-msgstr "— city —"
-
-msgctxt "Languages::eurosite.no_destinations_configured"
-msgid "No destinations are enabled yet. Please check back soon."
-msgstr "No destinations are enabled yet. Please check back soon."
-
 msgctxt "Languages::eurosite.destination_not_available"
 msgid "This destination is not available for booking."
 msgstr "This destination is not available for booking."
@@ -363,26 +339,6 @@ msgstr "Condiții de anulare"
 msgctxt "Languages::eurosite.fees_confirmed_at_booking"
 msgid "Condițiile de anulare vor fi confirmate la rezervare."
 msgstr "Condițiile de anulare vor fi confirmate la rezervare."
-
-msgctxt "Languages::eurosite.module_packages"
-msgid "Pachete Touroperator"
-msgstr "Pachete Touroperator"
-
-msgctxt "Languages::eurosite.module_transport"
-msgid "Transport Touroperator"
-msgstr "Transport Touroperator"
-
-msgctxt "Languages::eurosite.module_circuits"
-msgid "Circuite Touroperator"
-msgstr "Circuite Touroperator"
-
-msgctxt "Languages::eurosite.module_coming_soon"
-msgid "This Eurosite module is coming soon."
-msgstr "This Eurosite module is coming soon."
-
-msgctxt "Languages::eurosite.module_try_hotels"
-msgid "Search hotel stays instead"
-msgstr "Search hotel stays instead"
 
 msgctxt "Languages::eurosite.offer_expired"
 msgid "The selected offer has expired — please search again."
@@ -464,9 +420,13 @@ msgctxt "Languages::eurosite.contact_invalid"
 msgid "Please provide a valid e-mail address and phone number."
 msgstr "Please provide a valid e-mail address and phone number."
 
-msgctxt "Languages::eurosite.carrier_missing"
-msgid "Booking checkout is not fully configured yet — please contact us to finish this reservation."
-msgstr "Booking checkout is not fully configured yet — please contact us to finish this reservation."
+msgctxt "Languages::eurosite.hotel_not_bookable"
+msgid "This hotel cannot be booked online yet — please contact us to book it."
+msgstr "This hotel cannot be booked online yet — please contact us to book it."
+
+msgctxt "Languages::eurosite.cart_line_dropped"
+msgid "This stay could not be added to the cart — please try again or contact us."
+msgstr "This stay could not be added to the cart — please try again or contact us."
 
 msgctxt "Languages::eurosite.added_to_cart"
 msgid "Your stay was added to the cart — complete checkout to confirm the reservation."

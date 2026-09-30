@@ -53,12 +53,38 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         }
     }
 
-    // Pricing
+    // The package as the provider prices it NOW (the booking form's same
+    // verify): price, currency, hotel and dates never come from the form.
+    try {
+        $verified = TypeCoerce::toStringMap(Container::getApi()->verifyPackageOffer($offer_id));
+    } catch (\Throwable $e) {
+        fn_log_event('general', 'runtime', ['message' => 'Sphinx package add_to_cart verify failed: ' . $e->getMessage()]);
+        $verified = [];
+    }
+    $verifiedPricing = TypeCoerce::toStringMap($verified['pricing'] ?? null);
+    $verifiedHotel = TypeCoerce::toStringMap($verified['hotel'] ?? null);
     $customizedMap = TypeCoerce::toStringMap($customized);
     $customizedPricing = TypeCoerce::toStringMap($customizedMap['pricing'] ?? null);
-    $total_price   = TypeCoerce::toFloat($customizedPricing['selling_price'] ?? $bookingData['total_price'] ?? 0);
-    $basePrice     = TypeCoerce::toFloat($customizedPricing['supplier_price'] ?? $bookingData['base_price'] ?? $total_price);
-    $priceCurrency = TypeCoerce::toString($customizedPricing['currency'] ?? $bookingData['currency'] ?? ConfigProvider::getDefaultCurrency());
+    if ($verifiedPricing === [] || ($selected_services !== [] && $customizedPricing === [])) {
+        fn_set_notification('W', __('warning'),
+            __('sphinx_holidays.offer_unavailable', ['[default]' => 'This offer is no longer available.']));
+        return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.package_search'];
+    }
+    // The package's own hotel: the request cannot pair it with another hotel's product.
+    $verifiedHotelId = TypeCoerce::toString($verifiedHotel['id'] ?? '');
+    if ($verifiedHotelId === '' || ($hotel_id !== '' && $hotel_id !== $verifiedHotelId)) {
+        fn_set_notification('E', __('error'),
+            __('sphinx_holidays.invalid_offer', ['[default]' => 'Invalid offer.']));
+        return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.package_search'];
+    }
+    $hotel_id = $verifiedHotelId;
+
+    // Pricing: the provider's figure (customized with the chosen services,
+    // else verified), commission applied exactly once. The form's
+    // total_price already carried commission, which used to be added again.
+    $total_price   = TypeCoerce::toFloat($customizedPricing['selling_price'] ?? $verifiedPricing['selling_price'] ?? 0);
+    $basePrice     = TypeCoerce::toFloat($customizedPricing['supplier_price'] ?? $verifiedPricing['supplier_price'] ?? $total_price);
+    $priceCurrency = TypeCoerce::toString($customizedPricing['currency'] ?? $verifiedPricing['currency'] ?? ConfigProvider::getDefaultCurrency());
     $total_price   = $cartService->applyCommission($total_price);
 
     if ($total_price <= 0) {
@@ -67,7 +93,8 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.package_search'];
     }
 
-    // Resolve product
+    // The package's hotel's own buyable Sphinx product; the request's
+    // product_id only counts when it is that same product.
     $product_id = $cartService->resolveProductId($hotel_id, RequestCoerce::int($_REQUEST, 'product_id'));
     if (empty($product_id)) {
         fn_set_notification('E', __('error'),
@@ -76,8 +103,9 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
     }
 
     // Guest validation
-    $check_in  = RequestCoerce::string($_REQUEST, 'check_in');
-    $check_out = RequestCoerce::string($_REQUEST, 'check_out');
+    // The dates the provider priced (the form's only as a fallback).
+    $check_in  = TypeCoerce::toString($verifiedHotel['check_in'] ?? '') ?: RequestCoerce::string($_REQUEST, 'check_in');
+    $check_out = TypeCoerce::toString($verifiedHotel['check_out'] ?? '') ?: RequestCoerce::string($_REQUEST, 'check_out');
     $parsed_guests = $cartService->parseGuests(RequestCoerce::stringMap($_REQUEST, 'guests'), $check_in);
     if ($parsed_guests === false) {
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.package_booking_form?' . http_build_query([
@@ -104,7 +132,7 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
     // Extract type-specific
     $contact       = RequestCoerce::stringMap($_REQUEST, 'contact');
-    $hotelName     = RequestCoerce::string($_REQUEST, 'hotel_name');
+    $hotelName     = TypeCoerce::toString($verifiedHotel['name'] ?? '') ?: RequestCoerce::string($_REQUEST, 'hotel_name');
     $roomName      = RequestCoerce::string($_REQUEST, 'room_name');
     $boardName     = RequestCoerce::string($_REQUEST, 'board_name');
     $transport_type = RequestCoerce::string($_REQUEST, 'transport_type');

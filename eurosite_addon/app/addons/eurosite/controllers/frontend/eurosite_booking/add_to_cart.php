@@ -10,12 +10,18 @@ declare(strict_types=1);
  * shared travel_core field set; the POST layout stays byte-compatible with
  * the shared guest cards.
  *
- * The cart line rides on the hidden EUROSITE-BOOKING carrier product
- * (eurosite hotels have no per-hotel CS-Cart products — search is
- * destination-driven), with stored_price=Y and the travel_booking extra the
- * shared cart/order hooks key on.
+ * The cart line goes on the hotel's own product, chosen by product_id
+ * (BookingCartProduct): the product page the guest booked from, else the
+ * hotel's linked product. A hotel that is not a store product cannot be
+ * booked. stored_price=Y keeps the booking's price; the shared cart/order
+ * hooks key on the travel_booking extra, not the product.
+ *
+ * A refusal sends the guest back to the hotel's product page with their stay
+ * (BookingReturnUrl), where the search runs again — never to an empty page.
  */
 
+use Tygh\Addons\Eurosite\Services\BookingCartProduct;
+use Tygh\Addons\Eurosite\Services\BookingReturnUrl;
 use Tygh\Addons\Eurosite\Services\Container;
 use Tygh\Addons\Eurosite\Services\OfferContextStore;
 use Tygh\Addons\Eurosite\Services\RoomOccupancy;
@@ -30,7 +36,7 @@ if (!defined('BOOTSTRAP')) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    return [CONTROLLER_STATUS_REDIRECT, 'eurosite_booking.search'];
+    return [CONTROLLER_STATUS_REDIRECT, BookingReturnUrl::forProduct(BookingReturnUrl::requestedProductId($_REQUEST))];
 }
 
 $offerKey = (string) preg_replace('/[^a-f0-9]/', '', strtolower(RequestCoerce::string($_REQUEST, 'offer_key')));
@@ -40,7 +46,26 @@ if ($snapshot === null) {
         '[default]' => 'The selected offer has expired — please search again.',
     ]));
 
-    return [CONTROLLER_STATUS_REDIRECT, 'eurosite_booking.search'];
+    // The product page restores the guest's last search by itself.
+    return [CONTROLLER_STATUS_REDIRECT, BookingReturnUrl::forProduct(BookingReturnUrl::requestedProductId($_REQUEST))];
+}
+
+// ── The product the cart line goes on: the hotel's own, by product_id ──
+$cartProductId = BookingCartProduct::forSnapshot(
+    $snapshot,
+    Container::hotels()->findByProductCode(TypeCoerce::toString($snapshot['product_code'])),
+)['product_id'];
+if ($cartProductId <= 0) {
+    fn_set_notification('E', __('error'), __('eurosite.hotel_not_bookable', [
+        '[default]' => 'This hotel cannot be booked online yet — please contact us to book it.',
+    ]));
+    fn_log_event('general', 'runtime', ['message' => sprintf(
+        'Eurosite add_to_cart: hotel %s has no store product that can be bought',
+        TypeCoerce::toString($snapshot['product_code']),
+    )]);
+
+    // No product page to return to: it is disabled or gone.
+    return [CONTROLLER_STATUS_REDIRECT, BookingReturnUrl::HOME];
 }
 // Stop sale is never bookable (spec). OfferContextStore gives such offers no
 // key, so this only fires on a snapshot stored before that rule existed.
@@ -49,7 +74,7 @@ if (TypeCoerce::toString($snapshot['availability_code'] ?? '') === 'ST') {
         '[default]' => 'This offer is on stop sale and cannot be booked — please choose another.',
     ]));
 
-    return [CONTROLLER_STATUS_REDIRECT, 'eurosite_booking.search'];
+    return [CONTROLLER_STATUS_REDIRECT, BookingReturnUrl::forSnapshot($snapshot, $cartProductId)];
 }
 
 // ── Guests ──
@@ -118,11 +143,10 @@ if ($invalid || !$roomsMatch) {
 // day counts (no DST hour between two local midnights).
 $checkInDate = DateHelper::parseDate(TypeCoerce::toString($snapshot['check_in']));
 $ageMismatch = null;
-$correctedAges = [];
-$correctedRooms = [];
-foreach ($occupancy as $i => $room) {
-    $correctedRooms[$i + 1] = ['adults' => $room['adults'], 'children' => 0, 'childrenAges' => []];
-}
+$correctedRooms = array_map(
+    static fn (array $room): array => ['adults' => $room['adults'], 'children_ages' => []],
+    $occupancy,
+);
 foreach ($guests as $g) {
     if ($g['type'] !== 'child') {
         continue;
@@ -130,9 +154,9 @@ foreach ($guests as $g) {
     $atCheckIn = $checkInDate !== null
         ? (new \DateTimeImmutable($g['dob']))->diff(new \DateTimeImmutable($checkInDate))->y
         : TypeCoerce::toInt($g['age'] ?? 0);
-    $correctedAges[] = $atCheckIn;
-    $correctedRooms[$g['room']]['childrenAges'][] = $atCheckIn;
-    $correctedRooms[$g['room']]['children'] = count($correctedRooms[$g['room']]['childrenAges']);
+    if (isset($correctedRooms[$g['room'] - 1])) {
+        $correctedRooms[$g['room'] - 1]['children_ages'][] = $atCheckIn;
+    }
     if ($ageMismatch === null && $atCheckIn !== TypeCoerce::toInt($g['age'] ?? 0)) {
         $ageMismatch = ['name' => $g['name'], 'declared' => TypeCoerce::toInt($g['age'] ?? 0), 'actual' => $atCheckIn];
     }
@@ -145,16 +169,8 @@ if ($ageMismatch !== null) {
         '[default]' => 'The child [guest] will be [actual] years old at check-in, but the offer was priced for age [declared]. The search was re-run with the correct ages — please choose an offer again.',
     ]));
 
-    return [CONTROLLER_STATUS_REDIRECT, 'eurosite_booking.search?' . http_build_query([
-        'country'       => TypeCoerce::toString($snapshot['country_code']),
-        'city'          => TypeCoerce::toString($snapshot['city_code']),
-        'check_in'      => TypeCoerce::toString($snapshot['check_in']),
-        'check_out'     => TypeCoerce::toString($snapshot['check_out']),
-        'adults'        => TypeCoerce::toInt($snapshot['adults'] ?? 2),
-        'children_ages' => implode(',', $correctedAges),
-        'rooms'         => count($correctedRooms),
-        'rooms_data'    => (string) json_encode(array_values($correctedRooms)),
-    ])];
+    // The product page re-runs the search with the corrected ages.
+    return [CONTROLLER_STATUS_REDIRECT, BookingReturnUrl::forSnapshot($snapshot, $cartProductId, $correctedRooms)];
 }
 
 // Contact comes from CS-Cart checkout (as for sphinx/novoton): the booking
@@ -163,19 +179,6 @@ $guestEmail = trim(RequestCoerce::string($_REQUEST, 'guest_email'));
 $guestPhone = trim(RequestCoerce::string($_REQUEST, 'guest_phone'));
 if (filter_var($guestEmail, FILTER_VALIDATE_EMAIL) === false) {
     $guestEmail = '';
-}
-
-// ── Carrier product ──
-$carrierId = TypeCoerce::toInt(db_get_field(
-    "SELECT product_id FROM ?:products WHERE product_code = 'EUROSITE-BOOKING'",
-));
-if ($carrierId <= 0) {
-    fn_set_notification('E', __('error'), __('eurosite.carrier_missing', [
-        '[default]' => 'Booking checkout is not fully configured yet — please contact us to finish this reservation.',
-    ]));
-    fn_log_event('general', 'runtime', ['message' => 'Eurosite add_to_cart: EUROSITE-BOOKING carrier product missing']);
-
-    return [CONTROLLER_STATUS_REDIRECT, 'eurosite_booking.booking_form?offer_key=' . $offerKey];
 }
 
 // ── Persist the booking (mirror dual-write inside the repository) ──
@@ -245,7 +248,7 @@ if (!isset($cart['products']) || !is_array($cart['products'])) {
 }
 $cartId = (int) hexdec(substr(md5('eurosite' . $bookingId), 0, 7));
 $cart['products'][$cartId] = [
-    'product_id'   => $carrierId,
+    'product_id'   => $cartProductId,
     'amount'       => 1,
     'price'        => $cartPrice,
     'stored_price' => 'Y',
@@ -268,6 +271,27 @@ $cart['products'][$cartId] = [
 ];
 
 fn_calculate_cart_content($cart, $auth);
+
+// CS-Cart drops a line it won't sell (the product's category, user group,
+// storefront or vendor): the booking must not wait as if it were in the cart.
+if (!isset($cart['products'][$cartId])) {
+    Container::bookings()->update($bookingId, [
+        'status'       => TravelConstants::STATUS_FAILED,
+        'api_response' => 'CART_DROPPED: product ' . $cartProductId,
+    ]);
+    fn_log_event('general', 'runtime', ['message' => sprintf(
+        'Eurosite add_to_cart: the cart dropped booking %d (hotel %s, product %d)',
+        $bookingId,
+        TypeCoerce::toString($snapshot['product_code']),
+        $cartProductId,
+    )]);
+    fn_save_cart_content($cart, $userId);
+    fn_set_notification('E', __('error'), __('eurosite.cart_line_dropped', [
+        '[default]' => 'This stay could not be added to the cart — please try again or contact us.',
+    ]));
+
+    return [CONTROLLER_STATUS_REDIRECT, BookingReturnUrl::forSnapshot($snapshot, $cartProductId)];
+}
 fn_save_cart_content($cart, $userId);
 
 fn_set_notification('N', __('notice'), __('eurosite.added_to_cart', [
