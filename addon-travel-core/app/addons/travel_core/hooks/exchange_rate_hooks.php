@@ -15,7 +15,7 @@ declare(strict_types=1);
  *       'bnr_rates'        => array  (currency => RON rate)
  *       'publishing_date'  => string
  *       'commission'       => float
- *       'coefficients'     => array  (currency => EUR-based coefficient)
+ *       'coefficients'     => array  (currency => value of 1 unit in the primary currency)
  *       'updates'          => array  (currency => update result)
  *       'timestamp'        => string
  *
