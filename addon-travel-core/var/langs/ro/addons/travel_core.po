@@ -2317,3 +2317,7 @@ msgstr "Detalii"
 msgctxt "Languages::travel_core.stay_hide"
 msgid "Hide"
 msgstr "Ascunde"
+
+msgctxt "Languages::tmpl_travel_stay_summary"
+msgid "Stay summary (collapsible bar)"
+msgstr "Rezumat sejur (bară pliabilă)"

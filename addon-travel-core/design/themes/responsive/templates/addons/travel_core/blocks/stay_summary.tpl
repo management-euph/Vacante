@@ -1,3 +1,4 @@
+{** block-description:tmpl_travel_stay_summary **}
 {*
     Stay summary for the top of the checkout on phones — a layout block
     (block type travel_stay_summary, schemas/block_manager/blocks.post.php).
@@ -12,6 +13,10 @@
 
     The checkout controller assigns cart_products (with images); cart.products
     is the fallback. Non-travel lines return no card and are skipped.
+
+    Line 1 names the template in the block's Template dropdown: CS-Cart reads
+    block-description as a language key (without it, it falls back to the
+    file name and shows "_stay_summary").
 *}
 {$tss_products = $cart_products|default:$cart.products|default:[]}
 {foreach from=$tss_products key="tss_key" item="tss_product"}
