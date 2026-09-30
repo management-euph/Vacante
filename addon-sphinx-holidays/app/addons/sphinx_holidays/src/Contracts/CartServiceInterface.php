@@ -46,7 +46,8 @@ interface CartServiceInterface
     public function parseGuests(array $rawGuests, string $dateRef): array|false;
 
     /**
-     * Resolve a CS-Cart product_id from an entity ID (hotel_id, circuit_id, etc.).
+     * The hotel's own buyable Sphinx product (0 = refuse). $providedId, the
+     * request's product_id, is accepted only when it is that same product.
      */
     public function resolveProductId(string $entityId, int $providedId = 0): int;
 

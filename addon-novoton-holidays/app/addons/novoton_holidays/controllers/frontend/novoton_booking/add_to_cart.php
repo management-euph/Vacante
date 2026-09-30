@@ -58,21 +58,10 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
         return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
     }
 
-    // Get product ID from hotel ID
-    $prefix = ConfigProvider::getFirstProductCodePrefix();
+    // The hotel's own active Novoton product; the form's product_id only
+    // counts when it is that same product (never a fallback).
     $bdHotelId = TypeCoerce::toString($bookingData['hotel_id'] ?? '');
-    $product_code = $prefix . $bdHotelId;
-
-    $product_id = TypeCoerce::toInt(db_get_field(
-        "SELECT product_id FROM ?:products WHERE product_code = ?s",
-        $product_code
-    ));
-
-    if ($product_id <= 0) {
-        // Try the product_id from form
-        $product_id = TypeCoerce::toInt($bookingData['product_id'] ?? 0);
-    }
-
+    $product_id = \Tygh\Addons\NovotonHolidays\Services\HotelCartProduct::resolve($bdHotelId, TypeCoerce::toInt($bookingData['product_id'] ?? 0));
     if ($product_id <= 0) {
         fn_set_notification('E', __('error'), __('novoton_holidays.product_not_found'));
         return [CONTROLLER_STATUS_REDIRECT, 'index.index'];

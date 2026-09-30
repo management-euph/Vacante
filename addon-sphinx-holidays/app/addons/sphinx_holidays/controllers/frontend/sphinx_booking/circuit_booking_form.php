@@ -70,6 +70,15 @@ try {
     $sellingPrice = TypeCoerce::toFloat($quotePricing['selling_price'] ?? 0);
     $basePrice = $sellingPrice;
     $sellingPrice = Container::getCartService()->applyCommission($sellingPrice);
+    // The quote stays on the server: add-to-cart prices from it, never from the form.
+    (new \Tygh\Addons\SphinxHolidays\Services\CircuitQuoteStore())->remember(
+        $offer_id,
+        $circuit_id,
+        $basePrice,
+        TypeCoerce::toString($quotePricing['currency'] ?? ConfigProvider::getDefaultCurrency()),
+        $departure_date,
+        time(),
+    );
 
     // Parse rooms from quote
     $rooms = TypeCoerce::toRowList($quote['rooms'] ?? []);

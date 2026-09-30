@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\Eurosite\Services;
 
+use Tygh\Addons\TravelCore\Services\ProviderCartProduct;
+
 /**
  * Which CS-Cart product a Eurosite booking's cart line goes on — by
  * product_id, never by product code (a code is optional in CS-Cart; every
  * product has an id). As for Sphinx and Novoton, a booking always goes on the
  * hotel's own product; there is no stand-in product.
  *
- * In order, the first product that exists and can be bought (status A or H;
+ * In order, the first product that exists and can be bought (status A, or H
+ * when the availability gate hid it — the shared ProviderCartProduct rule;
  * CS-Cart drops a disabled product from the cart):
  *  1. the product page the guest booked from (its id rides in the server-side
  *     offer snapshot, so the form cannot change it);
@@ -31,10 +34,11 @@ final class BookingCartProduct
 
     /**
      * @param callable(int): string $statusOf the product's status, '' when it doesn't exist
+     * @param bool $gateHidden whether the availability gate hid the hotel's product
      *
      * @return array{product_id: int, source: string}
      */
-    public static function resolve(int $pageProductId, int $hotelProductId, callable $statusOf): array
+    public static function resolve(int $pageProductId, int $hotelProductId, callable $statusOf, bool $gateHidden = false): array
     {
         $candidates = [self::SOURCE_PAGE => $pageProductId, self::SOURCE_HOTEL => $hotelProductId];
         $checked = [];
@@ -43,7 +47,7 @@ final class BookingCartProduct
                 continue;
             }
             $checked[$productId] = true;
-            if (self::canBeBought($statusOf($productId))) {
+            if (self::canBeBought($statusOf($productId), $gateHidden)) {
                 return ['product_id' => $productId, 'source' => $source];
             }
         }
@@ -82,17 +86,17 @@ final class BookingCartProduct
         return self::resolve(
             $pageProductId,
             is_numeric($hotel) ? (int) $hotel : 0,
-            static function (int $productId): string {
-                $status = db_get_field('SELECT status FROM ?:products WHERE product_id = ?i', $productId);
-
-                return is_string($status) ? $status : '';
-            },
+            ProviderCartProduct::productStatus(...),
+            ($hotelRow['gate_hidden'] ?? 'N') === 'Y',
         );
     }
 
-    /** Active, or hidden (the availability gate hides a hotel): both stay in a cart. */
-    public static function canBeBought(string $status): bool
+    /**
+     * Active, or hidden by the availability gate (ProductGate sets
+     * gate_hidden): both stay in a cart. A product an admin hid stays hidden.
+     */
+    public static function canBeBought(string $status, bool $gateHidden = false): bool
     {
-        return in_array($status, ['A', 'H'], true);
+        return ProviderCartProduct::canBeBought($status, $gateHidden);
     }
 }

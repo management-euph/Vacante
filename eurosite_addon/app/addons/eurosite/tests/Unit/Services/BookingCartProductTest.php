@@ -25,9 +25,9 @@ final class BookingCartProductTest extends TestCase
     private const ROOT = __DIR__ . '/../../..';
 
     /** @param array<int, string> $statuses */
-    private static function resolve(int $page, int $hotel, array $statuses): array
+    private static function resolve(int $page, int $hotel, array $statuses, bool $gateHidden = false): array
     {
-        return BookingCartProduct::resolve($page, $hotel, static fn (int $id): string => $statuses[$id] ?? '');
+        return BookingCartProduct::resolve($page, $hotel, static fn (int $id): string => $statuses[$id] ?? '', $gateHidden);
     }
 
     public function testTheProductPageTheGuestBookedFromWins(): void
@@ -37,7 +37,9 @@ final class BookingCartProductTest extends TestCase
 
     public function testAGateHiddenProductCanStillBeBooked(): void
     {
-        self::assertSame(['product_id' => 41, 'source' => 'page'], self::resolve(41, 0, [41 => 'H']));
+        self::assertSame(['product_id' => 41, 'source' => 'page'], self::resolve(41, 0, [41 => 'H'], true));
+        // Hidden by an admin, not by the gate: it stays hidden.
+        self::assertSame(['product_id' => 0, 'source' => 'none'], self::resolve(41, 0, [41 => 'H']));
     }
 
     public function testADisabledOrDeletedPageProductFallsBackToTheHotelsProduct(): void
@@ -56,7 +58,8 @@ final class BookingCartProductTest extends TestCase
     public function testOnlyActiveAndHiddenProductsCanBeBought(): void
     {
         self::assertTrue(BookingCartProduct::canBeBought('A'));
-        self::assertTrue(BookingCartProduct::canBeBought('H'));
+        self::assertTrue(BookingCartProduct::canBeBought('H', true));
+        self::assertFalse(BookingCartProduct::canBeBought('H'), 'hidden by an admin');
         self::assertFalse(BookingCartProduct::canBeBought('D'));
         self::assertFalse(BookingCartProduct::canBeBought(''));
     }

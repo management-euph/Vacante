@@ -14,6 +14,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 use Tygh\Addons\SphinxHolidays\Services\CartService;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\SphinxHolidays\Services\OfferSnapshotStore;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
@@ -64,6 +65,27 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         \Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability::unwrapOffer($verifyResult)
     );
 
+    // The offer's own hotel — the verify answer, else the search snapshot —
+    // so the request cannot pair this offer with another hotel's product.
+    $offerHotelId = TypeCoerce::toString($verifyResult['hotel_id'] ?? '');
+    if ($offerHotelId === '') {
+        $offerHotelId = TypeCoerce::toString((OfferSnapshotStore::get($offer_id) ?? [])['hotel_id'] ?? '');
+    }
+    if ($offerHotelId !== '' && $hotel_id !== '' && $offerHotelId !== $hotel_id) {
+        fn_log_event('general', 'runtime', ['message' => sprintf(
+            'Sphinx add_to_cart: offer %s is for hotel %s, the request named hotel %s',
+            $offer_id,
+            $offerHotelId,
+            $hotel_id,
+        )]);
+        fn_set_notification('E', __('error'),
+            __('sphinx_holidays.invalid_offer', ['[default]' => 'Invalid offer.']));
+        return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
+    }
+    if ($offerHotelId !== '') {
+        $hotel_id = $offerHotelId;
+    }
+
     // Price with commission
     $basePrice = \Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability::extractPrice($verifyResult);
     $total_price = $cartService->applyCommission($basePrice);
@@ -89,7 +111,8 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
     ];
     unset($price_cache);
 
-    // Resolve product
+    // The hotel's own buyable Sphinx product; the request's product_id only
+    // counts when it is that same product.
     $product_id = $cartService->resolveProductId($hotel_id, $product_id);
     if (empty($product_id)) {
         fn_set_notification('E', __('error'),
