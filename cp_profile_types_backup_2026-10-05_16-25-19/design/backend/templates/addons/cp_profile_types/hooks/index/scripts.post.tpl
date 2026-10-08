@@ -1,0 +1,1 @@
+{script src="js/addons/cp_profile_types/func.js"}
