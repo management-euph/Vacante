@@ -72,7 +72,7 @@ OVERALL: Production-ready after the applied fixes.
   File:   addon-novoton-holidays/.../addon.xml
   Lines:  63-83
   Values: api_url=b2b.allinclusivebg.com, api_key=TEST-TEST-TEST-TEST-TEST,
-          api_id=713, api_user=EHROM117, api_password=EUP359YJX (plaintext!)
+          api_id=713, api_user=<redacted>, api_password=<redacted> (plaintext!)
   Impact: Credentials visible in source code / version control.
   Fix:    Removed all default values. Admin must configure after install.
 

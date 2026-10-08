@@ -59,7 +59,7 @@
                     </item>
                     <item id="api_key">
                         <type>password</type>
-                        <default_value>51|q3s6ZrK7212SFwQVBh5PkIOsPN9XS9WKJ7BtL9Puafaa6857</default_value>
+                        <default_value></default_value>
                         <variants/>
                     </item>
                     <item id="enable_api_cache">

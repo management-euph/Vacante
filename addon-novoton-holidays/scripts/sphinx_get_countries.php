@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 // --- Configuration ---
 $apiBaseUrl = 'https://api.sphinx2.christiantour.dev.ploi.imementohub.com';
-$apiKey     = '51|q3s6ZrK7212SFwQVBh5PkIOsPN9XS9WKJ7BtL9Puafaa6857';
+$apiKey     = (string) getenv('SPHINX_API_TOKEN'); // never commit a key
 
 // --- Functions ---
 

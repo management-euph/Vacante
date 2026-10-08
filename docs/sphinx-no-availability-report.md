@@ -3,7 +3,7 @@
 **To:** Sphinx / Christian Tour API team
 **From:** Euphoric Travel (account `guta.sergiu@gmail.com`)
 **Environment:** dev — `https://api.sphinx2.christiantour.dev.ploi.imementohub.com`
-**API key:** `51|q3s6Z…6857` (Bearer)
+**API key:** `51|<redacted>` (Bearer)
 
 ## Summary / the ask
 

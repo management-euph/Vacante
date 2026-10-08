@@ -72,3 +72,9 @@ dist/
 # is a symlink into this checkout, so KeyStorage writes them here. Private
 # keys must never reach the repo.
 addon-netopia-payments-main/app/addons/netopia_payments/keys/
+
+# Browser network captures (HAR) carry session cookies and request bodies.
+# Never commit them; scrub and share them out of band when needed.
+*.har
+*_Archive*.har
+devx.autoakt.ro_Archive*

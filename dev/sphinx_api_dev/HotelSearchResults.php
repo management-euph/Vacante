@@ -38,7 +38,7 @@ declare(strict_types=1);
 
 // ── Config ─────────────────────────────────────────────────────────────────
 const DEFAULT_API_URL   = 'https://api.sphinx2.christiantour.dev.ploi.imementohub.com';
-const DEFAULT_API_TOKEN = '51|q3s6ZrK7212SFwQVBh5PkIOsPN9XS9WKJ7BtL9Puafaa6857';
+const DEFAULT_API_TOKEN = ''; // set SPHINX_API_TOKEN; never commit a key
 
 const DEFAULT_DESTINATION_ID = 3713;
 const DEFAULT_CHECK_IN       = '2026-08-14';

@@ -80,12 +80,12 @@
                     </item>
                     <item id="api_user">
                         <type>input</type>
-                        <default_value>EHROM117</default_value>
+                        <default_value></default_value>
                         <variants/>
                     </item>
                     <item id="api_password">
                         <type>password</type>
-                        <default_value>EUP359YJX</default_value>
+                        <default_value></default_value>
                         <variants/>
                     </item>
                     <item id="enable_api_cache">
