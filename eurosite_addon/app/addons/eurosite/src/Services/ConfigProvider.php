@@ -131,9 +131,13 @@ class ConfigProvider extends AbstractConfigProvider
         return is_numeric($value) && (int) $value > 0 ? (int) $value : 1;
     }
 
+    /**
+     * Whether a plain http:// api_url is accepted. Off unless set: https://
+     * is always certificate-verified, this only unlocks unencrypted HTTP.
+     */
     public static function allowInsecureApi(): bool
     {
-        return self::getSetting('allow_insecure_api', 'Y') === 'Y';
+        return self::getBool('allow_insecure_api', false);
     }
 
     public static function getMaxRetries(): int

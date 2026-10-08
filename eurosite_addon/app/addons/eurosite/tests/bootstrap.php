@@ -44,8 +44,13 @@ spl_autoload_register(static function (string $class) use ($travelCoreSrc): void
 });
 
 // Minimal CS-Cart procedural stubs (only what the API layer references).
+// fn_log_event records its calls in $GLOBALS['eurosite_logged_events'] so
+// tests can assert what was logged.
 if (!function_exists('fn_log_event')) {
-    function fn_log_event(string $type, string $action, array $data = []): void {}
+    function fn_log_event(string $type, string $action, array $data = []): void
+    {
+        $GLOBALS['eurosite_logged_events'][] = [$type, $action, $data];
+    }
 }
 
 // Label lookup: the "[default]" text with its placeholders filled, which is

@@ -57,12 +57,12 @@ msgid "Default API language"
 msgstr "Limbă implicită API"
 
 msgctxt "SettingsOptions::eurosite::allow_insecure_api"
-msgid "Allow insecure (HTTP) API connection"
-msgstr "Permite conexiune API nesecurizată (HTTP)"
+msgid "Allow plain-HTTP (unencrypted) API URL"
+msgstr "Permite adresă API prin HTTP simplu (necriptat)"
 
 msgctxt "SettingsTooltips::eurosite::allow_insecure_api"
-msgid "Permit sending API credentials over unencrypted HTTP (dev only). Disable once the API URL uses https:// — connections then hard-fail rather than leak credentials in plaintext."
-msgstr "Permite trimiterea credențialelor API prin HTTP necriptat (doar pentru dezvoltare). Dezactivați când adresa API folosește https:// — conexiunile vor eșua în loc să expună credențialele în clar."
+msgid "Accept an API URL that starts with http://. The API username and password are then sent unencrypted; leave this off in production. An https:// URL always has its TLS certificate verified, whatever this setting says, and a URL without a scheme is treated as https://."
+msgstr "Acceptă o adresă API care începe cu http://. Utilizatorul și parola API sunt atunci trimise necriptat; lăsați opțiunea dezactivată în producție. Pentru o adresă https:// certificatul TLS este verificat întotdeauna, indiferent de această setare, iar o adresă fără schemă este tratată ca https://."
 
 msgctxt "SettingsOptions::eurosite::payment_terms_text"
 msgid "Payment terms text"

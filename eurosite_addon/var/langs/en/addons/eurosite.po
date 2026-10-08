@@ -57,12 +57,12 @@ msgid "Default API language"
 msgstr "Default API language"
 
 msgctxt "SettingsOptions::eurosite::allow_insecure_api"
-msgid "Allow insecure (HTTP) API connection"
-msgstr "Allow insecure (HTTP) API connection"
+msgid "Allow plain-HTTP (unencrypted) API URL"
+msgstr "Allow plain-HTTP (unencrypted) API URL"
 
 msgctxt "SettingsTooltips::eurosite::allow_insecure_api"
-msgid "Permit sending API credentials over unencrypted HTTP (dev only). Disable once the API URL uses https:// — connections then hard-fail rather than leak credentials in plaintext."
-msgstr "Permit sending API credentials over unencrypted HTTP (dev only). Disable once the API URL uses https:// — connections then hard-fail rather than leak credentials in plaintext."
+msgid "Accept an API URL that starts with http://. The API username and password are then sent unencrypted; leave this off in production. An https:// URL always has its TLS certificate verified, whatever this setting says, and a URL without a scheme is treated as https://."
+msgstr "Accept an API URL that starts with http://. The API username and password are then sent unencrypted; leave this off in production. An https:// URL always has its TLS certificate verified, whatever this setting says, and a URL without a scheme is treated as https://."
 
 msgctxt "SettingsOptions::eurosite::payment_terms_text"
 msgid "Payment terms text"

@@ -98,11 +98,12 @@
                         <default_value>RO</default_value>
                         <variants/>
                     </item>
-                    <!-- Eurosite endpoints may be http:// only; opt-in to allow
-                         sending credentials over unencrypted transport (dev). -->
+                    <!-- Opt-in to accept a plain http:// api_url (credentials
+                         then travel unencrypted). https:// is always
+                         certificate-verified; this never turns that off. -->
                     <item id="allow_insecure_api">
                         <type>checkbox</type>
-                        <default_value>Y</default_value>
+                        <default_value>N</default_value>
                         <variants/>
                     </item>
                     <!-- Shown in the "Conditii de Anulare si Plata" modal: the
