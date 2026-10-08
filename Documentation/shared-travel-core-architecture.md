@@ -1557,7 +1557,8 @@ The contract, enforced by `travel_core`'s `BookingIdContractTest`:
 |------------------------------|--------------------------------------------|-----------------------------------------|
 | `novoton_booking_id`         | `novoton_bookings.booking_id` (provider PK)| novoton add_to_cart (persisted)          |
 | `travel_booking_id`          | `sphinx_bookings.booking_id` (provider PK — legacy name, sphinx items only) | sphinx add_to_cart (persisted) |
-| `travel_surrogate_id`        | `travel_bookings.booking_id` (unified surrogate) | BOTH providers' `get_order_info` hooks (computed per render, never persisted) |
+| `eurosite_booking_id`, `booking_id` | `eurosite_bookings.booking_id` (provider PK; `booking_id` is the same value under a generic name) | eurosite add_to_cart (persisted) |
+| `travel_surrogate_id`        | `travel_bookings.booking_id` (unified surrogate) | each provider's `get_order_info` hook — novoton, sphinx and eurosite (computed per render, never persisted) |
 
 Rules:
 1. `travel_surrogate_id` is the ONLY key allowed in `travel_bookings.view`

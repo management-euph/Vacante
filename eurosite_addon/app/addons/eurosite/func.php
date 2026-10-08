@@ -242,6 +242,34 @@ function fn_eurosite_place_order_post(
 }
 
 /**
+ * get_order_info — the booking details the order page's per-line block
+ * (hooks/orders/product_info.post.tpl) reads but a eurosite cart line never
+ * stored: meal plan, children count, every room, the terms, the supplier
+ * reference + status, and in the admin the View Booking id.
+ *
+ * Runs wherever the order is read, including inside the customer's "Place
+ * order" request (place_order_post above): it only adds display keys, and
+ * nothing may escape.
+ *
+ * @param mixed $order fn_get_order_info() output (by reference)
+ * @param mixed $additional_data
+ */
+function fn_eurosite_get_order_info(&$order, $additional_data = []): void
+{
+    if (!is_array($order)) {
+        return;
+    }
+    try {
+        $order = (new \Tygh\Addons\Eurosite\Services\OrderLineDecorator(
+            \Tygh\Addons\Eurosite\Services\Container::bookings(),
+            \Tygh\Addons\Eurosite\Services\OrderLineDecorator::storeContext(),
+        ))->decorateOrder($order, defined('AREA') && AREA === 'A');
+    } catch (\Throwable $e) {
+        fn_log_event('general', 'runtime', ['message' => 'Eurosite get_order_info: ' . $e::class . ': ' . $e->getMessage()]);
+    }
+}
+
+/**
  * user_login_post — claim guest bookings created in this session.
  */
 function fn_eurosite_user_login_post(mixed $user_data, mixed $user_id, mixed $unused = null): void

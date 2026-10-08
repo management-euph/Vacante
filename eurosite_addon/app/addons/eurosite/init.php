@@ -162,6 +162,7 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
 fn_register_hooks(
     'pre_place_order',            // price-tamper guard on eurosite cart lines
     'place_order_post',           // link + submit bookings to the Eurosite API
+    'get_order_info',             // booking details for the order page block
     'user_login_post',            // claim guest bookings by session
     'create_user_post',           // claim bookings for new registrations
     'travel_link_order_bookings', // travel_core reconcile sweep

@@ -1251,3 +1251,23 @@ msgstr "[n] sold {city is|cities are} no longer in the Eurosite catalog."
 msgctxt "Languages::eurosite.dest_alert_outside"
 msgid "[n] live {product is|products are} outside the destination whitelist."
 msgstr "[n] live {product is|products are} outside the destination whitelist."
+
+msgctxt "Languages::eurosite.order_booking_ref"
+msgid "Eurosite booking: [ref] ([status])"
+msgstr "Eurosite booking: [ref] ([status])"
+
+msgctxt "Languages::eurosite.booking_status_pending"
+msgid "Pending"
+msgstr "Pending"
+
+msgctxt "Languages::eurosite.booking_status_confirmed"
+msgid "Confirmed"
+msgstr "Confirmed"
+
+msgctxt "Languages::eurosite.booking_status_cancelled"
+msgid "Cancelled"
+msgstr "Cancelled"
+
+msgctxt "Languages::eurosite.booking_status_failed"
+msgid "Failed"
+msgstr "Failed"

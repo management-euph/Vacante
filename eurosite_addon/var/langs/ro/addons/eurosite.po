@@ -1251,3 +1251,23 @@ msgstr "[n] {oraș vândut nu mai este|orașe vândute nu mai sunt|de orașe vâ
 msgctxt "Languages::eurosite.dest_alert_outside"
 msgid "[n] live {product is|products are} outside the destination whitelist."
 msgstr "[n] {produs activ este|produse active sunt|de produse active sunt} în afara listei de destinații."
+
+msgctxt "Languages::eurosite.order_booking_ref"
+msgid "Eurosite booking: [ref] ([status])"
+msgstr "Rezervare Eurosite: [ref] ([status])"
+
+msgctxt "Languages::eurosite.booking_status_pending"
+msgid "Pending"
+msgstr "În așteptare"
+
+msgctxt "Languages::eurosite.booking_status_confirmed"
+msgid "Confirmed"
+msgstr "Confirmată"
+
+msgctxt "Languages::eurosite.booking_status_cancelled"
+msgid "Cancelled"
+msgstr "Anulată"
+
+msgctxt "Languages::eurosite.booking_status_failed"
+msgid "Failed"
+msgstr "Eșuată"
