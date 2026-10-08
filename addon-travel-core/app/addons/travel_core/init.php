@@ -109,6 +109,7 @@ if (function_exists('fn_travel_core_heal_language_keys')) {
 fn_register_hooks(
     'get_cart_product_data_post',      // Format cart items for travel bookings
     'calculate_cart_items_post',       // Ensure rooms_data preserved as array
+    'pre_add_to_cart',                 // Storefront adds may not set travel/provider extra keys
     'dispatch_before_display',         // CSS loading for booking pages
     'get_order_info',                   // Format booking data in order view
     'place_order_post',                 // Deposit orders: record the balance owed

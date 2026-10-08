@@ -115,7 +115,9 @@ Addon settings (Admin → Add-ons → Eurosite), read via `ConfigProvider`:
 - `api_user` / `api_password` — the credentials embedded in `<AuditInfo>`
 - `tourop_code` — the operator code in payloads (default `EU`)
 - `default_currency` (EUR) / `default_language` (RO)
-- `allow_insecure_api` — permit http:// transport (dev)
+- `allow_insecure_api` — accept a plain `http://` `api_url` (credentials sent
+  unencrypted; default off). `https://` URLs always verify the TLS certificate
+  and host name regardless of this flag, and a scheme-less URL becomes `https://`
 - retry / timeout / circuit-breaker tuning
 
 There are **no default credentials** — the spec ships placeholders

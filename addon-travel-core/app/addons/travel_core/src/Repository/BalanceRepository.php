@@ -16,7 +16,8 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  * link through the normal checkout, so any payment method works.
  *
  * status: open → paid (the balance order reached P/C) | cancelled (the
- * deposit order was cancelled or declined).
+ * deposit order was cancelled or declined). Settling goes through
+ * markPaidIfOpen(), which only ever moves an open row.
  */
 class BalanceRepository
 {
@@ -134,6 +135,37 @@ class BalanceRepository
     public function update(int $balanceId, array $fields): void
     {
         db_query('UPDATE ?:travel_balances SET ?u WHERE balance_id = ?i', $fields, $balanceId);
+    }
+
+    /**
+     * Link the order placed to pay a balance — only while the balance is
+     * still open. True when the row was written (db_query() answers an
+     * UPDATE with its affected-row count).
+     */
+    public function linkOpen(int $balanceId, int $balanceOrderId): bool
+    {
+        return TypeCoerce::toInt(db_query(
+            'UPDATE ?:travel_balances SET balance_order_id = ?i WHERE balance_id = ?i AND status = ?s',
+            $balanceOrderId,
+            $balanceId,
+            self::STATUS_OPEN,
+        )) > 0;
+    }
+
+    /**
+     * open → paid by $balanceOrderId. Never touches a paid or cancelled
+     * balance: false when no open row was there to settle.
+     */
+    public function markPaidIfOpen(int $balanceId, int $balanceOrderId, string $paidAt): bool
+    {
+        return TypeCoerce::toInt(db_query(
+            'UPDATE ?:travel_balances SET status = ?s, balance_order_id = ?i, paid_at = ?s WHERE balance_id = ?i AND status = ?s',
+            self::STATUS_PAID,
+            $balanceOrderId,
+            $paidAt,
+            $balanceId,
+            self::STATUS_OPEN,
+        )) > 0;
     }
 
     public function cancelOpenForOrder(int $orderId): void

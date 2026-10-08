@@ -7,7 +7,7 @@ To begin using our API and authenticate your requests, you will need the followi
     API Key: Your unique key that you can use to access all the API features.
 
 Url instanta dev:api.sphinx2.christiantour.dev.ploi.imementohub.com 
-api key dev: 51|q3s6ZrK7212SFwQVBh5PkIOsPN9XS9WKJ7BtL9Puafaa6857
+api key dev: <stored in the add-on settings; not committed>
 
 Using the API Key
 To authenticate a request, simply include your API Key in the Authorization header with the Bearer scheme. Here's how to add the token to the request header using cURL:

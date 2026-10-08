@@ -28,14 +28,18 @@ interface BookingOwnershipRepositoryInterface
     public function findByProductIds(array $product_ids, array $statuses = [TravelConstants::STATUS_PENDING, TravelConstants::STATUS_CONFIRMED], string $session_id = '', int $user_id = 0): array;
 
     /**
-     * Find a booking by ID only when it belongs to the given user or session.
+     * Find a cart-stage booking (order_id = 0, status pending) by ID only when
+     * it belongs to the given user or session. user_id counts only when > 0
+     * and session_id only when non-empty: an anonymous visitor with no
+     * session owns nothing (guest bookings are stored with user_id = 0).
      *
      * @return array<string, mixed>|null
      */
     public function findByIdWithOwnership(int $booking_id, int $user_id, string $session_id): ?array;
 
     /**
-     * Check booking ownership; returns the booking_id when owned, else null.
+     * Same rule as findByIdWithOwnership; returns the booking_id when owned,
+     * else null.
      */
     public function checkOwnership(int $booking_id, int $user_id, string $session_id): ?int;
 }

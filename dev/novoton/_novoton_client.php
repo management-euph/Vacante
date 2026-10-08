@@ -23,8 +23,8 @@ declare(strict_types=1);
  *   NOVOTON_API_URL       host or full base URL (default b2b.allinclusivebg.com)
  *   NOVOTON_API_KEY       API key   (default TEST-TEST-TEST-TEST-TEST)
  *   NOVOTON_API_ID        API id    (default 713)
- *   NOVOTON_API_USER      <usr>     (default EHROM117)
- *   NOVOTON_API_PASSWORD  <psw>     (default EUP359YJX)
+ *   NOVOTON_API_USER      <usr>     (required, no default)
+ *   NOVOTON_API_PASSWORD  <psw>     (required, no default)
  *   NOVOTON_API_LANG      default language for calls (default UK)
  *   NOVOTON_API_INSECURE  1 to skip TLS verify (dev only)
  *
@@ -34,8 +34,8 @@ declare(strict_types=1);
 const NVT_DEFAULT_API_URL      = 'b2b.allinclusivebg.com';
 const NVT_DEFAULT_API_KEY      = 'TEST-TEST-TEST-TEST-TEST';
 const NVT_DEFAULT_API_ID       = '713';
-const NVT_DEFAULT_API_USER     = 'EHROM117';
-const NVT_DEFAULT_API_PASSWORD = 'EUP359YJX';
+const NVT_DEFAULT_API_USER     = ''; // set NOVOTON_API_USER; never commit credentials
+const NVT_DEFAULT_API_PASSWORD = ''; // set NOVOTON_API_PASSWORD
 const NVT_DEFAULT_LANG         = 'UK';
 
 /** True when invoked from the command line (vs. served over a web SAPI). */

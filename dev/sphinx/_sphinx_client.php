@@ -25,7 +25,7 @@ declare(strict_types=1);
  */
 
 const SPX_DEFAULT_API_URL   = 'https://api.sphinx2.christiantour.dev.ploi.imementohub.com';
-const SPX_DEFAULT_API_TOKEN = '51|q3s6ZrK7212SFwQVBh5PkIOsPN9XS9WKJ7BtL9Puafaa6857';
+const SPX_DEFAULT_API_TOKEN = ''; // set SPHINX_API_TOKEN; never commit a key
 
 function spx_is_cli(): bool
 {

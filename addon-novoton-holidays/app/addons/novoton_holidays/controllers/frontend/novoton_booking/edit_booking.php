@@ -24,7 +24,9 @@ use Tygh\Addons\NovotonHolidays\ViewModels\NovotonBookingSidebarBuilder;
         return [CONTROLLER_STATUS_REDIRECT, 'checkout.cart'];
     }
 
-    // Get booking record — verify ownership (user_id or session_id)
+    // Get booking record — verify ownership (a real user_id > 0 or a non-empty
+    // session id; guest bookings all carry user_id 0, so it never matches on
+    // its own). Only a pending booking not yet attached to an order is returned.
     // CS-Cart's session is an ArrayAccess container object; a plain (non-reference)
     // local binds the same object handle, so offset reads below operate on the
     // live session exactly as direct `Tygh::$app['session'][...]` access would.

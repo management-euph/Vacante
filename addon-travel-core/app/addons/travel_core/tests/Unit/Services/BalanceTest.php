@@ -49,6 +49,31 @@ final class FakeBalanceRepository extends BalanceRepository
         $this->rows[$balanceId] = $fields + ($this->rows[$balanceId] ?? ['balance_id' => $balanceId]);
     }
 
+    /**
+     * Same contract as the real conditional UPDATEs: only an open row moves,
+     * and, like MySQL, an UPDATE that changes nothing reports 0 rows.
+     */
+    public function linkOpen(int $balanceId, int $balanceOrderId): bool
+    {
+        if (($this->rows[$balanceId]['status'] ?? null) !== self::STATUS_OPEN
+            || ($this->rows[$balanceId]['balance_order_id'] ?? null) === $balanceOrderId) {
+            return false;
+        }
+        $this->rows[$balanceId]['balance_order_id'] = $balanceOrderId;
+
+        return true;
+    }
+
+    public function markPaidIfOpen(int $balanceId, int $balanceOrderId, string $paidAt): bool
+    {
+        if (($this->rows[$balanceId]['status'] ?? null) !== self::STATUS_OPEN) {
+            return false;
+        }
+        $this->rows[$balanceId] = ['status' => self::STATUS_PAID, 'balance_order_id' => $balanceOrderId, 'paid_at' => $paidAt] + $this->rows[$balanceId];
+
+        return true;
+    }
+
     public function cancelOpenForOrder(int $orderId): void
     {
         foreach ($this->rows as $id => $r) {
@@ -109,7 +134,7 @@ final class BalanceTest extends TestCase
         $service = new BalanceService($repo, 'secret');
         $service->onOrderPlaced(1042, self::depositOrder());
 
-        $balanceOrder = ['order_id' => 1100, 'products' => ['x' => ['product_id' => 77, 'extra' => ['travel_balance_id' => 1, 'parent_order_id' => 1042]]]];
+        $balanceOrder = self::balanceOrder(1100, ['product_id' => 77, 'price' => 209.3, 'amount' => 1]);
         $service->onOrderPlaced(1100, $balanceOrder);
         self::assertSame(1100, $repo->rows[1]['balance_order_id']);
         self::assertSame('open', $repo->rows[1]['status'], 'placed is not paid (bank transfer waits for the admin)');
@@ -118,6 +143,133 @@ final class BalanceTest extends TestCase
         self::assertSame('open', $repo->rows[1]['status']);
         $service->onStatusChanged('P', $balanceOrder);
         self::assertSame('paid', $repo->rows[1]['status']);
+    }
+
+    public function testReplacingAnAlreadyLinkedBalanceOrderLogsNothing(): void
+    {
+        [$service, $repo, $log] = self::withRecordedBalance();
+        $balanceOrder = self::balanceOrder(1100, ['product_id' => 77, 'price' => 209.3, 'amount' => 1]);
+
+        $service->onOrderPlaced(1100, $balanceOrder);
+        $service->onOrderPlaced(1100, $balanceOrder); // admin edits and re-places the same order
+
+        self::assertSame(1100, $repo->rows[1]['balance_order_id']);
+        self::assertSame([], $log->getArrayCopy(), 'no false "settled meanwhile" warning');
+    }
+
+    /**
+     * The balance order of the pay link: one line, extra written by
+     * travel_balance.pay. $line overrides the line's own fields.
+     *
+     * @param array<string, mixed> $line
+     * @param array<string, mixed> $extra
+     * @return array<string, mixed>
+     */
+    private static function balanceOrder(int $orderId, array $line, array $extra = []): array
+    {
+        return [
+            'order_id' => $orderId,
+            'products' => ['x' => $line + ['extra' => $extra + ['travel_balance_id' => 1, 'travel_balance' => true, 'parent_order_id' => 1042]]],
+        ];
+    }
+
+    /** @return array{0: BalanceService, 1: FakeBalanceRepository, 2: \ArrayObject<int, string>} */
+    private static function withRecordedBalance(): array
+    {
+        $repo = new FakeBalanceRepository();
+        $log = new \ArrayObject();
+        $service = new BalanceService($repo, 'secret', static function (string $m) use ($log): void {
+            $log->append($m);
+        });
+        $service->onOrderPlaced(1042, self::depositOrder());
+
+        return [$service, $repo, $log];
+    }
+
+    /**
+     * REGRESSION (audit H1): any line carrying extra.travel_balance_id linked
+     * and settled that balance. A forged line - a cheap product, too small a
+     * charge, another deposit order, an unknown balance - now neither links
+     * nor settles, and is logged.
+     *
+     * @return iterable<string, array{0: array<string, mixed>, 1: array<string, mixed>}>
+     */
+    public static function forgedLines(): iterable
+    {
+        yield 'a cheap product' => [['product_id' => 3, 'price' => 209.3, 'amount' => 1], []];
+        yield 'the balance product for 1.00' => [['product_id' => 77, 'price' => 1.0, 'amount' => 1], []];
+        yield 'one cent short' => [['product_id' => 77, 'price' => 209.29, 'amount' => 1], []];
+        yield 'no price at all' => [['product_id' => 77], []];
+        yield 'another deposit order' => [['product_id' => 77, 'price' => 209.3, 'amount' => 1], ['parent_order_id' => 999]];
+        yield 'no deposit order' => [['product_id' => 77, 'price' => 209.3, 'amount' => 1], ['parent_order_id' => null]];
+        yield 'an unknown balance' => [['product_id' => 77, 'price' => 209.3, 'amount' => 1], ['travel_balance_id' => 58]];
+    }
+
+    /**
+     * @param array<string, mixed> $line
+     * @param array<string, mixed> $extra
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('forgedLines')]
+    public function testAForgedBalanceLineNeitherLinksNorSettles(array $line, array $extra): void
+    {
+        [$service, $repo, $log] = self::withRecordedBalance();
+        $order = self::balanceOrder(1100, $line, $extra);
+
+        $service->onOrderPlaced(1100, $order);
+        $service->onStatusChanged('P', $order);
+        $service->onStatusChanged('C', $order);
+
+        self::assertSame('open', $repo->rows[1]['status'], 'reminders must keep running');
+        self::assertArrayNotHasKey('balance_order_id', $repo->rows[1]);
+        self::assertCount(1, $repo->rows, 'a balance line records no balance of its own');
+        self::assertCount(3, $log, 'every refusal is logged');
+        self::assertStringContainsString('refused', $log[0]);
+    }
+
+    public function testACancelledBalanceIsNeverTurnedPaid(): void
+    {
+        [$service, $repo, $log] = self::withRecordedBalance();
+        $service->onStatusChanged('I', self::depositOrder());
+        $order = self::balanceOrder(1100, ['product_id' => 77, 'price' => 209.3, 'amount' => 1]);
+
+        $service->onOrderPlaced(1100, $order);
+        $service->onStatusChanged('P', $order);
+
+        self::assertSame('cancelled', $repo->rows[1]['status']);
+        self::assertArrayNotHasKey('balance_order_id', $repo->rows[1]);
+        self::assertStringContainsString('balance is cancelled', $log[0]);
+    }
+
+    public function testABalancePaidByOneOrderIsNotOverwrittenByAnother(): void
+    {
+        [$service, $repo, $log] = self::withRecordedBalance();
+        $first = self::balanceOrder(1100, ['product_id' => 77, 'price' => 209.3, 'amount' => 1]);
+        $service->onStatusChanged('P', $first);
+        $paidAt = $repo->rows[1]['paid_at'];
+
+        $second = self::balanceOrder(1200, ['product_id' => 77, 'price' => 209.3, 'amount' => 1]);
+        $service->onOrderPlaced(1200, $second);
+        $service->onStatusChanged('P', $second);
+
+        self::assertSame('paid', $repo->rows[1]['status']);
+        self::assertSame(1100, $repo->rows[1]['balance_order_id']);
+        self::assertSame($paidAt, $repo->rows[1]['paid_at']);
+        self::assertCount(2, $log);
+    }
+
+    public function testTheMatchingLineSettlesOnceAndCompleteAfterProcessedIsQuiet(): void
+    {
+        [$service, $repo, $log] = self::withRecordedBalance();
+        // Two units at half the balance charge the whole of it.
+        $order = self::balanceOrder(1100, ['product_id' => 77, 'price' => '104.65', 'amount' => '2']);
+
+        $service->onOrderPlaced(1100, $order);
+        $service->onStatusChanged('P', $order);
+        $service->onStatusChanged('C', $order);
+
+        self::assertSame('paid', $repo->rows[1]['status']);
+        self::assertSame(1100, $repo->rows[1]['balance_order_id']);
+        self::assertCount(0, $log);
     }
 
     public function testCancellingTheDepositOrderCancelsTheBalance(): void
