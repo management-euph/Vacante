@@ -10,6 +10,7 @@
  */
 
 use Netopia\CsCart\Ipn\IpnHandler;
+use Netopia\CsCart\Payment\RefundBasis;
 use Netopia\CsCart\Support\Arr;
 use Tygh\Tygh;
 
@@ -59,8 +60,8 @@ if ($mode === 'details') {
         //   (b) `transaction_id` is set so we have an ntpID to refund
         //       against.
         //
-        //   (c) NETOPIA processing currency is known (so we can render the
-        //       paid amount).
+        //   (c) The refund basis (RefundBasis: paid amount + currency) is
+        //       known, the same check the refund controller makes.
         //
         // Refundable balance > 0 is a SEPARATE gate (`netopia_refund_can_submit`)
         // — when the order has been fully refunded the modal still opens
@@ -69,23 +70,18 @@ if ($mode === 'details') {
         $payment_info = is_array($order_info['payment_info'] ?? null) ? $order_info['payment_info'] : [];
         $netopia_payment_id = is_string($payment_info['transaction_id'] ?? null) ? $payment_info['transaction_id'] : '';
 
-        // Source amounts from the actual NETOPIA processing currency, NOT
-        // CS-Cart's display currency. Example: an order placed in USD with
-        // total $452.91 may have been processed at NETOPIA as 2.698,67 RON
-        // (the addon's processor_params can pin the refund currency to RON
-        // regardless of order currency). Refunds MUST be issued in NETOPIA's
-        // currency, so the modal's "remaining refundable" and amount input
-        // must show that currency too — otherwise the admin types "100"
-        // expecting USD and we'd send 100 RON.
-        $netopia_amount_str = is_string($payment_info['netopia_amount'] ?? null)
-            ? $payment_info['netopia_amount']
-            : '';
-        $paid = IpnHandler::parseFormattedAmount($netopia_amount_str);
-        $refunded_str = is_string($payment_info['netopia_refunded_amount'] ?? null)
-            ? $payment_info['netopia_refunded_amount']
-            : '';
-        $already_refunded = $refunded_str === '' ? 0.0 : IpnHandler::parseAmount($refunded_str);
-        $refundable_remaining = max(0.0, $paid['value'] - $already_refunded);
+        // Source amounts from the refund basis the refund controller caps
+        // and sends in (RefundBasis): the START-REQUEST charge
+        // (`netopia_start_amount`, e.g. "68,70 EUR"), falling back to the
+        // IPN's `netopia_amount` for orders that pre-date it. NOT the IPN's
+        // post-FX amount (e.g. "361,78 RON") and NOT CS-Cart's display
+        // currency: the panel's paid / refunded / remaining figures, the
+        // currency label, "Refund all" and the bar must all be in the
+        // currency NETOPIA refunds in — otherwise the admin types "50"
+        // meaning RON and we send 50 EUR. `netopia_refunded_amount` is
+        // written by RefundFinalizer on the same basis.
+        $basis = RefundBasis::fromPaymentInfo($payment_info);
+        $refundable_remaining = $basis->remaining();
 
         $processor_data = fn_netopia_get_payment_method_data(Arr::int($order_info, 'payment_id'));
         $processor_params = is_array($processor_data['processor_params'] ?? null)
@@ -100,24 +96,21 @@ if ($mode === 'details') {
         $current_status = is_string($order_info['status'] ?? null) ? $order_info['status'] : '';
         $is_paid_status = $current_status !== '' && in_array($current_status, $paid_status_codes, true);
 
-        if ($is_paid_status && $netopia_payment_id !== '' && $paid['currency'] !== '') {
+        if ($is_paid_status && $netopia_payment_id !== '' && $basis->isKnown()) {
             $refund_log = is_string($payment_info['netopia_refund_log'] ?? null)
                 ? $payment_info['netopia_refund_log']
                 : '';
             $view->assign('netopia_refund_available', true);
             $view->assign('netopia_refund_can_submit', $refundable_remaining > 0.0);
             $view->assign('netopia_refund_remaining', $refundable_remaining);
-            $view->assign('netopia_refund_remaining_display', IpnHandler::formatAmount($refundable_remaining, $paid['currency']));
-            $view->assign('netopia_refund_already_refunded', $already_refunded);
-            $view->assign('netopia_refund_already_refunded_display', IpnHandler::formatAmount($already_refunded, $paid['currency']));
-            $view->assign('netopia_refund_paid_display', IpnHandler::formatAmount($paid['value'], $paid['currency']));
-            $view->assign('netopia_refund_currency', $paid['currency']);
+            $view->assign('netopia_refund_remaining_display', IpnHandler::formatAmount($refundable_remaining, $basis->currency));
+            $view->assign('netopia_refund_already_refunded', $basis->alreadyRefunded);
+            $view->assign('netopia_refund_already_refunded_display', IpnHandler::formatAmount($basis->alreadyRefunded, $basis->currency));
+            $view->assign('netopia_refund_paid_display', IpnHandler::formatAmount($basis->paid, $basis->currency));
+            $view->assign('netopia_refund_currency', $basis->currency);
             // The order panel's bar: the refunded share of the paid amount.
-            $view->assign('netopia_refund_paid', $paid['value']);
-            $view->assign(
-                'netopia_refund_refunded_pct',
-                $paid['value'] > 0.0 ? min(100.0, round($already_refunded / $paid['value'] * 100, 1)) : 0.0,
-            );
+            $view->assign('netopia_refund_paid', $basis->paid);
+            $view->assign('netopia_refund_refunded_pct', $basis->refundedPercent());
             $view->assign('netopia_refund_history', fn_netopia_parse_refund_log($refund_log));
             // The original payment's NETOPIA-side order id (the
             // `<csCartId>-<retrySuffix>` value shown in NETOPIA's merchant

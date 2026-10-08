@@ -83,27 +83,16 @@ final class RefundFinalizer
         string $origin = 'admin',
     ): RefundResult {
         $paymentInfoPrev = Arr::array($orderInfo, 'payment_info');
-        $previousRefundedStr = Arr::string($paymentInfoPrev, 'netopia_refunded_amount');
-        $previousRefunded = $previousRefundedStr === '' ? 0.0 : IpnHandler::parseAmount($previousRefundedStr);
-        $cumulativeRefunded = $previousRefunded + $amount;
-        // Compare against the START-REQUEST charge (`netopia_start_amount`,
-        // e.g. "68,70 EUR"), the same basis the refund controller uses for
-        // its cap-check — so cumulative_refunded and originalAmount are
-        // always denominated in the same currency. Falling back to
-        // `netopia_amount` (the post-FX IPN amount, e.g. "361,78 RON")
-        // keeps legacy orders that pre-date `netopia_start_amount`
-        // working: same-currency orders agree on both values, and FX
-        // orders use the controller's matching fallback so cumulative
-        // and original stay in the same currency within one order.
-        // Final fallback to the CS-Cart order total handles orders with
-        // no NETOPIA payment record at all (avoids labelling every
-        // refund as "full" when both fields are absent).
-        $netopiaStartStr = Arr::string($paymentInfoPrev, 'netopia_start_amount');
-        $netopiaPaidStr = $netopiaStartStr !== ''
-            ? $netopiaStartStr
-            : Arr::string($paymentInfoPrev, 'netopia_amount');
-        $netopiaPaid = $netopiaPaidStr === '' ? 0.0 : IpnHandler::parseAmount($netopiaPaidStr);
-        $originalAmount = $netopiaPaid > 0.0 ? $netopiaPaid : Arr::float($orderInfo, 'total');
+        // Same basis the refund controller caps against and the order panel
+        // shows (RefundBasis: `netopia_start_amount`, else the legacy
+        // `netopia_amount`), so cumulative_refunded and originalAmount are
+        // always in the currency the refund was sent in. Fallback to the
+        // CS-Cart order total handles orders with no NETOPIA payment
+        // record at all (avoids labelling every refund as "full" when
+        // both fields are absent).
+        $basis = RefundBasis::fromPaymentInfo($paymentInfoPrev);
+        $cumulativeRefunded = $basis->alreadyRefunded + $amount;
+        $originalAmount = $basis->paid > 0.0 ? $basis->paid : Arr::float($orderInfo, 'total');
         // Tolerate float rounding — half a cent is well below any
         // currency's smallest unit and prevents 499.995 < 500.0 from
         // being mis-labelled partial. Also guard against

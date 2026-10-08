@@ -23,6 +23,7 @@ use Netopia\CsCart\Bootstrap;
 use Netopia\CsCart\Ipn\IpnHandler;
 use Netopia\CsCart\Payment\ClaimResult;
 use Netopia\CsCart\Payment\RefundAttemptStore;
+use Netopia\CsCart\Payment\RefundBasis;
 use Netopia\CsCart\Payment\RefundReplay;
 use Netopia\CsCart\Payment\RefundService;
 use Netopia\CsCart\Support\Arr;
@@ -30,6 +31,14 @@ use Tygh\Tygh;
 
 if (!defined('BOOTSTRAP')) {
     die('Access denied');
+}
+
+// POST only: CS-Cart checks security_hash on POST requests alone, so a GET
+// (a link or an <img> on another page) would refund with no CSRF check. The
+// panel form and the gear-menu items POST with security_hash; order_id may
+// still arrive in the query string, hence $_REQUEST below.
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || $mode !== 'process') {
+    return [CONTROLLER_STATUS_NO_PAGE];
 }
 
 $order_id = isset($_REQUEST['order_id']) && is_numeric($_REQUEST['order_id']) ? (int) $_REQUEST['order_id'] : 0;
@@ -46,10 +55,6 @@ if (empty($order_info)) {
 }
 
 $redirect_url = fn_url('orders.details?order_id=' . $order_id);
-
-if ($mode !== 'process') {
-    return [CONTROLLER_STATUS_NO_PAGE];
-}
 
 // --- Resolve processor + validate this is a NETOPIA order ---------------
 
@@ -84,25 +89,17 @@ if ($netopia_payment_id === '') {
     return [CONTROLLER_STATUS_REDIRECT, $redirect_url];
 }
 
-// Source the cap amounts + currency from the START-REQUEST charge
+// Cap and currency come from the START-REQUEST charge
 // (`payment_info.netopia_start_amount`, e.g. "68,70 EUR"), NOT from
-// `netopia_amount` which is the post-FX amount NETOPIA echoes in the IPN
-// (e.g. "361,78 RON"). NETOPIA's /operation/credit cap is enforced against
-// the original charge we sent to /payment/card/start; capping locally
-// against the IPN amount lets the admin overshoot on FX-converted orders
-// and triggers an error.code=99 "Invalid Credit amount" from NETOPIA.
-//
-// Backwards compat: orders placed before `netopia_start_amount` was
-// introduced fall back to `netopia_amount`. Same-currency orders
-// (start currency == IPN currency) are unaffected — the two values agree.
-$netopia_start_amount_str = is_string($payment_info['netopia_start_amount'] ?? null)
-    ? $payment_info['netopia_start_amount']
-    : '';
-$netopia_amount_str = $netopia_start_amount_str !== ''
-    ? $netopia_start_amount_str
-    : (is_string($payment_info['netopia_amount'] ?? null) ? $payment_info['netopia_amount'] : '');
-$paid = IpnHandler::parseFormattedAmount($netopia_amount_str);
-if ($paid['currency'] === '' || $paid['value'] <= 0.0) {
+// `netopia_amount`, the post-FX amount NETOPIA echoes in the IPN (e.g.
+// "361,78 RON"): NETOPIA's /operation/credit enforces its cap against the
+// original charge, and capping against the IPN amount would let the admin
+// overshoot on FX orders (error.code=99 "Invalid Credit amount"). Orders
+// that pre-date `netopia_start_amount` fall back to `netopia_amount`.
+// RefundBasis is shared with the order panel (orders.post.php) so the
+// amount the admin types is in the currency we refund in.
+$basis = RefundBasis::fromPaymentInfo($payment_info);
+if (!$basis->isKnown()) {
     // Distinct from `missing_payment_id` above: that path means the
     // order's NETOPIA payment ntpID hasn't been recorded; this path
     // means the order has no recorded *paid amount* (or its currency
@@ -110,12 +107,8 @@ if ($paid['currency'] === '' || $paid['value'] <= 0.0) {
     fn_set_notification('E', __('error'), __('netopia_refund_missing_paid_currency'));
     return [CONTROLLER_STATUS_REDIRECT, $redirect_url];
 }
-$currency = $paid['currency'];
-$already_refunded_str = is_string($payment_info['netopia_refunded_amount'] ?? null)
-    ? $payment_info['netopia_refunded_amount']
-    : '';
-$already_refunded = $already_refunded_str === '' ? 0.0 : IpnHandler::parseAmount($already_refunded_str);
-$remaining_refundable = max(0.0, $paid['value'] - $already_refunded);
+$currency = $basis->currency;
+$remaining_refundable = $basis->remaining();
 
 if ($remaining_refundable <= 0.0) {
     fn_set_notification('E', __('error'), __('netopia_refund_nothing_left'));
