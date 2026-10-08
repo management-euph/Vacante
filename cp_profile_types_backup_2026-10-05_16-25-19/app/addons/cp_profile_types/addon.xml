@@ -1,0 +1,116 @@
+<?xml version="1.0"?>
+<addon scheme="3.0">
+    <id>cp_profile_types</id>
+    <version>1.5</version>
+    <priority>5000</priority>
+    <position>100</position>
+    <default_language>en</default_language>
+    <status>disabled</status>
+    <has_icon>Y</has_icon>
+    <authors>
+        <author>
+            <name>Cart-Power</name>
+            <email>sales@cart-power.com</email>
+            <url>http://cart-power.com</url>
+        </author>
+    </authors>
+    <supplier>Cart-Power</supplier>
+    <supplier_link>https://cart-power.com</supplier_link>
+    <compatibility>
+        <dependencies>cp_addons_manager</dependencies>
+    </compatibility>
+    <settings edition_type="ROOT,ULT:VENDOR">
+        <sections>
+            <section id="general">
+                <items>
+                   <item id="licensekey">
+                        <type>input</type>
+                        <default_value></default_value>
+                    </item>
+                    <item id="ug_status">
+                        <type>selectbox</type>
+                        <variants>
+                            <item id="A"></item>
+                            <item id="P"></item>
+                        </variants>
+                        <default_value>A</default_value>
+                    </item>
+                    <item id="type_change">
+                        <type>selectbox</type>
+                        <variants>
+                            <item id="A"></item>
+                            <item id="O"></item>
+                            <item id="D"></item>
+                        </variants>
+                        <default_value>D</default_value>
+                    </item>
+                    <item id="profile_types">
+                        <type>selectbox</type>
+                        <default_value>user_and_vendor</default_value>
+                        <variants>
+                            <item id="user"></item>
+                            <item id="vendor"></item>
+                            <item id="user_and_vendor"></item>
+                        </variants>
+                    </item>
+                    <item id="add_profile_types_name">
+                        <type>checkbox</type>
+                        <default_value>N</default_value>
+                    </item>
+                </items>
+            </section>
+        </sections>
+    </settings>
+    <queries>
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:cp_profile_types` (
+                `type_id` mediumint(8) unsigned NOT NULL AUTO_INCREMENT,
+                `code` char(1) NOT NULL DEFAULT '',
+                `position` mediumint(8) unsigned NOT NULL default 0,
+                `user_type` char(1) NOT NULL DEFAULT 'C',
+                `usergroup_ids` varchar(128) NOT NULL DEFAULT '',
+                `status` char(1) NOT NULL DEFAULT 'D',
+                `extra` text NOT NULL DEFAULT '',
+                PRIMARY KEY (`type_id`),
+                UNIQUE KEY (`code`)
+            ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+        </item>
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:cp_profile_type_descriptions` (
+                `type_id` mediumint(8) unsigned NOT NULL default 0,
+                `lang_code` char(2) NOT NULL DEFAULT '',
+                `name` varchar(255) NOT NULL DEFAULT '',
+                `description` text NOT NULL DEFAULT '',
+                PRIMARY KEY (`type_id`,`lang_code`)
+            ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+        </item>
+
+       <item for="install" version="1.2">ALTER TABLE `?:cp_profile_types` ADD `is_default` tinyint(1) NOT NULL default '0';</item>
+        <item for="install" version="1.2">ALTER TABLE `?:cp_profile_types` ADD `id_plans` varchar(128) NOT NULL DEFAULT '';</item>
+        <item for="install">ALTER TABLE `?:users` ADD `cp_profile_type` char(1) DEFAULT ''</item>
+        <item for="install">ALTER TABLE `?:orders` ADD `cp_profile_type` char(1) DEFAULT ''</item>
+        <item for="install" editions="MULTIVENDOR">ALTER TABLE `?:companies` ADD `cp_profile_type` char(1) DEFAULT ''</item>
+        <item for="install">REPLACE INTO `?:privileges` (privilege, is_default, section_id, group_id, is_view) VALUES ('manage_cp_profile_types', 'Y', 'addons', 'cp_profile_types', 'N')</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:cp_profile_types`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:cp_profile_type_descriptions`</item>
+        <item for="uninstall">ALTER TABLE `?:users` DROP COLUMN `cp_profile_type`</item>
+        <item for="uninstall">ALTER TABLE `?:orders` DROP COLUMN `cp_profile_type`</item>
+        <item for="uninstall" editions="MULTIVENDOR">ALTER TABLE `?:companies` DROP COLUMN `cp_profile_type`</item>
+        <item for="uninstall">DELETE FROM `?:privileges` WHERE privilege = 'manage_cp_profile_types'</item>
+    </queries>
+    <functions>
+        <item for="install">fn_cp_profile_types_install</item>
+        <item for="install">fn_cp_profile_types_install_default_type</item>
+        <item for="uninstall">fn_cp_profile_types_uninstall</item>
+    </functions>
+     <scripts>
+        <item version="1.2">upgrades/1.2/scripts/post_script.php</item>
+    </scripts>
+</addon>
+
+
+
+
+
+
+
