@@ -15,6 +15,7 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 use Tygh\Addons\TravelCore\Services\BookingDisplayService;
+use Tygh\Addons\TravelCore\Services\RequestExtraGuard;
 use Tygh\Addons\TravelCore\Services\TravelCoreConfig;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
 use Tygh\Registry;
@@ -76,6 +77,37 @@ function fn_travel_core_calculate_cart_items_post(&$cart, &$cart_products, $auth
                 }
             }
         }
+    }
+}
+
+/**
+ * Hook: pre_add_to_cart — a storefront add may not set the travel add-ons'
+ * own cart-line keys (travel_*, novoton_*, sphinx_*, eurosite_*, total_price,
+ * rooms_data, offer_id, parent_order_id): RequestExtraGuard strips them from
+ * $product_data before core copies `extra` into the cart. Booking and balance
+ * lines are written straight into the session cart by their controllers and
+ * never come through here. The admin area (order editing) is left alone.
+ *
+ * CS-Cart 4.x: fn_set_hook('pre_add_to_cart', $product_data, $cart, $auth,
+ * $update) in fn_add_product_to_cart(); $product_data is that function's own
+ * copy, read after the hook, so the strip takes effect by reference.
+ *
+ * @param mixed $product_data
+ * @param mixed $cart
+ * @param mixed $auth
+ * @param mixed $update
+ */
+function fn_travel_core_pre_add_to_cart(&$product_data, &$cart = [], &$auth = [], &$update = false): void
+{
+    if (!is_array($product_data)) {
+        return;
+    }
+    $area = defined('AREA') ? TypeCoerce::toString(constant('AREA')) : '';
+    $removed = RequestExtraGuard::strip($product_data, is_array($cart) ? $cart : [], TypeCoerce::toBool($update), $area);
+    if ($removed !== []) {
+        fn_log_event('general', 'runtime', [
+            'message' => '[TravelCore] add to cart: dropped request-supplied extra ' . implode(', ', $removed),
+        ]);
     }
 }
 
