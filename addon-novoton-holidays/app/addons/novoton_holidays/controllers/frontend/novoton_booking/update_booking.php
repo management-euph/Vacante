@@ -12,6 +12,13 @@ use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 
+    // State-changing mode: POST only (the edit form posts; CS-Cart validates
+    // the form's security hash on POST). A GET link must never rewrite a
+    // booking's travellers or contact details.
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+        return [CONTROLLER_STATUS_REDIRECT, 'checkout.cart'];
+    }
+
     $security = _nvt_get_security_service();
     /** @var array<string, mixed> $bookingData */
     $bookingData = $_REQUEST;
@@ -23,7 +30,9 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
         return [CONTROLLER_STATUS_REDIRECT, 'checkout.cart'];
     }
 
-    // Verify booking ownership before allowing update
+    // Verify booking ownership before allowing update. Ownership means a real
+    // user_id (> 0) or a non-empty session id, never user_id 0 (every guest
+    // booking has it); and only a pending booking with no order yet is editable.
     // CS-Cart's session is an ArrayAccess container object; a plain (non-reference)
     // local binds the same object handle, so offset reads below operate on the
     // live session exactly as direct `Tygh::$app['session'][...]` access would.

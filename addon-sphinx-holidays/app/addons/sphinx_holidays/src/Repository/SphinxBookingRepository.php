@@ -38,16 +38,28 @@ class SphinxBookingRepository
      * order_id = 0 only: a booking already attached to an order must not be
      * editable through a stale cart link.
      *
+     * user_id only counts for a real account (> 0) and session_id only when
+     * non-empty: guest bookings are stored with user_id = 0, so matching an
+     * anonymous visitor's user_id 0 would hand them every guest booking.
+     *
      * @return array<string, mixed>|null
      */
     public function findByIdWithOwnership(int $booking_id, int $user_id, string $session_id): ?array
     {
-        $row = self::asRow(db_get_row(
-            'SELECT * FROM ?:sphinx_bookings WHERE booking_id = ?i AND order_id = 0 AND (user_id = ?i OR session_id = ?s)',
-            $booking_id,
-            $user_id,
-            $session_id,
-        ));
+        $hasUser = $user_id > 0;
+        $hasSession = trim($session_id) !== '';
+        if ($booking_id <= 0 || (!$hasUser && !$hasSession)) {
+            return null;
+        }
+
+        $sql = 'SELECT * FROM ?:sphinx_bookings WHERE booking_id = ?i AND order_id = 0 AND ';
+        if ($hasUser && $hasSession) {
+            $row = self::asRow(db_get_row($sql . '(user_id = ?i OR session_id = ?s)', $booking_id, $user_id, $session_id));
+        } elseif ($hasUser) {
+            $row = self::asRow(db_get_row($sql . 'user_id = ?i', $booking_id, $user_id));
+        } else {
+            $row = self::asRow(db_get_row($sql . 'session_id = ?s', $booking_id, $session_id));
+        }
 
         return $row === [] ? null : $row;
     }
@@ -181,6 +193,11 @@ class SphinxBookingRepository
      */
     public function linkToUserBySession(int $user_id, string $session_id): int
     {
+        // An empty session would claim every session-less guest booking.
+        if ($user_id <= 0 || trim($session_id) === '') {
+            return 0;
+        }
+
         $affected = TypeCoerce::toInt(db_query(
             'UPDATE ?:sphinx_bookings SET user_id = ?i WHERE session_id = ?s AND user_id = 0 AND order_id = 0',
             $user_id,
