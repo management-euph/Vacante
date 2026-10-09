@@ -1268,8 +1268,35 @@
 /* Checkout summary: the card opens with the hotel and the stay, so the core
    product line above it ("Admiral Hotel", "1 x $468.75") would repeat both.
    Only the card's own preceding siblings in its line are hidden, so no
-   theme class names are assumed. */
-:where(li, div) > :not(li, .travel-ccard):has(~ .travel-ccard--sidebar) { display: none; }
+   theme class names are assumed — except the core's remove button, a link to
+   checkout.delete whatever the theme's markup: it stays, in the card's top
+   corner beside the title. Hiding it too left travel lines with no way to be
+   removed at checkout.
+   Phones that show the stay-summary block hide this card instead (below), so
+   there the line stays as the theme draws it. Hence the two media blocks. */
+.travel-ccard--sidebar .travel-ccard-title { padding-right: 44px; }
+@media (min-width: 768px) {
+    :where(li, div) > :not(li, .travel-ccard, a[href*="checkout.delete"], :has(a[href*="checkout.delete"])):has(~ .travel-ccard--sidebar) { display: none; }
+    :where(li, div):has(> .travel-ccard--sidebar) { position: relative; }
+    :where(li, div):has(> .travel-ccard--sidebar) > :is(a[href*="checkout.delete"], :has(a[href*="checkout.delete"])) {
+        position: absolute;
+        top: 25px;
+        right: 14px;
+        z-index: 1;
+        margin: 0;
+    }
+}
+@media (max-width: 767px) {
+    body:not(:has(.travel-stay-summary)) :where(li, div) > :not(li, .travel-ccard, a[href*="checkout.delete"], :has(a[href*="checkout.delete"])):has(~ .travel-ccard--sidebar) { display: none; }
+    body:not(:has(.travel-stay-summary)) :where(li, div):has(> .travel-ccard--sidebar) { position: relative; }
+    body:not(:has(.travel-stay-summary)) :where(li, div):has(> .travel-ccard--sidebar) > :is(a[href*="checkout.delete"], :has(a[href*="checkout.delete"])) {
+        position: absolute;
+        top: 25px;
+        right: 14px;
+        z-index: 1;
+        margin: 0;
+    }
+}
 
 /* ── Stay summary block (blocks/stay_summary.tpl) ─────────────────────────
    Top of the checkout on phones: a collapsed bar per booking that opens into

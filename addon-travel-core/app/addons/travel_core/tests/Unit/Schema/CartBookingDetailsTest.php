@@ -72,7 +72,35 @@ final class CartBookingDetailsTest extends TestCase
         // The sidebar form hides the core product line above it — by the
         // card's own position, never by a theme's class names.
         $css = (string) file_get_contents(dirname(__DIR__, 6) . '/design/themes/responsive/css/addons/travel_core/booking-pages.css');
-        self::assertStringContainsString(':where(li, div) > :not(li, .travel-ccard):has(~ .travel-ccard--sidebar) { display: none; }', $css);
+        $hide = ':where(li, div) > :not(li, .travel-ccard, a[href*="checkout.delete"], :has(a[href*="checkout.delete"])):has(~ .travel-ccard--sidebar) { display: none; }';
+        self::assertStringContainsString($hide, $css);
+        self::assertStringNotContainsString(':where(li, div) > :not(li, .travel-ccard):has(~ .travel-ccard--sidebar)', $css);
+    }
+
+    /**
+     * REGRESSION: hiding every element before the sidebar card also hid the
+     * core's remove button, so a travel line could not be removed at
+     * checkout; and on phones, where the stay-summary block hides the card,
+     * the line showed nothing at all.
+     */
+    public function testCheckoutSummaryKeepsTheRemoveButton(): void
+    {
+        $css = (string) file_get_contents(dirname(__DIR__, 6) . '/design/themes/responsive/css/addons/travel_core/booking-pages.css');
+        $hide = ':not(li, .travel-ccard, a[href*="checkout.delete"], :has(a[href*="checkout.delete"])):has(~ .travel-ccard--sidebar) { display: none; }';
+
+        // Every rule hiding the line spares the remove link (and a wrapper of it).
+        self::assertSame(2, substr_count($css, $hide));
+        self::assertSame(2, substr_count($css, ':has(~ .travel-ccard--sidebar)'));
+        // ... and it is placed in the card's corner, beside the title.
+        self::assertSame(2, substr_count($css, ':where(li, div):has(> .travel-ccard--sidebar) > :is(a[href*="checkout.delete"], :has(a[href*="checkout.delete"])) {'));
+        self::assertStringContainsString('.travel-ccard--sidebar .travel-ccard-title { padding-right: 44px; }', $css);
+
+        // On phones the line is hidden only while the card shows, i.e. when
+        // the stay-summary block (which hides the card there) is absent.
+        $phones = substr($css, (int) strpos($css, "@media (max-width: 767px) {\n    body:not(:has(.travel-stay-summary))"));
+        self::assertStringStartsWith('@media (max-width: 767px)', $phones);
+        self::assertStringContainsString('body:not(:has(.travel-stay-summary)) :where(li, div) > ' . $hide, $phones);
+        self::assertStringContainsString('body:has(.travel-stay-summary) .travel-ccard--sidebar { display: none; }', $css);
     }
 
     public function testTravelCoreOwnsTheCheckoutHooksAndNovotonCopiesAreGone(): void
