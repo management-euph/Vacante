@@ -146,8 +146,13 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         $rooms_data = [['room_id' => '', 'room_name' => 'Standard', 'adults' => $adults, 'children' => $children]];
     }
 
-    $check_out = !empty($departure_date) && $duration_days > 0
-        ? date('Y-m-d', (int) strtotime($departure_date . " + {$duration_days} days"))
+    // The trip ends on its last day, departure + days - 1 (departure + days
+    // was a day after the return). Days and nights are the supplier's own,
+    // apart (9 days / 6 nights when legs run overnight); without days, after
+    // the nights. A same-day trip returns on its departure date.
+    $tripLength = $duration_days > 0 ? $duration_days - 1 : $duration_nights;
+    $check_out = !empty($departure_date)
+        ? date('Y-m-d', (int) strtotime($departure_date . " + {$tripLength} days"))
         : '';
 
     // Build + persist booking record
@@ -177,7 +182,7 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
     }
 
     $booking_id = $cartService->upsertBooking(
-        $booking_record, (string) $circuit_id, $departure_date, '', TypeCoerce::toString($parsed_guests['holder_name'])
+        $booking_record, (string) $circuit_id, $departure_date, $check_out, TypeCoerce::toString($parsed_guests['holder_name'])
     );
 
     $product_extra = [
@@ -190,7 +195,13 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         'hotel_id' => (string) $circuit_id, 'hotel_name' => $title, 'offer_id' => $offer_id,
         'room_id' => $rooms_data[0]['room_id'], 'room_name' => $rooms_data[0]['room_name'],
         'board_id' => $transport_type, 'board_name' => ucfirst($transport_type),
+        'transport_type' => $transport_type,
+        // Shown on the order: the quote's meal plan and the departure city,
+        // from the server-side quote (the form only for display text).
+        'meal_name' => $storedQuote['meal_type'],
+        'departure_name' => $storedQuote['departure_name'] !== '' ? $storedQuote['departure_name'] : $departure_name,
         'check_in' => $departure_date, 'check_out' => $check_out, 'nights' => $duration_nights,
+        'duration_days' => $duration_days,
         'adults' => $adults, 'children' => $children, 'children_ages' => $children_ages,
         'num_rooms' => count($rooms_data), 'rooms_data' => $rooms_data,
         'guest_names' => $parsed_guests['guest_list'], 'holder_name' => $parsed_guests['holder_name'],

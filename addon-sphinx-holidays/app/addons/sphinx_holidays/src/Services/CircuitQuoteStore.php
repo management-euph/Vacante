@@ -30,8 +30,20 @@ final class CircuitQuoteStore
     {
     }
 
-    public function remember(string $offerId, int $circuitId, float $sellingPrice, string $currency, string $departureDate, int $now): void
-    {
+    /**
+     * @param string $mealType the quote's meal plan ("Half Board"), for the order
+     * @param string $departureName where the trip starts ("Bucharest"), for the order
+     */
+    public function remember(
+        string $offerId,
+        int $circuitId,
+        float $sellingPrice,
+        string $currency,
+        string $departureDate,
+        int $now,
+        string $mealType = '',
+        string $departureName = '',
+    ): void {
         if ($offerId === '' || $circuitId <= 0 || $sellingPrice <= 0) {
             return;
         }
@@ -41,6 +53,8 @@ final class CircuitQuoteStore
             'selling_price' => $sellingPrice,
             'currency' => $currency,
             'departure_date' => $departureDate,
+            'meal_type' => $mealType,
+            'departure_name' => $departureName,
             'stored_at' => $now,
         ];
         $this->session->set(self::SESSION_KEY, array_slice($quotes, -self::MAX_QUOTES, null, true));
@@ -50,7 +64,7 @@ final class CircuitQuoteStore
      * The quote stored for this offer, for this circuit, still fresh; null
      * otherwise (the caller must then refuse, never fall back to the form).
      *
-     * @return array{circuit_id: int, selling_price: float, currency: string, departure_date: string}|null
+     * @return array{circuit_id: int, selling_price: float, currency: string, departure_date: string, meal_type: string, departure_name: string}|null
      */
     public function get(string $offerId, int $circuitId, int $now): ?array
     {
@@ -72,6 +86,8 @@ final class CircuitQuoteStore
             'selling_price' => TypeCoerce::toFloat($quote['selling_price']),
             'currency' => TypeCoerce::toString($quote['currency'] ?? ''),
             'departure_date' => TypeCoerce::toString($quote['departure_date'] ?? ''),
+            'meal_type' => TypeCoerce::toString($quote['meal_type'] ?? ''),
+            'departure_name' => TypeCoerce::toString($quote['departure_name'] ?? ''),
         ];
     }
 }

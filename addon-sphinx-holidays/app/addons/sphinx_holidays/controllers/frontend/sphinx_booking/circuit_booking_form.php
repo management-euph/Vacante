@@ -64,6 +64,7 @@ try {
     // Take the first quote (or let user select if multiple)
     $quote = $quotes[0];
     $offer_id = TypeCoerce::toString($quote['offer_id'] ?? '');
+    $quoteDeparture = TypeCoerce::toStringMap($quote['departure'] ?? null);
 
     // Apply commission
     $quotePricing = TypeCoerce::toStringMap($quote['pricing'] ?? null);
@@ -78,6 +79,9 @@ try {
         TypeCoerce::toString($quotePricing['currency'] ?? ConfigProvider::getDefaultCurrency()),
         $departure_date,
         time(),
+        // What the order shows: the meal plan and where the trip starts.
+        TypeCoerce::toString($quote['meal_type_name'] ?? ''),
+        TypeCoerce::toString($quoteDeparture['name'] ?? ''),
     );
 
     // Parse rooms from quote
@@ -86,7 +90,6 @@ try {
     // Parse additional services (optional/mandatory)
     $additionalServices = TypeCoerce::toList($quote['additional_services'] ?? []);
 
-    $quoteDeparture = TypeCoerce::toStringMap($quote['departure'] ?? null);
     $quoteDuration = TypeCoerce::toStringMap($quote['duration'] ?? null);
 
     $view->assign('sphinx_circuit_booking', [

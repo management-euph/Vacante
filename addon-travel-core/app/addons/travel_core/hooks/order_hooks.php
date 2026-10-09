@@ -76,7 +76,8 @@ function fn_travel_core_get_order_info(&$order, $additional_data): void
     unset($product);
 
     // Paid with a deposit: what is still owed, with its pay link while open
-    // (order details, emails, admin — components/order_deposit_details.tpl).
+    // (the order booking card, admin and customer; the order emails'
+    // mail components/order_deposit_details.tpl).
     if (fn_travel_core_order_has_deposit($order)) {
         $order['travel_balances'] = (new BalanceService())->forOrder(TypeCoerce::toInt($order['order_id'] ?? 0));
         // The full order total beside what was charged (the order total) —

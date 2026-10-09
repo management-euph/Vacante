@@ -31,13 +31,7 @@ final class InlineStyleRatchetTest extends TestCase
         'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/hooks/checkout/order_info.post.tpl' => 10,
         'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/hooks/checkout/summary_extra.post.tpl' => 3,
         'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/hooks/common/product_info.post.tpl' => 9,
-        'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/hooks/orders/details.post.tpl' => 7,
-        'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/hooks/orders/order_product_info.post.tpl' => 1,
-        'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/hooks/orders/product_info.post.tpl' => 14,
         'addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/blocks/package_search.tpl' => 19,
-        'addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/hooks/orders/details.post.tpl' => 7,
-        'addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/hooks/orders/order_product_info.post.tpl' => 1,
-        'addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/hooks/orders/product_info.post.tpl' => 1,
         'addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/circuit_search.tpl' => 6,
         'addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/package_search.tpl' => 5,
         'addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/search.tpl' => 1,
@@ -47,7 +41,6 @@ final class InlineStyleRatchetTest extends TestCase
         // (--ty-product-block-image-width) that cannot move to static CSS.
         'addon-travel-core/design/themes/responsive/templates/addons/travel_core/blocks/product_templates/travelcore_template.tpl' => 1,
         'addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/booking_form_mount.tpl' => 1,
-        'addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/order_booking_details.tpl' => 2,
         'addon-travel-core/design/themes/responsive/templates/addons/travel_core/hooks/products/main_info_title.post.tpl' => 2,
         'addon-travel-core/design/themes/responsive/templates/addons/travel_core/hooks/products/product_detail_bottom.post.tpl' => 15,
     ];

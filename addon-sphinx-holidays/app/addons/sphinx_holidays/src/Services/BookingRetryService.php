@@ -131,6 +131,7 @@ class BookingRetryService implements BookingRetryServiceInterface
         } catch (\Throwable $e) {
             $this->repo->update($bookingId, [
                 'status' => TravelConstants::STATUS_FAILED,
+                'api_response' => (string) json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE),
             ]);
 
             fn_log_event('general', 'runtime', [

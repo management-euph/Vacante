@@ -51,6 +51,7 @@ require_once __DIR__ . '/functions/destinations.php';
 require_once __DIR__ . '/functions/exchange_rates.php';
 require_once __DIR__ . '/functions/geocoding.php';
 require_once __DIR__ . '/functions/hotels.php';
+require_once __DIR__ . '/functions/order_card.php';
 require_once __DIR__ . '/functions/seo.php';
 require_once __DIR__ . '/functions/self_heal.php';
 

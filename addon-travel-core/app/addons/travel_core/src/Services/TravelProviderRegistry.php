@@ -34,6 +34,9 @@ class TravelProviderRegistry
     /** @var array<string, callable(array<string, mixed>): array<string, mixed>> provider name => cart-line terms resolver */
     private static array $cartTerms = [];
 
+    /** @var array<string, callable(array<string, mixed>): array<string, mixed>> provider name => order-line facts resolver */
+    private static array $orderCardFacts = [];
+
     /**
      * Register a travel provider.
      */
@@ -166,7 +169,7 @@ class TravelProviderRegistry
 
     /**
      * The terms of a cart line from the provider that owns it; [] when no
-     * registered provider claims it (eurosite stores none on the line).
+     * registered provider claims it.
      *
      * @param array<string, mixed> $extra
      * @return array<string, mixed>
@@ -180,6 +183,45 @@ class TravelProviderRegistry
             $terms = $resolver($extra);
             if ($terms !== []) {
                 return $terms;
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * Register how a provider describes its own booking on an order line, for
+     * the order booking card (ViewModels\OrderBookingCardFactory): what only
+     * the provider's booking row knows. The resolver gets the line's extra
+     * and returns [] for lines it does not own, else
+     * {provider_booking_id, reference, our_reference, error, not_sent, note,
+     * kind, transport, meals, departure, services} (every key optional).
+     *
+     * @param callable(array<string, mixed>): array<string, mixed> $resolver
+     */
+    public static function setOrderCardResolver(string $name, callable $resolver): void
+    {
+        if (isset(self::$providers[$name])) {
+            self::$orderCardFacts[$name] = $resolver;
+        }
+    }
+
+    /**
+     * The provider facts of an order line, with the owning provider's name
+     * under 'provider'; [] when no registered provider claims the line.
+     *
+     * @param array<string, mixed> $extra
+     * @return array<string, mixed>
+     */
+    public static function orderCardFacts(array $extra): array
+    {
+        foreach (self::$orderCardFacts as $name => $resolver) {
+            if (!isset(self::$providers[$name])) {
+                continue;
+            }
+            $facts = $resolver($extra);
+            if ($facts !== []) {
+                return ['provider' => $name] + $facts;
             }
         }
 
@@ -341,5 +383,6 @@ class TravelProviderRegistry
         self::$providers = [];
         self::$cron = [];
         self::$cartTerms = [];
+        self::$orderCardFacts = [];
     }
 }

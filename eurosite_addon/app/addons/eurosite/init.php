@@ -147,6 +147,17 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
         'eurosite',
         new \Tygh\Addons\Eurosite\Providers\EurositeHotelProductProvider(),
     );
+    // What the booking row knows about an order line (supplier reference,
+    // whether it reached Eurosite, why it failed) and the line's terms, for
+    // travel_core's booking cards (order pages; checkout).
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setOrderCardResolver(
+        'eurosite',
+        static fn (array $extra): array => (new \Tygh\Addons\Eurosite\Services\OrderCardFacts())->facts($extra),
+    );
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setCartTermsResolver(
+        'eurosite',
+        static fn (array $extra): array => (new \Tygh\Addons\Eurosite\Services\OrderCardFacts())->terms($extra),
+    );
     \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setStatusCallbacks(
         'eurosite',
         static function (): array {
@@ -162,6 +173,7 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
 fn_register_hooks(
     'pre_place_order',            // price-tamper guard on eurosite cart lines
     'place_order_post',           // link + submit bookings to the Eurosite API
+    'get_order_info',             // booking details for the order page block
     'user_login_post',            // claim guest bookings by session
     'create_user_post',           // claim bookings for new registrations
     'travel_link_order_bookings', // travel_core reconcile sweep

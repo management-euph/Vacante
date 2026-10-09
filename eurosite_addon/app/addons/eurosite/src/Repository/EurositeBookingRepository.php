@@ -75,6 +75,52 @@ class EurositeBookingRepository
     }
 
     /**
+     * The meal plan of several bookings in one read, keyed by booking_id (the
+     * order page's per-line decoration; the rest of the row stays unread).
+     *
+     * @param list<int> $bookingIds
+     * @return array<int, array<string, mixed>>
+     */
+    public function mealsByIds(array $bookingIds): array
+    {
+        $ids = array_values(array_unique(array_filter($bookingIds, static fn (int $id): bool => $id > 0)));
+        if ($ids === []) {
+            return [];
+        }
+        $rows = [];
+        foreach (self::asRowList(db_get_array('SELECT booking_id, meal_name, board_id FROM ?:eurosite_bookings WHERE booking_id IN (?n)', $ids)) as $row) {
+            $rows[TypeCoerce::toInt($row['booking_id'] ?? 0)] = $row;
+        }
+
+        return $rows;
+    }
+
+    /**
+     * The unified ?:travel_bookings ids (the admin "View Booking #N" link)
+     * of these eurosite bookings, keyed by eurosite booking_id. Bookings
+     * without a mirror row are absent.
+     *
+     * @param list<int> $bookingIds
+     * @return array<int, int>
+     */
+    public function surrogateIds(array $bookingIds): array
+    {
+        $ids = array_values(array_unique(array_filter($bookingIds, static fn (int $id): bool => $id > 0)));
+        if ($ids === []) {
+            return [];
+        }
+        $map = [];
+        foreach (self::asRowList(db_get_array(
+            "SELECT booking_id, provider_booking_id FROM ?:travel_bookings WHERE provider = 'eurosite' AND provider_booking_id IN (?a)",
+            array_map('strval', $ids),
+        )) as $row) {
+            $map[TypeCoerce::toInt($row['provider_booking_id'] ?? 0)] = TypeCoerce::toInt($row['booking_id'] ?? 0);
+        }
+
+        return $map;
+    }
+
+    /**
      * @return list<array<string, mixed>>
      */
     public function getRecent(int $limit = 10): array

@@ -2321,3 +2321,219 @@ msgstr "Hide"
 msgctxt "Languages::tmpl_travel_stay_summary"
 msgid "Stay summary (collapsible bar)"
 msgstr "Stay summary (collapsible bar)"
+
+msgctxt "Languages::travel_core.obc_departure"
+msgid "Departure"
+msgstr "Departure"
+
+msgctxt "Languages::travel_core.obc_return"
+msgid "Return"
+msgstr "Return"
+
+msgctxt "Languages::travel_core.obc_trip"
+msgid "Trip"
+msgstr "Trip"
+
+msgctxt "Languages::travel_core.obc_stay"
+msgid "Stay"
+msgstr "Stay"
+
+msgctxt "Languages::travel_core.obc_n_days"
+msgid "[n] day|[n] days"
+msgstr "[n] day|[n] days"
+
+msgctxt "Languages::travel_core.obc_kind_circuit"
+msgid "Circuit"
+msgstr "Circuit"
+
+msgctxt "Languages::travel_core.obc_kind_package"
+msgid "Package"
+msgstr "Package"
+
+msgctxt "Languages::travel_core.obc_kind_flight_hotel"
+msgid "Flight + hotel"
+msgstr "Flight + hotel"
+
+msgctxt "Languages::travel_core.obc_kind_bus_hotel"
+msgid "Bus + hotel"
+msgstr "Bus + hotel"
+
+msgctxt "Languages::travel_core.obc_status_pending"
+msgid "Awaiting confirmation"
+msgstr "Awaiting confirmation"
+
+msgctxt "Languages::travel_core.obc_status_confirmed"
+msgid "Confirmed"
+msgstr "Confirmed"
+
+msgctxt "Languages::travel_core.obc_status_completed"
+msgid "Completed"
+msgstr "Completed"
+
+msgctxt "Languages::travel_core.obc_status_cancelled"
+msgid "Cancelled"
+msgstr "Cancelled"
+
+msgctxt "Languages::travel_core.obc_status_failed"
+msgid "Failed"
+msgstr "Failed"
+
+msgctxt "Languages::travel_core.obc_status_ask"
+msgid "On request"
+msgstr "On request"
+
+msgctxt "Languages::travel_core.obc_status_waiting"
+msgid "Waiting list"
+msgstr "Waiting list"
+
+msgctxt "Languages::travel_core.obc_status_not_sent"
+msgid "Not sent"
+msgstr "Not sent"
+
+msgctxt "Languages::travel_core.obc_ref"
+msgid "Ref"
+msgstr "Ref"
+
+msgctxt "Languages::travel_core.obc_our_ref"
+msgid "Our ref"
+msgstr "Our ref"
+
+msgctxt "Languages::travel_core.obc_no_ref"
+msgid "No supplier reference"
+msgstr "No supplier reference"
+
+msgctxt "Languages::travel_core.obc_copy"
+msgid "Copy"
+msgstr "Copy"
+
+msgctxt "Languages::travel_core.obc_copied"
+msgid "Copied"
+msgstr "Copied"
+
+msgctxt "Languages::travel_core.obc_copy_ref"
+msgid "Copy the supplier reference"
+msgstr "Copy the supplier reference"
+
+msgctxt "Languages::travel_core.obc_booking_n"
+msgid "Booking #[id]"
+msgstr "Booking #[id]"
+
+msgctxt "Languages::travel_core.obc_open_booking"
+msgid "Open booking"
+msgstr "Open booking"
+
+msgctxt "Languages::travel_core.obc_failed_title"
+msgid "[provider] did not confirm this booking"
+msgstr "[provider] did not confirm this booking"
+
+msgctxt "Languages::travel_core.obc_failed_text"
+msgid "Nothing is reserved at the supplier yet."
+msgstr "Nothing is reserved at the supplier yet."
+
+msgctxt "Languages::travel_core.obc_not_sent_title"
+msgid "Not sent to [provider] yet"
+msgstr "Not sent to [provider] yet"
+
+msgctxt "Languages::travel_core.obc_not_sent_text"
+msgid "The booking never reached the supplier, so nothing is reserved yet."
+msgstr "The booking never reached the supplier, so nothing is reserved yet."
+
+msgctxt "Languages::travel_core.obc_supplier_answer"
+msgid "Supplier answer"
+msgstr "Supplier answer"
+
+msgctxt "Languages::travel_core.obc_supplier_note"
+msgid "Supplier note"
+msgstr "Supplier note"
+
+msgctxt "Languages::travel_core.obc_transport"
+msgid "Transport"
+msgstr "Transport"
+
+msgctxt "Languages::travel_core.obc_transport_flight"
+msgid "Flight"
+msgstr "Flight"
+
+msgctxt "Languages::travel_core.obc_transport_bus"
+msgid "Bus"
+msgstr "Bus"
+
+msgctxt "Languages::travel_core.obc_from_city"
+msgid "from [city]"
+msgstr "from [city]"
+
+msgctxt "Languages::travel_core.obc_extras"
+msgid "Included"
+msgstr "Included"
+
+msgctxt "Languages::travel_core.obc_show_schedule"
+msgid "Show schedule"
+msgstr "Show schedule"
+
+msgctxt "Languages::travel_core.obc_hide_schedule"
+msgid "Hide schedule"
+msgstr "Hide schedule"
+
+msgctxt "Languages::travel_core.obc_from_date"
+msgid "from [date]"
+msgstr "from [date]"
+
+msgctxt "Languages::travel_core.obc_payment"
+msgid "Payment"
+msgstr "Payment"
+
+msgctxt "Languages::travel_core.obc_full_stay"
+msgid "Full stay"
+msgstr "Full stay"
+
+msgctxt "Languages::travel_core.obc_deposit_paid"
+msgid "Deposit paid"
+msgstr "Deposit paid"
+
+msgctxt "Languages::travel_core.obc_balance_due"
+msgid "Balance · due [date]"
+msgstr "Balance · due [date]"
+
+msgctxt "Languages::travel_core.obc_balance_open"
+msgid "Open"
+msgstr "Open"
+
+msgctxt "Languages::travel_core.obc_balance_overdue"
+msgid "Overdue"
+msgstr "Overdue"
+
+msgctxt "Languages::travel_core.obc_balance_paid"
+msgid "Paid"
+msgstr "Paid"
+
+msgctxt "Languages::travel_core.obc_balance_cancelled"
+msgid "Cancelled"
+msgstr "Cancelled"
+
+msgctxt "Languages::travel_core.obc_copy_pay_link"
+msgid "Copy balance pay link"
+msgstr "Copy balance pay link"
+
+msgctxt "Languages::travel_core.obc_reminders"
+msgid "[n] reminder sent|[n] reminders sent"
+msgstr "[n] reminder sent|[n] reminders sent"
+
+msgctxt "Languages::travel_core.obc_supplier_price"
+msgid "Supplier price"
+msgstr "Supplier price"
+
+msgctxt "Languages::travel_core.obc_booked_at"
+msgid "Booked [date]"
+msgstr "Booked [date]"
+
+msgctxt "Languages::travel_core.obc_on_booking"
+msgid "on booking"
+msgstr "on booking"
+
+msgctxt "Languages::travel_core.obc_updated_at"
+msgid "Updated [date]"
+msgstr "Updated [date]"
+
+msgctxt "Languages::travel_core.obc_your_booking"
+msgid "Your booking"
+msgstr "Your booking"

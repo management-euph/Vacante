@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
  * Pins the Romanian terms-label word order to the English source: "Payment
  * and cancellation" → "Condiții de Plată și Anulare". The old reversed
  * "Anulare și Plată" must not reappear in the novoton templates or the RO
- * translation catalogue (search cards, order/product hooks, perk line).
+ * translation catalogue (search cards, product hooks, perk line).
  */
 final class TermsLabelOrderTest extends TestCase
 {
@@ -19,16 +19,22 @@ final class TermsLabelOrderTest extends TestCase
         return dirname(__DIR__, 3);
     }
 
-    public function testOrderHookTemplatesUsePaymentFirstOrder(): void
+    /**
+     * The customer order page's booking block is travel_core's shared card
+     * now (hooks/orders/product_info.post.tpl, "order" form) for every
+     * provider; novoton no longer ships its own text block there, so its
+     * terms label lives in the catalogue only (below).
+     */
+    public function testOrderPageBlockIsTheSharedCard(): void
     {
         foreach (['responsive', 'nova_theme'] as $theme) {
-            $path = dirname(self::addonRoot(), 3)
+            $novoton = dirname(self::addonRoot(), 3)
                 . "/design/themes/{$theme}/templates/addons/novoton_holidays/hooks/orders/product_info.post.tpl";
-            self::assertFileExists($path, $theme);
-            $tpl = (string) file_get_contents($path);
+            $shared = dirname(self::addonRoot(), 4)
+                . "/addon-travel-core/design/themes/{$theme}/templates/addons/travel_core/hooks/orders/product_info.post.tpl";
 
-            self::assertStringContainsString('Condiții de Plată și Anulare', $tpl, $theme);
-            self::assertStringNotContainsString('Condiții de Anulare și Plată', $tpl, $theme);
+            self::assertFileDoesNotExist($novoton, $theme);
+            self::assertFileExists($shared, $theme);
         }
     }
 

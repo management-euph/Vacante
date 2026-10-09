@@ -19,7 +19,14 @@
                    checkout (blocks/stay_summary.tpl), whose bar already shows
                    the hotel: no title, no header, no frame;
                    "cart" (default) — cart page and mini cart, whose rows
-                   already show the product: the title only.
+                   already show the product: the title only;
+                   "order" — the customer's order page (hooks/orders/
+                   product_info.post.tpl): the title with the booking's status,
+                   the trip details of a circuit or package, and the balance of
+                   a deposit order with its pay button. Its card comes from
+                   fn_travel_core_order_booking_card(..., "customer"), which
+                   carries nothing about the provider: no name, supplier
+                   reference or price.
       tcc_card     optional: the prepared card, when the caller already has it.
 
     The collapsibles (guests, rooms, full terms) are native <details>: no JS.
@@ -39,7 +46,19 @@
 <div class="travel-ccard travel-ccard--{$tcc_context}">
 
     {* The card's title. The stay-summary block's bar already names the stay. *}
-    {if $tcc_context != "summary"}
+    {if $tcc_context == "order"}
+        <div class="travel-ccard-title travel-ccard-title--order">
+            <span>{__("travel_core.your_booking_details")}</span>
+            {if $tcc.kind == "circuit"}
+                <span class="travel-ccard-kind">{__("travel_core.obc_kind_circuit")}</span>
+            {elseif $tcc.kind == "package"}
+                <span class="travel-ccard-kind">{if $tcc.transport == "flight"}{__("travel_core.obc_kind_flight_hotel")}{elseif $tcc.transport == "bus"}{__("travel_core.obc_kind_bus_hotel")}{else}{__("travel_core.obc_kind_package")}{/if}</span>
+            {/if}
+            {if $tcc.status.code}
+                <span class="travel-ccard-status travel-ccard-status--{$tcc.status.tone}">{__("travel_core.obc_status_`$tcc.status.code`")}</span>
+            {/if}
+        </div>
+    {elseif $tcc_context != "summary"}
         <div class="travel-ccard-title">{__("travel_core.your_booking_details")}</div>
     {/if}
 
@@ -87,17 +106,17 @@
     {* Check-in → nights → check-out *}
     <div class="travel-ccard-dates">
         <div class="travel-ccard-date">
-            <span class="travel-ccard-date__label">{__("travel_core.check_in")}</span>
+            <span class="travel-ccard-date__label">{if $tcc.kind|default:"" == "circuit"}{__("travel_core.obc_departure")}{else}{__("travel_core.check_in")}{/if}</span>
             <span class="travel-ccard-date__value">{$tcc.check_in.date|escape:html}</span>
             {if $tcc.show_weekday && $tcc.check_in.weekday}<span class="travel-ccard-date__weekday">{$tcc.check_in.weekday|escape:html}</span>{/if}
         </div>
         <div class="travel-ccard-dates__stay">
-            {if $tcc.nights > 0}<span class="travel-ccard-nights">{__("travel_core.n_nights", [$tcc.nights])}</span>{/if}
+            {if $tcc.nights > 0}<span class="travel-ccard-nights">{if $tcc.days|default:0}{__("travel_core.obc_n_days", [$tcc.days])}, {/if}{__("travel_core.n_nights", [$tcc.nights])}</span>{/if}
             <svg width="40" height="10" viewBox="0 0 40 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 5h37M33 1l4 4-4 4"></path></svg>
             {if $tcc.per_night}<span class="travel-ccard-pernight">{__("travel_core.price_per_night", ["[price]" => $tcc.per_night])}</span>{/if}
         </div>
         <div class="travel-ccard-date travel-ccard-date--end">
-            <span class="travel-ccard-date__label">{__("travel_core.check_out")}</span>
+            <span class="travel-ccard-date__label">{if $tcc.kind|default:"" == "circuit"}{__("travel_core.obc_return")}{else}{__("travel_core.check_out")}{/if}</span>
             <span class="travel-ccard-date__value">{$tcc.check_out.date|escape:html}</span>
             {if $tcc.show_weekday && $tcc.check_out.weekday}<span class="travel-ccard-date__weekday">{$tcc.check_out.weekday|escape:html}</span>{/if}
         </div>
@@ -138,6 +157,33 @@
                     {elseif !$tcc.room_list}
                         <span>{__("travel_core.n_rooms", [$tcc.rooms])}</span>
                     {/if}
+                </span>
+            </li>
+        {/if}
+        {if $tcc.package|default:""}
+            <li class="travel-ccard-fact">
+                <span class="travel-ccard-fact__icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"></path><circle cx="7.5" cy="7.5" r="1.5"></circle></svg></span>
+                <span class="travel-ccard-fact__text">
+                    <strong>{$tcc.package|escape:html}</strong>
+                    <span>{__("travel_core.package")}</span>
+                </span>
+            </li>
+        {/if}
+        {if $tcc.transport|default:"" || $tcc.departure|default:""}
+            <li class="travel-ccard-fact">
+                <span class="travel-ccard-fact__icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2"></circle><circle cx="18" cy="6" r="2"></circle><path d="M8 18h7a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h7"></path></svg></span>
+                <span class="travel-ccard-fact__text">
+                    <strong>{if $tcc.transport == "flight"}{__("travel_core.obc_transport_flight")}{elseif $tcc.transport == "bus"}{__("travel_core.obc_transport_bus")}{elseif $tcc.transport}{$tcc.transport|escape:html}{else}{$tcc.departure|escape:html}{/if}</strong>
+                    <span>{if $tcc.transport && $tcc.departure}{__("travel_core.obc_from_city", ["[city]" => $tcc.departure])}{else}{__("travel_core.obc_transport")}{/if}</span>
+                </span>
+            </li>
+        {/if}
+        {if $tcc.services|default:[]}
+            <li class="travel-ccard-fact">
+                <span class="travel-ccard-fact__icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v8H4v-8"></path><path d="M2 7h20v5H2z"></path><path d="M12 20V7"></path><path d="M12 7c-1.5-3-5-3-5-1s3 1 5 1c2 0 5 1 5-1s-3.5-2-5 1z"></path></svg></span>
+                <span class="travel-ccard-fact__text">
+                    <strong>{", "|implode:$tcc.services|escape:html}</strong>
+                    <span>{__("travel_core.obc_extras")}</span>
                 </span>
             </li>
         {/if}
@@ -206,7 +252,28 @@
 
     {* Deposit bookings (DepositCartLine): this line charges the deposit, the
        balance is paid later from the order's pay link. *}
-    {if $tcc.deposit}
+    {if $tcc.deposit && $tcc.balance|default:[]}
+        {* A placed deposit order: what was paid, what is still owed and by
+           when, and — while it is open — the button to pay it. *}
+        <div class="travel-ccard-split">
+            <span class="travel-ccard-split__title">{__("travel_core.paid_with_deposit")}</span>
+            <div class="travel-ccard-split__row travel-ccard-split__row--now">
+                <span>{__("travel_core.obc_deposit_paid")}</span>
+                <strong>{$tcc.deposit.deposit|escape:html}</strong>
+            </div>
+            <div class="travel-ccard-split__row">
+                <span>{__("travel_core.split_balance")}{if $tcc.balance.due} {__("travel_core.due_by", ["[date]" => $tcc.balance.due])}{/if}</span>
+                <span>{$tcc.balance.amount|escape:html} <span class="travel-ccard-status travel-ccard-status--{if $tcc.balance.state == "paid"}ok{elseif $tcc.balance.state == "overdue"}bad{elseif $tcc.balance.state == "cancelled"}muted{else}warn{/if}">{__("travel_core.obc_balance_`$tcc.balance.state`")}</span></span>
+            </div>
+            <div class="travel-ccard-split__row travel-ccard-split__row--total">
+                <span>{__("travel_core.split_total")}</span>
+                <span>{$tcc.deposit.full|escape:html}</span>
+            </div>
+            {if $tcc.balance.pay_query}
+                <a class="ty-btn ty-btn__primary travel-ccard-split__pay" href="{$tcc.balance.pay_query|fn_url}">{__("travel_core.pay_balance_btn")}</a>
+            {/if}
+        </div>
+    {elseif $tcc.deposit}
         <div class="travel-ccard-split">
             <span class="travel-ccard-split__title">{__("travel_core.how_you_pay")}</span>
             <meter class="travel-ccard-split__bar" min="0" max="100" value="{$tcc.deposit.percent}" aria-hidden="true"></meter>

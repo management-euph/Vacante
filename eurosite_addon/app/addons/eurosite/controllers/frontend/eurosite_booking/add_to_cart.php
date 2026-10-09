@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 use Tygh\Addons\Eurosite\Services\BookingCartProduct;
 use Tygh\Addons\Eurosite\Services\BookingReturnUrl;
+use Tygh\Addons\Eurosite\Services\ConfigProvider;
 use Tygh\Addons\Eurosite\Services\Container;
 use Tygh\Addons\Eurosite\Services\OfferContextStore;
 use Tygh\Addons\Eurosite\Services\RoomOccupancy;
@@ -29,6 +30,7 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\DateHelper;
 use Tygh\Addons\TravelCore\TravelConstants;
+use Tygh\Addons\TravelCore\ViewModels\BookingSidebarFactory;
 use Tygh\Tygh;
 
 if (!defined('BOOTSTRAP')) {
@@ -267,6 +269,9 @@ $cart['products'][$cartId] = [
         'children_ages'       => implode(',', $childrenAges),
         'guests_data'         => (string) json_encode($guests, JSON_UNESCAPED_UNICODE),
         'holder_name'         => $holderName,
+        // The payment terms shown on the booking page, kept with the line:
+        // the order shows what the customer agreed to, not today's setting.
+        'payment_terms'       => BookingSidebarFactory::termLines(ConfigProvider::getPaymentTermsText()),
     ],
 ];
 

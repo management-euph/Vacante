@@ -67,6 +67,21 @@ final class MoneyFormatter
         return new self($row, $toDisplay, TravelCoreConfig::isRoundPrices());
     }
 
+    /**
+     * Amounts already in $code, in that currency's CS-Cart format, unconverted:
+     * the admin order page (the store's primary currency) and supplier prices
+     * (the API currency). A currency the store does not define shows its code.
+     */
+    public static function forCurrency(string $code): self
+    {
+        $row = TypeCoerce::toStringMap(TravelCoreConfig::getCurrencies()[$code] ?? null);
+        if ($row === []) {
+            $row = ['currency_code' => $code, 'symbol' => $code === 'EUR' ? '€' : $code, 'after' => 'Y'];
+        }
+
+        return new self($row);
+    }
+
     /** "1.798,00 €" / "$1,798.00" — plain text, safe to escape. */
     public function format(float $primaryAmount): string
     {

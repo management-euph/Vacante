@@ -32,11 +32,8 @@ return [
     // AREAS (storefront / admin / mail — Smarty resolves templates per
     // area, so each area needs its own physical copy). First path in a
     // set is the reference the others are synced FROM.
-    'area_copy_sets' => [
-        [
-            'addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/order_booking_details.tpl',
-            'addon-travel-core/design/backend/templates/addons/travel_core/components/order_booking_details.tpl',
-            'addon-travel-core/design/backend/mail/templates/addons/travel_core/components/order_booking_details.tpl',
-        ],
-    ],
+    // None today: the order pages draw travel_core's booking card, so
+    // components/order_booking_details.tpl lives in the mail tree only
+    // (the order emails).
+    'area_copy_sets' => [],
 ];
