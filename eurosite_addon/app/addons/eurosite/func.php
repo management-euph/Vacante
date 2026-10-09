@@ -242,14 +242,13 @@ function fn_eurosite_place_order_post(
 }
 
 /**
- * get_order_info — the booking details the order page's per-line block
- * (hooks/orders/product_info.post.tpl) reads but a eurosite cart line never
- * stored: meal plan, children count, every room, the terms, the supplier
- * reference + status, and in the admin the View Booking id.
+ * get_order_info — the stay fields a eurosite cart line never stored (meal
+ * plan, children count, every room, "Last, First" guest names, and in the
+ * admin the View Booking id), for travel_core's order booking card.
  *
  * Runs wherever the order is read, including inside the customer's "Place
- * order" request (place_order_post above): it only adds display keys, and
- * nothing may escape.
+ * order" request (place_order_post above): it only adds display keys, reads
+ * nothing for an order without eurosite lines, and nothing may escape.
  *
  * @param mixed $order fn_get_order_info() output (by reference)
  * @param mixed $additional_data
@@ -260,10 +259,8 @@ function fn_eurosite_get_order_info(&$order, $additional_data = []): void
         return;
     }
     try {
-        $order = (new \Tygh\Addons\Eurosite\Services\OrderLineDecorator(
-            \Tygh\Addons\Eurosite\Services\Container::bookings(),
-            \Tygh\Addons\Eurosite\Services\OrderLineDecorator::storeContext(),
-        ))->decorateOrder($order, defined('AREA') && AREA === 'A');
+        $order = (new \Tygh\Addons\Eurosite\Services\OrderLineDecorator(\Tygh\Addons\Eurosite\Services\Container::bookings()))
+            ->decorateOrder($order, defined('AREA') && AREA === 'A');
     } catch (\Throwable $e) {
         fn_log_event('general', 'runtime', ['message' => 'Eurosite get_order_info: ' . $e::class . ': ' . $e->getMessage()]);
     }

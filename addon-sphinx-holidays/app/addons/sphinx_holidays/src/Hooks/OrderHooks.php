@@ -287,9 +287,11 @@ final class OrderHooks
                         'status' => TravelConstants::STATUS_CONFIRMED,
                     ]);
                 } catch (\Throwable $e) {
-                    // Mark booking as failed in both sphinx_bookings and travel_bookings
+                    // Mark booking as failed in both sphinx_bookings and travel_bookings,
+                    // keeping the supplier's answer for the admin order page.
                     $repo->update($booking_id, [
                         'status' => TravelConstants::STATUS_FAILED,
+                        'api_response' => (string) json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE),
                     ]);
 
                     fn_log_event('general', 'runtime', [

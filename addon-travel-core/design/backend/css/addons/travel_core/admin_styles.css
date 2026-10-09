@@ -896,3 +896,253 @@ a.travel-fm-chip,
 a.travel-fm-chip:hover {
     text-decoration: none;
 }
+
+/* ── Order booking card (components/order_booking_card.tpl) ──────────────
+   Under each travel line on the admin order page: status and supplier
+   reference, the stay, rooms with their guests, terms, the deposit balance.
+   Built to fit the product cell (~460 px) and to grow with it. */
+.travel-obc {
+    margin: 12px 0 4px;
+    border: 1px solid #d5dbe3;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #fff;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #333;
+    white-space: normal;
+}
+
+.travel-obc__bar,
+.travel-obc__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 8px;
+    padding: 9px 12px;
+    background: #f5f7fa;
+    border-bottom: 1px solid #e3e8ee;
+}
+
+.travel-obc__bar {
+    cursor: pointer;
+    list-style: none;
+}
+
+.travel-obc__bar::-webkit-details-marker { display: none; }
+.travel-obc__bar::marker { content: ""; }
+.travel-obc__bar:focus-visible { outline: 2px solid #0b6aa8; outline-offset: -2px; }
+.travel-obc--fold:not([open]) > .travel-obc__bar { border-bottom: 0; }
+.travel-obc--fold > .travel-obc__head { background: #fff; }
+.travel-obc__bar-dates { color: #222; }
+
+.travel-obc__toggle {
+    margin-left: auto;
+    color: #0b6aa8;
+}
+
+.travel-obc__toggle-close,
+[open] > summary .travel-obc__toggle-open { display: none; }
+[open] > summary .travel-obc__toggle-close { display: inline; }
+
+.travel-obc__provider,
+.travel-obc__kind {
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.travel-obc__provider {
+    border: 1px solid #c9d1db;
+    color: #4b5563;
+}
+
+.travel-obc__kind {
+    background: #4b5563;
+    color: #fff;
+}
+
+.travel-obc__status,
+.travel-obc__state {
+    padding: 2px 9px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.travel-obc__status--ok,
+.travel-obc__state--paid { background: #e3f4e8; color: #1e6b34; }
+.travel-obc__status--warn,
+.travel-obc__state--open { background: #fff1d1; color: #7a4a00; }
+.travel-obc__status--bad,
+.travel-obc__state--overdue { background: #fbe4e1; color: #a3271b; }
+.travel-obc__status--muted,
+.travel-obc__state--cancelled { background: #eceff3; color: #4b5563; }
+
+.travel-obc__ref { color: #4b5563; }
+.travel-obc__ref strong { color: #222; font-weight: 600; }
+.travel-obc__open { margin-left: auto; font-weight: 600; }
+.travel-obc__muted { color: #5b6470; }
+.travel-obc__icon { flex-shrink: 0; }
+
+.travel-obc__alert {
+    display: flex;
+    gap: 10px;
+    margin: 12px 12px 0;
+    padding: 10px 12px;
+    border-radius: 4px;
+    background: #fdf1ef;
+    color: #5f1810;
+}
+
+.travel-obc__alert .travel-obc__icon { margin-top: 1px; color: #a3271b; }
+.travel-obc__alert-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.travel-obc__alert-error { font-size: 12px; overflow-wrap: anywhere; }
+.travel-obc__alert-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.travel-obc__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    padding: 12px 12px 10px;
+}
+
+.travel-obc__label {
+    font-size: 11px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: #5b6470;
+}
+
+.travel-obc__value {
+    margin-top: 2px;
+    font-weight: 600;
+    color: #222;
+}
+
+.travel-obc__value--ok { color: #1e6b34; }
+
+.travel-obc__trip {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 0 12px 10px;
+    color: #374151;
+}
+
+.travel-obc__rooms {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 4px 12px 12px;
+}
+
+.travel-obc__room {
+    display: flex;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 4px;
+    background: #f9fafb;
+}
+
+.travel-obc__room-no {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    background: #e3e8ee;
+    color: #374151;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.travel-obc__room-body { min-width: 0; }
+.travel-obc__room-body strong { color: #222; font-weight: 600; }
+.travel-obc__guests { margin-top: 2px; color: #4b5563; }
+
+.travel-obc__lead {
+    padding: 0 4px;
+    border: 1px solid #b9d6ea;
+    border-radius: 3px;
+    color: #0b6aa8;
+    font-size: 11px;
+}
+
+.travel-obc__note { color: #374151; }
+
+.travel-obc__terms,
+.travel-obc__money {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 12px;
+    border-top: 1px solid #e3e8ee;
+}
+
+.travel-obc__money { background: #fbfcfd; }
+.travel-obc__money .travel-obc__grid { padding: 0; }
+
+.travel-obc__cancel {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.travel-obc__cancel strong { font-weight: 600; }
+.travel-obc__cancel--ok { color: #1e6b34; }
+.travel-obc__cancel--bad { color: #a3271b; }
+
+.travel-obc__schedule > summary {
+    display: inline;
+    color: #0b6aa8;
+    cursor: pointer;
+    list-style: none;
+}
+
+.travel-obc__schedule > summary::-webkit-details-marker { display: none; }
+
+.travel-obc__steps {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 16px;
+    margin-top: 6px;
+    padding: 8px 10px;
+    border-radius: 4px;
+    background: #f9fafb;
+    color: #374151;
+}
+
+.travel-obc__step-value { text-align: right; }
+.travel-obc__step-line { grid-column: 1 / -1; }
+.travel-obc__payment { color: #374151; }
+
+.travel-obc__paylink {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.travel-obc__foot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    padding: 8px 12px;
+    border-top: 1px solid #e3e8ee;
+    background: #fbfcfd;
+    color: #5b6470;
+    font-size: 12px;
+}
+
+.travel-obc__foot strong { color: #374151; font-weight: 600; }
+
+@media (max-width: 767px) {
+    .travel-obc__grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}

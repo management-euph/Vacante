@@ -259,7 +259,12 @@ final class CartBookingCardFactory
                 continue;
             }
             $g = TypeCoerce::toStringMap($guest);
-            $name = trim(TypeCoerce::toString($g['name'] ?? ''));
+            // display_name: the order's formatted "Last, First" (travel_core
+            // get_order_info); name: what the provider stored.
+            $name = trim(TypeCoerce::toString($g['display_name'] ?? ''));
+            if ($name === '') {
+                $name = trim(TypeCoerce::toString($g['name'] ?? ''));
+            }
             if ($name === '') {
                 $name = trim(TypeCoerce::toString($g['last_name'] ?? '') . ' ' . TypeCoerce::toString($g['first_name'] ?? ''));
             }
@@ -359,17 +364,25 @@ final class CartBookingCardFactory
             $number = $i + 1;
             $split = self::splitCode(self::firstString($room, ['room_type_display', 'room_name', 'room_id']));
             $price = TypeCoerce::toFloat($room['price'] ?? 0);
+            // sphinx hotels: children_ages; novoton: children_ages_str;
+            // eurosite and sphinx circuits: childrenAges (a list).
+            $ages = self::childrenAges(match (true) {
+                is_array($room['children_ages'] ?? null) => $room['children_ages'],
+                is_array($room['childrenAges'] ?? null) => $room['childrenAges'],
+                default => self::firstString($room, ['children_ages', 'children_ages_str']),
+            });
+            $children = TypeCoerce::toInt($room['children'] ?? 0);
+            if ($children === 0 && $ages !== '') {
+                $children = count(explode(', ', $ages));
+            }
             $out[] = [
                 'number' => $number,
                 'name' => $split['name'],
                 'code' => $split['code'],
                 'price' => $price > 0 ? $this->money->format($price) : '',
                 'adults' => TypeCoerce::toInt($room['adults'] ?? 0),
-                'children' => TypeCoerce::toInt($room['children'] ?? 0),
-                // sphinx / eurosite: children_ages; novoton: children_ages_str.
-                'children_ages' => self::childrenAges(is_array($room['children_ages'] ?? null)
-                    ? $room['children_ages']
-                    : self::firstString($room, ['children_ages', 'children_ages_str'])),
+                'children' => $children,
+                'children_ages' => $ages,
                 'board' => self::splitCode(self::firstString($room, ['board_name', 'board_id']))['name'],
                 'guests' => array_values(array_filter(
                     $guests,

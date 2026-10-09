@@ -2321,3 +2321,215 @@ msgstr "Ascunde"
 msgctxt "Languages::tmpl_travel_stay_summary"
 msgid "Stay summary (collapsible bar)"
 msgstr "Rezumat sejur (bară pliabilă)"
+
+msgctxt "Languages::travel_core.obc_departure"
+msgid "Departure"
+msgstr "Plecare"
+
+msgctxt "Languages::travel_core.obc_return"
+msgid "Return"
+msgstr "Întoarcere"
+
+msgctxt "Languages::travel_core.obc_trip"
+msgid "Trip"
+msgstr "Circuit"
+
+msgctxt "Languages::travel_core.obc_stay"
+msgid "Stay"
+msgstr "Sejur"
+
+msgctxt "Languages::travel_core.obc_n_days"
+msgid "[n] day|[n] days"
+msgstr "[n] zi|[n] zile|[n] de zile"
+
+msgctxt "Languages::travel_core.obc_kind_circuit"
+msgid "Circuit"
+msgstr "Circuit"
+
+msgctxt "Languages::travel_core.obc_kind_package"
+msgid "Package"
+msgstr "Pachet"
+
+msgctxt "Languages::travel_core.obc_kind_flight_hotel"
+msgid "Flight + hotel"
+msgstr "Avion + hotel"
+
+msgctxt "Languages::travel_core.obc_kind_bus_hotel"
+msgid "Bus + hotel"
+msgstr "Autocar + hotel"
+
+msgctxt "Languages::travel_core.obc_status_pending"
+msgid "Awaiting confirmation"
+msgstr "În așteptarea confirmării"
+
+msgctxt "Languages::travel_core.obc_status_confirmed"
+msgid "Confirmed"
+msgstr "Confirmată"
+
+msgctxt "Languages::travel_core.obc_status_completed"
+msgid "Completed"
+msgstr "Finalizată"
+
+msgctxt "Languages::travel_core.obc_status_cancelled"
+msgid "Cancelled"
+msgstr "Anulată"
+
+msgctxt "Languages::travel_core.obc_status_failed"
+msgid "Failed"
+msgstr "Eșuată"
+
+msgctxt "Languages::travel_core.obc_status_ask"
+msgid "On request"
+msgstr "La cerere"
+
+msgctxt "Languages::travel_core.obc_status_waiting"
+msgid "Waiting list"
+msgstr "Listă de așteptare"
+
+msgctxt "Languages::travel_core.obc_status_not_sent"
+msgid "Not sent"
+msgstr "Netrimisă"
+
+msgctxt "Languages::travel_core.obc_ref"
+msgid "Ref"
+msgstr "Ref."
+
+msgctxt "Languages::travel_core.obc_our_ref"
+msgid "Our ref"
+msgstr "Ref. noastră"
+
+msgctxt "Languages::travel_core.obc_no_ref"
+msgid "No supplier reference"
+msgstr "Fără referință de la furnizor"
+
+msgctxt "Languages::travel_core.obc_copy"
+msgid "Copy"
+msgstr "Copiază"
+
+msgctxt "Languages::travel_core.obc_copied"
+msgid "Copied"
+msgstr "Copiat"
+
+msgctxt "Languages::travel_core.obc_copy_ref"
+msgid "Copy the supplier reference"
+msgstr "Copiază referința furnizorului"
+
+msgctxt "Languages::travel_core.obc_booking_n"
+msgid "Booking #[id]"
+msgstr "Rezervarea #[id]"
+
+msgctxt "Languages::travel_core.obc_open_booking"
+msgid "Open booking"
+msgstr "Deschide rezervarea"
+
+msgctxt "Languages::travel_core.obc_failed_title"
+msgid "[provider] did not confirm this booking"
+msgstr "[provider] nu a confirmat această rezervare"
+
+msgctxt "Languages::travel_core.obc_failed_text"
+msgid "Nothing is reserved at the supplier yet."
+msgstr "Deocamdată nu este nimic rezervat la furnizor."
+
+msgctxt "Languages::travel_core.obc_not_sent_title"
+msgid "Not sent to [provider] yet"
+msgstr "Netrimisă încă la [provider]"
+
+msgctxt "Languages::travel_core.obc_not_sent_text"
+msgid "The booking never reached the supplier, so nothing is reserved yet."
+msgstr "Rezervarea nu a ajuns la furnizor, deci deocamdată nu este nimic rezervat."
+
+msgctxt "Languages::travel_core.obc_supplier_answer"
+msgid "Supplier answer"
+msgstr "Răspunsul furnizorului"
+
+msgctxt "Languages::travel_core.obc_supplier_note"
+msgid "Supplier note"
+msgstr "Notă furnizor"
+
+msgctxt "Languages::travel_core.obc_transport"
+msgid "Transport"
+msgstr "Transport"
+
+msgctxt "Languages::travel_core.obc_transport_flight"
+msgid "Flight"
+msgstr "Avion"
+
+msgctxt "Languages::travel_core.obc_transport_bus"
+msgid "Bus"
+msgstr "Autocar"
+
+msgctxt "Languages::travel_core.obc_from_city"
+msgid "from [city]"
+msgstr "din [city]"
+
+msgctxt "Languages::travel_core.obc_extras"
+msgid "Included"
+msgstr "Inclus"
+
+msgctxt "Languages::travel_core.obc_show_schedule"
+msgid "Show schedule"
+msgstr "Arată eșalonarea"
+
+msgctxt "Languages::travel_core.obc_hide_schedule"
+msgid "Hide schedule"
+msgstr "Ascunde eșalonarea"
+
+msgctxt "Languages::travel_core.obc_from_date"
+msgid "from [date]"
+msgstr "din [date]"
+
+msgctxt "Languages::travel_core.obc_payment"
+msgid "Payment"
+msgstr "Plată"
+
+msgctxt "Languages::travel_core.obc_full_stay"
+msgid "Full stay"
+msgstr "Sejur complet"
+
+msgctxt "Languages::travel_core.obc_deposit_paid"
+msgid "Deposit paid"
+msgstr "Avans plătit"
+
+msgctxt "Languages::travel_core.obc_balance_due"
+msgid "Balance · due [date]"
+msgstr "Rest de plată · scadent [date]"
+
+msgctxt "Languages::travel_core.obc_balance_open"
+msgid "Open"
+msgstr "De plată"
+
+msgctxt "Languages::travel_core.obc_balance_overdue"
+msgid "Overdue"
+msgstr "Termen depășit"
+
+msgctxt "Languages::travel_core.obc_balance_paid"
+msgid "Paid"
+msgstr "Plătit"
+
+msgctxt "Languages::travel_core.obc_balance_cancelled"
+msgid "Cancelled"
+msgstr "Anulat"
+
+msgctxt "Languages::travel_core.obc_copy_pay_link"
+msgid "Copy balance pay link"
+msgstr "Copiază linkul de plată a restului"
+
+msgctxt "Languages::travel_core.obc_reminders"
+msgid "[n] reminder sent|[n] reminders sent"
+msgstr "[n] reamintire trimisă|[n] reamintiri trimise|[n] de reamintiri trimise"
+
+msgctxt "Languages::travel_core.obc_supplier_price"
+msgid "Supplier price"
+msgstr "Preț furnizor"
+
+msgctxt "Languages::travel_core.obc_booked_at"
+msgid "Booked [date]"
+msgstr "Rezervat [date]"
+
+msgctxt "Languages::travel_core.obc_updated_at"
+msgid "Updated [date]"
+msgstr "Actualizat [date]"
+
+msgctxt "Languages::travel_core.obc_your_booking"
+msgid "Your booking"
+msgstr "Rezervarea ta"

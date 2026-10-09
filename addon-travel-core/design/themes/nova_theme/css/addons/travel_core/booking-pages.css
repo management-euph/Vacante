@@ -1041,6 +1041,32 @@
 /* Hotel: photo, stars, name, destination */
 .travel-ccard-hotel { display: flex; gap: 14px; align-items: center; padding: 16px; }
 .travel-ccard-title + .travel-ccard-hotel { padding-top: 2px; }
+/* Customer order page ("order" form): the title carries the booking's
+   status and, for a circuit or package, what kind of trip it is. */
+.travel-ccard-title--order { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.travel-ccard-title--order > span:first-child { margin-right: auto; }
+.travel-ccard-kind {
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: #4b5563;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+.travel-ccard-status {
+    padding: 2px 9px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.travel-ccard-status--ok { background: #e3f4e8; color: #1e6b34; }
+.travel-ccard-status--warn { background: #fff1d1; color: #7a4a00; }
+.travel-ccard-status--bad { background: #fbe4e1; color: #a3271b; }
+.travel-ccard-status--muted { background: #eceff3; color: #4b5563; }
+.travel-ccard-split__pay { align-self: flex-start; margin-top: 4px; }
 .travel-ccard-hotel__photo {
     flex: 0 0 76px;
     width: 76px;

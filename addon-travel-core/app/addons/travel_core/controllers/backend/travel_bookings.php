@@ -173,12 +173,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $booking_id = RequestCoerce::int($_REQUEST, 'booking_id');
         if ($booking_id > 0) {
             $booking = $bookingRepo->getProviderInfo($booking_id);
-            if (!empty($booking)) {
+            // booking_id is the unified travel_bookings id; providers check
+            // their OWN booking (contract rule 2). Passing the unified id made
+            // "Check Status" check whichever provider booking shared that number.
+            $providerBookingId = TypeCoerce::toInt($booking['provider_booking_id'] ?? 0);
+            if (!empty($booking) && $providerBookingId > 0) {
                 $bookingProvider = TypeCoerce::toString($booking['provider'] ?? '');
                 $providerInfo = TravelProviderRegistry::get($bookingProvider);
                 try {
                     if ($providerInfo !== null && !empty($providerInfo['single_status_callback'])) {
-                        $result = call_user_func($providerInfo['single_status_callback'], $booking_id);
+                        $result = call_user_func($providerInfo['single_status_callback'], $providerBookingId);
                         $resultMap = is_array($result) ? $result : [];
                         if (!empty($resultMap['changed'])) {
                             $oldStatus = TypeCoerce::toString($resultMap['old_status'] ?? '');
@@ -191,8 +195,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         // Fallback: try BookingAdminProvider directly
                         $adminProvider = TravelProviderRegistry::getBookingAdminProvider($bookingProvider);
                         if ($adminProvider !== null) {
-                            $pbId = TypeCoerce::toString($booking['provider_booking_id'] ?? $booking_id);
-                            $result = $adminProvider->checkStatus($pbId);
+                            $result = $adminProvider->checkStatus((string) $providerBookingId);
                             if (!empty($result['changed'])) {
                                 $oldStatus = $result['old_status'];
                                 $newStatus = $result['new_status'];

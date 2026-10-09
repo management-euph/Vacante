@@ -25,9 +25,21 @@ final class CircuitQuoteStoreTest extends TestCase
         $store->remember('offer-1', 7, 850.0, 'EUR', '2026-11-02', 1000);
 
         self::assertSame(
-            ['circuit_id' => 7, 'selling_price' => 850.0, 'currency' => 'EUR', 'departure_date' => '2026-11-02'],
+            ['circuit_id' => 7, 'selling_price' => 850.0, 'currency' => 'EUR', 'departure_date' => '2026-11-02', 'meal_type' => '', 'departure_name' => ''],
             $store->get('offer-1', 7, 1000 + 60),
         );
+    }
+
+    public function testTheQuoteKeepsItsMealPlanAndDepartureCityForTheOrder(): void
+    {
+        $store = new CircuitQuoteStore();
+        $store->remember('offer-2', 9, 640.0, 'EUR', '2026-11-08', 1000, 'Half Board', 'Bucharest');
+
+        $quote = $store->get('offer-2', 9, 1000);
+
+        self::assertNotNull($quote);
+        self::assertSame('Half Board', $quote['meal_type']);
+        self::assertSame('Bucharest', $quote['departure_name']);
     }
 
     public function testAnotherOfferOrCircuitOrAnOldQuoteIsNotTrusted(): void

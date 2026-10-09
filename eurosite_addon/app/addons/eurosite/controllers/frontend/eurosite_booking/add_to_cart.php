@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 use Tygh\Addons\Eurosite\Services\BookingCartProduct;
 use Tygh\Addons\Eurosite\Services\BookingReturnUrl;
+use Tygh\Addons\Eurosite\Services\ConfigProvider;
 use Tygh\Addons\Eurosite\Services\Container;
 use Tygh\Addons\Eurosite\Services\OfferContextStore;
 use Tygh\Addons\Eurosite\Services\RoomOccupancy;
@@ -267,6 +268,12 @@ $cart['products'][$cartId] = [
         'children_ages'       => implode(',', $childrenAges),
         'guests_data'         => (string) json_encode($guests, JSON_UNESCAPED_UNICODE),
         'holder_name'         => $holderName,
+        // The payment terms shown on the booking page, kept with the line:
+        // the order shows what the customer agreed to, not today's setting.
+        'payment_terms'       => array_values(array_filter(
+            array_map('trim', explode("\n", ConfigProvider::getPaymentTermsText())),
+            static fn (string $line): bool => $line !== '',
+        )),
     ],
 ];
 

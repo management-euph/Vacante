@@ -75,20 +75,20 @@ class EurositeBookingRepository
     }
 
     /**
-     * Several bookings in one read, keyed by booking_id (the order page's
-     * per-line decoration).
+     * The meal plan of several bookings in one read, keyed by booking_id (the
+     * order page's per-line decoration; the rest of the row stays unread).
      *
      * @param list<int> $bookingIds
      * @return array<int, array<string, mixed>>
      */
-    public function findByIds(array $bookingIds): array
+    public function mealsByIds(array $bookingIds): array
     {
         $ids = array_values(array_unique(array_filter($bookingIds, static fn (int $id): bool => $id > 0)));
         if ($ids === []) {
             return [];
         }
         $rows = [];
-        foreach (self::asRowList(db_get_array('SELECT * FROM ?:eurosite_bookings WHERE booking_id IN (?n)', $ids)) as $row) {
+        foreach (self::asRowList(db_get_array('SELECT booking_id, meal_name, board_id FROM ?:eurosite_bookings WHERE booking_id IN (?n)', $ids)) as $row) {
             $rows[TypeCoerce::toInt($row['booking_id'] ?? 0)] = $row;
         }
 

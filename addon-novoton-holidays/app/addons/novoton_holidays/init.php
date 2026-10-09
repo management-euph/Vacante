@@ -116,6 +116,12 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
         'novoton',
         new \Tygh\Addons\NovotonHolidays\Providers\NovotonHotelProductProvider()
     );
+    // What the booking row knows about an order line (supplier reference,
+    // failure, the offer's remarks), for travel_core's order booking card.
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setOrderCardResolver(
+        'novoton',
+        static fn (array $extra): array => (new \Tygh\Addons\NovotonHolidays\Services\OrderCardFacts())->facts($extra),
+    );
     // Cancellation & payment terms of novoton cart lines, for travel_core's
     // cart / checkout booking card.
     \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setCartTermsResolver(

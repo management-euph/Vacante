@@ -6,62 +6,24 @@ namespace Tygh\Addons\Eurosite\Services;
 
 use Tygh\Addons\Eurosite\Repository\EurositeBookingRepository;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
-use Tygh\Addons\TravelCore\Services\TravelCoreConfig;
-use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\TravelCore\ViewModels\BookingSidebarFactory;
 
 /**
- * get_order_info for eurosite lines: adds the fields the shared order
- * booking block (travel_core components/order_booking_details.tpl) reads but
- * a eurosite cart line never stored.
- *
- * The cart line carries the stay (hotel, dates, rooms, guests); the rest
- * lives on the ?:eurosite_bookings row: the meal plan, the supplier reference
- * and status, and the cancellation fees Eurosite confirmed after booking.
+ * get_order_info for eurosite lines: adds the stay fields a eurosite cart
+ * line never stored, for the order booking card (travel_core
+ * OrderBookingCardFactory) and the order emails: the meal plan (on the
+ * ?:eurosite_bookings row), the children count, every room's name,
+ * "Last, First" guest names, and in the admin the unified View Booking id.
+ * The reference, status, failure and terms come from OrderCardFacts.
  *
  * Only ADDS derived keys. eurosite_booking_id, children_ages and rooms_data
  * are left as stored: the booking submission reads the order through
  * fn_get_order_info too, and an admin order edit may write these extras back.
- * The values that change over a booking's life (status, reference, fees, the
- * View Booking id) are recomputed on every read, never kept.
  */
 final class OrderLineDecorator
 {
-    public const array STATUSES = [
-        TravelConstants::STATUS_PENDING,
-        TravelConstants::STATUS_CONFIRMED,
-        TravelConstants::STATUS_CANCELLED,
-        TravelConstants::STATUS_FAILED,
-    ];
-
-    /**
-     * @param array{fee_line: string, ref_line: string, statuses: array<string, string>, payment_terms: string, date_format: string} $context
-     */
-    public function __construct(
-        private readonly EurositeBookingRepository $repo,
-        private readonly array $context,
-    ) {
-    }
-
-    /**
-     * The labels and settings decorate() needs, from the running store.
-     *
-     * @return array{fee_line: string, ref_line: string, statuses: array<string, string>, payment_terms: string, date_format: string}
-     */
-    public static function storeContext(): array
+    public function __construct(private readonly EurositeBookingRepository $repo)
     {
-        $statuses = [];
-        foreach (self::STATUSES as $status) {
-            $statuses[$status] = TypeCoerce::toString(__('eurosite.booking_status_' . $status));
-        }
-
-        return [
-            'fee_line' => TypeCoerce::toString(__('eurosite.cancel_fee_line')),
-            'ref_line' => TypeCoerce::toString(__('eurosite.order_booking_ref')),
-            'statuses' => $statuses,
-            'payment_terms' => ConfigProvider::getPaymentTermsText(),
-            'date_format' => TravelCoreConfig::getDateFormat(),
-        ];
     }
 
     /**
@@ -87,7 +49,7 @@ final class OrderLineDecorator
             return $order;
         }
 
-        $bookings = $this->repo->findByIds($ids);
+        $bookings = $this->repo->mealsByIds($ids);
         $surrogates = $admin ? $this->repo->surrogateIds($ids) : [];
         foreach ($products as $key => $product) {
             if (!is_array($product)) {
@@ -101,7 +63,6 @@ final class OrderLineDecorator
                 TypeCoerce::toStringMap($product['extra'] ?? null),
                 $bookings[$id] ?? null,
                 $surrogates[$id] ?? 0,
-                $this->context,
             );
             $products[$key] = $product;
         }
@@ -116,12 +77,11 @@ final class OrderLineDecorator
      * @param array<string, mixed> $extra the line's extra, after travel_core's
      *                                    get_order_info (dates formatted,
      *                                    guests_data an array)
-     * @param array<string, mixed>|null $booking its ?:eurosite_bookings row
+     * @param array<string, mixed>|null $booking its ?:eurosite_bookings meal columns
      * @param int $surrogateId its ?:travel_bookings id, 0 = no link
-     * @param array{fee_line: string, ref_line: string, statuses: array<string, string>, payment_terms: string, date_format: string} $context
      * @return array<string, mixed>
      */
-    public static function decorate(array $extra, ?array $booking, int $surrogateId, array $context): array
+    public static function decorate(array $extra, ?array $booking, int $surrogateId): array
     {
         // The line stores the children's ages only ("7,4"); the block shows
         // children when it has a count.
@@ -155,15 +115,6 @@ final class OrderLineDecorator
             $extra['guests_data'] = $guests;
         }
 
-        // Payment terms are the add-on setting (the API has no payment
-        // schedule) — the same lines the booking page showed.
-        if (empty($extra['payment_terms'])) {
-            $lines = self::lines($context['payment_terms']);
-            if ($lines !== []) {
-                $extra['payment_terms'] = $lines;
-            }
-        }
-
         if ($surrogateId > 0) {
             $extra['travel_surrogate_id'] = $surrogateId;
         }
@@ -182,67 +133,7 @@ final class OrderLineDecorator
             }
         }
 
-        $fees = self::cancellationLines(
-            TypeCoerce::toString($booking['cancellation_fees_json'] ?? ''),
-            $context['fee_line'],
-            $context['date_format'],
-        );
-        if ($fees !== []) {
-            $extra['cancellation_fees'] = $fees;
-        }
-
-        $reference = TypeCoerce::toString($booking['api_ref'] ?? '');
-        if ($reference === '') {
-            $reference = TypeCoerce::toString($booking['client_ref'] ?? '');
-        }
-        $status = TypeCoerce::toString($booking['status'] ?? '');
-        if ($reference !== '' || $status !== '') {
-            $line = strtr($context['ref_line'], [
-                '[ref]' => $reference !== '' ? $reference : '—',
-                '[status]' => $context['statuses'][$status] ?? ucfirst($status),
-            ]);
-            // No status: drop the empty "()" the label leaves behind.
-            $extra['eurosite_ref_line'] = trim((string) preg_replace('/\s*\(\s*\)/u', '', $line));
-        }
-
         return $extra;
-    }
-
-    /**
-     * The fee schedule Eurosite confirmed for the booking (getBookingFees,
-     * absolute amounts per booking item) as one line per window, the items'
-     * amounts added up — what cancelling the whole booking costs.
-     *
-     * @return list<string>
-     */
-    public static function cancellationLines(string $feesJson, string $template, string $dateFormat): array
-    {
-        $decoded = $feesJson !== '' ? json_decode($feesJson, true) : null;
-        $snapshot = TypeCoerce::toStringMap($decoded);
-        $windows = [];
-        foreach (TypeCoerce::toRowList($snapshot['items'] ?? null) as $item) {
-            foreach (TypeCoerce::toRowList($item['fees'] ?? null) as $fee) {
-                $from = TypeCoerce::toString($fee['from_date'] ?? '');
-                $to = TypeCoerce::toString($fee['to_date'] ?? '');
-                $currency = TypeCoerce::toString($fee['currency'] ?? '');
-                $key = $from . '|' . $to . '|' . $currency;
-                $windows[$key] ??= ['from' => $from, 'to' => $to, 'currency' => $currency, 'price' => 0.0];
-                $windows[$key]['price'] += TypeCoerce::toFloat($fee['price'] ?? 0);
-            }
-        }
-
-        $lines = [];
-        foreach ($windows as $window) {
-            $lines[] = BookingSidebarBuilder::cancelLines([[
-                'type' => 'cancellation',
-                'from_date' => $window['from'],
-                'to_date' => $window['to'],
-                'value' => $window['price'],
-                'is_percent' => false,
-            ]], $window['currency'], $template, $dateFormat)[0];
-        }
-
-        return $lines;
     }
 
     /** "Popescu / Ion" -> "Popescu, Ion"; anything else as given. */
@@ -284,13 +175,5 @@ final class OrderLineDecorator
     private static function ages(string $csv): array
     {
         return array_values(array_filter(array_map('trim', explode(',', $csv)), static fn (string $age): bool => $age !== ''));
-    }
-
-    /**
-     * @return list<string>
-     */
-    private static function lines(string $text): array
-    {
-        return array_values(array_filter(array_map('trim', explode("\n", $text)), static fn (string $line): bool => $line !== ''));
     }
 }

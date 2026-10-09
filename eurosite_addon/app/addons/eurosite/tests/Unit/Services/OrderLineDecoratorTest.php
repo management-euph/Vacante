@@ -20,20 +20,6 @@ use Tygh\Addons\Eurosite\Services\OrderLineDecorator;
 final class OrderLineDecoratorTest extends TestCase
 {
     /**
-     * @return array{fee_line: string, ref_line: string, statuses: array<string, string>, payment_terms: string, date_format: string}
-     */
-    private static function context(string $paymentTerms = "30% at booking\n\n70% 21 days before check-in\n"): array
-    {
-        return [
-            'fee_line' => 'Between [from] - [to]: [value] penalty',
-            'ref_line' => 'Eurosite booking: [ref] ([status])',
-            'statuses' => ['pending' => 'Pending', 'confirmed' => 'Confirmed', 'cancelled' => 'Cancelled', 'failed' => 'Failed'],
-            'payment_terms' => $paymentTerms,
-            'date_format' => '%d.%m.%Y',
-        ];
-    }
-
-    /**
      * A eurosite line as add_to_cart writes it, after travel_core's own
      * get_order_info (guests_data formatted into an array).
      *
@@ -80,15 +66,15 @@ final class OrderLineDecoratorTest extends TestCase
 
     public function testFillsBoardFromTheBookingsMealPlan(): void
     {
-        $extra = OrderLineDecorator::decorate(self::extra(), self::booking(), 0, self::context());
+        $extra = OrderLineDecorator::decorate(self::extra(), self::booking(), 0);
 
         self::assertSame('Half Board', $extra['board_name']);
     }
 
     public function testBoardFallsBackToTheBoardCodeAndNeverOverwritesALineValue(): void
     {
-        $fromCode = OrderLineDecorator::decorate(self::extra(), self::booking(['meal_name' => '']), 0, self::context());
-        $kept = OrderLineDecorator::decorate(self::extra(['board_name' => 'All Inclusive']), self::booking(), 0, self::context());
+        $fromCode = OrderLineDecorator::decorate(self::extra(), self::booking(['meal_name' => '']), 0);
+        $kept = OrderLineDecorator::decorate(self::extra(['board_name' => 'All Inclusive']), self::booking(), 0);
 
         self::assertSame('HB', $fromCode['board_name']);
         self::assertSame('All Inclusive', $kept['board_name']);
@@ -96,9 +82,9 @@ final class OrderLineDecoratorTest extends TestCase
 
     public function testCountsChildrenFromTheirAges(): void
     {
-        $two = OrderLineDecorator::decorate(self::extra(['children_ages' => '7, 4']), null, 0, self::context());
-        $none = OrderLineDecorator::decorate(self::extra(), null, 0, self::context());
-        $given = OrderLineDecorator::decorate(self::extra(['children_ages' => '7', 'children' => 3]), null, 0, self::context());
+        $two = OrderLineDecorator::decorate(self::extra(['children_ages' => '7, 4']), null, 0);
+        $none = OrderLineDecorator::decorate(self::extra(), null, 0);
+        $given = OrderLineDecorator::decorate(self::extra(['children_ages' => '7', 'children' => 3]), null, 0);
 
         self::assertSame(2, $two['children']);
         self::assertSame('7, 4', $two['children_ages'], 'the stored ages stay as they are');
@@ -109,12 +95,11 @@ final class OrderLineDecoratorTest extends TestCase
     public function testNamesEveryRoomOfAMultiRoomBooking(): void
     {
         $rooms = '[{"room_name":"Double Room","adults":2},{"room_name":"Double Room","adults":2},{"room_name":"Triple Room","adults":3}]';
-        $fromJson = OrderLineDecorator::decorate(self::extra(['rooms_data' => $rooms, 'num_rooms' => 3]), null, 0, self::context());
+        $fromJson = OrderLineDecorator::decorate(self::extra(['rooms_data' => $rooms, 'num_rooms' => 3]), null, 0);
         $fromArray = OrderLineDecorator::decorate(
             self::extra(['rooms_data' => json_decode($rooms, true), 'num_rooms' => 3]),
             null,
             0,
-            self::context(),
         );
 
         self::assertSame('2x Double Room, Triple Room', $fromJson['room_type_display']);
@@ -124,8 +109,8 @@ final class OrderLineDecoratorTest extends TestCase
 
     public function testASingleRoomKeepsTheLinesRoomName(): void
     {
-        $extra = OrderLineDecorator::decorate(self::extra(), null, 0, self::context());
-        $broken = OrderLineDecorator::decorate(self::extra(['rooms_data' => '{not json']), null, 0, self::context());
+        $extra = OrderLineDecorator::decorate(self::extra(), null, 0);
+        $broken = OrderLineDecorator::decorate(self::extra(['rooms_data' => '{not json']), null, 0);
 
         self::assertArrayNotHasKey('room_type_display', $extra);
         self::assertArrayNotHasKey('room_type_display', $broken);
@@ -133,7 +118,7 @@ final class OrderLineDecoratorTest extends TestCase
 
     public function testGuestNamesReadLastCommaFirst(): void
     {
-        $extra = OrderLineDecorator::decorate(self::extra(), null, 0, self::context());
+        $extra = OrderLineDecorator::decorate(self::extra(), null, 0);
 
         self::assertIsArray($extra['guests_data']);
         self::assertSame('Popescu, Ion', $extra['guests_data'][0]['display_name']);
@@ -143,83 +128,10 @@ final class OrderLineDecoratorTest extends TestCase
         self::assertSame('Popescu /', OrderLineDecorator::displayName('Popescu /'));
     }
 
-    public function testPaymentTermsComeFromTheSettingOneLineEach(): void
-    {
-        $extra = OrderLineDecorator::decorate(self::extra(), null, 0, self::context());
-        $none = OrderLineDecorator::decorate(self::extra(), null, 0, self::context(" \n "));
-        $kept = OrderLineDecorator::decorate(self::extra(['payment_terms' => ['Paid in full']]), null, 0, self::context());
-
-        self::assertSame(['30% at booking', '70% 21 days before check-in'], $extra['payment_terms']);
-        self::assertArrayNotHasKey('payment_terms', $none);
-        self::assertSame(['Paid in full'], $kept['payment_terms']);
-    }
-
-    public function testCancellationFeesAddUpTheBookingItemsPerWindow(): void
-    {
-        $fees = (string) json_encode([
-            'api_ref' => '778899',
-            'client_ref' => 'ES1A2B3C4D5E',
-            'items' => [
-                ['item_client_id' => '1', 'item_ref' => 'A', 'fees' => [
-                    ['type' => 'cancellation', 'from_date' => '2026-09-20', 'to_date' => '2026-09-30', 'price' => 100.0, 'currency' => 'EUR'],
-                    ['type' => 'cancellation', 'from_date' => '2026-10-01', 'to_date' => '2026-10-05', 'price' => 400.5, 'currency' => 'EUR'],
-                ]],
-                ['item_client_id' => '2', 'item_ref' => 'B', 'fees' => [
-                    ['type' => 'cancellation', 'from_date' => '2026-09-20', 'to_date' => '2026-09-30', 'price' => 50.0, 'currency' => 'EUR'],
-                ]],
-            ],
-        ]);
-
-        $extra = OrderLineDecorator::decorate(self::extra(), self::booking(['cancellation_fees_json' => $fees]), 0, self::context());
-
-        self::assertSame([
-            'Between 20.09.2026 - 30.09.2026: 150,00 € penalty',
-            'Between 01.10.2026 - 05.10.2026: 400,50 € penalty',
-        ], $extra['cancellation_fees']);
-    }
-
-    public function testNoFeeScheduleMeansNoCancellationLines(): void
-    {
-        $empty = OrderLineDecorator::decorate(self::extra(), self::booking(), 0, self::context());
-        $broken = OrderLineDecorator::decorate(self::extra(), self::booking(['cancellation_fees_json' => '{oops']), 0, self::context());
-
-        self::assertArrayNotHasKey('cancellation_fees', $empty);
-        self::assertArrayNotHasKey('cancellation_fees', $broken);
-    }
-
-    public function testReferenceLinePrefersTheSupplierReference(): void
-    {
-        $api = OrderLineDecorator::decorate(self::extra(), self::booking(), 0, self::context());
-        $client = OrderLineDecorator::decorate(self::extra(), self::booking(['api_ref' => '', 'status' => 'failed']), 0, self::context());
-
-        self::assertSame('Eurosite booking: 778899 (Confirmed)', $api['eurosite_ref_line']);
-        self::assertSame('Eurosite booking: ES1A2B3C4D5E (Failed)', $client['eurosite_ref_line']);
-    }
-
-    public function testReferenceLineWithoutStatusDropsTheEmptyBrackets(): void
-    {
-        $extra = OrderLineDecorator::decorate(self::extra(), self::booking(['status' => '']), 0, self::context());
-        $unknown = OrderLineDecorator::decorate(self::extra(), self::booking(['status' => 'on hold']), 0, self::context());
-
-        self::assertSame('Eurosite booking: 778899', $extra['eurosite_ref_line']);
-        self::assertSame('Eurosite booking: 778899 (On hold)', $unknown['eurosite_ref_line']);
-    }
-
-    public function testStatusAndReferenceAreRecomputedNotKept(): void
-    {
-        // An admin order edit can write the decorated extra back into the
-        // order: the next read must show today's status, not the saved one.
-        $stale = self::extra(['eurosite_ref_line' => 'Eurosite booking: 778899 (Pending)']);
-
-        $extra = OrderLineDecorator::decorate($stale, self::booking(), 0, self::context());
-
-        self::assertSame('Eurosite booking: 778899 (Confirmed)', $extra['eurosite_ref_line']);
-    }
-
     public function testViewBookingIdIsSetOnlyWhenKnown(): void
     {
-        $linked = OrderLineDecorator::decorate(self::extra(), self::booking(), 27, self::context());
-        $unlinked = OrderLineDecorator::decorate(self::extra(), self::booking(), 0, self::context());
+        $linked = OrderLineDecorator::decorate(self::extra(), self::booking(), 27);
+        $unlinked = OrderLineDecorator::decorate(self::extra(), self::booking(), 0);
 
         self::assertSame(27, $linked['travel_surrogate_id']);
         self::assertArrayNotHasKey('travel_surrogate_id', $unlinked);
@@ -227,10 +139,9 @@ final class OrderLineDecoratorTest extends TestCase
 
     public function testWithoutABookingRowOnlyTheLinesOwnDataIsUsed(): void
     {
-        $extra = OrderLineDecorator::decorate(self::extra(['children_ages' => '5']), null, 0, self::context());
+        $extra = OrderLineDecorator::decorate(self::extra(['children_ages' => '5']), null, 0);
 
         self::assertArrayNotHasKey('board_name', $extra);
-        self::assertArrayNotHasKey('eurosite_ref_line', $extra);
         self::assertSame(1, $extra['children']);
     }
 
@@ -238,7 +149,7 @@ final class OrderLineDecoratorTest extends TestCase
     {
         $before = self::extra(['children_ages' => '7']);
 
-        $after = OrderLineDecorator::decorate($before, self::booking(), 27, self::context());
+        $after = OrderLineDecorator::decorate($before, self::booking(), 27);
 
         foreach (['eurosite_booking_id', 'booking_id', 'children_ages', 'rooms_data', 'room_name', 'adults', 'hotel_name', 'holder_name'] as $key) {
             self::assertSame($before[$key], $after[$key], $key);
@@ -251,9 +162,9 @@ final class OrderLineDecoratorTest extends TestCase
             /** @var list<string> */
             public array $calls = [];
 
-            public function findByIds(array $bookingIds): array
+            public function mealsByIds(array $bookingIds): array
             {
-                $this->calls[] = 'findByIds:' . implode(',', $bookingIds);
+                $this->calls[] = 'mealsByIds:' . implode(',', $bookingIds);
 
                 return [41 => ['booking_id' => 41, 'meal_name' => 'Half Board', 'api_ref' => '778899', 'status' => 'confirmed']];
             }
@@ -274,9 +185,9 @@ final class OrderLineDecoratorTest extends TestCase
             ],
         ];
 
-        $admin = (new OrderLineDecorator($repo, self::context()))->decorateOrder($order, true);
+        $admin = (new OrderLineDecorator($repo))->decorateOrder($order, true);
 
-        self::assertSame(['findByIds:41', 'surrogateIds:41'], $repo->calls);
+        self::assertSame(['mealsByIds:41', 'surrogateIds:41'], $repo->calls);
         self::assertIsArray($admin['products']);
         self::assertSame(['3001', '3002'], array_map('strval', array_keys($admin['products'])));
         self::assertSame('Half Board', $admin['products']['3001']['extra']['board_name']);
@@ -289,7 +200,7 @@ final class OrderLineDecoratorTest extends TestCase
         $repo = new class () extends EurositeBookingRepository {
             public int $surrogateReads = 0;
 
-            public function findByIds(array $bookingIds): array
+            public function mealsByIds(array $bookingIds): array
             {
                 return [];
             }
@@ -302,7 +213,7 @@ final class OrderLineDecoratorTest extends TestCase
             }
         };
 
-        $order = (new OrderLineDecorator($repo, self::context()))->decorateOrder(
+        $order = (new OrderLineDecorator($repo))->decorateOrder(
             ['products' => [['extra' => self::extra()]]],
             false,
         );
@@ -317,7 +228,7 @@ final class OrderLineDecoratorTest extends TestCase
         $repo = new class () extends EurositeBookingRepository {
             public int $reads = 0;
 
-            public function findByIds(array $bookingIds): array
+            public function mealsByIds(array $bookingIds): array
             {
                 ++$this->reads;
 
@@ -326,7 +237,7 @@ final class OrderLineDecoratorTest extends TestCase
         };
         $order = ['products' => [['extra' => ['travel_booking' => true, 'novoton_booking' => true]]]];
 
-        self::assertSame($order, (new OrderLineDecorator($repo, self::context()))->decorateOrder($order, true));
+        self::assertSame($order, (new OrderLineDecorator($repo))->decorateOrder($order, true));
         self::assertSame(0, $repo->reads);
     }
 }

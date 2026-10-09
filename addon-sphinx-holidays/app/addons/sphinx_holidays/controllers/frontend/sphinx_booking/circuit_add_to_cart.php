@@ -146,8 +146,11 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         $rooms_data = [['room_id' => '', 'room_name' => 'Standard', 'adults' => $adults, 'children' => $children]];
     }
 
-    $check_out = !empty($departure_date) && $duration_days > 0
-        ? date('Y-m-d', (int) strtotime($departure_date . " + {$duration_days} days"))
+    // The trip ends after its nights: the provider counts days as nights + 1,
+    // so departure + days was a day after the return.
+    $tripNights = $duration_nights > 0 ? $duration_nights : max(0, $duration_days - 1);
+    $check_out = !empty($departure_date) && $tripNights > 0
+        ? date('Y-m-d', (int) strtotime($departure_date . " + {$tripNights} days"))
         : '';
 
     // Build + persist booking record
@@ -190,6 +193,10 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         'hotel_id' => (string) $circuit_id, 'hotel_name' => $title, 'offer_id' => $offer_id,
         'room_id' => $rooms_data[0]['room_id'], 'room_name' => $rooms_data[0]['room_name'],
         'board_id' => $transport_type, 'board_name' => ucfirst($transport_type),
+        // Shown on the order: the quote's meal plan and the departure city,
+        // from the server-side quote (the form only for display text).
+        'meal_name' => $storedQuote['meal_type'],
+        'departure_name' => $storedQuote['departure_name'] !== '' ? $storedQuote['departure_name'] : $departure_name,
         'check_in' => $departure_date, 'check_out' => $check_out, 'nights' => $duration_nights,
         'adults' => $adults, 'children' => $children, 'children_ages' => $children_ages,
         'num_rooms' => count($rooms_data), 'rooms_data' => $rooms_data,

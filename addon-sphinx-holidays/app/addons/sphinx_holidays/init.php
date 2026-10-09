@@ -75,6 +75,12 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
         'sphinx',
         new \Tygh\Addons\SphinxHolidays\Providers\SphinxHotelProductProvider()
     );
+    // What the booking row knows about an order line (confirmation number,
+    // failure, the kind of trip), for travel_core's order booking card.
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setOrderCardResolver(
+        'sphinx',
+        static fn (array $extra): array => (new \Tygh\Addons\SphinxHolidays\Services\OrderCardFacts())->facts($extra),
+    );
     // Cancellation & payment terms of sphinx cart lines, for travel_core's
     // cart / checkout booking card.
     \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setCartTermsResolver(

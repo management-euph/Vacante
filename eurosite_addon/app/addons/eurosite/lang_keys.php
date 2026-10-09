@@ -1122,24 +1122,4 @@ return [
         'en' => '[n] live {product is|products are} outside the destination whitelist.',
         'ro' => '[n] {produs activ este|produse active sunt|de produse active sunt} în afara listei de destinații.',
     ],
-    'eurosite.order_booking_ref' => [
-        'en' => 'Eurosite booking: [ref] ([status])',
-        'ro' => 'Rezervare Eurosite: [ref] ([status])',
-    ],
-    'eurosite.booking_status_pending' => [
-        'en' => 'Pending',
-        'ro' => 'În așteptare',
-    ],
-    'eurosite.booking_status_confirmed' => [
-        'en' => 'Confirmed',
-        'ro' => 'Confirmată',
-    ],
-    'eurosite.booking_status_cancelled' => [
-        'en' => 'Cancelled',
-        'ro' => 'Anulată',
-    ],
-    'eurosite.booking_status_failed' => [
-        'en' => 'Failed',
-        'ro' => 'Eșuată',
-    ],
 ];

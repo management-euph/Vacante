@@ -1526,4 +1526,216 @@ Dacă ați plătit deja, vă rugăm să ignorați acest email.',
         'en' => 'Hide',
         'ro' => 'Ascunde',
     ],
+    'travel_core.obc_departure' => [
+        'en' => 'Departure',
+        'ro' => 'Plecare',
+    ],
+    'travel_core.obc_return' => [
+        'en' => 'Return',
+        'ro' => 'Întoarcere',
+    ],
+    'travel_core.obc_trip' => [
+        'en' => 'Trip',
+        'ro' => 'Circuit',
+    ],
+    'travel_core.obc_stay' => [
+        'en' => 'Stay',
+        'ro' => 'Sejur',
+    ],
+    'travel_core.obc_n_days' => [
+        'en' => '[n] day|[n] days',
+        'ro' => '[n] zi|[n] zile|[n] de zile',
+    ],
+    'travel_core.obc_kind_circuit' => [
+        'en' => 'Circuit',
+        'ro' => 'Circuit',
+    ],
+    'travel_core.obc_kind_package' => [
+        'en' => 'Package',
+        'ro' => 'Pachet',
+    ],
+    'travel_core.obc_kind_flight_hotel' => [
+        'en' => 'Flight + hotel',
+        'ro' => 'Avion + hotel',
+    ],
+    'travel_core.obc_kind_bus_hotel' => [
+        'en' => 'Bus + hotel',
+        'ro' => 'Autocar + hotel',
+    ],
+    'travel_core.obc_status_pending' => [
+        'en' => 'Awaiting confirmation',
+        'ro' => 'În așteptarea confirmării',
+    ],
+    'travel_core.obc_status_confirmed' => [
+        'en' => 'Confirmed',
+        'ro' => 'Confirmată',
+    ],
+    'travel_core.obc_status_completed' => [
+        'en' => 'Completed',
+        'ro' => 'Finalizată',
+    ],
+    'travel_core.obc_status_cancelled' => [
+        'en' => 'Cancelled',
+        'ro' => 'Anulată',
+    ],
+    'travel_core.obc_status_failed' => [
+        'en' => 'Failed',
+        'ro' => 'Eșuată',
+    ],
+    'travel_core.obc_status_ask' => [
+        'en' => 'On request',
+        'ro' => 'La cerere',
+    ],
+    'travel_core.obc_status_waiting' => [
+        'en' => 'Waiting list',
+        'ro' => 'Listă de așteptare',
+    ],
+    'travel_core.obc_status_not_sent' => [
+        'en' => 'Not sent',
+        'ro' => 'Netrimisă',
+    ],
+    'travel_core.obc_ref' => [
+        'en' => 'Ref',
+        'ro' => 'Ref.',
+    ],
+    'travel_core.obc_our_ref' => [
+        'en' => 'Our ref',
+        'ro' => 'Ref. noastră',
+    ],
+    'travel_core.obc_no_ref' => [
+        'en' => 'No supplier reference',
+        'ro' => 'Fără referință de la furnizor',
+    ],
+    'travel_core.obc_copy' => [
+        'en' => 'Copy',
+        'ro' => 'Copiază',
+    ],
+    'travel_core.obc_copied' => [
+        'en' => 'Copied',
+        'ro' => 'Copiat',
+    ],
+    'travel_core.obc_copy_ref' => [
+        'en' => 'Copy the supplier reference',
+        'ro' => 'Copiază referința furnizorului',
+    ],
+    'travel_core.obc_booking_n' => [
+        'en' => 'Booking #[id]',
+        'ro' => 'Rezervarea #[id]',
+    ],
+    'travel_core.obc_open_booking' => [
+        'en' => 'Open booking',
+        'ro' => 'Deschide rezervarea',
+    ],
+    'travel_core.obc_failed_title' => [
+        'en' => '[provider] did not confirm this booking',
+        'ro' => '[provider] nu a confirmat această rezervare',
+    ],
+    'travel_core.obc_failed_text' => [
+        'en' => 'Nothing is reserved at the supplier yet.',
+        'ro' => 'Deocamdată nu este nimic rezervat la furnizor.',
+    ],
+    'travel_core.obc_not_sent_title' => [
+        'en' => 'Not sent to [provider] yet',
+        'ro' => 'Netrimisă încă la [provider]',
+    ],
+    'travel_core.obc_not_sent_text' => [
+        'en' => 'The booking never reached the supplier, so nothing is reserved yet.',
+        'ro' => 'Rezervarea nu a ajuns la furnizor, deci deocamdată nu este nimic rezervat.',
+    ],
+    'travel_core.obc_supplier_answer' => [
+        'en' => 'Supplier answer',
+        'ro' => 'Răspunsul furnizorului',
+    ],
+    'travel_core.obc_supplier_note' => [
+        'en' => 'Supplier note',
+        'ro' => 'Notă furnizor',
+    ],
+    'travel_core.obc_transport' => [
+        'en' => 'Transport',
+        'ro' => 'Transport',
+    ],
+    'travel_core.obc_transport_flight' => [
+        'en' => 'Flight',
+        'ro' => 'Avion',
+    ],
+    'travel_core.obc_transport_bus' => [
+        'en' => 'Bus',
+        'ro' => 'Autocar',
+    ],
+    'travel_core.obc_from_city' => [
+        'en' => 'from [city]',
+        'ro' => 'din [city]',
+    ],
+    'travel_core.obc_extras' => [
+        'en' => 'Included',
+        'ro' => 'Inclus',
+    ],
+    'travel_core.obc_show_schedule' => [
+        'en' => 'Show schedule',
+        'ro' => 'Arată eșalonarea',
+    ],
+    'travel_core.obc_hide_schedule' => [
+        'en' => 'Hide schedule',
+        'ro' => 'Ascunde eșalonarea',
+    ],
+    'travel_core.obc_from_date' => [
+        'en' => 'from [date]',
+        'ro' => 'din [date]',
+    ],
+    'travel_core.obc_payment' => [
+        'en' => 'Payment',
+        'ro' => 'Plată',
+    ],
+    'travel_core.obc_full_stay' => [
+        'en' => 'Full stay',
+        'ro' => 'Sejur complet',
+    ],
+    'travel_core.obc_deposit_paid' => [
+        'en' => 'Deposit paid',
+        'ro' => 'Avans plătit',
+    ],
+    'travel_core.obc_balance_due' => [
+        'en' => 'Balance · due [date]',
+        'ro' => 'Rest de plată · scadent [date]',
+    ],
+    'travel_core.obc_balance_open' => [
+        'en' => 'Open',
+        'ro' => 'De plată',
+    ],
+    'travel_core.obc_balance_overdue' => [
+        'en' => 'Overdue',
+        'ro' => 'Termen depășit',
+    ],
+    'travel_core.obc_balance_paid' => [
+        'en' => 'Paid',
+        'ro' => 'Plătit',
+    ],
+    'travel_core.obc_balance_cancelled' => [
+        'en' => 'Cancelled',
+        'ro' => 'Anulat',
+    ],
+    'travel_core.obc_copy_pay_link' => [
+        'en' => 'Copy balance pay link',
+        'ro' => 'Copiază linkul de plată a restului',
+    ],
+    'travel_core.obc_reminders' => [
+        'en' => '[n] reminder sent|[n] reminders sent',
+        'ro' => '[n] reamintire trimisă|[n] reamintiri trimise|[n] de reamintiri trimise',
+    ],
+    'travel_core.obc_supplier_price' => [
+        'en' => 'Supplier price',
+        'ro' => 'Preț furnizor',
+    ],
+    'travel_core.obc_booked_at' => [
+        'en' => 'Booked [date]',
+        'ro' => 'Rezervat [date]',
+    ],
+    'travel_core.obc_updated_at' => [
+        'en' => 'Updated [date]',
+        'ro' => 'Actualizat [date]',
+    ],
+    'travel_core.obc_your_booking' => [
+        'en' => 'Your booking',
+        'ro' => 'Rezervarea ta',
+    ],
 ];
