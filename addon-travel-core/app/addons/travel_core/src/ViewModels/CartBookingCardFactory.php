@@ -42,6 +42,12 @@ final class CartBookingCardFactory
     public const CANCEL_PARTIAL = 'partial';
     public const CANCEL_FULL = 'full';
 
+    /**
+     * Where a rooms_data row keeps its room's name: the providers' own keys,
+     * then the raw API row sphinx packages store ({code, name, …}).
+     */
+    private const array ROOM_NAME_KEYS = ['room_type_display', 'room_name', 'name', 'room_id', 'code'];
+
     public function __construct(
         private readonly MoneyFormatter $money,
         private readonly string $today,
@@ -89,7 +95,7 @@ final class CartBookingCardFactory
         $numRooms = max(1, TypeCoerce::toInt($extra['num_rooms'] ?? 1), count($roomsData));
         $room = self::splitCode(self::firstString($extra, ['room_type_display', 'room_name', 'room_id']));
         $roomNames = array_map(
-            static fn (array $r): array => ['room_name' => self::splitCode(self::firstString($r, ['room_type_display', 'room_name', 'room_id']))['name']],
+            static fn (array $r): array => ['room_name' => self::splitCode(self::firstString($r, self::ROOM_NAME_KEYS))['name']],
             $roomsData,
         );
 
@@ -362,7 +368,7 @@ final class CartBookingCardFactory
         $out = [];
         foreach ($roomsData as $i => $room) {
             $number = $i + 1;
-            $split = self::splitCode(self::firstString($room, ['room_type_display', 'room_name', 'room_id']));
+            $split = self::splitCode(self::firstString($room, self::ROOM_NAME_KEYS));
             $price = TypeCoerce::toFloat($room['price'] ?? 0);
             // sphinx hotels: children_ages; novoton: children_ages_str;
             // eurosite and sphinx circuits: childrenAges (a list).

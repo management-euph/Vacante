@@ -30,6 +30,7 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\DateHelper;
 use Tygh\Addons\TravelCore\TravelConstants;
+use Tygh\Addons\TravelCore\ViewModels\BookingSidebarFactory;
 use Tygh\Tygh;
 
 if (!defined('BOOTSTRAP')) {
@@ -270,10 +271,7 @@ $cart['products'][$cartId] = [
         'holder_name'         => $holderName,
         // The payment terms shown on the booking page, kept with the line:
         // the order shows what the customer agreed to, not today's setting.
-        'payment_terms'       => array_values(array_filter(
-            array_map('trim', explode("\n", ConfigProvider::getPaymentTermsText())),
-            static fn (string $line): bool => $line !== '',
-        )),
+        'payment_terms'       => BookingSidebarFactory::termLines(ConfigProvider::getPaymentTermsText()),
     ],
 ];
 

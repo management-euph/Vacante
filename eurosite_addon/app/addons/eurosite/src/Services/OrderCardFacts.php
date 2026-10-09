@@ -60,6 +60,11 @@ final class OrderCardFacts
         $facts['reference'] = $apiRef;
         $facts['our_reference'] = trim(TypeCoerce::toString($row['client_ref'] ?? ''));
         $facts['status'] = $status;
+        // What Eurosite charges for the booking, in its currency.
+        $supplier = TypeCoerce::toFloat($row['total_price'] ?? 0);
+        if ($supplier > 0) {
+            $facts['supplier_price'] = ['amount' => $supplier, 'currency' => strtoupper(TypeCoerce::toString($row['currency'] ?? 'EUR'))];
+        }
         $facts['not_sent'] = $apiRef === '' && $status === TravelConstants::STATUS_PENDING
             && TypeCoerce::toInt($row['order_id'] ?? 0) > 0;
         if ($status === TravelConstants::STATUS_FAILED) {

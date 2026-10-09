@@ -58,8 +58,7 @@ namespace Tygh\Addons\Eurosite\Tests\Unit\Hooks {
             // The order shows the terms agreed to, not today's setting.
             $addToCart = (string) file_get_contents(self::ADDON_ROOT . '/controllers/frontend/eurosite_booking/add_to_cart.php');
 
-            self::assertStringContainsString("'payment_terms'       => array_values(array_filter(", $addToCart);
-            self::assertStringContainsString('ConfigProvider::getPaymentTermsText()', $addToCart);
+            self::assertStringContainsString("'payment_terms'       => BookingSidebarFactory::termLines(ConfigProvider::getPaymentTermsText()),", $addToCart);
         }
 
         public function testTheHookNeverThrows(): void

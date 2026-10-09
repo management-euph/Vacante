@@ -61,6 +61,11 @@ final class OrderCardFacts
         $status = strtolower(TypeCoerce::toString($row['status'] ?? ''));
         $facts['reference'] = trim(TypeCoerce::toString($row['api_booking_ref'] ?? ''));
         $facts['status'] = $status;
+        // What Sphinx charges: the offer's price before our commission.
+        $supplier = TypeCoerce::toFloat($row['base_price'] ?? 0);
+        if ($supplier > 0) {
+            $facts['supplier_price'] = ['amount' => $supplier, 'currency' => strtoupper(TypeCoerce::toString($row['currency'] ?? 'EUR'))];
+        }
         if ($status === TravelConstants::STATUS_FAILED) {
             $answer = json_decode(TypeCoerce::toString($row['api_response'] ?? ''), true);
             $error = is_array($answer) ? trim(TypeCoerce::toString($answer['error'] ?? '')) : '';

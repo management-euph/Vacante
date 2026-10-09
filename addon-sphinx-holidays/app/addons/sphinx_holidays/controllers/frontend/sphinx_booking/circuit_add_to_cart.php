@@ -180,7 +180,7 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
     }
 
     $booking_id = $cartService->upsertBooking(
-        $booking_record, (string) $circuit_id, $departure_date, '', TypeCoerce::toString($parsed_guests['holder_name'])
+        $booking_record, (string) $circuit_id, $departure_date, $check_out, TypeCoerce::toString($parsed_guests['holder_name'])
     );
 
     $product_extra = [
@@ -193,6 +193,7 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         'hotel_id' => (string) $circuit_id, 'hotel_name' => $title, 'offer_id' => $offer_id,
         'room_id' => $rooms_data[0]['room_id'], 'room_name' => $rooms_data[0]['room_name'],
         'board_id' => $transport_type, 'board_name' => ucfirst($transport_type),
+        'transport_type' => $transport_type,
         // Shown on the order: the quote's meal plan and the departure city,
         // from the server-side quote (the form only for display text).
         'meal_name' => $storedQuote['meal_type'],

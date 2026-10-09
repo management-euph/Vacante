@@ -16,7 +16,7 @@ declare(strict_types=1);
  * row, what its provider knows about it (TravelProviderRegistry::orderCardFacts,
  * registered by each provider from its init.php), the provider's terms, the
  * order's balances, the hotel record, and for the admin the provider's name,
- * the supplier price in its own currency and the provider's remedies for a
+ * the supplier's price in its own currency and the provider's remedies for a
  * failed booking (BookingAdminProviderInterface::getAvailableActions).
  *
  * The admin card is built only in the admin area, whatever a template asks
@@ -138,8 +138,11 @@ function fn_travel_core_order_card_admin_meta(array $facts, array $booking): arr
     $info = $provider !== '' ? TravelProviderRegistry::get($provider) : null;
     $meta = ['provider_name' => $info !== null ? TypeCoerce::toString($info['label']) : ucfirst($provider)];
 
-    $total = TypeCoerce::toFloat($booking['total_price'] ?? 0);
-    $currency = strtoupper(TypeCoerce::toString($booking['currency'] ?? ''));
+    // The provider's own figure (before our commission) when it has one,
+    // else the booking's total as mirrored.
+    $supplier = TypeCoerce::toStringMap($facts['supplier_price'] ?? null);
+    $total = TypeCoerce::toFloat($supplier['amount'] ?? $booking['total_price'] ?? 0);
+    $currency = strtoupper(TypeCoerce::toString($supplier['currency'] ?? $booking['currency'] ?? ''));
     if ($total > 0 && $currency !== '') {
         $meta['supplier_price'] = MoneyFormatter::forCurrency($currency)->formatDisplay($total);
     }

@@ -317,6 +317,24 @@ final class OrderBookingCardFactoryTest extends TestCase
         self::assertSame([], self::factory()->build(self::item(), 'customer')['balance'], 'paid in full');
     }
 
+    public function testAPackagesRawApiRoomsKeepTheirNames(): void
+    {
+        // sphinx packages store the API's own rows: {code, name, adults, children_ages}.
+        $item = self::item([
+            'eurosite_booking_id' => 0,
+            'booking_type' => 'package',
+            'rooms_data' => [
+                ['code' => 'FAM', 'name' => 'Family Room', 'adults' => 2, 'children_ages' => [5]],
+                ['code' => 'DBL', 'name' => 'Double Room', 'adults' => 2, 'children_ages' => []],
+            ],
+        ]);
+
+        $card = self::factory()->build($item, 'customer');
+
+        self::assertSame(['Family Room', 'Double Room'], array_column($card['room_cards'], 'name'));
+        self::assertSame(['5', ''], array_column($card['room_cards'], 'children_ages'));
+    }
+
     public function testANonTravelLineHasNoCard(): void
     {
         self::assertSame([], self::factory()->build(['product_id' => 1, 'price' => 10, 'extra' => []], 'admin'));
