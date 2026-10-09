@@ -146,11 +146,13 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         $rooms_data = [['room_id' => '', 'room_name' => 'Standard', 'adults' => $adults, 'children' => $children]];
     }
 
-    // The trip ends after its nights: the provider counts days as nights + 1,
-    // so departure + days was a day after the return.
-    $tripNights = $duration_nights > 0 ? $duration_nights : max(0, $duration_days - 1);
-    $check_out = !empty($departure_date) && $tripNights > 0
-        ? date('Y-m-d', (int) strtotime($departure_date . " + {$tripNights} days"))
+    // The trip ends on its last day, departure + days - 1 (departure + days
+    // was a day after the return). Days and nights are the supplier's own,
+    // apart (9 days / 6 nights when legs run overnight); without days, after
+    // the nights. A same-day trip returns on its departure date.
+    $tripLength = $duration_days > 0 ? $duration_days - 1 : $duration_nights;
+    $check_out = !empty($departure_date)
+        ? date('Y-m-d', (int) strtotime($departure_date . " + {$tripLength} days"))
         : '';
 
     // Build + persist booking record
@@ -199,6 +201,7 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         'meal_name' => $storedQuote['meal_type'],
         'departure_name' => $storedQuote['departure_name'] !== '' ? $storedQuote['departure_name'] : $departure_name,
         'check_in' => $departure_date, 'check_out' => $check_out, 'nights' => $duration_nights,
+        'duration_days' => $duration_days,
         'adults' => $adults, 'children' => $children, 'children_ages' => $children_ages,
         'num_rooms' => count($rooms_data), 'rooms_data' => $rooms_data,
         'guest_names' => $parsed_guests['guest_list'], 'holder_name' => $parsed_guests['holder_name'],

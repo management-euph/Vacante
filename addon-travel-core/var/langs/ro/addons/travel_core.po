@@ -2526,6 +2526,10 @@ msgctxt "Languages::travel_core.obc_booked_at"
 msgid "Booked [date]"
 msgstr "Rezervat [date]"
 
+msgctxt "Languages::travel_core.obc_on_booking"
+msgid "on booking"
+msgstr "la rezervare"
+
 msgctxt "Languages::travel_core.obc_updated_at"
 msgid "Updated [date]"
 msgstr "Actualizat [date]"

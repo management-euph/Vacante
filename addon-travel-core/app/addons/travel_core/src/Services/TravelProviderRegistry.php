@@ -169,7 +169,7 @@ class TravelProviderRegistry
 
     /**
      * The terms of a cart line from the provider that owns it; [] when no
-     * registered provider claims it (eurosite stores none on the line).
+     * registered provider claims it.
      *
      * @param array<string, mixed> $extra
      * @return array<string, mixed>

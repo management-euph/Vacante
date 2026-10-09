@@ -77,9 +77,11 @@ final class OrderBookingCardTest extends TestCase
         $fn = self::read('app/addons/travel_core/functions/order_card.php');
 
         self::assertStringContainsString(
-            "\$admin = \$audience === OrderBookingCardFactory::AUDIENCE_ADMIN && defined('AREA') && AREA === 'A';",
+            "\$admin = \$audience === OrderBookingCardFactory::AUDIENCE_ADMIN && fn_travel_core_order_card_full_admin();",
             $fn,
         );
+        // travel_bookings' own guard (Functions\OrderCardAudienceTest runs it).
+        self::assertStringContainsString("if (!defined('AREA') || AREA !== 'A' || (defined('RESTRICTED_ADMIN') && RESTRICTED_ADMIN)) {", $fn);
         self::assertStringContainsString('$meta = $admin ? fn_travel_core_order_card_admin_meta($facts, $booking) : [];', $fn);
     }
 

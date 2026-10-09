@@ -20,6 +20,11 @@ use Tygh\Addons\TravelCore\TravelConstants;
  */
 final class OrderCardFacts
 {
+    /** Markup that separates text (a space is left where it was). */
+    private const string BLOCK_TAGS = 'p|br|div|li|ul|ol|h[1-6]|tr|td|th|table|tbody|thead';
+    /** Markup inside a sentence. */
+    private const string INLINE_TAGS = 'b|i|u|em|strong|span|a|font|small|sup|sub';
+
     public function __construct(private readonly ?BookingRepository $repo = null)
     {
     }
@@ -87,14 +92,35 @@ final class OrderCardFacts
 
     /**
      * The offer's remark as plain text. Novoton sends it with its markup
-     * escaped and the ampersands lost ("lt;pgt;Late check-inlt;/pgt;"): put
-     * the tags back, then drop them, as the search results do.
+     * escaped and the ampersands lost ("lt;pgt;Late check-inlt;/pgt;", " amp; "),
+     * sometimes properly escaped ("B&amp;B", "&gt; 20m2"): drop the tags in
+     * either form — a paragraph or line break leaves a space — and decode the
+     * rest. Only a known tag name closed by "gt;" is markup, and "amp;" only
+     * where no letter precedes it, so "1 adult; children free" and "camp;"
+     * stay as written.
      */
     public static function plainText(mixed $value): string
     {
-        $text = str_replace(['lt;', 'gt;', 'amp;'], ['<', '>', '&'], TypeCoerce::toString($value));
-        $text = strip_tags(html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        $tag = self::tagGap(...);
+        $text = (string) preg_replace_callback(
+            '/lt;\/?(' . self::BLOCK_TAGS . '|' . self::INLINE_TAGS . ')(?=[\s\/]|gt;)[^<>]{0,200}?gt;/i',
+            $tag,
+            TypeCoerce::toString($value),
+        );
+        $text = (string) preg_replace('/(?<![\p{L}\p{N}&])amp;/u', '&', $text);
+        $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $text = (string) preg_replace_callback('/<\/?([a-z][a-z0-9]*)\b[^<>]*>/i', $tag, $text);
 
         return trim((string) preg_replace('/\s+/u', ' ', $text));
+    }
+
+    /**
+     * What a dropped tag leaves: a space where it separated text.
+     *
+     * @param array<array-key, string> $m preg match, [1] = the tag name
+     */
+    private static function tagGap(array $m): string
+    {
+        return preg_match('/^(?:' . self::BLOCK_TAGS . ')$/i', $m[1] ?? '') === 1 ? ' ' : '';
     }
 }

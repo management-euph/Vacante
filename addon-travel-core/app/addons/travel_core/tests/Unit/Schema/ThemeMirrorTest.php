@@ -14,10 +14,10 @@ use PHPUnit\Framework\TestCase;
  *     responsive templates AND assets (css). Editing only the responsive copy
  *     silently ships a stale nova_theme page (exactly this had already
  *     happened to 4 novoton templates when this guard was written).
- *  2. AREA copies — travel_core's order_booking_details.tpl must exist
- *     identically in the storefront theme, the admin backend and the mail
- *     tree (Smarty resolves templates per area; an include across areas
- *     cannot resolve).
+ *  2. AREA copies — a template needed in more than one area (storefront
+ *     theme, admin backend, mail tree) must exist identically in each:
+ *     Smarty resolves templates per area, an include across areas cannot
+ *     resolve. None today (the manifest's area_copy_sets).
  *
  * The mirror SET lives in scripts/mirror-manifest.php — shared with the
  * `composer mirror` sync tool, so the tool and this guard can never
@@ -122,6 +122,7 @@ class ThemeMirrorTest extends TestCase
     {
         $manifest = self::manifest();
         $repoRoot = self::repoRoot();
+        self::assertIsList($manifest['area_copy_sets']);
 
         foreach ($manifest['area_copy_sets'] as $set) {
             $reference = null;

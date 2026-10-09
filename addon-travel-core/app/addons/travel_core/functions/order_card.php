@@ -20,9 +20,11 @@ declare(strict_types=1);
  * failed booking (BookingAdminProviderInterface::getAvailableActions).
  *
  * The admin card is built only in the admin area, whatever a template asks
- * for: the customer's card never carries a provider, a supplier reference or
- * price, or a supplier error. Nothing may escape from here — a failure is
- * logged and the line simply shows no card.
+ * for, and only for an administrator who may open the bookings themselves
+ * (travel_bookings' own guard): staff in an admin usergroup get the
+ * customer's card. The customer's card never carries a provider, a supplier
+ * reference or price, or a supplier error. Nothing may escape from here — a
+ * failure is logged and the line simply shows no card.
  *
  * @package TravelCore
  */
@@ -49,7 +51,7 @@ function fn_travel_core_order_booking_card(mixed $item, mixed $order_info = [], 
         return [];
     }
     $order = TypeCoerce::toStringMap($order_info);
-    $admin = $audience === OrderBookingCardFactory::AUDIENCE_ADMIN && defined('AREA') && AREA === 'A';
+    $admin = $audience === OrderBookingCardFactory::AUDIENCE_ADMIN && fn_travel_core_order_card_full_admin();
 
     try {
         $facts = TravelProviderRegistry::orderCardFacts($extra);
@@ -92,6 +94,21 @@ function fn_travel_core_order_booking_card(mixed $item, mixed $order_info = [], 
 
         return [];
     }
+}
+
+/**
+ * Whether this request may see the admin card: the admin area, and an
+ * administrator travel_bookings would let in — not one restricted by an
+ * admin usergroup, not a Multi-Vendor store. Supplier prices (before our
+ * commission), references, errors and the remedies are theirs only.
+ */
+function fn_travel_core_order_card_full_admin(): bool
+{
+    if (!defined('AREA') || AREA !== 'A' || (defined('RESTRICTED_ADMIN') && RESTRICTED_ADMIN)) {
+        return false;
+    }
+
+    return !(function_exists('fn_allowed_for') && fn_allowed_for('MULTIVENDOR'));
 }
 
 /**

@@ -21,7 +21,11 @@ use Tygh\Addons\TravelCore\TravelConstants;
  *
  *  - the booking's status (travel_bookings) and what kind of trip it is
  *    (hotel, circuit, flight/bus + hotel package), with circuit dates read as
- *    departure / return and the return taken from the nights;
+ *    departure / return and the supplier's own count of days;
+ *  - the terms read as an order's, not a checkout's: an instalment without a
+ *    date was due on booking (not "now"), and a cancelled, completed or
+ *    started trip has no cancellation headline (nor, cancelled, a balance
+ *    to pay);
  *  - every room as its own block with its board, occupancy and guests;
  *  - the balance of a deposit order: open / paid / overdue, its pay link;
  *  - for the ADMIN only: the provider, the supplier reference, the supplier's
@@ -88,17 +92,16 @@ final class OrderBookingCardFactory
         $extra = TypeCoerce::toStringMap($item['extra'] ?? null);
 
         $kind = self::kind($facts, $extra);
+        $days = 0;
         if ($kind === self::KIND_CIRCUIT) {
-            // The supplier counts a circuit in days (nights + 1); the line's
-            // check-out was departure + days, a day after the trip ends.
-            $departure = DateHelper::parseDate(TypeCoerce::toString($extra['check_in'] ?? ''));
-            $nights = TypeCoerce::toInt($card['nights']);
-            if ($departure !== null && $nights > 0) {
-                $card['check_out'] = $this->date(DateHelper::getCheckOutDate($departure, $nights));
+            [$return, $days] = self::circuitSpan($extra, TypeCoerce::toInt($card['nights']));
+            if ($return !== '') {
+                $card['check_out'] = $this->date($return);
             }
         }
 
         $status = $this->status($booking, $facts, $admin);
+        $card = $this->orderTerms($card, $status['code'], $admin, TypeCoerce::toString($extra['check_in'] ?? ''));
 
         $card['audience'] = $admin ? self::AUDIENCE_ADMIN : self::AUDIENCE_CUSTOMER;
         // A placed order is not edited from here, and its price is settled.
@@ -107,8 +110,7 @@ final class OrderBookingCardFactory
         $card['status'] = $status;
         $card['kind'] = $kind;
         $card['transport'] = self::word($facts['transport'] ?? '');
-        $nights = TypeCoerce::toInt($card['nights']);
-        $card['days'] = $kind === self::KIND_CIRCUIT && $nights > 0 ? $nights + 1 : 0;
+        $card['days'] = $days;
         // A circuit's meal plan, when the provider stored it. Circuit lines
         // from before carried the transport ("Bus") as their board.
         $meals = trim(TypeCoerce::toString($facts['meals'] ?? ''));
@@ -147,7 +149,7 @@ final class OrderBookingCardFactory
             return ['guests' => $guests] + $room;
         }, $card['room_list']);
         $card['room_cards'] = $this->roomCards($card);
-        $card['balance'] = $this->balance($card['deposit'], $extra, $balances, TypeCoerce::toString($item['item_id'] ?? ''));
+        $card['balance'] = $this->balance($card['deposit'], $extra, $balances, TypeCoerce::toString($item['item_id'] ?? ''), $status['code'], $admin);
 
         // Admin only — never handed to the customer's template.
         $card['provider'] = $admin ? [
@@ -213,6 +215,72 @@ final class OrderBookingCardFactory
     }
 
     /**
+     * A circuit's return date and its length in days. The supplier gives
+     * days and nights apart (9 days / 6 nights when legs run overnight), so
+     * a line keeps its duration_days and the trip ends on its last day,
+     * departure + days - 1. Lines from before stored departure + days as
+     * their check-out (some, briefly, departure + nights): at least nights + 1.
+     *
+     * @param array<string, mixed> $extra
+     * @return array{0: string, 1: int} [return date (ISO) or '', days or 0]
+     */
+    private static function circuitSpan(array $extra, int $nights): array
+    {
+        $departure = DateHelper::parseDate(TypeCoerce::toString($extra['check_in'] ?? ''));
+        if ($departure === null) {
+            return ['', 0];
+        }
+        $days = TypeCoerce::toInt($extra['duration_days'] ?? 0);
+        if ($days <= 0) {
+            $stored = DateHelper::parseDate(TypeCoerce::toString($extra['check_out'] ?? ''));
+            $span = $stored !== null ? DateHelper::calculateNights($departure, $stored) : 0;
+            $days = $nights > 0 ? max($span, $nights + 1) : $span;
+        }
+
+        return $days > 0 ? [DateHelper::getCheckOutDate($departure, $days - 1), $days] : ['', 0];
+    }
+
+    /**
+     * The checkout's terms, read for a placed order. Its payment steps say
+     * "now" for an instalment without a date or one already past — on an
+     * order those were due on booking, and a past one was paid or is owed by
+     * its date: each step keeps its date, the undated ones read "on booking".
+     * The cancellation headline ("free until …", "cancelling now costs …")
+     * is for a trip still ahead: none once the booking is cancelled or
+     * completed or the stay has begun; the customer of a cancelled booking
+     * gets no timeline either.
+     *
+     * @param array<string, mixed> $card
+     * @return array<string, mixed>
+     */
+    private function orderTerms(array $card, string $status, bool $admin, string $checkIn): array
+    {
+        $terms = TypeCoerce::toStringMap($card['terms'] ?? null);
+        $steps = array_map(static function (array $step): array {
+            $step['is_now'] = false;
+            $step['at_booking'] = TypeCoerce::toString($step['due_iso'] ?? '') === '';
+
+            return $step;
+        }, TypeCoerce::toRowList($terms['payment_steps'] ?? null));
+        usort($steps, static fn (array $a, array $b): int => [$a['at_booking'] ? 0 : 1, TypeCoerce::toString($a['due_iso'] ?? '')]
+            <=> [$b['at_booking'] ? 0 : 1, TypeCoerce::toString($b['due_iso'] ?? '')]);
+        $terms['payment_steps'] = $steps;
+        $card['terms'] = $terms;
+
+        $start = DateHelper::parseDate($checkIn);
+        $over = in_array($status, [TravelConstants::STATUS_CANCELLED, TravelConstants::STATUS_COMPLETED], true)
+            || ($start !== null && $start <= $this->today);
+        if ($over) {
+            $card['cancel'] = ['state' => '', 'free_until' => '', 'now' => [], 'then' => []];
+        }
+        if (!$admin && $status === TravelConstants::STATUS_CANCELLED) {
+            $card['has_terms'] = false;
+        }
+
+        return $card;
+    }
+
+    /**
      * Every room as a block of its own, also a single one: name, supplier
      * code, board, occupancy and its guests (lead guest marked).
      *
@@ -251,14 +319,17 @@ final class OrderBookingCardFactory
     /**
      * The balance still owed on a deposit order: its ?:travel_balances row is
      * the one of this order item, else (rows written before item_id) the one
-     * with this line's due date.
+     * with this line's due date. A cancelled booking's balance is not paid:
+     * no pay link, and the customer reads it as cancelled even while the row
+     * stays open (only an order's own cancellation closes it). The reminders
+     * are the day marks it was sent at ("7,2").
      *
      * @param mixed $deposit the checkout card's deposit block
      * @param array<string, mixed> $extra
      * @param list<array<string, mixed>> $balances
      * @return array{state: string, amount: string, due: string, pay_query: string, reminders: int, balance_order_id: int}|array{}
      */
-    private function balance(mixed $deposit, array $extra, array $balances, string $itemId): array
+    private function balance(mixed $deposit, array $extra, array $balances, string $itemId, string $status, bool $admin): array
     {
         $deposit = TypeCoerce::toStringMap($deposit);
         if ($deposit === []) {
@@ -283,13 +354,25 @@ final class OrderBookingCardFactory
         if ($state === 'open' && (!empty($row['overdue_notified_at']) || ($dueIso !== '' && $dueIso < $this->today))) {
             $state = 'overdue';
         }
+        $state = in_array($state, ['open', 'overdue', 'paid', 'cancelled'], true) ? $state : 'open';
+        $payable = in_array($state, ['open', 'overdue'], true);
+        if ($status === TravelConstants::STATUS_CANCELLED) {
+            if ($payable && !$admin) {
+                $state = 'cancelled';
+            }
+            $payable = false;
+        }
+        $marks = array_filter(
+            array_map('trim', explode(',', TypeCoerce::toString($row['reminders_sent'] ?? ''))),
+            static fn (string $mark): bool => $mark !== '',
+        );
 
         return [
-            'state' => in_array($state, ['open', 'overdue', 'paid', 'cancelled'], true) ? $state : 'open',
+            'state' => $state,
             'amount' => TypeCoerce::toString($deposit['balance'] ?? ''),
             'due' => TypeCoerce::toString($deposit['balance_due'] ?? ''),
-            'pay_query' => in_array($state, ['open', 'overdue'], true) ? TypeCoerce::toString($row['pay_query'] ?? '') : '',
-            'reminders' => max(0, TypeCoerce::toInt($row['reminders_sent'] ?? 0)),
+            'pay_query' => $payable ? TypeCoerce::toString($row['pay_query'] ?? '') : '',
+            'reminders' => count($marks),
             'balance_order_id' => max(0, TypeCoerce::toInt($row['balance_order_id'] ?? 0)),
         ];
     }

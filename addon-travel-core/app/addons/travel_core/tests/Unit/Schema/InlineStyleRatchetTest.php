@@ -41,7 +41,6 @@ final class InlineStyleRatchetTest extends TestCase
         // (--ty-product-block-image-width) that cannot move to static CSS.
         'addon-travel-core/design/themes/responsive/templates/addons/travel_core/blocks/product_templates/travelcore_template.tpl' => 1,
         'addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/booking_form_mount.tpl' => 1,
-        'addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/order_booking_details.tpl' => 2,
         'addon-travel-core/design/themes/responsive/templates/addons/travel_core/hooks/products/main_info_title.post.tpl' => 2,
         'addon-travel-core/design/themes/responsive/templates/addons/travel_core/hooks/products/product_detail_bottom.post.tpl' => 15,
     ];

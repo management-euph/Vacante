@@ -1730,6 +1730,10 @@ Dacă ați plătit deja, vă rugăm să ignorați acest email.',
         'en' => 'Booked [date]',
         'ro' => 'Rezervat [date]',
     ],
+    'travel_core.obc_on_booking' => [
+        'en' => 'on booking',
+        'ro' => 'la rezervare',
+    ],
     'travel_core.obc_updated_at' => [
         'en' => 'Updated [date]',
         'ro' => 'Actualizat [date]',

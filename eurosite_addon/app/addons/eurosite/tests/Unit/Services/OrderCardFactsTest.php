@@ -87,7 +87,33 @@ final class OrderCardFactsTest extends TestCase
         self::assertSame(['provider_booking_id' => '41'], OrderCardFacts::fromRow(41, null));
     }
 
-    public function testTheFeeScheduleIsOneWindowPerPeriodInThePrimaryCurrency(): void
+    public function testTheFeeScheduleIsOneWindowPerPeriodAsAShareOfTheBooking(): void
+    {
+        // REGRESSION: the fees were converted at today's rate while the line
+        // price was converted the day it was booked, so a 100% fee read as
+        // "cancelling now costs 99.9%" and changed every day. In the
+        // booking's own currency they are a share of its total instead.
+        $fees = (string) json_encode(['items' => [
+            ['fees' => [
+                ['from_date' => '2026-10-27', 'to_date' => '2026-11-06', 'price' => 100.0, 'currency' => 'EUR'],
+                ['from_date' => '2026-11-07', 'to_date' => '2026-11-12', 'price' => 1246.5, 'currency' => 'EUR'],
+            ]],
+            ['fees' => [
+                ['from_date' => '2026-10-27', 'to_date' => '2026-11-06', 'price' => 50.0, 'currency' => 'EUR'],
+                ['from_date' => '2026-11-07', 'to_date' => '2026-11-12', 'price' => 150.0, 'currency' => 'EUR'],
+            ]],
+        ]]);
+        $rates = static fn (string $currency): float => throw new \LogicException('no conversion for a share');
+
+        self::assertSame([
+            ['from' => '2026-10-27', 'to' => '2026-11-06', 'percent' => 10.0],
+            ['from' => '2026-11-07', 'to' => '2026-11-12', 'percent' => 93.1],
+        ], OrderCardFacts::windows($fees, 1500.0, 'EUR', $rates));
+        self::assertSame([], OrderCardFacts::windows('', 1500.0, 'EUR', $rates));
+        self::assertSame([], OrderCardFacts::windows('{oops', 1500.0, 'EUR', $rates));
+    }
+
+    public function testFeesInAnotherCurrencyOrWithoutATotalStayAmountsInThePrimaryCurrency(): void
     {
         $fees = (string) json_encode(['items' => [
             ['fees' => [
@@ -98,15 +124,20 @@ final class OrderCardFactsTest extends TestCase
                 ['from_date' => '2026-10-27', 'to_date' => '2026-11-06', 'price' => 50.0, 'currency' => 'EUR'],
             ]],
         ]]);
+        $asked = [];
+        $rates = static function (string $currency) use (&$asked): float {
+            $asked[] = $currency;
 
-        $windows = OrderCardFacts::windows($fees, static fn (string $currency): float => $currency === 'EUR' ? 5.0 : 0.0);
-
-        self::assertSame([
+            return $currency === 'EUR' ? 5.0 : 0.0;
+        };
+        $amounts = [
             ['from' => '2026-10-27', 'to' => '2026-11-06', 'amount' => 750.0],
             ['from' => '2026-11-07', 'to' => '2026-11-12', 'amount' => 2002.5],
-        ], $windows);
-        self::assertSame([], OrderCardFacts::windows('', static fn (string $c): float => 1.0));
-        self::assertSame([], OrderCardFacts::windows('{oops', static fn (string $c): float => 1.0));
+        ];
+
+        self::assertSame($amounts, OrderCardFacts::windows($fees, 0.0, 'EUR', $rates));
+        self::assertSame($amounts, OrderCardFacts::windows($fees, 1500.0, 'USD', $rates));
+        self::assertSame(['EUR', 'EUR', 'EUR', 'EUR', 'EUR', 'EUR'], $asked);
     }
 
     public function testTermsAreTheStoredPaymentLinesAndTheConfirmedFees(): void
@@ -117,15 +148,56 @@ final class OrderCardFactsTest extends TestCase
                 return $bookingId === 41 ? ['booking_id' => 41, 'cancellation_fees_json' => ''] : null;
             }
         };
-        $facts = new OrderCardFacts($repo);
+        $facts = new OrderCardFacts($repo, static fn (): array => ['Setting: 100% at booking']);
 
         $withLines = $facts->terms(['eurosite_booking_id' => 41, 'payment_terms' => ['30% at booking', ' ', '70% before check-in']]);
-        $noTerms = $facts->terms(['eurosite_booking_id' => 41]);
+        $emptyAtBooking = $facts->terms(['eurosite_booking_id' => 41, 'payment_terms' => []]);
         $notOurs = $facts->terms(['novoton_booking' => true]);
 
         self::assertSame(['payment_lines' => ['30% at booking', '70% before check-in']], $withLines);
-        self::assertSame([], $noTerms);
+        // The setting was empty when the line was booked: it stays so.
+        self::assertSame([], $emptyAtBooking);
         self::assertSame([], $notOurs);
+    }
+
+    public function testALineFromBeforeTheSnapshotShowsTheSettingAsItsPagesDid(): void
+    {
+        // REGRESSION: lines booked before add_to_cart stored the terms lost
+        // them on the order pages (the old decorator filled in the setting).
+        $repo = new class () extends EurositeBookingRepository {
+            public function findById(int $bookingId): ?array
+            {
+                return ['booking_id' => $bookingId, 'cancellation_fees_json' => ''];
+            }
+        };
+        $facts = new OrderCardFacts($repo, static fn (): array => ['30% la rezervare', ' ', '70% cu 30 de zile înainte']);
+
+        self::assertSame(
+            ['payment_lines' => ['30% la rezervare', '70% cu 30 de zile înainte']],
+            $facts->terms(['eurosite_booking_id' => 41]),
+        );
+    }
+
+    public function testTheBookingsFeesAreReadAsAShareOfItsTotal(): void
+    {
+        $repo = new class () extends EurositeBookingRepository {
+            public function findById(int $bookingId): ?array
+            {
+                return [
+                    'booking_id' => $bookingId,
+                    'total_price' => '1396.50',
+                    'currency' => 'eur',
+                    'cancellation_fees_json' => (string) json_encode(['items' => [['fees' => [
+                        ['from_date' => '2026-10-01', 'to_date' => '2026-11-06', 'price' => 1396.5, 'currency' => 'EUR'],
+                    ]]]]),
+                ];
+            }
+        };
+
+        self::assertSame(
+            [['from' => '2026-10-01', 'to' => '2026-11-06', 'percent' => 100.0]],
+            (new OrderCardFacts($repo, static fn (): array => []))->terms(['eurosite_booking_id' => 41])['cancel_windows'] ?? null,
+        );
     }
 
     public function testOnlyEurositeLinesAreClaimed(): void

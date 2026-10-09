@@ -62,7 +62,7 @@
         <ul>
             {if $tt.payment_steps}
                 {foreach from=$tt.payment_steps item="tt_pay"}
-                    <li><strong>{$tt_pay.percent_label|escape:html}</strong>{if $tt_pay.amount_label} &middot; {$tt_pay.amount_label nofilter}{/if} {if $tt_pay.is_now}{__("travel_core.due_now")}{else}{__("travel_core.due_by", ["[date]" => $tt_pay.due_label])}{/if}</li>
+                    <li><strong>{$tt_pay.percent_label|escape:html}</strong>{if $tt_pay.amount_label} &middot; {$tt_pay.amount_label nofilter}{/if} {if $tt_pay.is_now}{__("travel_core.due_now")}{elseif $tt_pay.at_booking|default:false}{__("travel_core.obc_on_booking")}{else}{__("travel_core.due_by", ["[date]" => $tt_pay.due_label])}{/if}</li>
                 {/foreach}
             {elseif $tt.payment_lines_html}
                 {foreach from=$tt.payment_lines_html item="tt_pay_line"}

@@ -12,7 +12,7 @@
 
     Several bookings on one order: each card folds into a one-row summary
     (native <details>; one that needs action stays open). The schedule is a
-    <details> too. The copy buttons are js/addons/travel_core/order_booking_card.js.
+    <details> too. The copy buttons are js/addons/travel_core/order-booking-card.js.
     Styling: admin_styles.css .travel-obc*. Core Smarty modifiers only — the
     admin page renders inside {capture name="mainbox"}.
 *}
@@ -182,7 +182,7 @@
                 <div class="travel-obc__payment">
                     <span class="travel-obc__muted">{__("travel_core.obc_payment")}:</span>
                     {foreach from=$tobc.terms.payment_steps item="tobc_pay" name="tobc_pay"}
-                        {if !$smarty.foreach.tobc_pay.first} &middot; {/if}{$tobc_pay.percent_label|escape:html}{if $tobc_pay.amount_label} ({$tobc_pay.amount_label|escape:html}){/if} {if $tobc_pay.due_label}{__("travel_core.due_by", ["[date]" => $tobc_pay.due_label])}{else}{__("travel_core.due_now")}{/if}
+                        {if !$smarty.foreach.tobc_pay.first} &middot; {/if}{$tobc_pay.percent_label|escape:html}{if $tobc_pay.amount_label} ({$tobc_pay.amount_label|escape:html}){/if} {if $tobc_pay.due_label}{__("travel_core.due_by", ["[date]" => $tobc_pay.due_label])}{else}{__("travel_core.obc_on_booking")}{/if}
                     {/foreach}
                     {foreach from=$tobc.terms.payment_lines item="tobc_line" name="tobc_pl"}
                         {if !$smarty.foreach.tobc_pl.first} &middot; {/if}{$tobc_line|escape:html}

@@ -263,6 +263,35 @@ final class OrderBookingCardFactoryTest extends TestCase
         self::assertSame('Half Board', $new['board']);
     }
 
+    public function testACircuitLastsTheSuppliersDays(): void
+    {
+        // REGRESSION: days were nights + 1 and the return departure + nights,
+        // so a 9 days / 6 nights circuit read "7 days" and came back two
+        // days early. The line keeps the supplier's days now.
+        $line = static fn (array $extra): array => self::item($extra + [
+            'eurosite_booking_id' => 0,
+            'booking_type' => 'circuit',
+            'check_in' => '2026-11-08',
+            'nights' => 6,
+            'num_rooms' => 1,
+            'rooms_data' => [],
+        ]);
+        $facts = ['provider' => 'sphinx', 'kind' => 'circuit'];
+        $span = static function (array $extra) use ($line, $facts): array {
+            $card = self::factory()->build($line($extra), 'customer', [], $facts);
+
+            return [$card['days'], $card['nights'], $card['check_out']['date']];
+        };
+
+        self::assertSame([9, 6, '16.11.2026'], $span(['duration_days' => 9, 'check_out' => '2026-11-16']));
+        // A line from before: its check-out was departure + days.
+        self::assertSame([9, 6, '16.11.2026'], $span(['check_out' => '2026-11-17']));
+        // Briefly departure + nights: at least nights + 1.
+        self::assertSame([7, 6, '14.11.2026'], $span(['check_out' => '2026-11-14']));
+        // A same-day trip returns on its departure date.
+        self::assertSame([1, 0, '08.11.2026'], $span(['duration_days' => 1, 'nights' => 0, 'check_out' => '2026-11-08']));
+    }
+
     public function testAPackageKeepsItsTransportAndAHotelHasNone(): void
     {
         $package = self::factory()->build(self::item(['booking_type' => 'package', 'transport_type' => 'flight']), 'customer', [], ['kind' => 'package', 'transport' => 'flight']);
@@ -287,7 +316,7 @@ final class OrderBookingCardFactoryTest extends TestCase
         $deposit = ['travel_deposit' => ['ratio' => 0.3, 'balance_due' => '2026-10-26', 'full' => 6380.0, 'deposit' => 1914.0, 'balance' => 4466.0]];
         $balances = [
             ['balance_id' => 1, 'item_id' => '9999', 'due_date' => '2026-10-26', 'status' => 'paid', 'balance_order_id' => 55],
-            ['balance_id' => 2, 'item_id' => '3001', 'due_date' => '2026-10-26', 'status' => 'open', 'pay_query' => 'travel_balance.pay?balance_id=2&key=k', 'reminders_sent' => '1'],
+            ['balance_id' => 2, 'item_id' => '3001', 'due_date' => '2026-10-26', 'status' => 'open', 'pay_query' => 'travel_balance.pay?balance_id=2&key=k', 'reminders_sent' => '7'],
         ];
 
         $card = self::factory()->build(self::item($deposit, 1914.0), 'customer', [], [], [], [], $balances);
@@ -315,6 +344,81 @@ final class OrderBookingCardFactoryTest extends TestCase
         self::assertSame(['paid', '', 55], [$paidCard['balance']['state'], $paidCard['balance']['pay_query'], $paidCard['balance']['balance_order_id']]);
         self::assertSame(['overdue', 'q'], [$lateCard['balance']['state'], $lateCard['balance']['pay_query']]);
         self::assertSame([], self::factory()->build(self::item(), 'customer')['balance'], 'paid in full');
+    }
+
+    public function testTheRemindersAreCountedFromTheirDayMarks(): void
+    {
+        // REGRESSION: reminders_sent holds the day marks ("7", "7,2"); read
+        // as a number, one reminder said "7 sent" and two said none.
+        $deposit = ['travel_deposit' => ['ratio' => 0.3, 'balance_due' => '2026-10-26', 'full' => 6380.0, 'deposit' => 1914.0, 'balance' => 4466.0]];
+        $count = static function (string $marks) use ($deposit): mixed {
+            $balances = [['balance_id' => 2, 'item_id' => '3001', 'due_date' => '2026-10-26', 'status' => 'open', 'pay_query' => 'q', 'reminders_sent' => $marks]];
+
+            return self::factory()->build(self::item($deposit, 1914.0), 'admin', [], [], [], [], $balances)['balance']['reminders'];
+        };
+
+        self::assertSame([0, 1, 1, 2, 2], [$count(''), $count('7'), $count('2'), $count('7,2'), $count(' 7, 2 ,')]);
+    }
+
+    public function testAnOrdersInstalmentsAreDueOnBookingOrByTheirDateNeverNow(): void
+    {
+        // REGRESSION: the checkout's "due now" read on a placed order as if
+        // the instalments already paid were owed again ("100% · … now").
+        $terms = ['payment_rows' => [
+            ['due' => '2026-10-26', 'percent' => 50],
+            ['due' => null, 'percent' => 30],
+            ['due' => '2026-10-01', 'percent' => 20],
+        ]];
+
+        foreach (['customer', 'admin'] as $audience) {
+            $steps = self::factory()->build(self::item(), $audience, self::booking(), [], [], $terms)['terms']['payment_steps'];
+
+            self::assertSame(
+                [['30%', true, ''], ['20%', false, '01.10.2026'], ['50%', false, '26.10.2026']],
+                array_map(static fn (array $s): array => [$s['percent_label'], $s['at_booking'], $s['due_label']], $steps),
+                $audience,
+            );
+            self::assertSame([false, false, false], array_column($steps, 'is_now'), $audience);
+        }
+    }
+
+    public function testACancelledBookingHasNoBalanceToPayAndNoCancellationAhead(): void
+    {
+        // REGRESSION: a booking the supplier (or the admin) cancelled kept
+        // its open balance's "Pay balance" button and "Free cancellation
+        // until …" — only cancelling the order closes the balance row.
+        $deposit = ['travel_deposit' => ['ratio' => 0.3, 'balance_due' => '2026-10-26', 'full' => 6380.0, 'deposit' => 1914.0, 'balance' => 4466.0]];
+        $balances = [['balance_id' => 2, 'item_id' => '3001', 'due_date' => '2026-10-26', 'status' => 'open', 'pay_query' => 'q', 'reminders_sent' => '7']];
+        $terms = [
+            'cancel_windows' => [['to' => '2026-10-31', 'percent' => 0], ['from' => '2026-11-01', 'percent' => 50]],
+            'payment_rows' => [['due' => null, 'percent' => 30], ['due' => '2026-10-26', 'percent' => 70]],
+        ];
+        $build = static fn (string $audience, string $status): array => self::factory()->build(
+            self::item($deposit, 1914.0), $audience, self::booking(['status' => $status]), [], [], $terms, $balances,
+        );
+
+        $live = $build('customer', 'confirmed');
+        self::assertSame(['free', 'open', 'q', true], [$live['cancel']['state'], $live['balance']['state'], $live['balance']['pay_query'], $live['has_terms']]);
+
+        $customer = $build('customer', 'cancelled');
+        self::assertSame(['', 'cancelled', '', false], [$customer['cancel']['state'], $customer['balance']['state'], $customer['balance']['pay_query'], $customer['has_terms']]);
+
+        // The admin sees the row as it stands (still open: cancel the order
+        // to close it), with no link to pay it; the terms stay for reference.
+        $admin = $build('admin', 'cancelled');
+        self::assertSame(['', 'open', '', true], [$admin['cancel']['state'], $admin['balance']['state'], $admin['balance']['pay_query'], $admin['has_terms']]);
+    }
+
+    public function testACompletedOrStartedTripHasNoCancellationHeadline(): void
+    {
+        $terms = ['cancel_windows' => [['to' => '2026-10-31', 'percent' => 0], ['from' => '2026-11-01', 'percent' => 50]]];
+        $headline = static fn (array $extra, string $status): string => self::factory()
+            ->build(self::item($extra), 'customer', self::booking(['status' => $status]), [], [], $terms)['cancel']['state'];
+
+        self::assertSame('free', $headline([], 'confirmed'));
+        self::assertSame('', $headline([], 'completed'));
+        self::assertSame('', $headline(['check_in' => self::TODAY, 'check_out' => '2026-10-14'], 'confirmed'));
+        self::assertSame('', $headline(['check_in' => '2026-10-01', 'check_out' => '2026-10-07'], 'confirmed'));
     }
 
     public function testAPackagesRawApiRoomsKeepTheirNames(): void

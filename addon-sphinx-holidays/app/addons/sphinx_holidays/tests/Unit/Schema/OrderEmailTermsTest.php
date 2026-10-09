@@ -50,9 +50,9 @@ final class OrderEmailTermsTest extends TestCase
      */
     public function testSharedComponentRendersBothProviderShapes(): void
     {
+        // The order pages draw travel_core's booking card; the mail tree
+        // keeps the only copy of this component.
         foreach ([
-            'addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/order_booking_details.tpl',
-            'addon-travel-core/design/backend/templates/addons/travel_core/components/order_booking_details.tpl',
             'addon-travel-core/design/backend/mail/templates/addons/travel_core/components/order_booking_details.tpl',
         ] as $copy) {
             $tpl = self::read($copy);
