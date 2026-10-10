@@ -1,0 +1,45 @@
+name: Deploy settings
+description: >
+  Checks the environment's settings before anything connects to the server:
+  DEPLOY_PATH is set, and no setting was saved as a secret where the
+  workflows read a variable.
+
+inputs:
+  environment:
+    description: The environment being used (for the messages)
+    required: true
+  deploy-path:
+    description: The variable DEPLOY_PATH
+    required: false
+    default: ''
+  saved-as-secrets:
+    description: >
+      Names of the settings found only among the secrets (names, never
+      values), space separated
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Check the settings
+      shell: bash
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+        DEPLOY_PATH: ${{ inputs.deploy-path }}
+        SAVED_AS_SECRETS: ${{ inputs.saved-as-secrets }}
+      run: |
+        set -euo pipefail
+        fail() { echo "::error::$*"; { echo "## Settings"; echo "$*"; } >> "$GITHUB_STEP_SUMMARY"; exit 1; }
+        where="Settings → Environments → $ENVIRONMENT → Environment variables → Add environment variable"
+        read -ra names <<< "$SAVED_AS_SECRETS"
+        if [ "${#names[@]}" -gt 0 ]; then
+          list=$(printf '%s, ' "${names[@]}")
+          fail "Saved as a secret, but the workflows read it as a variable: ${list%, }. In $where, add each one with the same name and value, then delete the secret."
+        fi
+        example="/usr/home/USER/public_html/dev on a Hetzner managed server"
+        [ -n "$DEPLOY_PATH" ] || fail "Variable DEPLOY_PATH is not set. In $where: DEPLOY_PATH = the store's folder on the server (where config.php is), e.g. $example."
+        if [[ "$DEPLOY_PATH" =~ [[:space:]] ]]; then
+          fail "Variable DEPLOY_PATH contains a space or a line break: edit it and remove it."
+        fi
+        [[ "$DEPLOY_PATH" =~ ^/.+ ]] || fail "Variable DEPLOY_PATH must be the full path, starting with /, e.g. $example."

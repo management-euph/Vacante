@@ -28,6 +28,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: ./.github/actions/deploy-settings
+        with:
+          environment: ${{ inputs.environment }}
+          deploy-path: ${{ vars.DEPLOY_PATH }}
+          # Names of settings saved as secrets instead of variables.
+          saved-as-secrets: >-
+            ${{ vars.DEPLOY_PATH == '' && secrets.DEPLOY_PATH != '' && 'DEPLOY_PATH' || '' }}
+            ${{ vars.DEPLOY_PORT == '' && secrets.DEPLOY_PORT != '' && 'DEPLOY_PORT' || '' }}
+            ${{ vars.STORE_URL == '' && secrets.STORE_URL != '' && 'STORE_URL' || '' }}
+            ${{ vars.STORE_ADMIN_URL == '' && secrets.STORE_ADMIN_URL != '' && 'STORE_ADMIN_URL' || '' }}
+
       - uses: ./.github/actions/deploy-ssh
         with:
           ssh-key: ${{ secrets.ARTIFACT_SSH_KEY }}
@@ -41,10 +52,6 @@ jobs:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
           set -uo pipefail
-          if [[ ! "$DEPLOY_PATH" =~ ^/.+ ]]; then
-            echo "::error::Variable DEPLOY_PATH must be the store's absolute path on the server, e.g. /var/www/socialtrip.ro/dev"
-            exit 1
-          fi
           # The newest CS-Cart every travel add-on accepts (their addon.xml).
           supported=$(grep -h -A3 '<core_version>' addon-*/app/addons/*/addon.xml \
             | grep -oE '<max>[^<]+' | cut -d'>' -f2 | sort -V | head -1)

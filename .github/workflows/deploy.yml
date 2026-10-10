@@ -63,6 +63,17 @@ jobs:
         with:
           fetch-depth: 0  # deploy-addons.sh compares HEAD with origin/main
 
+      - uses: ./.github/actions/deploy-settings
+        with:
+          environment: ${{ inputs.environment }}
+          deploy-path: ${{ vars.DEPLOY_PATH }}
+          # Names of settings saved as secrets instead of variables.
+          saved-as-secrets: >-
+            ${{ vars.DEPLOY_PATH == '' && secrets.DEPLOY_PATH != '' && 'DEPLOY_PATH' || '' }}
+            ${{ vars.DEPLOY_PORT == '' && secrets.DEPLOY_PORT != '' && 'DEPLOY_PORT' || '' }}
+            ${{ vars.STORE_URL == '' && secrets.STORE_URL != '' && 'STORE_URL' || '' }}
+            ${{ vars.STORE_ADMIN_URL == '' && secrets.STORE_ADMIN_URL != '' && 'STORE_ADMIN_URL' || '' }}
+
       - uses: ./.github/actions/deploy-ssh
         with:
           ssh-key: ${{ secrets.ARTIFACT_SSH_KEY }}
@@ -78,10 +89,6 @@ jobs:
           GO: ${{ inputs.go }}
         run: |
           set -euo pipefail
-          if [[ ! "$DEPLOY_PATH" =~ ^/.+ ]]; then
-            echo "::error::Variable DEPLOY_PATH must be the store's absolute path on the server (docs/DEPLOY.md, step 3)."
-            exit 1
-          fi
           # "store" is the SSH alias .github/actions/deploy-ssh set up.
           args=("store:$DEPLOY_PATH" --addons "$ADDONS")
           # Anything but main (a tag, for a rollback) is deployed on purpose.
