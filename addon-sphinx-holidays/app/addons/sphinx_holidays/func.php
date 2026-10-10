@@ -17,9 +17,10 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 // CS-Cart calls every fn_* below BY NAME (hook dispatch, settings variants,
 // install/uninstall). The names must live here; the bodies live in src/
 // (Hooks\OrderHooks, Install\*, Api\ImageHelper, Repository\*) so func.php
-// stays a thin dispatch boundary — see GodFileRatchetTest.
+// stays a thin dispatch boundary — see GodFileRatchetTest. An install calls
+// them before init.php ever runs, so src/'s autoloader is loaded here too.
 // =========================================================================
-
+require_once __DIR__ . '/autoload.php';
 /**
  * Variants function for the default_currency addon setting.
  * Pulls currencies from CS-Cart's configured currencies.
@@ -52,18 +53,7 @@ function fn_settings_variants_addons_sphinx_holidays_default_currency(): array
  */
 function fn_settings_variants_addons_sphinx_holidays_product_languages(): array
 {
-    $languages = TypeCoerce::toRowList(
-        db_get_array("SELECT lang_code, name FROM ?:languages WHERE status = 'A' ORDER BY name"),
-    );
-    $result = [];
-    foreach ($languages as $lang) {
-        $code = TypeCoerce::toString($lang['lang_code'] ?? '');
-        if ($code === '') {
-            continue;
-        }
-        $result[$code] = TypeCoerce::toString($lang['name'] ?? '') . ' (' . strtoupper($code) . ')';
-    }
-    return $result;
+    return \Tygh\Addons\SphinxHolidays\Install\ProductLanguageOptions::build();
 }
 
 /**

@@ -31,20 +31,8 @@ if (!defined('SPHINX_HOLIDAYS_VERSION')) {
     unset($__sv);
 }
 
-// Register PSR-4 autoloader for sphinx_holidays namespace.
-spl_autoload_register(function ($class) {
-    $prefix = 'Tygh\\Addons\\SphinxHolidays\\';
-    if (strncmp($prefix, $class, strlen($prefix)) !== 0) {
-        return;
-    }
-
-    $relative = str_replace('\\', '/', substr($class, strlen($prefix))) . '.php';
-    $file = __DIR__ . '/src/' . $relative;
-
-    if (file_exists($file)) {
-        require $file;
-    }
-});
+// PSR-4 autoloader for the sphinx_holidays namespace (func.php loads it too).
+require_once __DIR__ . '/autoload.php';
 
 // Register with shared travel provider registry (guard against travel_core not being loaded)
 if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)) {

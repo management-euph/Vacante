@@ -103,7 +103,7 @@ jobs:
               bad "CS-Cart $ver is newer than the add-ons accept (up to $supported): CS-Cart will refuse to install them"
             fi
             if [ -r "$root/config.local.php" ]; then ok "can read config.local.php (database backup)"; else bad "cannot read config.local.php (needed for the database backup)"; fi
-            for d in app/addons design/backend/templates/addons design/backend/css/addons js/addons var/langs var/cache; do
+            for d in app/addons app/payments design/backend/templates/addons design/backend/templates/views/payments/components/cc_processors design/backend/css/addons js/addons var/langs var/cache; do
               if [ ! -e "$root/$d" ]; then continue; fi
               if [ -w "$root/$d" ]; then ok "can write $d"; else bad "ARTIFACT_USERNAME cannot write $d"; fi
             done

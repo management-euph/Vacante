@@ -29,8 +29,9 @@ bash scripts/deploy-addons.sh user@host:/var/www/cscart              # dry run: 
 bash scripts/deploy-addons.sh user@host:/var/www/cscart --go --backup --clear-cache
 ```
 
-Add `--addons travel_core,novoton_holidays,sphinx_holidays,fgo_invoicing,eurosite`
-where the store has Eurosite, `--port N` for a non-standard SSH port; `--help`
+Add `--addons travel_core,novoton_holidays,sphinx_holidays,fgo_invoicing,eurosite,netopia_payments`
+where the store has Eurosite and Netopia Payments (the Deploy workflow's
+default), `--port N` for a non-standard SSH port; `--help`
 lists the rest. It never touches CS-Cart's own files or other add-ons', skips a
 theme the store doesn't have, and refuses a path without `config.php`.
 
@@ -69,12 +70,21 @@ styles**; leaving it on the server keeps that bug alive.
 
 ## 3. Install order (strict)
 
-Install from **Admin → Add-ons → Manage add-ons**, in this order:
+Install from **Admin → Add-ons → Downloaded add-ons** (CS-Cart 4.20+; *Manage
+add-ons* in older versions): search for the name, then **Install** to its
+right. In this order:
 
 1. **Travel Core** (`travel_core`) — shared foundation; the others declare a
    dependency on it
 2. **Novoton Holidays** (`novoton_holidays`)
 3. **Sphinx Holidays** (`sphinx_holidays`)
+
+Then, in any order: **FGO Invoicing**, **Eurosite Touring** (after Travel
+Core), and **Netopia Payments**, which needs no other add-on. Installing
+Netopia registers its payment processor: add a payment method with it in
+**Administration → Payment methods**, processor **Netopia Payments**, and set
+the POS signature, API key and key files in its Configure tab (store only,
+never in the repository).
 
 Installation runs the CREATE TABLEs and each addon's post-install setup
 (novoton's `setup_db()` creates its CASCADE FKs and seeds feature aliases;

@@ -7,10 +7,12 @@
 # release deletes stays on the server and keeps working against the new code
 # (the provider order blocks the booking card replaced would still render).
 # This copies each add-on's OWN folders with rsync --delete - app/addons/<id>,
-# design/.../addons/<id>, js/addons/<id>: the set scripts/package-addons.php
-# zips and docker/fullstore/link-addons.sh links - and nothing else: CS-Cart's
-# files and other add-ons' are never touched. Language files are copied only.
-# Theme folders go only to themes the store has (responsive, nova_theme).
+# design/.../addons/<id>, js/addons/<id>: the set docker/fullstore/link-addons.sh
+# links - and nothing else: CS-Cart's files and other add-ons' are never
+# touched. Single files in CS-Cart's own folders are copied only, never
+# deleted: language files, and a payment processor's script
+# (app/payments/<id>.php) and settings form. Theme folders go only to themes
+# the store has (responsive, nova_theme).
 #
 # What is deployed is the COMMITTED code at HEAD (git archive): uncommitted
 # edits and untracked files never reach the store, and line endings are the
@@ -50,7 +52,11 @@ declare -A DIRS=(
     [sphinx_holidays]=addon-sphinx-holidays
     [fgo_invoicing]=addon-fgo-invoicing
     [eurosite]=addon-eurosite
+    [netopia_payments]=addon-netopia-payments-main
 )
+# Add-ons whose storefront templates are for the responsive theme only: a
+# store on nova_theme gets those same files (as link-addons.sh links them).
+declare -A RESPONSIVE_ONLY=([netopia_payments]=1)
 DEFAULT_ADDONS=travel_core,novoton_holidays,sphinx_holidays,fgo_invoicing
 # Never deployed from app/addons/<id>/ (as in package-addons.php). They are
 # also left alone on the store: excluded paths are not deleted there.
@@ -159,28 +165,44 @@ for theme in responsive nova_theme; do
     if on_store "test -d $(q "$root/design/themes/$theme")"; then themes+=("$theme"); fi
 done
 
-trees_for() { # $1 = add-on id: its folders, store-root relative
-    local id=$1 theme
-    printf '%s\n' "app/addons/$id" "design/backend/templates/addons/$id" "design/backend/css/addons/$id" \
+trees_for() { # $1 = add-on id: "source<TAB>destination" folders, store-root relative
+    local id=$1 theme from tree
+    for tree in "app/addons/$id" "design/backend/templates/addons/$id" "design/backend/css/addons/$id" \
         "design/backend/js/addons/$id" "design/backend/mail/templates/addons/$id" \
-        "design/backend/media/images/addons/$id" "js/addons/$id"
+        "design/backend/media/images/addons/$id" "js/addons/$id"; do
+        printf '%s\t%s\n' "$tree" "$tree"
+    done
     for theme in ${themes[@]+"${themes[@]}"}; do
-        printf '%s\n' "design/themes/$theme/templates/addons/$id" "design/themes/$theme/css/addons/$id"
+        from=$theme
+        if [ -n "${RESPONSIVE_ONLY[$id]:-}" ] && [ ! -d "$stage/${DIRS[$id]}/design/themes/$theme" ]; then
+            from=responsive
+        fi
+        for tree in templates css mail/templates; do
+            printf '%s\t%s\n' "design/themes/$from/$tree/addons/$id" "design/themes/$theme/$tree/addons/$id"
+        done
     done
 }
+files_for() { # $1 = add-on id: single files in CS-Cart's own folders, copied only
+    printf '%s\n' "var/langs/en/addons/$1.po" "var/langs/ro/addons/$1.po" "app/payments/$1.php" \
+        "design/backend/templates/views/payments/components/cc_processors/$1.tpl"
+}
 
-tasks=() # "id<TAB>tree"
+tasks=() # "id<TAB>source<TAB>destination"
+files=() # "id<TAB>file"
 for id in "${ids[@]}"; do
-    while IFS= read -r tree; do
-        if [ -d "$stage/${DIRS[$id]}/$tree" ]; then tasks+=("$id"$'\t'"$tree"); fi
+    while IFS=$'\t' read -r from tree; do
+        if [ -d "$stage/${DIRS[$id]}/$from" ]; then tasks+=("$id"$'\t'"$from"$'\t'"$tree"); fi
     done < <(trees_for "$id")
+    while IFS= read -r file; do
+        if [ -f "$stage/${DIRS[$id]}/$file" ]; then files+=("$id"$'\t'"$file"); fi
+    done < <(files_for "$id")
 done
 [ ${#tasks[@]} -gt 0 ] || die "nothing to deploy for: $addons"
 
 # Folders the store does not have yet: created on --go, only listed on a dry run.
 check=''
 for job in "${tasks[@]}"; do
-    tree=${job#*$'\t'}
+    tree=${job##*$'\t'}
     check+="[ -d $(q "$root/$tree") ] || echo $(q "$tree"); "
 done
 mapfile -t missing < <(on_store "$check")
@@ -201,7 +223,7 @@ echo
 if [ "$go" -eq 1 ] && [ "$backup" -eq 1 ]; then
     echo "Backing up the store first (~/deploy-backups on the store):"
     folders=()
-    for job in "${tasks[@]}"; do folders+=("${job#*$'\t'}"); done
+    for job in "${tasks[@]}" ${files[@]+"${files[@]}"}; do folders+=("${job##*$'\t'}"); done
     on_store_script "$root" "$(date -u +%Y%m%d-%H%M%S)-$(git -C "$repo" rev-parse --short HEAD)" "${folders[@]}" <<'BACKUP' \
         || die "backup failed: nothing was deployed"
 set -euo pipefail
@@ -280,8 +302,9 @@ fi
 log=$work/changes
 : > "$log"
 for job in "${tasks[@]}"; do
-    id=${job%%$'\t'*} tree=${job#*$'\t'}
-    src=$stage/${DIRS[$id]}/$tree
+    id=${job%%$'\t'*} tree=${job##*$'\t'} from=${job#*$'\t'}
+    from=${from%%$'\t'*}
+    src=$stage/${DIRS[$id]}/$from
     excl=() prune=()
     if [ "$tree" = "app/addons/$id" ]; then
         for name in "${EXCLUDES[@]}"; do excl+=("--exclude=/$name"); prune+=(! -path "$src/$name" ! -path "$src/$name/*"); done
@@ -297,17 +320,14 @@ for job in "${tasks[@]}"; do
         printf '%s\n' "$out" >> "$log"
     fi
 done
-for id in "${ids[@]}"; do
-    for lang in en ro; do
-        file=var/langs/$lang/addons/$id.po
-        [ -f "$stage/${DIRS[$id]}/$file" ] || continue
-        out=$(rsync "${rsync_opts[@]}" "$stage/${DIRS[$id]}/$file" "$(dest "var/langs/$lang/addons")/")
-        if [ -n "$out" ]; then
-            echo "== $file"
-            printf '%s\n' "$out" | sed 's/^/   /'
-            printf '%s\n' "$out" >> "$log"
-        fi
-    done
+for job in ${files[@]+"${files[@]}"}; do
+    id=${job%%$'\t'*} file=${job#*$'\t'}
+    out=$(rsync "${rsync_opts[@]}" "$stage/${DIRS[$id]}/$file" "$(dest "$(dirname "$file")")/")
+    if [ -n "$out" ]; then
+        echo "== $file"
+        printf '%s\n' "$out" | sed 's/^/   /'
+        printf '%s\n' "$out" >> "$log"
+    fi
 done
 
 updated=$(grep -c '^[<>]f' "$log" || true)

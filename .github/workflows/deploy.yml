@@ -24,7 +24,7 @@ on:
       addons:
         description: Add-ons to deploy (comma-separated ids)
         type: string
-        default: travel_core,novoton_holidays,sphinx_holidays,fgo_invoicing,eurosite
+        default: travel_core,novoton_holidays,sphinx_holidays,fgo_invoicing,eurosite,netopia_payments
       go:
         description: Deploy for real (unticked = dry run, nothing changes on the store)
         type: boolean
