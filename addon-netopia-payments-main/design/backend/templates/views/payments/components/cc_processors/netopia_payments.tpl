@@ -226,6 +226,7 @@
             <div class="controls">
                 <select name="payment_data[processor_params][currency]" id="netopia_currency">
                     <option value="order_currency" {if $processor_params.currency == "order_currency"}selected="selected"{/if}>{__("netopia_use_primary_currency")}</option>
+                    <option value="primary_currency" {if $processor_params.currency == "primary_currency"}selected="selected"{/if}>{__("netopia_primary_currency")} ({$np_currency|escape:"html"})</option>
                     {foreach from=$currencies item="currency"}
                         <option value="{$currency.currency_code|escape:"html"}" {if $processor_params.currency == $currency.currency_code}selected="selected"{/if}>{$currency.currency_code|escape:"html"} - {$currency.description|escape:"html"}</option>
                     {/foreach}

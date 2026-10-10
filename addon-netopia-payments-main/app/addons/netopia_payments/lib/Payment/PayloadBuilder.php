@@ -56,6 +56,19 @@ use Netopia\CsCart\Support\CountryCodes;
  */
 final class PayloadBuilder
 {
+    /** "Payment currency" setting: the currency the customer placed the order in (also the default). */
+    public const string ORDER_CURRENCY = 'order_currency';
+
+    /** "Payment currency" setting: the store's primary currency, with no conversion. */
+    public const string PRIMARY_CURRENCY = 'primary_currency';
+
+    /** @var \Closure(float, string, string): ?float amount, from, to: the converted amount, or null when it cannot convert */
+    private readonly \Closure $convert;
+
+    /**
+     * @param (\Closure(float, string, string): ?float)|null $convert currency conversion; CS-Cart's
+     *        fn_format_price_by_currency() (the store's own rates) when null
+     */
     public function __construct(
         private readonly ClockInterface $clock,
         private readonly string $notifyUrl,
@@ -63,7 +76,15 @@ final class PayloadBuilder
         private readonly string $primaryCurrency,
         private readonly string $language = 'RO',
         private readonly string $siteUrl = '',
+        ?\Closure $convert = null,
     ) {
+        $this->convert = $convert ?? static function (float $amount, string $from, string $to): ?float {
+            if (!function_exists('fn_format_price_by_currency')) {
+                return null;
+            }
+            $raw = fn_format_price_by_currency($amount, $from, $to);
+            return is_numeric($raw) ? (float) $raw : null;
+        };
     }
 
     /**
@@ -109,22 +130,28 @@ final class PayloadBuilder
      */
     public function resolveCurrency(array $processorParams, array $orderInfo): array
     {
-        $amount = Arr::float($orderInfo, 'total'); // always in primary currency
+        $amount = Arr::float($orderInfo, 'total'); // CS-Cart keeps it in the primary currency
 
-        $configuredCurrency = Arr::string($processorParams, 'currency');
-
-        if ($configuredCurrency === '' || $configuredCurrency === 'order_currency') {
+        $configured = Arr::string($processorParams, 'currency');
+        $currency = match ($configured) {
+            // The currency the customer chose at checkout: CS-Cart stores it
+            // on the order and shows the total converted into it.
+            '', self::ORDER_CURRENCY => Arr::string($orderInfo, 'secondary_currency'),
+            self::PRIMARY_CURRENCY => $this->primaryCurrency,
+            default => $configured,
+        };
+        if ($currency === '' || $currency === $this->primaryCurrency) {
             return [$this->primaryCurrency, $amount];
         }
 
-        $currency = $configuredCurrency;
-
-        if ($currency !== $this->primaryCurrency && function_exists('fn_format_price_by_currency')) {
-            $raw = fn_format_price_by_currency($orderInfo['total'], $this->primaryCurrency, $currency);
-            $amount = is_numeric($raw) ? (float) $raw : $amount;
+        $converted = ($this->convert)($amount, $this->primaryCurrency, $currency);
+        if ($converted === null || $converted <= 0.0) {
+            // No rate for it: charge the order total as stored, in the
+            // primary currency, never the same number in another currency.
+            return [$this->primaryCurrency, $amount];
         }
 
-        return [$currency, $amount];
+        return [$currency, $converted];
     }
 
     /**
@@ -210,7 +237,7 @@ final class PayloadBuilder
             'ntpID' => null,
             'posSignature' => Arr::string($processorParams, 'pos_signature'),
             'dateTime' => $this->clock->now()->format('c'),
-            'description' => $this->buildDescription($processorParams, $orderInfo),
+            'description' => $this->buildDescription($processorParams, $orderInfo, $amount, $currency),
             'orderID' => Arr::string($orderInfo, 'order_id') . '-' . $retrySuffix,
             'amount' => $amount,
             'currency' => $currency,
@@ -269,6 +296,10 @@ final class PayloadBuilder
     private function buildProducts(array $orderInfo, float $amount): array
     {
         $products = [];
+        // Prices are in the primary currency: bring them into the charged
+        // one with the same rate as the total.
+        $total = Arr::float($orderInfo, 'total');
+        $rate = $total > 0.0 ? $amount / $total : 1.0;
 
         $rawProducts = Arr::array($orderInfo, 'products');
         foreach ($rawProducts as $raw) {
@@ -279,7 +310,7 @@ final class PayloadBuilder
                 name:     Arr::string($raw, 'product', 'Product'),
                 code:     Arr::firstString($raw, 'product_code', 'product_id'),
                 category: 'General',
-                price:    Arr::float($raw, 'price'),
+                price:    round(Arr::float($raw, 'price') * $rate, 2),
                 vat:      0,
             );
             $products[] = $product->toArray();
@@ -321,7 +352,7 @@ final class PayloadBuilder
      * @param array<string, mixed> $processorParams
      * @param array<string, mixed> $orderInfo
      */
-    private function buildDescription(array $processorParams, array $orderInfo): string
+    private function buildDescription(array $processorParams, array $orderInfo, float $amount, string $currency): string
     {
         $template = Arr::string($processorParams, 'order_description');
         if ($template === '') {
@@ -334,8 +365,8 @@ final class PayloadBuilder
             ['[order_id]', '[total]', '[currency]', '[email]', '[company]', '[site_url]'],
             [
                 $orderId,
-                Arr::string($orderInfo, 'total'),
-                Arr::string($orderInfo, 'secondary_currency', $this->primaryCurrency),
+                number_format($amount, 2, '.', ''),
+                $currency,
                 Arr::string($orderInfo, 'email'),
                 $this->language,
                 $this->siteUrl,
