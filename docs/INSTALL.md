@@ -69,7 +69,9 @@ styles**; leaving it on the server keeps that bug alive.
 
 ## 3. Install order (strict)
 
-Install from **Admin → Add-ons → Manage add-ons**, in this order:
+Install from **Admin → Add-ons → Downloaded add-ons** (CS-Cart 4.20+; *Manage
+add-ons* in older versions): search for the name, then **Install** to its
+right. In this order:
 
 1. **Travel Core** (`travel_core`) — shared foundation; the others declare a
    dependency on it

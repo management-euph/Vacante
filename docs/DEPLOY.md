@@ -181,7 +181,7 @@ Do it on `dev` first, then the same on `production`.
 3. **Actions → Deploy → Run workflow**: *Use workflow from* `main`,
    environment `dev`, *go* **unticked** → the run lists every file it would
    copy. Run it again with *go* ticked (on `production`, approve it).
-4. Admin → Add-ons: install them **in order** and configure them
+4. Admin → Add-ons → **Downloaded add-ons**: install them **in order** and configure them
    (`docs/INSTALL.md`, sections 3–5). The deploy copies files; installing
    is a one-time admin step.
 

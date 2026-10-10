@@ -97,7 +97,7 @@ into nova_theme too.
    ```bash
    docker compose exec app bash /repo/docker/fullstore/link-addons.sh
    ```
-2. Admin → **Add-ons** → Manage add-ons → **Netopia Payments** → Install.
+2. Admin → **Add-ons** → Downloaded add-ons → **Netopia Payments** → Install.
    Installing registers the "Netopia Payments" payment processor.
 3. Admin → **Administration → Payment methods** → add a method, processor
    **Netopia Payments**. In its Configure tab set Mode = sandbox, the POS
