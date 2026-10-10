@@ -5,6 +5,7 @@
     <priority>100</priority>
     <position>0</position>
     <status>active</status>
+    <has_icon>Y</has_icon>
     <auto_install>MULTIVENDOR,ULTIMATE</auto_install>
     <default_language>en</default_language>
     <supplier>VacanteLitoral.ro</supplier>
