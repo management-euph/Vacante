@@ -40,21 +40,49 @@ runs:
         KNOWN_HOSTS: ${{ inputs.known-hosts }}
       run: |
         set -euo pipefail
+        fail() { echo "::error::$*"; { echo "## SSH setup failed"; echo "$*"; } >> "$GITHUB_STEP_SUMMARY"; exit 1; }
         if [ -z "$SSH_KEY" ] || [ -z "$SSH_HOST" ] || [ -z "$SSH_USER" ]; then
-          echo "::error::Secrets ARTIFACT_SSH_KEY, ARTIFACT_HOST and ARTIFACT_USERNAME must be set (docs/DEPLOY.md, step 3)."
-          exit 1
+          fail "Secrets ARTIFACT_SSH_KEY, ARTIFACT_HOST and ARTIFACT_USERNAME must be set (docs/DEPLOY.md, step 3)."
         fi
-        port=${SSH_PORT:-22}
+        # A pasted secret often carries a space or a line break.
+        host=$(printf '%s' "$SSH_HOST" | tr -d '[:space:]')
+        user=$(printf '%s' "$SSH_USER" | tr -d '[:space:]')
+        port=$(printf '%s' "${SSH_PORT:-22}" | tr -d '[:space:]')
+        case "$host" in
+          *@*) fail "ARTIFACT_HOST must be only the server's name or IP address: the user goes in ARTIFACT_USERNAME." ;;
+          */*) fail "ARTIFACT_HOST must be only the server's name or IP address, without https:// or a path." ;;
+        esac
+        if [[ "$host" =~ ^[^:]+:[0-9]+$ ]]; then
+          fail "ARTIFACT_HOST must not include the port: set the port as the environment variable DEPLOY_PORT."
+        fi
+        [[ "$host" =~ ^[A-Za-z0-9.:-]+$ ]] || fail "ARTIFACT_HOST has unexpected characters: it must be only the server's name or IP address."
+        [[ "$user" =~ ^[A-Za-z0-9._-]+$ ]] || fail "ARTIFACT_USERNAME must be only the user name (no @, no host)."
+        [[ "$port" =~ ^[0-9]+$ ]] || fail "DEPLOY_PORT must be a number."
+
         install -d -m 700 ~/.ssh
         printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
         chmod 600 ~/.ssh/deploy_key
         if [ -n "$KNOWN_HOSTS" ]; then
           printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
         else
-          ssh-keyscan -p "$port" -t ed25519,ecdsa,rsa "$SSH_HOST" > ~/.ssh/known_hosts 2>/dev/null || true
+          ssh-keyscan -T 15 -p "$port" -t ed25519,ecdsa,rsa "$host" > ~/.ssh/known_hosts 2>/dev/null || true
           if [ ! -s ~/.ssh/known_hosts ]; then
-            echo "::error::Could not reach the server's SSH port to read its host key (wrong host or port, or a firewall)."
-            exit 1
+            # Why: the name, the port, or something in between. The host is a
+            # secret; nothing below prints it.
+            if ! getent ahosts "$host" >/dev/null; then
+              why="ARTIFACT_HOST does not resolve to an address: check it is the server's name or IP address, spelled right."
+            else
+              rc=0
+              timeout 15 bash -c 'exec 3<>"/dev/tcp/$1/$2"' _ "$host" "$port" 2>/dev/null || rc=$?
+              if [ "$rc" -eq 124 ]; then
+                why="Port $port does not answer from GitHub (the connection times out): a firewall drops it (Hetzner Cloud Firewall, ufw, CSF...) or SSH listens on another port. Allow SSH on that port from any address (key login only), or set the right port as DEPLOY_PORT."
+              elif [ "$rc" -ne 0 ]; then
+                why="Port $port refuses connections: SSH is not listening there. Find the SSH port (Port in /etc/ssh/sshd_config, or the panel) and set it as the environment variable DEPLOY_PORT."
+              else
+                why="Port $port answers, but not like an SSH server: is it the SSH port? Set the right one as DEPLOY_PORT."
+              fi
+            fi
+            fail "Could not read the server's SSH host key. $why"
           fi
           {
             echo "### Server host key (not pinned)"
@@ -66,8 +94,8 @@ runs:
         fi
         {
           echo "Host store"
-          echo "  HostName $SSH_HOST"
-          echo "  User $SSH_USER"
+          echo "  HostName $host"
+          echo "  User $user"
           echo "  Port $port"
           echo "  IdentityFile ~/.ssh/deploy_key"
           echo "  IdentitiesOnly yes"
