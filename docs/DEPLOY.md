@@ -35,8 +35,8 @@ an unmanaged VPS or any Linux server with SSH. On Hetzner's managed products
 - **SSH is on port 222.** Port 22 is SFTP only (it answers `SSH-2.0-mod_sftp`)
   and gives no shell, so rsync cannot run there. Set `DEPLOY_PORT` to `222`.
 - SSH is for the **main FTP user** only (the user that owns `public_html`).
-- Public keys are added in **konsoleH → Settings → Login data → Public SFTP
-  Keys** (see step 2).
+- Public keys are added in **konsoleH → Settings → Login data → Public SSH
+  Keys** and **Public SFTP Keys** (see step 2).
 
 - **SSH login by key**, and `rsync`, `tar`, `gzip`, `mysqldump` (or
   `mariadb-dump`) and PHP **8.3+** on the command line. On a Debian/Ubuntu
@@ -82,8 +82,11 @@ two files in `C:\Users\<you>\.ssh\`:
 Add the public key on the server:
 
 - **Hetzner managed server** (konsoleH): Settings → Login data →
-  *Public SFTP Keys* → **Add**, paste the whole line of `github_deploy.pub`,
-  save (konsoleH converts it to the format it needs).
+  *Public SSH Keys* → **Add**, paste the whole line of `github_deploy.pub`,
+  save; do the same under *Public SFTP Keys* (konsoleH converts it to the
+  format it needs). The SSH section serves the shell on port 222, which the
+  deploy uses; the SFTP section serves port 22, and Hetzner's guide names
+  only that one. A public key reveals nothing, so adding it to both is safe.
 - **An unmanaged VPS**: logged in as the site user,
   ```bash
   mkdir -p ~/.ssh && chmod 700 ~/.ssh
