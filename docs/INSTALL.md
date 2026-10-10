@@ -15,7 +15,27 @@ current schema** — no upgrade items or migrations need to be applied.
 
 ## 2. Deploy the addon files
 
-Copy (rsync) each addon's trees into the CS-Cart root, preserving paths:
+**Use `scripts/deploy-addons.sh`** (rsync over SSH). It deploys the committed
+`main` and deletes, inside each add-on's own folders only, the files a release
+removed — which "Upload & install" and FTP never do:
+
+```bash
+git checkout main && git pull
+bash scripts/deploy-addons.sh user@host:/var/www/cscart              # dry run: lists every copy and deletion
+bash scripts/deploy-addons.sh user@host:/var/www/cscart --go --clear-cache
+```
+
+Add `--addons travel_core,novoton_holidays,sphinx_holidays,fgo_invoicing,eurosite`
+where the store has Eurosite, `--port N` for a non-standard SSH port; `--help`
+lists the rest. It never touches CS-Cart's own files or other add-ons', skips a
+theme the store doesn't have, and refuses a path without `config.php`.
+
+On **Windows** run it from WSL (Git Bash has no rsync):
+`wsl`, then `sudo apt install rsync openssh-client` once, then
+`cd /mnt/c/<your checkout>` and the commands above. If git says "dubious
+ownership", run the `git config --global --add safe.directory …` it suggests.
+
+Without the script, copy (rsync) each addon's trees into the CS-Cart root, preserving paths:
 
 ```
 addon-<name>/app/addons/<addon>/   → <cscart>/app/addons/<addon>/
