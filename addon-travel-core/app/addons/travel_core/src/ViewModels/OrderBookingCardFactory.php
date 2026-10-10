@@ -152,10 +152,12 @@ final class OrderBookingCardFactory
         $card['balance'] = $this->balance($card['deposit'], $extra, $balances, TypeCoerce::toString($item['item_id'] ?? ''), $status['code'], $admin);
 
         // Admin only — never handed to the customer's template.
+        // Same shape for both: the admin template also draws a restricted
+        // admin's customer card.
         $card['provider'] = $admin ? [
             'code' => TypeCoerce::toString($facts['provider'] ?? $booking['provider'] ?? ''),
             'name' => TypeCoerce::toString($meta['provider_name'] ?? ''),
-        ] : [];
+        ] : ['code' => '', 'name' => ''];
         $card['reference'] = $admin ? trim(TypeCoerce::toString($facts['reference'] ?? '')) : '';
         $card['our_reference'] = $admin ? trim(TypeCoerce::toString($facts['our_reference'] ?? '')) : '';
         $card['booking_id'] = $admin ? max(0, TypeCoerce::toInt($booking['booking_id'] ?? $extra['travel_surrogate_id'] ?? 0)) : 0;
@@ -246,9 +248,10 @@ final class OrderBookingCardFactory
      * order those were due on booking, and a past one was paid or is owed by
      * its date: each step keeps its date, the undated ones read "on booking".
      * The cancellation headline ("free until …", "cancelling now costs …")
-     * is for a trip still ahead: none once the booking is cancelled or
-     * completed or the stay has begun; the customer of a cancelled booking
-     * gets no timeline either.
+     * and the step marked "today" are for a trip still ahead: once the
+     * booking is cancelled or completed or the stay has begun there is
+     * neither — the admin keeps the schedule for reference, the customer
+     * keeps only the payment terms (none when cancelled).
      *
      * @param array<string, mixed> $card
      * @return array<string, mixed>
@@ -272,9 +275,16 @@ final class OrderBookingCardFactory
             || ($start !== null && $start <= $this->today);
         if ($over) {
             $card['cancel'] = ['state' => '', 'free_until' => '', 'now' => [], 'then' => []];
-        }
-        if (!$admin && $status === TravelConstants::STATUS_CANCELLED) {
-            $card['has_terms'] = false;
+            $terms['cancel_steps'] = array_map(
+                static fn (array $step): array => ['is_current' => false] + $step,
+                $admin ? TypeCoerce::toRowList($terms['cancel_steps'] ?? null) : [],
+            );
+            if (!$admin) {
+                $terms['cancel_lines'] = [];
+                $card['has_terms'] = $status !== TravelConstants::STATUS_CANCELLED
+                    && ($terms['payment_steps'] !== [] || TypeCoerce::toStringList($terms['payment_lines'] ?? []) !== []);
+            }
+            $card['terms'] = $terms;
         }
 
         return $card;

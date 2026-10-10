@@ -1785,47 +1785,7 @@ body.travel-conditions-open {
     .travel-booking-page .travel-cta-note { text-align: center; margin-right: 0; }
 }
 
-/* ── Deposit bookings: cart line, balance line, order details ──────────── */
-/* components/order_deposit_details.tpl (the cart / checkout card has its
-   own .travel-ccard-split). Not scoped to .travel-booking-page: it renders
-   on the customer's order pages. */
-.travel-order-deposit {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 14px;
-    margin-top: 10px;
-    padding: 10px 12px;
-    border: 1px dashed #c9d6ea;
-    border-radius: 8px;
-    background: #f8fbff;
-    font-size: 13px;
-    line-height: 1.45;
-    color: #334155;
-}
-.travel-order-deposit {
-    flex-direction: column;
-    align-items: flex-start;
-}
-.travel-order-deposit strong {
-    color: #0f172a;
-}
-.travel-order-deposit__note {
-    flex-basis: 100%;
-    font-size: 12px;
-    color: #64748b;
-}
-.travel-order-deposit__title {
-    font-weight: 700;
-    color: #0f172a;
-}
-.travel-order-deposit__pay {
-    margin-top: 6px;
-}
-.travel-order-deposit__state--paid {
-    color: #15803d;
-    font-weight: 600;
-}
-
+/* ── Deposit bookings: order summary ────────────────────────────────────── */
 /* Order summary with a deposit (components/deposit_totals.tpl) */
 .travel-deposit-totals {
     margin: 12px 0;

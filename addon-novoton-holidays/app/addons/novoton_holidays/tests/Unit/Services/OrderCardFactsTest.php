@@ -91,6 +91,12 @@ final class OrderCardFactsTest extends TestCase
         yield 'properly escaped entities' => ['Hotel offers B&amp;B, balcony &gt; 20m2', 'Hotel offers B&B, balcony > 20m2'];
         yield 'properly escaped markup' => ['&lt;p&gt;One &amp; two&lt;/p&gt;&lt;p&gt;Three&lt;/p&gt;', 'One & two Three'];
         yield 'a plain "<"' => ['Children < 12 free', 'Children < 12 free'];
+        // REGRESSION (second review): the lost-ampersand form inside words,
+        // a lone "gt;", and escaped tags with a slash or attributes.
+        yield 'lost ampersands between words' => ['lt;pgt;Bamp;B, Spaamp;Wellnesslt;/pgt;', 'B&B, Spa&Wellness'];
+        yield 'a lone "gt;" and "lt;"' => ['lt;pgt;Copii gt; 12 ani, bebelusi lt; 2 anilt;/pgt;', 'Copii > 12 ani, bebelusi < 2 ani'];
+        yield 'escaped self-closing tag' => ['Pool&lt;br /&gt;Spa', 'Pool Spa'];
+        yield 'escaped tag with attributes' => ['&lt;p style="x"&gt;Late check-in&lt;/p&gt;', 'Late check-in'];
     }
 
     #[DataProvider('remarks')]

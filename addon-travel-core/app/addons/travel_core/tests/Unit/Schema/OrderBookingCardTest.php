@@ -83,6 +83,10 @@ final class OrderBookingCardTest extends TestCase
         // travel_bookings' own guard (Functions\OrderCardAudienceTest runs it).
         self::assertStringContainsString("if (!defined('AREA') || AREA !== 'A' || (defined('RESTRICTED_ADMIN') && RESTRICTED_ADMIN)) {", $fn);
         self::assertStringContainsString('$meta = $admin ? fn_travel_core_order_card_admin_meta($facts, $booking) : [];', $fn);
+        // REGRESSION (second review): a restricted admin's card took the
+        // storefront's rounded display currency; the admin page reads the
+        // primary currency, unrounded, whoever views it.
+        self::assertStringContainsString("\$money = defined('AREA') && AREA === 'A' && defined('CART_PRIMARY_CURRENCY')", $fn);
     }
 
     public function testTheAdminCardEscapesEverySuppliedText(): void

@@ -30,6 +30,7 @@ declare(strict_types=1);
  */
 
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Services\DepositCartLine;
 use Tygh\Addons\TravelCore\Services\MoneyFormatter;
 use Tygh\Addons\TravelCore\Services\TravelCoreConfig;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
@@ -40,11 +41,16 @@ defined('BOOTSTRAP') or die('Access denied');
 
 /**
  * The card's view array for one order line; [] when it is not a travel booking.
+ * Built once per request for a line of a saved order (the page summary
+ * reads it again: fn_travel_core_order_open_balance).
  *
  * @return array<string, mixed>
  */
 function fn_travel_core_order_booking_card(mixed $item, mixed $order_info = [], mixed $audience = 'customer'): array
 {
+    /** @var array<string, array<string, mixed>> $built */
+    static $built = [];
+
     $line = TypeCoerce::toStringMap($item);
     $extra = TypeCoerce::toStringMap($line['extra'] ?? null);
     if (empty($extra['travel_booking'])) {
@@ -52,6 +58,12 @@ function fn_travel_core_order_booking_card(mixed $item, mixed $order_info = [], 
     }
     $order = TypeCoerce::toStringMap($order_info);
     $admin = $audience === OrderBookingCardFactory::AUDIENCE_ADMIN && fn_travel_core_order_card_full_admin();
+    $orderId = TypeCoerce::toInt($order['order_id'] ?? 0);
+    $itemId = TypeCoerce::toString($line['item_id'] ?? '');
+    $key = $orderId > 0 && $itemId !== '' ? $orderId . ':' . $itemId . ':' . ($admin ? 'a' : 'c') : '';
+    if ($key !== '' && isset($built[$key])) {
+        return $built[$key];
+    }
 
     try {
         $facts = TravelProviderRegistry::orderCardFacts($extra);
@@ -63,7 +75,9 @@ function fn_travel_core_order_booking_card(mixed $item, mixed $order_info = [], 
             : null;
 
         $meta = $admin ? fn_travel_core_order_card_admin_meta($facts, $booking) : [];
-        $money = $admin && defined('CART_PRIMARY_CURRENCY')
+        // The admin order page (a restricted admin's customer card too)
+        // reads the store's primary currency, unrounded, as its totals do.
+        $money = defined('AREA') && AREA === 'A' && defined('CART_PRIMARY_CURRENCY')
             ? MoneyFormatter::forCurrency(TypeCoerce::toString(CART_PRIMARY_CURRENCY))
             : MoneyFormatter::forStore();
 
@@ -85,6 +99,9 @@ function fn_travel_core_order_booking_card(mixed $item, mixed $order_info = [], 
         // on demand — except one that needs action.
         $card['collapsible'] = $admin && fn_travel_core_order_card_count($order) > 1;
         $card['open'] = !$card['collapsible'] || $card['alert'] !== [];
+        if ($key !== '') {
+            $built[$key] = $card;
+        }
 
         return $card;
     } catch (\Throwable $e) {
@@ -190,6 +207,29 @@ function fn_travel_core_order_card_admin_meta(array $facts, array $booking): arr
     $meta['actions'] = $actions;
 
     return $meta;
+}
+
+/**
+ * What is still to pay on an order's deposit lines, for the summary under
+ * the customer's order (components/deposit_totals.tpl): each line's balance
+ * while its card shows it open or overdue — not once paid, nor for a
+ * booking that was cancelled (its card reads "Cancelled"). A line whose card
+ * could not be built keeps its balance (DepositCartLine::openBalance).
+ *
+ * @return array{balance: float, balance_due: string}
+ */
+function fn_travel_core_order_open_balance(mixed $order_info): array
+{
+    $order = TypeCoerce::toStringMap($order_info);
+
+    return DepositCartLine::openBalance(
+        TypeCoerce::toRowList($order['products'] ?? null),
+        static function (array $line) use ($order): string {
+            $card = fn_travel_core_order_booking_card($line, $order, OrderBookingCardFactory::AUDIENCE_CUSTOMER);
+
+            return TypeCoerce::toString(TypeCoerce::toStringMap($card['balance'] ?? null)['state'] ?? '');
+        },
+    );
 }
 
 /**

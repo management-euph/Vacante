@@ -124,6 +124,33 @@ final class DepositCartLine
     }
 
     /**
+     * What is still to pay on a placed order's deposit lines: each line's
+     * balance while its booking card shows it open or overdue — not once
+     * paid, nor a cancelled booking's. A line whose state is unknown ('')
+     * keeps its balance.
+     *
+     * @param array<array-key, mixed> $products order products
+     * @param \Closure(array<string, mixed>): string $balanceState a line's card balance state
+     * @return array{balance: float, balance_due: string}
+     */
+    public static function openBalance(array $products, \Closure $balanceState): array
+    {
+        $balance = 0.0;
+        $due = '';
+        foreach ($products as $item) {
+            $line = TypeCoerce::toStringMap($item);
+            $a = self::amounts($line);
+            if ($a === [] || !in_array($balanceState($line), ['', 'open', 'overdue'], true)) {
+                continue;
+            }
+            $balance += $a['balance'];
+            $due = max($due, $a['balance_due']);
+        }
+
+        return ['balance' => round($balance, 2), 'balance_due' => $due];
+    }
+
+    /**
      * @param array<string, mixed> $row
      * @return array<string, mixed>
      */
