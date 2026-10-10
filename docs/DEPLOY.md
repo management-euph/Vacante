@@ -105,11 +105,14 @@ Optional but recommended, to pin the server:
 ssh-keyscan -p 222 socialtrip.ro
 ```
 
-Use the same host name as in `ARTIFACT_HOST` and the SSH port. Its output has
-comment lines (`# socialtrip.ro:222 SSH-2.0-…`) and key lines
-(`[socialtrip.ro]:222 ssh-ed25519 AAAA…`): the secret `DEPLOY_KNOWN_HOSTS`
-below needs only the key lines (comment lines do no harm). A scan of port 22
-gives the SFTP service's key, which does not match port 222.
+Scan the **SSH port** (222); any of the server's names works, the shop's
+domain or the server's own name (`…your-server.de`): they reach the same
+machine and the same key, and only the key is kept (the name in each line is
+ignored). Its output has comment lines (`# socialtrip.ro:222 SSH-2.0-…`) and
+key lines (`[socialtrip.ro]:222 ssh-ed25519 AAAA…`): the secret
+`DEPLOY_KNOWN_HOSTS` below needs only the key lines (comment lines do no
+harm). A scan of port 22 gives the SFTP service's key, which does not match
+port 222.
 
 ## 3. Set up GitHub (once)
 
@@ -120,9 +123,9 @@ store on the same VPS):
 | Secret | Value |
 |---|---|
 | `ARTIFACT_SSH_KEY` | the whole content of `github_deploy` (the private key: open it in Notepad, copy from `-----BEGIN` to `-----END…-----`) |
-| `ARTIFACT_HOST` | the VPS host name or IP |
+| `ARTIFACT_HOST` | the server's name or IP, without `https://`, user or port: the shop's domain (`socialtrip.ro`) or the server's own name from konsoleH (`…your-server.de`). Both reach the same machine; the server's own name keeps working if the domain ever moves elsewhere. |
 | `ARTIFACT_USERNAME` | the user GitHub logs in as |
-| `DEPLOY_KNOWN_HOSTS` | *(optional)* the `ssh-keyscan` output: pins the server. Without it the key is trusted on first use, as in the tutorial, and its fingerprint is shown in each run's summary. |
+| `DEPLOY_KNOWN_HOSTS` | *(optional)* the key lines of `ssh-keyscan -p 222 …` (step 2): pins the server. Without it the key is trusted on first use, as in the tutorial, and its fingerprint is shown in each run's summary. |
 
 **One environment per store** — Settings → Environments → New environment.
 Each holds only variables (the repository is public, and so are the workflow
