@@ -33,13 +33,13 @@ final class DashboardCronContractTest extends TestCase
     private static function template(): string
     {
         return (string) file_get_contents(
-            self::repoRoot() . '/eurosite_addon/design/backend/templates/addons/eurosite/views/eurosite/manage.tpl',
+            self::repoRoot() . '/addon-eurosite/design/backend/templates/addons/eurosite/views/eurosite/manage.tpl',
         );
     }
 
     private static function script(): string
     {
-        return (string) file_get_contents(self::repoRoot() . '/eurosite_addon/js/addons/eurosite/dashboard.js');
+        return (string) file_get_contents(self::repoRoot() . '/addon-eurosite/js/addons/eurosite/dashboard.js');
     }
 
     protected function setUp(): void
@@ -228,7 +228,7 @@ final class DashboardCronContractTest extends TestCase
     public function testTheScriptShipsAndIsLoadedInsideTheCapture(): void
     {
         $tpl = self::template();
-        $js = self::repoRoot() . '/eurosite_addon/js/addons/eurosite/dashboard.js';
+        $js = self::repoRoot() . '/addon-eurosite/js/addons/eurosite/dashboard.js';
 
         self::assertFileExists($js);
         self::assertStringContainsString('{script src="js/addons/eurosite/dashboard.js"}', $tpl);

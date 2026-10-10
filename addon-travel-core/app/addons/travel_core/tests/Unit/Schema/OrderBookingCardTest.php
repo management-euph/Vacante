@@ -115,7 +115,7 @@ final class OrderBookingCardTest extends TestCase
             'addon-novoton-holidays/design/backend/templates/addons/novoton_holidays/hooks/orders/order_product_info.post.tpl',
             'addon-sphinx-holidays/design/backend/templates/addons/sphinx_holidays/hooks/orders/product_info.post.tpl',
             'addon-sphinx-holidays/design/backend/templates/addons/sphinx_holidays/hooks/orders/order_product_info.post.tpl',
-            'eurosite_addon/design/backend/templates/addons/eurosite/hooks/orders/product_info.post.tpl',
+            'addon-eurosite/design/backend/templates/addons/eurosite/hooks/orders/product_info.post.tpl',
             'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/hooks/orders/product_info.post.tpl',
             'addon-novoton-holidays/design/themes/nova_theme/templates/addons/novoton_holidays/hooks/orders/product_info.post.tpl',
             'addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/hooks/orders/product_info.post.tpl',

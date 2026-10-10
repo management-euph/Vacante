@@ -384,7 +384,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: eurosite_addon/app/addons/eurosite
+        working-directory: addon-eurosite/app/addons/eurosite
     steps:
       - uses: actions/checkout@v4
 
@@ -442,7 +442,7 @@ jobs:
                addon-travel-core/app/addons/travel_core \
                addon-sphinx-holidays/app/addons/sphinx_holidays \
                addon-fgo-invoicing/app/addons/fgo_invoicing \
-               eurosite_addon/app/addons/eurosite \
+               addon-eurosite/app/addons/eurosite \
                -path '*/vendor' -prune -o -name '*.php' -print0 | xargs -0 -n 50 php -l
 
   # ── ESLint + Vitest (frontend JS / JSX) ──

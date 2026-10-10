@@ -2,7 +2,7 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 /**
  * Behavioral tests for the eurosite dashboard's crontab block
- * (eurosite_addon/js/addons/eurosite/dashboard.js).
+ * (addon-eurosite/js/addons/eurosite/dashboard.js).
  *
  * The block exists because nobody schedules nine URLs one at a time — they
  * paste a crontab. Two decisions shape it (nightly full vs per-catalog, URL
@@ -93,7 +93,7 @@ beforeAll(async () => {
     // path needs it to exist even though this suite runs the clipboard path.
     document.execCommand = () => true;
 
-    await import('../../eurosite_addon/js/addons/eurosite/dashboard.js');
+    await import('../../addon-eurosite/js/addons/eurosite/dashboard.js');
 });
 
 beforeEach(() => {

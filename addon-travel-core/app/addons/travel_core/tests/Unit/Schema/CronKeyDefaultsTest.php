@@ -36,7 +36,7 @@ final class CronKeyDefaultsTest extends TestCase
         'travel_core' => 'addon-travel-core',
         'novoton_holidays' => 'addon-novoton-holidays',
         'sphinx_holidays' => 'addon-sphinx-holidays',
-        'eurosite' => 'eurosite_addon',
+        'eurosite' => 'addon-eurosite',
         'fgo_invoicing' => 'addon-fgo-invoicing',
     ];
 

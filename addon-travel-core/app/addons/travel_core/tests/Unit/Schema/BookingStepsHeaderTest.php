@@ -93,7 +93,7 @@ final class BookingStepsHeaderTest extends TestCase
         foreach ([
             'addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/booking_form.php',
             'addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php',
-            'eurosite_addon/app/addons/eurosite/controllers/frontend/eurosite_booking/booking_form.php',
+            'addon-eurosite/app/addons/eurosite/controllers/frontend/eurosite_booking/booking_form.php',
         ] as $controller) {
             $src = (string) file_get_contents(self::root() . '/' . $controller);
             self::assertStringNotContainsString('fn_add_breadcrumb(', $src, $controller);

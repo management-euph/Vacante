@@ -40,9 +40,6 @@ var/
 !/addon-*/var/
 /addon-*/var/*
 !/addon-*/var/langs/
-!/eurosite_addon/var/
-/eurosite_addon/var/*
-!/eurosite_addon/var/langs/
 phpcs.cache
 .phpunit.result.cache
 .phpunit.cache/

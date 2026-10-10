@@ -114,7 +114,7 @@ final class CartSkipPolicyTest extends TestCase
         yield 'novoton booking edited' => ['addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php', "fn_travel_core_after_add_to_cart_url('novoton_holidays')"];
         yield 'sphinx hotels, circuits, packages' => ['addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CartService.php', "CartSkipPolicy::current()->afterAddToCart('sphinx_holidays')"];
         yield 'sphinx booking edited' => ['addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/update_booking.php', "fn_travel_core_after_add_to_cart_url('sphinx_holidays')"];
-        yield 'eurosite add to cart' => ['eurosite_addon/app/addons/eurosite/controllers/frontend/eurosite_booking/add_to_cart.php', "fn_travel_core_after_add_to_cart_url('eurosite')"];
+        yield 'eurosite add to cart' => ['addon-eurosite/app/addons/eurosite/controllers/frontend/eurosite_booking/add_to_cart.php', "fn_travel_core_after_add_to_cart_url('eurosite')"];
     }
 
     #[\PHPUnit\Framework\Attributes\DataProvider('redirects')]
@@ -131,7 +131,7 @@ final class CartSkipPolicyTest extends TestCase
         yield 'sphinx hotel' => ['addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/booking_form.tpl', 'fn_travel_core_booking_cta_label("sphinx_holidays")', 2];
         yield 'sphinx circuit' => ['addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/circuit_booking_form.tpl', 'fn_travel_core_booking_cta_label("sphinx_holidays", "sphinx_holidays.add_to_cart_btn")', 1];
         yield 'sphinx package' => ['addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/package_booking_form.tpl', 'fn_travel_core_booking_cta_label("sphinx_holidays", "sphinx_holidays.add_to_cart_btn")', 1];
-        yield 'eurosite' => ['eurosite_addon/design/themes/responsive/templates/addons/eurosite/views/eurosite_booking/booking_form.tpl', 'fn_travel_core_booking_cta_label("eurosite")', 2];
+        yield 'eurosite' => ['addon-eurosite/design/themes/responsive/templates/addons/eurosite/views/eurosite_booking/booking_form.tpl', 'fn_travel_core_booking_cta_label("eurosite")', 2];
     }
 
     /** The button and the mobile bar both follow the setting (edit mode keeps its own label). */

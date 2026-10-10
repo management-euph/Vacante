@@ -2,7 +2,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
  * Behavioral tests for the Eurosite → Hotels selection bar
- * (eurosite_addon/js/addons/eurosite/hotels.js), driven through the markup
+ * (addon-eurosite/js/addons/eurosite/hotels.js), driven through the markup
  * hotels.tpl renders.
  *
  * What must hold: the bar counts what is ticked and how many of those can
@@ -36,7 +36,7 @@ beforeAll(async () => {
         </div>`;
     // jsdom cannot navigate: stop the real submit a confirmed click would make.
     document.getElementById('es-hotels-form').addEventListener('submit', (e) => e.preventDefault());
-    await import('../../eurosite_addon/js/addons/eurosite/hotels.js');
+    await import('../../addon-eurosite/js/addons/eurosite/hotels.js');
 });
 
 const $ = (sel) => document.querySelector(sel);

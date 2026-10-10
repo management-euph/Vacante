@@ -43,7 +43,7 @@ final class AddonScriptPathsTest extends TestCase
         'novoton_holidays' => 'addon-novoton-holidays',
         'sphinx_holidays' => 'addon-sphinx-holidays',
         'fgo_invoicing' => 'addon-fgo-invoicing',
-        'eurosite' => 'eurosite_addon',
+        'eurosite' => 'addon-eurosite',
     ];
 
     private static function repoRoot(): string

@@ -124,7 +124,7 @@ final class CronKeyServiceTest extends TestCase
         $providers = [
             'novoton_holidays' => '/addon-novoton-holidays/app/addons/novoton_holidays',
             'sphinx_holidays' => '/addon-sphinx-holidays/app/addons/sphinx_holidays',
-            'eurosite' => '/eurosite_addon/app/addons/eurosite',
+            'eurosite' => '/addon-eurosite/app/addons/eurosite',
         ];
 
         foreach ($providers as $addon => $dir) {

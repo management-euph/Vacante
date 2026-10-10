@@ -31,7 +31,7 @@ return RectorConfig::configure()
         __DIR__ . '/addon-travel-core/app/addons/travel_core/src',
         __DIR__ . '/addon-sphinx-holidays/app/addons/sphinx_holidays/src',
         __DIR__ . '/addon-fgo-invoicing/app/addons/fgo_invoicing/src',
-        __DIR__ . '/eurosite_addon/app/addons/eurosite/src',
+        __DIR__ . '/addon-eurosite/app/addons/eurosite/src',
     ])
     ->withSkip([
         // Vendor + caches

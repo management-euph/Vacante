@@ -227,7 +227,7 @@ final class ToolsCronKeyButtonTest extends TestCase
     {
         $eurosite = (string) file_get_contents(
             dirname(__DIR__, 7)
-            . '/eurosite_addon/design/backend/templates/addons/eurosite/views/eurosite/manage.tpl',
+            . '/addon-eurosite/design/backend/templates/addons/eurosite/views/eurosite/manage.tpl',
         );
 
         $forms = substr_count($eurosite, 'value="eurosite.generate_cron_key"');
