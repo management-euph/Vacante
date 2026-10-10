@@ -6,7 +6,7 @@ The **Sphinx Holidays** addon integrates with the Sphinx/Christian Tour REST API
 
 **Provider**: Christian Tour (via Sphinx API)
 **Dependency**: `travel_core` addon (shared booking infrastructure)
-**CS-Cart compatibility**: 4.9.3 – 4.20.1
+**CS-Cart compatibility**: 4.9.3 – 4.21.2
 **PHP requirement**: 8.3+
 
 ---

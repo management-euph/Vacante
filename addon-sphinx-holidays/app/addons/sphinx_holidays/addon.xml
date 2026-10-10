@@ -26,7 +26,7 @@
     <compatibility>
         <core_version>
             <min>4.9.3</min>
-            <max>4.20.1</max>
+            <max>4.21.2</max>
         </core_version>
         <core_edition>ULTIMATE</core_edition>
         <php_version>
