@@ -137,6 +137,23 @@ git -C "$repo" archive --format=tar HEAD "${srcs[@]}" | tar -x -C "$stage"
 # --- Where it goes --------------------------------------------------------------
 on_store "test -f $(q "$root/config.php") && test -d $(q "$root/app/addons")" \
     || die "$target is not a CS-Cart root (no config.php and app/addons there)"
+# CS-Cart refuses to install an add-on whose addon.xml <max> is older than
+# the store: say so before anything is copied.
+store_version=$(on_store_script "$root" <<'VERSION' || true
+grep -oE "PRODUCT_VERSION', *'[^']+" "$1/config.php" 2>/dev/null | grep -oE '[0-9][0-9.]*$' || true
+VERSION
+)
+version_warnings=()
+if [ -n "$store_version" ]; then
+    for id in "${ids[@]}"; do
+        max=$(grep -A3 '<core_version>' "$stage/${DIRS[$id]}/app/addons/$id/addon.xml" 2>/dev/null \
+            | grep -oE '<max>[^<]+' | cut -d'>' -f2 || true)
+        if [ -n "$max" ] && [ "$(printf '%s\n%s\n' "$store_version" "$max" | sort -V | tail -1)" != "$max" ]; then
+            version_warnings+=("$id accepts CS-Cart up to $max, the store runs $store_version: CS-Cart will refuse to install it")
+        fi
+    done
+fi
+
 themes=()
 for theme in responsive nova_theme; do
     if on_store "test -d $(q "$root/design/themes/$theme")"; then themes+=("$theme"); fi
@@ -176,7 +193,8 @@ if [ "$go" -eq 1 ]; then rsync_opts+=(--delay-updates); else rsync_opts+=(--dry-
 [ -z "$host" ] || rsync_opts+=(-e "ssh ${ssh_opts[*]}")
 
 echo "Deploying $(git -C "$repo" log -1 --format='%h %s' HEAD)"
-echo "      to $target (themes: ${themes[*]:-none})"
+echo "      to $target (CS-Cart ${store_version:-?}, themes: ${themes[*]:-none})"
+for w in ${version_warnings[@]+"${version_warnings[@]}"}; do echo "WARNING: $w"; done
 [ "$go" -eq 1 ] || echo "      DRY RUN: nothing changes on the store; add --go to deploy."
 echo
 

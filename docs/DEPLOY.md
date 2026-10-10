@@ -25,19 +25,31 @@ provider order blocks would show beside the new booking card). CS-Cart's own
 SDK has no deploy command; its `addon:build_upgrade` (Upgrade Center packages)
 is the alternative if SSH is ever impossible: see the end of this file.
 
-## 1. What the production server needs
+## 1. What the server needs
 
-- Linux hosting with **SSH login by key**, and `rsync`, `tar`, `gzip`,
-  `mysqldump` (or `mariadb-dump`) and PHP **8.3+** on the command line.
-  A VPS has all of this; on shared hosting ask for SSH and check with the
-  Server check (step 4).
-- SSH **not limited to some IP addresses**: GitHub's runners use changing
-  addresses from shared cloud ranges, and GitHub advises against allowing
-  them by IP. If the hosting insists, see "If GitHub cannot reach the server".
-- CS-Cart **4.19.1–4.20.x** installed, MySQL 8.0+ / MariaDB 10.6+, the
-  `responsive` or `nova_theme` theme (`docs/INSTALL.md`, section 1).
-- The deploy user's home directory **outside** the web root: backups are kept
-  in `~/deploy-backups` (the deploy refuses a backup folder inside the store).
+The stores run on a **Hetzner VPS**; the same steps fit any Linux server with
+SSH.
+
+- **SSH login by key**, and `rsync`, `tar`, `gzip`, `mysqldump` (or
+  `mariadb-dump`) and PHP **8.3+** on the command line. On a Debian/Ubuntu
+  VPS: `apt install rsync` if the Server check says it is missing.
+- SSH **not limited to some IP addresses** (in the Hetzner Cloud firewall or
+  `ufw`): GitHub's runners use changing addresses from shared cloud ranges,
+  and GitHub advises against allowing them by IP. If you must restrict it,
+  see "If GitHub cannot reach the server".
+- CS-Cart **4.19.1–4.21.2** (the `<max>` in each `addon.xml`), MySQL 8.0+ /
+  MariaDB 10.6+, the `responsive` or `nova_theme` theme (`docs/INSTALL.md`,
+  section 1). A newer CS-Cart refuses to install the add-ons until their
+  `<max>` is raised, after testing that release in Docker.
+- The SSH user's home directory **outside** the web root: backups are kept in
+  `~/deploy-backups` (the deploy refuses a backup folder inside the store).
+
+**Which user GitHub logs in as.** `root` works, but a key for root lets a
+leaked secret do anything on the VPS. Safer: the user that owns the site's
+files (a panel such as CloudPanel or Plesk creates one per site; see who owns
+them with `stat -c %U /path/to/store/config.php`). It needs to write the
+add-on folders and `var/cache`, and to read `config.local.php`; the Server
+check verifies all of it.
 
 ## 2. Create the deploy key (once)
 
@@ -47,67 +59,72 @@ On your computer (PowerShell or WSL):
 ssh-keygen -t ed25519 -C "github-deploy" -N "" -f deploy_key
 ```
 
-- Add the content of `deploy_key.pub` to `~/.ssh/authorized_keys` of the deploy
-  user on the server (most hosting panels have an "SSH keys" page for this).
-- Check it works from your computer: `ssh -i deploy_key -p PORT user@host`.
-- Get the server's host key: `ssh-keyscan -p PORT host` (compare the fingerprint
-  with the one your hosting shows, if it does).
+- Add the content of `deploy_key.pub` to `~/.ssh/authorized_keys` of that user
+  on the server.
+- Check it works from your computer: `ssh -i deploy_key -p 22 user@host`.
+- Optional but recommended, to pin the server: `ssh-keyscan -p 22 host`
+  (its output is the secret `DEPLOY_KNOWN_HOSTS` below).
 
-## 3. Create the GitHub environment (once)
+## 3. Set up GitHub (once)
 
-Repository → **Settings → Environments → New environment** → `production`:
+**Repository secrets** — Settings → Secrets and variables → Actions →
+*Repository secrets* (the names of the Hetzner tutorial; shared by every
+store on the same VPS):
 
-- **Required reviewers**: you. Every production deploy then waits for your
-  approval.
-- **Deployment branches and tags**: *Selected branches and tags* → `main` and
-  `v*` (tags are how you roll back).
-- **Environment secrets** (masked in logs; the repository is public, and so
-  are its workflow logs):
+| Secret | Value |
+|---|---|
+| `ARTIFACT_SSH_KEY` | the whole content of `deploy_key` (the private key) |
+| `ARTIFACT_HOST` | the VPS host name or IP |
+| `ARTIFACT_USERNAME` | the user GitHub logs in as |
+| `DEPLOY_KNOWN_HOSTS` | *(optional)* the `ssh-keyscan` output: pins the server. Without it the key is trusted on first use, as in the tutorial, and its fingerprint is shown in each run's summary. |
 
-  | Secret | Value |
-  |---|---|
-  | `DEPLOY_SSH_KEY` | the whole content of `deploy_key` (the private key) |
-  | `DEPLOY_KNOWN_HOSTS` | the `ssh-keyscan` output |
-  | `DEPLOY_TARGET` | `user@host:/absolute/path/to/cscart` |
+**One environment per store** — Settings → Environments → New environment.
+Each holds only variables (the repository is public, and so are the workflow
+logs: the host and user stay secrets, the server is reached as the alias
+`store` and never named in a log):
 
-- **Environment variables**:
+| Environment | `DEPLOY_PATH` (variable) | `STORE_URL` | `STORE_ADMIN_URL` |
+|---|---|---|---|
+| `dev` | the CS-Cart folder of https://socialtrip.ro/dev/ on the VPS, e.g. `/var/www/socialtrip.ro/dev` | `https://socialtrip.ro/dev/` | `https://socialtrip.ro/dev/admin.php` (or the renamed admin script) |
+| `production` (later) | the live store's folder | its URL | its admin URL |
 
-  | Variable | Value |
-  |---|---|
-  | `DEPLOY_PORT` | the SSH port, only if it is not 22 |
-  | `STORE_URL` | `https://your-shop.ro` (smoke test) |
-  | `STORE_ADMIN_URL` | the admin login page, e.g. `https://your-shop.ro/admin.php` (or your renamed admin script) |
+Add `DEPLOY_PORT` to an environment only if SSH is not on port 22. For
+`production`, also set **Required reviewers** (you) and **Deployment branches
+and tags** → *Selected* → `main` and `v*` (tags are how you roll back).
 
-Then delete `deploy_key` from your computer, or keep it somewhere safe. A
-`staging` environment, for a test copy of the store on a subdomain, is set up
-the same way with its own secrets.
+The workflows appear under **Actions** once this pull request is merged into
+`main` (GitHub only lists manual workflows that are on the default branch).
 
 ## 4. Check the server
 
-**Actions → Server check → Run workflow** → environment `production`.
+**Actions → Server check → Run workflow** → environment `dev`.
 
 The run summary is a checklist: SSH from GitHub, the tools, PHP version, CS-Cart
-found (with its version), write access to the add-on folders, the backup folder
-and free space. Fix any **MISSING** line before deploying. "No CS-Cart at the
-store path yet" is expected until CS-Cart is installed (step 5).
+found at `DEPLOY_PATH` (with its version, compared with what the add-ons
+accept), `config.local.php` readable, write access to the add-on folders and the
+cache, the backup folder and free space. Fix any **MISSING** line before
+deploying.
 
 ### If GitHub cannot reach the server
 
 1. Log in from your computer with the same key (step 2). If that fails, it is
    the key, user, port or host, not GitHub.
-2. Compare `DEPLOY_KNOWN_HOSTS` with a fresh `ssh-keyscan`.
-3. Ask the hosting whether SSH is restricted by IP address. If it is, either
-   run a **self-hosted runner** on a machine the hosting allows (GitHub →
-   Settings → Actions → Runners), or deploy from your computer with the same
-   script (WSL): `bash scripts/deploy-addons.sh user@host:/path --go --backup --clear-cache`.
+2. If `DEPLOY_KNOWN_HOSTS` is set, compare it with a fresh `ssh-keyscan`.
+3. Check the Hetzner Cloud firewall and `ufw` allow SSH from anywhere (key
+   login only; password login can stay off). If SSH must stay restricted,
+   run a **self-hosted runner** on an allowed machine (GitHub → Settings →
+   Actions → Runners), or deploy from your computer with the same script
+   (WSL): `bash scripts/deploy-addons.sh user@host:/path --go --backup --clear-cache`.
 
 ## 5. First installation
+
+Do it on `dev` first, then the same on `production`.
 
 1. Install CS-Cart on the server and secure the admin as CS-Cart recommends.
 2. **Server check** again: everything OK.
 3. **Actions → Deploy → Run workflow**: *Use workflow from* `main`,
-   environment `production`, *go* **unticked** → the run lists every file it
-   would copy. Run it again with *go* ticked, and approve it.
+   environment `dev`, *go* **unticked** → the run lists every file it would
+   copy. Run it again with *go* ticked (on `production`, approve it).
 4. Admin → Add-ons: install them **in order** and configure them
    (`docs/INSTALL.md`, sections 3–5). The deploy copies files; installing
    is a one-time admin step.
@@ -116,8 +133,8 @@ store path yet" is expected until CS-Cart is installed (step 5).
 
 1. Merge the pull request (CI green).
 2. Optionally tag it, so you can come back to it: `git tag v2026.10.10 && git push origin v2026.10.10`.
-3. **Actions → Deploy → Run workflow**: `main`, `production`, *go* ticked →
-   approve. The run:
+3. **Actions → Deploy → Run workflow**: `main`, `dev` first, *go* ticked;
+   once it looks right there, the same with `production` (and approve). The run:
    - runs the full CI on that commit (a red CI stops here, nothing deployed);
    - backs up the add-on folders and the database to `~/deploy-backups`
      (the newest 10 of each are kept);

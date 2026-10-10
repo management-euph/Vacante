@@ -8,7 +8,7 @@ current schema** — no upgrade items or migrations need to be applied.
 
 | Requirement | Value | Why / how to check |
 |---|---|---|
-| CS-Cart | **4.19.1 – 4.20.x** | developed/tested against 4.20.1; requires the Smarty 5 engine (CS-Cart ≥ 4.19.1) — the addons duck-type the view object and never check `instanceof \Smarty` (gone in Smarty 5) |
+| CS-Cart | **4.19.1 – 4.21.2** | developed against 4.20.1, tested on 4.21.2 (each addon.xml's `<max>`; raise it only after testing a newer release); requires the Smarty 5 engine (CS-Cart ≥ 4.19.1) — the addons duck-type the view object and never check `instanceof \Smarty` (gone in Smarty 5) |
 | PHP | **8.3+** | typed class constants, readonly properties (`composer.json` requires `^8.3`) |
 | Database | **MySQL 8.0+ or MariaDB 10.6+** | all upserts use the portable `VALUES(col)` form (converted 2026-07-03; the earlier MySQL-only `AS new_row` alias is gone). Change-detection upserts proven on MariaDB 10.11. Check with `SELECT VERSION();`. |
 | Theme | `responsive` or `nova_theme` | the addons ship design files for both |

@@ -10,8 +10,9 @@ name: Deploy
 #   environment          production (or staging)
 #   go                   unticked: a dry run that only lists the changes
 #
-# The repository is public and so are these logs: the server's host, user and
-# path live in the environment's secrets (masked in logs), never in variables.
+# The repository is public and so are these logs: the server is reached as the
+# SSH alias "store", so its host and user (secrets ARTIFACT_HOST,
+# ARTIFACT_USERNAME) never appear; DEPLOY_PATH is an environment variable.
 
 on:
   workflow_dispatch:
@@ -64,19 +65,25 @@ jobs:
 
       - uses: ./.github/actions/deploy-ssh
         with:
-          ssh-key: ${{ secrets.DEPLOY_SSH_KEY }}
+          ssh-key: ${{ secrets.ARTIFACT_SSH_KEY }}
+          host: ${{ secrets.ARTIFACT_HOST }}
+          user: ${{ secrets.ARTIFACT_USERNAME }}
+          port: ${{ vars.DEPLOY_PORT }}
           known-hosts: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
 
       - name: ${{ inputs.go && 'Back up, deploy, clear cache' || 'List what would change' }}
         env:
-          DEPLOY_TARGET: ${{ secrets.DEPLOY_TARGET }}
-          DEPLOY_PORT: ${{ vars.DEPLOY_PORT }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
           ADDONS: ${{ inputs.addons }}
           GO: ${{ inputs.go }}
         run: |
           set -euo pipefail
-          args=("$DEPLOY_TARGET" --addons "$ADDONS")
-          [ -z "$DEPLOY_PORT" ] || args+=(--port "$DEPLOY_PORT")
+          if [[ ! "$DEPLOY_PATH" =~ ^/.+ ]]; then
+            echo "::error::Variable DEPLOY_PATH must be the store's absolute path on the server (docs/DEPLOY.md, step 3)."
+            exit 1
+          fi
+          # "store" is the SSH alias .github/actions/deploy-ssh set up.
+          args=("store:$DEPLOY_PATH" --addons "$ADDONS")
           # Anything but main (a tag, for a rollback) is deployed on purpose.
           [ "$GITHUB_REF" = refs/heads/main ] || args+=(--any-commit)
           [ "$GO" != true ] || args+=(--go --backup --clear-cache)

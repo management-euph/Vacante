@@ -4,8 +4,9 @@ name: Server check
 # scripts/deploy-addons.sh needs? Actions -> Server check -> Run workflow,
 # pick the environment. It only reads: nothing on the server changes.
 #
-# The repository is public and so are these logs: the report never prints the
-# host, the user or the store path (they live in the environment's secrets).
+# The repository is public and so are these logs: the server is reached as
+# the SSH alias "store" (.github/actions/deploy-ssh), so the host and the user
+# (secrets ARTIFACT_HOST, ARTIFACT_USERNAME) are never printed.
 
 on:
   workflow_dispatch:
@@ -29,48 +30,53 @@ jobs:
 
       - uses: ./.github/actions/deploy-ssh
         with:
-          ssh-key: ${{ secrets.DEPLOY_SSH_KEY }}
+          ssh-key: ${{ secrets.ARTIFACT_SSH_KEY }}
+          host: ${{ secrets.ARTIFACT_HOST }}
+          user: ${{ secrets.ARTIFACT_USERNAME }}
+          port: ${{ vars.DEPLOY_PORT }}
           known-hosts: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
 
       - name: Check the server
         env:
-          DEPLOY_TARGET: ${{ secrets.DEPLOY_TARGET }}
-          DEPLOY_PORT: ${{ vars.DEPLOY_PORT }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
           set -uo pipefail
-          if [[ ! "$DEPLOY_TARGET" =~ ^[^/:]+:/.+ ]]; then
-            echo "::error::Secret DEPLOY_TARGET must look like user@host:/absolute/path/to/cscart"
+          if [[ ! "$DEPLOY_PATH" =~ ^/.+ ]]; then
+            echo "::error::Variable DEPLOY_PATH must be the store's absolute path on the server, e.g. /var/www/socialtrip.ro/dev"
             exit 1
           fi
-          host=${DEPLOY_TARGET%%:*} root=${DEPLOY_TARGET#*:}
-          ssh_args=()
-          [ -z "$DEPLOY_PORT" ] || ssh_args+=(-p "$DEPLOY_PORT")
+          # The newest CS-Cart every travel add-on accepts (their addon.xml).
+          supported=$(grep -h -A3 '<core_version>' addon-*/app/addons/*/addon.xml \
+            | grep -oE '<max>[^<]+' | cut -d'>' -f2 | sort -V | head -1)
 
-          if ! ssh "${ssh_args[@]}" "$host" true; then
+          if ! ssh store true; then
             {
               echo "## SSH from GitHub Actions: FAILED"
               echo "GitHub's runner could not log in. Check, in this order:"
-              echo "1. From your own computer: \`ssh -i deploy_key -p PORT user@host\` logs in without a password."
-              echo "2. DEPLOY_KNOWN_HOSTS matches the server (\`ssh-keyscan -p PORT host\`)."
-              echo "3. The hosting does not limit SSH to some IP addresses: GitHub's runners use changing addresses."
-              echo "   If it does, use a self-hosted runner on an allowed machine, or deploy from your computer (docs/DEPLOY.md)."
+              echo "1. From your own computer: \`ssh -i <private key> -p PORT user@host\` logs in without a password."
+              echo "2. The public key is in ~/.ssh/authorized_keys of ARTIFACT_USERNAME on the server."
+              echo "3. If DEPLOY_KNOWN_HOSTS is set, it matches \`ssh-keyscan -p PORT host\` today."
+              echo "4. The server's firewall does not limit SSH to some IP addresses: GitHub's runners use changing addresses."
             } | tee -a "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
           echo "SSH from GitHub Actions: OK"
 
-          # The store path is quoted here, on purpose, for the remote shell.
+          # The path and version are quoted here, on purpose, for the remote shell.
           # shellcheck disable=SC2029
-          ssh "${ssh_args[@]}" "$host" "bash -s -- $(printf '%q' "$root")" > report.txt <<'CHECK'
-          root=$1
+          ssh store "bash -s -- $(printf '%q %q' "$DEPLOY_PATH" "$supported")" > report.txt <<'CHECK'
+          root=$1 supported=$2
           fail=0
           ok() { echo "| OK | $* |"; }
           bad() { echo "| **MISSING** | $* |"; fail=1; }
           warn() { echo "| note | $* |"; }
           echo "| | |"
           echo "|---|---|"
+          if [ "$(id -u)" = 0 ]; then
+            warn "logged in as root: works, but a deploy user owning only the site is safer (docs/DEPLOY.md, step 2)"
+          fi
           for tool in rsync tar gzip; do
-            if command -v "$tool" >/dev/null; then ok "$tool installed"; else bad "$tool is not installed (needed to deploy)"; fi
+            if command -v "$tool" >/dev/null; then ok "$tool installed"; else bad "$tool is not installed (needed to deploy): apt install $tool"; fi
           done
           if command -v php >/dev/null; then
             v=$(php -r 'echo PHP_VERSION;')
@@ -81,18 +87,25 @@ jobs:
           if command -v mysqldump >/dev/null || command -v mariadb-dump >/dev/null; then ok "mysqldump installed (database backups)"; else bad "mysqldump is not installed (needed for the backup before each deploy)"; fi
           if [ -f "$root/config.php" ] && [ -d "$root/app/addons" ]; then
             ver=$(grep -oE "PRODUCT_VERSION', *'[^']+" "$root/config.php" | grep -oE "[0-9][0-9.]*$" || true)
-            ok "CS-Cart found at the store path${ver:+ (version $ver)}"
-            for d in app/addons design/backend/templates/addons js/addons var/langs; do
-              if [ -w "$root/$d" ]; then ok "can write $d"; else bad "the deploy user cannot write $d"; fi
+            ok "CS-Cart found at DEPLOY_PATH${ver:+ (version $ver)}"
+            if [ -n "$ver" ] && [ -n "$supported" ] && [ "$(printf '%s\n%s\n' "$ver" "$supported" | sort -V | tail -1)" != "$supported" ]; then
+              bad "CS-Cart $ver is newer than the add-ons accept (up to $supported): CS-Cart will refuse to install them"
+            fi
+            if [ -r "$root/config.local.php" ]; then ok "can read config.local.php (database backup)"; else bad "cannot read config.local.php (needed for the database backup)"; fi
+            for d in app/addons design/backend/templates/addons design/backend/css/addons js/addons var/langs var/cache; do
+              if [ ! -e "$root/$d" ]; then continue; fi
+              if [ -w "$root/$d" ]; then ok "can write $d"; else bad "ARTIFACT_USERNAME cannot write $d"; fi
             done
             for theme in responsive nova_theme; do
-              if [ -d "$root/design/themes/$theme" ]; then ok "theme $theme present"; fi
+              if [ -d "$root/design/themes/$theme" ]; then
+                if [ -w "$root/design/themes/$theme" ]; then ok "theme $theme present, writable"; else bad "theme $theme present, but ARTIFACT_USERNAME cannot write it"; fi
+              fi
             done
           else
-            warn "no CS-Cart at the store path yet: install CS-Cart there before the first deploy"
+            warn "no CS-Cart at DEPLOY_PATH: install CS-Cart there, or fix the path"
           fi
           if mkdir -p ~/deploy-backups 2>/dev/null && [ -w ~/deploy-backups ]; then ok "backup folder ~/deploy-backups is writable"; else bad "cannot create ~/deploy-backups in the deploy user's home"; fi
-          case "$HOME/" in "$root"/*) bad "the deploy user's home is inside the store root: backups would be public" ;; esac
+          case "$HOME/" in "$root"/*) bad "the deploy user's home is inside the store: backups would be public" ;; esac
           free=$(df -Pk "$HOME" 2>/dev/null | awk 'NR==2 {printf "%.1f", $4/1048576}')
           [ -z "$free" ] || ok "free space for backups: ${free} GB"
           exit $fail
