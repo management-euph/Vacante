@@ -58,11 +58,6 @@ final class PayloadBuilderResolveCurrencyTest extends TestCase
         self::assertSame(['USD', 1045.61], $this->builder()->resolveCurrency(['currency' => 'order_currency'], $order));
     }
 
-    public function testPrimaryCurrencyIgnoresTheCheckoutCurrency(): void
-    {
-        self::assertSame(['USD', 1045.61], $this->builder()->resolveCurrency(['currency' => 'primary_currency'], self::ORDER));
-    }
-
     public function testNamedCurrencyWinsOverTheCheckoutCurrency(): void
     {
         $builder = $this->builder(['RON' => 0.21]); // 1 RON = 0.21 USD
@@ -70,7 +65,7 @@ final class PayloadBuilderResolveCurrencyTest extends TestCase
         self::assertSame(['RON', 4979.1], $builder->resolveCurrency(['currency' => 'RON'], self::ORDER));
     }
 
-    public function testNamedCurrencyEqualToPrimaryIsNotConverted(): void
+    public function testPrimaryCurrencyChosenFromTheListIgnoresTheCheckoutCurrency(): void
     {
         self::assertSame(['USD', 1045.61], $this->builder()->resolveCurrency(['currency' => 'USD'], self::ORDER));
     }

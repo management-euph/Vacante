@@ -56,11 +56,12 @@ use Netopia\CsCart\Support\CountryCodes;
  */
 final class PayloadBuilder
 {
-    /** "Payment currency" setting: the currency the customer placed the order in (also the default). */
+    /**
+     * "Payment currency" setting: the currency the customer placed the order
+     * in (also the default). Otherwise the setting names a currency; the
+     * primary one, marked in the list, is charged without conversion.
+     */
     public const string ORDER_CURRENCY = 'order_currency';
-
-    /** "Payment currency" setting: the store's primary currency, with no conversion. */
-    public const string PRIMARY_CURRENCY = 'primary_currency';
 
     /** @var \Closure(float, string, string): ?float amount, from, to: the converted amount, or null when it cannot convert */
     private readonly \Closure $convert;
@@ -137,7 +138,6 @@ final class PayloadBuilder
             // The currency the customer chose at checkout: CS-Cart stores it
             // on the order and shows the total converted into it.
             '', self::ORDER_CURRENCY => Arr::string($orderInfo, 'secondary_currency'),
-            self::PRIMARY_CURRENCY => $this->primaryCurrency,
             default => $configured,
         };
         if ($currency === '' || $currency === $this->primaryCurrency) {

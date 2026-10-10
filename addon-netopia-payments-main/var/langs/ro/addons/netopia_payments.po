@@ -109,8 +109,8 @@ msgid "Payment currency"
 msgstr "Moneda plății"
 
 msgctxt "Languages::netopia_currency_description"
-msgid "Order currency: the one the customer chose at checkout, the total converted with the store's currency rates. Primary currency: the store's own, unconverted. A named currency: always that one."
-msgstr "Moneda comenzii: cea aleasă de client la finalizarea comenzii, totalul convertit după cursurile magazinului. Moneda principală: cea a magazinului, fără conversie. O monedă anume: mereu aceea."
+msgid "Order currency: the one the customer chose at checkout, the total converted with the store's currency rates. A currency from the list: always that one; the one marked Primary currency is charged unconverted."
+msgstr "Moneda comenzii: cea aleasă de client la finalizarea comenzii, totalul convertit după cursurile magazinului. O monedă din listă: mereu aceea; cea marcată Moneda principală se încasează fără conversie."
 
 msgctxt "Languages::netopia_current_file"
 msgid "Current file"

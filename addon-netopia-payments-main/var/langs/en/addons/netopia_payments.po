@@ -109,8 +109,8 @@ msgid "Payment currency"
 msgstr "Payment currency"
 
 msgctxt "Languages::netopia_currency_description"
-msgid "Order currency: the one the customer chose at checkout, the total converted with the store's currency rates. Primary currency: the store's own, unconverted. A named currency: always that one."
-msgstr "Order currency: the one the customer chose at checkout, the total converted with the store's currency rates. Primary currency: the store's own, unconverted. A named currency: always that one."
+msgid "Order currency: the one the customer chose at checkout, the total converted with the store's currency rates. A currency from the list: always that one; the one marked Primary currency is charged unconverted."
+msgstr "Order currency: the one the customer chose at checkout, the total converted with the store's currency rates. A currency from the list: always that one; the one marked Primary currency is charged unconverted."
 
 msgctxt "Languages::netopia_current_file"
 msgid "Current file"
