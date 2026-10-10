@@ -67,7 +67,7 @@ final class SeoTemplatesPerLanguageTest extends TestCase
             '/addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php',
             '/addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/UpdateProductsCommand.php',
             '/addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/OffersUpdateCommand.php',
-            '/eurosite_addon/app/addons/eurosite/src/Services/EurositeProductFactory.php',
+            '/addon-eurosite/app/addons/eurosite/src/Services/EurositeProductFactory.php',
         ];
         foreach ($sites as $rel) {
             self::assertStringContainsString(
@@ -103,8 +103,8 @@ final class SeoTemplatesPerLanguageTest extends TestCase
                 'view'       => '/addon-sphinx-holidays/design/backend/templates/addons/sphinx_holidays/views/sphinx_seo_templates/manage.tpl',
             ],
             'eurosite' => [
-                'controller' => '/eurosite_addon/app/addons/eurosite/controllers/backend/eurosite.php',
-                'view'       => '/eurosite_addon/design/backend/templates/addons/eurosite/views/eurosite/seo_templates.tpl',
+                'controller' => '/addon-eurosite/app/addons/eurosite/controllers/backend/eurosite.php',
+                'view'       => '/addon-eurosite/design/backend/templates/addons/eurosite/views/eurosite/seo_templates.tpl',
             ],
         ];
     }

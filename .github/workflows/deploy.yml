@@ -1,0 +1,119 @@
+name: Deploy
+
+# Deploys the travel add-ons to a store: the full CI runs again on the very
+# commit being deployed, then scripts/deploy-addons.sh copies it over SSH
+# (backup first, removed files deleted, cache cleared) and
+# scripts/smoke-test.sh checks the store answers. See docs/DEPLOY.md.
+#
+# Actions -> Deploy -> Run workflow:
+#   "Use workflow from"  main for a release; a tag (v2026.10.10) to roll back
+#   environment          production (or staging)
+#   go                   unticked: a dry run that only lists the changes
+#
+# The repository is public and so are these logs: the server is reached as the
+# SSH alias "store", so its host and user (secrets ARTIFACT_HOST,
+# ARTIFACT_USERNAME) never appear; DEPLOY_PATH is an environment variable.
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Where to deploy
+        type: environment
+        required: true
+      addons:
+        description: Add-ons to deploy (comma-separated ids)
+        type: string
+        default: travel_core,novoton_holidays,sphinx_holidays,fgo_invoicing,eurosite
+      go:
+        description: Deploy for real (unticked = dry run, nothing changes on the store)
+        type: boolean
+        default: false
+
+# One deploy at a time per store; a second one waits instead of overlapping.
+concurrency:
+  group: deploy-${{ inputs.environment }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: CI on this commit
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+    # ci.yml's Qodana job asks for these; a called workflow only gets what
+    # its caller grants.
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: write
+
+  deploy:
+    name: ${{ inputs.go && 'Deploy' || 'Dry run' }} to ${{ inputs.environment }}
+    needs: ci
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ vars.STORE_URL }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # deploy-addons.sh compares HEAD with origin/main
+
+      - uses: ./.github/actions/deploy-ssh
+        with:
+          ssh-key: ${{ secrets.ARTIFACT_SSH_KEY }}
+          host: ${{ secrets.ARTIFACT_HOST }}
+          user: ${{ secrets.ARTIFACT_USERNAME }}
+          port: ${{ vars.DEPLOY_PORT }}
+          known-hosts: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+
+      - name: ${{ inputs.go && 'Back up, deploy, clear cache' || 'List what would change' }}
+        env:
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+          ADDONS: ${{ inputs.addons }}
+          GO: ${{ inputs.go }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$DEPLOY_PATH" =~ ^/.+ ]]; then
+            echo "::error::Variable DEPLOY_PATH must be the store's absolute path on the server (docs/DEPLOY.md, step 3)."
+            exit 1
+          fi
+          # "store" is the SSH alias .github/actions/deploy-ssh set up.
+          args=("store:$DEPLOY_PATH" --addons "$ADDONS")
+          # Anything but main (a tag, for a rollback) is deployed on purpose.
+          [ "$GITHUB_REF" = refs/heads/main ] || args+=(--any-commit)
+          [ "$GO" != true ] || args+=(--go --backup --clear-cache)
+          bash scripts/deploy-addons.sh "${args[@]}" 2>&1 | tee deploy.txt
+          {
+            echo "## ${{ inputs.go && 'Deployed' || 'Dry run' }}: $(git log -1 --format='%h %s')"
+            echo
+            echo '```'
+            grep -E '^(Done|Dry run|== |   \*deleting)' deploy.txt | head -200
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Smoke test
+        if: inputs.go
+        env:
+          STORE_URL: ${{ vars.STORE_URL }}
+          STORE_ADMIN_URL: ${{ vars.STORE_ADMIN_URL }}
+        run: |
+          if [ -z "$STORE_URL" ]; then
+            echo "::warning::Variable STORE_URL is not set on this environment: smoke test skipped."
+            exit 0
+          fi
+          bash scripts/smoke-test.sh "$STORE_URL" "$STORE_ADMIN_URL" | tee smoke.txt
+          { echo "## Smoke test"; echo; echo '```'; cat smoke.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Next steps
+        if: inputs.go && success()
+        run: |
+          {
+            echo "## Next"
+            echo "- Open any admin page once: new language labels add themselves."
+            echo "- First deploy to this store? Install the add-ons in order (docs/INSTALL.md, section 3)."
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -64,7 +64,7 @@ final class SettingsTypeAndLabelRepairTest extends TestCase
     {
         $root = dirname(__DIR__, 7);
         foreach (['en', 'ro'] as $lang) {
-            $po = (string) file_get_contents($root . "/eurosite_addon/var/langs/{$lang}/addons/eurosite.po");
+            $po = (string) file_get_contents($root . "/addon-eurosite/var/langs/{$lang}/addons/eurosite.po");
             self::assertStringNotContainsString('msgstr "Hotels root category ID"', $po);
             self::assertStringNotContainsString('msgstr "ID categorie rădăcină hoteluri"', $po);
         }
@@ -81,7 +81,7 @@ final class SettingsTypeAndLabelRepairTest extends TestCase
         );
         self::assertStringContainsString(
             "function fn_settings_variants_addons_eurosite_hotels_category_id(): array\n{\n    return \\Tygh\\Addons\\TravelCore\\Helpers\\CategoryOptions::build();",
-            (string) file_get_contents($root . '/eurosite_addon/app/addons/eurosite/func.php'),
+            (string) file_get_contents($root . '/addon-eurosite/app/addons/eurosite/func.php'),
         );
     }
 }

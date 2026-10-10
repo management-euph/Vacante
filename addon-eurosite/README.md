@@ -1,4 +1,4 @@
-# `eurosite_addon/` — Eurosite Touring provider addon (MVP)
+# `addon-eurosite/` — Eurosite Touring provider addon (MVP)
 
 A new CS-Cart provider addon (id **`eurosite`**) for the **Eurosite** XML web
 service — a distinct Touroperator platform, a sibling to the existing
@@ -31,7 +31,7 @@ service — a distinct Touroperator platform, a sibling to the existing
 > PHPStan/cs-fixer/CI paths (final graduation step).
 
 ```
-eurosite_addon/
+addon-eurosite/
 ├── var/langs/{en,ro}/addons/eurosite.po  addon name/description + settings labels
 └── app/addons/eurosite/
     ├── addon.xml            id=eurosite, deps=travel_core, settings + eurosite_bookings table
@@ -206,7 +206,7 @@ matching the same hotel across providers.
 ## Testing
 
 ```bash
-cd eurosite_addon/app/addons/eurosite
+cd addon-eurosite/app/addons/eurosite
 composer install                 # once, for phpunit
 vendor/bin/phpunit               # 30 tests, 138 assertions
 ```

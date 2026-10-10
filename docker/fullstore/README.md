@@ -108,6 +108,19 @@ into nova_theme too.
 
 ## Getting your changes to show up (update & verify)
 
+**One command for the usual update** (PowerShell, from `docker\fullstore`):
+
+```powershell
+.\update.ps1                  # pull the branch you are on
+.\update.ps1 -Branch main     # or switch first (any branch, e.g. a PR's)
+```
+
+It pulls, re-links the addons (new folders, and per-file links of deleted files on
+HP Sure Click checkouts) and clears CS-Cart's cache; then open any admin page once and
+hard-refresh the storefront. No `rsync --delete` here: the store links the repo's folders,
+so a file deleted in git is gone from the store too. If Windows refuses to run scripts,
+use `powershell -ExecutionPolicy Bypass -File .\update.ps1`.
+
 After a `git pull`, what you have to run depends on **which layer** you changed — most
 addon changes need nothing but a browser refresh, because addon source is symlinked live
 from your repo (`/repo`) and opcache re-checks the file every request.

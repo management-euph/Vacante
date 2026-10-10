@@ -26,7 +26,7 @@ final class CronRunReportingTest extends TestCase
 {
     /** addon id => [repo dir, dispatcher-relative path, HTTP controller] */
     private const array PROVIDERS = [
-        'eurosite' => ['eurosite_addon/app/addons/eurosite', 'eurosite_cron.php'],
+        'eurosite' => ['addon-eurosite/app/addons/eurosite', 'eurosite_cron.php'],
         'sphinx_holidays' => ['addon-sphinx-holidays/app/addons/sphinx_holidays', 'sphinx_cron.php'],
         'novoton_holidays' => ['addon-novoton-holidays/app/addons/novoton_holidays', 'novoton_cron.php'],
     ];
@@ -92,7 +92,7 @@ final class CronRunReportingTest extends TestCase
     public function testEveryProviderDeclaresItsCronFromItsOwnInit(): void
     {
         $anchors = [
-            'eurosite' => ['eurosite.manage', 'eurosite-scheduled-jobs', 'eurosite_addon/design/backend/templates/addons/eurosite/views/eurosite/manage.tpl'],
+            'eurosite' => ['eurosite.manage', 'eurosite-scheduled-jobs', 'addon-eurosite/design/backend/templates/addons/eurosite/views/eurosite/manage.tpl'],
             'sphinx_holidays' => ['sphinx_holidays.manage', 'sphinx-cron-commands', 'addon-sphinx-holidays/design/backend/templates/addons/sphinx_holidays/views/sphinx_holidays/manage.tpl'],
             'novoton_holidays' => ['novoton_holidays.manage', 'novoton-cron-jobs', 'addon-novoton-holidays/design/backend/templates/addons/novoton_holidays/views/novoton_holidays/manage.tpl'],
         ];

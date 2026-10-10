@@ -1,0 +1,80 @@
+name: Deploy SSH
+description: >
+  SSH client set up for the deploy workflows. The server is reachable as the
+  alias "store" (ssh store, rsync store:/path), so no step ever needs to name
+  the host or the user: the repository is public, and so are its logs.
+
+inputs:
+  ssh-key:
+    description: Private key of the deploy user (secret ARTIFACT_SSH_KEY)
+    required: true
+  host:
+    description: Server host name or IP (secret ARTIFACT_HOST)
+    required: true
+  user:
+    description: User to log in as (secret ARTIFACT_USERNAME)
+    required: true
+  port:
+    description: SSH port (variable DEPLOY_PORT; 22 when empty)
+    required: false
+    default: ''
+  known-hosts:
+    description: >
+      The server's host key line(s) from `ssh-keyscan -p PORT host` (secret
+      DEPLOY_KNOWN_HOSTS). Pins the server. When empty the key is fetched on
+      each run and trusted (what the Hetzner tutorial does), and its
+      fingerprint is shown in the run summary.
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Set up SSH
+      shell: bash
+      env:
+        SSH_KEY: ${{ inputs.ssh-key }}
+        SSH_HOST: ${{ inputs.host }}
+        SSH_USER: ${{ inputs.user }}
+        SSH_PORT: ${{ inputs.port }}
+        KNOWN_HOSTS: ${{ inputs.known-hosts }}
+      run: |
+        set -euo pipefail
+        if [ -z "$SSH_KEY" ] || [ -z "$SSH_HOST" ] || [ -z "$SSH_USER" ]; then
+          echo "::error::Secrets ARTIFACT_SSH_KEY, ARTIFACT_HOST and ARTIFACT_USERNAME must be set (docs/DEPLOY.md, step 3)."
+          exit 1
+        fi
+        port=${SSH_PORT:-22}
+        install -d -m 700 ~/.ssh
+        printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
+        if [ -n "$KNOWN_HOSTS" ]; then
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+        else
+          ssh-keyscan -p "$port" -t ed25519,ecdsa,rsa "$SSH_HOST" > ~/.ssh/known_hosts 2>/dev/null || true
+          if [ ! -s ~/.ssh/known_hosts ]; then
+            echo "::error::Could not reach the server's SSH port to read its host key (wrong host or port, or a firewall)."
+            exit 1
+          fi
+          {
+            echo "### Server host key (not pinned)"
+            echo "Trusted on first use. To pin it, save the output of \`ssh-keyscan -p $port <host>\` as the secret DEPLOY_KNOWN_HOSTS."
+            echo '```'
+            ssh-keygen -lf ~/.ssh/known_hosts | awk '{print $1, $2, $NF}'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+        fi
+        {
+          echo "Host store"
+          echo "  HostName $SSH_HOST"
+          echo "  User $SSH_USER"
+          echo "  Port $port"
+          echo "  IdentityFile ~/.ssh/deploy_key"
+          echo "  IdentitiesOnly yes"
+          echo "  StrictHostKeyChecking yes"
+          echo "  BatchMode yes"
+          echo "  ConnectTimeout 20"
+          echo "  ServerAliveInterval 15"
+          echo "  LogLevel ERROR"
+        } > ~/.ssh/config
+        chmod 600 ~/.ssh/config

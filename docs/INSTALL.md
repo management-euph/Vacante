@@ -8,14 +8,38 @@ current schema** — no upgrade items or migrations need to be applied.
 
 | Requirement | Value | Why / how to check |
 |---|---|---|
-| CS-Cart | **4.19.1 – 4.20.x** | developed/tested against 4.20.1; requires the Smarty 5 engine (CS-Cart ≥ 4.19.1) — the addons duck-type the view object and never check `instanceof \Smarty` (gone in Smarty 5) |
+| CS-Cart | **4.19.1 – 4.21.2** | developed against 4.20.1, tested on 4.21.2 (each addon.xml's `<max>`; raise it only after testing a newer release); requires the Smarty 5 engine (CS-Cart ≥ 4.19.1) — the addons duck-type the view object and never check `instanceof \Smarty` (gone in Smarty 5) |
 | PHP | **8.3+** | typed class constants, readonly properties (`composer.json` requires `^8.3`) |
 | Database | **MySQL 8.0+ or MariaDB 10.6+** | all upserts use the portable `VALUES(col)` form (converted 2026-07-03; the earlier MySQL-only `AS new_row` alias is gone). Change-detection upserts proven on MariaDB 10.11. Check with `SELECT VERSION();`. |
 | Theme | `responsive` or `nova_theme` | the addons ship design files for both |
 
 ## 2. Deploy the addon files
 
-Copy (rsync) each addon's trees into the CS-Cart root, preserving paths:
+**Production: use the Deploy workflow** (GitHub Actions; backup, deploy,
+smoke test). Setting it up, first install, releases and rollback:
+[`docs/DEPLOY.md`](DEPLOY.md). It runs the script below, which also works by hand.
+
+**By hand: `scripts/deploy-addons.sh`** (rsync over SSH). It deploys the committed
+`main` and deletes, inside each add-on's own folders only, the files a release
+removed — which "Upload & install" and FTP never do:
+
+```bash
+git checkout main && git pull
+bash scripts/deploy-addons.sh user@host:/var/www/cscart              # dry run: lists every copy and deletion
+bash scripts/deploy-addons.sh user@host:/var/www/cscart --go --backup --clear-cache
+```
+
+Add `--addons travel_core,novoton_holidays,sphinx_holidays,fgo_invoicing,eurosite`
+where the store has Eurosite, `--port N` for a non-standard SSH port; `--help`
+lists the rest. It never touches CS-Cart's own files or other add-ons', skips a
+theme the store doesn't have, and refuses a path without `config.php`.
+
+On **Windows** run it from WSL (Git Bash has no rsync):
+`wsl`, then `sudo apt install rsync openssh-client` once, then
+`cd /mnt/c/<your checkout>` and the commands above. If git says "dubious
+ownership", run the `git config --global --add safe.directory …` it suggests.
+
+Without the script, copy (rsync) each addon's trees into the CS-Cart root, preserving paths:
 
 ```
 addon-<name>/app/addons/<addon>/   → <cscart>/app/addons/<addon>/

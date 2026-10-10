@@ -359,7 +359,7 @@ final class SettingsMigratorTest extends TestCase
         $dirs = [
             'novoton_holidays' => '/addon-novoton-holidays',
             'sphinx_holidays' => '/addon-sphinx-holidays',
-            'eurosite' => '/eurosite_addon',
+            'eurosite' => '/addon-eurosite',
         ];
 
         foreach (\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::KNOWN_PROVIDER_ADDONS as $addon) {
@@ -404,7 +404,7 @@ final class SettingsMigratorTest extends TestCase
     public function testEurositeMintsTheSharedCoreKeyAndNoLongerDeclaresItsOwn(): void
     {
         $repoRoot = dirname(__DIR__, 7);
-        $xml = (string) file_get_contents($repoRoot . '/eurosite_addon/app/addons/eurosite/addon.xml');
+        $xml = (string) file_get_contents($repoRoot . '/addon-eurosite/app/addons/eurosite/addon.xml');
 
         self::assertStringNotContainsString('<item id="cron_access_key">', $xml);
 
@@ -419,7 +419,7 @@ final class SettingsMigratorTest extends TestCase
         // satisfied by the comment above the call, so a mint replaced by a
         // plain read of the old key passed.
         $block = SourceCode::body(
-            $repoRoot . '/eurosite_addon/app/addons/eurosite/controllers/backend/eurosite.php',
+            $repoRoot . '/addon-eurosite/app/addons/eurosite/controllers/backend/eurosite.php',
             "if (\$mode === 'generate_cron_key')",
         );
 

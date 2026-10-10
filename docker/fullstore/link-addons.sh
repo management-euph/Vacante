@@ -35,7 +35,7 @@ declare -A ADDONS=(
     # MVP (out of the CI gates): linking only puts it on the Add-ons page —
     # installing stays a manual admin action, and its API credentials are the
     # spec placeholders until an operator fills real ones in its settings.
-    [eurosite]=eurosite_addon
+    [eurosite]=addon-eurosite
     # Payment processor: install it from Add-ons, then Administration ->
     # Payment methods -> add a method with processor "Netopia Payments" and
     # fill in its sandbox signature/API key there (never in the repo).

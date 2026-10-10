@@ -27,17 +27,17 @@ final class SettingsHealStoreRootTest extends TestCase
         // The repo side: travel_core's source, and eurosite's in its own top-level folder.
         mkdir($this->tmp . '/repo/addon-travel-core/app/addons/travel_core/functions', 0o777, true);
         copy(dirname(__DIR__, 3) . '/functions/self_heal.php', $this->tmp . '/repo/addon-travel-core/app/addons/travel_core/functions/self_heal.php');
-        mkdir($this->tmp . '/repo/eurosite_addon/app/addons/eurosite', 0o777, true);
-        file_put_contents($this->tmp . '/repo/eurosite_addon/app/addons/eurosite/addon.xml', '<addon/>');
-        mkdir($this->tmp . '/repo/eurosite_addon/var/langs/en/addons', 0o777, true);
-        file_put_contents($this->tmp . '/repo/eurosite_addon/var/langs/en/addons/eurosite.po', '');
+        mkdir($this->tmp . '/repo/addon-eurosite/app/addons/eurosite', 0o777, true);
+        file_put_contents($this->tmp . '/repo/addon-eurosite/app/addons/eurosite/addon.xml', '<addon/>');
+        mkdir($this->tmp . '/repo/addon-eurosite/var/langs/en/addons', 0o777, true);
+        file_put_contents($this->tmp . '/repo/addon-eurosite/var/langs/en/addons/eurosite.po', '');
 
         // The store side, linked the way docker/fullstore/link-addons.sh does it.
         mkdir($this->tmp . '/store/app/addons', 0o777, true);
         mkdir($this->tmp . '/store/var/langs/en/addons', 0o777, true);
         symlink($this->tmp . '/repo/addon-travel-core/app/addons/travel_core', $this->tmp . '/store/app/addons/travel_core');
-        symlink($this->tmp . '/repo/eurosite_addon/app/addons/eurosite', $this->tmp . '/store/app/addons/eurosite');
-        symlink($this->tmp . '/repo/eurosite_addon/var/langs/en/addons/eurosite.po', $this->tmp . '/store/var/langs/en/addons/eurosite.po');
+        symlink($this->tmp . '/repo/addon-eurosite/app/addons/eurosite', $this->tmp . '/store/app/addons/eurosite');
+        symlink($this->tmp . '/repo/addon-eurosite/var/langs/en/addons/eurosite.po', $this->tmp . '/store/var/langs/en/addons/eurosite.po');
     }
 
     protected function tearDown(): void

@@ -9,7 +9,7 @@ declare(strict_types=1);
  * the Eurosite XML-over-HTTP protocol directly so each probe can show the RAW
  * request + response for one RequestType.
  *
- * Protocol (mirrors eurosite_addon's EurositeXmlBuilder/EurositeHttpClient):
+ * Protocol (mirrors addon-eurosite's EurositeXmlBuilder/EurositeHttpClient):
  *   POST {api_url}   (ONE url for everything; Content-Type: text/xml)
  *     <Request RequestType="...">
  *       <AuditInfo>RequestId/RequestUser/RequestPass/RequestTime/RequestLang</AuditInfo>

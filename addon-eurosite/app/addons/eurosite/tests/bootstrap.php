@@ -12,7 +12,7 @@ declare(strict_types=1);
  */
 
 $addonRoot = dirname(__DIR__);
-$repoRoot = dirname($addonRoot, 4); // eurosite_addon/app/addons/eurosite -> repo root
+$repoRoot = dirname($addonRoot, 4); // addon-eurosite/app/addons/eurosite -> repo root
 
 // Eurosite src/ + tests/
 spl_autoload_register(static function (string $class) use ($addonRoot): void {

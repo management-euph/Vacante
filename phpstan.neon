@@ -63,11 +63,11 @@ parameters:
         - addon-fgo-invoicing/app/addons/fgo_invoicing/hooks
         - addon-fgo-invoicing/app/addons/fgo_invoicing/func.php
         - addon-fgo-invoicing/app/addons/fgo_invoicing/init.php
-        - eurosite_addon/app/addons/eurosite/src
-        - eurosite_addon/app/addons/eurosite/controllers
-        - eurosite_addon/app/addons/eurosite/functions
-        - eurosite_addon/app/addons/eurosite/func.php
-        - eurosite_addon/app/addons/eurosite/init.php
+        - addon-eurosite/app/addons/eurosite/src
+        - addon-eurosite/app/addons/eurosite/controllers
+        - addon-eurosite/app/addons/eurosite/functions
+        - addon-eurosite/app/addons/eurosite/func.php
+        - addon-eurosite/app/addons/eurosite/init.php
         # NOT cron.php: it defines AREA/CONSOLE for standalone runs, and letting
         # PHPStan see those defines constant-folds every AREA comparison in the
         # whole analysis (sibling cron.php files are excluded for the same reason).
@@ -84,7 +84,7 @@ parameters:
         - addon-travel-core/app/addons/travel_core/src
         - addon-sphinx-holidays/app/addons/sphinx_holidays/src
         - addon-fgo-invoicing/app/addons/fgo_invoicing/src
-        - eurosite_addon/app/addons/eurosite/src
+        - addon-eurosite/app/addons/eurosite/src
 
     excludePaths:
         - '*/vendor/*'

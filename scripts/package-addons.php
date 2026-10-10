@@ -32,7 +32,7 @@ $addons = [
     'fgo_invoicing' => 'addon-fgo-invoicing',
     // Not packaged by default: an MVP outside the CI gates. Request it
     // explicitly (`php scripts/package-addons.php eurosite`) when needed.
-    'eurosite' => 'eurosite_addon',
+    'eurosite' => 'addon-eurosite',
 ];
 $defaultIds = ['travel_core', 'novoton_holidays', 'sphinx_holidays', 'fgo_invoicing'];
 

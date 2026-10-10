@@ -106,7 +106,7 @@ exclude:
       - addon-travel-core/app/addons/travel_core/tests
       - addon-sphinx-holidays/app/addons/sphinx_holidays/tests
       - addon-fgo-invoicing/app/addons/fgo_invoicing/tests
-      - eurosite_addon/app/addons/eurosite/tests
+      - addon-eurosite/app/addons/eurosite/tests
       - addon-netopia-payments-main/tests
       # Vendored psr/log copy (namespace Psr\Log under lib/, loaded by the
       # addon's own autoloader); netopia's PHPStan / Psalm / php-cs-fixer
