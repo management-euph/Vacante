@@ -57,7 +57,7 @@ jobs:
               echo "2. The public key is in ~/.ssh/authorized_keys of ARTIFACT_USERNAME on the server."
               echo "3. If DEPLOY_KNOWN_HOSTS is set, it matches \`ssh-keyscan -p PORT host\` today."
               echo "4. The server's firewall does not limit SSH to some IP addresses: GitHub's runners use changing addresses."
-              echo "5. Hetzner managed server (konsoleH): SSH is on port 222 (DEPLOY_PORT), only for the main FTP user, and the public key is added in konsoleH → Settings → Login data → Public SFTP Keys."
+              echo "5. Hetzner managed server (konsoleH): SSH is on port 222 (DEPLOY_PORT), only for the main FTP user, and the public key is added in konsoleH → Settings → Login data → Public SSH Keys (and Public SFTP Keys)."
             } | tee -a "$GITHUB_STEP_SUMMARY"
             exit 1
           fi

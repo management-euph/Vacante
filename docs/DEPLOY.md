@@ -35,8 +35,8 @@ an unmanaged VPS or any Linux server with SSH. On Hetzner's managed products
 - **SSH is on port 222.** Port 22 is SFTP only (it answers `SSH-2.0-mod_sftp`)
   and gives no shell, so rsync cannot run there. Set `DEPLOY_PORT` to `222`.
 - SSH is for the **main FTP user** only (the user that owns `public_html`).
-- Public keys are added in **konsoleH → Settings → Login data → Public SFTP
-  Keys** (see step 2).
+- Public keys are added in **konsoleH → Settings → Login data → Public SSH
+  Keys** and **Public SFTP Keys** (see step 2).
 
 - **SSH login by key**, and `rsync`, `tar`, `gzip`, `mysqldump` (or
   `mariadb-dump`) and PHP **8.3+** on the command line. On a Debian/Ubuntu
@@ -82,8 +82,11 @@ two files in `C:\Users\<you>\.ssh\`:
 Add the public key on the server:
 
 - **Hetzner managed server** (konsoleH): Settings → Login data →
-  *Public SFTP Keys* → **Add**, paste the whole line of `github_deploy.pub`,
-  save (konsoleH converts it to the format it needs).
+  *Public SSH Keys* → **Add**, paste the whole line of `github_deploy.pub`,
+  save; do the same under *Public SFTP Keys* (konsoleH converts it to the
+  format it needs). The SSH section serves the shell on port 222, which the
+  deploy uses; the SFTP section serves port 22, and Hetzner's guide names
+  only that one. A public key reveals nothing, so adding it to both is safe.
 - **An unmanaged VPS**: logged in as the site user,
   ```bash
   mkdir -p ~/.ssh && chmod 700 ~/.ssh
@@ -105,11 +108,14 @@ Optional but recommended, to pin the server:
 ssh-keyscan -p 222 socialtrip.ro
 ```
 
-Use the same host name as in `ARTIFACT_HOST` and the SSH port. Its output has
-comment lines (`# socialtrip.ro:222 SSH-2.0-…`) and key lines
-(`[socialtrip.ro]:222 ssh-ed25519 AAAA…`): the secret `DEPLOY_KNOWN_HOSTS`
-below needs only the key lines (comment lines do no harm). A scan of port 22
-gives the SFTP service's key, which does not match port 222.
+Scan the **SSH port** (222); any of the server's names works, the shop's
+domain or the server's own name (`…your-server.de`): they reach the same
+machine and the same key, and only the key is kept (the name in each line is
+ignored). Its output has comment lines (`# socialtrip.ro:222 SSH-2.0-…`) and
+key lines (`[socialtrip.ro]:222 ssh-ed25519 AAAA…`): the secret
+`DEPLOY_KNOWN_HOSTS` below needs only the key lines (comment lines do no
+harm). A scan of port 22 gives the SFTP service's key, which does not match
+port 222.
 
 ## 3. Set up GitHub (once)
 
@@ -120,9 +126,9 @@ store on the same VPS):
 | Secret | Value |
 |---|---|
 | `ARTIFACT_SSH_KEY` | the whole content of `github_deploy` (the private key: open it in Notepad, copy from `-----BEGIN` to `-----END…-----`) |
-| `ARTIFACT_HOST` | the VPS host name or IP |
+| `ARTIFACT_HOST` | the server's name or IP, without `https://`, user or port: the shop's domain (`socialtrip.ro`) or the server's own name from konsoleH (`…your-server.de`). Both reach the same machine; the server's own name keeps working if the domain ever moves elsewhere. |
 | `ARTIFACT_USERNAME` | the user GitHub logs in as |
-| `DEPLOY_KNOWN_HOSTS` | *(optional)* the `ssh-keyscan` output: pins the server. Without it the key is trusted on first use, as in the tutorial, and its fingerprint is shown in each run's summary. |
+| `DEPLOY_KNOWN_HOSTS` | *(optional)* the key lines of `ssh-keyscan -p 222 …` (step 2): pins the server. Without it the key is trusted on first use, as in the tutorial, and its fingerprint is shown in each run's summary. |
 
 **One environment per store** — Settings → Environments → New environment.
 Each holds only variables (the repository is public, and so are the workflow

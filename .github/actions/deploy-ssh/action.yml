@@ -74,7 +74,7 @@ runs:
           fail "ARTIFACT_SSH_KEY is not a usable private key: paste the whole private key file (not the .pub), from -----BEGIN to -----END."
         fi
         if [ -n "$KNOWN_HOSTS" ]; then
-          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf '%s\n' "$KNOWN_HOSTS" | tr -d '\r' > ~/.ssh/known_hosts
         else
           banner=$(ssh-keyscan -T 15 -p "$port" -t ed25519,ecdsa,rsa "$host" 2>&1 > ~/.ssh/known_hosts || true)
           # Hetzner managed servers (konsoleH) answer on 22 with an
@@ -110,11 +110,21 @@ runs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
         fi
+        # The server is known by its key, not by the name a line was scanned
+        # with (the shop's domain or the server's own name, any port): every
+        # key line is filed under the alias "store" (HostKeyAlias below).
+        keys=$(grep -v -e '^[[:space:]]*#' -e '^[[:space:]]*@' -e '^[[:space:]]*$' ~/.ssh/known_hosts \
+          | awk 'NF >= 3 {print "store", $2, $3}' || true)
+        if [ -z "$keys" ]; then
+          fail "DEPLOY_KNOWN_HOSTS holds no key line: paste the lines of \`ssh-keyscan -p PORT host\` that do not start with #."
+        fi
+        printf '%s\n' "$keys" > ~/.ssh/known_hosts
         {
           echo "Host store"
           echo "  HostName $host"
           echo "  User $user"
           echo "  Port $port"
+          echo "  HostKeyAlias store"
           echo "  IdentityFile ~/.ssh/deploy_key"
           echo "  IdentitiesOnly yes"
           echo "  StrictHostKeyChecking yes"
