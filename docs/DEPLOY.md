@@ -27,8 +27,15 @@ is the alternative if SSH is ever impossible: see the end of this file.
 
 ## 1. What the server needs
 
-The stores run on a **Hetzner VPS**; the same steps fit any Linux server with
-SSH.
+The stores run on **Hetzner webhosting** (managed through konsoleH, host
+names `*.your-server.de`); the same steps fit a VPS or any Linux server with
+SSH. On Hetzner webhosting and Managed Servers:
+
+- **SSH is on port 222.** Port 22 is SFTP only (it answers `SSH-2.0-mod_sftp`)
+  and gives no shell, so rsync cannot run there. Set `DEPLOY_PORT` to `222`.
+- SSH is for the **main FTP user** only (the user that owns `public_html`).
+- Public keys are added in **konsoleH → Settings → Login data → Public SFTP
+  Keys** (see step 2).
 
 - **SSH login by key**, and `rsync`, `tar`, `gzip`, `mysqldump` (or
   `mariadb-dump`) and PHP **8.3+** on the command line. On a Debian/Ubuntu
@@ -71,24 +78,37 @@ two files in `C:\Users\<you>\.ssh\`:
 - `github_deploy.pub` — the **public** key, one line starting with
   `ssh-ed25519`. It goes on the server.
 
-Add the public key on the server, logged in as the site user (PuTTY, or the
-panel's terminal):
+Add the public key on the server:
 
-```bash
-mkdir -p ~/.ssh && chmod 700 ~/.ssh
-echo 'ssh-ed25519 AAAA...the whole line of github_deploy.pub... github-deploy' >> ~/.ssh/authorized_keys
-chmod 600 ~/.ssh/authorized_keys
-```
+- **Hetzner webhosting / Managed Server**: konsoleH → Settings → Login data →
+  *Public SFTP Keys* → **Add**, paste the whole line of `github_deploy.pub`,
+  save (konsoleH converts it to the format it needs).
+- **A VPS**: logged in as the site user,
+  ```bash
+  mkdir -p ~/.ssh && chmod 700 ~/.ssh
+  echo 'ssh-ed25519 AAAA...the whole line of github_deploy.pub... github-deploy' >> ~/.ssh/authorized_keys
+  chmod 600 ~/.ssh/authorized_keys
+  ```
 
-Check it from your computer (same port as in PuTTY):
+Check it from your computer (port **222** on Hetzner webhosting, usually 22
+on a VPS):
 
 ```powershell
-ssh -i "$env:USERPROFILE\.ssh\github_deploy" -p 22 sociad@socialtrip.ro
+ssh -i "$env:USERPROFILE\.ssh\github_deploy" -p 222 sociad@socialtrip.ro
 ```
 
-It must log in **without asking for a password or passphrase**. Optional but
-recommended, to pin the server: `ssh-keyscan -p 22 socialtrip.ro` (its output
-is the secret `DEPLOY_KNOWN_HOSTS` below).
+It must open a shell **without asking for a password or passphrase**.
+Optional but recommended, to pin the server:
+
+```powershell
+ssh-keyscan -p 222 socialtrip.ro
+```
+
+Use the same host name as in `ARTIFACT_HOST` and the SSH port. Its output has
+comment lines (`# socialtrip.ro:222 SSH-2.0-…`) and key lines
+(`[socialtrip.ro]:222 ssh-ed25519 AAAA…`): the secret `DEPLOY_KNOWN_HOSTS`
+below needs only the key lines (comment lines do no harm). A scan of port 22
+gives the SFTP service's key, which does not match port 222.
 
 ## 3. Set up GitHub (once)
 
@@ -113,7 +133,8 @@ logs: the host and user stay secrets, the server is reached as the alias
 | `dev` | the CS-Cart folder of https://socialtrip.ro/dev/ on the VPS, e.g. `/var/www/socialtrip.ro/dev` | `https://socialtrip.ro/dev/` | `https://socialtrip.ro/dev/admin.php` (or the renamed admin script) |
 | `production` (later) | the live store's folder | its URL | its admin URL |
 
-Add `DEPLOY_PORT` to an environment only if SSH is not on port 22. For
+Add `DEPLOY_PORT` to an environment when SSH is not on port 22: **`222` on
+Hetzner webhosting**. For
 `production`, also set **Required reviewers** (you) and **Deployment branches
 and tags** → *Selected* → `main` and `v*` (tags are how you roll back).
 
