@@ -77,10 +77,10 @@ runs:
           printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
         else
           banner=$(ssh-keyscan -T 15 -p "$port" -t ed25519,ecdsa,rsa "$host" 2>&1 > ~/.ssh/known_hosts || true)
-          # Hetzner webhosting and Managed Servers answer on 22 with an
+          # Hetzner managed servers (konsoleH) answer on 22 with an
           # SFTP-only service (ProFTPD mod_sftp): no shell, so no rsync.
           if [[ "$banner" == *mod_sftp* ]]; then
-            fail "Port $port is an SFTP-only service (mod_sftp): it gives no shell, so rsync cannot run there. On Hetzner webhosting or a Managed Server, SSH is on port 222: set the environment variable DEPLOY_PORT to 222."
+            fail "Port $port is an SFTP-only service (mod_sftp): it gives no shell, so rsync cannot run there. On a Hetzner managed server (konsoleH), SSH is on port 222: set the environment variable DEPLOY_PORT to 222."
           fi
           if [ ! -s ~/.ssh/known_hosts ]; then
             # Why: the name, the port, or something in between. The host is a

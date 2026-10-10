@@ -27,9 +27,10 @@ is the alternative if SSH is ever impossible: see the end of this file.
 
 ## 1. What the server needs
 
-The stores run on **Hetzner webhosting** (managed through konsoleH, host
-names `*.your-server.de`); the same steps fit a VPS or any Linux server with
-SSH. On Hetzner webhosting and Managed Servers:
+The stores run on a **Hetzner managed server** (a managed vServer,
+administered in konsoleH, host names `*.your-server.de`); the same steps fit
+an unmanaged VPS or any Linux server with SSH. On Hetzner's managed products
+(managed servers and webhosting, all in konsoleH):
 
 - **SSH is on port 222.** Port 22 is SFTP only (it answers `SSH-2.0-mod_sftp`)
   and gives no shell, so rsync cannot run there. Set `DEPLOY_PORT` to `222`.
@@ -80,18 +81,18 @@ two files in `C:\Users\<you>\.ssh\`:
 
 Add the public key on the server:
 
-- **Hetzner webhosting / Managed Server**: konsoleH → Settings → Login data →
+- **Hetzner managed server** (konsoleH): Settings → Login data →
   *Public SFTP Keys* → **Add**, paste the whole line of `github_deploy.pub`,
   save (konsoleH converts it to the format it needs).
-- **A VPS**: logged in as the site user,
+- **An unmanaged VPS**: logged in as the site user,
   ```bash
   mkdir -p ~/.ssh && chmod 700 ~/.ssh
   echo 'ssh-ed25519 AAAA...the whole line of github_deploy.pub... github-deploy' >> ~/.ssh/authorized_keys
   chmod 600 ~/.ssh/authorized_keys
   ```
 
-Check it from your computer (port **222** on Hetzner webhosting, usually 22
-on a VPS):
+Check it from your computer (port **222** on a Hetzner managed server,
+usually 22 on an unmanaged VPS):
 
 ```powershell
 ssh -i "$env:USERPROFILE\.ssh\github_deploy" -p 222 sociad@socialtrip.ro
@@ -134,7 +135,7 @@ logs: the host and user stay secrets, the server is reached as the alias
 | `production` (later) | the live store's folder | its URL | its admin URL |
 
 Add `DEPLOY_PORT` to an environment when SSH is not on port 22: **`222` on
-Hetzner webhosting**. For
+a Hetzner managed server**. For
 `production`, also set **Required reviewers** (you) and **Deployment branches
 and tags** → *Selected* → `main` and `v*` (tags are how you roll back).
 
