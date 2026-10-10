@@ -53,17 +53,42 @@ check verifies all of it.
 
 ## 2. Create the deploy key (once)
 
-On your computer (PowerShell or WSL):
+A key used only by GitHub, **without a passphrase** (GitHub cannot type one),
+in **OpenSSH format**. Not your own key, and not a PuTTY `.ppk` file: if you
+use PuTTY, keep your key for yourself and make this one separately.
 
-```bash
-ssh-keygen -t ed25519 -C "github-deploy" -N "" -f deploy_key
+On your computer, in PowerShell (Windows has `ssh-keygen` built in):
+
+```powershell
+ssh-keygen -t ed25519 -C "github-deploy" -f "$env:USERPROFILE\.ssh\github_deploy"
 ```
 
-- Add the content of `deploy_key.pub` to `~/.ssh/authorized_keys` of that user
-  on the server.
-- Check it works from your computer: `ssh -i deploy_key -p 22 user@host`.
-- Optional but recommended, to pin the server: `ssh-keyscan -p 22 host`
-  (its output is the secret `DEPLOY_KNOWN_HOSTS` below).
+Press **Enter twice** when it asks for a passphrase (leave it empty). It writes
+two files in `C:\Users\<you>\.ssh\`:
+
+- `github_deploy` — the **private** key. It starts with
+  `-----BEGIN OPENSSH PRIVATE KEY-----`. It goes into GitHub (step 3), nowhere else.
+- `github_deploy.pub` — the **public** key, one line starting with
+  `ssh-ed25519`. It goes on the server.
+
+Add the public key on the server, logged in as the site user (PuTTY, or the
+panel's terminal):
+
+```bash
+mkdir -p ~/.ssh && chmod 700 ~/.ssh
+echo 'ssh-ed25519 AAAA...the whole line of github_deploy.pub... github-deploy' >> ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+```
+
+Check it from your computer (same port as in PuTTY):
+
+```powershell
+ssh -i "$env:USERPROFILE\.ssh\github_deploy" -p 22 sociad@socialtrip.ro
+```
+
+It must log in **without asking for a password or passphrase**. Optional but
+recommended, to pin the server: `ssh-keyscan -p 22 socialtrip.ro` (its output
+is the secret `DEPLOY_KNOWN_HOSTS` below).
 
 ## 3. Set up GitHub (once)
 
@@ -73,7 +98,7 @@ store on the same VPS):
 
 | Secret | Value |
 |---|---|
-| `ARTIFACT_SSH_KEY` | the whole content of `deploy_key` (the private key) |
+| `ARTIFACT_SSH_KEY` | the whole content of `github_deploy` (the private key: open it in Notepad, copy from `-----BEGIN` to `-----END…-----`) |
 | `ARTIFACT_HOST` | the VPS host name or IP |
 | `ARTIFACT_USERNAME` | the user GitHub logs in as |
 | `DEPLOY_KNOWN_HOSTS` | *(optional)* the `ssh-keyscan` output: pins the server. Without it the key is trusted on first use, as in the tutorial, and its fingerprint is shown in each run's summary. |

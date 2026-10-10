@@ -60,8 +60,19 @@ runs:
         [[ "$port" =~ ^[0-9]+$ ]] || fail "DEPLOY_PORT must be a number."
 
         install -d -m 700 ~/.ssh
-        printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+        # A key copied on Windows may carry CR line endings: OpenSSH rejects them.
+        printf '%s\n' "$SSH_KEY" | tr -d '\r' > ~/.ssh/deploy_key
         chmod 600 ~/.ssh/deploy_key
+        if grep -q '^PuTTY-User-Key-File' ~/.ssh/deploy_key; then
+          fail "ARTIFACT_SSH_KEY is a PuTTY key (.ppk): GitHub needs an OpenSSH key, starting with -----BEGIN OPENSSH PRIVATE KEY-----. Create one without a passphrase (docs/DEPLOY.md, step 2)."
+        fi
+        if ! ssh-keygen -y -P '' -f ~/.ssh/deploy_key > /dev/null 2>&1; then
+          probe=$(ssh-keygen -y -P 'x' -f ~/.ssh/deploy_key 2>&1 || true)
+          if grep -q 'ENCRYPTED' ~/.ssh/deploy_key || [[ "$probe" == *passphrase* ]]; then
+            fail "ARTIFACT_SSH_KEY has a passphrase, which GitHub cannot type: use a key made for GitHub without one (docs/DEPLOY.md, step 2)."
+          fi
+          fail "ARTIFACT_SSH_KEY is not a usable private key: paste the whole private key file (not the .pub), from -----BEGIN to -----END."
+        fi
         if [ -n "$KNOWN_HOSTS" ]; then
           printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
         else
@@ -73,6 +84,8 @@ runs:
               why="ARTIFACT_HOST does not resolve to an address: check it is the server's name or IP address, spelled right."
             else
               rc=0
+              # Host and port go in as arguments, never into the code itself.
+              # shellcheck disable=SC2016
               timeout 15 bash -c 'exec 3<>"/dev/tcp/$1/$2"' _ "$host" "$port" 2>/dev/null || rc=$?
               if [ "$rc" -eq 124 ]; then
                 why="Port $port does not answer from GitHub (the connection times out): a firewall drops it (Hetzner Cloud Firewall, ufw, CSF...) or SSH listens on another port. Allow SSH on that port from any address (key login only), or set the right port as DEPLOY_PORT."
