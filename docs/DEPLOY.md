@@ -131,13 +131,16 @@ store on the same VPS):
 | `DEPLOY_KNOWN_HOSTS` | *(optional)* the key lines of `ssh-keyscan -p 222 …` (step 2): pins the server. Without it the key is trusted on first use, as in the tutorial, and its fingerprint is shown in each run's summary. |
 
 **One environment per store** — Settings → Environments → New environment.
-Each holds only variables (the repository is public, and so are the workflow
-logs: the host and user stay secrets, the server is reached as the alias
-`store` and never named in a log):
+Each holds only **variables**, not secrets: in the environment, *Environment
+variables* → **Add environment variable** (the workflows read these as
+variables, and a setting saved under *Environment secrets* is reported as
+misplaced). The repository is public, and so are the workflow logs: the host
+and user stay secrets, the server is reached as the alias `store` and never
+named in a log.
 
-| Environment | `DEPLOY_PATH` (variable) | `STORE_URL` | `STORE_ADMIN_URL` |
+| Environment | `DEPLOY_PATH` | `STORE_URL` | `STORE_ADMIN_URL` |
 |---|---|---|---|
-| `dev` | the CS-Cart folder of https://socialtrip.ro/dev/ on the VPS, e.g. `/var/www/socialtrip.ro/dev` | `https://socialtrip.ro/dev/` | `https://socialtrip.ro/dev/admin.php` (or the renamed admin script) |
+| `dev` | the CS-Cart folder of https://socialtrip.ro/dev/ on the server (where `config.php` is), e.g. `/usr/home/sociad/public_html/dev` | `https://socialtrip.ro/dev/` | `https://socialtrip.ro/dev/admin.php` (or the renamed admin script) |
 | `production` (later) | the live store's folder | its URL | its admin URL |
 
 Add `DEPLOY_PORT` to an environment when SSH is not on port 22: **`222` on
