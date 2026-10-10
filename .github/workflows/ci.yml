@@ -5,6 +5,8 @@ on:
     branches: ['**']
   pull_request:
     branches: [main]
+  # deploy.yml runs the whole suite again on the commit it is about to deploy.
+  workflow_call:
 
 jobs:
   # ── PHPStan (level 10 — zero errors outside baseline) ──

@@ -1,0 +1,103 @@
+name: Server check
+
+# Can GitHub Actions reach the store over SSH, and does the server have what
+# scripts/deploy-addons.sh needs? Actions -> Server check -> Run workflow,
+# pick the environment. It only reads: nothing on the server changes.
+#
+# The repository is public and so are these logs: the report never prints the
+# host, the user or the store path (they live in the environment's secrets).
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to check (holds the server's secrets)
+        type: environment
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: SSH and server readiness (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/deploy-ssh
+        with:
+          ssh-key: ${{ secrets.DEPLOY_SSH_KEY }}
+          known-hosts: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+
+      - name: Check the server
+        env:
+          DEPLOY_TARGET: ${{ secrets.DEPLOY_TARGET }}
+          DEPLOY_PORT: ${{ vars.DEPLOY_PORT }}
+        run: |
+          set -uo pipefail
+          if [[ ! "$DEPLOY_TARGET" =~ ^[^/:]+:/.+ ]]; then
+            echo "::error::Secret DEPLOY_TARGET must look like user@host:/absolute/path/to/cscart"
+            exit 1
+          fi
+          host=${DEPLOY_TARGET%%:*} root=${DEPLOY_TARGET#*:}
+          ssh_args=()
+          [ -z "$DEPLOY_PORT" ] || ssh_args+=(-p "$DEPLOY_PORT")
+
+          if ! ssh "${ssh_args[@]}" "$host" true; then
+            {
+              echo "## SSH from GitHub Actions: FAILED"
+              echo "GitHub's runner could not log in. Check, in this order:"
+              echo "1. From your own computer: \`ssh -i deploy_key -p PORT user@host\` logs in without a password."
+              echo "2. DEPLOY_KNOWN_HOSTS matches the server (\`ssh-keyscan -p PORT host\`)."
+              echo "3. The hosting does not limit SSH to some IP addresses: GitHub's runners use changing addresses."
+              echo "   If it does, use a self-hosted runner on an allowed machine, or deploy from your computer (docs/DEPLOY.md)."
+            } | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo "SSH from GitHub Actions: OK"
+
+          # The store path is quoted here, on purpose, for the remote shell.
+          # shellcheck disable=SC2029
+          ssh "${ssh_args[@]}" "$host" "bash -s -- $(printf '%q' "$root")" > report.txt <<'CHECK'
+          root=$1
+          fail=0
+          ok() { echo "| OK | $* |"; }
+          bad() { echo "| **MISSING** | $* |"; fail=1; }
+          warn() { echo "| note | $* |"; }
+          echo "| | |"
+          echo "|---|---|"
+          for tool in rsync tar gzip; do
+            if command -v "$tool" >/dev/null; then ok "$tool installed"; else bad "$tool is not installed (needed to deploy)"; fi
+          done
+          if command -v php >/dev/null; then
+            v=$(php -r 'echo PHP_VERSION;')
+            if php -r 'exit(version_compare(PHP_VERSION, "8.3.0", ">=") ? 0 : 1);'; then ok "PHP $v (command line)"; else bad "PHP $v on the command line: 8.3 or newer is needed"; fi
+          else
+            bad "php is not available on the command line (needed to back up the database)"
+          fi
+          if command -v mysqldump >/dev/null || command -v mariadb-dump >/dev/null; then ok "mysqldump installed (database backups)"; else bad "mysqldump is not installed (needed for the backup before each deploy)"; fi
+          if [ -f "$root/config.php" ] && [ -d "$root/app/addons" ]; then
+            ver=$(grep -oE "PRODUCT_VERSION', *'[^']+" "$root/config.php" | grep -oE "[0-9][0-9.]*$" || true)
+            ok "CS-Cart found at the store path${ver:+ (version $ver)}"
+            for d in app/addons design/backend/templates/addons js/addons var/langs; do
+              if [ -w "$root/$d" ]; then ok "can write $d"; else bad "the deploy user cannot write $d"; fi
+            done
+            for theme in responsive nova_theme; do
+              if [ -d "$root/design/themes/$theme" ]; then ok "theme $theme present"; fi
+            done
+          else
+            warn "no CS-Cart at the store path yet: install CS-Cart there before the first deploy"
+          fi
+          if mkdir -p ~/deploy-backups 2>/dev/null && [ -w ~/deploy-backups ]; then ok "backup folder ~/deploy-backups is writable"; else bad "cannot create ~/deploy-backups in the deploy user's home"; fi
+          case "$HOME/" in "$root"/*) bad "the deploy user's home is inside the store root: backups would be public" ;; esac
+          free=$(df -Pk "$HOME" 2>/dev/null | awk 'NR==2 {printf "%.1f", $4/1048576}')
+          [ -z "$free" ] || ok "free space for backups: ${free} GB"
+          exit $fail
+          CHECK
+          status=$?
+
+          { echo "## Server readiness: ${{ inputs.environment }}"; echo; cat report.txt; } | tee -a "$GITHUB_STEP_SUMMARY"
+          exit $status

@@ -1,0 +1,42 @@
+name: Deploy SSH
+description: >
+  SSH client set up for the deploy workflows: the environment's private key,
+  the server's pinned host key, no password prompts. The repository is public,
+  so its logs are too: nothing here prints the key, the host or the path.
+
+inputs:
+  ssh-key:
+    description: Private key of the deploy user (secret DEPLOY_SSH_KEY)
+    required: true
+  known-hosts:
+    description: The server's host key line(s), from ssh-keyscan (secret DEPLOY_KNOWN_HOSTS)
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Set up SSH
+      shell: bash
+      env:
+        SSH_KEY: ${{ inputs.ssh-key }}
+        KNOWN_HOSTS: ${{ inputs.known-hosts }}
+      run: |
+        set -euo pipefail
+        if [ -z "$SSH_KEY" ] || [ -z "$KNOWN_HOSTS" ]; then
+          echo "::error::Secrets DEPLOY_SSH_KEY and DEPLOY_KNOWN_HOSTS must be set on this environment (docs/DEPLOY.md, step 3)."
+          exit 1
+        fi
+        install -d -m 700 ~/.ssh
+        printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
+        printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+        cat > ~/.ssh/config <<'CONFIG'
+        Host *
+          IdentityFile ~/.ssh/deploy_key
+          IdentitiesOnly yes
+          StrictHostKeyChecking yes
+          BatchMode yes
+          ConnectTimeout 20
+          ServerAliveInterval 15
+          LogLevel ERROR
+        CONFIG

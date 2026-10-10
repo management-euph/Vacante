@@ -15,14 +15,18 @@ current schema** — no upgrade items or migrations need to be applied.
 
 ## 2. Deploy the addon files
 
-**Use `scripts/deploy-addons.sh`** (rsync over SSH). It deploys the committed
+**Production: use the Deploy workflow** (GitHub Actions; backup, deploy,
+smoke test). Setting it up, first install, releases and rollback:
+[`docs/DEPLOY.md`](DEPLOY.md). It runs the script below, which also works by hand.
+
+**By hand: `scripts/deploy-addons.sh`** (rsync over SSH). It deploys the committed
 `main` and deletes, inside each add-on's own folders only, the files a release
 removed — which "Upload & install" and FTP never do:
 
 ```bash
 git checkout main && git pull
 bash scripts/deploy-addons.sh user@host:/var/www/cscart              # dry run: lists every copy and deletion
-bash scripts/deploy-addons.sh user@host:/var/www/cscart --go --clear-cache
+bash scripts/deploy-addons.sh user@host:/var/www/cscart --go --backup --clear-cache
 ```
 
 Add `--addons travel_core,novoton_holidays,sphinx_holidays,fgo_invoicing,eurosite`
