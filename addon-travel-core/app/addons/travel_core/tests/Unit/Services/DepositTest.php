@@ -121,6 +121,30 @@ final class DepositTest extends TestCase
         self::assertSame([], DepositCartLine::totals(['b' => $products['b']], 20.0), 'no deposit line: nothing to add');
     }
 
+    /**
+     * REGRESSION (second review): the order page summary still said "Balance
+     * — by date, pay it later from the link" for a cancelled booking whose
+     * card read "Cancelled". It counts only what each card shows as owed.
+     */
+    public function testAPlacedOrdersSummaryCountsOnlyTheBalancesStillOwed(): void
+    {
+        $line = static fn (string $item, float $balance, string $due): array => ['item_id' => $item, 'extra' => ['travel_deposit' => [
+            'ratio' => 0.3, 'balance_due' => $due, 'full' => $balance / 0.7, 'deposit' => $balance / 0.7 * 0.3, 'balance' => $balance,
+        ]]];
+        $products = [
+            $line('1', 4466.0, '2026-10-26'),
+            $line('2', 700.0, '2026-11-02'),
+            ['item_id' => '3', 'extra' => []],
+        ];
+        $states = static fn (array $byItem): \Closure => static fn (array $l): string => $byItem[$l['item_id']] ?? '';
+
+        self::assertSame(['balance' => 5166.0, 'balance_due' => '2026-11-02'], DepositCartLine::openBalance($products, $states(['1' => 'open', '2' => 'overdue'])));
+        self::assertSame(['balance' => 4466.0, 'balance_due' => '2026-10-26'], DepositCartLine::openBalance($products, $states(['1' => 'open', '2' => 'cancelled'])));
+        self::assertSame(['balance' => 0.0, 'balance_due' => ''], DepositCartLine::openBalance($products, $states(['1' => 'paid', '2' => 'cancelled'])));
+        // A card that could not be built keeps the line's balance.
+        self::assertSame(5166.0, DepositCartLine::openBalance($products, $states([]))['balance']);
+    }
+
     public function testTheSummaryIsHookedIntoCartCheckoutAndOrderPages(): void
     {
         $t = dirname(__DIR__, 7) . '/addon-travel-core/design/themes/responsive/templates/addons/travel_core/';
@@ -128,8 +152,15 @@ final class DepositTest extends TestCase
             $src = (string) file_get_contents($t . $hook);
             self::assertStringContainsString('components/deposit_totals.tpl" dt_products=' . $var . '.products dt_charged=' . $var . '.total', $src, $hook);
         }
+        // The order page: the deposit is paid; only the balance still owed.
+        $orderHook = (string) file_get_contents($t . 'hooks/orders/details.post.tpl');
+        self::assertStringContainsString('{$dt_open = fn_travel_core_order_open_balance($order_info)}', $orderHook);
+        self::assertStringContainsString('dt_order=$dt_open}', $orderHook);
         $partial = (string) file_get_contents($t . 'components/deposit_totals.tpl');
         self::assertStringContainsString('fn_travel_core_deposit_totals(', $partial);
-        self::assertLessThan(strpos($partial, 'deposit_paid_now")}</span>'), strpos($partial, 'deposit_order_total'), 'full total first');
+        self::assertLessThan(strpos($partial, 'deposit_paid_now")}{/if}</span>'), strpos($partial, 'deposit_order_total'), 'full total first');
+        // The checkout note and the relabelling script are the checkout's only.
+        self::assertMatchesRegularExpression('/\{if !\$dt_placed\}\s*<div class="travel-deposit-totals__row">.*deposit_cart_note.*\{elseif \$dt_placed\.balance > 0\}/s', $partial);
+        self::assertStringContainsString('{if !$dt_placed}{script src="js/addons/travel_core/deposit-totals.js"}{/if}', $partial);
     }
 }

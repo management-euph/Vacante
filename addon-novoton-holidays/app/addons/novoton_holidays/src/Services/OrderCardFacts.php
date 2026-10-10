@@ -92,22 +92,28 @@ final class OrderCardFacts
 
     /**
      * The offer's remark as plain text. Novoton sends it with its markup
-     * escaped and the ampersands lost ("lt;pgt;Late check-inlt;/pgt;", " amp; "),
-     * sometimes properly escaped ("B&amp;B", "&gt; 20m2"): drop the tags in
-     * either form — a paragraph or line break leaves a space — and decode the
-     * rest. Only a known tag name closed by "gt;" is markup, and "amp;" only
-     * where no letter precedes it, so "1 adult; children free" and "camp;"
-     * stay as written.
+     * escaped and the ampersands lost ("lt;pgt;Late check-inlt;/pgt;",
+     * "Bamp;B", "Copii gt; 12 ani"), sometimes properly escaped ("B&amp;B",
+     * "&lt;br /&gt;"): drop the tags in either form — a paragraph or line
+     * break leaves a space — and decode the rest. Only a known tag name
+     * closed by "gt;" is markup; "amp;" is an ampersand on its own or
+     * between two words' letters, and "lt;"/"gt;" on their own between
+     * spaces, so "1 adult; children free" and "beach camp; quiet" stay as
+     * written.
      */
     public static function plainText(mixed $value): string
     {
         $tag = self::tagGap(...);
         $text = (string) preg_replace_callback(
-            '/lt;\/?(' . self::BLOCK_TAGS . '|' . self::INLINE_TAGS . ')(?=[\s\/]|gt;)[^<>]{0,200}?gt;/i',
+            '/(?<!&)lt;\/?(' . self::BLOCK_TAGS . '|' . self::INLINE_TAGS . ')(?=[\s\/]|gt;)[^<>]{0,200}?gt;/i',
             $tag,
             TypeCoerce::toString($value),
         );
-        $text = (string) preg_replace('/(?<![\p{L}\p{N}&])amp;/u', '&', $text);
+        $text = (string) preg_replace(
+            ['/(?<![\p{L}\p{N}&])amp;|(?<=[\p{L}\p{N}])amp;(?=[\p{L}\p{N}])/u', '/(?<=\s)gt;(?=\s)/u', '/(?<=\s)lt;(?=\s)/u'],
+            ['&', '>', '<'],
+            $text,
+        );
         $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
         $text = (string) preg_replace_callback('/<\/?([a-z][a-z0-9]*)\b[^<>]*>/i', $tag, $text);
 

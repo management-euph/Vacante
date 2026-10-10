@@ -126,7 +126,7 @@ final class OrderBookingCardFactoryTest extends TestCase
         );
 
         self::assertSame('customer', $card['audience']);
-        self::assertSame([], $card['provider']);
+        self::assertSame(['code' => '', 'name' => ''], $card['provider']);
         self::assertSame('', $card['reference']);
         self::assertSame('', $card['our_reference']);
         self::assertSame(0, $card['booking_id']);
@@ -419,6 +419,35 @@ final class OrderBookingCardFactoryTest extends TestCase
         self::assertSame('', $headline([], 'completed'));
         self::assertSame('', $headline(['check_in' => self::TODAY, 'check_out' => '2026-10-14'], 'confirmed'));
         self::assertSame('', $headline(['check_in' => '2026-10-01', 'check_out' => '2026-10-07'], 'confirmed'));
+    }
+
+    public function testAFinishedTripsScheduleMarksNoStepAsToday(): void
+    {
+        // REGRESSION (second review): the headline went, but the schedule
+        // still tagged a step "today" ("Until check-in · Today 100%", or
+        // "Free cancellation · Today" on a cancelled booking).
+        $terms = [
+            'cancel_windows' => [['from' => '2026-08-01', 'percent' => 50], ['from' => '2026-09-01', 'percent' => 100]],
+            'payment_rows' => [['due' => null, 'percent' => 100]],
+        ];
+        $cases = [
+            'completed' => [['check_in' => '2026-09-20', 'check_out' => '2026-09-27'], 'completed'],
+            'started' => [['check_in' => '2026-10-07', 'check_out' => '2026-10-14'], 'confirmed'],
+            'cancelled' => [[], 'cancelled'],
+        ];
+
+        foreach ($cases as $name => [$extra, $status]) {
+            $admin = self::factory()->build(self::item($extra), 'admin', self::booking(['status' => $status]), [], [], $terms);
+            $customer = self::factory()->build(self::item($extra), 'customer', self::booking(['status' => $status]), [], [], $terms);
+
+            self::assertNotSame([], $admin['terms']['cancel_steps'], $name . ': the admin keeps the schedule');
+            self::assertNotContains(true, array_column($admin['terms']['cancel_steps'], 'is_current'), $name);
+            self::assertSame([], $customer['terms']['cancel_steps'], $name);
+            self::assertSame($status !== 'cancelled', $customer['has_terms'], $name . ': payment terms only');
+        }
+
+        $ahead = self::factory()->build(self::item(), 'customer', self::booking(), [], [], $terms);
+        self::assertContains(true, array_column($ahead['terms']['cancel_steps'], 'is_current'), 'a trip ahead keeps "today"');
     }
 
     public function testAPackagesRawApiRoomsKeepTheirNames(): void
