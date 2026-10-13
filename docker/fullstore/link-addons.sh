@@ -40,6 +40,8 @@ declare -A ADDONS=(
     # Payment methods -> add a method with processor "Netopia Payments" and
     # fill in its sandbox signature/API key there (never in the repo).
     [netopia_payments]=addon-netopia-payments-main
+    # Profile types for customers and vendors: install it from Add-ons.
+    [euph_profile_types]=Addon-euph-profile_types
 )
 
 # Addons that ship templates for the responsive theme only: link those into
@@ -47,6 +49,7 @@ declare -A ADDONS=(
 # addons keep real nova_theme copies, see scripts/mirror-themes.php).
 declare -A RESPONSIVE_ONLY=(
     [netopia_payments]=1
+    [euph_profile_types]=1
 )
 
 link() { # $1 = source under /repo, $2 = destination under docroot

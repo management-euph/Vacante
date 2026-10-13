@@ -1,0 +1,47 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Profile type card — Rules</title><link rel="stylesheet" href="admin.css"></head>
+<body><div class="wrap">
+<!--#top-->
+<div class="subnav"><a>Customers</a><a>Administrators</a><a>User groups</a><a>Profile fields</a><a class="active">Profile types</a></div>
+<div class="page">
+  <div class="main">
+    <div class="titlebar">
+      <h1>Profile type: Travel agency</h1><span class="lang">EN ▾</span>
+      <div class="actions"><span class="btn">Cancel</span><span class="btn btn-primary">Save</span></div>
+    </div>
+    <div class="content form">
+      <div class="tabs"><a>General</a><a class="active">Rules</a><a>Fields</a></div>
+
+      <div class="subheader">User groups <span class="mark">1</span></div>
+      <div class="control-group"><div class="control-label">Grants user groups:</div><div class="controls" style="padding-top:4px">
+        <label class="check-line"><input type="checkbox" checked>Agents · net rates</label>
+        <label class="check-line"><input type="checkbox" checked>B2B</label>
+        <label class="check-line"><input type="checkbox">Corporate rates</label>
+        <label class="check-line"><input type="checkbox">Wholesale</label>
+        <p class="description">A customer of this type joins these groups: wholesale prices and terms come with the type, not by hand. On a change of type the customer moves to the groups of the new type.</p>
+      </div></div>
+
+      <div class="subheader">Account activation <span class="mark">2</span></div>
+      <div class="control-group"><div class="control-label">New accounts:</div><div class="controls" style="padding-top:4px">
+        <label class="check-line"><input type="radio" name="a">As the store setting says</label>
+        <label class="check-line"><input type="radio" name="a">Activated at once</label>
+        <label class="check-line"><input type="radio" name="a" checked>Wait for approval</label>
+        <p class="description">Accounts registered on the storefront. The store setting is "Administrator must activate new user accounts".</p>
+      </div></div>
+
+      <div class="subheader">Storefronts <span class="mark">3</span></div>
+      <div class="control-group"><div class="control-label">Works on:</div><div class="controls" style="padding-top:4px">
+        <label class="check-line"><input type="checkbox">vacantelitoral.ro</label>
+        <label class="check-line"><input type="checkbox" checked>b2b.vacantelitoral.ro</label>
+        <p class="description">None ticked: every storefront. The type is offered only where it works; with the login rule on, its customers sign in only there.</p>
+      </div></div>
+    </div>
+  </div>
+</div>
+<div class="legend">
+  <div><span class="mark">1</span><span>Group status after joining comes from the setting "Group status after changing profile type": Active or Pending.</span></div>
+  <div><span class="mark">2</span><span>Per type: an agency waits for approval while private persons are activated as the store usually does.</span></div>
+  <div><span class="mark">3</span><span>Multi-storefront stores (Ultimate, Multi-Vendor Plus/Ultimate): the type is used only on the ticked storefronts.</span></div>
+  <div><span class="mark" style="background:#cfd8e3;box-shadow:none">i</span><span>Vendor types have a "Vendor plans" block here instead of activation: the plans an applicant of the type can choose.</span></div>
+</div>
+<span class="mockup-tag">MOCKUP</span>
+</div></body></html>

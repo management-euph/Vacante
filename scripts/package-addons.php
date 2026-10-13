@@ -33,6 +33,8 @@ $addons = [
     // Not packaged by default: an MVP outside the CI gates. Request it
     // explicitly (`php scripts/package-addons.php eurosite`) when needed.
     'eurosite' => 'addon-eurosite',
+    // Not packaged by default either: `php scripts/package-addons.php euph_profile_types`.
+    'euph_profile_types' => 'Addon-euph-profile_types',
 ];
 $defaultIds = ['travel_core', 'novoton_holidays', 'sphinx_holidays', 'fgo_invoicing'];
 

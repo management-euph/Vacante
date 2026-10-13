@@ -1,0 +1,57 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Checkout with type choice</title><link rel="stylesheet" href="storefront.css">
+<style>.co { display:grid; grid-template-columns: minmax(0,1fr) 340px; gap: 30px; } .step { border:1px solid #e3e6ea; border-radius:4px; padding: 18px 20px; margin-bottom: 16px; } .step h3 { margin:0 0 14px; font-size:17px; font-weight:700; display:flex; gap:10px; align-items:center; } .num { width:24px; height:24px; border-radius:50%; background:var(--brand); color:#fff; font-size:13px; display:inline-flex; align-items:center; justify-content:center; } .sum { border:1px solid #e3e6ea; border-radius:4px; padding:18px 20px; background:#fafbfc; } .line { display:flex; justify-content:space-between; margin:8px 0; font-size:13px; } .total { border-top:1px solid #e3e6ea; margin-top:12px; padding-top:12px; font-size:18px; font-weight:700; display:flex; justify-content:space-between; } .pay label { display:flex; gap:8px; align-items:center; border:1px solid #e3e6ea; border-radius:3px; padding:10px 12px; margin-bottom:8px; } .pay label.on { border-color: var(--brand); background:#f2f8fd; }</style></head>
+<body><div class="wrap">
+<!--#sftop-->
+<div class="container">
+  <div class="breadcrumbs"><a>Home</a> › Checkout</div>
+  <h1 class="title">Checkout</h1>
+  <div class="co">
+    <div>
+      <div class="step">
+        <h3><span class="num">1</span>Customer information <span class="mark">2</span></h3>
+        <div class="choice">
+          <label class="ty-control-group__title req">Profile type <span class="mark">1</span></label>
+          <div class="options"><label class="opt"><input type="radio" name="t">Private person</label><label class="opt"><input type="radio" name="t" checked>Company</label></div>
+        </div>
+        <div class="grid2">
+          <div class="ty-control-group"><label class="ty-control-group__title req">First name</label><input class="ty-input" value="Andrei"></div>
+          <div class="ty-control-group"><label class="ty-control-group__title req">Last name</label><input class="ty-input" value="Ionescu"></div>
+          <div class="ty-control-group"><label class="ty-control-group__title req">E-mail</label><input class="ty-input" value="andrei@litoralturism.ro"></div>
+          <div class="ty-control-group"><label class="ty-control-group__title req">Phone</label><input class="ty-input" value="+40 722 123 456"></div>
+          <div class="ty-control-group"><label class="ty-control-group__title req">Company name</label><input class="ty-input" value="Litoral Turism SRL"></div>
+          <div class="ty-control-group"><label class="ty-control-group__title req">Tax number (CUI)</label><input class="ty-input" value="RO12345678"></div>
+        </div>
+      </div>
+      <div class="step">
+        <h3><span class="num">2</span>Billing address</h3>
+        <div class="grid2">
+          <div class="ty-control-group"><label class="ty-control-group__title req">Address</label><input class="ty-input" value="Str. Mircea cel Bătrân 10"></div>
+          <div class="ty-control-group"><label class="ty-control-group__title req">City</label><input class="ty-input" value="Constanța"></div>
+        </div>
+      </div>
+      <div class="step pay">
+        <h3><span class="num">3</span>Payment</h3>
+        <label class="on"><input type="radio" name="p" checked>Bank transfer — invoice on the company</label>
+        <p class="prefilled-summary">Taken from your profile: Company name, Tax number (CUI), Trade register no., Address <span class="mark">3</span></p>
+        <label><input type="radio" name="p">Card online (Netopia)</label>
+      </div>
+    </div>
+    <div>
+      <div class="sum">
+        <b>Your order</b>
+        <div class="line"><span>Hotel Malibu, Mamaia — 3 nights</span><span>1 450,00 lei</span></div>
+        <div class="line"><span>Airport transfer Constanța</span><span>120,00 lei</span></div>
+        <div class="total"><span>Total</span><span>1 570,00 lei</span></div>
+        <div style="margin-top:16px"><span class="btn-cta" style="display:block;text-align:center">Place order</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="legend">
+  <div><span class="mark">1</span><span>The type is <b>chosen right at checkout, by a guest as well</b> (setting: everybody, guests only or nobody). Without the choice a signed-in customer orders with the type of their profile.</span></div>
+  <div><span class="mark">2</span><span>The customer blocks of the checkout use the <b>"By profile type" filling</b>: they show the fields of the chosen type, required as that type says.</span></div>
+  <div><span class="mark">3</span><span>Russian Payments, "Issue an invoice": with <b>"Do not ask again for invoice details taken from the profile"</b> the details the profile holds are filled in and their inputs hidden; one line says what was taken.</span></div>
+</div>
+<div class="footer"><span>© 2026 VacanteLitoral.ro</span><span>Terms</span><span>Privacy</span></div>
+<span class="mockup-tag">MOCKUP</span>
+</div></body></html>

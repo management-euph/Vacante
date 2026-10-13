@@ -1,0 +1,55 @@
+// Profile types: storefront.
+//
+// The type choice is a profile field CS-Cart draws itself (radio buttons or
+// a drop-down); its wrapper carries the class euph-pt-choice.
+
+.euph-pt-choice {
+    margin-bottom: 18px;
+
+    input[type="radio"] {
+        margin-right: 6px;
+    }
+
+    // Radio buttons side by side, each option a pill.
+    .radio,
+    label.radio,
+    .ty-profile-field__radio {
+        display: inline-block;
+        margin: 0 14px 6px 0;
+    }
+}
+
+// While the form is redrawn for another type.
+.euph-pt-redrawing {
+    opacity: .55;
+    pointer-events: none;
+    transition: opacity .15s ease-in-out;
+}
+
+// Invoice details already taken from the profile (Russian Payments).
+.euph-pt-prefilled {
+    display: none;
+}
+
+.euph-pt-prefilled-summary {
+    margin: 6px 0 12px;
+    color: #6b7785;
+    font-size: 13px;
+
+    strong {
+        color: #333;
+    }
+}
+
+// Product page, Multi-Vendor: the vendor type next to the vendor's name.
+.euph-pt-vendor-type {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 8px;
+    border-radius: 10px;
+    background: #eef3fb;
+    color: #31445a;
+    font-size: 12px;
+    line-height: 18px;
+    vertical-align: middle;
+}

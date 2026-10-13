@@ -1,0 +1,217 @@
+<?xml version="1.0"?>
+<addon scheme="3.0">
+    <id>euph_profile_types</id>
+    <version>2.2.0</version>
+    <priority>5000</priority>
+    <position>100</position>
+    <status>active</status>
+    <default_language>en</default_language>
+    <has_icon>Y</has_icon>
+    <!-- Profile types for customers and vendors: each type gets its own set of
+         profile fields, its own user groups and its own rules.
+
+         The <name> children of the settings below are the fallback labels:
+         CS-Cart takes a setting's label from the language pack
+         (var/langs/<lang>/addons/euph_profile_types.po) and falls back to
+         <name> when the pack is missing, so the settings form never renders
+         with blank labels. -->
+
+    <authors>
+        <author>
+            <name>VacanteLitoral.ro</name>
+            <email>office@VacanteLitoral.ro</email>
+            <url>https://vacantelitoral.ro</url>
+        </author>
+    </authors>
+    <supplier>VacanteLitoral.ro</supplier>
+    <supplier_link>https://vacantelitoral.ro</supplier_link>
+
+    <!-- No <core_edition>: CS-Cart, CS-Cart Ultimate, Multi-Vendor and
+         Multi-Vendor Plus/Ultimate. No <max>: newer cores are not refused. -->
+    <compatibility>
+        <core_version>
+            <min>4.21.2</min>
+        </core_version>
+        <php_version>
+            <min>8.3.0</min>
+        </php_version>
+    </compatibility>
+
+    <settings edition_type="ROOT,ULT:VENDOR">
+        <sections>
+            <section id="general">
+                <name>General</name>
+                <items>
+                    <item id="header_scope">
+                        <name>Profile types</name>
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="types_for">
+                        <name>Use profile types for</name>
+                        <type>selectbox</type>
+                        <default_value>both</default_value>
+                        <variants>
+                            <item id="customers"><name>Customers</name></item>
+                            <item id="vendors"><name>Vendors</name></item>
+                            <item id="both"><name>Customers and vendors</name></item>
+                        </variants>
+                    </item>
+                    <item id="type_change">
+                        <name>Allow user to change type after registration</name>
+                        <type>selectbox</type>
+                        <default_value>never</default_value>
+                        <variants>
+                            <item id="always"><name>Always</name></item>
+                            <item id="once"><name>One change</name></item>
+                            <item id="never"><name>Never</name></item>
+                        </variants>
+                    </item>
+                    <item id="group_status">
+                        <name>Group status after changing profile type</name>
+                        <type>selectbox</type>
+                        <default_value>A</default_value>
+                        <variants>
+                            <item id="A"><name>Active</name></item>
+                            <item id="P"><name>Pending</name></item>
+                        </variants>
+                    </item>
+
+                    <item id="header_storefront">
+                        <name>Storefront</name>
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="hide_standard_types">
+                        <name>Hide standard types from the choice on the storefront</name>
+                        <type>checkbox</type>
+                        <default_value>N</default_value>
+                        <variants/>
+                    </item>
+                    <item id="choice_view">
+                        <name>Profile type choice view</name>
+                        <type>selectbox</type>
+                        <default_value>radio</default_value>
+                        <variants>
+                            <item id="radio"><name>Radio buttons</name></item>
+                            <item id="select"><name>Drop-down</name></item>
+                        </variants>
+                    </item>
+                    <item id="reload_on_change">
+                        <name>Reload the page when the type is changed</name>
+                        <type>checkbox</type>
+                        <default_value>N</default_value>
+                        <variants/>
+                    </item>
+                    <item id="restrict_login">
+                        <name>Let customers sign in only on the storefronts of their profile type</name>
+                        <type>checkbox</type>
+                        <default_value>N</default_value>
+                        <variants/>
+                    </item>
+
+                    <item id="header_checkout">
+                        <name>Checkout</name>
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="checkout_choice">
+                        <name>Profile type choice at checkout</name>
+                        <type>selectbox</type>
+                        <default_value>all</default_value>
+                        <variants>
+                            <item id="all"><name>Everybody</name></item>
+                            <item id="guests"><name>Guests only</name></item>
+                            <item id="none"><name>Nobody</name></item>
+                        </variants>
+                    </item>
+                    <item id="invoice_details_from_profile">
+                        <name>Do not ask again for invoice details taken from the profile</name>
+                        <type>checkbox</type>
+                        <default_value>N</default_value>
+                        <variants/>
+                    </item>
+
+                    <item id="header_vendors">
+                        <name>Multi-Vendor</name>
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="vendor_type_in_product">
+                        <name>Use the name of the profile type in the vendor information</name>
+                        <type>checkbox</type>
+                        <default_value>N</default_value>
+                        <variants/>
+                    </item>
+                </items>
+            </section>
+        </sections>
+    </settings>
+
+    <!-- Tables only. The type columns of users, orders and companies are added
+         and dropped by fn_euph_profile_types_install()/_uninstall(), which
+         check that a column exists first: a reinstall after an interrupted
+         uninstall must not fail on "Duplicate column". -->
+    <queries>
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:euph_profile_types` (
+                `type_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                `code` varchar(32) NOT NULL DEFAULT '',
+                `user_type` char(1) NOT NULL DEFAULT 'C' COMMENT 'C customers, V vendors',
+                `status` char(1) NOT NULL DEFAULT 'A' COMMENT 'A active, H only by a registration link, D disabled',
+                `position` int(11) NOT NULL DEFAULT 0,
+                `is_default` char(1) NOT NULL DEFAULT 'N',
+                `is_standard` char(1) NOT NULL DEFAULT 'N' COMMENT 'Y for the two types created at install',
+                `activation` char(1) NOT NULL DEFAULT 'S' COMMENT 'S store setting, A at once, P after approval',
+                PRIMARY KEY (`type_id`),
+                UNIQUE KEY `code` (`code`),
+                KEY `user_type` (`user_type`, `status`, `position`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Profile types'
+        </item>
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:euph_profile_type_descriptions` (
+                `type_id` int(11) unsigned NOT NULL,
+                `lang_code` char(2) NOT NULL DEFAULT '',
+                `name` varchar(255) NOT NULL DEFAULT '',
+                `description` text NULL,
+                PRIMARY KEY (`type_id`, `lang_code`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Profile type names per language'
+        </item>
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:euph_profile_type_fields` (
+                `type_id` int(11) unsigned NOT NULL,
+                `field_id` int(11) unsigned NOT NULL COMMENT 'profile_fields.field_id',
+                `profile_show` char(1) NOT NULL DEFAULT 'N',
+                `profile_required` char(1) NOT NULL DEFAULT 'N',
+                `registration_show` char(1) NOT NULL DEFAULT 'N',
+                `checkout_show` char(1) NOT NULL DEFAULT 'N',
+                `checkout_required` char(1) NOT NULL DEFAULT 'N',
+                `storefront_show` char(1) NOT NULL DEFAULT 'N',
+                PRIMARY KEY (`type_id`, `field_id`),
+                KEY `field_id` (`field_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Per-type show/require flags of the common profile fields'
+        </item>
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:euph_profile_type_links` (
+                `type_id` int(11) unsigned NOT NULL,
+                `object_type` char(1) NOT NULL COMMENT 'G user group, S storefront, P vendor plan',
+                `object_id` int(11) unsigned NOT NULL,
+                PRIMARY KEY (`type_id`, `object_type`, `object_id`),
+                KEY `object` (`object_type`, `object_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='User groups, storefronts and vendor plans of a profile type'
+        </item>
+        <item for="install">REPLACE INTO ?:privileges (privilege, is_default, section_id, group_id, is_view) VALUES ('view_euph_profile_types', 'Y', 'addons', 'euph_profile_types', 'Y')</item>
+        <item for="install">REPLACE INTO ?:privileges (privilege, is_default, section_id, group_id, is_view) VALUES ('manage_euph_profile_types', 'Y', 'addons', 'euph_profile_types', 'N')</item>
+
+        <item for="uninstall">DROP TABLE IF EXISTS `?:euph_profile_types`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:euph_profile_type_descriptions`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:euph_profile_type_fields`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:euph_profile_type_links`</item>
+        <item for="uninstall">DELETE FROM ?:privileges WHERE privilege IN ('view_euph_profile_types', 'manage_euph_profile_types')</item>
+    </queries>
+
+    <functions>
+        <item for="install">fn_euph_profile_types_install</item>
+        <item for="uninstall">fn_euph_profile_types_uninstall</item>
+    </functions>
+</addon>

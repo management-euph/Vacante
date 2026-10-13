@@ -1,0 +1,86 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Profile types — list</title><link rel="stylesheet" href="admin.css"></head>
+<body><div class="wrap">
+<!--#top-->
+<div class="subnav"><a>Customers</a><a>Administrators</a><a>User groups</a><a>Profile fields</a><a class="active">Profile types</a></div>
+<div class="page">
+  <div class="main">
+    <div class="titlebar">
+      <h1>Customer profile types</h1><span class="lang">EN ▾</span>
+      <div class="actions"><span class="btn btn-icon">⚙ ▾</span><span class="btn btn-primary">Save</span><span class="btn">+ Add profile type</span></div>
+    </div>
+    <div class="content">
+      <div class="tabs"><a class="active">Customer profile types</a><a>Vendor profile types</a></div>
+      <table class="table">
+        <thead><tr>
+          <th style="width:28px"><input type="checkbox"></th><th>Pos.</th><th>Name</th><th class="center">Default <span class="mark">3</span></th><th class="center">Customers</th><th>User groups <span class="mark">2</span></th><th>Storefronts <span class="mark">4</span></th><th>Activation</th><th></th><th class="right">Status</th>
+        </tr></thead>
+        <tbody>
+          <tr>
+            <td></td><td><input type="text" class="w-micro" value="0"></td>
+            <td><a class="name">Private person</a><span class="code">U</span><span class="label">standard</span><div class="description">Everybody until they choose another type.</div></td>
+            <td class="center"><input type="radio" name="d" checked></td>
+            <td class="center"><span class="count">1 284</span></td>
+            <td><span class="muted">—</span></td>
+            <td><span class="muted">All storefronts</span></td>
+            <td><span class="muted">As the store setting says</span></td>
+            <td class="center muted">⋯</td>
+            <td class="right"><span class="status">Active</span></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox"></td><td><input type="text" class="w-micro" value="10"></td>
+            <td><a class="name">Company</a><span class="code">B</span> <span class="mark">1</span><div class="description">Legal entities: VAT invoice, tax number, trade register.</div></td>
+            <td class="center"><input type="radio" name="d"></td>
+            <td class="center"><span class="count">312</span></td>
+            <td><span class="chip">Corporate rates</span></td>
+            <td><span class="muted">All storefronts</span></td>
+            <td>Wait for approval</td>
+            <td class="center muted">⋯</td>
+            <td class="right"><span class="status">Active</span></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox"></td><td><input type="text" class="w-micro" value="20"></td>
+            <td><a class="name">Travel agency</a><span class="code">AG</span><div class="description">Partner agencies. Registration by link only.</div></td>
+            <td class="center"><input type="radio" name="d"></td>
+            <td class="center"><span class="count">27</span></td>
+            <td><span class="chip">Agents · net rates</span><span class="chip">B2B</span></td>
+            <td><span class="chip">b2b.vacantelitoral.ro</span></td>
+            <td>Wait for approval</td>
+            <td class="center muted">⋯</td>
+            <td class="right"><span class="status hidden">Hidden</span></td>
+          </tr>
+          <tr class="dim">
+            <td><input type="checkbox"></td><td><input type="text" class="w-micro" value="30"></td>
+            <td><a class="name" style="color:#9aa5b1">Non-profit</a><span class="code">NP</span></td>
+            <td class="center"><input type="radio" name="d"></td>
+            <td class="center"><span class="count">4</span></td>
+            <td><span class="chip">NGO</span></td>
+            <td><span class="muted">All storefronts</span></td>
+            <td>Activated at once</td>
+            <td class="center muted">⋯</td>
+            <td class="right"><span class="status disabled">Disabled</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="sidebar">
+    <div class="sidebar-row">
+      <h6>How it works</h6>
+      <p>Profile fields stay one common list: each field gets show/require checkboxes per type, so a value survives a change of type and reports see one and the same field. A type grants user groups and works on the storefronts you choose.</p>
+    </div>
+    <hr>
+    <ul>
+      <li><a>Profile fields</a></li>
+      <li><a>Add-on settings</a></li>
+      <li><a>User groups</a></li>
+    </ul>
+  </div>
+</div>
+<div class="legend">
+  <div><span class="mark">1</span><span>The <b>code</b> is kept with customers and orders and goes into registration links: <code>?dispatch=profiles.add&amp;euph_profile_type=B</code>.</span></div>
+  <div><span class="mark">2</span><span>A type <b>grants user groups</b>: a company or an agency gets its prices and terms by type, not by hand.</span></div>
+  <div><span class="mark">3</span><span>The <b>default type</b> is what guests and accounts nobody chose a type for get.</span></div>
+  <div><span class="mark">4</span><span>A type works on <b>selected storefronts</b>; with the login rule on, its customers sign in only there.</span></div>
+</div>
+<span class="mockup-tag">MOCKUP</span>
+</div></body></html>
