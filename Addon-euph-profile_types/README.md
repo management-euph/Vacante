@@ -184,8 +184,17 @@ Which details are taken depends on the profile fields mapped in the payment meth
 
 **Uninstall:**
 
-- drops the add-on's four tables and the type columns of customers, orders and vendors;
-- **keeps the profile fields**, their values and their general checkboxes.
+- drops the add-on's four tables and the type columns of customers, orders and vendors (the type of each customer, vendor and order goes with them);
+- removes its two privileges and their grants to administrator user groups;
+- gives the checkout blocks back the filling they had; CS-Cart removes the add-on's settings and texts;
+- **keeps the profile fields**, their values and their general checkboxes. The add-on never creates or deletes a field nor writes its checkboxes, and replaces no CS-Cart template: the *Profile fields* list is CS-Cart's own again, each field working by its own checkboxes;
+- keeps what belongs to CS-Cart: the customers' user groups, and the fields and values imported from 1.x.
+
+Before uninstalling:
+
+- **disable** the add-on first: the list then shows each field's own checkboxes, which is what every customer gets after the uninstall; adjust them there;
+- export the customers and orders with their *Profile type* column if you want to keep a record of the types;
+- take the add-on's placeholders (`{{ user.profile_type }}`…) out of the document and e-mail templates you added them to.
 
 ## Moving from `cp_profile_types` 1.x
 

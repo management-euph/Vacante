@@ -209,6 +209,8 @@
         <item for="uninstall">DROP TABLE IF EXISTS `?:euph_profile_type_fields`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:euph_profile_type_links`</item>
         <item for="uninstall">DELETE FROM ?:privileges WHERE privilege IN ('view_euph_profile_types', 'manage_euph_profile_types')</item>
+        <!-- Their grants to administrator user groups, which a reinstall would bring back. -->
+        <item for="uninstall">DELETE FROM ?:usergroup_privileges WHERE privilege IN ('view_euph_profile_types', 'manage_euph_profile_types')</item>
     </queries>
 
     <functions>

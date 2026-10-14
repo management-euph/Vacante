@@ -82,6 +82,25 @@ final class AddonXmlTest extends TestCase
         }
     }
 
+    public function testUninstallRemovesEveryPrivilegeAndItsGrants(): void
+    {
+        $created = [];
+        $uninstall = '';
+        foreach (self::xml()->queries->item as $query) {
+            $sql = (string) $query;
+            if ((string) $query['for'] === 'uninstall') {
+                $uninstall .= $sql . "\n";
+            } elseif (preg_match("/INTO \\?:privileges \\(.*\\) VALUES \\('([a-z_]+)'/", $sql, $match) === 1) {
+                $created[] = $match[1];
+            }
+        }
+
+        self::assertSame(['view_euph_profile_types', 'manage_euph_profile_types'], $created);
+        $list = "('" . implode("', '", $created) . "')";
+        self::assertStringContainsString('DELETE FROM ?:privileges WHERE privilege IN ' . $list, $uninstall);
+        self::assertStringContainsString('DELETE FROM ?:usergroup_privileges WHERE privilege IN ' . $list, $uninstall);
+    }
+
     public function testNothingOfTheOldAddonRemainsOutsideTheImporter(): void
     {
         $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(dirname(self::root(), 3), \FilesystemIterator::SKIP_DOTS));
