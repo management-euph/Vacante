@@ -221,9 +221,11 @@ function fn_euph_profile_types_registration_context(UserKind $kind): ?FieldConte
     $posted = fn_euph_profile_types_session_get('euph_profile_types_posted');
     $type = null;
     foreach ([$requested, Cast::string($posted[$kind->value] ?? '')] as $code) {
-        $type = $code !== '' ? $catalog->assignableOnStorefront($kind, $code, $storefrontId, $langCode) : null;
-        if ($type !== null) {
-            break;
+        if ($code !== '') {
+            $type = $catalog->assignableOnStorefront($kind, $code, $storefrontId, $langCode);
+            if ($type !== null) {
+                break;
+            }
         }
     }
     $type ??= $catalog->defaultType($kind, $storefrontId, $langCode);

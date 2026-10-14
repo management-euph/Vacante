@@ -236,19 +236,22 @@
             || $(form).closest('.litecheckout, #litecheckout_form, [data-ca-lite-checkout-element]').length > 0;
     }
 
+    /** The type changed: the form is drawn for it. Returns the redraw under way, else null. */
     function onChoiceChange(event) {
         var input = event.target;
         var form = input.form;
         var config = _.euph_profile_types || {};
 
         if (!form || (input.type === 'radio' && !input.checked) || !input.value) {
-            return;
+            return null;
         }
         if (config.reload || isCheckout(form) || typeof window.fetch !== 'function' || typeof window.DOMParser !== 'function') {
             reloadWithType(form, input.value);
-        } else {
-            redraw(form, input.value);
+
+            return null;
         }
+
+        return redraw(form, input.value);
     }
 
     /** After a reload for another type: the typing goes back into its form. */
@@ -907,7 +910,7 @@
     }
 
     function flagOf(name) {
-        var match = String(name || '').match(/\[([a-z_]+)\]$/);
+        var match = String(name || '').match(/\[([a-z_]+)]$/);
 
         return match ? match[1] : '';
     }
@@ -966,7 +969,7 @@
 
     $(document).on('change', 'input[type="checkbox"][name^="fields_data["]', function () {
         var form = this.closest('form');
-        var match = this.name.match(/^fields_data\[(\d+)\]/);
+        var match = this.name.match(/^fields_data\[(\d+)]/);
 
         if (form && match) {
             refreshMirrors(form, match[1]);
