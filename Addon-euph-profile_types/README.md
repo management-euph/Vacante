@@ -88,6 +88,7 @@ They can be ticked in three places, all on the same data:
   - *One type*: one line per field, the form that type gets. Fields the type does not see are greyed. Ticking a general field here sets it per type; the other types keep what they saw.
   - Everything is saved with the list's own **Save**. The view is remembered, and a type card opens the list on its type.
   - The list's own template is not replaced: the rows hang on its hook in each Show / Required cell.
+  - **Checkout column.** CS-Cart 4.18 and later show only the *Profile* column for customer fields, as the checkout takes its fields from the blocks of the checkout layout. A customer type still decides the fields of its checkout (the *By profile type* filling of those blocks), so while the add-on sets customer types the column comes back, as with the 1.x add-on: *Profile* show / required / at registration, *Checkout* show / required, each with CS-Cart's own checkboxes and the rows of the types. The field card gets CS-Cart's *Checkout* checkboxes too.
 - **The field card:** a **Profile types** block with one row per type.
 - **The type card:** a **Fields** tab with one row per field.
 
@@ -205,7 +206,7 @@ Which details are taken depends on the profile fields mapped in the payment meth
 - drops the add-on's four tables and the type columns of customers, orders and vendors (the type of each customer, vendor and order goes with them);
 - removes its two privileges and their grants to administrator user groups;
 - gives the checkout blocks back the filling they had; CS-Cart removes the add-on's settings and texts;
-- **keeps the profile fields**, their values and their general checkboxes. The add-on never creates or deletes a field nor writes its checkboxes, and replaces no CS-Cart template: the *Profile fields* list is CS-Cart's own again, each field working by its own checkboxes;
+- **keeps the profile fields**, their values and their general checkboxes. The add-on never creates or deletes a field nor writes its checkboxes, and replaces no CS-Cart template: the *Profile fields* list is CS-Cart's own again (customer fields without the *Checkout* column, as in CS-Cart 4.18+), each field working by its own checkboxes;
 - keeps what belongs to CS-Cart: the customers' user groups, and the fields and values imported from 1.x.
 
 Before uninstalling:
@@ -285,9 +286,11 @@ Register handlers as usual: `fn_register_hooks('euph_update_profile_type_post', 
 - **No core template is overridden.**
 - The type choice is a virtual profile field (`euph_profile_type`), so the stock profile, registration and checkout templates draw it.
 - The Profile fields list gets its per-type rows through its own hooks: `profile_fields:field_settings` (each Show / Required cell) and `profile_fields:field_type_description` (the Type column). The field card uses `profile_fields:profile_data`.
+- The `profiles/profile_types` schema gives the customer fields their *Checkout* column back (`FieldsList::withCheckoutArea()`).
+- The add-on's data reaches its script inside its own inline script (`Tygh.euph_profile_types`), never in a `<script type="application/json">` block: CS-Cart joins the inline scripts of a page into one script, where such a block is a syntax error.
 - Fields are filtered in the `get_profile_fields` / `get_profile_fields_post` hooks, and an order's values in `get_order_info` (`Service\OrderFields`).
 - The checkout uses its own block filling.
-- The rest goes through hooks on users, companies and orders, pre/post controllers, template hooks, and the `block_manager`, `documents`, `exim`, `menu` and `permissions` schemas.
+- The rest goes through hooks on users, companies and orders, pre/post controllers, template hooks, and the `block_manager`, `documents`, `exim`, `menu`, `permissions` and `profiles` schemas.
 
 ### Code layout
 
@@ -342,7 +345,7 @@ The code is checked by static analysis and unit tests, but it was not run inside
    - The checkout blocks show the *By profile type* filling in *Design → Layouts → Checkout*.
 2. **Create a type**, for example Company `B`: tick its fields on the *Fields* tab, give it a user group, set *Wait for approval*.
 3. **Open Profile fields.**
-   - The switcher appears above CS-Cart's list. Try *All types* and each type.
+   - The switcher appears above CS-Cart's list, and customer fields have a *Checkout* column next to *Profile*. Try *All types* and each type.
    - Save the list without touching anything: no field may become "per type".
    - Use *Set per type* on a field, tick one type differently and save. The other types keep what they saw.
    - Open a field card: check the *Profile types* block and its note.

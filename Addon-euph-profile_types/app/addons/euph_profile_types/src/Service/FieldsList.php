@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\EuphProfileTypes\Service;
 
 use Tygh\Addons\EuphProfileTypes\Cast;
+use Tygh\Addons\EuphProfileTypes\Enum\FieldArea;
 use Tygh\Addons\EuphProfileTypes\Enum\UserKind;
 use Tygh\Addons\EuphProfileTypes\Model\FieldRule;
 use Tygh\Addons\EuphProfileTypes\Model\FieldRuleSet;
@@ -45,6 +46,35 @@ final class FieldsList
         return $kind === UserKind::Vendor
             ? ['profile' => ['profile_show', 'profile_required', 'registration_show', 'storefront_show']]
             : ['profile' => ['profile_show', 'profile_required', 'registration_show'], 'checkout' => ['checkout_show', 'checkout_required']];
+    }
+
+    /**
+     * CS-Cart's schema of profile types (schemas/profiles/profile_types.php)
+     * with the Checkout area for the customers' fields. CS-Cart 4.18 and
+     * later leave it out, as the checkout takes its fields from the blocks
+     * of the checkout layout; a customer type still says which fields its
+     * checkout shows and requires (the "By profile type" filling of those
+     * blocks). With the area back, the list of profile fields and the field
+     * card draw the Checkout column with CS-Cart's own checkboxes, and the
+     * list draws the rows of the types in it, as the 1.x add-on did.
+     *
+     * @param array<array-key, mixed> $schema
+     *
+     * @return array<array-key, mixed>
+     */
+    public static function withCheckoutArea(array $schema): array
+    {
+        $code = UserKind::Customer->fieldProfileType();
+        $type = $schema[$code] ?? null;
+        $areas = is_array($type) ? ($type['allowed_areas'] ?? null) : null;
+        if (!is_array($type) || !is_array($areas) || in_array(FieldArea::Checkout->value, $areas, true)) {
+            return $schema;
+        }
+        $areas[] = FieldArea::Checkout->value;
+        $type['allowed_areas'] = $areas;
+        $schema[$code] = $type;
+
+        return $schema;
     }
 
     /**
