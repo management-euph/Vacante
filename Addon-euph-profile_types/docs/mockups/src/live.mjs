@@ -5,6 +5,7 @@
 // inside CS-Cart's list of profile fields; the choice as CS-Cart draws a
 // radio profile field). Only the admin chrome around them is a mockup.
 //   PLAYWRIGHT_MODULE=<playwright> LESS_MODULE=<less> node live.mjs
+// The committed PNGs were then reduced to 256 colours, as in render.mjs.
 import { readFileSync, writeFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
