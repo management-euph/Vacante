@@ -132,7 +132,7 @@ final class ProfileTypeRepository
      * shows up nameless in another language, and the key of its registration
      * links.
      *
-     * @param array{code?: string, user_type?: string, status?: string, position?: int, activation?: string, is_standard?: string, is_default?: string, link_key?: string} $fields
+     * @param array{code?: string, user_type?: string, status?: string, position?: int, activation?: string, is_standard?: string, is_default?: string, link_key?: string, invoice_as?: string} $fields
      * @param list<string> $langCodes
      * @param array<string, list<int>> $links object type => ids; only the object types given are replaced
      */

@@ -48,7 +48,7 @@ final class TypeAdminTest extends TestCase
         self::assertIsArray($insert);
         self::assertMatchesRegularExpression('/^[0-9a-f]{32}$/', $insert['link_key'] ?? '', 'the key of its registration links');
         unset($insert['link_key']);
-        self::assertSame(['code' => 'WHOLESALE', 'status' => 'H', 'position' => 0, 'activation' => 'P', 'user_type' => 'C', 'is_standard' => 'N'], $insert);
+        self::assertSame(['code' => 'WHOLESALE', 'status' => 'H', 'position' => 0, 'activation' => 'P', 'invoice_as' => '', 'user_type' => 'C', 'is_standard' => 'N'], $insert);
         self::assertCount(2, $this->db->writes('REPLACE INTO ?:euph_profile_type_descriptions'));
         self::assertSame('Wholesale', $this->db->writes('REPLACE INTO ?:euph_profile_type_descriptions')[0]['params'][0]['name']);
         self::assertSame(12, $this->db->writes('REPLACE INTO ?:euph_profile_type_fields')[0]['params'][0]['type_id'], 'the rules of the standard type are copied');
@@ -83,6 +83,33 @@ final class TypeAdminTest extends TestCase
             ['euph_profile_types.error_vendor_types_need_multivendor'],
             $this->admin(false)->save(0, ['user_type' => 'V', 'name' => 'Shop', 'code' => 'SH'], 'en', ['en'])['errors'],
         );
+    }
+
+    public function testACustomerTypeSaysHowItsOrdersAreInvoicedAVendorTypeDoesNot(): void
+    {
+        $this->db->insertIds = [12, 13];
+        $this->admin()->save(2, ['name' => 'Company', 'code' => 'B', 'invoice_as' => 'C'], 'en', ['en']);
+        $this->admin()->save(3, ['name' => 'Private person', 'code' => 'P', 'invoice_as' => 'P'], 'en', ['en']);
+        $this->admin()->save(0, ['user_type' => 'V', 'name' => 'Shop', 'code' => 'SH', 'invoice_as' => 'C'], 'en', ['en']);
+        $this->admin()->save(0, ['user_type' => 'C', 'name' => 'Other', 'code' => 'OT', 'invoice_as' => 'nonsense'], 'en', ['en']);
+
+        $updates = $this->db->writes('UPDATE ?:euph_profile_types SET ?u');
+        $inserts = $this->db->writes('INSERT INTO ?:euph_profile_types');
+        self::assertSame('C', self::column($updates[0], 'invoice_as'));
+        self::assertSame('P', self::column($updates[1], 'invoice_as'));
+        self::assertSame('', self::column($inserts[0], 'invoice_as'), 'a vendor application is not an order');
+        self::assertSame('', self::column($inserts[1], 'invoice_as'), 'an unknown value: as the order\'s data says');
+    }
+
+    /**
+     * @param array{query: string, params: list<mixed>} $write
+     */
+    private static function column(array $write, string $column): mixed
+    {
+        $fields = $write['params'][0] ?? null;
+        self::assertIsArray($fields);
+
+        return $fields[$column] ?? null;
     }
 
     public function testARenamedCodeFollowsItsCustomersOrdersAndVendors(): void

@@ -62,9 +62,11 @@ function fn_euph_profile_types_update_order(&$order = [], $order_id = 0): void
 
 /**
  * Hook: get_order_info — the type's name for e-mail templates
- * ({{ order_info.euph_profile_type_name }}) and add-ons, and the order as
- * its type has it: no value of a field the type does not have reaches
- * invoicing (FGO), payment (Netopia), documents or other add-ons.
+ * ({{ order_info.euph_profile_type_name }}) and add-ons; how the type is
+ * invoiced, for invoicing add-ons (euph_profile_type_invoice_as: company or
+ * person, absent when the order's data decides); and the order as its type
+ * has it: no value of a field the type does not have reaches invoicing (FGO),
+ * payment (Netopia), documents or other add-ons.
  *
  * @param mixed $order
  * @param mixed $additional_data
@@ -83,6 +85,10 @@ function fn_euph_profile_types_get_order_info(&$order = [], $additional_data = [
         $catalog = fn_euph_profile_types_container()->catalog();
         $type = $catalog->isEnabled(UserKind::Customer) ? $catalog->byCode($code, fn_euph_profile_types_lang()) : null;
         if ($type !== null && $type->kind === UserKind::Customer) {
+            $invoiceAs = $type->invoiceAs->orderValue();
+            if ($invoiceAs !== null) {
+                $order['euph_profile_type_invoice_as'] = $invoiceAs;
+            }
             $order = fn_euph_profile_types_order_fields_of_type($order, $type);
         }
     } catch (\Throwable $e) {

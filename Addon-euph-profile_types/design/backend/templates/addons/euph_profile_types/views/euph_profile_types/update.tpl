@@ -146,6 +146,22 @@
                         </div>
                     </div>
                 </div>
+
+                {include file="common/subheader.tpl" title=__("euph_profile_types.invoicing") target="#euph_pt_invoicing"}
+                <div id="euph_pt_invoicing" class="in collapse">
+                    <div class="control-group">
+                        <label class="control-label">{__("euph_profile_types.invoice_as")}:</label>
+                        <div class="controls">
+                            {foreach ["" => "invoice_as_order_data", "C" => "invoice_as_company", "P" => "invoice_as_person"] as $invoice_as => $label}
+                                <label class="radio" for="elm_euph_pt_invoice_as_{$invoice_as|default:"D"}">
+                                    <input type="radio" id="elm_euph_pt_invoice_as_{$invoice_as|default:"D"}" name="type_data[invoice_as]" value="{$invoice_as}" {if $type.invoice_as|default:"" == $invoice_as}checked="checked"{/if} />
+                                    {__("euph_profile_types.`$label`")}
+                                </label>
+                            {/foreach}
+                            <p class="muted description">{__("euph_profile_types.invoice_as_hint")}</p>
+                        </div>
+                    </div>
+                </div>
             {else}
                 <input type="hidden" name="type_data[activation]" value="S" />
             {/if}

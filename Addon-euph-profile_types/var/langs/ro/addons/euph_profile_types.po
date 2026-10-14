@@ -368,6 +368,30 @@ msgctxt "Languages::euph_profile_types.activation_hint"
 msgid "Accounts registered on the storefront. The store setting is \"Administrator must activate new user accounts\"."
 msgstr "Conturile înregistrate pe magazin. Setarea magazinului este „Administratorul trebuie să activeze conturile noi”."
 
+msgctxt "Languages::euph_profile_types.invoicing"
+msgid "Invoicing"
+msgstr "Facturare"
+
+msgctxt "Languages::euph_profile_types.invoice_as"
+msgid "Invoice as"
+msgstr "Facturează ca"
+
+msgctxt "Languages::euph_profile_types.invoice_as_order_data"
+msgid "As the order's data says"
+msgstr "După datele comenzii"
+
+msgctxt "Languages::euph_profile_types.invoice_as_company"
+msgid "Company (legal entity, PJ)"
+msgstr "Persoană juridică (PJ)"
+
+msgctxt "Languages::euph_profile_types.invoice_as_person"
+msgid "Private person (PF)"
+msgstr "Persoană fizică (PF)"
+
+msgctxt "Languages::euph_profile_types.invoice_as_hint"
+msgid "For invoicing add-ons such as FGO. A company is invoiced with its company name, CIF and Reg. Com., a private person with their name and CNP: show those fields for the type. As the order's data says: a company name or a CIF on the order makes it a company."
+msgstr "Pentru modulele de facturare, precum FGO. O persoană juridică este facturată cu denumirea firmei, CIF-ul și Nr. Reg. Com., o persoană fizică cu numele și CNP-ul: afișați aceste câmpuri pentru tip. După datele comenzii: o denumire de firmă sau un CIF pe comandă o face persoană juridică."
+
 msgctxt "Languages::euph_profile_types.works_on"
 msgid "Works on"
 msgstr "Funcționează pe"

@@ -28,7 +28,15 @@
         <p class="description">Accounts registered on the storefront. The store setting is "Administrator must activate new user accounts".</p>
       </div></div>
 
-      <div class="subheader">Storefronts <span class="mark">3</span></div>
+      <div class="subheader">Invoicing <span class="mark">3</span></div>
+      <div class="control-group"><div class="control-label">Invoice as:</div><div class="controls" style="padding-top:4px">
+        <label class="check-line"><input type="radio" name="i">As the order's data says</label>
+        <label class="check-line"><input type="radio" name="i" checked>Company (legal entity, PJ)</label>
+        <label class="check-line"><input type="radio" name="i">Private person (PF)</label>
+        <p class="description">For invoicing add-ons such as FGO. A company is invoiced with its company name, CIF and Reg. Com., a private person with their name and CNP: show those fields for the type. As the order's data says: a company name or a CIF on the order makes it a company.</p>
+      </div></div>
+
+      <div class="subheader">Storefronts <span class="mark">4</span></div>
       <div class="control-group"><div class="control-label">Works on:</div><div class="controls" style="padding-top:4px">
         <label class="check-line"><input type="checkbox">vacantelitoral.ro</label>
         <label class="check-line"><input type="checkbox" checked>b2b.vacantelitoral.ro</label>
@@ -40,8 +48,9 @@
 <div class="legend">
   <div><span class="mark">1</span><span>Group status after joining comes from the setting "Group status after changing profile type": Active or Pending.</span></div>
   <div><span class="mark">2</span><span>Per type: an agency waits for approval while private persons are activated as the store usually does.</span></div>
-  <div><span class="mark">3</span><span>Multi-storefront stores (Ultimate, Multi-Vendor Plus/Ultimate): the type is used only on the ticked storefronts.</span></div>
-  <div><span class="mark" style="background:#cfd8e3;box-shadow:none">i</span><span>Vendor types have a "Vendor plans" block here instead of activation: the plans an applicant of the type can choose.</span></div>
+  <div><span class="mark">3</span><span>FGO reads it on every order of the type: an agency is invoiced as a company (PJ) with its company name, CIF and Reg. Com., a private person (PF) with the name and CNP.</span></div>
+  <div><span class="mark">4</span><span>Multi-storefront stores (Ultimate, Multi-Vendor Plus/Ultimate): the type is used only on the ticked storefronts.</span></div>
+  <div><span class="mark" style="background:#cfd8e3;box-shadow:none">i</span><span>Vendor types have a "Vendor plans" block here instead of activation and invoicing: the plans an applicant of the type can choose.</span></div>
 </div>
 <span class="mockup-tag">MOCKUP</span>
 </div></body></html>

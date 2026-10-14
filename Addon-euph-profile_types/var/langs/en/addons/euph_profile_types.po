@@ -368,6 +368,30 @@ msgctxt "Languages::euph_profile_types.activation_hint"
 msgid "Accounts registered on the storefront. The store setting is \"Administrator must activate new user accounts\"."
 msgstr "Accounts registered on the storefront. The store setting is \"Administrator must activate new user accounts\"."
 
+msgctxt "Languages::euph_profile_types.invoicing"
+msgid "Invoicing"
+msgstr "Invoicing"
+
+msgctxt "Languages::euph_profile_types.invoice_as"
+msgid "Invoice as"
+msgstr "Invoice as"
+
+msgctxt "Languages::euph_profile_types.invoice_as_order_data"
+msgid "As the order's data says"
+msgstr "As the order's data says"
+
+msgctxt "Languages::euph_profile_types.invoice_as_company"
+msgid "Company (legal entity, PJ)"
+msgstr "Company (legal entity, PJ)"
+
+msgctxt "Languages::euph_profile_types.invoice_as_person"
+msgid "Private person (PF)"
+msgstr "Private person (PF)"
+
+msgctxt "Languages::euph_profile_types.invoice_as_hint"
+msgid "For invoicing add-ons such as FGO. A company is invoiced with its company name, CIF and Reg. Com., a private person with their name and CNP: show those fields for the type. As the order's data says: a company name or a CIF on the order makes it a company."
+msgstr "For invoicing add-ons such as FGO. A company is invoiced with its company name, CIF and Reg. Com., a private person with their name and CNP: show those fields for the type. As the order's data says: a company name or a CIF on the order makes it a company."
+
 msgctxt "Languages::euph_profile_types.works_on"
 msgid "Works on"
 msgstr "Works on"

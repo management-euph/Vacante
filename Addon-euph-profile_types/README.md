@@ -62,6 +62,7 @@ The last row is rendered from the add-on's own styles and script on the markup i
   - **user groups** the type grants;
   - **storefronts** where the type works (none ticked means all);
   - **account activation** for new storefront accounts: *as the store setting says*, *at once* or *after approval*;
+  - **invoice as**, for customer types: a *company (PJ)*, a *private person (PF)*, or *as the order's data says*. Invoicing add-ons such as FGO read it on every order of the type;
   - for vendor types, the **vendor plans** an applicant of the type may choose.
 - **Registration links**, shown on the type card:
   - `index.php?dispatch=profiles.add&euph_profile_type=B&euph_profile_key=…` preselects the type in the registration form.
@@ -130,11 +131,15 @@ The list of fields stays one list. A value survives a change of type, and report
 
 ### Invoicing and card payments: FGO, Netopia
 
-The type's fields are CS-Cart profile fields, so the other add-ons read them as they read any field: nothing to connect.
+The type's fields are CS-Cart profile fields, so the other add-ons read them as they read any field, and the order tells them how its type is invoiced (`euph_profile_type_invoice_as`).
 
-- **FGO** takes the CIF, Reg. Com. and CNP from the profile fields picked in its settings (or found by their names), and invoices a company (PJ) when the order has a company name or a CIF, a private person (PF) otherwise. With the rule above, an order of a type that does not have the company name and CIF fields carries neither, even when the customer once was a company.
-  - Make the company name, or the CIF, **required for each company type**: a company order then always reaches FGO as a company.
-  - With FGO's *Do not issue for individuals without a CNP* on, show and require the CNP field for the private types.
+- **FGO** invoices each order as its type says (*Invoice as*, on the type card's *Rules* tab):
+  - a company type: a company (PJ), with the company name, CIF and Reg. Com. of the type's fields;
+  - a private type: a private person (PF), with the name and CNP, even if a company name is on the order;
+  - a type left on *as the order's data says*: FGO's own rule, a company name or a CIF makes it a company.
+
+  FGO finds those fields by the settings *Profile field holding the company name / CIF / Reg. Com. / CNP*, or by their names ("Denumire firmă", "CUI", "Nr. Reg. Com.", "CNP"). Without a company name field, it takes CS-Cart's own *Company* field. With the rule above, an order never carries the fields of another type, even when the customer once had it.
+  - Show, and require, the company name and the CIF for the company types, and the CNP for the private types when FGO's *Do not issue for individuals without a CNP* is on: FGO refuses an invoice without them only when its settings say so.
 - **Netopia** sends the payment page the billing name, e-mail, phone and address of the order; it has no field for a company or a tax id. Keep the billing first and last name, and the billing address, **shown for every type that pays by card**: a type that hides them sends an empty name.
 
 ### Russian Payments: "Issue an invoice"
@@ -261,6 +266,8 @@ All are in `functions/types.php`.
 | `fn_euph_profile_types_is_code_on_storefront($code, $storefront_id)` | Whether a type works on a storefront. |
 | `fn_euph_profile_types_get_type_name($code, $lang_code)` | The name of a type; the code if the type is gone. |
 
+On an order (`fn_get_order_info()`): `euph_profile_type` (the code), `euph_profile_type_name`, and `euph_profile_type_invoice_as` (`company` or `person`; absent when the order's data decides).
+
 ### Hooks
 
 | Hook | Arguments |
@@ -353,7 +360,7 @@ The code is checked by static analysis and unit tests, but it was not run inside
    - the required fields of each type;
    - the order's type in the admin sidebar, in the customer's order page, the invoice and the order e-mail.
 7. **Documents:** add `{{ user.<your field code> }}` and `{{ user.profile_type }}` to the invoice and print it.
-   - **FGO:** sign in as a customer of a company type, fill the company name and the CIF, switch to a private type and order: the FGO invoice must be for a private person (PF), without the CIF. An order of the company type: a company (PJ) with its CIF.
+   - **FGO:** set *Invoice as* to *Company* on the company type and to *Private person* on the private type. Order as each type: a company (PJ) with its company name, CIF and Reg. Com.; a private person (PF) with the name and CNP. Then sign in as a customer of the company type, switch to the private type and order: a private person (PF), without the old CIF.
    - **Netopia:** pay an order of each type by card: the payment page shows the billing name.
 8. **Admin:**
    - customer card: the type change redraws the card;

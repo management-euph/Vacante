@@ -6,6 +6,7 @@ namespace Tygh\Addons\EuphProfileTypes\Tests\Unit\Model;
 
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\EuphProfileTypes\Enum\Activation;
+use Tygh\Addons\EuphProfileTypes\Enum\InvoiceAs;
 use Tygh\Addons\EuphProfileTypes\Enum\TypeStatus;
 use Tygh\Addons\EuphProfileTypes\Enum\UserKind;
 use Tygh\Addons\EuphProfileTypes\Model\ProfileType;
@@ -66,6 +67,22 @@ final class ProfileTypeTest extends TestCase
         self::assertTrue($hidden->isAssignable());
         self::assertFalse($disabled->isSelectable());
         self::assertFalse($disabled->isAssignable());
+    }
+
+    public function testATypeSaysHowItsOrdersAreInvoiced(): void
+    {
+        $company = ProfileType::fromRow(Types::row(2, 'B', 'C', ['invoice_as' => 'C']));
+        $person = ProfileType::fromRow(Types::row(3, 'P', 'C', ['invoice_as' => 'p']));
+        $byData = ProfileType::fromRow(Types::row(1, 'U'));
+
+        self::assertSame(InvoiceAs::Company, $company->invoiceAs);
+        self::assertSame('company', $company->invoiceAs->orderValue());
+        self::assertSame(InvoiceAs::Person, $person->invoiceAs, 'read case-insensitively');
+        self::assertSame('person', $person->invoiceAs->orderValue());
+        self::assertSame(InvoiceAs::OrderData, $byData->invoiceAs, 'not said: the order\'s data decides');
+        self::assertNull($byData->invoiceAs->orderValue());
+        self::assertSame(InvoiceAs::OrderData, InvoiceAs::fromValue('X'));
+        self::assertSame('C', $company->toArray()['invoice_as']);
     }
 
     public function testTheNameFallsBackToTheCode(): void

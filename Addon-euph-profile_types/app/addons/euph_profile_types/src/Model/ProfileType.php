@@ -6,6 +6,7 @@ namespace Tygh\Addons\EuphProfileTypes\Model;
 
 use Tygh\Addons\EuphProfileTypes\Cast;
 use Tygh\Addons\EuphProfileTypes\Enum\Activation;
+use Tygh\Addons\EuphProfileTypes\Enum\InvoiceAs;
 use Tygh\Addons\EuphProfileTypes\Enum\LinkKind;
 use Tygh\Addons\EuphProfileTypes\Enum\TypeStatus;
 use Tygh\Addons\EuphProfileTypes\Enum\UserKind;
@@ -20,6 +21,7 @@ final readonly class ProfileType
      * @param list<int> $storefrontIds storefronts the type works on; empty: all of them
      * @param list<int> $vendorPlanIds vendor plans offered to the type; empty: all of them
      * @param string $linkKey the secret of the type's registration links (never sent to the storefront)
+     * @param InvoiceAs $invoiceAs how the orders of the type are invoiced (company, private person, as their data says)
      */
     public function __construct(
         public int $id,
@@ -36,6 +38,7 @@ final readonly class ProfileType
         public array $storefrontIds = [],
         public array $vendorPlanIds = [],
         public string $linkKey = '',
+        public InvoiceAs $invoiceAs = InvoiceAs::OrderData,
     ) {
         if ($this->id <= 0) {
             throw new \InvalidArgumentException('id must be positive');
@@ -66,6 +69,7 @@ final readonly class ProfileType
             storefrontIds: $links[LinkKind::Storefront->value] ?? [],
             vendorPlanIds: $links[LinkKind::VendorPlan->value] ?? [],
             linkKey: Cast::string($row['link_key'] ?? ''),
+            invoiceAs: InvoiceAs::fromValue(Cast::string($row['invoice_as'] ?? '')),
         );
     }
 
@@ -107,7 +111,7 @@ final readonly class ProfileType
     /**
      * The shape templates and the add-on's public functions receive.
      *
-     * @return array{type_id: int, code: string, user_type: string, status: string, position: int, is_default: string, is_standard: string, activation: string, name: string, description: string, usergroup_ids: list<int>, storefront_ids: list<int>, vendor_plan_ids: list<int>}
+     * @return array{type_id: int, code: string, user_type: string, status: string, position: int, is_default: string, is_standard: string, activation: string, invoice_as: string, name: string, description: string, usergroup_ids: list<int>, storefront_ids: list<int>, vendor_plan_ids: list<int>}
      */
     public function toArray(): array
     {
@@ -120,6 +124,7 @@ final readonly class ProfileType
             'is_default' => Cast::yn($this->isDefault),
             'is_standard' => Cast::yn($this->isStandard),
             'activation' => $this->activation->value,
+            'invoice_as' => $this->invoiceAs->value,
             'name' => $this->displayName(),
             'description' => $this->description,
             'usergroup_ids' => $this->usergroupIds,

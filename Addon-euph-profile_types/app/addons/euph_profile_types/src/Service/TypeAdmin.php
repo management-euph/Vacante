@@ -7,6 +7,7 @@ namespace Tygh\Addons\EuphProfileTypes\Service;
 use Tygh\Addons\EuphProfileTypes\Cast;
 use Tygh\Addons\EuphProfileTypes\Db\Database;
 use Tygh\Addons\EuphProfileTypes\Enum\Activation;
+use Tygh\Addons\EuphProfileTypes\Enum\InvoiceAs;
 use Tygh\Addons\EuphProfileTypes\Enum\LinkKind;
 use Tygh\Addons\EuphProfileTypes\Enum\TypeStatus;
 use Tygh\Addons\EuphProfileTypes\Enum\UserKind;
@@ -77,6 +78,10 @@ final class TypeAdmin
             'status' => $status->value,
             'position' => Cast::int($input['position'] ?? 0),
             'activation' => (Activation::tryFrom(Cast::string($input['activation'] ?? '')) ?? Activation::StoreSetting)->value,
+            // Customer types only: a vendor's application is not an order.
+            'invoice_as' => $kind === UserKind::Customer
+                ? InvoiceAs::fromValue(Cast::string($input['invoice_as'] ?? ''))->value
+                : InvoiceAs::OrderData->value,
         ];
         if ($existing === null) {
             $fields['user_type'] = $kind->value;

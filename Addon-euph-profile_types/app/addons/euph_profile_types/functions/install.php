@@ -26,7 +26,7 @@ function fn_euph_profile_types_install(): void
 {
     $container = fn_euph_profile_types_container(true);
     fn_euph_profile_types_add_columns($container->db(), $container->isMultiVendor());
-    fn_euph_profile_types_ensure_link_keys();
+    fn_euph_profile_types_ensure_schema();
     fn_euph_profile_types_create_standard_types();
 
     $importer = $container->importer();
@@ -68,20 +68,26 @@ function fn_euph_profile_types_uninstall(): void
 }
 
 /**
- * Every type has the key of its registration links. The table of an earlier
- * version of the add-on gets the column and its types a key: on install,
- * and when the types are opened in the admin panel (files updated without
- * a reinstall).
+ * The columns later versions added to ?:euph_profile_types, for the table of
+ * an earlier version: on install, and when the types are opened in the admin
+ * panel (files updated without a reinstall). Every type then has the key of
+ * its registration links.
  */
-function fn_euph_profile_types_ensure_link_keys(): void
+function fn_euph_profile_types_ensure_schema(): void
 {
     $container = fn_euph_profile_types_container();
     $db = $container->db();
     if (!$db->tableExists('?:euph_profile_types')) {
         return;
     }
-    if (!$db->columnExists('?:euph_profile_types', 'link_key')) {
-        $db->execute("ALTER TABLE ?:euph_profile_types ADD `link_key` varchar(64) NOT NULL DEFAULT '' AFTER `activation`");
+    $columns = [
+        'link_key' => "varchar(64) NOT NULL DEFAULT '' AFTER `activation`",
+        'invoice_as' => "char(1) NOT NULL DEFAULT '' AFTER `link_key`",
+    ];
+    foreach ($columns as $column => $definition) {
+        if (!$db->columnExists('?:euph_profile_types', $column)) {
+            $db->execute('ALTER TABLE ?:euph_profile_types ADD `' . $column . '` ' . $definition);
+        }
     }
     $container->types()->fillLinkKeys();
 }
