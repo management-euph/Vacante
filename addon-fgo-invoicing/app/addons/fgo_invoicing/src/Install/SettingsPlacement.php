@@ -35,7 +35,7 @@ final class SettingsPlacement
      */
     public const LATE_SETTINGS = [
         ['sandbox', 'behaviour_header', ['platform_url']],
-        ['client_cnp_required', 'lines_header', ['cif_field', 'reg_com_field', 'cnp_field']],
+        ['client_cnp_required', 'lines_header', ['cif_field', 'reg_com_field', 'cnp_field', 'company_field']],
     ];
 
     private function __construct()

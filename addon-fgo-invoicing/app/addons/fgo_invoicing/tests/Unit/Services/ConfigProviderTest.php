@@ -158,11 +158,12 @@ final class ConfigProviderTest extends TestCase
     #[DataProvider('profileFieldIdCases')]
     public function testProfileFieldSelectorsParseAFieldIdOrFallBackToAutoDetect(mixed $seeded, int $expected): void
     {
-        ConfigProvider::seed(['cif_field' => $seeded, 'reg_com_field' => $seeded, 'cnp_field' => $seeded]);
+        ConfigProvider::seed(['cif_field' => $seeded, 'reg_com_field' => $seeded, 'cnp_field' => $seeded, 'company_field' => $seeded]);
 
         self::assertSame($expected, ConfigProvider::cifFieldId());
         self::assertSame($expected, ConfigProvider::regComFieldId());
         self::assertSame($expected, ConfigProvider::cnpFieldId());
+        self::assertSame($expected, ConfigProvider::companyFieldId());
     }
 
     public function testProfileFieldSelectorsAreAutoDetectWhenTheSettingRowsDoNotExist(): void
@@ -172,15 +173,17 @@ final class ConfigProviderTest extends TestCase
         self::assertSame(0, ConfigProvider::cifFieldId());
         self::assertSame(0, ConfigProvider::regComFieldId());
         self::assertSame(0, ConfigProvider::cnpFieldId());
+        self::assertSame(0, ConfigProvider::companyFieldId());
     }
 
     public function testProfileFieldSelectorsAreIndependent(): void
     {
-        ConfigProvider::seed(['cif_field' => '3', 'reg_com_field' => '4', 'cnp_field' => '']);
+        ConfigProvider::seed(['cif_field' => '3', 'reg_com_field' => '4', 'cnp_field' => '', 'company_field' => '7']);
 
         self::assertSame(3, ConfigProvider::cifFieldId());
         self::assertSame(4, ConfigProvider::regComFieldId());
         self::assertSame(0, ConfigProvider::cnpFieldId());
+        self::assertSame(7, ConfigProvider::companyFieldId());
     }
 
     // ── Currency ─────────────────────────────────────────────────────────

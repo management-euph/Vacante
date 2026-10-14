@@ -108,6 +108,10 @@ msgctxt "SettingsOptions::fgo_invoicing::cnp_field"
 msgid "Profile field holding the CNP (individuals)"
 msgstr "Profile field holding the CNP (individuals)"
 
+msgctxt "SettingsOptions::fgo_invoicing::company_field"
+msgid "Profile field holding the company name"
+msgstr "Profile field holding the company name"
+
 msgctxt "SettingsOptions::fgo_invoicing::lines_header"
 msgid "Invoice Lines & Codes"
 msgstr "Invoice Lines & Codes"
