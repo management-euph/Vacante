@@ -363,8 +363,9 @@ describe("CS-Cart's list of profile fields, by type", () => {
                         </tr>`).join('')}
                     </tbody></table>
                 </div>
-            </form>
-            ${config ? `<script type="application/json" id="euph_pt_list_config">${JSON.stringify(config)}</script>` : ''}`;
+            </form>`;
+        // What hooks/index/scripts.post.tpl sets: the list's config, or null.
+        window.Tygh.euph_profile_types = { reload: true, list: config };
 
         return document.getElementById('fields_form');
     };
@@ -376,6 +377,10 @@ describe("CS-Cart's list of profile fields, by type", () => {
 
     beforeEach(() => {
         window.localStorage.clear();
+    });
+
+    afterEach(() => {
+        delete window.Tygh.euph_profile_types;
     });
 
     it("set up once: CS-Cart's checkboxes go into the general line and are still sent; switcher and column heads appear", () => {
@@ -474,6 +479,22 @@ describe("CS-Cart's list of profile fields, by type", () => {
         expect(f.querySelector('.euph-pt-list-views')).toBeNull();
     });
 
+    it('take the settings only from the inline script, as an object', () => {
+        page([PHONE], null);
+        // A JSON block is not read: CS-Cart runs it as a script.
+        document.body.insertAdjacentHTML('beforeend', `<script type="application/json" id="euph_pt_list_config">${JSON.stringify(CONFIG)}</script>`);
+        expect(api().initFieldsList(document)).toBeNull();
+
+        window.Tygh.euph_profile_types = { reload: true, list: JSON.stringify(CONFIG) };
+        expect(api().initFieldsList(document)).toBeNull();
+
+        delete window.Tygh.euph_profile_types;
+        expect(api().initFieldsList(document)).toBeNull();
+
+        window.Tygh.euph_profile_types = { reload: true, list: CONFIG };
+        expect(api().initFieldsList(document)).toBe(document.getElementById('fields_form'));
+    });
+
     it('"show" off unticks and locks "required"', () => {
         const f = page([COMPANY]);
         const show = typeBox(f, 5, 2, 'profile_show');
@@ -490,6 +511,10 @@ describe("CS-Cart's list of profile fields, by type", () => {
 });
 
 describe('the view of one type greys the fields it does not see', () => {
+    afterEach(() => {
+        delete window.Tygh.euph_profile_types;
+    });
+
     it('marks the rows whose type shows nothing, and unmarks them once ticked', () => {
         document.body.innerHTML = `
             <form id="fields_form"><table><thead><tr><th></th><th>Profile<br>Show</th></tr></thead><tbody>
@@ -500,12 +525,14 @@ describe('the view of one type greys the fields it does not see', () => {
                         <div class="euph-pt-list-row euph-pt-list-row--type" data-ca-euph-pt-type="2"><input type="checkbox" name="euph_pt_list[5][2][profile_show]" value="Y" checked></div>
                     </div>
                 </td></tr>
-            </tbody></table></form>
-            <script type="application/json" id="euph_pt_list_config">${JSON.stringify({
+            </tbody></table></form>`;
+        window.Tygh.euph_profile_types = {
+            list: {
                 kind: 'C', types: [{ id: 1, name: 'Private person', tone: 1 }, { id: 2, name: 'Company', tone: 2 }],
                 areas: { profile: ['profile_show'] }, first_area: 'profile', view: '1', manage_url: '#',
                 labels: { see: 'Customers see:', all_types: 'All types', manage_types: 'Manage types', profile_type: 'Profile type', flags: { profile_show: 'show' } },
-            })}</script>`;
+            },
+        };
         window.localStorage.clear();
         const f = api().initFieldsList(document);
         const row = f.querySelector('#r5');

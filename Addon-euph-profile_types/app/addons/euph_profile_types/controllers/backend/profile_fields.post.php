@@ -41,7 +41,9 @@ if ($mode === 'manage') {
     $list = fn_euph_profile_types_fields_list($profileType);
     if ($list !== null) {
         fn_euph_profile_types_assign('euph_pt_list', $list);
-        fn_euph_profile_types_assign('euph_pt_list_config', fn_euph_profile_types_fields_list_config($list, Cast::string($_REQUEST['euph_view'] ?? '')));
+        fn_euph_profile_types_assign('euph_pt_list_config', fn_euph_profile_types_js_value(
+            fn_euph_profile_types_fields_list_config($list, Cast::string($_REQUEST['euph_view'] ?? '')),
+        ));
     }
 
     return;
