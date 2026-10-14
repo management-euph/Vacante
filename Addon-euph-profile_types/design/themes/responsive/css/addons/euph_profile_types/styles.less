@@ -1,0 +1,131 @@
+// Profile types: storefront.
+//
+// The type choice is a profile field CS-Cart draws itself (radio buttons or
+// a drop-down); its wrapper carries the class euph-pt-choice.
+
+.euph-pt-choice {
+    margin-bottom: 18px;
+
+    input[type="radio"] {
+        margin-right: 6px;
+    }
+
+    // Radio buttons side by side, each option a pill.
+    .radio,
+    label.radio,
+    .ty-profile-field__radio {
+        display: inline-block;
+        margin: 0 14px 6px 0;
+    }
+}
+
+// Choice view "Tabs (pills)": the script draws the radio buttons as a
+// segmented control and hides the theme's own; those stay in the form.
+.euph-pt-pills-source {
+    display: none !important;
+}
+
+.euph-pt-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    max-width: 640px;
+    margin: 2px 0 8px;
+    padding: 3px;
+    border: 1px solid #dfe3e8;
+    border-radius: 10px;
+    background: #f1f3f6;
+
+    &__pill {
+        position: relative;
+        flex: 1 1 auto;
+        margin: 0;
+        padding: 0;
+        cursor: pointer;
+    }
+
+    &__input {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 1px;
+        height: 1px;
+        margin: 0;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    &__text {
+        display: block;
+        padding: 9px 14px;
+        border-radius: 8px;
+        color: #4a525a;
+        font-weight: 700;
+        line-height: 1.25;
+        text-align: center;
+        white-space: nowrap;
+        transition: background-color .15s, box-shadow .15s, color .15s;
+    }
+}
+
+.euph-pt-pills__pill:hover .euph-pt-pills__text {
+    color: #1f2329;
+}
+
+.euph-pt-pills__input:checked + .euph-pt-pills__text {
+    background: #fff;
+    color: #1f2329;
+    box-shadow: 0 1px 3px rgba(16, 24, 40, .16), 0 0 0 1px #cfd8e3;
+}
+
+.euph-pt-pills__input:focus-visible + .euph-pt-pills__text {
+    outline: 2px solid #8cc4ef;
+    outline-offset: 1px;
+}
+
+.euph-pt-pills__input:disabled + .euph-pt-pills__text {
+    opacity: .5;
+    cursor: default;
+}
+
+@media (max-width: 480px) {
+    .euph-pt-pills__text {
+        padding: 9px 6px;
+        white-space: normal;
+    }
+}
+
+// While the form is redrawn for another type.
+.euph-pt-redrawing {
+    opacity: .55;
+    pointer-events: none;
+    transition: opacity .15s ease-in-out;
+}
+
+// Invoice details already taken from the profile (Russian Payments).
+.euph-pt-prefilled {
+    display: none;
+}
+
+.euph-pt-prefilled-summary {
+    margin: 6px 0 12px;
+    color: #6b7785;
+    font-size: 13px;
+
+    strong {
+        color: #333;
+    }
+}
+
+// Product page, Multi-Vendor: the vendor type next to the vendor's name.
+.euph-pt-vendor-type {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 8px;
+    border-radius: 10px;
+    background: #eef3fb;
+    color: #31445a;
+    font-size: 12px;
+    line-height: 18px;
+    vertical-align: middle;
+}

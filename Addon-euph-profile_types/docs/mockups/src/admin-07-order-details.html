@@ -1,0 +1,53 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Order details with profile type</title><link rel="stylesheet" href="admin.css"></head>
+<body><div class="wrap">
+<!--#top:Orders-->
+<div class="subnav"><a class="active">Orders</a><a>Shipments</a><a>Return requests</a></div>
+<div class="page">
+  <div class="main">
+    <div class="titlebar">
+      <h1>Order #1042</h1><span class="label label-info" style="font-size:12px;margin-left:12px">Processed</span>
+      <div class="actions"><span class="btn">Print invoice</span><span class="btn btn-icon">⚙ ▾</span><span class="btn btn-primary">Save</span></div>
+    </div>
+    <div class="content">
+      <table class="table" style="margin-bottom:18px">
+        <thead><tr><th>Product</th><th class="right">Price</th><th class="center">Qty</th><th class="right">Subtotal</th></tr></thead>
+        <tbody>
+          <tr><td><b>Hotel Malibu, Mamaia — 3 nights</b><div class="muted">12–15 Jul 2026 · 2 adults</div></td><td class="right">1 450,00 lei</td><td class="center">1</td><td class="right">1 450,00 lei</td></tr>
+          <tr><td><b>Airport transfer Constanța</b></td><td class="right">120,00 lei</td><td class="center">1</td><td class="right">120,00 lei</td></tr>
+        </tbody>
+      </table>
+      <div class="panel">
+        <h4>Customer information <span class="mark">2</span></h4>
+        <div class="kv">
+          <div class="k">Profile type</div><div><b>Company</b></div>
+          <div class="k">Name</div><div>Andrei Ionescu</div>
+          <div class="k">Company name</div><div>Litoral Turism SRL</div>
+          <div class="k">Tax number (CUI)</div><div>RO12345678</div>
+          <div class="k">Trade register no.</div><div>J13/1234/2015</div>
+          <div class="k">E-mail</div><div>andrei@litoralturism.ro</div>
+          <div class="k">Billing address</div><div>Str. Mircea cel Bătrân 10, Constanța, Romania</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sidebar">
+    <div class="sidebar-row">
+      <h6>Profile type <span class="mark">1</span></h6>
+      <div class="profile-info"><span class="ico">B</span><div><b style="color:#1a73e8">Company</b> <span class="code">B</span></div></div>
+      <div style="margin-top:10px"><select style="width:150px"><option>Company</option></select> <span class="btn btn-small">Save</span></div>
+      <p class="description">Corrects the type of this order only; the customer keeps theirs.</p>
+    </div>
+    <hr>
+    <div class="sidebar-row"><h6>Customer</h6><div>Andrei Ionescu</div><div class="muted">andrei@litoralturism.ro</div><div class="muted">+40 722 123 456</div></div>
+    <hr>
+    <div class="sidebar-row"><h6>Payment information</h6><div>Bank transfer (invoice)</div></div>
+    <hr>
+    <div class="sidebar-row"><h6>Shipping information</h6><div class="muted">Electronic voucher</div></div>
+  </div>
+</div>
+<div class="legend">
+  <div><span class="mark">1</span><span>The <b>profile type is the first block of the order sidebar</b>. The order keeps the type it was placed with.</span></div>
+  <div><span class="mark">2</span><span>The customer information shows the <b>fields of the order's type</b>. Documents and e-mails get them as <code>{{ user.company_cui }}</code>, the type as <code>{{ user.profile_type }}</code>.</span></div>
+</div>
+<span class="mockup-tag">MOCKUP</span>
+</div></body></html>

@@ -197,6 +197,7 @@ final class Container
                 cifFieldId:    ConfigProvider::cifFieldId(),
                 regComFieldId: ConfigProvider::regComFieldId(),
                 cnpFieldId:    ConfigProvider::cnpFieldId(),
+                companyFieldId: ConfigProvider::companyFieldId(),
             );
         }
         return $this->resolver;

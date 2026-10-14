@@ -16,7 +16,7 @@ if (!defined('BOOTSTRAP')) {
 // FuncSelfSufficiencyTest.
 
 /**
- * Options of the cif_field / reg_com_field / cnp_field selectors.
+ * Options of the cif_field / reg_com_field / cnp_field / company_field selectors.
  *
  * The store's custom TEXT profile fields as "<description> (#<id>)", after an
  * empty-value "Auto-detect by field name" entry (the default). Text types
@@ -36,7 +36,7 @@ if (!defined('BOOTSTRAP')) {
  */
 function fn_fgo_invoicing_profile_field_variants(): array
 {
-    // Three selectors render on one settings page: one query, not three.
+    // Four selectors render on one settings page: one query, not four.
     /** @var array<int|string, string>|null $variants */
     static $variants = null;
     if (is_array($variants)) {
@@ -121,6 +121,12 @@ function fn_settings_variants_addons_fgo_invoicing_reg_com_field(): array
 
 /** @return array<int|string, string> */
 function fn_settings_variants_addons_fgo_invoicing_cnp_field(): array
+{
+    return fn_fgo_invoicing_profile_field_variants();
+}
+
+/** @return array<int|string, string> */
+function fn_settings_variants_addons_fgo_invoicing_company_field(): array
 {
     return fn_fgo_invoicing_profile_field_variants();
 }

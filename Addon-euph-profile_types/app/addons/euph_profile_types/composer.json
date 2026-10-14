@@ -1,0 +1,28 @@
+{
+    "name": "vacantelitoral/euph-profile-types",
+    "description": "Profile types for customers and vendors (CS-Cart add-on euph_profile_types). Dev-only manifest: the add-on itself needs no Composer packages.",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": "^8.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Tygh\\Addons\\EuphProfileTypes\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tygh\\Addons\\EuphProfileTypes\\Tests\\": "tests/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
+    "config": {
+        "platform": {
+            "php": "8.3.0"
+        },
+        "sort-packages": true
+    }
+}

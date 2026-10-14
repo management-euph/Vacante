@@ -8,8 +8,10 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\FgoInvoicing\Constants;
+use Tygh\Addons\FgoInvoicing\Services\BillingExtrasResolver;
 use Tygh\Addons\FgoInvoicing\Services\BillingMapper;
 use Tygh\Addons\FgoInvoicing\Services\ConfigProvider;
+use Tygh\Addons\FgoInvoicing\Tests\Support\InMemoryProfileFieldCatalog;
 
 #[CoversClass(BillingMapper::class)]
 final class BillingMapperTest extends TestCase
@@ -283,6 +285,41 @@ final class BillingMapperTest extends TestCase
         self::assertNull($req->client->nrRegCom);
         self::assertFalse($req->client->platitorTva);
         self::assertSame('1960101123456', $req->client->toFormFields()['Client[CodUnic]']);
+    }
+
+    /**
+     * The order's profile type decides (euph_profile_types' "Invoice as"),
+     * and each kind of client is invoiced with the fields of its type: the
+     * company name, CIF and Reg. Com. of a company type, the name and CNP of
+     * a private one.
+     */
+    public function testTheProfileTypeDecidesCompanyOrPrivatePersonWithItsOwnFields(): void
+    {
+        $resolver = new BillingExtrasResolver(InMemoryProfileFieldCatalog::withDescriptions([
+            31 => 'Denumire firmă',
+            41 => 'CUI',
+            43 => 'Nr. Reg. Com.',
+            42 => 'CNP',
+        ]));
+
+        $company = (new BillingMapper())->mapOrderInfo($resolver->resolve($this->baseOrder([
+            'euph_profile_type_invoice_as' => 'company',
+            'fields' => [31 => 'Exemplu SRL', 41 => 'RO12345678', 43 => 'J12/34/2020'],
+        ])))->client;
+        self::assertSame(Constants::TIP_COMPANY, $company->tip);
+        self::assertSame('Exemplu SRL', $company->denumire);
+        self::assertSame('12345678', $company->codUnic);
+        self::assertSame('J12/34/2020', $company->nrRegCom);
+
+        $person = (new BillingMapper())->mapOrderInfo($resolver->resolve($this->baseOrder([
+            'euph_profile_type_invoice_as' => 'person',
+            'company' => 'Firma Veche SRL',
+            'fields' => [42 => '1960101123456'],
+        ])))->client;
+        self::assertSame(Constants::TIP_PERSON, $person->tip);
+        self::assertSame('Ion Popescu', $person->denumire);
+        self::assertSame('1960101123456', $person->codUnic);
+        self::assertNull($person->nrRegCom);
     }
 
     /**

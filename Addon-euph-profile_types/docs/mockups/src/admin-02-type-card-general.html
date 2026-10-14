@@ -1,0 +1,42 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Profile type card — General</title><link rel="stylesheet" href="admin.css"></head>
+<body><div class="wrap">
+<!--#top-->
+<div class="subnav"><a>Customers</a><a>Administrators</a><a>User groups</a><a>Profile fields</a><a class="active">Profile types</a></div>
+<div class="page">
+  <div class="main">
+    <div class="titlebar">
+      <h1>Profile type: Company</h1><span class="lang">EN ▾</span>
+      <div class="actions"><span class="btn">Cancel</span><span class="btn btn-primary">Save</span></div>
+    </div>
+    <div class="content form">
+      <div class="tabs"><a class="active">General</a><a>Rules</a><a>Fields</a></div>
+      <div class="control-group"><div class="control-label">Type of:</div><div class="controls"><span class="shift">Customers</span></div></div>
+      <div class="control-group"><div class="control-label req">Name:</div><div class="controls"><input type="text" class="w-large" value="Company"></div></div>
+      <div class="control-group"><div class="control-label req">Code:</div><div class="controls"><input type="text" class="w-small" value="B"> <span class="mark">1</span>
+        <p class="description">Kept with customers and orders and used in registration links. Latin letters, digits and _, up to 32 characters.</p></div></div>
+      <div class="control-group"><div class="control-label">Description:</div><div class="controls"><textarea class="w-large" rows="3">Legal entities: VAT invoice, tax number, trade register.</textarea>
+        <p class="description">For you: shown in the list of types.</p></div></div>
+      <div class="control-group"><div class="control-label">Position:</div><div class="controls"><input type="text" class="w-micro" value="10"></div></div>
+      <div class="control-group"><div class="control-label">Default type:</div><div class="controls"><label class="check-line" style="margin-top:7px"><input type="checkbox"></label>
+        <p class="description">Guests and new accounts get it when nobody chose a type.</p></div></div>
+      <div class="control-group"><div class="control-label">Status:</div><div class="controls" style="padding-top:6px">
+        <label class="check-line"><input type="radio" name="s" checked>Active</label>
+        <label class="check-line"><input type="radio" name="s">Hidden</label>
+        <label class="check-line"><input type="radio" name="s">Disabled</label>
+        <p class="description">Hidden: not offered in the choice, given by its registration link or by you. Disabled: nobody new gets it; who has it keeps it.</p></div></div>
+
+      <div class="subheader">Registration links <span class="mark">2</span></div>
+      <p class="muted" style="margin:0 0 14px 210px">For a mailing to partners or a "Become a dealer" button. The links carry the key of the type: a hidden type is given only to those who have its link, not to whoever knows its code. The locked link does not let the visitor change the type in the form.</p>
+      <div class="control-group"><div class="control-label">Link:</div><div class="controls"><div class="input-append"><input type="text" class="w-link" value="https://vacantelitoral.ro/index.php?dispatch=profiles.add&amp;euph_profile_type=B&amp;euph_profile_key=7c2e9a41d0b85f36e14a9d27c05b8f13"><span class="btn">Copy</span></div></div></div>
+      <div class="control-group"><div class="control-label">Locked link:</div><div class="controls"><div class="input-append"><input type="text" class="w-link" value="https://vacantelitoral.ro/index.php?dispatch=profiles.add&amp;euph_profile_type=B&amp;euph_profile_key=7c2e9a41d0b85f36e14a9d27c05b8f13&amp;euph_profile_type_locked=1"><span class="btn">Copy</span></div></div></div>
+      <div class="control-group"><div class="control-label">New links:</div><div class="controls"><label class="check-line"><input type="checkbox"></label>
+        <p class="description">On saving, the type gets a new key: the links sent so far stop working. Who already has the type keeps it.</p></div></div>
+    </div>
+  </div>
+</div>
+<div class="legend">
+  <div><span class="mark">1</span><span>Codes are upper case; changing a code carries it over to the customers, vendors and orders that have the old one. The standard types keep U and S.</span></div>
+  <div><span class="mark">2</span><span>Ready-made links: the type is preselected in the registration form; the locked one fixes it for the visit. The key in them is what gives a hidden type: <em>New links</em> replaces it.</span></div>
+</div>
+<span class="mockup-tag">MOCKUP</span>
+</div></body></html>

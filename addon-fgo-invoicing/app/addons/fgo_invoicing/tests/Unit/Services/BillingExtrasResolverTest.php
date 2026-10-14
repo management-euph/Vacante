@@ -50,13 +50,14 @@ final class BillingExtrasResolverTest extends TestCase
     public function testConfiguredFieldsAreReadTrimmedWithoutQueryingTheCatalog(): void
     {
         $catalog = new InMemoryProfileFieldCatalog();
-        $resolver = new BillingExtrasResolver($catalog, null, cifFieldId: 12, regComFieldId: 13, cnpFieldId: 14);
+        $resolver = new BillingExtrasResolver($catalog, null, cifFieldId: 12, regComFieldId: 13, cnpFieldId: 14, companyFieldId: 15);
 
-        $out = $resolver->resolve(self::order([12 => '  RO12345678 ', 13 => 'J40/1/2020', 14 => ' 1960101123456']));
+        $out = $resolver->resolve(self::order([12 => '  RO12345678 ', 13 => 'J40/1/2020', 14 => ' 1960101123456', 15 => ' Exemplu SRL ']));
 
         self::assertSame('RO12345678', $out['fgo_billing_cui']);
         self::assertSame('J40/1/2020', $out['fgo_billing_reg']);
         self::assertSame('1960101123456', $out['fgo_billing_cnp']);
+        self::assertSame('Exemplu SRL', $out['fgo_billing_company']);
         self::assertSame(0, $catalog->reads, 'a configured field that is present needs no catalog lookup');
     }
 
@@ -145,6 +146,16 @@ final class BillingExtrasResolverTest extends TestCase
             'Nr. R.C.'                     => ['Nr. R.C.', 'fgo_billing_reg'],
             'RegCom'                       => ['RegCom', 'fgo_billing_reg'],
             'dotted C.N.P.'                => ['C.N.P.', 'fgo_billing_cnp'],
+            // the company's NAME (a company type's own field)
+            'Denumire firmă'               => ['Denumire firmă', 'fgo_billing_company'],
+            'Numele firmei'                => ['Numele firmei', 'fgo_billing_company'],
+            'Denumirea societății'         => ['Denumirea societății', 'fgo_billing_company'],
+            'Nume companie'                => ['Nume companie', 'fgo_billing_company'],
+            'Company name'                 => ['Company name', 'fgo_billing_company'],
+            'Business name'                => ['Business name', 'fgo_billing_company'],
+            'Firmă'                        => ['Firmă', 'fgo_billing_company'],
+            'Firmă (opțional)'             => ['Firmă (opțional)', 'fgo_billing_company'],
+            'Denumire'                     => ['Denumire', 'fgo_billing_company'],
         ];
     }
 
@@ -156,7 +167,7 @@ final class BillingExtrasResolverTest extends TestCase
         $out = $resolver->resolve(self::order([21 => 'VALUE']));
 
         self::assertSame('VALUE', $out[$key], "'{$description}' should feed {$key}");
-        foreach (['fgo_billing_cui', 'fgo_billing_reg', 'fgo_billing_cnp'] as $other) {
+        foreach (['fgo_billing_cui', 'fgo_billing_reg', 'fgo_billing_cnp', 'fgo_billing_company'] as $other) {
             if ($other !== $key) {
                 self::assertSame('', $out[$other], "'{$description}' must not also feed {$other}");
             }
@@ -189,6 +200,14 @@ final class BillingExtrasResolverTest extends TestCase
             // "cod unic" without "de înregistrare / identificare"
             'Cod unic client'     => ['Cod unic client'],
             'Cod unic fidelitate' => ['Cod unic de fidelitate'],
+            // a company's other details are not its name
+            'Adresa firmei'       => ['Adresa firmei'],
+            'Telefon firmă'       => ['Telefon firmă'],
+            'IBAN firmă'          => ['IBAN firmă'],
+            'Banca firmei'        => ['Banca firmei'],
+            'Cod firmă'           => ['Cod firmă'],
+            'Sediul societății'   => ['Sediul societății'],
+            'Company address'     => ['Company address'],
         ];
     }
 
@@ -202,6 +221,7 @@ final class BillingExtrasResolverTest extends TestCase
         self::assertSame('', $out['fgo_billing_cui'], $description);
         self::assertSame('', $out['fgo_billing_reg'], $description);
         self::assertSame('', $out['fgo_billing_cnp'], $description);
+        self::assertSame('', $out['fgo_billing_company'], $description);
     }
 
     /**
@@ -219,6 +239,9 @@ final class BillingExtrasResolverTest extends TestCase
             'regcom'    => ['regcom', 'fgo_billing_reg'],
             'NrRegCom'  => ['NrRegCom', 'fgo_billing_reg'],
             'b_cnp'     => ['b_cnp', 'fgo_billing_cnp'],
+            'company_name'   => ['company_name', 'fgo_billing_company'],
+            'denumire_firma' => ['denumire_firma', 'fgo_billing_company'],
+            'firma'          => ['firma', 'fgo_billing_company'],
         ];
     }
 
@@ -494,6 +517,52 @@ final class BillingExtrasResolverTest extends TestCase
         self::assertCount(1, DbStub::calls('FROM ?:user_profiles'));
     }
 
+    // ── company or private person: the order's profile type ─────────────
+
+    public function testTheProfileTypeSaysCompanyOrPrivatePerson(): void
+    {
+        $resolver = new BillingExtrasResolver(new InMemoryProfileFieldCatalog());
+
+        $company = $resolver->resolve(self::order([], ['euph_profile_type_invoice_as' => 'company']));
+        self::assertSame(1, $company['fgo_billing_tip'], 'a company type is a PJ without a company name or a CIF yet');
+
+        $person = $resolver->resolve(self::order([], ['euph_profile_type_invoice_as' => 'person', 'company' => 'Firma Veche SRL']));
+        self::assertSame(2, $person['fgo_billing_tip'], 'a private type is a PF whatever company name the order holds');
+
+        $blank = $resolver->resolve(self::order([], ['euph_profile_type_invoice_as' => 'company', 'fgo_billing_tip' => '']));
+        self::assertSame(1, $blank['fgo_billing_tip'], 'the blank column fn_get_order_info() sets is no tip');
+
+        self::assertArrayNotHasKey('fgo_billing_tip', $resolver->resolve(self::order([], ['euph_profile_type_invoice_as' => 'other'])));
+        self::assertArrayNotHasKey('fgo_billing_tip', $resolver->resolve(self::order()), 'no type: the order\'s data decides');
+    }
+
+    public function testATipTheOrderCarriesIsKeptAndTheTypeComesBeforeTheLegacyColumn(): void
+    {
+        $resolver = new BillingExtrasResolver(new InMemoryProfileFieldCatalog(), static fn (int $profileId): array => ['fgo_billing_tip' => 1]);
+
+        $own = $resolver->resolve(self::order([], ['profile_id' => 7, 'fgo_billing_tip' => 2, 'euph_profile_type_invoice_as' => 'company']));
+        self::assertSame(2, $own['fgo_billing_tip'], "the order's own");
+
+        $typed = $resolver->resolve(self::order([], ['profile_id' => 7, 'euph_profile_type_invoice_as' => 'person']));
+        self::assertSame(2, $typed['fgo_billing_tip'], 'the type, not the legacy column');
+
+        $legacy = $resolver->resolve(self::order([], ['profile_id' => 7]));
+        self::assertSame(1, $legacy['fgo_billing_tip'], 'no type: the legacy column, as before');
+    }
+
+    public function testTheCompanyNameComesFromTheCompanyTypesOwnField(): void
+    {
+        $resolver = new BillingExtrasResolver(InMemoryProfileFieldCatalog::withDescriptions([31 => 'Denumire firmă', 32 => 'Adresa firmei']));
+
+        $out = $resolver->resolve(self::order([31 => ' Exemplu SRL ', 32 => 'Str. Mare 1']));
+        self::assertSame('Exemplu SRL', $out['fgo_billing_company']);
+
+        $withoutField = (new BillingExtrasResolver(InMemoryProfileFieldCatalog::withDescriptions([32 => 'Adresa firmei'])))
+            ->resolve(self::order([32 => 'Str. Mare 1'], ['company' => 'Standard SRL']));
+        self::assertSame('', $withoutField['fgo_billing_company'], "no such field: BillingMapper takes CS-Cart's own company field");
+        self::assertSame('Standard SRL', $withoutField['company']);
+    }
+
     // ── invariants ───────────────────────────────────────────────────────
 
     public function testKeysTheOrderAlreadyCarriesAreNeverOverwritten(): void
@@ -541,7 +610,7 @@ final class BillingExtrasResolverTest extends TestCase
         $resolver = new BillingExtrasResolver(new InMemoryProfileFieldCatalog(), static fn (int $id): array => []);
 
         self::assertSame(
-            ['fgo_billing_cui' => '', 'fgo_billing_reg' => '', 'fgo_billing_cnp' => ''],
+            ['fgo_billing_cui' => '', 'fgo_billing_reg' => '', 'fgo_billing_cnp' => '', 'fgo_billing_company' => ''],
             $resolver->resolve([]),
         );
 

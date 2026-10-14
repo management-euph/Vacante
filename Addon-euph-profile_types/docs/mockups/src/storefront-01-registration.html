@@ -1,0 +1,64 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Registration by type</title><link rel="stylesheet" href="storefront.css">
+<style>.cols { display:grid; grid-template-columns: 1fr 1fr; gap: 34px; } .col h2 { display: flex; align-items: center; height: 24px; font-size: 13px; text-transform: uppercase; color: #8a939c; letter-spacing: .06em; margin: 0 0 10px; }</style></head>
+<body><div class="wrap">
+<!--#sftop-->
+<div class="container">
+  <div class="breadcrumbs"><a>Home</a> › Register</div>
+  <h1 class="title">Register for a new account</h1>
+  <div class="cols">
+    <div class="col">
+      <h2>“Company” chosen</h2>
+      <div class="card">
+        <div class="ty-control-group"><label class="ty-control-group__title req">E-mail</label><input class="ty-input" value="andrei@litoralturism.ro"></div>
+        <div class="grid2">
+          <div class="ty-control-group"><label class="ty-control-group__title req">Password</label><input class="ty-input" value="••••••••••"></div>
+          <div class="ty-control-group"><label class="ty-control-group__title req">Confirm password</label><input class="ty-input" value="••••••••••"></div>
+        </div>
+        <div class="subheader">Contact information</div>
+        <div class="choice">
+          <label class="ty-control-group__title req">Profile type <span class="mark">1</span></label>
+          <div class="options"><label class="opt"><input type="radio" name="t1">Private person</label><label class="opt"><input type="radio" name="t1" checked>Company</label></div>
+        </div>
+        <div class="grid2">
+          <div class="ty-control-group"><label class="ty-control-group__title req">First name</label><input class="ty-input" value="Andrei"></div>
+          <div class="ty-control-group"><label class="ty-control-group__title req">Last name</label><input class="ty-input" value="Ionescu"></div>
+        </div>
+        <div class="ty-control-group"><label class="ty-control-group__title">Phone</label><input class="ty-input" value="+40 722 123 456"></div>
+        <div class="ty-control-group"><label class="ty-control-group__title req">Company name <span class="mark">3</span></label><input class="ty-input" value="Litoral Turism SRL"></div>
+        <div class="ty-control-group"><label class="ty-control-group__title req">Tax number (CUI)</label><input class="ty-input" value="RO12345678"></div>
+        <div style="margin-top:18px"><span class="btn-cta">Register</span></div>
+      </div>
+    </div>
+    <div class="col">
+      <h2>“Private person” chosen <span class="mark">2</span></h2>
+      <div class="card">
+        <div class="ty-control-group"><label class="ty-control-group__title req">E-mail</label><input class="ty-input" value="maria.popescu@gmail.com"></div>
+        <div class="grid2">
+          <div class="ty-control-group"><label class="ty-control-group__title req">Password</label><input class="ty-input" value="••••••••••"></div>
+          <div class="ty-control-group"><label class="ty-control-group__title req">Confirm password</label><input class="ty-input" value="••••••••••"></div>
+        </div>
+        <div class="subheader">Contact information</div>
+        <div class="choice">
+          <label class="ty-control-group__title req">Profile type</label>
+          <div class="options"><label class="opt"><input type="radio" name="t2" checked>Private person</label><label class="opt"><input type="radio" name="t2">Company</label></div>
+        </div>
+        <div class="grid2">
+          <div class="ty-control-group"><label class="ty-control-group__title req">First name</label><input class="ty-input" value="Maria"></div>
+          <div class="ty-control-group"><label class="ty-control-group__title req">Last name</label><input class="ty-input" value="Popescu"></div>
+        </div>
+        <div class="ty-control-group"><label class="ty-control-group__title">Phone</label><input class="ty-input" value="+40 744 987 654"></div>
+        <p class="annot">Not asked here: Date of birth (in the account only, "At registration" unticked) <span class="mark">4</span></p>
+        <div style="margin-top:18px"><span class="btn-cta">Register</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="legend">
+  <div><span class="mark">1</span><span>The <b>type choice</b> is drawn as a profile field (radio buttons or a drop-down, by setting). A link like <code>?euph_profile_type=B&amp;euph_profile_type_locked=1</code> fixes it.</span></div>
+  <div><span class="mark">2</span><span>Switching the type <b>redraws the form without reloading</b> and keeps what was typed. With "Reload the page" on (for a captcha, say), the page reloads and the typing is put back.</span></div>
+  <div><span class="mark">3</span><span>A <b>short form for private customers and a full one for companies</b>: the tax number is asked of a legal entity only.</span></div>
+  <div><span class="mark">4</span><span>Separate "At registration" checkbox: a field can live in the account without making registration longer.</span></div>
+</div>
+<div class="footer"><span>© 2026 VacanteLitoral.ro</span><span>Terms</span><span>Privacy</span></div>
+<span class="mockup-tag">MOCKUP</span>
+</div></body></html>

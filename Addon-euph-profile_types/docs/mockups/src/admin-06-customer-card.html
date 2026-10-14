@@ -1,0 +1,38 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Customer card with type</title><link rel="stylesheet" href="admin.css"></head>
+<body><div class="wrap">
+<!--#top-->
+<div class="subnav"><a class="active">Customers</a><a>Administrators</a><a>User groups</a><a>Profile fields</a><a>Profile types</a></div>
+<div class="page">
+  <div class="main">
+    <div class="titlebar">
+      <h1>Andrei Ionescu</h1>
+      <div class="actions"><span class="btn btn-icon">⚙ ▾</span><span class="btn btn-primary">Save</span></div>
+    </div>
+    <div class="content form">
+      <div class="tabs"><a class="active">General</a><a>User groups</a><a>Add-ons</a></div>
+      <div class="subheader">User account information</div>
+      <div class="control-group"><div class="control-label req">E-mail:</div><div class="controls"><input type="text" class="w-large" value="andrei@litoralturism.ro"></div></div>
+      <div class="control-group"><div class="control-label">Account type:</div><div class="controls"><span class="shift">Customer</span></div></div>
+      <div class="subheader">Contact information</div>
+      <div class="control-group" style="background:#f6faff;border:1px dashed #b8d3f5;border-radius:5px;padding:10px 0"><div class="control-label req">Profile type:</div><div class="controls"><select class="w-large"><option>Company</option></select> <span class="mark">1</span>
+        <p class="description">The first field of the card. Changing it redraws the card with the fields of the new type; on saving, the customer moves to the user groups of the new type.</p></div></div>
+      <div class="control-group"><div class="control-label req">First name:</div><div class="controls"><input type="text" class="w-large" value="Andrei"></div></div>
+      <div class="control-group"><div class="control-label req">Last name:</div><div class="controls"><input type="text" class="w-large" value="Ionescu"></div></div>
+      <div class="control-group"><div class="control-label">Phone:</div><div class="controls"><input type="text" class="w-large" value="+40 722 123 456"></div></div>
+      <div class="control-group"><div class="control-label req">Company name:</div><div class="controls"><input type="text" class="w-large" value="Litoral Turism SRL"> <span class="mark">2</span></div></div>
+      <div class="control-group"><div class="control-label req">Tax number (CUI):</div><div class="controls"><input type="text" class="w-large" value="RO12345678"></div></div>
+      <div class="control-group"><div class="control-label">Trade register no.:</div><div class="controls"><input type="text" class="w-large" value="J13/1234/2015"></div></div>
+    </div>
+  </div>
+  <div class="sidebar">
+    <div class="sidebar-row"><h6>Profile type</h6><div class="profile-info"><span class="ico">B</span><div><b>Company</b><div class="muted">since 12.03.2026</div></div></div></div>
+    <hr>
+    <div class="sidebar-row"><h6>User groups</h6><span class="chip">Corporate rates</span></div>
+  </div>
+</div>
+<div class="legend">
+  <div><span class="mark">1</span><span>The administrator changes the type in the panel in any case, whatever the customer's own "change type" rule.</span></div>
+  <div><span class="mark">2</span><span>Only the fields of the customer's type, as ticked "In the profile". A private person's card shows the date of birth instead.</span></div>
+</div>
+<span class="mockup-tag">MOCKUP</span>
+</div></body></html>

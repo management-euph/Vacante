@@ -53,10 +53,11 @@ declare -A DIRS=(
     [fgo_invoicing]=addon-fgo-invoicing
     [eurosite]=addon-eurosite
     [netopia_payments]=addon-netopia-payments-main
+    [euph_profile_types]=Addon-euph-profile_types
 )
 # Add-ons whose storefront templates are for the responsive theme only: a
 # store on nova_theme gets those same files (as link-addons.sh links them).
-declare -A RESPONSIVE_ONLY=([netopia_payments]=1)
+declare -A RESPONSIVE_ONLY=([netopia_payments]=1 [euph_profile_types]=1)
 DEFAULT_ADDONS=travel_core,novoton_holidays,sphinx_holidays,fgo_invoicing
 # Never deployed from app/addons/<id>/ (as in package-addons.php). They are
 # also left alone on the store: excluded paths are not deleted there.

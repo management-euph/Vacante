@@ -40,6 +40,11 @@ var/
 !/addon-*/var/
 /addon-*/var/*
 !/addon-*/var/langs/
+# Same for the add-on folders spelled with a capital A (Addon-euph-profile_types):
+# git patterns are case-sensitive, so addon-* does not match them.
+!/Addon-*/var/
+/Addon-*/var/*
+!/Addon-*/var/langs/
 phpcs.cache
 .phpunit.result.cache
 .phpunit.cache/
@@ -58,6 +63,7 @@ NovotonBeforeSplit/
 .DS_Store
 Thumbs.db
 addon-*.zip
+Addon-*.zip
 dist/
 
 # HP Sure Click (Bromium) isolation markers on Windows checkouts: unreadable

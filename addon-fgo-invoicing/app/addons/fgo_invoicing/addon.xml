@@ -201,6 +201,12 @@
                         <default_value></default_value>
                         <variants/>
                     </item>
+                    <item id="company_field">
+                        <name>Profile field holding the company name</name>
+                        <type>selectbox</type>
+                        <default_value></default_value>
+                        <variants/>
+                    </item>
 
                     <!-- Lines / Codes -->
                     <item id="lines_header">

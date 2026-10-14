@@ -10,8 +10,9 @@ use Tygh\Addons\FgoInvoicing\Helpers\TypeCoerce;
 use Tygh\Addons\FgoInvoicing\Repository\ProfileFieldCatalog;
 
 /**
- * Fills the `fgo_billing_*` keys BillingMapper reads (CIF, Reg. Com., CNP)
- * from where a CS-Cart store actually keeps them.
+ * Fills the `fgo_billing_*` keys BillingMapper reads (CIF, Reg. Com., CNP,
+ * company name, company or private person) from where a CS-Cart store
+ * actually keeps them.
  *
  * WHY: BillingMapper always read `fgo_billing_cui` / `fgo_billing_reg`, but
  * nothing ever put them into $order_info, so every company customer was
@@ -23,10 +24,10 @@ use Tygh\Addons\FgoInvoicing\Repository\ProfileFieldCatalog;
  *
  * Resolution, per key, never touching a key the order already carries:
  *   a. the field the merchant picked in the add-on settings (cif_field,
- *      reg_com_field, cnp_field). A picked id the store no longer has (the
- *      field was deleted or re-created) falls through to (b): the settings
- *      form already shows such a value as "Auto-detect", and a stale id
- *      would otherwise leave the CIF empty for good;
+ *      reg_com_field, cnp_field, company_field). A picked id the store no
+ *      longer has (the field was deleted or re-created) falls through to
+ *      (b): the settings form already shows such a value as "Auto-detect",
+ *      and a stale id would otherwise leave the CIF empty for good;
  *   b. when that setting is empty ("Auto-detect", also what a store runs on
  *      before the setting row exists): the custom field whose description or
  *      code reads like one, diacritic-insensitive. Several matches: the one
@@ -34,7 +35,20 @@ use Tygh\Addons\FgoInvoicing\Repository\ProfileFieldCatalog;
  *      twin, then the lowest field id;
  *   c. the add-on's legacy ?:user_profiles.fgo_billing_* columns, via
  *      $order_info['profile_id'], for whatever is still empty. That source
- *      alone also supplies fgo_billing_company and fgo_billing_tip.
+ *      alone also supplies fgo_billing_tip.
+ *
+ * The company name is a custom field only where the store made one ("Denumire
+ * firmă" for its company customers); otherwise BillingMapper falls back to
+ * CS-Cart's own company field, as before.
+ *
+ * Company or private person (fgo_billing_tip, 1 = PJ, 2 = PF): when the
+ * order's profile type says how it is invoiced (euph_profile_types' "Invoice
+ * as": $order_info['euph_profile_type_invoice_as'] = company or person), that
+ * decides, ahead of the legacy column; a tip the order already carries is
+ * kept. Otherwise BillingMapper decides by the data: a company name or a CIF.
+ * The profile types add-on also leaves out of the order the values of the
+ * fields its type does not have, so a company type's order brings the company
+ * name, CIF and Reg. Com., and a private person's the CNP.
  *
  * Then, on the values resolved here (never on ones the order carried):
  *   - a leading "CUI:" / "C.I.F." / "CNP:" label is dropped;
@@ -54,6 +68,13 @@ final class BillingExtrasResolver
     public const KEY_CNP = 'fgo_billing_cnp';
     public const KEY_COMPANY = 'fgo_billing_company';
     public const KEY_TIP = 'fgo_billing_tip';
+
+    /** How the order's profile type is invoiced (euph_profile_types): company, person, or absent. */
+    public const PROFILE_TYPE_INVOICE_AS = 'euph_profile_type_invoice_as';
+
+    /** fgo_billing_tip of a company (PJ) and of a private person (PF). */
+    private const TIP_COMPANY = 1;
+    private const TIP_PERSON = 2;
 
     /**
      * Matched against a description or code after words(): lower-case ASCII
@@ -95,6 +116,12 @@ final class BillingExtrasResolver
             '/\bcod(ul)? numeric personal\b/',
             '/\bpersonal (numeric|identification) (code|number)\b/',
         ],
+        // The NAME of the company: "Adresa firmei", "Telefon firmă", "IBAN
+        // firmă" or "Cod firmă" never read as one. See also BARE_COMPANY.
+        self::KEY_COMPANY => [
+            '/\b(denumire|denumirea|nume|numele) (firma|firmei|societate|societatea|societatii|companie|compania|companiei|persoanei juridice)\b/',
+            '/\b(company|business|organi[sz]ation) name\b/',
+        ],
     ];
 
     /**
@@ -111,7 +138,13 @@ final class BillingExtrasResolver
     private const CODE_CUI = '/\bcui\b/';
 
     /**
-     * The three field ids are the add-on settings (ConfigProvider::cifFieldId()
+     * A description that IS a company-name label: "Firmă", "Societate",
+     * "Denumire", "Company" (parentheses dropped: "Firmă (opțional)").
+     */
+    private const BARE_COMPANY = '/^(firma|societate|societatea|companie|compania|company|denumire|denumirea)$/';
+
+    /**
+     * The four field ids are the add-on settings (ConfigProvider::cifFieldId()
      * and siblings); 0 means auto-detect. $legacyLookup maps a profile_id to
      * its legacy fgo_billing_* values; null means there is no legacy source.
      *
@@ -120,6 +153,7 @@ final class BillingExtrasResolver
      * @param int $cifFieldId profile field holding the CIF; 0 auto-detects
      * @param int $regComFieldId profile field holding the Reg. Com. number; 0 auto-detects
      * @param int $cnpFieldId profile field holding the CNP; 0 auto-detects
+     * @param int $companyFieldId profile field holding the company name; 0 auto-detects, then CS-Cart's own company field
      */
     public function __construct(
         private readonly ProfileFieldCatalog $catalog,
@@ -127,6 +161,7 @@ final class BillingExtrasResolver
         private readonly int $cifFieldId = 0,
         private readonly int $regComFieldId = 0,
         private readonly int $cnpFieldId = 0,
+        private readonly int $companyFieldId = 0,
     ) {
     }
 
@@ -155,9 +190,9 @@ final class BillingExtrasResolver
     }
 
     /**
-     * A copy of $orderInfo that always carries fgo_billing_cui, _reg and _cnp
-     * (possibly ''), plus fgo_billing_company / _tip when the legacy columns
-     * had them.
+     * A copy of $orderInfo that always carries fgo_billing_cui, _reg, _cnp and
+     * _company (possibly ''), plus fgo_billing_tip when the profile type or
+     * the legacy columns say it.
      *
      * @param array<string, mixed> $orderInfo
      *
@@ -179,7 +214,32 @@ final class BillingExtrasResolver
             $out[$key] = $hit['value'];
         }
 
-        return self::tidyIdentifiers($this->applyLegacy($out), $orderInfo);
+        return self::tidyIdentifiers($this->applyLegacy(self::applyProfileType($out)), $orderInfo);
+    }
+
+    /**
+     * The order's profile type says company or private person: that is the
+     * tip, unless the order already carries one.
+     *
+     * @param array<string, mixed> $out
+     *
+     * @return array<string, mixed>
+     */
+    private static function applyProfileType(array $out): array
+    {
+        if (TypeCoerce::toInt($out[self::KEY_TIP] ?? 0) !== 0) {
+            return $out;
+        }
+        $tip = match (strtolower(trim(TypeCoerce::toString($out[self::PROFILE_TYPE_INVOICE_AS] ?? '')))) {
+            'company' => self::TIP_COMPANY,
+            'person' => self::TIP_PERSON,
+            default => 0,
+        };
+        if ($tip !== 0) {
+            $out[self::KEY_TIP] = $tip;
+        }
+
+        return $out;
     }
 
     /**
@@ -217,6 +277,7 @@ final class BillingExtrasResolver
             self::KEY_CIF => $this->cifFieldId,
             self::KEY_REG_COM => $this->regComFieldId,
             self::KEY_CNP => $this->cnpFieldId,
+            self::KEY_COMPANY => $this->companyFieldId,
         ];
     }
 
@@ -296,15 +357,20 @@ final class BillingExtrasResolver
      */
     private static function matches(array $field, string $key): bool
     {
+        $bare = match ($key) {
+            self::KEY_CIF => self::BARE_CUI,
+            self::KEY_COMPANY => self::BARE_COMPANY,
+            default => null,
+        };
         foreach ($field['descriptions'] as $description) {
             $ascii = self::ascii($description);
             $words = self::words($ascii);
             if (self::matchesAny($key, $words)) {
                 return true;
             }
-            if ($key === self::KEY_CIF) {
+            if ($bare !== null) {
                 $unbracketed = self::words(preg_replace('/\([^)]*\)?/', ' ', $ascii) ?? $ascii);
-                if (preg_match(self::BARE_CUI, $words) === 1 || preg_match(self::BARE_CUI, $unbracketed) === 1) {
+                if (preg_match($bare, $words) === 1 || preg_match($bare, $unbracketed) === 1) {
                     return true;
                 }
             }
@@ -315,7 +381,9 @@ final class BillingExtrasResolver
         }
         $code = self::words(self::ascii($field['field_name']));
 
-        return self::matchesAny($key, $code) || ($key === self::KEY_CIF && preg_match(self::CODE_CUI, $code) === 1);
+        return self::matchesAny($key, $code)
+            || ($key === self::KEY_CIF && preg_match(self::CODE_CUI, $code) === 1)
+            || ($key === self::KEY_COMPANY && preg_match(self::BARE_COMPANY, $code) === 1);
     }
 
     private static function matchesAny(string $key, string $words): bool

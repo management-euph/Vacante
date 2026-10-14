@@ -1,0 +1,609 @@
+msgid ""
+msgstr "Project-Id-Version: cs-cart-latest\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language-Team: Romanian\n"
+"Language: ro_RO\n"
+
+msgctxt "Addons::name::euph_profile_types"
+msgid "Profile types for customers and vendors"
+msgstr "Tipuri de profil pentru clienți și vânzători"
+
+msgctxt "Addons::description::euph_profile_types"
+msgid "Splits customers and vendors into types: each type gets its own set of profile fields, its own user groups and its own rules."
+msgstr "Împarte clienții și vânzătorii în tipuri: fiecare tip are propriul set de câmpuri de profil, propriile grupuri de utilizatori și propriile reguli."
+
+msgctxt "SettingsSections::euph_profile_types::general"
+msgid "General"
+msgstr "General"
+
+msgctxt "SettingsOptions::euph_profile_types::header_scope"
+msgid "Profile types"
+msgstr "Tipuri de profil"
+
+msgctxt "SettingsOptions::euph_profile_types::types_for"
+msgid "Use profile types for"
+msgstr "Folosește tipuri de profil pentru"
+
+msgctxt "SettingsVariants::euph_profile_types::types_for::customers"
+msgid "Customers"
+msgstr "Clienți"
+
+msgctxt "SettingsVariants::euph_profile_types::types_for::vendors"
+msgid "Vendors"
+msgstr "Vânzători"
+
+msgctxt "SettingsVariants::euph_profile_types::types_for::both"
+msgid "Customers and vendors"
+msgstr "Clienți și vânzători"
+
+msgctxt "SettingsTooltips::euph_profile_types::types_for"
+msgid "Vendor types work in Multi-Vendor only."
+msgstr "Tipurile de vânzător funcționează doar în Multi-Vendor."
+
+msgctxt "SettingsOptions::euph_profile_types::type_change"
+msgid "Allow user to change type after registration"
+msgstr "Permite utilizatorului să schimbe tipul după înregistrare"
+
+msgctxt "SettingsVariants::euph_profile_types::type_change::always"
+msgid "Always"
+msgstr "Oricând"
+
+msgctxt "SettingsVariants::euph_profile_types::type_change::once"
+msgid "One change"
+msgstr "O singură dată"
+
+msgctxt "SettingsVariants::euph_profile_types::type_change::never"
+msgid "Never"
+msgstr "Niciodată"
+
+msgctxt "SettingsTooltips::euph_profile_types::type_change"
+msgid "The administrator changes the type in the panel in any case."
+msgstr "Administratorul poate schimba tipul din panou în orice situație."
+
+msgctxt "SettingsOptions::euph_profile_types::group_status"
+msgid "Group status after changing profile type"
+msgstr "Starea în grup după schimbarea tipului de profil"
+
+msgctxt "SettingsVariants::euph_profile_types::group_status::A"
+msgid "Active"
+msgstr "Activ"
+
+msgctxt "SettingsVariants::euph_profile_types::group_status::P"
+msgid "Pending"
+msgstr "În așteptare"
+
+msgctxt "SettingsTooltips::euph_profile_types::group_status"
+msgid "The status a customer gets in the user groups of their type, at registration and after a change of type."
+msgstr "Starea pe care clientul o primește în grupurile tipului său, la înregistrare și după schimbarea tipului."
+
+msgctxt "SettingsOptions::euph_profile_types::header_storefront"
+msgid "Storefront"
+msgstr "Magazin"
+
+msgctxt "SettingsOptions::euph_profile_types::hide_standard_types"
+msgid "Hide standard types from the choice on the storefront"
+msgstr "Ascunde tipurile standard din alegerea de pe magazin"
+
+msgctxt "SettingsTooltips::euph_profile_types::hide_standard_types"
+msgid "Customers choose only from the types you created, as long as at least one of them is active. The default type is then the first of them."
+msgstr "Clienții aleg doar dintre tipurile create de dumneavoastră, cât timp cel puțin unul dintre ele este activ. Tipul implicit devine primul dintre ele."
+
+msgctxt "SettingsOptions::euph_profile_types::choice_view"
+msgid "Profile type choice view"
+msgstr "Afișarea alegerii tipului de profil"
+
+msgctxt "SettingsVariants::euph_profile_types::choice_view::radio"
+msgid "Radio buttons"
+msgstr "Butoane radio"
+
+msgctxt "SettingsVariants::euph_profile_types::choice_view::select"
+msgid "Drop-down"
+msgstr "Listă derulantă"
+
+msgctxt "SettingsVariants::euph_profile_types::choice_view::pills"
+msgid "Tabs (pills)"
+msgstr "Taburi (butoane alăturate)"
+
+msgctxt "SettingsTooltips::euph_profile_types::choice_view"
+msgid "In registration, in the profile and at checkout. Tabs suit two to four types with short names; with more types the drop-down reads better."
+msgstr "La înregistrare, în profil și la finalizarea comenzii. Taburile se potrivesc pentru două până la patru tipuri cu nume scurte; cu mai multe tipuri, lista derulantă se citește mai ușor."
+
+msgctxt "SettingsOptions::euph_profile_types::reload_on_change"
+msgid "Reload the page when the type is changed"
+msgstr "Reîncarcă pagina la schimbarea tipului"
+
+msgctxt "SettingsTooltips::euph_profile_types::reload_on_change"
+msgid "By default the form is redrawn without reloading and keeps what has been typed. Turn this on if a captcha or another third-party script stops working after the redraw."
+msgstr "Implicit formularul se redesenează fără reîncărcare și păstrează ce s-a completat. Activați opțiunea dacă un captcha sau alt script terț nu mai funcționează după redesenare."
+
+msgctxt "SettingsOptions::euph_profile_types::restrict_login"
+msgid "Let customers sign in only on the storefronts of their profile type"
+msgstr "Permite clienților autentificarea doar pe magazinele tipului lor de profil"
+
+msgctxt "SettingsTooltips::euph_profile_types::restrict_login"
+msgid "A customer whose type does not work on this storefront cannot sign in there. Administrators and vendors sign in as usual."
+msgstr "Un client al cărui tip nu funcționează pe acest magazin nu se poate autentifica aici. Administratorii și vânzătorii se autentifică normal."
+
+msgctxt "SettingsOptions::euph_profile_types::header_checkout"
+msgid "Checkout"
+msgstr "Finalizarea comenzii"
+
+msgctxt "SettingsOptions::euph_profile_types::checkout_choice"
+msgid "Profile type choice at checkout"
+msgstr "Alegerea tipului de profil la finalizarea comenzii"
+
+msgctxt "SettingsVariants::euph_profile_types::checkout_choice::all"
+msgid "Everybody"
+msgstr "Toată lumea"
+
+msgctxt "SettingsVariants::euph_profile_types::checkout_choice::guests"
+msgid "Guests only"
+msgstr "Doar vizitatorii neautentificați"
+
+msgctxt "SettingsVariants::euph_profile_types::checkout_choice::none"
+msgid "Nobody"
+msgstr "Nimeni"
+
+msgctxt "SettingsTooltips::euph_profile_types::checkout_choice"
+msgid "Without the choice a signed-in customer orders with the type of their profile, a guest with the default type."
+msgstr "Fără alegere, un client autentificat comandă cu tipul profilului său, iar un vizitator cu tipul implicit."
+
+msgctxt "SettingsOptions::euph_profile_types::invoice_details_from_profile"
+msgid "Do not ask again for invoice details taken from the profile"
+msgstr "Nu mai cere datele de facturare preluate din profil"
+
+msgctxt "SettingsTooltips::euph_profile_types::invoice_details_from_profile"
+msgid "The \"Issue an invoice\" payment of the Russian Payments add-on: the details are taken from the profile and the customer does not type them twice."
+msgstr "Plata „Emite factură” a modulului Russian Payments: datele sunt preluate din profil și clientul nu le mai introduce a doua oară."
+
+msgctxt "SettingsOptions::euph_profile_types::header_vendors"
+msgid "Multi-Vendor"
+msgstr "Multi-Vendor"
+
+msgctxt "SettingsOptions::euph_profile_types::vendor_type_in_product"
+msgid "Use the name of the profile type in the vendor information"
+msgstr "Afișează numele tipului de profil în informațiile vânzătorului"
+
+msgctxt "SettingsTooltips::euph_profile_types::vendor_type_in_product"
+msgid "Multi-Vendor: the vendor type is shown next to the vendor name on the product page and in the vendor card."
+msgstr "Multi-Vendor: tipul vânzătorului apare lângă numele acestuia pe pagina produsului și în fișa vânzătorului."
+
+msgctxt "Languages::euph_customer_profile_types"
+msgid "Profile types"
+msgstr "Tipuri de profil"
+
+msgctxt "Languages::euph_customer_profile_types_menu_description"
+msgid "Customer types: their fields, user groups and rules."
+msgstr "Tipuri de clienți: câmpurile, grupurile de utilizatori și regulile lor."
+
+msgctxt "Languages::euph_vendor_profile_types"
+msgid "Vendor types"
+msgstr "Tipuri de vânzător"
+
+msgctxt "Languages::euph_vendor_profile_types_menu_description"
+msgid "Vendor types: their fields, user groups and vendor plans."
+msgstr "Tipuri de vânzători: câmpurile, grupurile de utilizatori și planurile lor."
+
+msgctxt "Languages::privileges.view_euph_profile_types"
+msgid "View profile types"
+msgstr "Vizualizare tipuri de profil"
+
+msgctxt "Languages::privileges.manage_euph_profile_types"
+msgid "Manage profile types"
+msgstr "Administrare tipuri de profil"
+
+msgctxt "Languages::privilege_groups.euph_profile_types"
+msgid "Profile types"
+msgstr "Tipuri de profil"
+
+msgctxt "Languages::euph_profile_type"
+msgid "By profile type"
+msgstr "După tipul de profil"
+
+msgctxt "Languages::euph_profile_types.profile_type"
+msgid "Profile type"
+msgstr "Tip de profil"
+
+msgctxt "Languages::euph_profile_types.vendor_type"
+msgid "Vendor type"
+msgstr "Tip de vânzător"
+
+msgctxt "Languages::euph_profile_types.profile_types"
+msgid "Profile types"
+msgstr "Tipuri de profil"
+
+msgctxt "Languages::euph_profile_types.customer_types"
+msgid "Customer profile types"
+msgstr "Tipuri de profil pentru clienți"
+
+msgctxt "Languages::euph_profile_types.vendor_types"
+msgid "Vendor profile types"
+msgstr "Tipuri de profil pentru vânzători"
+
+msgctxt "Languages::euph_profile_types.standard_customer_type"
+msgid "Customer"
+msgstr "Client"
+
+msgctxt "Languages::euph_profile_types.standard_vendor_type"
+msgid "Vendor"
+msgstr "Vânzător"
+
+msgctxt "Languages::euph_profile_types.standard"
+msgid "standard"
+msgstr "standard"
+
+msgctxt "Languages::euph_profile_types.default"
+msgid "Default"
+msgstr "Implicit"
+
+msgctxt "Languages::euph_profile_types.add_type"
+msgid "Add profile type"
+msgstr "Adaugă tip de profil"
+
+msgctxt "Languages::euph_profile_types.new_customer_type"
+msgid "New customer type"
+msgstr "Tip nou de client"
+
+msgctxt "Languages::euph_profile_types.new_vendor_type"
+msgid "New vendor type"
+msgstr "Tip nou de vânzător"
+
+msgctxt "Languages::euph_profile_types.tab_rules"
+msgid "Rules"
+msgstr "Reguli"
+
+msgctxt "Languages::euph_profile_types.tab_fields"
+msgid "Fields"
+msgstr "Câmpuri"
+
+msgctxt "Languages::euph_profile_types.for"
+msgid "Type of"
+msgstr "Tip pentru"
+
+msgctxt "Languages::euph_profile_types.for_customers"
+msgid "Customers"
+msgstr "Clienți"
+
+msgctxt "Languages::euph_profile_types.for_vendors"
+msgid "Vendors"
+msgstr "Vânzători"
+
+msgctxt "Languages::euph_profile_types.standard_type_note"
+msgid "The standard type everybody has until they choose another one. It cannot be deleted or disabled; rename it as you like."
+msgstr "Tipul standard pe care îl are oricine până alege altul. Nu poate fi șters sau dezactivat; îl puteți redenumi."
+
+msgctxt "Languages::euph_profile_types.code_hint"
+msgid "Kept with customers and orders and used in registration links. Latin letters, digits and _, up to 32 characters."
+msgstr "Se păstrează la clienți și comenzi și se folosește în linkurile de înregistrare. Litere latine, cifre și _, maximum 32 de caractere."
+
+msgctxt "Languages::euph_profile_types.description_hint"
+msgid "For you: shown in the list of types."
+msgstr "Pentru dumneavoastră: apare în lista tipurilor."
+
+msgctxt "Languages::euph_profile_types.default_type"
+msgid "Default type"
+msgstr "Tip implicit"
+
+msgctxt "Languages::euph_profile_types.default_type_hint"
+msgid "Guests and new accounts get it when nobody chose a type."
+msgstr "Vizitatorii și conturile noi îl primesc când nu s-a ales niciun tip."
+
+msgctxt "Languages::euph_profile_types.default_type_vendor_hint"
+msgid "A vendor application gets it when nobody chose a type."
+msgstr "O cerere de vânzător îl primește când nu s-a ales niciun tip."
+
+msgctxt "Languages::euph_profile_types.status_hint"
+msgid "Hidden: not offered in the choice, given by its registration link or by you. Disabled: nobody new gets it; who has it keeps it."
+msgstr "Ascuns: nu apare în alegere, se atribuie prin linkul său de înregistrare sau de dumneavoastră. Dezactivat: nu îl mai primește nimeni nou; cine îl are îl păstrează."
+
+msgctxt "Languages::euph_profile_types.registration_links"
+msgid "Registration links"
+msgstr "Linkuri de înregistrare"
+
+msgctxt "Languages::euph_profile_types.registration_links_hint"
+msgid "For a mailing to partners or a \"Become a dealer\" button. The links carry the key of the type: a hidden type is given only to those who have its link, not to whoever knows its code. The locked link does not let the visitor change the type in the form."
+msgstr "Pentru un mesaj către parteneri sau un buton „Devino dealer”. Linkurile conțin cheia tipului: un tip ascuns se acordă doar celor care au linkul, nu oricui îi cunoaște codul. Linkul blocat nu permite vizitatorului să schimbe tipul în formular."
+
+msgctxt "Languages::euph_profile_types.application_links_hint"
+msgid "Vendor application links. They carry the key of the type: a hidden type is given only to those who have its link, not to whoever knows its code. The locked link does not let the applicant change the type in the form."
+msgstr "Linkuri pentru cererea de vânzător. Conțin cheia tipului: un tip ascuns se acordă doar celor care au linkul, nu oricui îi cunoaște codul. Linkul blocat nu permite solicitantului să schimbe tipul în formular."
+
+msgctxt "Languages::euph_profile_types.link_open"
+msgid "Link"
+msgstr "Link"
+
+msgctxt "Languages::euph_profile_types.link_locked"
+msgid "Locked link"
+msgstr "Link blocat"
+
+msgctxt "Languages::euph_profile_types.new_links"
+msgid "New links"
+msgstr "Linkuri noi"
+
+msgctxt "Languages::euph_profile_types.new_links_hint"
+msgid "On saving, the type gets a new key: the links sent so far stop working. Who already has the type keeps it."
+msgstr "La salvare, tipul primește o cheie nouă: linkurile trimise până acum nu mai funcționează. Cine are deja tipul îl păstrează."
+
+msgctxt "Languages::euph_profile_types.copy"
+msgid "Copy"
+msgstr "Copiază"
+
+msgctxt "Languages::euph_profile_types.copied"
+msgid "Copied to the clipboard"
+msgstr "Copiat în clipboard"
+
+msgctxt "Languages::euph_profile_types.grants_usergroups"
+msgid "Grants user groups"
+msgstr "Acordă grupurile"
+
+msgctxt "Languages::euph_profile_types.usergroups_hint"
+msgid "A customer of this type joins these groups: wholesale prices and terms come with the type, not by hand. On a change of type the customer moves to the groups of the new type."
+msgstr "Un client de acest tip intră în aceste grupuri: prețurile și condițiile en-gros vin odată cu tipul, nu manual. La schimbarea tipului, clientul trece în grupurile noului tip."
+
+msgctxt "Languages::euph_profile_types.no_usergroups"
+msgid "There are no user groups yet. <a href=\"[url]\">Create one</a>."
+msgstr "Nu există încă grupuri de utilizatori. <a href=\"[url]\">Creați unul</a>."
+
+msgctxt "Languages::euph_profile_types.activation"
+msgid "Account activation"
+msgstr "Activarea contului"
+
+msgctxt "Languages::euph_profile_types.new_accounts"
+msgid "New accounts"
+msgstr "Conturi noi"
+
+msgctxt "Languages::euph_profile_types.activation_store"
+msgid "As the store setting says"
+msgstr "Conform setării magazinului"
+
+msgctxt "Languages::euph_profile_types.activation_instant"
+msgid "Activated at once"
+msgstr "Activate imediat"
+
+msgctxt "Languages::euph_profile_types.activation_approval"
+msgid "Wait for approval"
+msgstr "Așteaptă aprobarea"
+
+msgctxt "Languages::euph_profile_types.activation_hint"
+msgid "Accounts registered on the storefront. The store setting is \"Administrator must activate new user accounts\"."
+msgstr "Conturile înregistrate pe magazin. Setarea magazinului este „Administratorul trebuie să activeze conturile noi”."
+
+msgctxt "Languages::euph_profile_types.invoicing"
+msgid "Invoicing"
+msgstr "Facturare"
+
+msgctxt "Languages::euph_profile_types.invoice_as"
+msgid "Invoice as"
+msgstr "Facturează ca"
+
+msgctxt "Languages::euph_profile_types.invoice_as_order_data"
+msgid "As the order's data says"
+msgstr "După datele comenzii"
+
+msgctxt "Languages::euph_profile_types.invoice_as_company"
+msgid "Company (legal entity, PJ)"
+msgstr "Persoană juridică (PJ)"
+
+msgctxt "Languages::euph_profile_types.invoice_as_person"
+msgid "Private person (PF)"
+msgstr "Persoană fizică (PF)"
+
+msgctxt "Languages::euph_profile_types.invoice_as_hint"
+msgid "For invoicing add-ons such as FGO. A company is invoiced with its company name, CIF and Reg. Com., a private person with their name and CNP: show those fields for the type. As the order's data says: a company name or a CIF on the order makes it a company."
+msgstr "Pentru modulele de facturare, precum FGO. O persoană juridică este facturată cu denumirea firmei, CIF-ul și Nr. Reg. Com., o persoană fizică cu numele și CNP-ul: afișați aceste câmpuri pentru tip. După datele comenzii: o denumire de firmă sau un CIF pe comandă o face persoană juridică."
+
+msgctxt "Languages::euph_profile_types.works_on"
+msgid "Works on"
+msgstr "Funcționează pe"
+
+msgctxt "Languages::euph_profile_types.all_storefronts"
+msgid "All storefronts"
+msgstr "Toate magazinele"
+
+msgctxt "Languages::euph_profile_types.storefronts_hint"
+msgid "None ticked: every storefront. The type is offered only where it works; with the login rule on, its customers sign in only there."
+msgstr "Nebifat niciunul: toate magazinele. Tipul se oferă doar unde funcționează; cu regula de autentificare activă, clienții săi se autentifică doar acolo."
+
+msgctxt "Languages::euph_profile_types.vendor_plans"
+msgid "Vendor plans"
+msgstr "Planuri de vânzător"
+
+msgctxt "Languages::euph_profile_types.offers_plans"
+msgid "Offers the plans"
+msgstr "Oferă planurile"
+
+msgctxt "Languages::euph_profile_types.vendor_plans_hint"
+msgid "The plans an applicant of this type can choose. None ticked: every plan."
+msgstr "Planurile pe care le poate alege un solicitant de acest tip. Nebifat niciunul: toate planurile."
+
+msgctxt "Languages::euph_profile_types.field"
+msgid "Field"
+msgstr "Câmp"
+
+msgctxt "Languages::euph_profile_types.section_vendor"
+msgid "Vendor information"
+msgstr "Informații vânzător"
+
+msgctxt "Languages::euph_profile_types.area_profile"
+msgid "In the profile"
+msgstr "În profil"
+
+msgctxt "Languages::euph_profile_types.area_registration"
+msgid "At registration"
+msgstr "La înregistrare"
+
+msgctxt "Languages::euph_profile_types.area_application"
+msgid "In the application"
+msgstr "În cerere"
+
+msgctxt "Languages::euph_profile_types.area_checkout"
+msgid "At checkout"
+msgstr "La comandă"
+
+msgctxt "Languages::euph_profile_types.area_storefront"
+msgid "On the storefront"
+msgstr "Pe magazin"
+
+msgctxt "Languages::euph_profile_types.show"
+msgid "show"
+msgstr "afișează"
+
+msgctxt "Languages::euph_profile_types.required"
+msgid "required"
+msgstr "obligatoriu"
+
+msgctxt "Languages::euph_profile_types.general_settings"
+msgid "general checkboxes"
+msgstr "setări generale"
+
+msgctxt "Languages::euph_profile_types.general_settings_tooltip"
+msgid "No type governs this field yet: it works by its general checkboxes. Tick differently for a type to set it per type."
+msgstr "Niciun tip nu guvernează încă acest câmp: funcționează după bifele generale. Bifați diferit pentru un tip ca să îl setați pe tipuri."
+
+msgctxt "Languages::euph_profile_types.fields_tab_note"
+msgid "One common list of fields: what you tick here is what customers of this type see. A field with nothing ticked for any type works by its general checkboxes; once ticked differently for a type, it shows to each type only where that type's checkboxes say so."
+msgstr "O singură listă comună de câmpuri: ce bifați aici vede clientul de acest tip. Un câmp nebifat la niciun tip funcționează după bifele generale; odată bifat diferit pentru un tip, apare fiecărui tip doar unde o spun bifele tipului."
+
+msgctxt "Languages::euph_profile_types.field_governed_note"
+msgid "This field is set per type: the general checkboxes above do not decide where it shows while the add-on is on."
+msgstr "Acest câmp este setat pe tipuri: cât timp modulul este activ, bifele generale de mai sus nu decid unde apare."
+
+msgctxt "Languages::euph_profile_types.field_general_note"
+msgid "Nothing is ticked differently for any type: the field works by the general checkboxes above. Tick a row below to set it per type."
+msgstr "Nu este bifat nimic diferit pentru vreun tip: câmpul funcționează după bifele generale de mai sus. Bifați un rând de mai jos ca să îl setați pe tipuri."
+
+msgctxt "Languages::euph_profile_types.fill_from_general"
+msgid "Same as the general checkboxes"
+msgstr "La fel ca bifele generale"
+
+msgctxt "Languages::euph_profile_types.clear_types"
+msgid "Clear"
+msgstr "Golește"
+
+msgctxt "Languages::euph_profile_types.field_card_hint"
+msgid "Untick every row to give the field back to its general checkboxes."
+msgstr "Debifați toate rândurile ca să readuceți câmpul la bifele generale."
+
+msgctxt "Languages::euph_profile_types.kind_disabled_note"
+msgid "These types are not in use: check the setting \"Use profile types for\" of the <a href=\"[url]\">add-on</a>."
+msgstr "Aceste tipuri nu sunt folosite: verificați setarea „Folosește tipuri de profil pentru” a <a href=\"[url]\">modulului</a>."
+
+msgctxt "Languages::euph_profile_types.legacy_found"
+msgid "The data of the Profile types add-on version 1.x is in the database."
+msgstr "Datele modulului Tipuri de profil versiunea 1.x se află în baza de date."
+
+msgctxt "Languages::euph_profile_types.legacy_import"
+msgid "Carry over types and fields"
+msgstr "Preia tipurile și câmpurile"
+
+msgctxt "Languages::euph_profile_types.legacy_imported"
+msgid "Carried over from version 1.x: [types] types, [rules] field settings, [adopted] fields joined the common list, [values] values copied."
+msgstr "Preluate din versiunea 1.x: [types] tipuri, [rules] setări de câmpuri, [adopted] câmpuri adăugate în lista comună, [values] valori copiate."
+
+msgctxt "Languages::euph_profile_types.how_it_works"
+msgid "How it works"
+msgstr "Cum funcționează"
+
+msgctxt "Languages::euph_profile_types.how_it_works_text"
+msgid "Profile fields stay one common list: each field gets show/require checkboxes per type, so a value survives a change of type and reports see one and the same field. A type grants user groups and works on the storefronts you choose."
+msgstr "Câmpurile de profil rămân o singură listă comună: fiecare câmp primește bife de afișare/obligatoriu pe tipuri, astfel o valoare rămâne la schimbarea tipului, iar rapoartele văd același câmp. Un tip acordă grupuri de utilizatori și funcționează pe magazinele alese."
+
+msgctxt "Languages::euph_profile_types.go_profile_fields"
+msgid "Profile fields"
+msgstr "Câmpuri de profil"
+
+msgctxt "Languages::euph_profile_types.go_settings"
+msgid "Add-on settings"
+msgstr "Setările modulului"
+
+msgctxt "Languages::euph_profile_types.change_order_type"
+msgid "Change"
+msgstr "Schimbă"
+
+msgctxt "Languages::euph_profile_types.change_order_type_hint"
+msgid "Corrects the type of this order only; the customer keeps theirs."
+msgstr "Corectează doar tipul acestei comenzi; clientul își păstrează tipul."
+
+msgctxt "Languages::euph_profile_types.invoice_details_taken"
+msgid "Taken from your profile:"
+msgstr "Preluate din profilul dumneavoastră:"
+
+msgctxt "Languages::euph_profile_types.login_denied_on_storefront"
+msgid "Your account cannot sign in to this store. Please sign in on the store where you registered."
+msgstr "Contul dumneavoastră nu se poate autentifica în acest magazin. Vă rugăm să vă autentificați în magazinul în care v-ați înregistrat."
+
+msgctxt "Languages::euph_profile_types.list_view_customers"
+msgid "Customers see:"
+msgstr "Clienții văd:"
+
+msgctxt "Languages::euph_profile_types.list_view_vendors"
+msgid "Vendors see:"
+msgstr "Vânzătorii văd:"
+
+msgctxt "Languages::euph_profile_types.all_types"
+msgid "All types"
+msgstr "Toate tipurile"
+
+msgctxt "Languages::euph_profile_types.tag_general"
+msgid "general"
+msgstr "general"
+
+msgctxt "Languages::euph_profile_types.tag_always"
+msgid "always"
+msgstr "mereu"
+
+msgctxt "Languages::euph_profile_types.tag_as_billing"
+msgid "as in the billing address"
+msgstr "ca la adresa de facturare"
+
+msgctxt "Languages::euph_profile_types.set_per_type"
+msgid "Set per type"
+msgstr "Setează pe tipuri"
+
+msgctxt "Languages::euph_profile_types.general_row_hint"
+msgid "CS-Cart's general checkboxes, the same for all types. \"Set per type\" opens a row per type, filled from them; nothing changes until a row differs."
+msgstr "Bifele generale CS-Cart, aceleași pentru toate tipurile. „Setează pe tipuri” deschide câte un rând pe tip, completat din ele; nu se schimbă nimic până când un rând diferă."
+
+msgctxt "Languages::euph_profile_types.registration_follows_show"
+msgid "At registration follows \"show\" while the field is general."
+msgstr "La înregistrare urmează „afișează” cât timp câmpul este general."
+
+msgctxt "Languages::euph_profile_types.manage_types"
+msgid "Manage types"
+msgstr "Administrează tipurile"
+
+msgctxt "Languages::euph_profile_types.open_in_profile_fields"
+msgid "See this type in the Profile fields list"
+msgstr "Vedeți acest tip în lista câmpurilor de profil"
+
+msgctxt "Languages::euph_profile_types.error_type_not_found"
+msgid "The profile type was not found."
+msgstr "Tipul de profil nu a fost găsit."
+
+msgctxt "Languages::euph_profile_types.error_type_not_saved"
+msgid "The profile type was not saved."
+msgstr "Tipul de profil nu a fost salvat."
+
+msgctxt "Languages::euph_profile_types.error_name_required"
+msgid "Enter the name of the type."
+msgstr "Introduceți numele tipului."
+
+msgctxt "Languages::euph_profile_types.error_code_format"
+msgid "The code may hold Latin letters, digits and _, up to 32 characters."
+msgstr "Codul poate conține litere latine, cifre și _, maximum 32 de caractere."
+
+msgctxt "Languages::euph_profile_types.error_code_reserved"
+msgid "The codes U and S belong to the standard types."
+msgstr "Codurile U și S aparțin tipurilor standard."
+
+msgctxt "Languages::euph_profile_types.error_code_taken"
+msgid "Another type has this code."
+msgstr "Alt tip are deja acest cod."
+
+msgctxt "Languages::euph_profile_types.error_standard_type_delete"
+msgid "A standard type cannot be deleted."
+msgstr "Un tip standard nu poate fi șters."
+
+msgctxt "Languages::euph_profile_types.error_vendor_types_need_multivendor"
+msgid "Vendor types work in Multi-Vendor only."
+msgstr "Tipurile de vânzător funcționează doar în Multi-Vendor."

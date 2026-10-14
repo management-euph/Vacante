@@ -52,12 +52,13 @@ final class SettingsPlacementTest extends TestCase
             ['name' => 'cif_field', 'position' => '310'],
             ['name' => 'reg_com_field', 'position' => '320'],
             ['name' => 'cnp_field', 'position' => '330'],
+            ['name' => 'company_field', 'position' => '350'],
             ['name' => 'platform_url', 'position' => '340'],
         ];
 
-        self::assertSame(4, SettingsPlacement::apply());
+        self::assertSame(5, SettingsPlacement::apply());
         self::assertSame(
-            ['platform_url' => 35, 'cif_field' => 152, 'reg_com_field' => 154, 'cnp_field' => 156],
+            ['platform_url' => 35, 'cif_field' => 152, 'reg_com_field' => 154, 'cnp_field' => 156, 'company_field' => 158],
             self::movedTo(),
             'the platform URL under the API credentials, the field selectors under the customer settings',
         );
@@ -68,7 +69,7 @@ final class SettingsPlacementTest extends TestCase
         self::assertSame('fgo_invoicing', $selects[0]['params'][0]);
         self::assertSame(['sandbox', 'behaviour_header', 'platform_url'], $selects[0]['params'][1]);
         self::assertSame(
-            ['client_cnp_required', 'lines_header', 'cif_field', 'reg_com_field', 'cnp_field'],
+            ['client_cnp_required', 'lines_header', 'cif_field', 'reg_com_field', 'cnp_field', 'company_field'],
             $selects[1]['params'][1],
         );
     }

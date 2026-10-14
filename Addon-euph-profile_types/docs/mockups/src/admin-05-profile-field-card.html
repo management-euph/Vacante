@@ -1,0 +1,49 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Profile field card — Profile types block</title><link rel="stylesheet" href="admin.css"></head>
+<body><div class="wrap">
+<!--#top-->
+<div class="subnav"><a>Customers</a><a>Administrators</a><a>User groups</a><a class="active">Profile fields</a><a>Profile types</a></div>
+<div class="page">
+  <div class="main">
+    <div class="titlebar">
+      <h1>Tax number (CUI)</h1><span class="lang">EN ▾</span>
+      <div class="actions"><span class="btn">Cancel</span><span class="btn btn-primary">Save</span></div>
+    </div>
+    <div class="content form">
+      <div class="tabs"><a class="active">General</a></div>
+      <div class="control-group"><div class="control-label req">Name:</div><div class="controls"><input type="text" class="w-large" value="Tax number (CUI)"></div></div>
+      <div class="control-group"><div class="control-label">Code:</div><div class="controls"><span class="shift">company_cui</span></div></div>
+      <div class="control-group"><div class="control-label">Position:</div><div class="controls"><input type="text" class="w-micro" value="40"></div></div>
+      <div class="control-group"><div class="control-label">Type:</div><div class="controls"><select><option>Input field</option></select></div></div>
+      <div class="control-group"><div class="control-label">Section:</div><div class="controls"><span class="shift">Contact information</span></div></div>
+      <div class="control-group"><div class="control-label">Profile (show / required):</div><div class="controls" style="padding-top:7px"><input type="checkbox"> / <input type="checkbox" disabled></div></div>
+      <div class="control-group"><div class="control-label">Checkout (show / required):</div><div class="controls" style="padding-top:7px"><input type="checkbox"> / <input type="checkbox" disabled> <span class="mark">1</span></div></div>
+
+      <div class="subheader">Profile types <span class="mark">2</span></div>
+      <div class="alert alert-info">This field is set per type: the general checkboxes above do not decide where it shows while the add-on is on.</div>
+      <table class="table rules">
+        <thead><tr>
+          <th style="width:34%">Profile type</th>
+          <th class="center">In the profile<small>show / required</small></th>
+          <th class="center">At registration<small>show</small></th>
+          <th class="center">At checkout<small>show / required</small></th>
+        </tr></thead>
+        <tbody>
+          <tr><td><a class="name">Private person</a><span class="code">U</span><span class="label">standard</span></td><td class="cell"><input type="checkbox"><span class="slash">/</span><input type="checkbox" disabled></td><td class="cell"><input type="checkbox"></td><td class="cell"><input type="checkbox"><span class="slash">/</span><input type="checkbox" disabled></td></tr>
+          <tr><td><a class="name">Company</a><span class="code">B</span></td><td class="cell"><input type="checkbox" checked><span class="slash">/</span><input type="checkbox" checked></td><td class="cell"><input type="checkbox" checked></td><td class="cell"><input type="checkbox" checked><span class="slash">/</span><input type="checkbox" checked></td></tr>
+          <tr><td><a class="name">Travel agency</a><span class="code">AG</span><span class="label label-info">Hidden</span></td><td class="cell"><input type="checkbox" checked><span class="slash">/</span><input type="checkbox" checked></td><td class="cell"><input type="checkbox" checked></td><td class="cell"><input type="checkbox" checked><span class="slash">/</span><input type="checkbox" checked></td></tr>
+          <tr class="dim"><td><a class="name" style="color:#9aa5b1">Non-profit</a><span class="code">NP</span><span class="label">Disabled</span></td><td class="cell"><input type="checkbox" checked><span class="slash">/</span><input type="checkbox"></td><td class="cell"><input type="checkbox"></td><td class="cell"><input type="checkbox" checked><span class="slash">/</span><input type="checkbox"></td></tr>
+        </tbody>
+      </table>
+      <div class="actions-row"><span class="btn">Same as the general checkboxes</span><span class="btn">Clear</span> <span class="mark">3</span></div>
+      <p class="description">Untick every row to give the field back to its general checkboxes.</p>
+    </div>
+  </div>
+</div>
+<div class="legend">
+  <div><span class="mark">1</span><span>The <b>general checkboxes</b> stay CS-Cart's own: they apply to fields nothing is ticked for in any type, and to the whole store when the add-on is off.</span></div>
+  <div><span class="mark">2</span><span>The add-on adds a <b>Profile types</b> block to every field card: a row per type. The field is created once and stays one field.</span></div>
+  <div><span class="mark">3</span><span>Helpers: copy the general checkboxes to every type, or clear the block.</span></div>
+  <div><span class="mark" style="background:#cfd8e3;box-shadow:none">i</span><span>Vendor fields get "In the application" and "On the storefront" columns instead of registration and checkout.</span></div>
+</div>
+<span class="mockup-tag">MOCKUP</span>
+</div></body></html>

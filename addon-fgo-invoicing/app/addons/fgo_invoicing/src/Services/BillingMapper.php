@@ -17,16 +17,19 @@ use Tygh\Addons\FgoInvoicing\Helpers\TypeCoerce;
  * Translates a CS-Cart `$order_info` array (the standard structure returned
  * by `fn_get_order_info`) into an `IssueInvoiceRequest`.
  *
- * The `fgo_billing_*` keys (CIF, Reg. Com., CNP) are not CS-Cart's: run the
- * order through BillingExtrasResolver first, which fills them from the
- * store's custom profile fields. InvoiceIssuer does.
+ * The `fgo_billing_*` keys (CIF, Reg. Com., CNP, company name, PJ / PF) are
+ * not CS-Cart's: run the order through BillingExtrasResolver first, which
+ * fills them from the store's custom profile fields and from the order's
+ * profile type. InvoiceIssuer does.
  *
  * Rules of thumb:
  *
- *   - PJ (company) when the order carries a company name (`fgo_billing_company`,
+ *   - `fgo_billing_tip` (1 = PJ, 2 = PF) decides when set: the profile type's
+ *     "Invoice as" (euph_profile_types) sets it, so a company type is a PJ and
+ *     a private type a PF whatever else the order holds. Without it: PJ
+ *     (company) when the order carries a company name (`fgo_billing_company`,
  *     `b_company` or CS-Cart's `company`, first non-blank) or a CIF
- *     (`fgo_billing_cui`). Otherwise PF. `fgo_billing_tip` (1 = PJ, 2 = PF)
- *     overrides both.
+ *     (`fgo_billing_cui`), otherwise PF.
  *   - The CIF is compacted ("RO 123 456 78" -> "RO12345678") and counts only
  *     when it holds a digit 1-9: what customers type into a required CUI
  *     field when they have none ("N/A", "nu e cazul", "0", "RO") is no CIF,

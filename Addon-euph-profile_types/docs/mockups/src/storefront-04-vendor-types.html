@@ -1,0 +1,49 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Multi-Vendor: vendor types</title><link rel="stylesheet" href="storefront.css">
+<style>.cols { display:grid; grid-template-columns: 1fr 1fr; gap: 34px; } .col h2 { font-size: 13px; text-transform: uppercase; color: #8a939c; letter-spacing: .06em; margin: 0 0 10px; } .prod { display:grid; grid-template-columns: 180px 1fr; gap: 18px; } .img { height: 180px; border-radius: 4px; background: linear-gradient(135deg,#f2d9b8,#e8b98a); display:flex; align-items:center; justify-content:center; color:#7b5531; font-weight:700; } .price { font-size: 26px; color: #222; margin: 8px 0 12px; } .vendor { font-size: 13px; margin: 10px 0; } .vendor b { color:#555; } .vt { display:inline-block; margin-left:6px; padding:1px 8px; border-radius:10px; background:#eef3fb; color:#31445a; font-size:12px; } .plan { display:flex; gap: 10px; } .plan label { flex:1; border:1px solid #d9dde2; border-radius:4px; padding:10px 12px; font-size: 13px; } .plan label.on { border-color: var(--brand); background:#f2f8fd; }</style></head>
+<body><div class="wrap">
+<!--#sftop-->
+<div class="container">
+  <div class="cols">
+    <div class="col">
+      <h2>Product page</h2>
+      <div class="card">
+        <div class="prod">
+          <div class="img">Handmade</div>
+          <div>
+            <div style="font-size:20px">Ceramic plate — hand painted</div>
+            <div class="price">89,00 lei</div>
+            <div class="vendor"><b>Vendor:</b> <a>Atelier Dobrogea</a><span class="vt">Individual seller</span> <span class="mark">1</span></div>
+            <div class="vendor"><b>Availability:</b> in stock</div>
+            <span class="btn-cta">Add to cart</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <h2>Apply for a vendor account</h2>
+      <div class="card">
+        <div class="choice">
+          <label class="ty-control-group__title req">Vendor type <span class="mark">2</span></label>
+          <div class="options"><label class="opt"><input type="radio" name="v">Company</label><label class="opt"><input type="radio" name="v" checked>Individual seller</label></div>
+        </div>
+        <div class="ty-control-group"><label class="ty-control-group__title req">Shop name</label><input class="ty-input" value="Atelier Dobrogea"></div>
+        <div class="grid2">
+          <div class="ty-control-group"><label class="ty-control-group__title req">First name</label><input class="ty-input" value="Elena"></div>
+          <div class="ty-control-group"><label class="ty-control-group__title req">Last name</label><input class="ty-input" value="Marin"></div>
+        </div>
+        <div class="ty-control-group"><label class="ty-control-group__title req">Personal ID (CNP)</label><input class="ty-input" value="2850101130000"></div>
+        <div class="ty-control-group"><label class="ty-control-group__title req">Vendor plan <span class="mark">3</span></label>
+          <div class="plan"><label class="on"><input type="radio" name="p" checked> Starter · 0 lei</label><label><input type="radio" name="p"> Artisan · 49 lei</label></div></div>
+        <div style="margin-top:14px"><span class="btn-cta">Submit</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="legend">
+  <div><span class="mark">1</span><span>"Use the name of the profile type in the vendor information": the <b>vendor type next to the vendor name</b> on the product page and in the vendor card.</span></div>
+  <div><span class="mark">2</span><span>Vendors get <b>their own types</b> — "Company" and "Individual seller" — with different fields: a CNP for individuals, a tax number for companies.</span></div>
+  <div><span class="mark">3</span><span>Each vendor type offers <b>its own vendor plans</b> and grants its own user groups.</span></div>
+</div>
+<div class="footer"><span>© 2026 VacanteLitoral.ro</span><span>Terms</span><span>Privacy</span></div>
+<span class="mockup-tag">MOCKUP</span>
+</div></body></html>

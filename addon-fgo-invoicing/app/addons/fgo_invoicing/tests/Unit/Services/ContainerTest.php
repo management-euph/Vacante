@@ -57,15 +57,16 @@ final class ContainerTest extends TestCase
 
     public function testTheResolverCarriesTheConfiguredFieldIds(): void
     {
-        ConfigProvider::seed(['cif_field' => '12', 'reg_com_field' => '13', 'cnp_field' => '14']);
+        ConfigProvider::seed(['cif_field' => '12', 'reg_com_field' => '13', 'cnp_field' => '14', 'company_field' => '15']);
         $catalog = new InMemoryProfileFieldCatalog();
         $resolver = Container::getInstance()->withProfileFieldCatalog($catalog)->billingExtrasResolver();
 
-        $out = $resolver->resolve(['fields' => [12 => 'RO1', 13 => 'J1', 14 => '1960101123456']]);
+        $out = $resolver->resolve(['fields' => [12 => 'RO1', 13 => 'J1', 14 => '1960101123456', 15 => 'Exemplu SRL']]);
 
         self::assertSame('RO1', $out['fgo_billing_cui']);
         self::assertSame('J1', $out['fgo_billing_reg']);
         self::assertSame('1960101123456', $out['fgo_billing_cnp']);
+        self::assertSame('Exemplu SRL', $out['fgo_billing_company']);
         self::assertSame(0, $catalog->reads, 'configured fields need no auto-detection');
     }
 

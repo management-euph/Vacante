@@ -108,6 +108,10 @@ msgctxt "SettingsOptions::fgo_invoicing::cnp_field"
 msgid "Câmpul de profil cu CNP-ul (persoane fizice)"
 msgstr "Câmpul de profil cu CNP-ul (persoane fizice)"
 
+msgctxt "SettingsOptions::fgo_invoicing::company_field"
+msgid "Câmpul de profil cu denumirea firmei"
+msgstr "Câmpul de profil cu denumirea firmei"
+
 msgctxt "SettingsOptions::fgo_invoicing::lines_header"
 msgid "Linii factură & Coduri"
 msgstr "Linii factură & Coduri"

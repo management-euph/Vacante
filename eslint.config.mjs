@@ -30,6 +30,7 @@ export default [
             '**/react*-bundle.js', // built React bundle (generated, not source)
             '**/react-vendor.js', // built React vendor chunk (generated, not source)
             'addon-*/design/**', // third-party CS-Cart themes + Smarty templates
+            'Addon-*/design/**',
             'stubs/**',
             'var/**',
         ],
@@ -37,7 +38,7 @@ export default [
 
     // Standalone addon scripts — classic browser scripts (var / IIFE style)
     {
-        files: ['addon-*/js/**/*.js'],
+        files: ['addon-*/js/**/*.js', 'Addon-*/js/**/*.js'],
         languageOptions: {
             ecmaVersion: 2021,
             sourceType: 'script',

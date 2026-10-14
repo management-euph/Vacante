@@ -151,6 +151,15 @@ final class ConfigProvider
     }
 
     /**
+     * Custom profile field holding the company name; 0 = auto-detect by field
+     * name, then CS-Cart's own company field.
+     */
+    public static function companyFieldId(): int
+    {
+        return self::profileFieldId('company_field');
+    }
+
+    /**
      * A profile-field selector: a positive field id, else 0 ("Auto-detect by
      * field name"). 0 is also what a store runs on when the setting row does
      * not exist — CS-Cart creates settings only at install, so every store

@@ -157,14 +157,19 @@ final class InvoiceMailer
 
     /**
      * Who the greeting addresses: the company for a company order, else the
-     * person. NOT under the key `company_name`: CS-Cart's mailer overwrites
-     * that template variable with the STORE's name.
+     * person. A private person's order (fgo_billing_tip 2, or its profile type
+     * says so) greets the person even when a company name is on the order.
+     * NOT under the key `company_name`: CS-Cart's mailer overwrites that
+     * template variable with the STORE's name.
      *
      * @param array<string, mixed> $orderInfo
      */
     private static function customerName(array $orderInfo): string
     {
-        foreach (['fgo_billing_company', 'b_company', 'company'] as $key) {
+        $tip = TypeCoerce::toInt($orderInfo[BillingExtrasResolver::KEY_TIP] ?? 0);
+        $person = $tip === 2
+            || ($tip === 0 && strtolower(trim(TypeCoerce::toString($orderInfo[BillingExtrasResolver::PROFILE_TYPE_INVOICE_AS] ?? ''))) === 'person');
+        foreach ($person ? [] : ['fgo_billing_company', 'b_company', 'company'] as $key) {
             $name = trim(TypeCoerce::toString($orderInfo[$key] ?? ''));
             if ($name !== '') {
                 return $name;

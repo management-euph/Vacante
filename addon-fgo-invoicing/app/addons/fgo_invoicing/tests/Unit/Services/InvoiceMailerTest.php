@@ -92,6 +92,20 @@ final class InvoiceMailerTest extends TestCase
         self::assertArrayNotHasKey('company_name', $this->sent[0]);
     }
 
+    /**
+     * A private person's order greets the person, even when a company name
+     * is on it: its profile type says so, or the tip the resolver set.
+     */
+    public function testAPrivatePersonsOrderGreetsThePerson(): void
+    {
+        foreach ([['euph_profile_type_invoice_as' => 'person'], ['fgo_billing_tip' => 2]] as $i => $says) {
+            $order = array_replace($this->orders[7], ['company' => 'Firma Veche SRL'], $says);
+            $this->mailer()->send($order, 'F', (string) ($i + 1), 'https://api.fgo.ro/p/1');
+
+            self::assertSame('Ana Pop', $this->sent[$i]['customer_name']);
+        }
+    }
+
     public function testNoAddressOrNoPdfIsSkippedWithoutSending(): void
     {
         $order = $this->orders[7];
