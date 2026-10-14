@@ -97,6 +97,14 @@
                             </div>
                         </div>
                     {/foreach}
+                    <div class="control-group">
+                        <label class="control-label" for="elm_euph_pt_new_links">{__("euph_profile_types.new_links")}:</label>
+                        <div class="controls">
+                            <input type="hidden" name="type_data[new_link_key]" value="N" />
+                            <input type="checkbox" name="type_data[new_link_key]" id="elm_euph_pt_new_links" value="Y" />
+                            <p class="muted description">{__("euph_profile_types.new_links_hint")}</p>
+                        </div>
+                    </div>
                 </div>
             {/if}
         </div>

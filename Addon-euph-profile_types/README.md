@@ -55,7 +55,7 @@ The last row is rendered from the add-on's own styles and script on the markup i
 - **Code:** Latin capitals, digits and `_`, up to 32 characters. It is stored with customers, vendors and orders, and used in registration links. Renaming a code carries the new code over to everything that had the old one.
 - **Status:**
   - *Active*: offered in the choice.
-  - *Hidden*: not offered. A customer gets it only through a registration link or from an administrator.
+  - *Hidden*: not offered. A customer gets it only through its registration link or from an administrator: knowing the code is not enough.
   - *Disabled*: nobody new gets it. Those who have it keep it.
 - **Default type:** what guests and new accounts get when nobody chose a type.
 - **Rules** (one tab of the type card):
@@ -64,9 +64,11 @@ The last row is rendered from the add-on's own styles and script on the markup i
   - **account activation** for new storefront accounts: *as the store setting says*, *at once* or *after approval*;
   - for vendor types, the **vendor plans** an applicant of the type may choose.
 - **Registration links**, shown on the type card:
-  - `index.php?dispatch=profiles.add&euph_profile_type=B` preselects the type in the registration form.
+  - `index.php?dispatch=profiles.add&euph_profile_type=B&euph_profile_key=…` preselects the type in the registration form.
   - Adding `&euph_profile_type_locked=1` stops the visitor from changing it.
-  - The vendor application works the same way: `index.php?dispatch=companies.apply_for_vendor&euph_profile_type=…`.
+  - The vendor application works the same way: `index.php?dispatch=companies.apply_for_vendor&euph_profile_type=…&euph_profile_key=…`.
+  - `euph_profile_key` is the type's secret (128 random bits). A hidden type is given only to a visitor who opened its link: in the registration form, a change of type in the profile, at checkout and in the vendor application. Its code alone does not show it. An active type needs no key.
+  - *New links* on the type card gives the type a new key on saving: the links sent so far stop working, and those who already have the type keep it.
 
 ### Profile fields per type
 
@@ -166,6 +168,7 @@ Which details are taken depends on the profile fields mapped in the payment meth
 - creates the add-on's tables: `?:euph_profile_types`, `?:euph_profile_type_descriptions`, `?:euph_profile_type_fields` (the per-type checkboxes) and `?:euph_profile_type_links` (groups, storefronts, plans);
 - adds the type columns: `users.euph_profile_type`, `users.euph_profile_type_changes`, `orders.euph_profile_type`, and in Multi-Vendor `companies.euph_profile_type`;
 - creates the two standard types and gives everybody without a type the standard one;
+- gives every type the key of its registration links (a store that already runs an earlier version gets the keys when *Profile types* is opened);
 - imports the 1.x data, if present;
 - switches the checkout blocks to the *By profile type* filling.
 
@@ -330,8 +333,10 @@ The code is checked by static analysis and unit tests, but it was not run inside
 4. **Register on the storefront.**
    - Switch the type: the form must redraw with the right fields and keep the typing. This also shows that the add-on's scripts load on the theme.
    - Try both links: open and locked.
+   - Make the type hidden: its link still works, the same address without `euph_profile_key` (or with a wrong one) shows only the offered types, and after *New links* the old link no longer works.
    - The account must wait for approval, and the user group must be granted.
 5. **Profile:** try changing the type under each *Allow user to change type* value.
+   - After each change, on the storefront and in the admin customer card, the customer must have left the old type's user groups and joined the new type's.
    - Set *Profile type choice view* to *Tabs (pills)* and check the choice on registration, the profile and checkout: on a phone as well.
 6. **Checkout**, as a guest and signed in:
    - the type choice;

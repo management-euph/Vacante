@@ -84,6 +84,10 @@ final class TypeAdmin
         } elseif ($existing->isDefault && !$isDefault) {
             $fields['is_default'] = 'N';
         }
+        if ($existing !== null && Cast::flag($input['new_link_key'] ?? 'N')) {
+            // New registration links: the ones sent so far stop working.
+            $fields['link_key'] = ProfileTypeRepository::newLinkKey();
+        }
         $links = [
             LinkKind::Usergroup->value => Cast::idList($input['usergroup_ids'] ?? []),
             LinkKind::Storefront->value => Cast::idList($input['storefront_ids'] ?? []),

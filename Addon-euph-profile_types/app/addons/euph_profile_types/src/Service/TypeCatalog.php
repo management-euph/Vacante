@@ -70,16 +70,34 @@ final class TypeCatalog
 
     /**
      * A type an account may get or switch to on the storefront: one offered in
-     * the choice, or a hidden one a registration link gives.
+     * the choice, or a hidden one the visitor has unlocked. A hidden type
+     * stays unknown to whoever only has its code, which is no secret.
+     *
+     * @param list<string> $unlocked codes of the hidden types the visitor may take:
+     *                               the ones whose registration link (with its key) was opened,
+     *                               and the type the signed-in customer already has
      */
-    public function assignableOnStorefront(UserKind $kind, string $code, int $storefrontId, string $langCode): ?ProfileType
+    public function assignableOnStorefront(UserKind $kind, string $code, int $storefrontId, string $langCode, array $unlocked = []): ?ProfileType
     {
         $type = $this->types->findByCode($code, $langCode);
         if ($type === null || $type->kind !== $kind || !$type->isAssignable() || !$type->worksOn($storefrontId)) {
             return null;
         }
+        if (!$type->isSelectable() && !in_array($type->code, $unlocked, true)) {
+            return null;
+        }
 
         return $type;
+    }
+
+    /**
+     * The type whose registration link a key opens, if the key is right.
+     */
+    public function openedByLink(string $code, string $key, string $langCode): ?ProfileType
+    {
+        $type = $key !== '' ? $this->types->findByCode($code, $langCode) : null;
+
+        return $type !== null && $type->isAssignable() && $type->opensWith($key) ? $type : null;
     }
 
     /** A type the administrator may give: any type of the kind but a disabled one. */

@@ -293,20 +293,20 @@ msgid "A vendor application gets it when nobody chose a type."
 msgstr "A vendor application gets it when nobody chose a type."
 
 msgctxt "Languages::euph_profile_types.status_hint"
-msgid "Hidden: not offered in the choice, given by a registration link or by you. Disabled: nobody new gets it; who has it keeps it."
-msgstr "Hidden: not offered in the choice, given by a registration link or by you. Disabled: nobody new gets it; who has it keeps it."
+msgid "Hidden: not offered in the choice, given by its registration link or by you. Disabled: nobody new gets it; who has it keeps it."
+msgstr "Hidden: not offered in the choice, given by its registration link or by you. Disabled: nobody new gets it; who has it keeps it."
 
 msgctxt "Languages::euph_profile_types.registration_links"
 msgid "Registration links"
 msgstr "Registration links"
 
 msgctxt "Languages::euph_profile_types.registration_links_hint"
-msgid "For a mailing to partners or a \"Become a dealer\" button. The locked link does not let the visitor change the type in the form."
-msgstr "For a mailing to partners or a \"Become a dealer\" button. The locked link does not let the visitor change the type in the form."
+msgid "For a mailing to partners or a \"Become a dealer\" button. The links carry the key of the type: a hidden type is given only to those who have its link, not to whoever knows its code. The locked link does not let the visitor change the type in the form."
+msgstr "For a mailing to partners or a \"Become a dealer\" button. The links carry the key of the type: a hidden type is given only to those who have its link, not to whoever knows its code. The locked link does not let the visitor change the type in the form."
 
 msgctxt "Languages::euph_profile_types.application_links_hint"
-msgid "Vendor application links. The locked link does not let the applicant change the type in the form."
-msgstr "Vendor application links. The locked link does not let the applicant change the type in the form."
+msgid "Vendor application links. They carry the key of the type: a hidden type is given only to those who have its link, not to whoever knows its code. The locked link does not let the applicant change the type in the form."
+msgstr "Vendor application links. They carry the key of the type: a hidden type is given only to those who have its link, not to whoever knows its code. The locked link does not let the applicant change the type in the form."
 
 msgctxt "Languages::euph_profile_types.link_open"
 msgid "Link"
@@ -315,6 +315,14 @@ msgstr "Link"
 msgctxt "Languages::euph_profile_types.link_locked"
 msgid "Locked link"
 msgstr "Locked link"
+
+msgctxt "Languages::euph_profile_types.new_links"
+msgid "New links"
+msgstr "New links"
+
+msgctxt "Languages::euph_profile_types.new_links_hint"
+msgid "On saving, the type gets a new key: the links sent so far stop working. Who already has the type keeps it."
+msgstr "On saving, the type gets a new key: the links sent so far stop working. Who already has the type keeps it."
 
 msgctxt "Languages::euph_profile_types.copy"
 msgid "Copy"

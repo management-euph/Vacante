@@ -177,7 +177,7 @@ function fn_euph_profile_types_customer_storefront_context(string $location, str
     $type = $current;
     $requested = fn_euph_profile_types_requested_code();
     if ($requested !== '' && TypeChangeGuard::allows($settings->typeChange, $currentCode, $requested, $changes)) {
-        $type = $catalog->assignableOnStorefront(UserKind::Customer, $requested, $storefrontId, $langCode) ?? $current;
+        $type = $catalog->assignableOnStorefront(UserKind::Customer, $requested, $storefrontId, $langCode, fn_euph_profile_types_unlocked_codes()) ?? $current;
     }
     $choice = TypeChangeGuard::mayChange($settings->typeChange, $currentCode, $changes)
         ? fn_euph_profile_types_choice_options($catalog->selectable(UserKind::Customer, $storefrontId, $langCode), $type, $current)
@@ -199,21 +199,26 @@ function fn_euph_profile_types_vendor_storefront_context(string $controller, str
  * Registration and vendor application: the type of the link or of the
  * switch (?euph_profile_type=), else the one posted last time (the form came
  * back with an error), else the default. A link with
- * euph_profile_type_locked=1 fixes the type for the visit.
+ * euph_profile_type_locked=1 fixes the type for the visit. A hidden type
+ * needs its link (with its key): its code alone does not show it.
  */
 function fn_euph_profile_types_registration_context(UserKind $kind): ?FieldContext
 {
     $catalog = fn_euph_profile_types_container()->catalog();
     $langCode = fn_euph_profile_types_lang();
     $storefrontId = fn_euph_profile_types_storefront_id();
+    $unlocked = fn_euph_profile_types_unlocked_codes();
 
     $requested = fn_euph_profile_types_requested_code();
     $lock = fn_euph_profile_types_session_get('euph_profile_types_lock');
-    if ($requested !== '' && Cast::flag($_REQUEST['euph_profile_type_locked'] ?? 'N')) {
+    if ($requested !== ''
+        && Cast::flag($_REQUEST['euph_profile_type_locked'] ?? 'N')
+        && $catalog->assignableOnStorefront($kind, $requested, $storefrontId, $langCode, $unlocked) !== null
+    ) {
         $lock[$kind->value] = $requested;
         fn_euph_profile_types_session_put('euph_profile_types_lock', $lock);
     }
-    $locked = $catalog->assignableOnStorefront($kind, Cast::string($lock[$kind->value] ?? ''), $storefrontId, $langCode);
+    $locked = $catalog->assignableOnStorefront($kind, Cast::string($lock[$kind->value] ?? ''), $storefrontId, $langCode, $unlocked);
     if ($locked !== null) {
         return new FieldContext($kind, $locked, FieldArea::Registration, [$locked->code => $locked->displayName()]);
     }
@@ -222,7 +227,7 @@ function fn_euph_profile_types_registration_context(UserKind $kind): ?FieldConte
     $type = null;
     foreach ([$requested, Cast::string($posted[$kind->value] ?? '')] as $code) {
         if ($code !== '') {
-            $type = $catalog->assignableOnStorefront($kind, $code, $storefrontId, $langCode);
+            $type = $catalog->assignableOnStorefront($kind, $code, $storefrontId, $langCode, $unlocked);
             if ($type !== null) {
                 break;
             }
@@ -271,6 +276,40 @@ function fn_euph_profile_types_signed_in_customer_id(): int
 }
 
 /**
+ * The hidden types the visitor may take on the storefront: the ones whose
+ * registration link was opened in this session (?euph_profile_type=CODE with
+ * the type's euph_profile_key, checked here), and the type the signed-in
+ * customer already has.
+ *
+ * @return list<string> codes
+ */
+function fn_euph_profile_types_unlocked_codes(): array
+{
+    $codes = array_keys(array_filter(
+        fn_euph_profile_types_session_get('euph_profile_types_unlocked'),
+        static fn (mixed $unlocked): bool => $unlocked === true,
+    ));
+    $codes = array_map('strval', $codes);
+
+    $key = Cast::string($_REQUEST['euph_profile_key'] ?? '');
+    $requested = fn_euph_profile_types_requested_code();
+    if ($key !== '' && $requested !== '' && fn_euph_profile_types_is_storefront()) {
+        $type = fn_euph_profile_types_container()->catalog()->openedByLink($requested, $key, fn_euph_profile_types_lang());
+        if ($type !== null && !in_array($type->code, $codes, true)) {
+            $codes[] = $type->code;
+            fn_euph_profile_types_session_put('euph_profile_types_unlocked', array_fill_keys($codes, true));
+        }
+    }
+
+    $own = Cast::string(fn_euph_profile_types_user_row(fn_euph_profile_types_signed_in_customer_id())['euph_profile_type'] ?? '');
+    if ($own !== '' && !in_array($own, $codes, true)) {
+        $codes[] = $own;
+    }
+
+    return $codes;
+}
+
+/**
  * @return array<string, mixed>
  */
 function fn_euph_profile_types_user_row(int $userId): array
@@ -301,9 +340,17 @@ function fn_euph_profile_types_current_customer_type(): ?ProfileType
     $cart = fn_euph_profile_types_session_get('cart');
     $userData = Cast::array($cart['user_data'] ?? []);
 
+    $storefront = fn_euph_profile_types_is_storefront();
+    $unlocked = $storefront ? fn_euph_profile_types_unlocked_codes() : [];
     foreach ([$cart['euph_profile_type'] ?? '', $userData['euph_profile_type'] ?? ''] as $code) {
-        $type = $catalog->byCode(CodeValidator::normalize(Cast::string($code)), $langCode);
-        if ($type !== null && $type->kind === UserKind::Customer && $type->isAssignable()) {
+        $code = CodeValidator::normalize(Cast::string($code));
+        if ($code === '') {
+            continue;
+        }
+        $type = $storefront
+            ? $catalog->assignableOnStorefront(UserKind::Customer, $code, fn_euph_profile_types_storefront_id(), $langCode, $unlocked)
+            : $catalog->assignableByAdmin(UserKind::Customer, $code, $langCode);
+        if ($type !== null) {
             return $type;
         }
     }

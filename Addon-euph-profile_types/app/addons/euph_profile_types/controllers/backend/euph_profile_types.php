@@ -26,6 +26,7 @@ if (!defined('BOOTSTRAP')) {
  */
 
 $container = fn_euph_profile_types_container();
+fn_euph_profile_types_ensure_link_keys();
 $kind = UserKind::tryFrom(Cast::string($_REQUEST['user_type'] ?? '')) ?? UserKind::Customer;
 if ($kind === UserKind::Vendor && !$container->isMultiVendor()) {
     $kind = UserKind::Customer;

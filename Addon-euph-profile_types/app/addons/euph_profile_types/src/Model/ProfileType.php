@@ -19,6 +19,7 @@ final readonly class ProfileType
      * @param list<int> $usergroupIds user groups the type grants
      * @param list<int> $storefrontIds storefronts the type works on; empty: all of them
      * @param list<int> $vendorPlanIds vendor plans offered to the type; empty: all of them
+     * @param string $linkKey the secret of the type's registration links (never sent to the storefront)
      */
     public function __construct(
         public int $id,
@@ -34,6 +35,7 @@ final readonly class ProfileType
         public array $usergroupIds = [],
         public array $storefrontIds = [],
         public array $vendorPlanIds = [],
+        public string $linkKey = '',
     ) {
         if ($this->id <= 0) {
             throw new \InvalidArgumentException('id must be positive');
@@ -63,6 +65,7 @@ final readonly class ProfileType
             usergroupIds: $links[LinkKind::Usergroup->value] ?? [],
             storefrontIds: $links[LinkKind::Storefront->value] ?? [],
             vendorPlanIds: $links[LinkKind::VendorPlan->value] ?? [],
+            linkKey: Cast::string($row['link_key'] ?? ''),
         );
     }
 
@@ -85,6 +88,15 @@ final readonly class ProfileType
     public function isAssignable(): bool
     {
         return $this->status !== TypeStatus::Disabled;
+    }
+
+    /**
+     * Whether a key is the one of the type's registration links. A type
+     * without a key has no link that opens it.
+     */
+    public function opensWith(string $key): bool
+    {
+        return $this->linkKey !== '' && hash_equals($this->linkKey, $key);
     }
 
     public function displayName(): string

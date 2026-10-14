@@ -143,6 +143,27 @@ function fn_euph_profile_types_login_denied_message(): string
 }
 
 /**
+ * The type a user had when the save in progress began: update_user_pre keeps
+ * it ($code given), update_profile takes it back. CS-Cart hands update_profile
+ * the user as read back from the database, not the array update_user_pre
+ * changed, so it cannot travel in that array.
+ */
+function fn_euph_profile_types_previous_type(int $userId, ?string $code = null): ?string
+{
+    /** @var array<int, string> $previous */
+    static $previous = [];
+    if ($code !== null) {
+        $previous[$userId] = $code;
+
+        return $code;
+    }
+    $kept = $previous[$userId] ?? null;
+    unset($previous[$userId]);
+
+    return $kept;
+}
+
+/**
  * Before a user is saved (hook update_user_pre): the type the form sent is
  * checked and kept only when the user may have it; a new account without
  * one gets the type of the cart or the default; a new storefront account is
@@ -154,6 +175,7 @@ function fn_euph_profile_types_prepare_user_data(int $userId, array &$userData):
 {
     $container = fn_euph_profile_types_container();
     $catalog = $container->catalog();
+    $storefront = fn_euph_profile_types_is_storefront();
     $current = fn_euph_profile_types_user_row($userId);
     $userType = Cast::string($userData['user_type'] ?? ($current['user_type'] ?? UserKind::Customer->value));
     $posted = array_key_exists('euph_profile_type', $userData)
@@ -165,16 +187,17 @@ function fn_euph_profile_types_prepare_user_data(int $userId, array &$userData):
         return;
     }
 
-    $storefront = fn_euph_profile_types_is_storefront();
     $langCode = fn_euph_profile_types_lang();
     $currentCode = Cast::string($current['euph_profile_type'] ?? '');
     $changes = Cast::int($current['euph_profile_type_changes'] ?? 0);
-    $userData['euph_previous_profile_type'] = $currentCode;
+    if ($userId > 0) {
+        fn_euph_profile_types_previous_type($userId, $currentCode);
+    }
 
     $type = null;
     if ($posted !== '') {
         $candidate = $storefront
-            ? $catalog->assignableOnStorefront(UserKind::Customer, $posted, fn_euph_profile_types_storefront_id(), $langCode)
+            ? $catalog->assignableOnStorefront(UserKind::Customer, $posted, fn_euph_profile_types_storefront_id(), $langCode, fn_euph_profile_types_unlocked_codes())
             : $catalog->assignableByAdmin(UserKind::Customer, $posted, $langCode);
         $allowed = $candidate !== null
             && (!$storefront || $userId <= 0 || TypeChangeGuard::allows($container->settings()->typeChange, $currentCode, $candidate->code, $changes));
@@ -233,7 +256,7 @@ function fn_euph_profile_types_after_profile_saved(string $action, array $userDa
         }
         $previous = $action === 'add'
             ? ''
-            : CodeValidator::normalize(Cast::string($userData['euph_previous_profile_type'] ?? $code));
+            : CodeValidator::normalize(fn_euph_profile_types_previous_type($userId) ?? $code);
         if (strcasecmp($previous, $code) !== 0) {
             $old = $previous !== '' ? $catalog->byCode($previous, $langCode) : null;
             $new = $catalog->byCode($code, $langCode);

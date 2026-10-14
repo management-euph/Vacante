@@ -45,6 +45,9 @@ final class TypeAdminTest extends TestCase
 
         self::assertSame(['type_id' => 12, 'errors' => [], 'previous_code' => ''], $result);
         $insert = $this->db->writes('INSERT INTO ?:euph_profile_types')[0]['params'][0];
+        self::assertIsArray($insert);
+        self::assertMatchesRegularExpression('/^[0-9a-f]{32}$/', $insert['link_key'] ?? '', 'the key of its registration links');
+        unset($insert['link_key']);
         self::assertSame(['code' => 'WHOLESALE', 'status' => 'H', 'position' => 0, 'activation' => 'P', 'user_type' => 'C', 'is_standard' => 'N'], $insert);
         self::assertCount(2, $this->db->writes('REPLACE INTO ?:euph_profile_type_descriptions'));
         self::assertSame('Wholesale', $this->db->writes('REPLACE INTO ?:euph_profile_type_descriptions')[0]['params'][0]['name']);
@@ -102,6 +105,20 @@ final class TypeAdminTest extends TestCase
         self::assertSame('U', $update['code']);
         self::assertSame('A', $update['status']);
         self::assertSame([], $this->db->writes('UPDATE ?:users'));
+    }
+
+    public function testNewLinksGiveTheTypeANewKey(): void
+    {
+        $this->admin()->save(4, ['name' => 'Dealer', 'code' => 'D', 'status' => 'H', 'new_link_key' => 'Y'], 'en', ['en']);
+        $this->admin()->save(4, ['name' => 'Dealer', 'code' => 'D', 'status' => 'H', 'new_link_key' => 'N'], 'en', ['en']);
+
+        $updates = $this->db->writes('UPDATE ?:euph_profile_types SET ?u');
+        $renewed = $updates[0]['params'][0];
+        self::assertIsArray($renewed);
+        self::assertMatchesRegularExpression('/^[0-9a-f]{32}$/', $renewed['link_key'] ?? '');
+        self::assertNotSame(Types::DEALER_KEY, $renewed['link_key']);
+        self::assertIsArray($updates[1]['params'][0]);
+        self::assertArrayNotHasKey('link_key', $updates[1]['params'][0], 'a plain save keeps the links');
     }
 
     public function testUntickingDefaultClearsIt(): void

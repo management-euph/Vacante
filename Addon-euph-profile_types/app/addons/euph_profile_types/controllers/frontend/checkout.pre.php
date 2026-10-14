@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $type = null;
 if ($chosen !== '' && $offered) {
-    $type = $catalog->assignableOnStorefront(UserKind::Customer, $chosen, $storefrontId, $langCode);
+    $type = $catalog->assignableOnStorefront(UserKind::Customer, $chosen, $storefrontId, $langCode, fn_euph_profile_types_unlocked_codes());
 }
 if ($type === null && !$offered) {
     // No choice: the type of the profile, else the default.

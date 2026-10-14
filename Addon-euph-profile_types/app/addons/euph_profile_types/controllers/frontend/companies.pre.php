@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $mode === 'apply_for_vendor') {
     $posted = Cast::string($companyData['euph_profile_type'] ?? (Cast::array($_REQUEST['user_data'] ?? [])['euph_profile_type'] ?? ''));
     $langCode = fn_euph_profile_types_lang();
     $storefrontId = fn_euph_profile_types_storefront_id();
-    $type = $container->catalog()->assignableOnStorefront(UserKind::Vendor, $posted, $storefrontId, $langCode)
+    $type = $container->catalog()->assignableOnStorefront(UserKind::Vendor, $posted, $storefrontId, $langCode, fn_euph_profile_types_unlocked_codes())
         ?? $container->catalog()->defaultType(UserKind::Vendor, $storefrontId, $langCode);
     if ($type !== null) {
         $companyData['euph_profile_type'] = $type->code;

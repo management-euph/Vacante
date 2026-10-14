@@ -51,6 +51,48 @@ final class ProfileTypeRepositoryTest extends TestCase
         self::assertCount(2, $db->writes('REPLACE INTO ?:euph_profile_type_links'));
     }
 
+    public function testANewTypeGetsAKeyForItsLinksAndASavedOneKeepsItsKey(): void
+    {
+        $db = Types::database();
+        $db->insertIds = [11, 12];
+        $repository = new ProfileTypeRepository($db);
+
+        $repository->save(0, ['code' => 'W', 'user_type' => 'C'], 'Wholesale', '', 'en', ['en'], []);
+        $repository->save(0, ['code' => 'X', 'user_type' => 'C'], 'Export', '', 'en', ['en'], []);
+        $repository->save(4, ['status' => 'H'], 'Dealer', '', 'en', ['en'], []);
+
+        $inserts = $db->writes('INSERT INTO ?:euph_profile_types');
+        $first = self::linkKey($inserts[0]['params'][0]);
+        self::assertMatchesRegularExpression('/^[0-9a-f]{32}$/', $first, '128 random bits');
+        self::assertNotSame($first, self::linkKey($inserts[1]['params'][0]), 'every type its own');
+        self::assertSame(['status' => 'H'], $db->writes('UPDATE ?:euph_profile_types SET ?u')[0]['params'][0], 'the key is not touched');
+    }
+
+    public function testTypesWithoutAKeyGetOne(): void
+    {
+        $db = Types::database();
+        $db->columns["WHERE link_key = ''"] = ['2', '3'];
+        $repository = new ProfileTypeRepository($db);
+
+        self::assertSame(2, $repository->fillLinkKeys());
+        $updates = $db->writes('SET link_key = ?s');
+        self::assertSame([2, 3], array_map(static fn (array $update): mixed => $update['params'][1], $updates));
+        self::assertNotSame($updates[0]['params'][0], $updates[1]['params'][0]);
+        self::assertStringContainsString("AND link_key = ''", $updates[0]['query'], 'a key given meanwhile stays');
+
+        $db = Types::database();
+        self::assertSame(0, (new ProfileTypeRepository($db))->fillLinkKeys());
+        self::assertSame([], $db->executed);
+    }
+
+    private static function linkKey(mixed $insert): string
+    {
+        self::assertIsArray($insert);
+        self::assertIsString($insert['link_key'] ?? null);
+
+        return $insert['link_key'];
+    }
+
     public function testUsageCountsCustomersOrVendorsByCode(): void
     {
         $db = Types::database();

@@ -362,7 +362,8 @@ function fn_euph_profile_types_usergroups(UserKind $kind): array
 }
 
 /**
- * Registration links of a type ("Become a dealer" buttons, mailings).
+ * Registration links of a type ("Become a dealer" buttons, mailings). They
+ * carry the type's key: a hidden type is given only to who has its link.
  *
  * @return array{open: string, locked: string}
  */
@@ -370,6 +371,9 @@ function fn_euph_profile_types_registration_links(ProfileType $type): array
 {
     $dispatch = $type->kind === UserKind::Vendor ? 'companies.apply_for_vendor' : 'profiles.add';
     $url = 'index.php?dispatch=' . $dispatch . '&euph_profile_type=' . rawurlencode($type->code);
+    if ($type->linkKey !== '') {
+        $url .= '&euph_profile_key=' . rawurlencode($type->linkKey);
+    }
 
     return [
         'open' => $url,

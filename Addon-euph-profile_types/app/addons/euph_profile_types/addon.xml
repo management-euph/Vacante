@@ -164,6 +164,7 @@
                 `is_default` char(1) NOT NULL DEFAULT 'N',
                 `is_standard` char(1) NOT NULL DEFAULT 'N' COMMENT 'Y for the two types created at install',
                 `activation` char(1) NOT NULL DEFAULT 'S' COMMENT 'S store setting, A at once, P after approval',
+                `link_key` varchar(64) NOT NULL DEFAULT '' COMMENT 'secret of the registration links: a hidden type needs it',
                 PRIMARY KEY (`type_id`),
                 UNIQUE KEY `code` (`code`),
                 KEY `user_type` (`user_type`, `status`, `position`)

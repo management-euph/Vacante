@@ -129,9 +129,10 @@ final class ProfileTypeRepository
     /**
      * Inserts or updates a type. The name and the description go to $langCode;
      * a new type gets them in every language of $langCodes too, so it never
-     * shows up nameless in another language.
+     * shows up nameless in another language, and the key of its registration
+     * links.
      *
-     * @param array{code?: string, user_type?: string, status?: string, position?: int, activation?: string, is_standard?: string} $fields
+     * @param array{code?: string, user_type?: string, status?: string, position?: int, activation?: string, is_standard?: string, is_default?: string, link_key?: string} $fields
      * @param list<string> $langCodes
      * @param array<string, list<int>> $links object type => ids; only the object types given are replaced
      */
@@ -150,7 +151,7 @@ final class ProfileTypeRepository
             }
             $this->saveDescription($typeId, $langCode, $name, $description);
         } else {
-            $typeId = $this->db->execute('INSERT INTO ?:euph_profile_types ?e', $fields);
+            $typeId = $this->db->execute('INSERT INTO ?:euph_profile_types ?e', $fields + ['link_key' => self::newLinkKey()]);
             foreach (array_unique([$langCode, ...$langCodes]) as $lang) {
                 $this->saveDescription($typeId, $lang, $name, $description);
             }
@@ -241,6 +242,38 @@ final class ProfileTypeRepository
     public function forget(): void
     {
         $this->cache = [];
+    }
+
+    /**
+     * A new secret for the registration links of a type: 128 random bits, so
+     * a link cannot be guessed from the type's code.
+     */
+    public static function newLinkKey(): string
+    {
+        return bin2hex(random_bytes(16));
+    }
+
+    /**
+     * Gives a link key to the types that have none (saved by an earlier
+     * version of the add-on).
+     *
+     * @return int how many types got one
+     */
+    public function fillLinkKeys(): int
+    {
+        $filled = 0;
+        foreach (Cast::idList($this->db->column("SELECT type_id FROM ?:euph_profile_types WHERE link_key = ''")) as $typeId) {
+            $filled += $this->db->execute(
+                "UPDATE ?:euph_profile_types SET link_key = ?s WHERE type_id = ?i AND link_key = ''",
+                self::newLinkKey(),
+                $typeId,
+            );
+        }
+        if ($filled > 0) {
+            $this->forget();
+        }
+
+        return $filled;
     }
 
     /**

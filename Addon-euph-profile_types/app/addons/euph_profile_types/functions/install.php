@@ -26,6 +26,7 @@ function fn_euph_profile_types_install(): void
 {
     $container = fn_euph_profile_types_container(true);
     fn_euph_profile_types_add_columns($container->db(), $container->isMultiVendor());
+    fn_euph_profile_types_ensure_link_keys();
     fn_euph_profile_types_create_standard_types();
 
     $importer = $container->importer();
@@ -64,6 +65,25 @@ function fn_euph_profile_types_uninstall(): void
     if (function_exists('fn_set_storage_data')) {
         fn_set_storage_data(fn_euph_profile_types_blocks_state_key(), null);
     }
+}
+
+/**
+ * Every type has the key of its registration links. The table of an earlier
+ * version of the add-on gets the column and its types a key: on install,
+ * and when the types are opened in the admin panel (files updated without
+ * a reinstall).
+ */
+function fn_euph_profile_types_ensure_link_keys(): void
+{
+    $container = fn_euph_profile_types_container();
+    $db = $container->db();
+    if (!$db->tableExists('?:euph_profile_types')) {
+        return;
+    }
+    if (!$db->columnExists('?:euph_profile_types', 'link_key')) {
+        $db->execute("ALTER TABLE ?:euph_profile_types ADD `link_key` varchar(64) NOT NULL DEFAULT '' AFTER `activation`");
+    }
+    $container->types()->fillLinkKeys();
 }
 
 /**

@@ -23,18 +23,20 @@
         <label class="check-line"><input type="radio" name="s" checked>Active</label>
         <label class="check-line"><input type="radio" name="s">Hidden</label>
         <label class="check-line"><input type="radio" name="s">Disabled</label>
-        <p class="description">Hidden: not offered in the choice, given by a registration link or by you. Disabled: nobody new gets it; who has it keeps it.</p></div></div>
+        <p class="description">Hidden: not offered in the choice, given by its registration link or by you. Disabled: nobody new gets it; who has it keeps it.</p></div></div>
 
       <div class="subheader">Registration links <span class="mark">2</span></div>
-      <p class="muted" style="margin:0 0 14px 210px">For a mailing to partners or a "Become a dealer" button. The locked link does not let the visitor change the type in the form.</p>
-      <div class="control-group"><div class="control-label">Link:</div><div class="controls"><div class="input-append"><input type="text" class="w-link" value="https://vacantelitoral.ro/index.php?dispatch=profiles.add&amp;euph_profile_type=B"><span class="btn">Copy</span></div></div></div>
-      <div class="control-group"><div class="control-label">Locked link:</div><div class="controls"><div class="input-append"><input type="text" class="w-link" value="https://vacantelitoral.ro/index.php?dispatch=profiles.add&amp;euph_profile_type=B&amp;euph_profile_type_locked=1"><span class="btn">Copy</span></div></div></div>
+      <p class="muted" style="margin:0 0 14px 210px">For a mailing to partners or a "Become a dealer" button. The links carry the key of the type: a hidden type is given only to those who have its link, not to whoever knows its code. The locked link does not let the visitor change the type in the form.</p>
+      <div class="control-group"><div class="control-label">Link:</div><div class="controls"><div class="input-append"><input type="text" class="w-link" value="https://vacantelitoral.ro/index.php?dispatch=profiles.add&amp;euph_profile_type=B&amp;euph_profile_key=7c2e9a41d0b85f36e14a9d27c05b8f13"><span class="btn">Copy</span></div></div></div>
+      <div class="control-group"><div class="control-label">Locked link:</div><div class="controls"><div class="input-append"><input type="text" class="w-link" value="https://vacantelitoral.ro/index.php?dispatch=profiles.add&amp;euph_profile_type=B&amp;euph_profile_key=7c2e9a41d0b85f36e14a9d27c05b8f13&amp;euph_profile_type_locked=1"><span class="btn">Copy</span></div></div></div>
+      <div class="control-group"><div class="control-label">New links:</div><div class="controls"><label class="check-line"><input type="checkbox"></label>
+        <p class="description">On saving, the type gets a new key: the links sent so far stop working. Who already has the type keeps it.</p></div></div>
     </div>
   </div>
 </div>
 <div class="legend">
   <div><span class="mark">1</span><span>Codes are upper case; changing a code carries it over to the customers, vendors and orders that have the old one. The standard types keep U and S.</span></div>
-  <div><span class="mark">2</span><span>Ready-made links: the type is preselected in the registration form; the locked one fixes it for the visit.</span></div>
+  <div><span class="mark">2</span><span>Ready-made links: the type is preselected in the registration form; the locked one fixes it for the visit. The key in them is what gives a hidden type: <em>New links</em> replaces it.</span></div>
 </div>
 <span class="mockup-tag">MOCKUP</span>
 </div></body></html>

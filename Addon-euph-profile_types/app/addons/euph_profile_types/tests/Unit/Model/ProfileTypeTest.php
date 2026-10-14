@@ -73,6 +73,22 @@ final class ProfileTypeTest extends TestCase
         self::assertSame('B', ProfileType::fromRow(Types::row(2, 'B', 'C', ['name' => '']))->displayName());
     }
 
+    public function testTheKeyOfTheLinksOpensTheTypeAndIsNeverHandedOn(): void
+    {
+        $type = ProfileType::fromRow(Types::row(4, 'D', 'C', ['status' => 'H', 'link_key' => Types::DEALER_KEY]));
+
+        self::assertSame(Types::DEALER_KEY, $type->linkKey);
+        self::assertTrue($type->opensWith(Types::DEALER_KEY));
+        self::assertFalse($type->opensWith(strtoupper(Types::DEALER_KEY)));
+        self::assertFalse($type->opensWith(''));
+        self::assertArrayNotHasKey('link_key', $type->toArray(), 'templates and public functions never get it');
+        self::assertNotContains(Types::DEALER_KEY, $type->toArray());
+
+        $keyless = ProfileType::fromRow(Types::row(2, 'B'));
+        self::assertSame('', $keyless->linkKey);
+        self::assertFalse($keyless->opensWith(''), 'no key: no link opens it');
+    }
+
     public function testToArrayRoundTrips(): void
     {
         $type = ProfileType::fromRow(Types::row(6, 'S', 'V', ['is_standard' => 'Y']), ['G' => [5], 'P' => [1, 2]]);

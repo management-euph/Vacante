@@ -67,15 +67,29 @@ final class TypeCatalogTest extends TestCase
         self::assertSame('U', self::catalog(new Settings(), true, $db)->defaultType(UserKind::Customer, 1, 'en')?->code, 'nothing offered: the standard type');
     }
 
-    public function testARegistrationLinkMayGiveAHiddenTypeOnItsStorefrontOnly(): void
+    public function testAHiddenTypeNeedsItsRegistrationLinkAndWorksOnItsStorefrontOnly(): void
     {
         $catalog = self::catalog();
 
-        self::assertSame('D', $catalog->assignableOnStorefront(UserKind::Customer, 'D', 2, 'en')?->code);
-        self::assertNull($catalog->assignableOnStorefront(UserKind::Customer, 'D', 1, 'en'), 'other storefront');
-        self::assertNull($catalog->assignableOnStorefront(UserKind::Customer, 'O', 1, 'en'), 'disabled');
-        self::assertNull($catalog->assignableOnStorefront(UserKind::Customer, 'S', 1, 'en'), 'a vendor type');
+        self::assertNull($catalog->assignableOnStorefront(UserKind::Customer, 'D', 2, 'en'), 'its code alone is not enough');
+        self::assertSame('D', $catalog->assignableOnStorefront(UserKind::Customer, 'D', 2, 'en', ['D'])?->code, 'unlocked by its link');
+        self::assertSame('B', $catalog->assignableOnStorefront(UserKind::Customer, 'B', 1, 'en')?->code, 'an offered type needs no link');
+        self::assertNull($catalog->assignableOnStorefront(UserKind::Customer, 'D', 1, 'en', ['D']), 'other storefront');
+        self::assertNull($catalog->assignableOnStorefront(UserKind::Customer, 'O', 1, 'en', ['O']), 'disabled');
+        self::assertNull($catalog->assignableOnStorefront(UserKind::Customer, 'S', 1, 'en', ['S']), 'a vendor type');
         self::assertNull($catalog->assignableOnStorefront(UserKind::Customer, 'X', 1, 'en'), 'no such type');
+    }
+
+    public function testOnlyTheKeyOfItsLinksOpensAType(): void
+    {
+        $catalog = self::catalog();
+
+        self::assertSame('D', $catalog->openedByLink('D', Types::DEALER_KEY, 'en')?->code);
+        self::assertSame('D', $catalog->openedByLink('d', Types::DEALER_KEY, 'en')?->code, 'codes are case-insensitive');
+        self::assertNull($catalog->openedByLink('D', strrev(Types::DEALER_KEY), 'en'), 'a wrong key');
+        self::assertNull($catalog->openedByLink('D', '', 'en'), 'no key');
+        self::assertNull($catalog->openedByLink('B', Types::DEALER_KEY, 'en'), 'the key of another type');
+        self::assertNull($catalog->openedByLink('B', '', 'en'), 'a type without a key has no link that opens it');
     }
 
     public function testTheAdministratorGivesAnyTypeButADisabledOne(): void
