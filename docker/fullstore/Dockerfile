@@ -1,7 +1,7 @@
-# Full-store CS-Cart 4.20.1 app image (matches devx: Apache + PHP 8.3).
+# Full-store CS-Cart 4.21.2 app image (the version production runs; Apache + PHP 8.3).
 FROM php:8.3-apache
 
-# CS-Cart 4.20.1 platform extensions — the same set docker/test-db/build.sh
+# CS-Cart platform extensions — the same set docker/test-db/build.sh
 # compiles for the console installer — plus pdo_mysql/mbstring used by the
 # addons' data paths. mlocati's installer handles the apt libfoo-dev dance.
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
