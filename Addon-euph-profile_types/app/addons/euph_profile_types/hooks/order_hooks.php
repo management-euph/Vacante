@@ -62,7 +62,9 @@ function fn_euph_profile_types_update_order(&$order = [], $order_id = 0): void
 
 /**
  * Hook: get_order_info — the type's name for e-mail templates
- * ({{ order_info.euph_profile_type_name }}) and add-ons.
+ * ({{ order_info.euph_profile_type_name }}) and add-ons, and the order as
+ * its type has it: no value of a field the type does not have reaches
+ * invoicing (FGO), payment (Netopia), documents or other add-ons.
  *
  * @param mixed $order
  * @param mixed $additional_data
@@ -73,7 +75,17 @@ function fn_euph_profile_types_get_order_info(&$order = [], $additional_data = [
         return;
     }
     $code = Cast::string($order['euph_profile_type'] ?? '');
-    if ($code !== '') {
-        $order['euph_profile_type_name'] = fn_euph_profile_types_get_type_name($code, Cast::string($order['lang_code'] ?? ''));
+    if ($code === '') {
+        return;
+    }
+    $order['euph_profile_type_name'] = fn_euph_profile_types_get_type_name($code, Cast::string($order['lang_code'] ?? ''));
+    try {
+        $catalog = fn_euph_profile_types_container()->catalog();
+        $type = $catalog->isEnabled(UserKind::Customer) ? $catalog->byCode($code, fn_euph_profile_types_lang()) : null;
+        if ($type !== null && $type->kind === UserKind::Customer) {
+            $order = fn_euph_profile_types_order_fields_of_type($order, $type);
+        }
+    } catch (\Throwable $e) {
+        error_log('euph_profile_types: ' . $e->getMessage());
     }
 }

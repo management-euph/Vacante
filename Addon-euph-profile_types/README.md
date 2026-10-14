@@ -126,6 +126,16 @@ The list of fields stays one list. A value survives a change of type, and report
   The stock invoice prints only the fields CS-Cart knows about, so add your own fields to it once.
 - **Exports:** *Profile type* is a field of the Customers and Orders exports.
 - **Lists:** the Customers list (and the Vendors list) get a *Profile type* column and a search filter.
+- **An order carries only the values of its type's fields.** A customer keeps the values of a type they no longer have, so switching back restores them, and CS-Cart copies the whole profile into the cart. Read through `fn_get_order_info()`, an order therefore leaves out the values of the fields its type shows nowhere (profile, registration, checkout): a custom field is left out of `fields`, CS-Cart's own column (such as `company`) is blank, the e-mail is kept. Reading deletes nothing: change the order's type and they are back (an order saved again in the order editor keeps what its type shows).
+
+### Invoicing and card payments: FGO, Netopia
+
+The type's fields are CS-Cart profile fields, so the other add-ons read them as they read any field: nothing to connect.
+
+- **FGO** takes the CIF, Reg. Com. and CNP from the profile fields picked in its settings (or found by their names), and invoices a company (PJ) when the order has a company name or a CIF, a private person (PF) otherwise. With the rule above, an order of a type that does not have the company name and CIF fields carries neither, even when the customer once was a company.
+  - Make the company name, or the CIF, **required for each company type**: a company order then always reaches FGO as a company.
+  - With FGO's *Do not issue for individuals without a CNP* on, show and require the CNP field for the private types.
+- **Netopia** sends the payment page the billing name, e-mail, phone and address of the order; it has no field for a company or a tax id. Keep the billing first and last name, and the billing address, **shown for every type that pays by card**: a type that hides them sends an empty name.
 
 ### Russian Payments: "Issue an invoice"
 
@@ -268,7 +278,7 @@ Register handlers as usual: `fn_register_hooks('euph_update_profile_type_post', 
 - **No core template is overridden.**
 - The type choice is a virtual profile field (`euph_profile_type`), so the stock profile, registration and checkout templates draw it.
 - The Profile fields list gets its per-type rows through its own hooks: `profile_fields:field_settings` (each Show / Required cell) and `profile_fields:field_type_description` (the Type column). The field card uses `profile_fields:profile_data`.
-- Fields are filtered in the `get_profile_fields` / `get_profile_fields_post` hooks.
+- Fields are filtered in the `get_profile_fields` / `get_profile_fields_post` hooks, and an order's values in `get_order_info` (`Service\OrderFields`).
 - The checkout uses its own block filling.
 - The rest goes through hooks on users, companies and orders, pre/post controllers, template hooks, and the `block_manager`, `documents`, `exim`, `menu` and `permissions` schemas.
 
@@ -343,6 +353,8 @@ The code is checked by static analysis and unit tests, but it was not run inside
    - the required fields of each type;
    - the order's type in the admin sidebar, in the customer's order page, the invoice and the order e-mail.
 7. **Documents:** add `{{ user.<your field code> }}` and `{{ user.profile_type }}` to the invoice and print it.
+   - **FGO:** sign in as a customer of a company type, fill the company name and the CIF, switch to a private type and order: the FGO invoice must be for a private person (PF), without the CIF. An order of the company type: a company (PJ) with its CIF.
+   - **Netopia:** pay an order of each type by card: the payment page shows the billing name.
 8. **Admin:**
    - customer card: the type change redraws the card;
    - Customers list: column and filter;

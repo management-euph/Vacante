@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\EuphProfileTypes\Model;
 
+use Tygh\Addons\EuphProfileTypes\Enum\FieldArea;
+
 /**
  * Every rule of the store, indexed by field.
  *
@@ -76,6 +78,29 @@ final class FieldRuleSet
         $ids = [];
         foreach (array_keys($this->byField) as $fieldId) {
             if ($this->isGoverned($fieldId)) {
+                $ids[] = $fieldId;
+            }
+        }
+
+        return $ids;
+    }
+
+    /**
+     * Ids of the fields some type governs that a type shows in none of the
+     * areas: the type does not have them.
+     *
+     * @return list<int>
+     */
+    public function unseenBy(int $typeId, FieldArea ...$areas): array
+    {
+        $ids = [];
+        foreach ($this->governedFieldIds() as $fieldId) {
+            $rule = $this->ruleFor($fieldId, $typeId);
+            $seen = false;
+            foreach ($areas as $area) {
+                $seen = $seen || ($rule !== null && $rule->shows($area));
+            }
+            if (!$seen) {
                 $ids[] = $fieldId;
             }
         }

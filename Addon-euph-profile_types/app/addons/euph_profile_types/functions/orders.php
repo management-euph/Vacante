@@ -7,6 +7,7 @@ use Tygh\Addons\EuphProfileTypes\Enum\FieldArea;
 use Tygh\Addons\EuphProfileTypes\Enum\UserKind;
 use Tygh\Addons\EuphProfileTypes\Model\ProfileType;
 use Tygh\Addons\EuphProfileTypes\Service\CodeValidator;
+use Tygh\Addons\EuphProfileTypes\Service\OrderFields;
 use Tygh\Addons\EuphProfileTypes\Service\TypeChoiceField;
 
 if (!defined('BOOTSTRAP')) {
@@ -49,6 +50,22 @@ function fn_euph_profile_types_order_type(array $order): ?ProfileType
     }
 
     return $catalog->defaultType(UserKind::Customer, fn_euph_profile_types_storefront_id(), $langCode);
+}
+
+/**
+ * The order as its type has it (Service\OrderFields): without the values of
+ * the fields its type does not have, which invoicing, documents and other
+ * add-ons would otherwise read as the order's.
+ *
+ * @param array<array-key, mixed> $order fn_get_order_info()
+ *
+ * @return array<array-key, mixed>
+ */
+function fn_euph_profile_types_order_fields_of_type(array $order, ProfileType $type): array
+{
+    $unseen = OrderFields::unseen(fn_euph_profile_types_container()->rules()->all(), $type->id);
+
+    return $unseen === [] ? $order : OrderFields::withoutUnseen($order, fn_euph_profile_types_field_rows($unseen));
 }
 
 /**
