@@ -153,7 +153,11 @@ final class LegacyImporter
         return $typeId;
     }
 
-    /** users/orders/companies.cp_profile_type -> euph_profile_type. */
+    /**
+     * users/orders/companies.cp_profile_type -> euph_profile_type.
+     *
+     * @param '?:users'|'?:orders'|'?:companies' $table in the query itself, where the ?: prefix is always replaced
+     */
     private function copyColumn(string $table): int
     {
         if (!$this->db->columnExists($table, 'cp_profile_type') || !$this->db->columnExists($table, 'euph_profile_type')) {
@@ -161,8 +165,7 @@ final class LegacyImporter
         }
 
         return $this->db->execute(
-            'UPDATE ?p SET euph_profile_type = UPPER(cp_profile_type) WHERE cp_profile_type != ?s',
-            $table,
+            'UPDATE ' . $table . ' SET euph_profile_type = UPPER(cp_profile_type) WHERE cp_profile_type != ?s',
             '',
         );
     }
