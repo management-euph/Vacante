@@ -100,9 +100,13 @@ msgctxt "SettingsVariants::euph_profile_types::choice_view::select"
 msgid "Drop-down"
 msgstr "Listă derulantă"
 
+msgctxt "SettingsVariants::euph_profile_types::choice_view::pills"
+msgid "Tabs (pills)"
+msgstr "Taburi (butoane alăturate)"
+
 msgctxt "SettingsTooltips::euph_profile_types::choice_view"
-msgid "In registration, in the profile and at checkout."
-msgstr "La înregistrare, în profil și la finalizarea comenzii."
+msgid "In registration, in the profile and at checkout. Tabs suit two to four types with short names; with more types the drop-down reads better."
+msgstr "La înregistrare, în profil și la finalizarea comenzii. Taburile se potrivesc pentru două până la patru tipuri cu nume scurte; cu mai multe tipuri, lista derulantă se citește mai ușor."
 
 msgctxt "SettingsOptions::euph_profile_types::reload_on_change"
 msgid "Reload the page when the type is changed"
@@ -495,6 +499,50 @@ msgstr "Preluate din profilul dumneavoastră:"
 msgctxt "Languages::euph_profile_types.login_denied_on_storefront"
 msgid "Your account cannot sign in to this store. Please sign in on the store where you registered."
 msgstr "Contul dumneavoastră nu se poate autentifica în acest magazin. Vă rugăm să vă autentificați în magazinul în care v-ați înregistrat."
+
+msgctxt "Languages::euph_profile_types.list_view_customers"
+msgid "Customers see:"
+msgstr "Clienții văd:"
+
+msgctxt "Languages::euph_profile_types.list_view_vendors"
+msgid "Vendors see:"
+msgstr "Vânzătorii văd:"
+
+msgctxt "Languages::euph_profile_types.all_types"
+msgid "All types"
+msgstr "Toate tipurile"
+
+msgctxt "Languages::euph_profile_types.tag_general"
+msgid "general"
+msgstr "general"
+
+msgctxt "Languages::euph_profile_types.tag_always"
+msgid "always"
+msgstr "mereu"
+
+msgctxt "Languages::euph_profile_types.tag_as_billing"
+msgid "as in the billing address"
+msgstr "ca la adresa de facturare"
+
+msgctxt "Languages::euph_profile_types.set_per_type"
+msgid "Set per type"
+msgstr "Setează pe tipuri"
+
+msgctxt "Languages::euph_profile_types.general_row_hint"
+msgid "CS-Cart's general checkboxes, the same for all types. \"Set per type\" opens a row per type, filled from them; nothing changes until a row differs."
+msgstr "Bifele generale CS-Cart, aceleași pentru toate tipurile. „Setează pe tipuri” deschide câte un rând pe tip, completat din ele; nu se schimbă nimic până când un rând diferă."
+
+msgctxt "Languages::euph_profile_types.registration_follows_show"
+msgid "At registration follows \"show\" while the field is general."
+msgstr "La înregistrare urmează „afișează” cât timp câmpul este general."
+
+msgctxt "Languages::euph_profile_types.manage_types"
+msgid "Manage types"
+msgstr "Administrează tipurile"
+
+msgctxt "Languages::euph_profile_types.open_in_profile_fields"
+msgid "See this type in the Profile fields list"
+msgstr "Vedeți acest tip în lista câmpurilor de profil"
 
 msgctxt "Languages::euph_profile_types.error_type_not_found"
 msgid "The profile type was not found."

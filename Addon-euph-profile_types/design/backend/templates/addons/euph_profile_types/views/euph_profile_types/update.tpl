@@ -184,6 +184,10 @@
         {* ── Fields ──────────────────────────────────────────────── *}
         {if $id}
             <div id="content_fields" class="hidden">
+                {if $euph_pt_kind == "V"}{$euph_pt_fields_type = "S"}{else}{$euph_pt_fields_type = "U"}{/if}
+                <p class="euph-pt-fields-link">
+                    <a href="{"profile_fields.manage?profile_type=`$euph_pt_fields_type`&euph_view=`$id`"|fn_url}">{__("euph_profile_types.open_in_profile_fields")}&nbsp;&rsaquo;</a>
+                </p>
                 {include file="addons/euph_profile_types/views/euph_profile_types/components/field_table.tpl" table=$euph_pt_field_table kind=$euph_pt_kind}
             </div>
         {/if}

@@ -7,13 +7,16 @@ use Tygh\Addons\EuphProfileTypes\Enum\UserKind;
 use Tygh\Addons\EuphProfileTypes\Model\FieldRule;
 use Tygh\Addons\EuphProfileTypes\Model\FieldRuleSet;
 use Tygh\Addons\EuphProfileTypes\Model\ProfileType;
+use Tygh\Addons\EuphProfileTypes\Service\FieldsList;
 
 if (!defined('BOOTSTRAP')) {
     exit('Access denied');
 }
 
 /*
- * The two places the administrator ticks the per-type checkboxes:
+ * The places the administrator ticks the per-type checkboxes:
+ *  - CS-Cart's own list of profile fields, all types side by side or one
+ *    type at a time (Service\FieldsList);
  *  - the "Profile types" block of a profile field card (a row per type);
  *  - the "Fields" tab of a type card (a row per field).
  * Both show what each type sees now: a field no type governs shows its
@@ -141,8 +144,9 @@ function fn_euph_profile_types_save_field_card(array $posted, int $fieldId, int 
     $rules = [];
     foreach ($container->types()->ofKind($kind, fn_euph_profile_types_descr_lang()) as $type) {
         $row = Cast::array($posted[$type->id] ?? []);
-        $rule = FieldRule::fromFlags($type->id, $fieldIds[0], $row);
-        $changed = $changed || $rule->signature() !== Cast::string($row['baseline'] ?? '');
+        $baseline = Cast::string($row['baseline'] ?? '');
+        $rule = FieldRule::fromFlags($type->id, $fieldIds[0], $row + FieldRule::flagsFromSignature($baseline));
+        $changed = $changed || $rule->signature() !== $baseline;
         $rules[$type->id] = $rule;
     }
     if ($changed) {
@@ -217,8 +221,9 @@ function fn_euph_profile_types_save_type_fields(int $typeId, array $posted): int
         if ($field === null || Cast::string($field['profile_type'] ?? '') !== $type->kind->fieldProfileType()) {
             continue;
         }
-        $rule = FieldRule::fromFlags($typeId, $fieldId, $row);
-        if ($rule->signature() === Cast::string($row['baseline'] ?? '')) {
+        $baseline = Cast::string($row['baseline'] ?? '');
+        $rule = FieldRule::fromFlags($typeId, $fieldId, $row + FieldRule::flagsFromSignature($baseline));
+        if ($rule->signature() === $baseline) {
             continue;
         }
         $changed[$fieldId] = $rule;
@@ -237,6 +242,100 @@ function fn_euph_profile_types_save_type_fields(int $typeId, array $posted): int
     $container->rules()->replaceForType($typeId, $changed, array_values($others), $fields);
 
     return count($changed);
+}
+
+/**
+ * CS-Cart's list of profile fields with the per-type checkboxes
+ * (hooks/profile_fields/field_settings.post.tpl). Null when the list's kind
+ * has no types in use: the list stays CS-Cart's own.
+ *
+ * @return array<string, mixed>|null
+ */
+function fn_euph_profile_types_fields_list(string $profileType): ?array
+{
+    $kind = UserKind::fromFieldProfileType($profileType);
+    $container = fn_euph_profile_types_container();
+    if ($kind === null || !$container->catalog()->isEnabled($kind)) {
+        return null;
+    }
+    $types = $container->types()->ofKind($kind, fn_euph_profile_types_descr_lang());
+    if ($types === []) {
+        return null;
+    }
+    $fields = $container->db()->rows('SELECT * FROM ?:profile_fields WHERE profile_type = ?s', $kind->fieldProfileType());
+    $areas = FieldsList::areas($kind);
+
+    return FieldsList::build($kind, $types, $container->rules()->all(), $fields) + [
+        'kind' => $kind->value,
+        'areas' => $areas,
+        'first_area' => (string) array_key_first($areas),
+    ];
+}
+
+/**
+ * What the list's script needs: the types, the checkboxes of each area with
+ * their labels, and the view to open (?euph_view=type id, from a type card).
+ *
+ * @param array<array-key, mixed> $list fn_euph_profile_types_fields_list()
+ *
+ * @return array<string, mixed>
+ */
+function fn_euph_profile_types_fields_list_config(array $list, string $view): array
+{
+    $vendor = Cast::string($list['kind'] ?? '') === UserKind::Vendor->value;
+    $typeIds = array_map(static fn (mixed $type): string => (string) Cast::int(Cast::array($type)['id'] ?? 0), Cast::array($list['types'] ?? []));
+    $show = fn_euph_profile_types_text('euph_profile_types.show', 'show');
+    $required = fn_euph_profile_types_text('euph_profile_types.required', 'required');
+
+    return [
+        'kind' => $vendor ? UserKind::Vendor->value : UserKind::Customer->value,
+        'types' => Cast::array($list['types'] ?? []),
+        'areas' => Cast::array($list['areas'] ?? []),
+        'first_area' => Cast::string($list['first_area'] ?? ''),
+        'view' => $view === 'all' || in_array($view, $typeIds, true) ? $view : '',
+        'manage_url' => fn_url('euph_profile_types.manage?user_type=' . ($vendor ? 'V' : 'C')),
+        'labels' => [
+            'see' => $vendor
+                ? fn_euph_profile_types_text('euph_profile_types.list_view_vendors', 'Vendors see:')
+                : fn_euph_profile_types_text('euph_profile_types.list_view_customers', 'Customers see:'),
+            'all_types' => fn_euph_profile_types_text('euph_profile_types.all_types', 'All types'),
+            'manage_types' => fn_euph_profile_types_text('euph_profile_types.manage_types', 'Manage types'),
+            'profile_type' => fn_euph_profile_types_text('euph_profile_types.profile_type', 'Profile type'),
+            'flags' => [
+                'profile_show' => $show,
+                'profile_required' => $required,
+                'registration_show' => $vendor
+                    ? fn_euph_profile_types_text('euph_profile_types.area_application', 'In the application')
+                    : fn_euph_profile_types_text('euph_profile_types.area_registration', 'At registration'),
+                'checkout_show' => $show,
+                'checkout_required' => $required,
+                'storefront_show' => fn_euph_profile_types_text('euph_profile_types.area_storefront', 'On the storefront'),
+            ],
+        ],
+    ];
+}
+
+/**
+ * Saves the per-type checkboxes of CS-Cart's list of profile fields, after
+ * CS-Cart saved the list itself. Returns how many fields changed.
+ *
+ * @param array<array-key, mixed> $posted field id => [split => Y/N, type id => checkboxes + baseline]
+ */
+function fn_euph_profile_types_save_fields_list(array $posted, string $profileType): int
+{
+    $kind = UserKind::fromFieldProfileType($profileType);
+    $container = fn_euph_profile_types_container();
+    if ($kind === null || $posted === [] || !$container->catalog()->isEnabled($kind)) {
+        return 0;
+    }
+    $types = $container->types()->ofKind($kind, fn_euph_profile_types_descr_lang());
+    $fields = fn_euph_profile_types_field_rows(Cast::idList(array_keys($posted)));
+    $changes = FieldsList::changes($kind, $types, $container->rules()->all(), $fields, $posted);
+    foreach ($changes as $fieldId => $rules) {
+        $container->rules()->replaceForFields(fn_euph_profile_types_with_twins([$fieldId]), $rules);
+    }
+
+    return count($changes);
 }
 
 /**

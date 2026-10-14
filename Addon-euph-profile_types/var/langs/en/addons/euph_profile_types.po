@@ -100,9 +100,13 @@ msgctxt "SettingsVariants::euph_profile_types::choice_view::select"
 msgid "Drop-down"
 msgstr "Drop-down"
 
+msgctxt "SettingsVariants::euph_profile_types::choice_view::pills"
+msgid "Tabs (pills)"
+msgstr "Tabs (pills)"
+
 msgctxt "SettingsTooltips::euph_profile_types::choice_view"
-msgid "In registration, in the profile and at checkout."
-msgstr "In registration, in the profile and at checkout."
+msgid "In registration, in the profile and at checkout. Tabs suit two to four types with short names; with more types the drop-down reads better."
+msgstr "In registration, in the profile and at checkout. Tabs suit two to four types with short names; with more types the drop-down reads better."
 
 msgctxt "SettingsOptions::euph_profile_types::reload_on_change"
 msgid "Reload the page when the type is changed"
@@ -495,6 +499,50 @@ msgstr "Taken from your profile:"
 msgctxt "Languages::euph_profile_types.login_denied_on_storefront"
 msgid "Your account cannot sign in to this store. Please sign in on the store where you registered."
 msgstr "Your account cannot sign in to this store. Please sign in on the store where you registered."
+
+msgctxt "Languages::euph_profile_types.list_view_customers"
+msgid "Customers see:"
+msgstr "Customers see:"
+
+msgctxt "Languages::euph_profile_types.list_view_vendors"
+msgid "Vendors see:"
+msgstr "Vendors see:"
+
+msgctxt "Languages::euph_profile_types.all_types"
+msgid "All types"
+msgstr "All types"
+
+msgctxt "Languages::euph_profile_types.tag_general"
+msgid "general"
+msgstr "general"
+
+msgctxt "Languages::euph_profile_types.tag_always"
+msgid "always"
+msgstr "always"
+
+msgctxt "Languages::euph_profile_types.tag_as_billing"
+msgid "as in the billing address"
+msgstr "as in the billing address"
+
+msgctxt "Languages::euph_profile_types.set_per_type"
+msgid "Set per type"
+msgstr "Set per type"
+
+msgctxt "Languages::euph_profile_types.general_row_hint"
+msgid "CS-Cart's general checkboxes, the same for all types. \"Set per type\" opens a row per type, filled from them; nothing changes until a row differs."
+msgstr "CS-Cart's general checkboxes, the same for all types. \"Set per type\" opens a row per type, filled from them; nothing changes until a row differs."
+
+msgctxt "Languages::euph_profile_types.registration_follows_show"
+msgid "At registration follows \"show\" while the field is general."
+msgstr "At registration follows \"show\" while the field is general."
+
+msgctxt "Languages::euph_profile_types.manage_types"
+msgid "Manage types"
+msgstr "Manage types"
+
+msgctxt "Languages::euph_profile_types.open_in_profile_fields"
+msgid "See this type in the Profile fields list"
+msgstr "See this type in the Profile fields list"
 
 msgctxt "Languages::euph_profile_types.error_type_not_found"
 msgid "The profile type was not found."

@@ -125,6 +125,27 @@ final readonly class FieldRule
     }
 
     /**
+     * The checkboxes a signature stands for ("YNYNNN"), column => Y/N. A form
+     * that does not draw every checkbox (the storefront one for customer
+     * types, checkout for vendor types) sends the rest back from here, so
+     * an untouched row is still unchanged.
+     *
+     * @return array<string, string>
+     */
+    public static function flagsFromSignature(string $signature): array
+    {
+        $flags = [];
+        foreach (self::FLAGS as $index => $flag) {
+            $value = $signature[$index] ?? '';
+            if ($value === 'Y' || $value === 'N') {
+                $flags[$flag] = $value;
+            }
+        }
+
+        return $flags;
+    }
+
+    /**
      * @return array{type_id: int, field_id: int, profile_show: string, profile_required: string, registration_show: string, checkout_show: string, checkout_required: string, storefront_show: string}
      */
     public function toRow(): array

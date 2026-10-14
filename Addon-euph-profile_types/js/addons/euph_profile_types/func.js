@@ -11,9 +11,15 @@
  *     survive the redraw): the page reloads with ?euph_profile_type=CODE and
  *     what was typed is put back after the reload (passwords excepted).
  *
- * Admin panel: the per-type checkboxes of the profile fields ("show" off
- * unticks and locks "required"), "Same as the general checkboxes", "Clear",
- * and the copy buttons of the registration links.
+ * With the choice view "Tabs (pills)" the radio buttons of the choice are
+ * drawn as a segmented control; the radio buttons stay and are sent.
+ *
+ * Admin panel: CS-Cart's list of profile fields with the per-type
+ * checkboxes, all types side by side or one type at a time ("Set per type"
+ * opens the rows of a field still on its general checkboxes); the per-type
+ * checkboxes of a field card and of a type card ("show" off unticks and
+ * locks "required"), "Same as the general checkboxes", "Clear", and the copy
+ * buttons of the registration links.
  *
  * Russian Payments, "Issue an invoice": the details the profile already
  * holds are filled in and their inputs hidden ("Do not ask again for invoice
@@ -259,6 +265,177 @@
         }
     }
 
+    /* ── Tabs (pills): the type choice as a segmented control ─────────── */
+
+    var PILLS_NO_FORM = 'euph_pt_pills_no_form';
+    var TITLE_LABEL = /(^|\s)(ty-control-group__title|litecheckout__label|control-label)(\s|$)/;
+    var pillOf = new WeakMap();
+    var originalOf = new WeakMap();
+    var pillGroups = 0;
+
+    /** The <label> of an option, not the title of the field. */
+    function optionLabel(radio) {
+        var label = radio.id ? radio.ownerDocument.querySelector('label[for="' + cssEscape(radio.id) + '"]') : null;
+
+        if (label && TITLE_LABEL.test(label.className)) {
+            label = null;
+        }
+
+        return label || (radio.parentNode && radio.parentNode.closest ? radio.parentNode.closest('label') : null);
+    }
+
+    /** The text of an option: its label, else the text after its radio button. */
+    function optionText(radio) {
+        var label = optionLabel(radio);
+        var text = '';
+
+        if (label) {
+            text = label.textContent || '';
+        } else {
+            for (var node = radio.nextSibling; node && node.nodeName !== 'INPUT' && node.nodeName !== 'BR'; node = node.nextSibling) {
+                text += node.textContent || '';
+            }
+        }
+
+        return text.trim() || radio.value;
+    }
+
+    /**
+     * Hides one option as the theme drew it: its label, or the radio button
+     * and the text after it (wrapped, as a text node takes no class). The
+     * radio button stays in the form and keeps being sent. Returns the node
+     * the option now starts with.
+     */
+    function hideOption(radio) {
+        var label = optionLabel(radio);
+
+        if (label && label.contains(radio)) {
+            label.classList.add('euph-pt-pills-source');
+
+            return label;
+        }
+        if (label) {
+            radio.classList.add('euph-pt-pills-source');
+            label.classList.add('euph-pt-pills-source');
+
+            return radio;
+        }
+        var wrap = radio.ownerDocument.createElement('span');
+        var nodes = [radio];
+
+        for (var node = radio.nextSibling; node && node.nodeName !== 'INPUT'; node = node.nextSibling) {
+            nodes.push(node);
+            if (node.nodeName === 'BR') {
+                break;
+            }
+        }
+        wrap.className = 'euph-pt-pills-source';
+        radio.parentNode.insertBefore(wrap, radio);
+        nodes.forEach(function (item) {
+            wrap.appendChild(item);
+        });
+
+        return wrap;
+    }
+
+    /**
+     * Draws the radio buttons of the type choice as pills. The pills are
+     * radio buttons too (arrow keys, screen readers) that belong to no form,
+     * so they are never sent: picking one ticks the original radio button,
+     * whose change redraws the form as usual. Returns how many choices were
+     * drawn.
+     */
+    function applyPills(context) {
+        var config = _.euph_profile_types || {};
+        var root = context && context.jquery ? context[0] : (context || document);
+        var groups = {};
+        var names = [];
+        var drawn = 0;
+
+        if (!config.pills || !root || typeof root.querySelectorAll !== 'function') {
+            return 0;
+        }
+        var radios = root.querySelectorAll('input[type="radio"][name$="[' + FIELD + ']"]');
+
+        for (var i = 0; i < radios.length; i++) {
+            var radio = radios[i];
+
+            if (pillOf.has(radio)) {
+                continue;
+            }
+            if (!groups[radio.name]) {
+                groups[radio.name] = [];
+                names.push(radio.name);
+            }
+            groups[radio.name].push(radio);
+        }
+        names.forEach(function (name) {
+            var options = groups[name];
+
+            if (options.length < 2) {
+                return;
+            }
+            var doc = options[0].ownerDocument;
+            var group = 'euph_pt_pills_' + (++pillGroups);
+            var pills = doc.createElement('div');
+            var first = null;
+
+            pills.className = 'euph-pt-pills';
+            pills.setAttribute('role', 'radiogroup');
+            options.forEach(function (option) {
+                var pill = doc.createElement('label');
+                var input = doc.createElement('input');
+                var text = doc.createElement('span');
+
+                input.type = 'radio';
+                input.className = 'euph-pt-pills__input';
+                input.name = group;
+                input.value = option.value;
+                input.setAttribute('form', PILLS_NO_FORM);
+                input.checked = option.checked;
+                input.disabled = option.disabled;
+                text.className = 'euph-pt-pills__text';
+                text.textContent = optionText(option);
+                pill.className = 'euph-pt-pills__pill';
+                pill.appendChild(input);
+                pill.appendChild(text);
+                pills.appendChild(pill);
+                pillOf.set(option, input);
+                originalOf.set(input, option);
+
+                var start = hideOption(option);
+
+                first = first || start;
+            });
+            first.parentNode.insertBefore(pills, first);
+            drawn++;
+        });
+
+        return drawn;
+    }
+
+    /** A pill was picked: its radio button takes the choice, and its change redraws the form. */
+    function pickPill(pill) {
+        var original = originalOf.get(pill);
+
+        if (!pill.checked || !original || original.checked) {
+            return false;
+        }
+        original.checked = true;
+        original.dispatchEvent(new window.Event('change', { bubbles: true }));
+
+        return true;
+    }
+
+    /** Pills follow their radio buttons (a restore after a reload, a script). */
+    function syncPill(radio) {
+        var pill = pillOf.get(radio);
+
+        if (pill) {
+            pill.checked = radio.checked;
+        }
+    }
+
     /* ── Russian Payments: invoice details taken from the profile ─────── */
 
     function invoiceDetails() {
@@ -308,19 +485,411 @@
 
     /* ── Admin panel ──────────────────────────────────────────────────── */
 
+    /** "show" off unticks and locks "required". */
     function syncRequired(showBox) {
-        var target = $(showBox).data('caEuphPtRequired');
+        var target = showBox.getAttribute('data-ca-euph-pt-required');
+        var required = target ? showBox.ownerDocument.querySelector(target) : null;
 
-        if (!target) {
+        if (!required) {
             return;
         }
-        var $required = $(target);
-
         if (showBox.checked) {
-            $required.prop('disabled', false);
+            required.disabled = false;
         } else {
-            $required.prop('checked', false).prop('disabled', true);
+            required.checked = false;
+            required.disabled = true;
         }
+    }
+
+    /* ── Admin panel: CS-Cart's list of profile fields, by type ──────── */
+
+    var LIST_VIEW_KEY = 'euph_profile_types.list_view.';
+    var LIST_MODES = ['types', 'general', 'locked', 'twin'];
+
+    function listConfig(doc) {
+        var source = doc.getElementById('euph_pt_list_config');
+
+        if (!source) {
+            return null;
+        }
+        try {
+            return JSON.parse(source.textContent || 'null');
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function fieldCells(form, fieldId) {
+        return form.querySelectorAll('.euph-pt-list-cell[data-ca-euph-pt-field="' + fieldId + '"]');
+    }
+
+    /**
+     * What CS-Cart's general checkboxes of a field say now. A locked
+     * "required" counts as unticked, as it is not sent; the checkboxes of a
+     * field CS-Cart keeps shown (the e-mail) count as they are.
+     */
+    function listGeneralFlags(form, fieldId, asDrawn) {
+        var flags = {};
+
+        ['profile_show', 'profile_required', 'checkout_show', 'checkout_required', 'storefront_show'].forEach(function (flag) {
+            var box = form.querySelector('input[type="checkbox"][name="fields_data[' + fieldId + '][' + flag + ']"]');
+
+            flags[flag] = !!box && box.checked && (asDrawn || !box.disabled);
+        });
+        flags.registration_show = flags.profile_show;
+
+        return flags;
+    }
+
+    /** The general line shows what applies where CS-Cart has no checkbox in the cell. */
+    function refreshMirrors(form, fieldId) {
+        var cells = fieldCells(form, fieldId);
+        var locked = cells.length > 0 && cells[0].getAttribute('data-ca-euph-pt-mode') === 'locked';
+        var flags = listGeneralFlags(form, fieldId, locked);
+
+        for (var i = 0; i < cells.length; i++) {
+            var mirrors = cells[i].querySelectorAll('.euph-pt-list-mirror');
+
+            for (var j = 0; j < mirrors.length; j++) {
+                mirrors[j].checked = !!flags[mirrors[j].getAttribute('data-ca-euph-pt-mirror')];
+            }
+        }
+    }
+
+    /**
+     * Moves CS-Cart's own checkboxes of a cell into the general line of the
+     * add-on, slot by slot, so that line lines up with the rows of the
+     * types. They keep their names and ids and are sent as before.
+     */
+    function adoptStockCheckboxes(cell) {
+        var td = cell.parentNode;
+        var fieldId = cell.getAttribute('data-ca-euph-pt-field');
+        var slots = cell.querySelectorAll('.euph-pt-list-row--general [data-ca-euph-pt-slot]');
+
+        for (var i = 0; i < slots.length; i++) {
+            var flag = slots[i].getAttribute('data-ca-euph-pt-slot');
+            var stock = td.querySelectorAll('[name="fields_data[' + fieldId + '][' + flag + ']"]');
+            var nodes = [];
+
+            for (var j = 0; j < stock.length; j++) {
+                var node = stock[j];
+
+                while (node && node.parentNode !== td) {
+                    node = node.parentNode;
+                }
+                if (node && node !== cell && nodes.indexOf(node) === -1) {
+                    nodes.push(node);
+                }
+            }
+            if (nodes.length === 0) {
+                var mirror = cell.ownerDocument.createElement('input');
+
+                mirror.type = 'checkbox';
+                mirror.disabled = true;
+                mirror.className = 'euph-pt-list-mirror';
+                mirror.setAttribute('data-ca-euph-pt-mirror', flag);
+                nodes.push(mirror);
+            }
+            for (var k = 0; k < nodes.length; k++) {
+                slots[i].appendChild(nodes[k]);
+            }
+        }
+    }
+
+    /** How a field is drawn: its rows (types, twin) or its general line (general, locked). */
+    function setFieldMode(form, fieldId, mode) {
+        var cells = fieldCells(form, fieldId);
+        var storefront = form.querySelector('input[type="checkbox"][name="fields_data[' + fieldId + '][storefront_show]"]');
+
+        for (var i = 0; i < cells.length; i++) {
+            var row = cells[i].closest('tr');
+
+            cells[i].setAttribute('data-ca-euph-pt-mode', mode);
+            if (row) {
+                LIST_MODES.forEach(function (each) {
+                    row.classList.toggle('euph-pt-row--' + each, each === mode);
+                });
+            }
+        }
+        // A vendor field set per type: CS-Cart's "Show on storefront" column does not decide.
+        if (storefront && !storefront.closest('.euph-pt-list-cell') && storefront.closest('td')) {
+            storefront.closest('td').classList.toggle('euph-pt-list-inert', mode === 'types' || mode === 'twin');
+        }
+    }
+
+    /** The rows of a field take what its general checkboxes say. */
+    function fillRowsFromGeneral(form, fieldId) {
+        var flags = listGeneralFlags(form, fieldId);
+        var cells = fieldCells(form, fieldId);
+
+        for (var i = 0; i < cells.length; i++) {
+            var boxes = cells[i].querySelectorAll('.euph-pt-list-row--type input[type="checkbox"][name]');
+
+            for (var j = 0; j < boxes.length; j++) {
+                var flag = flagOf(boxes[j].name);
+
+                if (Object.prototype.hasOwnProperty.call(flags, flag)) {
+                    boxes[j].checked = flags[flag];
+                    boxes[j].disabled = false;
+                }
+            }
+            var shows = cells[i].querySelectorAll('.euph-pt-list-row--type .cm-euph-pt-show');
+
+            for (var k = 0; k < shows.length; k++) {
+                syncRequired(shows[k]);
+            }
+        }
+    }
+
+    /** From now on the field is set per type: the save stores a row per type. */
+    function markSplit(form, fieldId) {
+        var split = form.querySelector('input[name="euph_pt_list[' + fieldId + '][split]"]');
+
+        if (split) {
+            split.value = 'Y';
+        }
+        setFieldMode(form, fieldId, 'types');
+    }
+
+    /** "Set per type": the rows open, filled from the general checkboxes. */
+    function splitField(form, fieldId) {
+        fillRowsFromGeneral(form, fieldId);
+        markSplit(form, fieldId);
+    }
+
+    /** A checkbox of a type changed: a field still on its general checkboxes becomes set per type. */
+    function onListTypeChange(box) {
+        var cell = box.closest('.euph-pt-list-cell');
+        var form = cell ? cell.closest('form') : null;
+
+        if (!form) {
+            return;
+        }
+        if (cell.getAttribute('data-ca-euph-pt-mode') === 'general') {
+            markSplit(form, cell.getAttribute('data-ca-euph-pt-field'));
+        }
+        markUnseen(form);
+    }
+
+    /** In the view of one type, the fields that type does not see at all are greyed. */
+    function markUnseen(form) {
+        var view = form.getAttribute('data-ca-euph-pt-view') || 'all';
+        var firsts = form.querySelectorAll('.euph-pt-list-cell[data-ca-euph-pt-first="Y"]');
+
+        for (var i = 0; i < firsts.length; i++) {
+            var row = firsts[i].closest('tr');
+            var unseen = false;
+
+            if (view !== 'all' && firsts[i].getAttribute('data-ca-euph-pt-mode') !== 'locked') {
+                var boxes = form.querySelectorAll('.euph-pt-list-cell[data-ca-euph-pt-field="' + firsts[i].getAttribute('data-ca-euph-pt-field') + '"]'
+                    + ' .euph-pt-list-row--type[data-ca-euph-pt-type="' + view + '"] input[type="checkbox"]');
+
+                unseen = true;
+                for (var j = 0; j < boxes.length; j++) {
+                    var flag = boxes[j].getAttribute('data-ca-euph-pt-flag') || flagOf(boxes[j].name);
+
+                    if (boxes[j].checked && /_show$/.test(flag)) {
+                        unseen = false;
+                    }
+                }
+            }
+            if (row) {
+                row.classList.toggle('euph-pt-row--unseen', unseen);
+            }
+        }
+    }
+
+    function listFlagsHead(doc, config, area, first) {
+        var grid = doc.createElement('div');
+        var flags = config.areas[area] || [];
+
+        grid.className = 'euph-pt-list-row euph-pt-list-head';
+        grid.setAttribute('data-ca-euph-pt-first', first ? 'Y' : 'N');
+        grid.style.setProperty('--euph-pt-cols', String(flags.length));
+        if (first) {
+            var label = doc.createElement('span');
+
+            label.className = 'euph-pt-list-label';
+            label.textContent = config.labels.profile_type;
+            grid.appendChild(label);
+        }
+        flags.forEach(function (flag) {
+            var name = doc.createElement('span');
+
+            name.textContent = config.labels.flags[flag] || flag;
+            grid.appendChild(name);
+        });
+
+        return grid;
+    }
+
+    /** Under the title of each area of the list's header: what each column is. */
+    function addListHeads(form, config) {
+        var doc = form.ownerDocument;
+        var head = form.querySelector('thead tr');
+
+        if (!head) {
+            return;
+        }
+        Object.keys(config.areas || {}).forEach(function (area) {
+            var cell = form.querySelector('.euph-pt-list-cell[data-ca-euph-pt-area="' + area + '"]');
+            var td = cell ? cell.parentNode : null;
+            var th = td && typeof td.cellIndex === 'number' && td.cellIndex >= 0 ? head.cells[td.cellIndex] : null;
+            var first = area === config.first_area;
+
+            if (!th || th.querySelector('.euph-pt-list-head')) {
+                return;
+            }
+            var title = doc.createElement('div');
+
+            title.className = 'euph-pt-list-head__title';
+            title.textContent = (th.firstChild && th.firstChild.nodeType === 3 ? th.firstChild.nodeValue : th.textContent).trim();
+            th.textContent = '';
+            th.appendChild(title);
+            th.appendChild(listFlagsHead(doc, config, area, first));
+            th.classList.add('euph-pt-list-col');
+            th.classList.toggle('euph-pt-list-col--first', first);
+        });
+    }
+
+    function listSwitcher(doc, config) {
+        var bar = doc.createElement('div');
+        var label = doc.createElement('span');
+        var group = doc.createElement('div');
+        var manage = doc.createElement('a');
+        var views = [{ id: 'all', name: config.labels.all_types }].concat(config.types || []);
+
+        bar.className = 'euph-pt-list-views';
+        label.className = 'euph-pt-list-views__label';
+        label.textContent = config.labels.see;
+        group.className = 'euph-pt-list-views__group';
+        group.setAttribute('role', 'group');
+        views.forEach(function (view) {
+            var button = doc.createElement('button');
+
+            button.type = 'button';
+            button.className = 'euph-pt-list-views__btn' + (view.status === 'D' ? ' euph-pt-list-views__btn--disabled' : '');
+            button.setAttribute('data-ca-euph-pt-view', String(view.id));
+            if (view.tone) {
+                var dot = doc.createElement('span');
+
+                dot.className = 'euph-pt-dot euph-pt-dot--' + view.tone;
+                button.appendChild(dot);
+            }
+            button.appendChild(doc.createTextNode(view.name));
+            group.appendChild(button);
+        });
+        manage.className = 'euph-pt-list-views__manage';
+        manage.href = config.manage_url || '#';
+        manage.textContent = config.labels.manage_types + ' ›';
+        bar.appendChild(label);
+        bar.appendChild(group);
+        bar.appendChild(manage);
+
+        return bar;
+    }
+
+    function storedListView(kind) {
+        try {
+            return window.localStorage.getItem(LIST_VIEW_KEY + kind) || '';
+        } catch (e) {
+            return '';
+        }
+    }
+
+    /** All types side by side ("all") or one type (its id). */
+    function setListView(form, view) {
+        var known = form.querySelector('.euph-pt-list-views__btn[data-ca-euph-pt-view="' + cssEscape(String(view)) + '"]');
+
+        view = known ? String(view) : 'all';
+        var one = view !== 'all';
+
+        form.classList.toggle('euph-pt-list--all', !one);
+        form.classList.toggle('euph-pt-list--one', one);
+        form.setAttribute('data-ca-euph-pt-view', view);
+
+        var rows = form.querySelectorAll('.euph-pt-list-row--type');
+
+        for (var i = 0; i < rows.length; i++) {
+            rows[i].classList.toggle('is-current', one && rows[i].getAttribute('data-ca-euph-pt-type') === view);
+        }
+        if (one) {
+            // A field on its general checkboxes shows them in the row of the type.
+            var general = form.querySelectorAll('.euph-pt-list-cell[data-ca-euph-pt-mode="general"][data-ca-euph-pt-first="Y"]');
+
+            for (var j = 0; j < general.length; j++) {
+                fillRowsFromGeneral(form, general[j].getAttribute('data-ca-euph-pt-field'));
+            }
+        }
+        markUnseen(form);
+        var buttons = form.querySelectorAll('.euph-pt-list-views__btn');
+
+        for (var k = 0; k < buttons.length; k++) {
+            var on = buttons[k].getAttribute('data-ca-euph-pt-view') === view;
+
+            buttons[k].classList.toggle('is-active', on);
+            buttons[k].setAttribute('aria-pressed', on ? 'true' : 'false');
+        }
+        try {
+            window.localStorage.setItem(LIST_VIEW_KEY + (form.getAttribute('data-ca-euph-pt-kind') || 'C'), view);
+        } catch (e) {
+            // The view is just not remembered.
+        }
+
+        return view;
+    }
+
+    /**
+     * Sets up CS-Cart's list of profile fields drawn with the per-type
+     * checkboxes (hooks/profile_fields/field_settings.post.tpl). Without
+     * this script the list stays CS-Cart's own. Returns the form, or null.
+     */
+    function initFieldsList(doc) {
+        doc = doc || document;
+        var config = listConfig(doc);
+        var first = doc.querySelector('.euph-pt-list-cell');
+        var form = first ? first.closest('form') : null;
+
+        if (!config || !form || form.classList.contains('euph-pt-list')) {
+            return null;
+        }
+        var cells = form.querySelectorAll('.euph-pt-list-cell');
+        var seen = {};
+
+        for (var i = 0; i < cells.length; i++) {
+            var cell = cells[i];
+            var fieldId = cell.getAttribute('data-ca-euph-pt-field');
+            var td = cell.parentNode;
+
+            adoptStockCheckboxes(cell);
+            if (td && td.classList) {
+                td.classList.add('euph-pt-list-col');
+                td.classList.toggle('euph-pt-list-col--first', cell.getAttribute('data-ca-euph-pt-first') === 'Y');
+            }
+            if (!seen[fieldId]) {
+                seen[fieldId] = true;
+                setFieldMode(form, fieldId, cell.getAttribute('data-ca-euph-pt-mode'));
+                refreshMirrors(form, fieldId);
+            }
+        }
+        // CS-Cart draws each section as its own table: a Type cell may wrap
+        // its tag rather than widen one table and shift its columns.
+        var tags = form.querySelectorAll('.euph-pt-list-type-tag');
+
+        for (var t = 0; t < tags.length; t++) {
+            var typeCell = tags[t].closest('td');
+
+            if (typeCell) {
+                typeCell.classList.add('euph-pt-list-type-cell');
+            }
+        }
+        addListHeads(form, config);
+        form.insertBefore(listSwitcher(doc, config), form.firstChild);
+        form.setAttribute('data-ca-euph-pt-kind', config.kind || 'C');
+        form.classList.add('euph-pt-list');
+        setListView(form, config.view || storedListView(config.kind || 'C') || 'all');
+
+        return form;
     }
 
     /** The general checkboxes of a field card, as the per-type checkboxes read them. */
@@ -344,6 +913,14 @@
     }
 
     $(document).on('change', CHOICE, onChoiceChange);
+
+    $(document).on('change', 'input[type="radio"][name$="[' + FIELD + ']"]', function () {
+        syncPill(this);
+    });
+
+    $(document).on('change', '.euph-pt-pills__input', function () {
+        pickPill(this);
+    });
 
     $(document).on('change', '.cm-euph-pt-show', function () {
         syncRequired(this);
@@ -374,6 +951,36 @@
         });
     });
 
+    $(document).on('click', '.cm-euph-pt-split-field', function (event) {
+        var form = this.closest('form');
+
+        event.preventDefault();
+        if (form) {
+            splitField(form, this.getAttribute('data-ca-euph-pt-field'));
+        }
+    });
+
+    $(document).on('change', '.euph-pt-list-row--type input[type="checkbox"]', function () {
+        onListTypeChange(this);
+    });
+
+    $(document).on('change', 'input[type="checkbox"][name^="fields_data["]', function () {
+        var form = this.closest('form');
+        var match = this.name.match(/^fields_data\[(\d+)\]/);
+
+        if (form && match) {
+            refreshMirrors(form, match[1]);
+        }
+    });
+
+    $(document).on('click', '.euph-pt-list-views__btn', function () {
+        var form = this.closest('form');
+
+        if (form) {
+            setListView(form, this.getAttribute('data-ca-euph-pt-view'));
+        }
+    });
+
     $(document).on('click', '.cm-euph-pt-copy', function () {
         var $input = $($(this).data('caEuphPtTarget'));
         var text = String($input.val() || '');
@@ -400,11 +1007,13 @@
 
     if ($.ceEvent) {
         $.ceEvent('on', 'ce.commoninit', function (context) {
+            applyPills(context);
             applyInvoiceDetails(context);
         });
     }
     $(function () {
         restoreAfterReload();
+        initFieldsList(document);
     });
 
     window.EuphProfileTypes = {
@@ -417,6 +1026,16 @@
         flagOf: flagOf,
         isChoiceName: isChoiceName,
         redraw: redraw,
+        applyPills: applyPills,
+        initFieldsList: initFieldsList,
+        setListView: setListView,
+        splitField: splitField,
+        onListTypeChange: onListTypeChange,
+        listGeneralFlags: listGeneralFlags,
+        syncRequired: syncRequired,
+        pickPill: pickPill,
+        syncPill: syncPill,
+        optionText: optionText,
         applyInvoiceDetails: applyInvoiceDetails
     };
 }(Tygh, Tygh.$));

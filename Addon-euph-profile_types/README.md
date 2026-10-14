@@ -37,7 +37,14 @@ Mockups of the main screens. The numbered marks refer to the notes under each im
 <td><a href="docs/mockups/storefront-03-order-details.png"><img src="docs/mockups/storefront-03-order-details.png" width="260" alt="Order details in the customer account"></a><br>Order in the customer account</td>
 <td><a href="docs/mockups/storefront-04-vendor-types.png"><img src="docs/mockups/storefront-04-vendor-types.png" width="260" alt="Vendor types"></a><br>Multi-Vendor: vendor types and plans</td>
 </tr>
+<tr>
+<td><a href="docs/mockups/admin-09-fields-all-types.png"><img src="docs/mockups/admin-09-fields-all-types.png" width="260" alt="Profile fields, all types"></a><br>Profile fields: all types</td>
+<td><a href="docs/mockups/admin-10-fields-one-type.png"><img src="docs/mockups/admin-10-fields-one-type.png" width="260" alt="Profile fields, one type"></a><br>Profile fields: one type</td>
+<td><a href="docs/mockups/storefront-05-pills.png"><img src="docs/mockups/storefront-05-pills.png" width="260" alt="Type choice as pills"></a><br>Type choice as pills (<a href="docs/mockups/storefront-06-pills-phone.png">phone</a>)</td>
+</tr>
 </table>
+
+The last row is rendered from the add-on's own styles and script on the markup its templates draw (`docs/mockups/src/live.mjs`); only the admin chrome around it is drawn.
 
 ## What it does
 
@@ -63,7 +70,7 @@ Mockups of the main screens. The numbered marks refer to the notes under each im
 
 ### Profile fields per type
 
-Every profile field gets a **Profile types** block on its card in *Customers → Profile fields*, with one row per type:
+Each type has these checkboxes for every profile field:
 
 | Customer types | Vendor types |
 |---|---|
@@ -71,7 +78,15 @@ Every profile field gets a **Profile types** block on its card in *Customers →
 | At registration: show | In the application: show |
 | At checkout: show / required | On the storefront (vendor page): show |
 
-The type card also has a **Fields** tab with the same checkboxes, laid out the other way: one row per field.
+They can be ticked in three places, all on the same data:
+
+- **CS-Cart's own Profile fields list.** A switcher above the list shows *All types* or one type at a time:
+  - *All types*: a field set per type shows a row per type, the type named once with its colour. A field still on its general checkboxes takes **one line**: CS-Cart's own checkboxes, for all types. **Set per type** opens its rows, filled from those checkboxes. The e-mail stays always shown, and a shipping field follows its billing twin.
+  - *One type*: one line per field, the form that type gets. Fields the type does not see are greyed. Ticking a general field here sets it per type; the other types keep what they saw.
+  - Everything is saved with the list's own **Save**. The view is remembered, and a type card opens the list on its type.
+  - The list's own template is not replaced: the rows hang on its hook in each Show / Required cell.
+- **The field card:** a **Profile types** block with one row per type.
+- **The type card:** a **Fields** tab with one row per field.
 
 **How a field is shown:**
 
@@ -85,7 +100,9 @@ The list of fields stays one list. A value survives a change of type, and report
 
 ### Storefront: registration, profile, checkout
 
-- The type choice is the **first field of the Contact information section**. It shows as radio buttons or a drop-down, by setting.
+- The type choice is the **first field of the Contact information section**. It shows as radio buttons, a drop-down or **tabs (pills)**, by setting.
+  - Tabs draw the choice as a segmented control. Underneath they stay radio buttons, so arrow keys, screen readers and the form redraw keep working; without the script the customer sees plain radio buttons.
+  - A type is always selected: the type of the registration link, else the customer's own, else the default type.
 - **Changing the type redraws the form** with the fields of the new type, without reloading, and keeps what was typed. The *Reload the page* setting switches this to a reload, for a captcha or another script that does not survive the redraw. The typing is put back after the reload; passwords are not.
 - **Checkout:**
   - At install, the *Customer information*, *Shipping address* and *Billing address* blocks of the checkout get the **By profile type** filling.
@@ -133,7 +150,7 @@ Which details are taken depends on the profile fields mapped in the payment meth
 | Allow user to change type after registration | Never · Always · One change | Applies on the storefront. The administrator can always change the type. |
 | Group status after changing profile type | Active · Pending | Status of the groups of the new type. |
 | Hide standard types from the choice on the storefront | off | Customers choose only from the types you created, if at least one of them is active. |
-| Profile type choice view | Radio buttons · Drop-down | |
+| Profile type choice view | Radio buttons · Drop-down · Tabs (pills) | Tabs suit two to four types with short names; with more types the drop-down reads better. |
 | Reload the page when the type is changed | off | By default the form is redrawn in place. |
 | Let customers sign in only on the storefronts of their profile type | off | See *Storefronts* above. |
 | Profile type choice at checkout | Everybody · Guests only · Nobody | |
@@ -238,6 +255,7 @@ Register handlers as usual: `fn_register_hooks('euph_update_profile_type_post', 
 
 - **No core template is overridden.**
 - The type choice is a virtual profile field (`euph_profile_type`), so the stock profile, registration and checkout templates draw it.
+- The Profile fields list gets its per-type rows through its own hooks: `profile_fields:field_settings` (each Show / Required cell) and `profile_fields:field_type_description` (the Type column). The field card uses `profile_fields:profile_data`.
 - Fields are filtered in the `get_profile_fields` / `get_profile_fields_post` hooks.
 - The checkout uses its own block filling.
 - The rest goes through hooks on users, companies and orders, pre/post controllers, template hooks, and the `block_manager`, `documents`, `exim`, `menu` and `permissions` schemas.
@@ -257,9 +275,11 @@ Addon-euph-profile_types/
 │   ├── schemas/             block_manager, documents, exim, menu, permissions
 │   ├── src/                 typed domain (no CS-Cart calls): Model, Repository, Service, Enum, Db
 │   └── tests/               PHPUnit (unit, with an in-memory fake of the database)
-├── design/backend/…         type list and card, field card block, list columns, order sidebar
+├── design/backend/…         type list and card, Profile fields list by type, field card block,
+│                            list columns, order sidebar
 ├── design/themes/responsive/…  scripts, styles, vendor type badge
-├── js/addons/euph_profile_types/func.js   form redraw, invoice details, admin helpers
+├── js/addons/euph_profile_types/func.js   form redraw, pills, invoice details, Profile fields
+│                                          list by type, admin helpers
 ├── var/langs/{en,ro}/addons/euph_profile_types.po
 └── docs/mockups/            the screens above and their sources (not packaged)
 ```
@@ -280,7 +300,9 @@ All of them run in CI (`.github/workflows/ci.yml`):
 Other commands:
 
 - **Package:** `php scripts/package-addons.php euph_profile_types` writes `dist/euph_profile_types-2.2.0.zip`. Only app, design, js and the language packs are packed; tests, vendor and docs are left out.
-- **Mockups:** `node Addon-euph-profile_types/docs/mockups/src/render.mjs`. It needs the `playwright` package; set `PLAYWRIGHT_MODULE` to its path if it is installed globally.
+- **Mockups:**
+  - `node Addon-euph-profile_types/docs/mockups/src/render.mjs` draws the static mockups. It needs the `playwright` package; set `PLAYWRIGHT_MODULE` to its path if it is installed globally.
+  - `node Addon-euph-profile_types/docs/mockups/src/live.mjs` renders the screens of the Profile fields list and of the pills from the add-on's own LESS and script. It also needs the `less` package (`LESS_MODULE`).
 
 ## Before going live: test on a copy of the store
 
@@ -290,12 +312,18 @@ The code is checked by static analysis and unit tests, but it was not run inside
    - The *Customer profile types* menu item, the two standard types and the settings appear.
    - The checkout blocks show the *By profile type* filling in *Design → Layouts → Checkout*.
 2. **Create a type**, for example Company `B`: tick its fields on the *Fields* tab, give it a user group, set *Wait for approval*.
-3. **Open a profile field card.** Check the *Profile types* block and its note. Save it with something changed, then check the type card's *Fields* tab.
+3. **Open Profile fields.**
+   - The switcher appears above CS-Cart's list. Try *All types* and each type.
+   - Save the list without touching anything: no field may become "per type".
+   - Use *Set per type* on a field, tick one type differently and save. The other types keep what they saw.
+   - Open a field card: check the *Profile types* block and its note.
+   - If the switcher does not show, the list's hooks are not where this add-on expects them in your CS-Cart version. The field card and the type card still work.
 4. **Register on the storefront.**
    - Switch the type: the form must redraw with the right fields and keep the typing. This also shows that the add-on's scripts load on the theme.
    - Try both links: open and locked.
    - The account must wait for approval, and the user group must be granted.
 5. **Profile:** try changing the type under each *Allow user to change type* value.
+   - Set *Profile type choice view* to *Tabs (pills)* and check the choice on registration, the profile and checkout: on a phone as well.
 6. **Checkout**, as a guest and signed in:
    - the type choice;
    - the required fields of each type;

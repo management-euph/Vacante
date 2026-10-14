@@ -95,6 +95,7 @@
                         <variants>
                             <item id="radio"><name>Radio buttons</name></item>
                             <item id="select"><name>Drop-down</name></item>
+                            <item id="pills"><name>Tabs (pills)</name></item>
                         </variants>
                     </item>
                     <item id="reload_on_change">

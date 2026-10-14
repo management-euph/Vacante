@@ -146,3 +146,236 @@
     border-bottom: 1px dashed @euph-pt-border;
     margin-bottom: 12px;
 }
+
+// ── CS-Cart's list of profile fields, by type ──────────────────────────
+// The add-on's cells stay hidden until the script sets the list up (the
+// class euph-pt-list on the form): without it the list is CS-Cart's own.
+
+.euph-pt-list-cell,
+.euph-pt-list-type-tag {
+    display: none;
+}
+
+.euph-pt-dot {
+    display: inline-block;
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #64748b;
+
+    &--1 { background: #2f7cf6; }
+    &--2 { background: #12a37a; }
+    &--3 { background: #e08a00; }
+    &--4 { background: #8b5cf6; }
+    &--5 { background: #e5484d; }
+    &--6 { background: #0ea5b7; }
+    &--7 { background: #a16207; }
+    &--8 { background: #64748b; }
+}
+
+.euph-pt-fields-link {
+    margin: 0 0 10px;
+}
+
+.euph-pt-list-views {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 12px;
+
+    &__label {
+        color: @euph-pt-muted;
+    }
+
+    &__group {
+        display: inline-flex;
+        flex-wrap: wrap;
+        padding: 2px;
+        border: 1px solid #d5dbe4;
+        border-radius: 8px;
+        background: #f6f8fb;
+    }
+
+    &__btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: #3b4652;
+        font-size: 12px;
+        line-height: 18px;
+        cursor: pointer;
+
+        &.is-active {
+            background: #fff;
+            box-shadow: 0 1px 2px rgba(16, 24, 40, .14), 0 0 0 1px #c9d6ea;
+            color: #0f1b2a;
+            font-weight: 700;
+        }
+
+        &--disabled {
+            opacity: .6;
+        }
+    }
+
+    &__manage {
+        margin-left: auto;
+        font-size: 12px;
+    }
+}
+
+.euph-pt-list {
+    .euph-pt-list-cell {
+        display: block;
+    }
+
+    .euph-pt-list-row {
+        display: grid;
+        grid-template-columns: repeat(var(--euph-pt-cols, 2), 58px);
+        justify-content: center;
+        align-items: center;
+        min-height: 22px;
+    }
+
+    .euph-pt-list-cell[data-ca-euph-pt-first="Y"] .euph-pt-list-row,
+    .euph-pt-list-head[data-ca-euph-pt-first="Y"] {
+        grid-template-columns: minmax(150px, 1fr) repeat(var(--euph-pt-cols, 2), 58px);
+    }
+
+    .euph-pt-list-row + .euph-pt-list-row {
+        margin-top: 4px;
+    }
+
+    .euph-pt-list-row--type,
+    .euph-pt-list-row--general {
+        display: none;
+    }
+
+    &.euph-pt-list--all .euph-pt-list-cell[data-ca-euph-pt-mode="types"] .euph-pt-list-row--type,
+    &.euph-pt-list--all .euph-pt-list-cell[data-ca-euph-pt-mode="twin"] .euph-pt-list-row--type,
+    &.euph-pt-list--one .euph-pt-list-cell[data-ca-euph-pt-mode="types"] .euph-pt-list-row--type.is-current,
+    &.euph-pt-list--one .euph-pt-list-cell[data-ca-euph-pt-mode="twin"] .euph-pt-list-row--type.is-current,
+    &.euph-pt-list--one .euph-pt-list-cell[data-ca-euph-pt-mode="general"] .euph-pt-list-row--type.is-current,
+    &.euph-pt-list--all .euph-pt-list-cell[data-ca-euph-pt-mode="general"] .euph-pt-list-row--general,
+    .euph-pt-list-cell[data-ca-euph-pt-mode="locked"] .euph-pt-list-row--general {
+        display: grid;
+    }
+
+    &.euph-pt-list--one .euph-pt-list-cell[data-ca-euph-pt-first="Y"] .euph-pt-list-row,
+    &.euph-pt-list--one .euph-pt-list-head[data-ca-euph-pt-first="Y"] {
+        grid-template-columns: repeat(var(--euph-pt-cols, 2), 58px);
+    }
+
+    &.euph-pt-list--one .euph-pt-list-label {
+        display: none;
+    }
+
+    .euph-pt-list-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        justify-self: start;
+        color: #3b4652;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    .euph-pt-list-slot {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        > span {
+            display: inline-flex;
+            align-items: center;
+        }
+
+        input[type="checkbox"] {
+            margin: 0;
+        }
+    }
+
+    .euph-pt-list-tag {
+        display: inline-block;
+        padding: 0 6px;
+        border-radius: 9px;
+        background: #eef1f5;
+        color: #5b6573;
+        font-size: 11px;
+        line-height: 16px;
+    }
+
+    .euph-pt-list-split {
+        font-size: 11px;
+        cursor: pointer;
+    }
+
+    .euph-pt-list-row--disabled {
+        opacity: .55;
+    }
+
+    .euph-pt-list-mirror {
+        opacity: .6;
+    }
+
+    .euph-pt-list-inert input[type="checkbox"] {
+        opacity: .35;
+        pointer-events: none;
+    }
+
+    .euph-pt-list-head {
+        margin-top: 3px;
+        color: @euph-pt-muted;
+        font-size: 11px;
+        font-weight: normal;
+
+        span {
+            text-align: center;
+        }
+
+        .euph-pt-list-label {
+            color: @euph-pt-muted;
+            font-size: 11px;
+        }
+    }
+
+    .euph-pt-list-head__title {
+        text-align: center;
+    }
+
+    &.euph-pt-list--all .euph-pt-list-col--first {
+        width: 36%;
+    }
+
+    .euph-pt-list-col {
+        white-space: nowrap;
+    }
+
+    &.euph-pt-list--one .euph-pt-list-type-cell {
+        white-space: normal;
+    }
+
+    &.euph-pt-list--one tr.euph-pt-row--unseen > td:not(.euph-pt-list-col),
+    &.euph-pt-list--one tr.euph-pt-row--unseen > td:not(.euph-pt-list-col) a,
+    &.euph-pt-list--one tr.euph-pt-row--unseen > td:not(.euph-pt-list-col) input[type="text"] {
+        color: #a7b0bb;
+    }
+
+    &.euph-pt-list--one tr.euph-pt-row--general .euph-pt-list-type-tag,
+    &.euph-pt-list--one tr.euph-pt-row--locked .euph-pt-list-type-tag,
+    &.euph-pt-list--one tr.euph-pt-row--twin .euph-pt-list-type-tag {
+        display: inline-block;
+        margin-left: 6px;
+        padding: 0 6px;
+        border-radius: 9px;
+        background: #eef1f5;
+        color: #5b6573;
+        font-size: 11px;
+        line-height: 16px;
+    }
+}

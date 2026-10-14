@@ -27,6 +27,12 @@ final class TypeChoiceFieldTest extends TestCase
         self::assertSame('S', TypeChoiceField::build(['B' => 'Company'], ChoiceView::Select, 'Profile type', 'U')['field_type']);
     }
 
+    public function testTabsAreRadioButtonsTheStorefrontScriptDrawsAsPills(): void
+    {
+        self::assertSame('R', TypeChoiceField::build(['P' => 'Private person', 'B' => 'Company'], ChoiceView::Pills, 'Profile type', 'U')['field_type']);
+        self::assertSame(ChoiceView::Pills, ChoiceView::from('pills'));
+    }
+
     public function testItGoesFirstInTheContactInformationOnce(): void
     {
         $field = TypeChoiceField::build(['B' => 'Company'], ChoiceView::Radio, 'Profile type', 'U');

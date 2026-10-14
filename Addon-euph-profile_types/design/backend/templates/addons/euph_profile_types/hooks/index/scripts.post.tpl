@@ -9,3 +9,6 @@
     };
 }(Tygh, Tygh.$));
 </script>
+{if $euph_pt_list_config}
+    <script type="application/json" id="euph_pt_list_config">{$euph_pt_list_config|json_encode nofilter}</script>
+{/if}
