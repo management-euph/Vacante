@@ -108,9 +108,6 @@ exclude:
       - addon-fgo-invoicing/app/addons/fgo_invoicing/tests
       - addon-eurosite/app/addons/eurosite/tests
       - Addon-euph-profile_types/app/addons/euph_profile_types/tests
-      # Cart-Power's cp_profile_types 1.5, kept only as the reference
-      # euph_profile_types was built from: never packaged or deployed.
-      - cp_profile_types_backup_2026-10-05_16-25-19
       - addon-netopia-payments-main/tests
       # Vendored psr/log copy (namespace Psr\Log under lib/, loaded by the
       # addon's own autoloader); netopia's PHPStan / Psalm / php-cs-fixer
