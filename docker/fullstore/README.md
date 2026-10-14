@@ -1,7 +1,7 @@
 # Full-store CS-Cart sandbox
 
-A disposable, local CS-Cart 4.20.1 store on **MariaDB 10.11** (matching the
-production server) with the repo addons (travel core, Novoton, Sphinx, FGO, Eurosite and Netopia payments) linked in for live testing —
+A disposable, local CS-Cart 4.21.2 store (the version production runs) on **MariaDB 10.11** (matching the
+production server) with the repo addons (travel core, Novoton, Sphinx, FGO, Eurosite, Netopia payments and profile types) linked in for live testing —
 install/uninstall, crons, booking flows, templates, and emails — without
 touching devx.
 
@@ -12,7 +12,7 @@ touching devx.
 
 - **Docker Desktop** (you already have it) with the **WSL2 backend** enabled
   (Settings → General → *Use the WSL 2 based engine*).
-- Your **CS-Cart 4.20.1 kit** (`cscart_v4.20.1.zip` or an extracted folder) and
+- Your **CS-Cart 4.21.2 kit** (`cscart_v4.21.2.zip` or an extracted folder) and
   a **valid license key**. Nothing in the repo ships the CS-Cart core — you
   supply it. Both stay gitignored.
 
@@ -35,7 +35,7 @@ touching devx.
 
 3. **Drop your kit** into `./kit/`:
    ```bash
-   cp /mnt/c/path/to/cscart_v4.20.1.zip ./kit/
+   cp /mnt/c/path/to/cscart_v4.21.2.zip ./kit/
    ```
 
 4. **Build and start**:
@@ -93,7 +93,7 @@ and the admin form `views/payments/components/cc_processors/netopia_payments.tpl
 It ships responsive-theme templates only; on a nova_theme store they are linked
 into nova_theme too.
 
-1. Link it (the link script is baked into the image, so run the repo copy, or rebuild):
+1. Link it (`update.ps1` does it; by hand, run the repo copy of the link script):
    ```bash
    docker compose exec app bash /repo/docker/fullstore/link-addons.sh
    ```
@@ -105,6 +105,30 @@ into nova_theme too.
    keys in the store only, never in the repo.
 4. Check out a test booking and pay with a Netopia sandbox card; the IPN lands
    on the store, so for a public return URL use a tunnel (the store is on localhost).
+
+## Profile types (euph_profile_types)
+
+`Addon-euph-profile_types` is linked like the other addons (its storefront
+templates are written for `responsive` and linked into nova_theme too). It needs
+CS-Cart **4.21.2**, and it is not installed automatically.
+
+1. Get the code and link it (PowerShell, from `docker\fullstore`; the branch
+   until it is merged, then `main`):
+   ```powershell
+   .\update.ps1 -Branch claude/laughing-lovelace-2jb32g
+   ```
+2. Admin → **Add-ons** → **Manage add-ons** → *Profile types for customers and
+   vendors* (it is under the not-installed add-ons) → **Install**.
+3. Admin → **Customers → Customer profile types**: the standard type is there;
+   create the store's own types. The README of the addon has the rest.
+
+Not on the Add-ons page? Run the link script by hand and read its output:
+```bash
+docker compose exec app bash /repo/docker/fullstore/link-addons.sh
+```
+`WARNING: … is not in this checkout` means the branch that has the addon is not
+checked out; `WARNING: … needs CS-Cart 4.21.2 or newer` means the store was
+provisioned from an older kit (see *Changing the CS-Cart version* below).
 
 ## Getting your changes to show up (update & verify)
 
@@ -132,15 +156,17 @@ from your repo (`/repo`) and opcache re-checks the file every request.
 | Sphinx language label (`lang_keys.php` / `addon.xml`) | load any **admin page** once — it self-reseeds on a content-hash change and clears cache |
 | Novoton / travel_core language, a **new DB table**, or an `addon.xml` scheme change | **re-install** the addon (Admin → Add-ons, or `install-addons.php` once it's inactive) |
 | DB column covered by an addon's auto-heal map | load any **admin page** once (it runs the `ALTER TABLE`) |
-| `link-addons.sh` / `entrypoint.sh` / `install-addons.php` / `php-dev.ini` / `apache-cscart.conf` / `Dockerfile` | **`docker compose up -d --build`** — these are baked into the image |
+| `link-addons.sh` (e.g. a new addon in its map) | **`.\update.ps1`** or **`docker compose restart app`**: the container runs the working tree's copy (an image built before that change runs its own copy: rebuild it once) |
+| `entrypoint.sh` / `install-addons.php` / `php-dev.ini` / `apache-cscart.conf` / `Dockerfile` | **`docker compose up -d --build`** — these are baked into the image |
 | A new `dev/` probe **file** (novoton / sphinx / sphinx_api_dev) | live (bind mount); a brand-new file → **`docker compose up -d`** |
 | Provider **data** already stored (e.g. hotel coordinates from an earlier sync) | **re-run the provider sync** — see *Stale coordinates* under Troubleshooting |
 
 Two gotchas that make people think an update "didn't take":
 
 - **`docker compose up -d` with unchanged config is a no-op** — it doesn't recreate the
-  container, so it doesn't even re-link. `docker compose restart app` *does* re-link, but it
-  runs the **image-baked** copy of `link-addons.sh` (so edits to that script need `--build`).
+  container, so it doesn't even re-link. `docker compose restart app` *does* re-link, with the
+  working tree's `link-addons.sh` (an image built before that change runs the copy baked into
+  it: rebuild once with `--build`).
 - To be **100 % sure** you're on a clean, latest everything:
   ```bash
   git pull && docker compose down -v && docker compose up -d --build
@@ -161,6 +187,19 @@ a hotel page append `&travel_debug=1` and read the `[travel_debug]` object in th
   docker compose down -v && docker compose up -d --build
   ```
 
+### Changing the CS-Cart version (e.g. 4.20.1 → 4.21.2)
+
+The kit is read only on the first provision: a restart keeps the version the store
+was installed with. Put the new kit in `./kit/` (with several zips there, the highest
+version is used), then wipe and re-provision:
+```bash
+cp /mnt/c/path/to/cscart_v4.21.2.zip ./kit/
+docker compose down -v && docker compose up -d --build
+```
+This drops the sandbox database (test orders, settings, synced data) and installs
+everything again on the new version. `docker compose exec app grep PRODUCT_VERSION config.php`
+shows the version a store runs.
+
 ## Storefront theme (nova_theme vs responsive)
 
 The first provision installs **nova_theme automatically when your kit ships
@@ -179,11 +218,10 @@ and activate the other theme from **Admin → Design → Themes**, then
 the newly installed theme's overlays appear), then **Admin → Settings → Clear
 cache**. A `down -v` re-provision also works but wipes the DB.
 
-> Caveat: that restart re-runs the copy of `link-addons.sh` **baked into the image**,
-> not the one in your working tree. If you *edit* `link-addons.sh` itself (e.g. to link
-> a newly added tree), a plain restart keeps running the old baked script — rebuild with
-> `docker compose up -d --build` for the change to take effect (the DB/docroot volumes
-> persist, so no re-provision).
+> That restart runs the working tree's `link-addons.sh`, so an edit to it (e.g. to link
+> a newly added tree) takes effect too. An image built before the entrypoint did that
+> runs the copy baked into it: rebuild once with `docker compose up -d --build` (the
+> DB/docroot volumes persist, so no re-provision).
 
 > `sphinx_holidays` ships storefront templates for `responsive` only; its
 > hotel-PDP booking form comes from shared `travel_core` templates (which

@@ -335,7 +335,7 @@ Other commands:
 
 ## Before going live: test on a copy of the store
 
-The code is checked by static analysis and unit tests, but it was not run inside a CS-Cart 4.21.2 store. Click through these on a staging copy (with Multi-Vendor, the vendor items too):
+The code is checked by static analysis and unit tests, but it was not run inside a CS-Cart store yet: the local Docker store (`docker/fullstore`, CS-Cart 4.21.2) is the place to start. Click through these on a staging copy (with Multi-Vendor, the vendor items too):
 
 1. **Install** the add-on, on the store's own theme (`nova_theme` in production).
    - The *Customer profile types* menu item, the two standard types and the settings appear.

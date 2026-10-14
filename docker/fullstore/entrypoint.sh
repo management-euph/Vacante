@@ -27,6 +27,11 @@ THEME="${CSCART_THEME:-}"
 
 log() { echo "[entrypoint] $*"; }
 
+# The working tree's link-addons.sh when the repo is mounted (a new addon in its
+# map is linked by a plain restart), else the copy baked into the image.
+LINK_ADDONS=/repo/docker/fullstore/link-addons.sh
+[ -f "$LINK_ADDONS" ] || LINK_ADDONS=/usr/local/bin/link-addons.sh
+
 wait_for_db() {
     # Probe with PHP's mysqli — the exact driver CS-Cart uses, and always
     # present in this image. (The old `mysqladmin ping` broke once the
@@ -48,7 +53,8 @@ ingest_kit() {
     # Accept either a .zip archive or an already-extracted directory in /kit
     # (same contract as docker/test-db/build.sh's CSCART_SRC).
     local zip src inner tmp
-    zip="$(find "$KIT" -maxdepth 1 -iname '*.zip' 2>/dev/null | head -n1 || true)"
+    # Several zips (an old kit left next to a new one): the highest version.
+    zip="$(find "$KIT" -maxdepth 1 -iname '*.zip' 2>/dev/null | sort -V | tail -n1 || true)"
     if [ -n "$zip" ]; then
         log "Unzipping kit: $zip"
         tmp="$(mktemp -d)"
@@ -154,7 +160,7 @@ provision() {
     resolve_theme
 
     log "Linking repo addons into the docroot..."
-    DOCROOT="$DOCROOT" REPO=/repo bash /usr/local/bin/link-addons.sh
+    DOCROOT="$DOCROOT" REPO=/repo bash "$LINK_ADDONS"
 
     write_install_config
 
@@ -174,7 +180,7 @@ provision() {
     # and picks them up — without this, the storefront booking form /
     # location line templates would be missing until the next restart.
     log "Re-linking addon design files for the installed theme..."
-    DOCROOT="$DOCROOT" REPO=/repo bash /usr/local/bin/link-addons.sh
+    DOCROOT="$DOCROOT" REPO=/repo bash "$LINK_ADDONS"
 
     enable_dev_mode
 
@@ -194,7 +200,7 @@ if [ ! -f "$SENTINEL" ]; then
     provision
 else
     log "Already provisioned; re-linking addons for freshness."
-    DOCROOT="$DOCROOT" REPO=/repo bash /usr/local/bin/link-addons.sh || true
+    DOCROOT="$DOCROOT" REPO=/repo bash "$LINK_ADDONS" || true
 fi
 
 exec "$@"

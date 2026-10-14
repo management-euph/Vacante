@@ -91,9 +91,34 @@ link_tpl() { # $1 = source dir under /repo, $2 = destination under docroot
     echo "    $dest -> $src (per file: skipped HP Sure Click ~BROMIUM entries)"
 }
 
+# The store's CS-Cart version against an addon's <core_version> range: CS-Cart
+# lists an addon outside it on the Add-ons page but refuses to install it, which
+# reads like "the addon is broken". Say it here instead.
+check_core_version() { # $1 = addon id, $2 = its addon.xml
+    local id="$1" xml="$2" store min max
+    store=$(grep -oE "PRODUCT_VERSION', *'[^']+" "$DOCROOT/config.php" 2>/dev/null | grep -oE "[0-9][0-9.]*$" || true)
+    [ -n "$store" ] && [ -f "$xml" ] || return 0
+    min=$(sed -n '/<core_version>/,/<\/core_version>/s:.*<min>\([^<]*\)</min>.*:\1:p' "$xml" | head -n1)
+    max=$(sed -n '/<core_version>/,/<\/core_version>/s:.*<max>\([^<]*\)</max>.*:\1:p' "$xml" | head -n1)
+    if [ -n "$min" ] && [ "$(printf '%s\n%s\n' "$min" "$store" | sort -V | head -n1)" != "$min" ]; then
+        echo "    WARNING: $id needs CS-Cart $min or newer, this store runs $store: CS-Cart will not install it." >&2
+    fi
+    if [ -n "$max" ] && [ "$(printf '%s\n%s\n' "$max" "$store" | sort -V | tail -n1)" != "$max" ]; then
+        echo "    WARNING: $id supports CS-Cart up to $max, this store runs $store: CS-Cart will not install it." >&2
+    fi
+}
+
 for id in "${!ADDONS[@]}"; do
     base="$REPO/${ADDONS[$id]}"
     echo "[link-addons] $id"
+
+    # An addon that only exists on another branch: say so, rather than link
+    # nothing in silence (it would just be missing from the Add-ons page).
+    if [ ! -d "$base/app/addons/$id" ]; then
+        echo "    WARNING: ${ADDONS[$id]}/app/addons/$id is not in this checkout: switch to a branch that has it (update.ps1 -Branch <branch>)." >&2
+        continue
+    fi
+    check_core_version "$id" "$base/app/addons/$id/addon.xml"
 
     link "$base/app/addons/$id"                           "$DOCROOT/app/addons/$id"
     link_tpl "$base/design/backend/templates/addons/$id"      "$DOCROOT/design/backend/templates/addons/$id"

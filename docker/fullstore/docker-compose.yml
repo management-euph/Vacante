@@ -1,7 +1,7 @@
 # Local full-store CS-Cart sandbox for addon testing.
 #
 #   cp .env.example .env         # then fill CSCART_LICENSE_KEY
-#   (drop cscart_v4.20.1.zip into ./kit/)
+#   (drop cscart_v4.21.2.zip into ./kit/)
 #   docker compose up -d --build
 #
 # Store       http://localhost:8080   (admin at /admin.php)
