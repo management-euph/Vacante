@@ -14,6 +14,20 @@ if (!defined('BOOTSTRAP')) {
 }
 
 /**
+ * A value for the add-on's inline <script>, as JavaScript: JSON with <, >, &
+ * and quotes escaped, so no text in it can close the script or open a
+ * comment. The add-on hands its data to its script this way, never in a
+ * <script type="application/json"> block: CS-Cart's pages ran such a block as
+ * JavaScript, where JSON is a syntax error, and the data never arrived.
+ */
+function fn_euph_profile_types_js_value(mixed $value): string
+{
+    $json = json_encode($value, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_INVALID_UTF8_SUBSTITUTE);
+
+    return is_string($json) ? $json : 'null';
+}
+
+/**
  * The add-on's services, built once per request from the add-on settings.
  */
 function fn_euph_profile_types_container(bool $reset = false): Container

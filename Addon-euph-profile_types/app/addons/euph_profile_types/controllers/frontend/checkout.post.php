@@ -34,5 +34,8 @@ if ($mode === 'checkout'
     && fn_euph_profile_types_container()->settings()->invoiceDetailsFromProfile
     && Registry::get('addons.rus_payments.status') === 'A'
 ) {
-    fn_euph_profile_types_assign('euph_pt_invoice_prefill', fn_euph_profile_types_invoice_details(fn_euph_profile_types_session_get('cart')));
+    $details = fn_euph_profile_types_invoice_details(fn_euph_profile_types_session_get('cart'));
+    if ($details !== []) {
+        fn_euph_profile_types_assign('euph_pt_invoice_prefill', fn_euph_profile_types_js_value($details));
+    }
 }

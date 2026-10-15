@@ -209,7 +209,7 @@ ${read('_admin421_top.html')}
   </div>
   <div class="legend">${legend}</div>
 </div></div></div>
-<script type="application/json" id="euph_pt_list_config">${JSON.stringify({ ...CONFIG, view })}</script>
+<script>window.Tygh.euph_profile_types = { reload: true, list: ${JSON.stringify({ ...CONFIG, view })} };</script>
 </body></html>`;
 }
 

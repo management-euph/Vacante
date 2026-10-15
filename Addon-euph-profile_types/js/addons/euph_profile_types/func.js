@@ -441,17 +441,11 @@
 
     /* ── Russian Payments: invoice details taken from the profile ─────── */
 
+    /** Set by the add-on's inline script (hooks/index/scripts.post.tpl). */
     function invoiceDetails() {
-        var source = document.getElementById('euph_pt_invoice_prefill');
+        var data = _.euph_profile_types ? _.euph_profile_types.invoice_prefill : null;
 
-        if (!source) {
-            return null;
-        }
-        try {
-            return JSON.parse(source.textContent || '{}');
-        } catch (e) {
-            return null;
-        }
+        return data && typeof data === 'object' ? data : null;
     }
 
     function applyInvoiceDetails(context) {
@@ -509,17 +503,11 @@
     var LIST_VIEW_KEY = 'euph_profile_types.list_view.';
     var LIST_MODES = ['types', 'general', 'locked', 'twin'];
 
-    function listConfig(doc) {
-        var source = doc.getElementById('euph_pt_list_config');
+    /** Set by the add-on's inline script (hooks/index/scripts.post.tpl). */
+    function listConfig() {
+        var data = _.euph_profile_types ? _.euph_profile_types.list : null;
 
-        if (!source) {
-            return null;
-        }
-        try {
-            return JSON.parse(source.textContent || 'null');
-        } catch (e) {
-            return null;
-        }
+        return data && typeof data === 'object' ? data : null;
     }
 
     function fieldCells(form, fieldId) {
@@ -849,7 +837,7 @@
      */
     function initFieldsList(doc) {
         doc = doc || document;
-        var config = listConfig(doc);
+        var config = listConfig();
         var first = doc.querySelector('.euph-pt-list-cell');
         var form = first ? first.closest('form') : null;
 

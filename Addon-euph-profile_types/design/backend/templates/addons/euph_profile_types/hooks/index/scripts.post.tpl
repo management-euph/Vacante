@@ -5,10 +5,9 @@
         'euph_profile_types.copied': '{__("euph_profile_types.copied")|escape:"javascript"}'
     });
     _.euph_profile_types = {
-        reload: true
+        reload: true,
+        {* The Profile fields list's types and checkboxes: fn_euph_profile_types_js_value(). *}
+        list: {if $euph_pt_list_config}{$euph_pt_list_config nofilter}{else}null{/if}
     };
 }(Tygh, Tygh.$));
 </script>
-{if $euph_pt_list_config}
-    <script type="application/json" id="euph_pt_list_config">{$euph_pt_list_config|json_encode nofilter}</script>
-{/if}

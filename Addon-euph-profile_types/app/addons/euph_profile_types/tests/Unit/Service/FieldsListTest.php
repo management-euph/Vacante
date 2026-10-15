@@ -81,6 +81,23 @@ final class FieldsListTest extends TestCase
         self::assertSame(['profile' => ['profile_show', 'profile_required', 'registration_show', 'storefront_show']], FieldsList::areas(UserKind::Vendor));
     }
 
+    public function testTheCustomersFieldsGetTheCheckoutColumnBack(): void
+    {
+        // CS-Cart 4.18+: the customers' fields have only the Profile area.
+        $schema = [
+            'U' => ['name' => 'user', 'allowed_sections' => ['C', 'BS'], 'allowed_areas' => ['profile']],
+            'S' => ['name' => 'seller', 'allowed_sections' => ['C'], 'allowed_areas' => ['profile']],
+        ];
+        $expected = $schema;
+        $expected['U']['allowed_areas'] = ['profile', 'checkout'];
+
+        self::assertSame($expected, FieldsList::withCheckoutArea($schema));
+        self::assertSame(array_keys(FieldsList::areas(UserKind::Customer)), $expected['U']['allowed_areas'], 'the columns the list draws rows in');
+        self::assertSame($expected, FieldsList::withCheckoutArea($expected), 'a core that has it keeps it once');
+        self::assertSame(['S' => $schema['S']], FieldsList::withCheckoutArea(['S' => $schema['S']]), 'the vendors\' fields keep theirs');
+        self::assertSame(['U' => ['name' => 'user']], FieldsList::withCheckoutArea(['U' => ['name' => 'user']]), 'an entry it does not know is left alone');
+    }
+
     public function testTheLockedFieldsAreTheEmailAndAVendorsCompanyName(): void
     {
         self::assertTrue(FieldsList::isLocked(['field_name' => 'email', 'is_default' => 'Y'], UserKind::Customer));
