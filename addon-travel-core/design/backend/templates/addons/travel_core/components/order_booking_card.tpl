@@ -220,10 +220,11 @@
         </div>
     {/if}
 
-    {if $tobc.supplier_price || $tobc.booked_at || $tobc.updated_at}
+    {if $tobc.supplier_price || $tobc.booked_at || $tobc.linked_at || $tobc.updated_at}
         <div class="travel-obc__foot">
             {if $tobc.supplier_price}<span>{__("travel_core.obc_supplier_price")} <strong>{$tobc.supplier_price|escape:html}</strong></span>{/if}
             {if $tobc.booked_at}<span>{__("travel_core.obc_booked_at", ["[date]" => $tobc.booked_at])}</span>{/if}
+            {if $tobc.linked_at}<span>{__("travel_core.obc_linked_at", ["[date]" => $tobc.linked_at])}</span>{/if}
             {if $tobc.updated_at}<span>{__("travel_core.obc_updated_at", ["[date]" => $tobc.updated_at])}</span>{/if}
         </div>
     {/if}

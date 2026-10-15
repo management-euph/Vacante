@@ -41,6 +41,76 @@ final class TravelBookingMirrorTest extends TestCase
         DbStub::reset();
     }
 
+    /** A store whose travel_bookings has linked_at, at 2026-10-10 22:15:00 by the database clock. */
+    private function withLinkedAtColumn(): void
+    {
+        DbStub::$getField = static fn (string $q, ...$p): ?string => match (true) {
+            str_starts_with($q, 'SHOW COLUMNS') => 'linked_at',
+            $q === 'SELECT NOW()' => '2026-10-10 22:15:00',
+            default => null,
+        };
+    }
+
+    public function testABookingBornWithItsOrderIsStampedOnInsert(): void
+    {
+        $this->withLinkedAtColumn();
+
+        (new TravelBookingMirror('novoton'))->upsert(8, ['order_id' => 18]);
+
+        [$sql, $params] = $this->queries[0];
+        self::assertSame('2026-10-10 22:15:00', $params[0]['linked_at']);
+        // A re-upsert never rewrites it from the insert record…
+        self::assertArrayNotHasKey('linked_at', $params[1]);
+        // …only when the order changes, read before order_id is assigned.
+        self::assertStringContainsString(
+            'linked_at = IF(VALUES(order_id) > 0 AND NOT (VALUES(order_id) <=> order_id), NOW(), linked_at),'
+                . ' order_id = IF(VALUES(order_id) > 0, VALUES(order_id), order_id)',
+            $sql,
+        );
+    }
+
+    public function testABookingAddedToTheCartIsNotStamped(): void
+    {
+        $this->withLinkedAtColumn();
+
+        (new TravelBookingMirror('novoton'))->upsert(8, ['hotel_name' => 'Admiral']);
+
+        self::assertArrayNotHasKey('linked_at', $this->queries[0][1][0]);
+    }
+
+    public function testLinkingAnExistingBookingStampsItAndUnlinkingClearsIt(): void
+    {
+        $this->withLinkedAtColumn();
+        $mirror = new TravelBookingMirror('novoton');
+
+        $mirror->applyUpdate(26, ['order_id' => 18, 'status' => 'pending']);
+        $mirror->applyUpdate(26, ['order_id' => 0]);
+
+        [$sql, $params] = $this->queries[0];
+        self::assertStringContainsString(
+            'UPDATE ?:travel_bookings SET linked_at = IF(?i > 0, IF(order_id <=> ?i, linked_at, NOW()), NULL), ?u'
+                . ' WHERE provider = ?s AND provider_booking_id = ?s',
+            $sql,
+        );
+        self::assertSame([18, 18, ['order_id' => 18, 'status' => 'pending'], 'novoton', '26'], $params);
+        self::assertSame([0, 0, ['order_id' => 0], 'novoton', '26'], $this->queries[1][1]);
+    }
+
+    public function testAStoreWithoutTheColumnYetWritesAsBefore(): void
+    {
+        // travel_core adds linked_at on an admin page load: a customer who
+        // orders first must not lose the booking to an unknown column.
+        DbStub::$getField = static fn (string $q, ...$p): ?string => null;
+        $mirror = new TravelBookingMirror('novoton');
+
+        $mirror->upsert(8, ['order_id' => 18]);
+        $mirror->applyUpdate(26, ['order_id' => 18]);
+
+        self::assertStringNotContainsString('linked_at', $this->queries[0][0]);
+        self::assertArrayNotHasKey('linked_at', $this->queries[0][1][0]);
+        self::assertSame('UPDATE ?:travel_bookings SET ?u WHERE provider = ?s AND provider_booking_id = ?s', $this->queries[1][0]);
+    }
+
     public function testUpsertBuildsProviderRecordWithDefaults(): void
     {
         (new TravelBookingMirror('sphinx'))->upsert(9, ['hotel_name' => 'Falez']);

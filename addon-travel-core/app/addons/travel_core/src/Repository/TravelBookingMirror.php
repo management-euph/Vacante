@@ -46,8 +46,24 @@ final class TravelBookingMirror
         'guests_data' => 'guests_json',
     ];
 
+    /** Whether travel_bookings has linked_at yet; null until this mirror first asks. */
+    private ?bool $hasLinkedAt = null;
+
     public function __construct(private readonly string $provider)
     {
+    }
+
+    /**
+     * travel_core adds linked_at from an admin page load (ensure_schema); a
+     * customer may order after a deploy before any admin page opened, and a
+     * write naming a missing column would lose the booking. One cheap check
+     * per mirror (a provider repository keeps one for its lifetime).
+     */
+    private function hasLinkedAt(): bool
+    {
+        return $this->hasLinkedAt ??= TypeCoerce::toString(
+            db_get_field("SHOW COLUMNS FROM ?:travel_bookings LIKE 'linked_at'"),
+        ) !== '';
     }
 
     /**
@@ -88,9 +104,25 @@ final class TravelBookingMirror
         $update_record = $travel_record;
         unset($update_record['order_id']);
 
+        // linked_at: when the booking got its order (the admin order card's
+        // "Linked to order"), from the database clock like created_at. A row
+        // born with an order is stamped on insert; an existing one when this
+        // write gives it an order, or a different one (<=>: order_id may be
+        // NULL). Assignments run left to right, so linked_at still compares
+        // against the stored order_id.
+        $linkedAt = '';
+        if ($this->hasLinkedAt()) {
+            $now = $travel_record['order_id'] > 0 ? TypeCoerce::toString(db_get_field('SELECT NOW()')) : '';
+            if ($now !== '') {
+                $travel_record['linked_at'] = $now;
+            }
+            $linkedAt = ' linked_at = IF(VALUES(order_id) > 0 AND NOT (VALUES(order_id) <=> order_id), NOW(), linked_at),';
+        }
+
         db_query(
             'INSERT INTO ?:travel_bookings ?e'
                 . ' ON DUPLICATE KEY UPDATE ?u,'
+                . $linkedAt
                 . ' order_id = IF(VALUES(order_id) > 0, VALUES(order_id), order_id)',
             $travel_record,
             $update_record,
@@ -118,6 +150,24 @@ final class TravelBookingMirror
 
         if (array_key_exists('guests_json', $travelUpdate)) {
             $travelUpdate['guests_json'] = self::coerceGuestsJson($travelUpdate['guests_json']);
+        }
+
+        if (array_key_exists('order_id', $travelUpdate) && $this->hasLinkedAt()) {
+            // linked_at as in upsert(): stamped when the order changes,
+            // cleared when the booking loses it. Placed before ?u, so it
+            // reads the stored order_id.
+            $orderId = TypeCoerce::toInt($travelUpdate['order_id']);
+            db_query(
+                'UPDATE ?:travel_bookings SET linked_at = IF(?i > 0, IF(order_id <=> ?i, linked_at, NOW()), NULL), ?u'
+                    . ' WHERE provider = ?s AND provider_booking_id = ?s',
+                $orderId,
+                $orderId,
+                $travelUpdate,
+                $this->provider,
+                (string) $providerBookingId,
+            );
+
+            return;
         }
 
         db_query(

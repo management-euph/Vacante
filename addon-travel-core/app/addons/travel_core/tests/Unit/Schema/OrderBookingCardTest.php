@@ -64,7 +64,7 @@ final class OrderBookingCardTest extends TestCase
         foreach (['responsive', 'nova_theme'] as $theme) {
             $card = self::code(self::read("design/themes/{$theme}/templates/addons/travel_core/components/cart_booking_details.tpl"));
 
-            foreach (['$tcc.provider', '$tcc.reference', '$tcc.our_reference', '$tcc.supplier_price', '$tcc.note', '$tcc.alert', '$tcc.booking_id', '$tcc.booked_at', '$tcc.updated_at'] as $key) {
+            foreach (['$tcc.provider', '$tcc.reference', '$tcc.our_reference', '$tcc.supplier_price', '$tcc.note', '$tcc.alert', '$tcc.booking_id', '$tcc.booked_at', '$tcc.linked_at', '$tcc.updated_at'] as $key) {
                 self::assertStringNotContainsString($key, $card, "{$theme}: {$key}");
             }
             // Supplier per-room prices are blanked in the order card's view model.

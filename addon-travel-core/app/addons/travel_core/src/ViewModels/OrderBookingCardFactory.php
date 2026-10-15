@@ -163,7 +163,9 @@ final class OrderBookingCardFactory
         $card['booking_id'] = $admin ? max(0, TypeCoerce::toInt($booking['booking_id'] ?? $extra['travel_surrogate_id'] ?? 0)) : 0;
         $card['note'] = $admin ? trim(TypeCoerce::toString($facts['note'] ?? '')) : '';
         $card['supplier_price'] = $admin ? TypeCoerce::toString($meta['supplier_price'] ?? '') : '';
+        // Added to cart (the row is born then), linked to the order, last change.
         $card['booked_at'] = $admin ? $this->stamp($booking['created_at'] ?? null) : '';
+        $card['linked_at'] = $admin ? $this->stamp($booking['linked_at'] ?? null) : '';
         $card['updated_at'] = $admin ? $this->stamp($booking['updated_at'] ?? null) : '';
         $card['alert'] = $admin ? $this->alert($status['code'], $facts, $meta) : [];
 

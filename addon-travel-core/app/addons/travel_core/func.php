@@ -180,6 +180,19 @@ function fn_travel_core_ensure_schema(): void
         if ($hasCreatedAtIdx === 0) {
             db_query('ALTER TABLE ?:travel_bookings ADD KEY `idx_created_at` (`created_at`)');
         }
+        // When each booking got its order (the order card's "Linked to
+        // order"). Bookings linked before the column existed keep NULL: their
+        // link time is unknown, and the card leaves it out.
+        $hasLinkedAt = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toInt(db_get_field(
+            "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = ?s
+               AND COLUMN_NAME = 'linked_at'",
+            $bookingsTable,
+        ));
+        if ($hasLinkedAt === 0) {
+            db_query("ALTER TABLE ?:travel_bookings ADD COLUMN `linked_at` DATETIME DEFAULT NULL COMMENT 'When order_id was set (TravelBookingMirror)' AFTER `updated_at`");
+        }
     }
 
     // Ensure travel_unmapped_values table exists

@@ -77,6 +77,7 @@ final class OrderBookingCardFactoryTest extends TestCase
             'currency' => 'EUR',
             'created_at' => '2026-10-06 14:33:00',
             'updated_at' => '2026-10-08 06:00:00',
+            'linked_at' => '2026-10-06 14:41:00',
         ];
     }
 
@@ -111,8 +112,23 @@ final class OrderBookingCardFactoryTest extends TestCase
         self::assertSame('Late check-in on request', $card['note']);
         self::assertSame('1.396,50 €', $card['supplier_price']);
         self::assertSame('06.10.2026 14:33', $card['booked_at']);
+        self::assertSame('06.10.2026 14:41', $card['linked_at']);
         self::assertSame('08.10.2026 06:00', $card['updated_at']);
         self::assertSame([], $card['alert']);
+    }
+
+    public function testABookingLinkedBeforeTheLinkTimeWasRecordedShowsNone(): void
+    {
+        // Stores that predate travel_bookings.linked_at keep NULL for the
+        // bookings already linked: no "Linked to order" rather than a guess.
+        foreach ([['linked_at' => null], ['linked_at' => ''], []] as $linked) {
+            $booking = self::booking();
+            unset($booking['linked_at']);
+            $card = self::factory()->build(self::item(), 'admin', $linked + $booking, self::facts(), self::meta());
+
+            self::assertSame('', $card['linked_at']);
+            self::assertSame('06.10.2026 14:33', $card['booked_at']);
+        }
     }
 
     public function testTheCustomerCardCarriesNothingAboutTheProvider(): void
@@ -133,6 +149,7 @@ final class OrderBookingCardFactoryTest extends TestCase
         self::assertSame('', $card['note']);
         self::assertSame('', $card['supplier_price']);
         self::assertSame('', $card['booked_at']);
+        self::assertSame('', $card['linked_at']);
         self::assertSame([], $card['alert']);
         // Supplier per-room prices (rooms_data) never show either.
         foreach ($card['room_list'] as $room) {

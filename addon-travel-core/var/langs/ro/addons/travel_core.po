@@ -2523,8 +2523,12 @@ msgid "Supplier price"
 msgstr "Preț furnizor"
 
 msgctxt "Languages::travel_core.obc_booked_at"
-msgid "Booked [date]"
-msgstr "Rezervat [date]"
+msgid "Added to cart [date]"
+msgstr "Adăugat în coș [date]"
+
+msgctxt "Languages::travel_core.obc_linked_at"
+msgid "Linked to order [date]"
+msgstr "Asociat comenzii [date]"
 
 msgctxt "Languages::travel_core.obc_on_booking"
 msgid "on booking"
