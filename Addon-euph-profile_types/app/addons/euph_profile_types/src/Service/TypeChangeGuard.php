@@ -26,6 +26,22 @@ final class TypeChangeGuard
         return self::mayChange($policy, $currentCode, $changesSoFar);
     }
 
+    /**
+     * Whether the type a locked registration link fixed still holds on the
+     * registration form (or the vendor application) being opened: on the
+     * page the link opens, and when the form comes back after being sent
+     * with that type (an error). Opened again any other way, a new visit, the
+     * form offers every type.
+     */
+    public static function lockHolds(string $lockedCode, string $postedCode, bool $lockedLinkOpened): bool
+    {
+        if ($lockedCode === '') {
+            return false;
+        }
+
+        return $lockedLinkOpened || strcasecmp($lockedCode, $postedCode) === 0;
+    }
+
     /** Whether the customer may change the type at all: the choice is offered in the account. */
     public static function mayChange(TypeChangePolicy $policy, string $currentCode, int $changesSoFar): bool
     {

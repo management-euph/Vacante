@@ -60,6 +60,15 @@ final class SmallServicesTest extends TestCase
         self::assertTrue(TypeChangeGuard::mayChange(TypeChangePolicy::Never, '', 0));
     }
 
+    public function testALockedLinkHoldsOnItsPageAndWhileTheFormComesBack(): void
+    {
+        self::assertTrue(TypeChangeGuard::lockHolds('D', '', true), 'the page the link opens');
+        self::assertTrue(TypeChangeGuard::lockHolds('D', 'd', false), 'the form sent with the type, back with an error');
+        self::assertFalse(TypeChangeGuard::lockHolds('D', '', false), 'the registration page opened again: every type');
+        self::assertFalse(TypeChangeGuard::lockHolds('D', 'B', false), 'sent with another type: the lock is not the form\'s');
+        self::assertFalse(TypeChangeGuard::lockHolds('', '', true), 'no lock');
+    }
+
     public function testAGroupBothTypesGrantIsLeftAsItIs(): void
     {
         self::assertSame(['remove' => [1], 'add' => [4]], UsergroupDiff::between([1, 2, 3], [2, 3, 4]));
