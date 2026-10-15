@@ -4,8 +4,10 @@
  * The type choice is a profile field CS-Cart draws itself
  * (user_data[euph_profile_type], company_data[euph_profile_type]). When it
  * changes, the form is drawn again for the new type:
- *   - registration and the customer account: the page of the new type is
- *     fetched and its form takes the place of this one; what was typed stays;
+ *   - registration and the customer account: the form of the new type
+ *     takes the place of this one and what was typed stays. The forms of
+ *     the other types are fetched once the page is idle, so the switch is
+ *     instant;
  *   - the checkout, the admin panel, and with the setting "Reload the page
  *     when the type is changed" (a captcha or another script that does not
  *     survive the redraw): the page reloads with ?euph_profile_type=CODE and
@@ -193,29 +195,143 @@
         return key ? doc.getElementById(key) : null;
     }
 
-    /** Fetches the page of the new type and puts its form in place of this one. */
+    function isCheckout(form) {
+        return form.id === 'litecheckout_form'
+            || $(form).closest('.litecheckout, #litecheckout_form, [data-ca-lite-checkout-element]').length > 0;
+    }
+
+    /** Whether a change of type draws the form again in place (else the page reloads). */
+    function redrawsInPlace(form) {
+        var config = _.euph_profile_types || {};
+
+        return !config.reload && !isCheckout(form) && typeof window.fetch === 'function' && typeof window.DOMParser === 'function';
+    }
+
+    /* The forms of the types, by form: code => promise of its HTML. */
+    var typeForms = new WeakMap();
+    /* The last switch of each form: a later switch wins over a slower one. */
+    var switches = new WeakMap();
+
+    /**
+     * The form as the page drawn for a type has it. Fetched once per form
+     * and type and kept, so a switch to a type fetched ahead needs no wait;
+     * a fetch that failed is tried again by the next switch.
+     */
+    function typeForm(form, code) {
+        var forms = typeForms.get(form);
+
+        if (!forms) {
+            forms = {};
+            typeForms.set(form, forms);
+        }
+        if (!forms[code]) {
+            forms[code] = window.fetch(urlWithType(window.location.href, code), { credentials: 'same-origin' })
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error('HTTP ' + response.status);
+                    }
+
+                    return response.text();
+                })
+                .then(function (html) {
+                    var fresh = findForm(new window.DOMParser().parseFromString(html, 'text/html'), form);
+
+                    if (!fresh) {
+                        throw new Error('The form of the new type was not found');
+                    }
+
+                    return fresh.innerHTML;
+                });
+            forms[code].catch(function () {
+                delete forms[code];
+            });
+        }
+
+        return forms[code];
+    }
+
+    /** The codes the type choice of a form offers, and the one chosen. */
+    function choiceOf(form) {
+        var codes = [];
+        var chosen = '';
+        var inputs = form.querySelectorAll(CHOICE);
+
+        for (var i = 0; i < inputs.length; i++) {
+            var options = inputs[i].tagName === 'SELECT' ? inputs[i].options : [inputs[i]];
+
+            for (var j = 0; j < options.length; j++) {
+                if (options[j].value && codes.indexOf(options[j].value) === -1) {
+                    codes.push(options[j].value);
+                }
+            }
+            if (inputs[i].tagName === 'SELECT' || inputs[i].checked) {
+                chosen = inputs[i].value;
+            }
+        }
+
+        return { codes: codes, chosen: chosen };
+    }
+
+    /**
+     * Fetches ahead the forms of the types the visitor may switch to, so the
+     * switch is instant. Returns their codes.
+     */
+    function prefetchTypes(form) {
+        if (!form || !redrawsInPlace(form)) {
+            return [];
+        }
+        var choice = choiceOf(form);
+        var others = choice.codes.filter(function (code) {
+            return code !== choice.chosen;
+        });
+
+        others.forEach(function (code) {
+            typeForm(form, code);
+        });
+
+        return others;
+    }
+
+    /** The forms with a type choice on the page: their other types, fetched ahead. */
+    function prefetchPageTypes(doc) {
+        var forms = [];
+        var inputs = (doc || document).querySelectorAll(CHOICE);
+
+        for (var i = 0; i < inputs.length; i++) {
+            if (inputs[i].form && forms.indexOf(inputs[i].form) === -1) {
+                forms.push(inputs[i].form);
+            }
+        }
+        forms.forEach(prefetchTypes);
+
+        return forms.length;
+    }
+
+    function whenIdle(callback) {
+        if (typeof window.requestIdleCallback === 'function') {
+            window.requestIdleCallback(callback, { timeout: 2000 });
+        } else {
+            window.setTimeout(callback, 300);
+        }
+    }
+
+    /** Puts the form of the new type in place of this one; what was typed stays. */
     function redraw(form, code) {
         var url = urlWithType(window.location.href, code);
         var values = snapshot(form, true);
         var $form = $(form);
+        var turn = (switches.get(form) || 0) + 1;
 
+        switches.set(form, turn);
         $form.addClass('euph-pt-redrawing');
 
-        return window.fetch(url, { credentials: 'same-origin' })
-            .then(function (response) {
-                if (!response.ok) {
-                    throw new Error('HTTP ' + response.status);
-                }
-
-                return response.text();
-            })
+        return typeForm(form, code)
             .then(function (html) {
-                var fresh = findForm(new window.DOMParser().parseFromString(html, 'text/html'), form);
-
-                if (!fresh) {
-                    throw new Error('The form of the new type was not found');
+                if (switches.get(form) !== turn) {
+                    // The visitor switched again: that switch draws the form.
+                    return;
                 }
-                $form.html(fresh.innerHTML);
+                $form.html(html);
                 restore(form, values);
                 $form.removeClass('euph-pt-redrawing');
                 if (typeof $.commonInit === 'function') {
@@ -224,28 +340,27 @@
                 if (window.history && typeof window.history.replaceState === 'function') {
                     window.history.replaceState(window.history.state, '', url);
                 }
+                // The type left is one the visitor may come back to.
+                prefetchTypes(form);
             })
             .catch(function () {
+                if (switches.get(form) !== turn) {
+                    return;
+                }
                 $form.removeClass('euph-pt-redrawing');
                 reloadWithType(form, code);
             });
-    }
-
-    function isCheckout(form) {
-        return form.id === 'litecheckout_form'
-            || $(form).closest('.litecheckout, #litecheckout_form, [data-ca-lite-checkout-element]').length > 0;
     }
 
     /** The type changed: the form is drawn for it. Returns the redraw under way, else null. */
     function onChoiceChange(event) {
         var input = event.target;
         var form = input.form;
-        var config = _.euph_profile_types || {};
 
         if (!form || (input.type === 'radio' && !input.checked) || !input.value) {
             return null;
         }
-        if (config.reload || isCheckout(form) || typeof window.fetch !== 'function' || typeof window.DOMParser !== 'function') {
+        if (!redrawsInPlace(form)) {
             reloadWithType(form, input.value);
 
             return null;
@@ -1005,6 +1120,9 @@
     $(function () {
         restoreAfterReload();
         initFieldsList(document);
+        whenIdle(function () {
+            prefetchPageTypes(document);
+        });
     });
 
     window.EuphProfileTypes = {
@@ -1017,6 +1135,8 @@
         flagOf: flagOf,
         isChoiceName: isChoiceName,
         redraw: redraw,
+        prefetchTypes: prefetchTypes,
+        prefetchPageTypes: prefetchPageTypes,
         applyPills: applyPills,
         initFieldsList: initFieldsList,
         setListView: setListView,

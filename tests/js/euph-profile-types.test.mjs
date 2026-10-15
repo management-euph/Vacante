@@ -19,7 +19,19 @@ function fakeJquery() {
             readyCallbacks.push(arg);
             return undefined;
         }
-        return { on: () => undefined };
+        const el = arg && arg.nodeType === 1 ? arg : null;
+
+        return {
+            on: () => undefined,
+            closest: (selector) => ({ length: el && el.closest(selector) ? 1 : 0 }),
+            addClass: (name) => el && el.classList.add(name),
+            removeClass: (name) => el && el.classList.remove(name),
+            html: (html) => {
+                if (el) {
+                    el.innerHTML = html;
+                }
+            },
+        };
     };
     $.ceEvent = () => undefined;
     return $;
@@ -136,6 +148,116 @@ describe('values kept over a reload', () => {
 
         window.sessionStorage.setItem('euph_profile_types.restore', '{not json');
         expect(api().takeStored()).toBeNull();
+    });
+});
+
+describe('switching the type', () => {
+    // The page of a type, as the server draws it: Company (B) has a tax number.
+    const page = (code) => `<!doctype html><html><body><form name="profiles_register_form">
+        <input type="radio" name="user_data[euph_profile_type]" value="U"${code === 'U' ? ' checked' : ''}>
+        <input type="radio" name="user_data[euph_profile_type]" value="B"${code === 'B' ? ' checked' : ''}>
+        <input name="user_data[firstname]" value="">
+        ${code === 'B' ? '<input name="user_data[fields][31]" value="">' : ''}
+    </form></body></html>`;
+    const privatePerson = () => form(page('U').replace(/^[\s\S]*<form[^>]*>|<\/form>[\s\S]*$/g, ''));
+    const respond = (code) => ({ ok: true, text: () => Promise.resolve(page(code)) });
+    const typeOf = (url) => new URL(url).searchParams.get('euph_profile_type');
+    let fetched;
+
+    beforeEach(() => {
+        fetched = [];
+        window.fetch = (url) => {
+            fetched.push(typeOf(url));
+            return Promise.resolve(respond(typeOf(url)));
+        };
+    });
+
+    afterEach(() => {
+        delete window.fetch;
+        delete window.Tygh.euph_profile_types;
+        window.history.replaceState(null, '', '/');
+    });
+
+    it('fetches the forms of the other types once, ahead of the switch', () => {
+        const f = privatePerson();
+
+        expect(api().prefetchTypes(f)).toEqual(['B']);
+        expect(api().prefetchTypes(f)).toEqual(['B']);
+        expect(fetched).toEqual(['B']);
+        expect(api().prefetchPageTypes(document)).toBe(1);
+        expect(fetched).toEqual(['B']);
+    });
+
+    it('switches with the form fetched ahead, keeps the typing, then fetches the type it left', async () => {
+        const f = privatePerson();
+
+        api().prefetchTypes(f);
+        f.elements['user_data[firstname]'].value = 'Ana';
+        f.querySelector('[value="B"]').checked = true;
+        await api().redraw(f, 'B');
+
+        expect(fetched).toEqual(['B', 'U']);
+        expect(f.querySelector('[name="user_data[fields][31]"]')).not.toBeNull();
+        expect(f.elements['user_data[firstname]'].value).toBe('Ana');
+        expect(f.querySelector('[value="B"]').checked).toBe(true);
+        expect(f.classList.contains('euph-pt-redrawing')).toBe(false);
+        expect(window.location.search).toBe('?euph_profile_type=B');
+
+        // Back to the type it left: nothing more to fetch.
+        await api().redraw(f, 'U');
+        expect(fetched).toEqual(['B', 'U']);
+        expect(f.querySelector('[name="user_data[fields][31]"]')).toBeNull();
+        expect(f.elements['user_data[firstname]'].value).toBe('Ana');
+    });
+
+    it('lets a later switch win over a slower one', async () => {
+        let answerCompany;
+
+        window.fetch = (url) => {
+            const code = typeOf(url);
+
+            fetched.push(code);
+            return code === 'B' ? new Promise((resolve) => { answerCompany = () => resolve(respond(code)); }) : Promise.resolve(respond(code));
+        };
+        const f = privatePerson();
+        const toCompany = api().redraw(f, 'B');
+
+        await api().redraw(f, 'U');
+        answerCompany();
+        await toCompany;
+        expect(f.querySelector('[name="user_data[fields][31]"]')).toBeNull();
+        expect(f.querySelector('[value="U"]').checked).toBe(true);
+        expect(window.location.search).toBe('?euph_profile_type=U');
+        expect(fetched).toEqual(['B', 'U']);
+    });
+
+    it('fetches again a form whose fetch failed', async () => {
+        window.fetch = (url) => {
+            fetched.push(typeOf(url));
+            return Promise.resolve({ ok: false, status: 503, text: () => Promise.resolve('') });
+        };
+        const f = privatePerson();
+
+        api().prefetchTypes(f);
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        api().prefetchTypes(f);
+        expect(fetched).toEqual(['B', 'B']);
+    });
+
+    it('fetches nothing ahead where the page reloads, or with a single type', () => {
+        window.Tygh.euph_profile_types = { reload: true };
+        expect(api().prefetchTypes(privatePerson())).toEqual([]);
+        delete window.Tygh.euph_profile_types;
+
+        document.body.innerHTML = '';
+        const checkout = privatePerson();
+
+        checkout.id = 'litecheckout_form';
+        expect(api().prefetchTypes(checkout)).toEqual([]);
+
+        document.body.innerHTML = '';
+        expect(api().prefetchTypes(form('<input type="radio" name="user_data[euph_profile_type]" value="U" checked>'))).toEqual([]);
+        expect(fetched).toEqual([]);
     });
 });
 

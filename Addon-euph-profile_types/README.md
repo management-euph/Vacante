@@ -108,6 +108,7 @@ The list of fields stays one list. A value survives a change of type, and report
   - Tabs draw the choice as a segmented control. Underneath they stay radio buttons, so arrow keys, screen readers and the form redraw keep working; without the script the customer sees plain radio buttons.
   - A type is always selected: the type of the registration link, else the customer's own, else the default type.
 - **Changing the type redraws the form** with the fields of the new type, without reloading, and keeps what was typed. The *Reload the page* setting switches this to a reload, for a captcha or another script that does not survive the redraw. The typing is put back after the reload; passwords are not.
+  - The switch is instant: once the page has loaded, the forms of the other types are fetched in the background (one page request per type) and kept for the visit.
 - **Checkout:**
   - At install, the *Customer information*, *Shipping address* and *Billing address* blocks of the checkout get the **By profile type** filling.
   - Guests choose the type right there. Signed-in customers can too, by setting.
