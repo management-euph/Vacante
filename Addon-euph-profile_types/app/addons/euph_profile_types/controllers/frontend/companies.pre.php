@@ -15,6 +15,12 @@ if (!fn_euph_profile_types_vendor_types_on()) {
 }
 $container = fn_euph_profile_types_container();
 
+// The vendor application opened: the type it was sent with last and the
+// type of a locked link count only while it comes back with an error.
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' && $mode === 'apply_for_vendor') {
+    fn_euph_profile_types_open_form(UserKind::Vendor);
+}
+
 // The vendor application: the posted type is kept only when it may be
 // applied for on this storefront, else the vendor gets the default type.
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $mode === 'apply_for_vendor') {

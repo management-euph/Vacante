@@ -66,7 +66,7 @@ The last row is rendered from the add-on's own styles and script on the markup i
   - for vendor types, the **vendor plans** an applicant of the type may choose.
 - **Registration links**, shown on the type card:
   - `index.php?dispatch=profiles.add&euph_profile_type=B&euph_profile_key=…` preselects the type in the registration form.
-  - Adding `&euph_profile_type_locked=1` stops the visitor from changing it.
+  - Adding `&euph_profile_type_locked=1` stops the visitor from changing it: on the page the link opens, and when the form comes back with an error. Opened again without the link, the registration form offers every type.
   - The vendor application works the same way: `index.php?dispatch=companies.apply_for_vendor&euph_profile_type=…&euph_profile_key=…`.
   - `euph_profile_key` is the type's secret (128 random bits). A hidden type is given only to a visitor who opened its link: in the registration form, a change of type in the profile, at checkout and in the vendor application. Its code alone does not show it. An active type needs no key.
   - *New links* on the type card gives the type a new key on saving: the links sent so far stop working, and those who already have the type keep it.
@@ -352,7 +352,7 @@ The code is checked by static analysis and unit tests, but it was not run inside
    - If the switcher does not show, the list's hooks are not where this add-on expects them in your CS-Cart version. The field card and the type card still work.
 4. **Register on the storefront.**
    - Switch the type: the form must redraw with the right fields and keep the typing. This also shows that the add-on's scripts load on the theme.
-   - Try both links: open and locked.
+   - Try both links: open and locked. After the locked link, open the registration page without it: every type is offered again.
    - Make the type hidden: its link still works, the same address without `euph_profile_key` (or with a wrong one) shows only the offered types, and after *New links* the old link no longer works.
    - The account must wait for approval, and the user group must be granted.
 5. **Profile:** try changing the type under each *Allow user to change type* value.

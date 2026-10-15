@@ -199,7 +199,8 @@ function fn_euph_profile_types_vendor_storefront_context(string $controller, str
  * Registration and vendor application: the type of the link or of the
  * switch (?euph_profile_type=), else the one posted last time (the form came
  * back with an error), else the default. A link with
- * euph_profile_type_locked=1 fixes the type for the visit. A hidden type
+ * euph_profile_type_locked=1 fixes the type on the page it opens and while
+ * the form comes back (fn_euph_profile_types_open_form()). A hidden type
  * needs its link (with its key): its code alone does not show it.
  */
 function fn_euph_profile_types_registration_context(UserKind $kind): ?FieldContext
@@ -223,9 +224,8 @@ function fn_euph_profile_types_registration_context(UserKind $kind): ?FieldConte
         return new FieldContext($kind, $locked, FieldArea::Registration, [$locked->code => $locked->displayName()]);
     }
 
-    $posted = fn_euph_profile_types_session_get('euph_profile_types_posted');
     $type = null;
-    foreach ([$requested, Cast::string($posted[$kind->value] ?? '')] as $code) {
+    foreach ([$requested, fn_euph_profile_types_posted_code($kind)] as $code) {
         if ($code !== '') {
             $type = $catalog->assignableOnStorefront($kind, $code, $storefrontId, $langCode, $unlocked);
             if ($type !== null) {

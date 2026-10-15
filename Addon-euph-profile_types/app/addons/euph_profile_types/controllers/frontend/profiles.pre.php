@@ -9,6 +9,16 @@ if (!defined('BOOTSTRAP')) {
     exit('Access denied');
 }
 
+// The registration form opened: the type it was sent with last and the type
+// of a locked link count only while the form comes back with an error.
+if ($_SERVER['REQUEST_METHOD'] !== 'POST'
+    && $mode === 'add'
+    && fn_euph_profile_types_signed_in_customer_id() === 0
+    && fn_euph_profile_types_container()->catalog()->isEnabled(UserKind::Customer)
+) {
+    fn_euph_profile_types_open_form(UserKind::Customer);
+}
+
 // The registration form remembers the type it was sent with: when it comes
 // back with an error, it opens on that type again.
 if ($_SERVER['REQUEST_METHOD'] === 'POST'

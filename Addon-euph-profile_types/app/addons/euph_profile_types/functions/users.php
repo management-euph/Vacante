@@ -310,6 +310,43 @@ function fn_euph_profile_types_remember_form_type(UserKind $kind, string $code):
     fn_euph_profile_types_session_put('euph_profile_types_posted', $posted);
 }
 
+/**
+ * The registration form (or the vendor application) opened by GET. The type
+ * the form was last sent with counts for this page only: the form came back
+ * with an error. The type of a locked link holds on the page the link opens
+ * and while the form comes back; opened again any other way, the form
+ * offers every type (TypeChangeGuard::lockHolds()).
+ */
+function fn_euph_profile_types_open_form(UserKind $kind): void
+{
+    $posted = fn_euph_profile_types_session_get('euph_profile_types_posted');
+    $code = Cast::string($posted[$kind->value] ?? '');
+    unset($posted[$kind->value]);
+    fn_euph_profile_types_session_put('euph_profile_types_posted', $posted);
+    Registry::set('runtime.euph_profile_types.posted.' . $kind->value, $code);
+
+    $lock = fn_euph_profile_types_session_get('euph_profile_types_lock');
+    $lockedLink = fn_euph_profile_types_requested_code() !== '' && Cast::flag($_REQUEST['euph_profile_type_locked'] ?? 'N');
+    if (isset($lock[$kind->value]) && !TypeChangeGuard::lockHolds(Cast::string($lock[$kind->value]), $code, $lockedLink)) {
+        unset($lock[$kind->value]);
+        fn_euph_profile_types_session_put('euph_profile_types_lock', $lock);
+    }
+}
+
+/**
+ * The type the registration form was last sent with: for the page opened
+ * (fn_euph_profile_types_open_form()), else as kept while the form is sent.
+ */
+function fn_euph_profile_types_posted_code(UserKind $kind): string
+{
+    $opened = Registry::get('runtime.euph_profile_types.posted.' . $kind->value);
+    if (is_string($opened)) {
+        return $opened;
+    }
+
+    return Cast::string(fn_euph_profile_types_session_get('euph_profile_types_posted')[$kind->value] ?? '');
+}
+
 function fn_euph_profile_types_forget_form_type(UserKind $kind): void
 {
     foreach (['euph_profile_types_posted', 'euph_profile_types_lock'] as $key) {
