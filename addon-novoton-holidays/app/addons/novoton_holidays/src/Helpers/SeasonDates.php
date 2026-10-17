@@ -27,6 +27,68 @@ final class SeasonDates
      */
     public static function seasons(array $priceinfo): array
     {
+        $ranges = [];
+        foreach (self::rawSeasons($priceinfo) as $season) {
+            $range = self::range($season);
+            if ($range !== null) {
+                $ranges[] = $range;
+            }
+        }
+
+        return $ranges;
+    }
+
+    /**
+     * How many seasons a priceinfo has, whatever its shape. A single season
+     * sent as an object counts as one, not as its number of fields.
+     *
+     * @param array<array-key, mixed> $priceinfo decoded priceinfo_data
+     */
+    public static function count(array $priceinfo): int
+    {
+        return count(self::rawSeasons($priceinfo));
+    }
+
+    /**
+     * The numbers of the seasons that are not over by $today. Season N is
+     * priced in the PriceN columns of season_price (as CalendarPriceBuilder
+     * reads them). NULL when no season carries both a number and a valid
+     * range, so the caller cannot tell which prices are current and should
+     * not filter.
+     *
+     * @param array<array-key, mixed> $priceinfo decoded priceinfo_data
+     * @param string $today Y-m-d
+     *
+     * @return array<int, true>|null
+     */
+    public static function numbersNotOver(array $priceinfo, string $today): ?array
+    {
+        $numbers = [];
+        $known = false;
+        foreach (self::rawSeasons($priceinfo) as $season) {
+            $number = TypeCoerce::toInt($season['Season'] ?? $season['IdSeason'] ?? $season['SeasonNr'] ?? 0);
+            $range = self::range($season);
+            if ($number <= 0 || $range === null) {
+                continue;
+            }
+            $known = true;
+            if ($range['to'] >= $today) {
+                $numbers[$number] = true;
+            }
+        }
+
+        return $known ? $numbers : null;
+    }
+
+    /**
+     * The season entries of either shape, as a list.
+     *
+     * @param array<array-key, mixed> $priceinfo
+     *
+     * @return list<array<array-key, mixed>>
+     */
+    private static function rawSeasons(array $priceinfo): array
+    {
         $raw = $priceinfo['seasons'] ?? [];
         if (is_array($raw) && array_key_exists('season', $raw)) {
             $raw = $raw['season'];
@@ -38,19 +100,27 @@ final class SeasonDates
             $raw = [$raw];
         }
 
-        $ranges = [];
+        $seasons = [];
         foreach ($raw as $season) {
-            if (!is_array($season)) {
-                continue;
-            }
-            $from = self::date($season['FromDate'] ?? $season['DateFrom'] ?? null);
-            $to = self::date($season['ToDate'] ?? $season['DateTo'] ?? null);
-            if ($from !== '' && $to !== '' && $from <= $to) {
-                $ranges[] = ['from' => $from, 'to' => $to];
+            if (is_array($season)) {
+                $seasons[] = $season;
             }
         }
 
-        return $ranges;
+        return $seasons;
+    }
+
+    /**
+     * @param array<array-key, mixed> $season
+     *
+     * @return array{from: string, to: string}|null
+     */
+    private static function range(array $season): ?array
+    {
+        $from = self::date($season['FromDate'] ?? $season['DateFrom'] ?? null);
+        $to = self::date($season['ToDate'] ?? $season['DateTo'] ?? null);
+
+        return $from !== '' && $to !== '' && $from <= $to ? ['from' => $from, 'to' => $to] : null;
     }
 
     /**
