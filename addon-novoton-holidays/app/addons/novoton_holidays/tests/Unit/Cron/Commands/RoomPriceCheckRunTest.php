@@ -123,13 +123,14 @@ final class RoomPriceCheckRunTest extends TestCase
 
         self::assertCount(2, $run['updates']);
         self::assertSame(['2'], $run['updates'][0][0]);
-        self::assertCount(24, $run['updates'][0][1]);
+        self::assertCount(23, $run['updates'][0][1]);
+        self::assertNotContains('5', $run['updates'][0][1], 'no answer is not "no prices": hotel 5 keeps its flag');
         self::assertSame(['27'], $run['updates'][1][0]);
 
         $stats = $run['result']['stats'];
         self::assertSame(2, $stats['with_prices']);
-        self::assertSame(28, $stats['without_prices']);
-        self::assertSame(1, $stats['invalid'], 'a failed response counts as invalid, not as "no prices" alone');
+        self::assertSame(27, $stats['without_prices']);
+        self::assertSame(1, $stats['invalid'], 'a failed response is counted, and left unchanged');
         self::assertSame(['BULGARIA' => 1, 'ALBANIA' => 1], $stats['by_country']);
     }
 
@@ -143,7 +144,7 @@ final class RoomPriceCheckRunTest extends TestCase
         self::assertSame(1500, $this->runCheck(self::hotels(3), [], ['limit' => 1500])['limit']);
     }
 
-    public function testAFailedBatchMarksItsHotelsInvalidAndTheRunGoesOn(): void
+    public function testAFailedBatchLeavesItsHotelsUnchangedAndTheRunGoesOn(): void
     {
         $db = $this->createStub(DatabaseHelperInterface::class);
         $db->method('getHotelsForPriceCheck')->willReturn(self::hotels(30));
@@ -177,8 +178,11 @@ final class RoomPriceCheckRunTest extends TestCase
         }
 
         self::assertSame(25, $result['stats']['invalid']);
+        self::assertSame(0, $result['stats']['without_prices'], 'the failed batch wrote no "no prices"');
         self::assertSame(5, $result['stats']['with_prices']);
-        self::assertCount(2, $updates);
+        self::assertCount(1, $updates, 'only the batch that answered was saved');
+        self::assertCount(5, $updates[0][0]);
+        self::assertSame([], $updates[0][1]);
     }
 
     public function testResponsesReadAsPricesNoPricesOrInvalid(): void
