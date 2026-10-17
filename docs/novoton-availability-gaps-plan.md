@@ -646,18 +646,38 @@ pass.
 
 **Still open, on purpose:**
 
-- **The sync log is trimmed to 100 rows every night, so the batched syncs run
-  in full every day.** Once the trim deletes the "last full sync" row, the
-  hotel info and price syncs fall back to a full sync. `BatchedPriceInfoSyncV2`
-  also looks for the type `sync_priceinfo` while writing `priceinfo`, so it
-  never finds one anyway.
-  - The cost is API calls, not freshness: new-season packages are picked up
-    daily.
-  - Fixing only the trim would switch the hotel info sync to incremental runs
-    that rely on `offers_update` reporting every new package, which is
-    unverified.
-  - Phase 1 replaces these baselines with durable state and an explicit,
-    configurable full-sync cadence.
+- **The two batched syncs refresh far more often than designed.** The
+  design is a full refresh every N days (settings: hotel info 180, price info
+  7) and an incremental one daily in between. Each sync decides by looking up
+  its last finished full run in `novoton_sync_log`.
+  - **Price sync: always full, back to back.**
+    - `BatchedPriceInfoSyncV2::determineSyncType` looks for the type
+      `sync_priceinfo`, but the sync records itself as `priceinfo`, so it
+      never finds a full run.
+    - Every new cycle is therefore full, and one starts at the next 5-minute
+      run after the last one ends.
+    - Every package's price list is downloaded many times a day instead of
+      once, whatever the cleanup does.
+  - **Hotel info sync: full once a day, when the cron jobs are called by URL.**
+    - Every URL call writes a row (and, with "send cron report email" on, the
+      default, sends a report email). With the suggested schedule that is about
+      900 rows a day.
+    - The 06:00 cleanup keeps the newest 100, about the last 2.5 hours, so the
+      "last full run" row is gone.
+    - The next run starts a full cycle: one call per hotel every day instead of
+      a few dozen.
+    - With the dashboard's `php …/cron.php` lines, no per-run rows are written
+      and this does not happen.
+  - **The fix:**
+    - the price sync reads its own type;
+    - the cleanup keeps 14 days and always the latest finished run of each
+      sync;
+    - the hotel info full refresh moves from 180 to 7 days. This must ship
+      together with the cleanup fix: otherwise the hotel sync would drop from
+      daily full refreshes to one every 180 days, relying only on Novoton's
+      change feed for new-season packages.
+    - Optionally, no log row or email for a 5-minute run that did nothing.
+
 - **The legacy backend mode `cron_offers_update`** stamps `last_price_check`
   on hotels without products without checking anything. It is legacy and
   reached by URL only, so it is left as is.
