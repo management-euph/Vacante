@@ -325,7 +325,7 @@
                     </item>
                     <item id="sync_interval_hotel_info_days">
                         <type>input</type>
-                        <default_value>180</default_value>
+                        <default_value>7</default_value>
                         <variants/>
                     </item>
                     <item id="sync_interval_price_info_days">

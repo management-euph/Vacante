@@ -190,24 +190,40 @@ class SyncLogRepository implements SyncLogRepositoryInterface
     }
 
     /**
-     * Trim logs to keep only the N most recent entries.
+     * Delete log rows older than $keepDays, except the last completed run of
+     * each sync type and the last completed *full* run of each.
+     *
+     * The batched syncs read those rows to decide between a full and an
+     * incremental cycle (hotelinfo, priceinfo, hotel_facilities), and the
+     * exchange rates read their last update from here. The old trim kept the
+     * newest 100 rows whatever they were; cron jobs called by URL write one
+     * row per run (about 900 a day), so 100 rows was the last 2-3 hours, the
+     * "last full run" rows were deleted every night, and the next tick started
+     * a full cycle again.
      *
      * @return int Number of rows deleted
      */
-    public function trimToLatest(int $keep = 100): int
+    public function prune(int $keepDays = 14): int
     {
-        $total = $this->count();
-        if ($total <= $keep) {
-            return 0;
-        }
-        $threshold_id = TypeCoerce::toInt(db_get_field(
-            'SELECT log_id FROM ?:novoton_sync_log ORDER BY sync_date DESC LIMIT 1 OFFSET ?i',
-            $keep - 1,
+        $keep = TypeCoerce::toIntList(db_get_fields(
+            "SELECT MAX(log_id) FROM ?:novoton_sync_log WHERE status = 'completed' GROUP BY sync_type
+             UNION
+             SELECT MAX(log_id) FROM ?:novoton_sync_log WHERE status = 'completed'
+               AND notes LIKE '%\"sync_type\":\"full\"%' GROUP BY sync_type",
         ));
-        if ($threshold_id <= 0) {
-            return 0;
+
+        if ($keep === []) {
+            return TypeCoerce::toInt(db_query(
+                'DELETE FROM ?:novoton_sync_log WHERE sync_date < DATE_SUB(NOW(), INTERVAL ?i DAY)',
+                max(1, $keepDays),
+            ));
         }
-        return TypeCoerce::toInt(db_query('DELETE FROM ?:novoton_sync_log WHERE log_id < ?i', $threshold_id));
+
+        return TypeCoerce::toInt(db_query(
+            'DELETE FROM ?:novoton_sync_log WHERE sync_date < DATE_SUB(NOW(), INTERVAL ?i DAY) AND log_id NOT IN (?n)',
+            max(1, $keepDays),
+            $keep,
+        ));
     }
 
     /**
