@@ -23,9 +23,12 @@ unless they start with another addon's folder.
 | Where the logic lives | **The rules in Travel Core, the data collection in Novoton** (§0.2). |
 | How long to stay report-only | **The admin switches it by hand** after reviewing the "would hide" list once, around Feb–Mar 2027 when the 2027 early-booking prices are loaded (§0.3). The switch is a Travel Core setting: *Hotel availability → Mode: Off / Report only (default) / Automatic*. |
 
-Still open: §11 questions 3 (hide hotels that left the feed automatically?),
-4 (default redirect target for closed hotels) and 6 (notify-me channels and
-consent text).
+| Hotels that left Novoton's list (3 runs in a row) | **Automatic mode:** hidden automatically. **Report only:** listed for the admin to decide (decided 2026-10-17). |
+| Closed hotels | **301 to the resort page by default** after 6 months; the admin can choose another target per hotel. |
+| "Notify me" | **Email only.** Consent text in §8. |
+| The batched syncs refreshing far more than designed (§13) | **Fixed now**, in phase 0. |
+
+Nothing in §11 is open any more.
 
 ### 0.2 Architecture: the rules in Travel Core, the data in Novoton
 
@@ -528,6 +531,22 @@ seaside hotel.
   "Availability Requests" grid then shows and filters them.
 - Add the mirror table to travel_core's schema self-heal (audit `data-perf-2`).
 
+**Consent text** (decided 2026-10-17: email only, a generic text). It sits
+next to an unticked checkbox that must be ticked to send the form. The request
+stores the time of consent and the text's version, and the link goes to the
+store's privacy policy page.
+
+- EN: "I agree to receive one email when booking opens for this hotel. My
+  email address is used only for this and is deleted once the email is sent,
+  or after 12 months at the latest. See the Privacy Policy."
+- RO: „Sunt de acord să primesc un singur e-mail când se deschid rezervările
+  pentru acest hotel. Adresa mea de e-mail este folosită doar în acest scop și
+  este ștearsă după trimiterea e-mailului sau cel târziu după 12 luni. Vezi
+  Politica de confidențialitate."
+
+A notify-me request is therefore kept until its email goes out, or for 12
+months at most, longer than the 30 days alternative requests get.
+
 **New language keys** go in EN and RO, in the owning addon's seed file and both
 `.po` files (Novoton: `lang_keys.php`, pinned by `LangSeedParityTest`). They
 cover:
@@ -581,12 +600,12 @@ cover:
    in phase 6.
 2. **Dormant:** *decided: an admin setting, default 12 months.* Anything
    shorter catches the winter gap.
-3. **Left the feed:** hide automatically after 3 missed runs, or only after an
-   admin has looked? *Open.*
-4. **Closed hotels:** after 6 months, redirect to the resort page by default, or
-   always to a hotel an admin chooses? *Open.*
+3. **Left the feed:** *decided: hidden automatically in Automatic mode; in
+   Report only, listed for the admin to decide.*
+4. **Closed hotels:** *decided: 301 to the resort page by default after 6
+   months; the admin can pick another target per hotel.*
 5. **Not offered:** *decided: no offline sales for now.*
-6. **Notify me:** email only, or phone too? Which consent text? *Open.*
+6. **Notify me:** *decided: email only; the consent text is in §8.*
 7. **Report-only until when?** *Decided 2026-10-17: the admin switches Mode
    to Automatic by hand after one review*, recommended once the 2027
    early-booking prices are loaded (Feb–Mar 2027) and the report has been
@@ -644,52 +663,31 @@ pass.
 | `692131b` | Alternative-request emails used template codes and an area registered nowhere, so customers never got them. | `Services\AlternativeEmail` uses the registered customer templates and passes a greeting, hotel names and rooms; `EmailTemplateCodesTest` pins every code to `addon.xml`. |
 | `ee1c530` | `offers_update` needed a sync-log row that the nightly cleanup deletes, after which it never ran again. | A durable baseline per country in storage_data (`Helpers\OffersUpdateBaseline`). |
 | `e5d44bb` | The hotel info sync wrote a `package_name` column that `novoton_hotels` does not have, in the same transaction as the package upsert. | The write is gone. |
+| `cb7986e` | The price sync looked up its last full run under `sync_priceinfo` while logging as `priceinfo`. It never found one, so full cycles ran back to back all day, downloading every price list many times a day. | It reads its own type: a full cycle every 7 days and, in between, only packages last synced more than 24 h ago. |
+| `f2df745` | The nightly cleanup kept the newest 100 sync-log rows, about 2–3 hours with URL-called cron jobs, so the batched syncs' "last full run" rows were deleted and the hotel info and facilities syncs ran in full every day. | `SyncLogRepository::prune()` keeps 14 days and always each sync's last finished (and last full) run. The hotel info full refresh defaults to 7 days instead of 180 (installed stores: change the setting). |
+| `940d540` | Two Novoton email templates showed in the admin list as raw keys (`_email_template.novoton_holidays_price_…`). | All five templates are named, and the names are seeded to installed stores. |
 
 **Still open, on purpose:**
 
-- **The two batched syncs refresh far more often than designed.** The
-  design is a full refresh every N days (settings: hotel info 180, price info
-  7) and an incremental one daily in between. Each sync decides by looking up
-  its last finished full run in `novoton_sync_log`.
-  - **Price sync: always full, back to back.**
-    - `BatchedPriceInfoSyncV2::determineSyncType` looks for the type
-      `sync_priceinfo`, but the sync records itself as `priceinfo`, so it
-      never finds a full run.
-    - Every new cycle is therefore full, and one starts at the next 5-minute
-      run after the last one ends.
-    - Every package's price list is downloaded many times a day instead of
-      once, whatever the cleanup does.
-  - **Hotel info sync: full once a day, when the cron jobs are called by URL.**
-    - Every URL call writes a row (and, with "send cron report email" on, the
-      default, sends a report email). With the suggested schedule that is about
-      900 rows a day.
-    - The 06:00 cleanup keeps the newest 100, about the last 2.5 hours, so the
-      "last full run" row is gone.
-    - The next run starts a full cycle: one call per hotel every day instead of
-      a few dozen.
-    - With the dashboard's `php …/cron.php` lines, no per-run rows are written
-      and this does not happen.
-  - **The fix:**
-    - the price sync reads its own type;
-    - the cleanup keeps 14 days and always the latest finished run of each
-      sync;
-    - the hotel info full refresh moves from 180 to 7 days. This must ship
-      together with the cleanup fix: otherwise the hotel sync would drop from
-      daily full refreshes to one every 180 days, relying only on Novoton's
-      change feed for new-season packages.
-    - Optionally, no log row or email for a 5-minute run that did nothing.
-
+- **Admin action after deploying `f2df745`:** set Add-ons → Novoton Holidays
+  → Settings → "Hotel info full sync interval (days)" from 180 to 7. Installed
+  stores keep their saved value.
+- **Optional, not done:** a 5-minute URL cron run that did nothing still
+  writes a log row and, with "send cron report email" on (the default), a
+  report email. The cleanup now copes with the rows; the emails can be turned
+  off in the setting.
 - **The legacy backend mode `cron_offers_update`** stamps `last_price_check`
   on hotels without products without checking anything. It is legacy and
   reached by URL only, so it is left as is.
 - **Privacy:** the travel_core mirror of alternative requests stores the email
   and phone in plain text, while Novoton's own table encrypts them (phase 2).
 - **Check on the live store:**
-  - Design → Email templates should list `novoton_holidays_alternatives_request`
-    and `novoton_holidays_alternatives_available`. CS-Cart imports them only at
-    install; if a store predates them, these two emails still cannot go out
-    until they are imported.
-  - Run the season-shape query (§14, query 4).
+  - Email templates (`admin.php?dispatch=email_templates.manage`), the
+    **Customer notifications** tab, should list "Novoton: Alternatives
+    Available" and "Novoton: Alternatives Request Confirmation". CS-Cart
+    imports them only at install; if they are missing, these two emails still
+    cannot go out until they are imported.
+  - The season shape is confirmed (§14, check 9).
 
 ## 14. Calibration (to run on the live store)
 
@@ -775,11 +773,12 @@ GROUP BY sync_type;
 
 ### In the admin and on the server (13–14)
 
-13. **Admin → Design → Email templates.** Are
-    `novoton_holidays_alternatives_request` and
-    `novoton_holidays_alternatives_available` listed? CS-Cart imports them only
-    at install. If they're missing, the phase 0 email fix cannot send until
-    they're imported.
+13. **Email templates** (`admin.php?dispatch=email_templates.manage`), the
+    **Customer notifications** tab. Are "Novoton: Alternatives Available"
+    (`novoton_holidays_alternatives_available`) and "Novoton: Alternatives
+    Request Confirmation" (`novoton_holidays_alternatives_request`) listed?
+    CS-Cart imports them only at install. If they're missing, the phase 0
+    email fix cannot send until they're imported.
 14. **cPanel → Cron Jobs.** Do the Novoton lines start with `php …/cron.php`,
     or are they URLs (`curl …` / `wget …`)? URL calls are what make the
     sync log fill up (§13).
@@ -793,3 +792,34 @@ The answers tell us:
 - how hard the batched syncs hit the API.
 
 They set the thresholds in §5 and the effort for phases 1–2.
+
+### Results so far (2026-10-17, from the local Docker store)
+
+Checks 6–13 were first run on the local store (`localhost:8080`, phpMyAdmin
+server `db`). There no cron job runs, the hotel list was last synced on
+2026-09-27 22:12, and there are no bookings. Checks 7, 10, 11, 12 and 14 must
+therefore be run on the **live** database and server.
+
+- **6.** 1,154 Novoton hotels.
+  - 83 are products, all Active, all with `has_room_price = Y`.
+  - **38 of the 83 Active products (46%) have no future price at all**:
+    customers can land on them and find nothing for any date.
+  - The other 1,071 hotels have no product.
+- **8.** Those 38 are mostly **mountain, spa and city hotels**, not seaside:
+  Bansko 4, Velingrad 4, Veliko Tarnovo 4, Sarnitsa 3, Sofia 3, Pavel Banya 2,
+  Varna 2, Hisarya 2, Govedartsi 2, then 1 each in 12 more places. The gap is
+  not only a seaside question.
+- **9.** Confirmed: the stored seasons are a flat list with `Season` /
+  `FromDate` / `ToDate`, e.g. hotel 476 "ADMIRAL ***** BB/HB [STAY 22.09 -
+  19.12]". This is the shape the old season note could not read, and the one
+  `SeasonDates` reads now.
+- **7.** Not meaningful on the local store: every hotel was last listed on
+  2026-09-27, because `hotel_list` has not run there since.
+- **10–12.** Empty on the local store: no bookings, no cron runs.
+  - 961 packages in total.
+  - 0 refreshed in the last hour.
+- **13.** The screenshot showed the *Administrator notifications* tab:
+  - the two price templates were there, under raw keys (named since
+    `940d540`);
+  - the alternatives templates are customer templates, so they are on the
+    *Customer notifications* tab, which is still to check.
