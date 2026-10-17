@@ -4391,3 +4391,11 @@ msgstr "This hotel offers accommodation from [from] to [to]."
 msgctxt "Languages::novoton_holidays.customer_greeting_name"
 msgid "customer"
 msgstr "customer"
+
+msgctxt "Languages::email_template.novoton_holidays_price_alert"
+msgid "Novoton: Price Alert (form price below API price)"
+msgstr "Novoton: Price Alert (form price below API price)"
+
+msgctxt "Languages::email_template.novoton_holidays_price_discrepancy"
+msgid "Novoton: Price Discrepancy"
+msgstr "Novoton: Price Discrepancy"
