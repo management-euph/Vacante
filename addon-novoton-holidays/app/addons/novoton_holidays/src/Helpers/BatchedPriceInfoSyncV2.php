@@ -109,11 +109,17 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
             return 'full';
         }
 
-        // Look only at completed *full* syncs (notes JSON contains sync_type: full).
+        // Look only at completed *full* syncs (notes JSON contains sync_type: full),
+        // logged under this sync's own name ('priceinfo', see completeSync()).
+        // It looked for 'sync_priceinfo', which nothing writes: it never found
+        // a full sync, so every cycle was full and a new one started at the
+        // next cron tick after the last ended — each package's priceinfo was
+        // downloaded many times a day instead of once.
         $lastFullSync = db_get_field(
             "SELECT MAX(sync_date) FROM ?:novoton_sync_log
-             WHERE sync_type = 'sync_priceinfo' AND status = 'completed'
+             WHERE sync_type = ?s AND status = 'completed'
              AND notes LIKE '%\"sync_type\":\"full\"%'",
+            $this->getSyncName(),
         );
 
         if (empty($lastFullSync)) {
