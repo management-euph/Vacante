@@ -25,6 +25,9 @@ class DestinationApiClient extends ApiClientBase implements DestinationApiClient
 
     /**
      * 25. offers_update - Updated/New Offers
+     *
+     * A refusal throws: read as "no changes", it moved the baseline past the
+     * changes it never saw (Refusal).
      */
     #[\Override]
     public function getOffersUpdate(string $dateTime, string $country = '', string $resort = '', string $hotel = ''): \SimpleXMLElement
@@ -38,7 +41,7 @@ class DestinationApiClient extends ApiClientBase implements DestinationApiClient
             <Hotel>' . $this->xmlCdata($hotel) . '</Hotel>
         </offers_update>';
 
-        return $this->callApiAndParse(Constants::API_FUNCTION_OFFERS_UPDATE, $xml);
+        return $this->callApiForAnswer(Constants::API_FUNCTION_OFFERS_UPDATE, $xml);
     }
 
     /**

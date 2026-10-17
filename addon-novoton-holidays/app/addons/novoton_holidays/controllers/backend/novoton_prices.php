@@ -19,6 +19,7 @@ declare(strict_types=1);
  */
 
 use Tygh\Tygh;
+use Tygh\Addons\NovotonHolidays\Api\Refusal;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Helpers\PriceCheckFlags;
@@ -498,24 +499,21 @@ if ($mode === 'check_prices_hotel') {
                     'nocache'   => true,
                 ]);
 
-                // Check if result has any prices
-                $has_room_price = false;
+                // Only an answer sets the flag: no answer, or a refusal such as a
+                // wrong password, keeps the stored one (PriceCheckFlags).
+                $answer = PriceCheckFlags::hasPrices($result);
+                $has_room_price = $answer === true;
                 $min_price = 0;
-                if ($result instanceof \SimpleXMLElement) {
-                    $prices = $result->xpath('//Price');
-                    $has_room_price = !empty($prices);
-                    if ($has_room_price) {
-                        foreach ($prices as $p) {
-                            $pval = (float)((string)$p);
-                            if ($pval > 0 && ($min_price === 0 || $pval < $min_price)) {
-                                $min_price = $pval;
-                            }
+                if ($has_room_price && $result instanceof \SimpleXMLElement) {
+                    foreach ($result->xpath('//Price') ?: [] as $p) {
+                        $pval = (float)((string)$p);
+                        if ($pval > 0 && ($min_price === 0 || $pval < $min_price)) {
+                            $min_price = $pval;
                         }
                     }
                 }
 
-                // Update database. No answer ($result === false) keeps the stored flag (PriceCheckFlags).
-                if ($result !== false) {
+                if ($answer !== null) {
                     $hotelRepo->update($hotel_id, ['has_room_price' => $has_room_price ? 'Y' : 'N', 'last_price_check' => $now]);
                 }
 
@@ -523,10 +521,11 @@ if ($mode === 'check_prices_hotel') {
                     $with_prices++;
                     $price_display = $min_price > 0 ? ' | <strong>' . number_format($min_price, 2) . ' EUR</strong>' : '';
                     echo "<span class='success'>✓ [{$hotel_num}] {$hotel_name} ({$city}){$price_display}</span><br>\n";
-                } elseif ($result === false) {
+                } elseif ($answer === null) {
                     $errors++;
+                    $why = $result instanceof \SimpleXMLElement ? 'Novoton: ' . (Refusal::reason($result) ?? '') : ($api->getLastError() ?: 'invalid response');
                     if ($errors <= 20) {
-                        echo "<span class='skip'>○ [{$hotel_num}] {$hotel_name} ({$city}) - invalid API response, flag unchanged</span><br>\n";
+                        echo "<span class='skip'>○ [{$hotel_num}] {$hotel_name} ({$city}) - no answer (" . htmlspecialchars($why) . "), flag unchanged</span><br>\n";
                     } elseif ($errors === 21) {
                         echo "<span class='skip'>... (more invalid responses)</span><br>\n";
                     }

@@ -4,24 +4,26 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Helpers;
 
+use Tygh\Addons\NovotonHolidays\Api\Refusal;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * How a room_price check sets ?:novoton_hotels.has_room_price.
  *
  * Only an answer decides: a reply with a <Price> is 'Y', a reply without one
- * is 'N'. No reply — a network, API or XML error, an open circuit breaker, a
- * resort whose call failed — decides nothing: the hotel keeps its flag and its
- * last_price_check, so the next run (least recently checked first) asks again.
- * Writing 'N' for those made every hotel of a failed batch, or of a resort
- * that did not answer, read "no prices".
+ * is 'N'. No answer — a network, API or XML error, a refusal such as a wrong
+ * password (Refusal), an open circuit breaker, a resort whose call failed —
+ * decides nothing: the hotel keeps its flag and its last_price_check, so the
+ * next run (least recently checked first) asks again. Writing 'N' for those
+ * made every hotel of a failed batch, or of a resort that did not answer, read
+ * "no prices".
  */
 final class PriceCheckFlags
 {
-    /** TRUE: the reply has a <Price>. FALSE: a reply without one. NULL: no reply to judge. */
+    /** TRUE: the reply has a <Price>. FALSE: an answer without one. NULL: no answer to judge. */
     public static function hasPrices(mixed $response): ?bool
     {
-        if (!$response instanceof \SimpleXMLElement) {
+        if (!$response instanceof \SimpleXMLElement || Refusal::reason($response) !== null) {
             return null;
         }
 

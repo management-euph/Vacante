@@ -51,7 +51,7 @@ interface PricingApiClientInterface
      */
     public function getRoomPriceByResortRaw(array $params): string;
 
-    /** 13. priceinfo — Season prices request. */
+    /** 13. priceinfo — Season prices request. A refusal (Api\Refusal) throws ApiException. */
     public function getPriceInfo(string $hotelId, string $packageName, string $lang = 'UK'): \SimpleXMLElement;
 
     /** 10. spo — EB (early booking), extras and other discounts. */
