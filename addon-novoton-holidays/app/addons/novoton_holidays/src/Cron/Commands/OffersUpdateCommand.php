@@ -6,6 +6,7 @@ namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
+use Tygh\Addons\NovotonHolidays\Helpers\OffersUpdateBaseline;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\DestinationScope;
@@ -38,22 +39,26 @@ class OffersUpdateCommand extends AbstractCronCommand
         $country = strtoupper(TypeCoerce::toString($this->getParam('country', Constants::DEFAULT_COUNTRY)));
 
         $syncRepo = Container::getInstance()->syncLogRepository();
-        $last_import = $syncRepo->getLastSyncDate('product_import');
-
-        if (empty($last_import)) {
-            $this->output('ERROR: No previous product import found!');
-            $this->output("Run 'Add Hotels as Products' first to establish the baseline timestamp.");
-            return ['success' => false, 'error' => 'No baseline import'];
-        }
+        // A durable baseline per country (OffersUpdateBaseline): the
+        // product_import log row it used to need was trimmed away by the
+        // nightly cleanup, after which the job never ran again.
+        $since = OffersUpdateBaseline::resolve(
+            OffersUpdateBaseline::get($country),
+            $syncRepo->getLastSyncDate('product_import'),
+            time(),
+        );
+        $askedAt = date('Y-m-d H:i:s');
 
         $this->output("Country: {$country}");
-        $this->output("Last product import: {$last_import}");
+        $this->output("Changes since: {$since}");
         $this->output('Checking offers added/modified after this time...');
         $this->output('');
 
-        $response = $this->api->destinations()->getOffersUpdate($last_import, $country);
+        // Throws when Novoton does not answer: the baseline then stays put.
+        $response = $this->api->destinations()->getOffersUpdate($since, $country);
 
-        if (!(bool) $response || !isset($response->Offer)) {
+        if (!isset($response->Offer)) {
+            OffersUpdateBaseline::advance($country, $askedAt);
             $this->output('No new offers found.');
             return ['success' => true, 'stats' => ['new_hotels' => 0, 'added_to_cart' => 0]];
         }
@@ -209,8 +214,9 @@ class OffersUpdateCommand extends AbstractCronCommand
         $this->output("Added to CS-Cart: {$added_to_cart}");
 
         $this->logToSyncTable('offers_update', $added_to_cart);
+        OffersUpdateBaseline::advance($country, $askedAt);
 
-        // Save sync timestamp
+        // The log row stays for the dashboard; the baseline no longer reads it.
         $syncRepo->create('product_import', [
             'updated' => $added_to_cart,
             'status' => 'completed',
