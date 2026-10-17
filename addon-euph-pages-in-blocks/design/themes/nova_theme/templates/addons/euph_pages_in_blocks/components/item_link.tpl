@@ -1,11 +1,12 @@
 {*
     A link to a page of a Page content block: to a link page's address (in
     a new window when the page says so), to a popup page in CS-Cart's dialog
-    (cm-dialog-opener loads the page into popup_target.tpl), or to the
-    page's own view.
+    (cm-dialog-opener loads the page into the div #item.dialog_id the
+    layout draws), or to the page's own view.
 
-    Params: item (a view item of BlockPresenter), class, text (empty: the
-    page's name), label (the link's accessible name; empty: its text).
+    Params: item (an item of fn_euph_pages_in_blocks_view()), class, text
+    (empty: the page's name), label (the link's accessible name; empty: its
+    text).
 *}
 {$class = $class|default:""}
 {$text = $text|default:""}

@@ -7,7 +7,8 @@
 
     Line 1 names the template in the block's Template list (a language
     variable). The view is worked out by fn_euph_pages_in_blocks_view()
-    (src/View/BlockPresenter.php): this template only prints it.
+    (func.php): this template only prints it. A popup page's link opens
+    CS-Cart's dialog, which loads the page into the hidden div after it.
 *}
 {$pib = fn_euph_pages_in_blocks_view($items, $block, "stacked")}
 {if $pib}
@@ -24,7 +25,7 @@
                         {include file="addons/euph_pages_in_blocks/components/item_link.tpl" item=$item class="euph-pib__title-link" text="" label=""}
                     </h3>
                     {if $item.kind == "popup"}
-                        {include file="addons/euph_pages_in_blocks/components/popup_target.tpl" item=$item}
+                        <div id="{$item.dialog_id}" class="hidden" title="{$item.title}"></div>
                     {/if}
                 {/if}
             </div>

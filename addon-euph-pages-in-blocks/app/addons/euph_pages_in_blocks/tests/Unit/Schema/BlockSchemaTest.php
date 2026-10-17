@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\EuphPagesInBlocks\Tests\Unit\Schema;
 
 use PHPUnit\Framework\TestCase;
-use Tygh\Addons\EuphPagesInBlocks\BlockSchema;
-use Tygh\Addons\EuphPagesInBlocks\Enum\Layout;
+use Tygh\Addons\EuphPagesInBlocks\Tests\Support\Schema;
 
 /**
  * The Page content block type in the block manager schema: a dedicated
@@ -38,54 +37,41 @@ final class BlockSchemaTest extends TestCase
         'cache' => ['update_handlers' => ['pages', 'page_descriptions']],
     ];
 
-    /**
-     * The add-on's schemas/block_manager/blocks.post.php applied to a schema.
-     *
-     * @param array<string, mixed> $schema
-     *
-     * @return array<array-key, mixed>
-     */
-    private static function apply(array $schema): array
-    {
-        $result = (static function (array $schema): mixed {
-            return include dirname(__DIR__, 3) . '/schemas/block_manager/blocks.post.php';
-        })($schema);
-        self::assertIsArray($result);
-
-        return $result;
-    }
+    private const PICKER = ['manually' => ['picker' => 'pickers/pages/picker.tpl', 'picker_params' => ['multiple' => true]]];
 
     /**
+     * @param array<string, mixed> $type
+     *
      * @return array<string, mixed>
      */
-    private static function type(): array
+    private static function items(array $type): array
     {
-        $type = self::apply(['pages' => self::CORE_PAGES])[BlockSchema::BLOCK_TYPE] ?? null;
-        self::assertIsArray($type);
+        $content = $type['content'] ?? null;
+        self::assertIsArray($content);
+        self::assertIsArray($content['items'] ?? null);
 
-        /** @var array<string, mixed> $type */
-        return $type;
+        /** @var array<string, mixed> */
+        return $content['items'];
     }
 
     public function testTheCorePagesBlockIsLeftAsItIs(): void
     {
-        $schema = self::apply(['pages' => self::CORE_PAGES, 'menu' => ['templates' => 'blocks/menu']]);
+        $schema = Schema::apply(['pages' => self::CORE_PAGES, 'menu' => ['templates' => 'blocks/menu']]);
 
+        self::assertIsArray($schema);
         self::assertSame(self::CORE_PAGES, $schema['pages']);
         self::assertSame(['templates' => 'blocks/menu'], $schema['menu']);
-        self::assertSame(['pages', 'menu', BlockSchema::BLOCK_TYPE], array_keys($schema));
+        self::assertSame(['pages', 'menu', Schema::BLOCK_TYPE], array_keys($schema));
     }
 
     public function testItsContentIsTheCoreManualFillingServedByTheAddon(): void
     {
-        $type = self::type();
-        $items = $type['content']['items'] ?? null;
-        self::assertIsArray($items);
+        $items = self::items(Schema::blockType(['pages' => self::CORE_PAGES]));
 
         self::assertSame('enum', $items['type']);
         self::assertSame('pages', $items['object']);
         self::assertSame('fn_euph_pages_in_blocks_get_pages', $items['items_function']);
-        self::assertTrue(function_exists($items['items_function']));
+        self::assertTrue(function_exists('fn_euph_pages_in_blocks_get_pages'));
         self::assertTrue($items['hide_label']);
         // Only the manual filling, exactly as the core defines it.
         self::assertSame(['manually' => self::CORE_PAGES['content']['items']['fillings']['manually']], $items['fillings']);
@@ -93,36 +79,26 @@ final class BlockSchemaTest extends TestCase
 
     public function testItIsNeverCached(): void
     {
-        self::assertArrayNotHasKey('cache', self::type(), "a form's confirmation or a poll's result must not reach the next visitor");
+        self::assertArrayNotHasKey('cache', Schema::blockType(['pages' => self::CORE_PAGES]), "a form's confirmation or a poll's result must not reach the next visitor");
     }
 
     public function testItHasTheFourTemplatesWithTheirSettings(): void
     {
-        $type = self::type();
+        $type = Schema::blockType();
+        self::assertIsArray($type['templates']);
 
         self::assertSame('blocks/wrappers', $type['wrappers']);
-        self::assertSame(
-            [
-                'addons/euph_pages_in_blocks/blocks/page_content/stacked.tpl',
-                'addons/euph_pages_in_blocks/blocks/page_content/tabs.tpl',
-                'addons/euph_pages_in_blocks/blocks/page_content/accordion.tpl',
-                'addons/euph_pages_in_blocks/blocks/page_content/cards.tpl',
-            ],
-            array_keys($type['templates']),
-        );
-        self::assertSame([], $type['templates'][Layout::Tabs->template()], 'tabs need no settings');
-        self::assertSame(
-            [BlockSchema::SHOW_TITLES, BlockSchema::SEPARATORS, BlockSchema::CONTENT, BlockSchema::EXCERPT_LENGTH],
-            array_keys($type['templates'][Layout::Stacked->template()]['settings']),
-        );
-        self::assertSame([BlockSchema::OPEN_FIRST, BlockSchema::ONE_OPEN], array_keys($type['templates'][Layout::Accordion->template()]['settings']));
-        self::assertSame([BlockSchema::COLUMNS, BlockSchema::EXCERPT_LENGTH], array_keys($type['templates'][Layout::Cards->template()]['settings']));
+        self::assertSame(array_map(static fn (string $layout): string => Schema::TEMPLATE_DIR . $layout . '.tpl', Schema::LAYOUTS), array_keys($type['templates']));
+        self::assertSame([], $type['templates'][Schema::TEMPLATE_DIR . 'tabs.tpl'], 'tabs need no settings');
+        self::assertSame(['euph_pib_show_titles', 'euph_pib_separators', 'euph_pib_content', 'euph_pib_excerpt_length'], array_keys(Schema::settings('stacked')));
+        self::assertSame(['euph_pib_open_first', 'euph_pib_one_open'], array_keys(Schema::settings('accordion')));
+        self::assertSame(['euph_pib_columns', 'euph_pib_excerpt_length'], array_keys(Schema::settings('cards')));
     }
 
     public function testTheSettingsAreValidBlockSettings(): void
     {
-        foreach (Layout::cases() as $layout) {
-            foreach (BlockSchema::settings($layout) as $name => $setting) {
+        foreach (Schema::LAYOUTS as $layout) {
+            foreach (Schema::settings($layout) as $name => $setting) {
                 self::assertMatchesRegularExpression('/^euph_pib_[a-z_]+$/', $name, 'a block property and a language variable');
                 self::assertContains($setting['type'], ['checkbox', 'selectbox', 'input'], $name);
                 self::assertIsString($setting['default_value'], $name);
@@ -135,38 +111,50 @@ final class BlockSchemaTest extends TestCase
                 }
             }
         }
-        self::assertSame(['2' => '2', '3' => '3', '4' => '4'], BlockSchema::settings(Layout::Cards)[BlockSchema::COLUMNS]['values']);
-        self::assertTrue(BlockSchema::settings(Layout::Cards)[BlockSchema::COLUMNS]['no_lang']);
+        self::assertSame(['2' => '2', '3' => '3', '4' => '4'], Schema::settings('cards')['euph_pib_columns']['values']);
+        self::assertTrue(Schema::settings('cards')['euph_pib_columns']['no_lang']);
     }
 
     public function testWithoutACorePagesBlockItKeepsTheCorePicker(): void
     {
-        $type = self::apply([])[BlockSchema::BLOCK_TYPE];
-        self::assertIsArray($type);
-        $items = $type['content']['items'];
+        $items = self::items(Schema::blockType());
 
+        self::assertTrue($items['remove_indent']);
+        self::assertTrue($items['hide_label']);
         self::assertSame('pages', $items['object']);
         self::assertSame('fn_euph_pages_in_blocks_get_pages', $items['items_function']);
-        self::assertSame(['manually' => ['picker' => 'pickers/pages/picker.tpl', 'picker_params' => ['multiple' => true]]], $items['fillings']);
+        self::assertSame(self::PICKER, $items['fillings']);
     }
 
     public function testACorePagesBlockWithoutAManualFillingGetsThePicker(): void
     {
-        $items = BlockSchema::items(['content' => ['items' => ['type' => 'enum', 'object' => '', 'fillings' => ['newest' => []]]]]);
+        $items = self::items(Schema::blockType(['pages' => ['content' => ['items' => ['type' => 'list', 'object' => '', 'fillings' => ['newest' => []]]]]]));
 
+        self::assertSame('enum', $items['type']);
         self::assertSame('pages', $items['object']);
-        self::assertSame(['manually' => ['picker' => 'pickers/pages/picker.tpl', 'picker_params' => ['multiple' => true]]], $items['fillings']);
+        self::assertSame(self::PICKER, $items['fillings']);
+        self::assertSame(self::PICKER, self::items(Schema::blockType(['pages' => 'not a block']))['fillings']);
     }
 
     public function testTheSchemaFileKeepsWhatItIsGivenWhenItIsNotAnArray(): void
     {
-        $result = (static function (): mixed {
-            $schema = 'not a schema';
-
-            return include dirname(__DIR__, 3) . '/schemas/block_manager/blocks.post.php';
-        })();
+        $result = Schema::apply('not a schema');
 
         self::assertIsArray($result);
-        self::assertSame([BlockSchema::BLOCK_TYPE], array_keys($result));
+        self::assertSame([Schema::BLOCK_TYPE], array_keys($result));
+    }
+
+    public function testNothingLeaksIntoTheScopeThatIncludesIt(): void
+    {
+        // fn_get_schema() includes the file in its own scope, amid its own
+        // variables.
+        $variables = (static function (): array {
+            $schema = [];
+            $schema = include Schema::file();
+
+            return array_keys(get_defined_vars());
+        })();
+
+        self::assertSame(['schema'], $variables);
     }
 }

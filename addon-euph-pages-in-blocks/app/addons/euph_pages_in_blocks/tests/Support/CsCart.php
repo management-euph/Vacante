@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Tygh\Addons\EuphPagesInBlocks\Tests\Support;
 
 /**
- * What the CS-Cart stubs of stubs.php answer: the pages fn_get_page_data()
- * returns and the calls it got.
+ * What the CS-Cart stubs of stubs.php answer, and the calls they got.
  */
 final class CsCart
 {
-    /** @var array<int, array<string, mixed>> page id => the row fn_get_page_data() returns */
+    /** @var array<string, mixed> what Registry::get() answers */
+    public static array $registry = ['config.table_prefix' => 'cscart_'];
+
+    /** @var array<int, mixed> page id => what fn_get_page_data() returns (false when missing) */
     public static array $pages = [];
 
     /** @var list<array{int, string}> [page id, language] of every fn_get_page_data() call */
@@ -27,6 +29,7 @@ final class CsCart
 
     public static function reset(): void
     {
+        self::$registry = ['config.table_prefix' => 'cscart_'];
         self::$pages = [];
         self::$pageCalls = [];
         self::$tables = [];

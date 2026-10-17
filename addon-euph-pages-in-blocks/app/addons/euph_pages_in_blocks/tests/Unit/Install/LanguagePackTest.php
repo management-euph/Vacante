@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace Tygh\Addons\EuphPagesInBlocks\Tests\Unit\Install;
 
 use PHPUnit\Framework\TestCase;
-use Tygh\Addons\EuphPagesInBlocks\BlockSchema;
-use Tygh\Addons\EuphPagesInBlocks\Enum\Layout;
 use Tygh\Addons\EuphPagesInBlocks\Tests\Support\LanguagePack;
+use Tygh\Addons\EuphPagesInBlocks\Tests\Support\Schema;
 
 /**
  * The language packs are what the panel and the storefront show: English
@@ -66,11 +65,11 @@ final class LanguagePackTest extends TestCase
     {
         $variables = LanguagePack::english()->languageVariables();
 
-        self::assertArrayHasKey('block_' . BlockSchema::BLOCK_TYPE, $variables);
-        self::assertArrayHasKey('block_' . BlockSchema::BLOCK_TYPE . '_description', $variables);
-        foreach (Layout::cases() as $layout) {
-            self::assertArrayHasKey($layout->descriptionKey(), $variables);
-            foreach (BlockSchema::settings($layout) as $name => $setting) {
+        self::assertArrayHasKey('block_' . Schema::BLOCK_TYPE, $variables);
+        self::assertArrayHasKey('block_' . Schema::BLOCK_TYPE . '_description', $variables);
+        foreach (Schema::LAYOUTS as $layout) {
+            self::assertArrayHasKey('tmpl_euph_pib_' . $layout, $variables);
+            foreach (Schema::settings($layout) as $name => $setting) {
                 self::assertArrayHasKey($name, $variables, $name . ' labels the setting');
                 if (empty($setting['no_lang']) && is_array($setting['values'] ?? null)) {
                     foreach ($setting['values'] as $label) {

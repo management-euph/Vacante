@@ -3,17 +3,19 @@
 declare(strict_types=1);
 
 /**
- * Stubs of the CS-Cart functions and class the boundary code calls, each
- * defined only if missing. They answer from Support\CsCart.
+ * Stubs of the CS-Cart functions and class func.php calls, each defined
+ * only if missing. They answer from Support\CsCart.
  */
 
 namespace Tygh {
+    use Tygh\Addons\EuphPagesInBlocks\Tests\Support\CsCart;
+
     if (!class_exists(Registry::class)) {
         final class Registry
         {
             public static function get(string $key): mixed
             {
-                return $key === 'config.table_prefix' ? 'cscart_' : null;
+                return CsCart::$registry[$key] ?? null;
             }
         }
     }
@@ -31,10 +33,7 @@ namespace {
     }
 
     if (!function_exists('fn_get_page_data')) {
-        /**
-         * @return array<string, mixed>|false
-         */
-        function fn_get_page_data(int $page_id, string $lang_code = 'en'): array|false
+        function fn_get_page_data(int $page_id, string $lang_code = 'en'): mixed
         {
             CsCart::$pageCalls[] = [$page_id, $lang_code];
 

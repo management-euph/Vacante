@@ -22,7 +22,7 @@
                             {include file="addons/euph_pages_in_blocks/components/item_link.tpl" item=$item class="ty-btn ty-btn__secondary" text=__("euph_pages_in_blocks.open_page") label=""}
                         </p>
                         {if $item.kind == "popup"}
-                            {include file="addons/euph_pages_in_blocks/components/popup_target.tpl" item=$item}
+                            <div id="{$item.dialog_id}" class="hidden" title="{$item.title}"></div>
                         {/if}
                     {/if}
                 </div>
