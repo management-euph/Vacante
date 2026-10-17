@@ -4383,3 +4383,7 @@ msgstr "Filter resorts…"
 msgctxt "Languages::novoton_holidays.dest_fold"
 msgid "[n] more country has no hotels synced and is not sold.|[n] more countries have no hotels synced and are not sold."
 msgstr "[n] more country has no hotels synced and is not sold.|[n] more countries have no hotels synced and are not sold."
+
+msgctxt "Languages::novoton_holidays.accommodation_period"
+msgid "This hotel offers accommodation from [from] to [to]."
+msgstr "This hotel offers accommodation from [from] to [to]."

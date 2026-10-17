@@ -1083,4 +1083,10 @@ return [
         'en' => '[n] more country has no hotels synced and is not sold.|[n] more countries have no hotels synced and are not sold.',
         'ro' => 'Încă [n] țară nu are hoteluri sincronizate și nu este vândută.|Încă [n] țări nu au hoteluri sincronizate și nu sunt vândute.|Încă [n] de țări nu au hoteluri sincronizate și nu sunt vândute.',
     ],
+    // "No availability" box on the hotel page: the season the hotel sells.
+    // The key was used by search.tpl but never defined, so the raw key showed.
+    'novoton_holidays.accommodation_period' => [
+        'en' => 'This hotel offers accommodation from [from] to [to].',
+        'ro' => 'Hotelul oferă cazare în perioada [from] – [to].',
+    ],
 ];

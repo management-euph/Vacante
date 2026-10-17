@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\NovotonHolidays\Helpers\SeasonDates;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
 
@@ -323,44 +324,30 @@ class SearchResultFormatter implements SearchResultFormatterInterface
     }
 
     /**
+     * The "this hotel offers accommodation from … to …" note: the current or
+     * next season window across every package (SeasonDates), empty once all
+     * seasons are over. It used to read only the nested seasons.season shape
+     * — not the flat list the API sends — and only the first package.
+     *
      * @param \Smarty $view
      * @param list<array<string, mixed>> $packages
      */
     private function assignSeasonPeriod($view, array $packages): void
     {
-        $seasonFrom = '';
-        $seasonTo = '';
-
+        $priceinfos = [];
         foreach ($packages as $pkg) {
             if (empty($pkg['priceinfo_data'])) {
                 continue;
             }
             $pi = json_decode(PriceInfoFormatter::toScalar($pkg['priceinfo_data']), true);
-            if (!is_array($pi) || !is_array($pi['seasons'] ?? null) || empty($pi['seasons']['season'])) {
-                continue;
+            if (is_array($pi)) {
+                $priceinfos[] = $pi;
             }
-
-            $piSeasons = $pi['seasons'];
-            $seasons = $piSeasons['season'];
-            if (!is_array($seasons)) {
-                continue;
-            }
-            if (isset($seasons['IdSeason']) || isset($seasons['DateFrom'])) {
-                $seasons = [$seasons];
-            }
-
-            $first = reset($seasons);
-            $last = end($seasons);
-            if (!is_array($first) || !is_array($last)) {
-                continue;
-            }
-            $seasonFrom = PriceInfoFormatter::toScalar($first['DateFrom'] ?? $first['FromDate'] ?? '');
-            $seasonTo = PriceInfoFormatter::toScalar($last['DateTo'] ?? $last['ToDate'] ?? '');
-            break;
         }
+        $window = SeasonDates::window($priceinfos, date('Y-m-d'));
 
-        $view->assign('hotel_season_from', $seasonFrom);
-        $view->assign('hotel_season_to', $seasonTo);
+        $view->assign('hotel_season_from', $window['from'] ?? '');
+        $view->assign('hotel_season_to', $window['to'] ?? '');
     }
 
     /** @param \Smarty $view */

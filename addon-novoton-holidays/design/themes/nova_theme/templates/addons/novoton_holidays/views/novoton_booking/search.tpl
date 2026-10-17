@@ -635,7 +635,7 @@
             </p>
             {if $hotel_season_from && $hotel_season_to}
             <p class="novoton-season-note">
-                {__("novoton_holidays.accommodation_period")|default:"This hotel offers accommodation from"} {$hotel_season_from|date_format:"%d %b"} {__("novoton_holidays.to")|default:"to"} {$hotel_season_to|date_format:"%d %b %Y"}
+                {__("novoton_holidays.accommodation_period", ["[from]" => $hotel_season_from|date_format:"%d.%m.%Y", "[to]" => $hotel_season_to|date_format:"%d.%m.%Y"])}
             </p>
             {/if}
         </div>
@@ -645,7 +645,7 @@
             <p>{__("novoton_holidays.try_different_dates")}</p>
             {if $hotel_season_from && $hotel_season_to}
             <p class="novoton-season-note">
-                {__("novoton_holidays.accommodation_period")|default:"This hotel offers accommodation from"} {$hotel_season_from|date_format:"%d %b"} {__("novoton_holidays.to")|default:"to"} {$hotel_season_to|date_format:"%d %b %Y"}
+                {__("novoton_holidays.accommodation_period", ["[from]" => $hotel_season_from|date_format:"%d.%m.%Y", "[to]" => $hotel_season_to|date_format:"%d.%m.%Y"])}
             </p>
             {/if}
 

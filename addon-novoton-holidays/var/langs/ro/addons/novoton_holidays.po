@@ -4383,3 +4383,7 @@ msgstr "Filtrează stațiunile…"
 msgctxt "Languages::novoton_holidays.dest_fold"
 msgid "[n] more country has no hotels synced and is not sold.|[n] more countries have no hotels synced and are not sold."
 msgstr "Încă [n] țară nu are hoteluri sincronizate și nu este vândută.|Încă [n] țări nu au hoteluri sincronizate și nu sunt vândute.|Încă [n] de țări nu au hoteluri sincronizate și nu sunt vândute."
+
+msgctxt "Languages::novoton_holidays.accommodation_period"
+msgid "This hotel offers accommodation from [from] to [to]."
+msgstr "Hotelul oferă cazare în perioada [from] – [to]."
