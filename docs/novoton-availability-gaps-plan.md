@@ -1,13 +1,82 @@
 # Novoton hotels with availability gaps — plan
 
-**Status:** Proposed — 2026-10-16
-**Scope:** `novoton_holidays` first. The shared pieces are shaped so they can
-move to `travel_core` later (see `docs/CONVERGENCE.md`), for Sphinx and Eurosite.
+**Status:** Proposed 2026-10-16. Decisions recorded 2026-10-17 (§0). Phase 0 done.
+**Scope:** the rules live in `travel_core` and Novoton is the first provider to
+use them; Eurosite and Sphinx move onto them later (§0.2, `docs/CONVERGENCE.md`).
 **Related:** `docs/adr/0001-availability-early-render-and-metrics.md`, Eurosite
 `ProductGate` / `AvailabilityPlan`, Sphinx `HotelAvailabilityGate`.
 
 Paths are relative to `addon-novoton-holidays/app/addons/novoton_holidays/`
 unless they start with another addon's folder.
+
+---
+
+## 0. Decisions (2026-10-17)
+
+### 0.1 What was decided
+
+| Question (§11) | Decision |
+|---|---|
+| Hotels between seasons | **Stay visible**: Active and listed, with the season panel (§7.1). |
+| When to hide a hotel with no availability | **An admin setting**: "Hide a hotel after N months without availability", default **12**. |
+| Sell hotels Novoton doesn't offer offline ("Ask us for a price") | **No, not for now.** Those hotels show "online booking unavailable", similar hotels and "notify me"; staff only get the purchasing list (§7.2). |
+| Where the logic lives | **The rules in Travel Core, the data collection in Novoton** (§0.2). |
+| How long to stay report-only | **Open.** Recommendation: until the 2027 early-booking prices are loaded (Feb–Mar 2027) and the "would hide" list has been reviewed once (§0.3). |
+
+Still open: §11 questions 3 (hide hotels that left the feed automatically?),
+4 (default redirect target for closed hotels) and 6 (notify-me channels and
+consent text).
+
+### 0.2 Architecture: the rules in Travel Core, the data in Novoton
+
+| Travel Core (shared, one behaviour for the store) | Novoton (provider-specific) |
+|---|---|
+| Settings: hide after N months (default 12); mode off / report / enforce; left-the-feed runs; redirect grace; mass-hide brake | Collecting evidence: still in `hotel_list`, published price window (priceinfo → calendar), resort `room_price` checks, offers on hotel-page searches |
+| The evidence and state table, keyed by provider + hotel id + product, and the change log | The `availability_check` job that feeds it |
+| The state rules (a pure policy) and the date windows (moved from Eurosite's `AvailabilityPlan`) | Novoton's own data fixes (phase 0) |
+| The gate: guarded Active ↔ Hidden flips, brake, overrides, `gateHidden` for booking | |
+| The hotel-page panel, "notify me", and the "prices are out" emails | |
+| The 301 for closed hotels, and the Availability admin page with a provider filter | |
+
+Why Travel Core:
+
+1. **One rule for the whole store.** Today Eurosite hides hotels between
+   seasons, Sphinx hides even more (it checks near dates only), and Novoton
+   hides none. A customer does not care which supplier a hotel comes from, and
+   the "keep them visible" decision should hold for all three.
+2. **Travel Core already owns what this plugs into:**
+   - the cart rule that lets a gate-hidden product be booked (`ProviderCartProduct`);
+   - the hotel-page booking engine and JSON-LD;
+   - availability requests and their admin grid;
+   - the cron framework;
+   - a runtime schema self-heal, which Novoton lacks (audit `data-perf-3`).
+3. **Building it in Novoton and moving it later** means building twice and
+   migrating a table, settings and an admin page.
+
+Novoton still goes first: it is the only provider wired at the start, and
+Eurosite and Sphinx keep their current gates until they are moved over
+(phase 6). New shared code follows `docs/CONVERGENCE.md`: the contract in
+`travel_core/src/Contracts` first, then the pure policy, with
+`ConvergenceLedgerTest` updated.
+
+### 0.3 What "report-only" means
+
+In report-only mode the job works out every hotel's state and lists what it
+**would** hide or show (on the Availability page and in the weekly email), but
+it changes no product. It is a dry run, so the rules can be checked against
+real data before they act on the catalog.
+
+"How long" is when to flip the mode setting to *enforce*. The recommendation is
+February–March 2027:
+
+- the job starts recording offers now, so by then it has months of
+  observations instead of guesses;
+- by then a hotel still without offers or prices is a real candidate, whereas
+  in October almost every seaside hotel looks empty;
+- with a 12-month threshold, little would be hidden before then anyway.
+
+Review the "would hide" list once, switch the setting, and from then on it runs
+by itself.
 
 ---
 
@@ -27,15 +96,15 @@ unless they start with another addon's folder.
 - Record evidence from the jobs that already run (no extra API calls). Add one
   new job that checks future dates per resort, including next summer's peak
   dates.
-- Add an admin page **Novoton → Availability**. It filters on "no offer in the
-  last X months" and has CSV export and bulk actions.
-- Only *dormant* hotels (12 months without an offer) and hotels that *left the
-  feed* are hidden. Hidden (status H) keeps the page and URL but drops the hotel
-  from listings. A closed hotel gets a 301 redirect after a grace period.
-  Nothing is ever deleted or Disabled.
+- Add an admin page **Hotel availability** (Travel Core, with a provider
+  filter). It filters on "no offer in the last X months" and has CSV export and
+  bulk actions.
+- Only *dormant* hotels (no offer for N months; an admin setting, default 12)
+  and hotels that *left the feed* are hidden. Hidden (status H) keeps the page
+  and URL but drops the hotel from listings. A closed hotel gets a 301 redirect
+  after a grace period. Nothing is ever deleted or Disabled.
 - The hotel page never ends in a dead end. It can show a season notice, "notify
-  me when 2027 prices appear", "ask us for a price", and similar hotels that can
-  be booked now.
+  me when 2027 prices appear", and similar hotels that can be booked now.
 - Run in report-only mode first. Turn on automatic hiding only after the report
   has been checked against the 2027 early-booking season.
 
@@ -44,10 +113,10 @@ unless they start with another addon's folder.
 | | Between seasons | Not offered by Novoton | No offer for 12+ months | Closed / left Novoton |
 |---|---|---|---|---|
 | Typical cause | Season over; next season's prices not loaded yet (Oct–Feb) | Hotel operates, but Novoton has no contract or allotment, or a stop sale | The hotel missed a whole selling year | Hotel closed, the contract ended, or Novoton removed it from `hotel_list` |
-| How we recognise it | No offer now. Offers or prices within the last 13 months. The other hotels in the resort have none either. | Other hotels in the resort sell the same dates; this one hasn't for 2+ weeks | No offer seen for 12 months | Missing from `hotel_list` 3 runs in a row (~9 days), or an admin marks it closed |
+| How we recognise it | No offer now. Offers or prices within the last 13 months. The other hotels in the resort have none either. | Other hotels in the resort sell the same dates; this one hasn't for 2+ weeks | No offer seen for N months (admin setting, default 12) | Missing from `hotel_list` 3 runs in a row (~9 days), or an admin marks it closed |
 | Product | Stays Active | Stays Active | Hidden | Hidden, then a 301 after 6 months |
-| Customer sees | "Summer 2027 prices are not published yet. Last season: Jun–Sep", plus Notify me and similar hotels | "Online booking is not available right now", plus Ask us for a price and similar hotels | Direct link only: "No offers for over a year", plus similar hotels and Notify me | "No longer available", plus similar hotels; redirected later |
-| Staff | Nothing to do | Purchasing list for Novoton; answer price requests | Review list: keep, wait, or close | Choose the redirect target |
+| Customer sees | "Summer 2027 prices are not published yet. Last season: Jun–Sep", plus Notify me and similar hotels | "Online booking is not available right now", plus similar hotels and Notify me | Direct link only: "No offers for over a year", plus similar hotels and Notify me | "No longer available", plus similar hotels; redirected later |
+| Staff | Nothing to do | Purchasing list for Novoton | Review list: keep, wait, or close | Choose the redirect target |
 
 ## 3. What the addon does today
 
@@ -139,9 +208,11 @@ unless they start with another addon's folder.
 
 ### 4.1 Evidence kept per hotel
 
-New table `?:novoton_hotel_availability`, one row per hotel. It is a separate
-table so the busy `novoton_hotels` table needs no ALTER, uninstall stays simple,
-and it can move to travel_core later.
+New Travel Core table `?:travel_hotel_availability` (§0.2), one row per
+provider hotel, keyed by `provider` + `hotel_id`, with the hotel's
+`product_id`. Being a separate table, the busy `novoton_hotels` needs no ALTER,
+and Travel Core's runtime schema self-heal brings it to installed stores. The
+columns below are what Novoton fills; other providers fill what they can.
 
 | Column | Meaning | Written by |
 |---|---|---|
@@ -154,15 +225,15 @@ and it can move to travel_core later.
 | `offer_next_date` | Earliest future check-in with an offer in the latest check | `availability_check` |
 | `offer_checked_at` | Last check that answered for this hotel, offer or not | `availability_check` |
 | `offer_months` | JSON: stay months with offers → when last seen, e.g. `{"2026-07":"2026-06-28"}` | Same |
-| `last_booking_check_in` | Check-in of the latest confirmed booking | Nightly, from `novoton_bookings` |
+| `last_booking_check_in` | Check-in of the latest confirmed booking | Nightly, from the provider's bookings (`novoton_bookings`) |
 | `state`, `state_since`, `state_reason` | Derived state (§5) | `availability_check` |
 | `gate_hidden` | This gate set the product to H | The gate |
 | `override`, `override_note`, `override_by`, `override_at` | Admin decision: keep visible / keep hidden / closed | Admin page |
 | `redirect_to` | For closed hotels: target product, category or URL | Admin page |
 
-A second table, `?:novoton_hotel_state_log`, records every change: hotel,
-product, old → new state and status, reason, who, and when. Every change can
-then be explained, and the log feeds the weekly email.
+A second table, `?:travel_hotel_state_log`, records every change: provider,
+hotel, product, old → new state and status, reason, who, and when. Every change
+can then be explained, and the log feeds the weekly email.
 
 "When was it last available" has two answers, and both are kept:
 
@@ -256,8 +327,9 @@ and the first match wins:
 2. Offer seen in the last 7 days → **bookable**. "On request" counts.
 3. Missing from `hotel_list` for 3 good runs → **left the feed**. After 6 months
    it is proposed as **closed**.
-4. Last availability (§4.4) is more than 12 months old, the hotel has been known
-   for at least 12 months, and the latest check of its resort answered →
+4. Last availability (§4.4) is older than N months (the admin setting, default
+   12), the hotel has been known for at least that long, and the latest check
+   of its resort answered →
    **dormant**.
 5. The resort is selling but this hotel has had no offer for 14 days →
    **not offered**. "Selling" means at least 25% of its checked hotels had offers
@@ -276,11 +348,13 @@ Rule 5's resort comparison is what tells "the whole coast is closed" apart from
 - **July:** if 60 of 80 hotels have offers and one has had none for two weeks,
   that one is not offered.
 
-Every threshold is a setting:
+Every threshold is a setting. `dormant_months` is the one admins see in Travel
+Core's settings, as "Hide a hotel after N months without availability"
+(default 12, decided 2026-10-17); the others can stay advanced settings:
 
 - `fresh_days` 7
 - `delisted_runs` 3
-- `dormant_months` 12
+- `dormant_months` 12 (admin setting)
 - `season_memory_months` 13
 - `peer_share` 25%
 - `not_offered_days` 14
@@ -292,11 +366,12 @@ this winter.
 
 ## 6. Report: hotels without availability in the last X months
 
-A new admin page, **Novoton → Availability**, with its own controller
-(`controllers/backend/novoton_availability.php`), template, menu entry and
-permission entry. It replaces the `hotels` / `view_hotel` modes in
-`controllers/backend/novoton_holidays.php`, which have no templates and are never
-rendered.
+A new Travel Core admin page, **Hotel availability**, with a provider filter,
+its own controller (`travel_core` `controllers/backend/travel_hotel_availability.php`),
+template, menu entry and permission entry (audit `web-security-9`: the other
+travel pages lack one). Novoton's `hotels` / `view_hotel` modes in
+`controllers/backend/novoton_holidays.php` have no templates and are never
+rendered; they can go.
 
 - **Filters:**
   - "No offer seen in the last [3 / 6 / 12 / 18 / 24] months";
@@ -314,7 +389,7 @@ rendered.
   - last seen in the feed, with missed runs;
   - last booking;
   - page views (CS-Cart product popularity);
-  - open requests (notify me / ask for a price);
+  - open notify-me requests;
   - suggested action.
 - **Bulk actions:**
   - hide, show, keep visible;
@@ -334,7 +409,7 @@ SELECT h.hotel_id, h.hotel_name, h.city, h.product_id, p.status,
        a.state, a.offer_seen_at, a.offer_stay_date, a.contract_from, a.contract_to,
        a.listed_last_seen_at, a.last_booking_check_in
 FROM ?:novoton_hotels h
-LEFT JOIN ?:novoton_hotel_availability a ON a.hotel_id = h.hotel_id
+LEFT JOIN ?:travel_hotel_availability a ON a.provider = 'novoton' AND a.hotel_id = h.hotel_id
 LEFT JOIN ?:products p ON p.product_id = h.product_id
 WHERE h.created_at < NOW() - INTERVAL ?i MONTH          -- known long enough to judge
   AND (a.offer_seen_at IS NULL OR a.offer_seen_at < NOW() - INTERVAL ?i MONTH)
@@ -371,24 +446,24 @@ seaside hotel.
 - **Product:** stays Active for SEO and demand.
 - **Hotel page:** a panel above the search, with:
   - "Online booking for this hotel is not available at the moment.";
-  - **[Ask us for a price]** (dates, guests, contact);
-  - similar hotels that have offers.
-- **Price requests:**
-  - they go to the "Availability Requests" grid;
-  - staff can sell offline, through a direct contract or another supplier
-    (decision 5).
-- **Purchasing list:** not-offered hotels sorted by demand (views and requests),
-  exported as a CSV for the Novoton account manager to request allotment or a
-  contract.
+  - similar hotels that have offers;
+  - **[Notify me when it can be booked]**.
+- **No offline sales for now** (decided 2026-10-17): no "Ask us for a price"
+  form. It can be added later on the same request table (`request_type`
+  `quote`).
+- **Purchasing list:** not-offered hotels sorted by demand (views and notify-me
+  requests), exported as a CSV for the Novoton account manager to request
+  allotment or a contract.
 - **The same hotel through another supplier:**
   - Today every product belongs to one provider. There is no shared hotel
     identity: Sphinx exposes a GIATA id, but it isn't stored.
   - Short term, an admin can point the redirect at the Sphinx or Eurosite
     product for the same hotel.
   - Long term, store GIATA ids and match hotels across providers.
-- **After 12 months** still not offered, the hotel becomes dormant (§7.3).
+- **After N months** (default 12) still not offered, the hotel becomes dormant
+  (§7.3).
 
-### 7.3 No availability for 12 months or more (dormant)
+### 7.3 No availability for N months or more (dormant; admin setting, default 12)
 
 - **Product:**
   - A → H, only if the product is Active, only by the gate, and with
@@ -423,8 +498,9 @@ seaside hotel.
   - Redirect only when the product has no future bookings and no unpaid
     balances.
 - **How the 301 works:**
-  - A Novoton frontend controller, `controllers/frontend/products.pre.php`,
-    redirects `products.view` for a closed hotel with
+  - A Travel Core frontend controller, `controllers/frontend/products.pre.php`,
+    finds the product's provider (`TravelProviderRegistry::resolveProductOwner`)
+    and redirects `products.view` for a closed hotel with
     `fn_redirect($url, false, true)`. The third argument means permanent;
     confirm it on 4.21.2.
   - The product stays Hidden. It is never Disabled or deleted, so bookings,
@@ -440,25 +516,25 @@ seaside hotel.
 | Today | After |
 |---|---|
 | Empty search → "No Availability" + ±10-day scan | A state panel first; the search stays available underneath |
-| "Notify me when available" really sends a staff alternatives request | Two clear actions: "Notify me when prices appear" (a watcher) and "Ask us for a price / alternatives" (staff) |
+| "Notify me when available" really sends a staff alternatives request | Two clear actions: "Notify me when prices appear" (a watcher) and "Ask us for alternatives" (the existing Novoton request, now with working emails) |
 | The season note prints a raw language key | Fixed key; dates from the evidence (`contract_from/to`, or last season's months) |
 | The date picker opens on next week, with no limits | Opens on the first published date; dates outside the window are marked |
 | Every hotel in a listing looks the same | Optional labels, and bookable hotels first (phase 6) |
 
 **Lead storage:**
 
-- Add `request_type` (`alternatives` · `notify` · `quote`) to
-  `novoton_alternative_requests` and to its travel_core mirror. The existing
+- Add `request_type` (`alternatives` · `notify`; `quote` reserved for later)
+  to `novoton_alternative_requests` and to its travel_core mirror. The existing
   "Availability Requests" grid then shows and filters them.
 - Add the mirror table to travel_core's schema self-heal (audit `data-perf-2`).
 
-**New language keys** go in EN and RO, in `lang_keys.php` and both `.po` files
-(`LangSeedParityTest`). They cover:
+**New language keys** go in EN and RO, in the owning addon's seed file and both
+`.po` files (Novoton: `lang_keys.php`, pinned by `LangSeedParityTest`). They
+cover:
 
 - season not published yet;
 - last season;
 - notify me;
-- ask for a price;
 - not offered;
 - no offers for over a year;
 - no longer available;
@@ -495,38 +571,37 @@ seaside hotel.
   Sphinx pitfall).
 - **Overrides win:** keep visible, keep hidden, closed.
 - **Nothing deleted, nothing Disabled.**
-- **Every change logged** in `novoton_hotel_state_log` and included in the
+- **Every change logged** in `travel_hotel_state_log` and included in the
   weekly email.
 
-## 11. Decisions for you
+## 11. Decisions
 
-1. **Between seasons:** keep hotels listed (recommended), or hide them as
-   Eurosite does today? Eurosite hides them, Sphinx hides even more, and Novoton
-   shows them. All three should end up behaving the same way.
-2. **Dormant:** after 12 months without an offer (recommended)? Anything
+1. **Between seasons:** *decided 2026-10-17: keep them listed.* Eurosite
+   hides them today and Sphinx hides even more; both move onto the shared rule
+   in phase 6.
+2. **Dormant:** *decided: an admin setting, default 12 months.* Anything
    shorter catches the winter gap.
 3. **Left the feed:** hide automatically after 3 missed runs, or only after an
-   admin has looked?
+   admin has looked? *Open.*
 4. **Closed hotels:** after 6 months, redirect to the resort page by default, or
-   always to a hotel an admin chooses?
-5. **Not offered:** do you want to sell these offline ("Ask us for a price"),
-   and who answers those requests?
-6. **Notify me:** email only, or phone too? Which consent text?
-7. **Report-only until when?** Recommended: until the 2027 early-booking prices
-   are loaded (Feb–Mar 2027) and the report has been checked. Then enforce for
-   *dormant* and *left the feed* only.
+   always to a hotel an admin chooses? *Open.*
+5. **Not offered:** *decided: no offline sales for now.*
+6. **Notify me:** email only, or phone too? Which consent text? *Open.*
+7. **Report-only until when?** *Open* (§0.3). Recommended: until the 2027
+   early-booking prices are loaded (Feb–Mar 2027) and the report has been
+   checked. Then enforce for *dormant* and *left the feed* only.
 
 ## 12. Phases
 
 | Phase | What ships | Customers see it | Size |
 |---|---|---|---|
-| 0 | Calibrate (§14); fix the data bugs in §13 | Small fixes | S |
-| 1 | Schema self-heal; evidence and log tables; passive capture; `availability_check` in report mode; classifier; backfill; Availability page, CSV, dashboard tile, weekly email | No | L |
-| 2 | Hotel-page panels; "notify me" and "prices are out" emails; ask for a price; similar hotels; date-picker window; language keys | Yes | M |
+| 0 | Fix the data bugs in §13 — **done 2026-10-17**. Calibration (§14) still to run on the live store | Small fixes | S |
+| 1 | Travel Core: the contract, the evidence and log tables (schema self-heal), the policy, the date windows (moved from Eurosite), settings (hide after N months, default 12; mode), the Hotel availability page, CSV, weekly email. Novoton: the evidence source (passive capture, `availability_check` in report mode, backfill), dashboard tile | No | L |
+| 2 | Hotel-page panels; "notify me" and "prices are out" emails; similar hotels; date-picker window; language keys | Yes | M |
 | 3 | Gate in enforce mode: dormant / left the feed → Hidden, and back to Active; brake; overrides; `gateHidden` for bookings | Yes | M |
 | 4 | Closed hotels: mark closed, redirect target, 301 controller, grace checks | Yes | S |
-| 5 | Purchasing list of not-offered hotels with their demand; offline price requests | Staff only | S |
-| 6 | Listing labels and sorting; move the policy, date windows and evidence table to travel_core; season dates for Sphinx; history for Eurosite | Yes | M |
+| 5 | Purchasing list of not-offered hotels with their demand | Staff only | S |
+| 6 | Eurosite and Sphinx move onto the shared rules (Sphinx gains season dates, Eurosite gains history); listing labels and sorting | Yes | M |
 
 **Repo rules every phase must pass:**
 
@@ -536,8 +611,10 @@ seaside hotel.
 - New code goes into new classes, because `functions/hotels.php`,
   `functions/email.php`, `controllers/backend/novoton_prices.php` and
   `novoton_tools.php` are each within one line of their size ceiling.
-- Novoton's schema changes ship through a runtime `Install\SchemaMigrator`,
-  ported from Sphinx/Eurosite. This also closes audit `data-perf-3`.
+- New tables go to Travel Core, whose runtime schema self-heal
+  (`fn_travel_core_ensure_schema`) reaches installed stores. Novoton needs its
+  own `Install\SchemaMigrator` (ported from Sphinx/Eurosite, closing audit
+  `data-perf-3`) only if Novoton's own tables change.
 - New cron modes go into the `STAGES` / `SCHEDULES` of `CronPlanBuilder`, with
   `dash_job_*` language keys.
 
@@ -552,39 +629,48 @@ seaside hotel.
 - schema parity;
 - the gate flag in `HotelCartProduct`.
 
-## 13. Fix these first (they distort availability)
+## 13. Phase 0: the data bugs, fixed 2026-10-17
 
-- **`RoomPriceCheckCommand.php:108-135`** stores failed calls as "no price".
-  When a call didn't answer, leave the flag unchanged.
-- **The season note** (`search.tpl:636-648`) uses
-  `novoton_holidays.accommodation_period`, which doesn't exist, so the raw key
-  prints.
-  - The season dates come from readers that expect `DateFrom/DateTo` under
-    `seasons.season`.
-  - The price-compare tool and `CalendarPriceBuilder` read `FromDate/ToDate`
-    instead.
-  - Confirm the real shape (§14) and read it the same way everywhere.
-- **`PriceComputeCommand::extractMinPrice`** builds the "from" price from past
-  seasons too. Use only seasons that end today or later.
-- **Alternative-request emails use template codes that don't exist.** The code
-  uses `novoton_alternatives_*` (`src/Services/AlternativeRequestService.php:354`,
-  `src/Cron/Commands/AlternativesCommand.php:263`). `addon.xml:1003,1041`
-  registers `novoton_holidays_alternatives_*`. Customer emails are therefore
-  probably never sent, and this must work before "notify me" relies on email.
-- **`OffersUpdateCommand.php:41-47`** needs a `product_import` log row that
-  only it writes, so on a store without one it never starts.
-  - Also, `CleanupCommand` trims `novoton_sync_log` to 100 rows, so no new state
-    may live there.
-- **`BatchedHotelInfoSyncV2.php:426`** writes `package_name` to
-  `novoton_hotels`, which has no such column.
-  - CS-Cart's `?u` placeholder normally drops unknown columns, so this is
-    probably a silent no-op.
-  - Confirm it anyway (§14, query 5): if that UPDATE failed, new-season packages
-    would never be saved, which would look exactly like an availability gap.
-- **Privacy, while there:** the travel_core mirror stores the requester's email
-  and phone in plain text. Novoton's own table encrypts them.
+Each fix is its own commit on `claude/serene-cray-lxk90u`, with tests; PHPStan
+level 10, both CS Fixer configs, Rector and the Novoton and Travel Core suites
+pass.
 
-## 14. Calibrate first (phase 0)
+| Commit | What was wrong | Now |
+|---|---|---|
+| `f7d5918` | Four price checks (the `room_price` cron, the admin resort-based and per-hotel checks, the legacy `AdminCronService`) saved "no price" when Novoton did not answer. The admin checks also defaulted to this year's July until November, so from August to October they asked about dates already past. | No answer leaves the flag unchanged (`Helpers\PriceCheckFlags`); the admin checks default to the next 7 July. |
+| `6a68c3f` | The "no availability" season note read only the nested season shape, took the first package's first-to-last season, past ones included, and used a language key that did not exist. | `Helpers\SeasonDates` reads both shapes and gives the current or next window across all packages; one translated sentence with dd.mm.yyyy dates. |
+| `9323c57` | The catalog "from" price took past seasons too. | Only seasons not yet over count; the season count reads both shapes. |
+| `692131b` | Alternative-request emails used template codes and an area registered nowhere, so customers never got them. | `Services\AlternativeEmail` uses the registered customer templates and passes a greeting, hotel names and rooms; `EmailTemplateCodesTest` pins every code to `addon.xml`. |
+| `ee1c530` | `offers_update` needed a sync-log row that the nightly cleanup deletes, after which it never ran again. | A durable baseline per country in storage_data (`Helpers\OffersUpdateBaseline`). |
+| `e5d44bb` | The hotel info sync wrote a `package_name` column that `novoton_hotels` does not have, in the same transaction as the package upsert. | The write is gone. |
+
+**Still open, on purpose:**
+
+- **The sync log is trimmed to 100 rows every night, so the batched syncs run
+  in full every day.** Once the trim deletes the "last full sync" row, the
+  hotel info and price syncs fall back to a full sync. `BatchedPriceInfoSyncV2`
+  also looks for the type `sync_priceinfo` while writing `priceinfo`, so it
+  never finds one anyway.
+  - The cost is API calls, not freshness: new-season packages are picked up
+    daily.
+  - Fixing only the trim would switch the hotel info sync to incremental runs
+    that rely on `offers_update` reporting every new package, which is
+    unverified.
+  - Phase 1 replaces these baselines with durable state and an explicit,
+    configurable full-sync cadence.
+- **The legacy backend mode `cron_offers_update`** stamps `last_price_check`
+  on hotels without products without checking anything. It is legacy and
+  reached by URL only, so it is left as is.
+- **Privacy:** the travel_core mirror of alternative requests stores the email
+  and phone in plain text, while Novoton's own table encrypts them (phase 2).
+- **Check on the live store:**
+  - Design → Email templates should list `novoton_holidays_alternatives_request`
+    and `novoton_holidays_alternatives_available`. CS-Cart imports them only at
+    install; if a store predates them, these two emails still cannot go out
+    until they are imported.
+  - Run the season-shape query (§14, query 4).
+
+## 14. Calibration (to run on the live store)
 
 ### API probes
 
