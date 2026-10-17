@@ -1973,8 +1973,8 @@ msgid "Dear [name],"
 msgstr "Dragă [name],"
 
 msgctxt "Languages::novoton_holidays.alternatives_available_body"
-msgid "We have found alternative options for your booking at [hotel] (Order #[order_id])."
-msgstr "Am găsit opțiuni alternative pentru rezervarea dvs. la [hotel] (Comanda #[order_id])."
+msgid "We have found alternative options for your request at [hotel]."
+msgstr "Am găsit opțiuni alternative pentru cererea dvs. la [hotel]."
 
 msgctxt "Languages::novoton_holidays.available_alternatives"
 msgid "Available Alternatives"
@@ -4387,3 +4387,7 @@ msgstr "Încă [n] țară nu are hoteluri sincronizate și nu este vândută.|Î
 msgctxt "Languages::novoton_holidays.accommodation_period"
 msgid "This hotel offers accommodation from [from] to [to]."
 msgstr "Hotelul oferă cazare în perioada [from] – [to]."
+
+msgctxt "Languages::novoton_holidays.customer_greeting_name"
+msgid "customer"
+msgstr "client"

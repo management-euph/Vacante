@@ -1089,4 +1089,15 @@ return [
         'en' => 'This hotel offers accommodation from [from] to [to].',
         'ro' => 'Hotelul oferă cazare în perioada [from] – [to].',
     ],
+    // Alternatives-request emails (AlternativeEmail). The request form asks
+    // for no name, so the "Dear [name]," line greets a generic customer; and
+    // the request has no order, so the body no longer quotes "Order #".
+    'novoton_holidays.customer_greeting_name' => [
+        'en' => 'customer',
+        'ro' => 'client',
+    ],
+    'novoton_holidays.alternatives_available_body' => [
+        'en' => 'We have found alternative options for your request at [hotel].',
+        'ro' => 'Am găsit opțiuni alternative pentru cererea dvs. la [hotel].',
+    ],
 ];

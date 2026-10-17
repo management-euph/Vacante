@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 use Tygh\Registry;
 use Tygh\Tygh;
+use Tygh\Addons\NovotonHolidays\Services\AlternativeEmail;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
@@ -85,25 +86,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!empty($request) && !empty($request['alternatives_data'])) {
                 $alternatives = json_decode(TypeCoerce::toString($request['alternatives_data']), true);
 
-                if (!empty($alternatives)) {
+                if (!empty($alternatives) && is_array($alternatives)) {
                     // Send email to customer
-                    $mail_data = [
-                        'request' => $request,
-                        'alternatives' => $alternatives,
-                        'hotel_name' => $request['hotel_name'],
-                        'check_in' => $request['check_in'],
-                        'check_out' => $request['check_out']
-                    ];
-
-                    /** @var \Tygh\Mailer\Mailer $mailer */
-                    $mailer = Tygh::$app['mailer'];
-                    $result = $mailer->send([
-                        'to' => $request['contact_email'],
-                        'from' => 'default_company_orders_department',
-                        'data' => $mail_data,
-                        'template_code' => 'novoton_alternatives_available',
-                        'tpl' => 'addons/novoton_holidays/email/alternatives_available.tpl'
-                    ], 'A');
+                    $result = AlternativeEmail::sendFound($request, $alternatives);
 
                     if ($result) {
                         $altRequestRepo->markNotified($request_id);

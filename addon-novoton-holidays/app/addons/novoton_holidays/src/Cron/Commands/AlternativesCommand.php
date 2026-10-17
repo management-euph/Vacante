@@ -6,6 +6,7 @@ namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
+use Tygh\Addons\NovotonHolidays\Services\AlternativeEmail;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
@@ -242,27 +243,7 @@ class AlternativesCommand extends AbstractCronCommand
     private function sendAlternativeEmail(array $request, array $alternatives): bool
     {
         try {
-            $company_data = fn_get_company_data(fn_get_default_company_id());
-            $mail_data = [
-                'hotel_name' => $request['hotel_name'],
-                'check_in' => $request['check_in'],
-                'check_out' => $request['check_out'],
-                'nights' => $request['nights'] ?? '',
-                'adults' => $request['adults'] ?? '',
-                'children' => $request['children'] ?? '',
-                'alternatives' => $alternatives,
-                'request_id' => $request['request_id'],
-                'company_data' => $company_data,
-                'request' => $request,
-            ];
-
-            return fn_novoton_holidays_send_mail([
-                'to' => $request['contact_email'],
-                'from' => 'default_company_orders_department',
-                'data' => $mail_data,
-                'template_code' => 'novoton_alternatives_available',
-                'tpl' => 'addons/novoton_holidays/email/alternatives_available.tpl',
-            ], 'A');
+            return AlternativeEmail::sendFound($request, $alternatives);
         } catch (\Exception) {
             return false;
         }
