@@ -21,6 +21,7 @@ declare(strict_types=1);
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
+use Tygh\Addons\NovotonHolidays\Helpers\PriceCheckFlags;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
@@ -114,11 +115,9 @@ if ($mode === 'check_prices') {
         return [CONTROLLER_STATUS_DENIED];
     }
 
-    // Default dates: July 7 - July 14, use next year if current date is Nov-Dec
-    $month_now = (int) date('n');
-    $default_year = ($month_now >= 11) ? (int) date('Y') + 1 : (int) date('Y');
-    $default_check_in = $default_year . '-07-07';
-    $default_check_out = $default_year . '-07-14';
+    // Default dates: the next 7-14 July (PriceCheckFlags::nextPeakCheckIn)
+    $default_check_in = PriceCheckFlags::nextPeakCheckIn(new \DateTimeImmutable('today'));
+    $default_check_out = date('Y-m-d', (int) strtotime($default_check_in . ' +7 days'));
 
     // Parse countries: support both multi-select array and legacy single string
     $selected_countries = [];
@@ -219,6 +218,7 @@ if ($mode === 'check_prices') {
 
         try {
             $hotels_with_prices = [];
+            $answered_resorts = [];
             $resort_errors = 0;
 
             // Step 2: Query each resort in bulk
@@ -278,12 +278,14 @@ if ($mode === 'check_prices') {
                         foreach ($resort_hotel_ids as $hid) {
                             $hotels_with_prices[$hid] = $resort_name;
                         }
+                        $answered_resorts[] = $resort_name;
                         echo "<span class='success'>  {$count} hotels with prices ({$response_kb} KB)</span><br>\n";
                     } else {
                         $errorNode = $xml->xpath('//Error') ?: $xml->xpath('//error');
                         if (!empty($errorNode)) {
                             echo "<span class='error'>  API error: " . htmlspecialchars(trim((string)$errorNode[0])) . "</span><br>\n";
                         } else {
+                            $answered_resorts[] = $resort_name;
                             echo "<span class='skip'>  No prices ({$response_kb} KB)</span><br>\n";
                         }
                     }
@@ -298,28 +300,15 @@ if ($mode === 'check_prices') {
 
             $grand_resort_errors += $resort_errors;
 
-            // Step 4: Update database - mark hotels with/without prices
-            $with_prices_count = 0;
-            $no_prices = 0;
-            $now = date('Y-m-d H:i:s');
-
+            // Step 4: Update database - mark hotels with/without prices. A hotel
+            // whose resort did not answer keeps its flag (PriceCheckFlags).
             echo "<br><div class='resort-header'>Updating database...</div>\n";
             flush();
 
-            foreach ($all_hotels as $hotel_id => $hotel) {
-                $has = isset($hotels_with_prices[$hotel_id]);
-
-                $hotelRepo->update((string) $hotel_id, [
-                    'has_room_price' => $has ? 'Y' : 'N',
-                    'last_price_check' => $now
-                ]);
-
-                if ($has) {
-                    $with_prices_count++;
-                } else {
-                    $no_prices++;
-                }
-            }
+            $split = PriceCheckFlags::splitByResort($all_hotels, $hotels_with_prices, $answered_resorts);
+            Container::getInstance()->databaseHelper()->batchUpdateHasRoomPriceFlag($split['with'], $split['without']);
+            $with_prices_count = count($split['with']);
+            $no_prices = count($split['without']);
 
             $grand_with_prices += $with_prices_count;
             $grand_no_prices += $no_prices;
@@ -332,7 +321,7 @@ if ($mode === 'check_prices') {
             echo "Resorts: {$total_resorts}" . ($resort_errors > 0 ? " ({$resort_errors} errors)" : '') . " | ";
             echo "DB: {$total_hotels} | ";
             echo "With prices: <span class='success'><strong>{$with_prices_count}</strong></span> | ";
-            echo "No prices: {$no_prices}<br>";
+            echo "No prices: {$no_prices} | Resort did not answer (unchanged): " . count($split['unanswered']) . "<br>";
 
             if (!empty($unknown_hotels)) {
                 echo "<span class='error'><strong>" . count($unknown_hotels) . " hotels with prices NOT in database:</strong></span><br>";
@@ -383,11 +372,9 @@ if ($mode === 'check_prices_hotel') {
         return [CONTROLLER_STATUS_DENIED];
     }
 
-    // Default dates: July 7 - July 14, use next year if current date is Nov-Dec
-    $month_now = (int) date('n');
-    $default_year = ($month_now >= 11) ? (int) date('Y') + 1 : (int) date('Y');
-    $default_check_in = $default_year . '-07-07';
-    $default_check_out = $default_year . '-07-14';
+    // Default dates: the next 7-14 July (PriceCheckFlags::nextPeakCheckIn)
+    $default_check_in = PriceCheckFlags::nextPeakCheckIn(new \DateTimeImmutable('today'));
+    $default_check_out = date('Y-m-d', (int) strtotime($default_check_in . ' +7 days'));
 
     // Parse countries: support both multi-select array and legacy single string
     $selected_countries = [];
@@ -527,22 +514,21 @@ if ($mode === 'check_prices_hotel') {
                     }
                 }
 
-                // Update database
-                $hotelRepo->update($hotel_id, [
-                    'has_room_price' => $has_room_price ? 'Y' : 'N',
-                    'last_price_check' => $now
-                ]);
+                // Update database. No answer ($result === false) keeps the stored flag (PriceCheckFlags).
+                if ($result !== false) {
+                    $hotelRepo->update($hotel_id, ['has_room_price' => $has_room_price ? 'Y' : 'N', 'last_price_check' => $now]);
+                }
 
                 if ($has_room_price) {
                     $with_prices++;
                     $price_display = $min_price > 0 ? ' | <strong>' . number_format($min_price, 2) . ' EUR</strong>' : '';
                     echo "<span class='success'>✓ [{$hotel_num}] {$hotel_name} ({$city}){$price_display}</span><br>\n";
                 } elseif ($result === false) {
-                    $no_prices++;
-                    if ($no_prices <= 20) {
-                        echo "<span class='skip'>○ [{$hotel_num}] {$hotel_name} ({$city}) - invalid API response</span><br>\n";
-                    } elseif ($no_prices === 21) {
-                        echo "<span class='skip'>... (more hotels without prices)</span><br>\n";
+                    $errors++;
+                    if ($errors <= 20) {
+                        echo "<span class='skip'>○ [{$hotel_num}] {$hotel_name} ({$city}) - invalid API response, flag unchanged</span><br>\n";
+                    } elseif ($errors === 21) {
+                        echo "<span class='skip'>... (more invalid responses)</span><br>\n";
                     }
                 } else {
                     $no_prices++;

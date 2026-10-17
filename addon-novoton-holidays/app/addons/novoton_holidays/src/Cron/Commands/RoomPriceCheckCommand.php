@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
+use Tygh\Addons\NovotonHolidays\Helpers\PriceCheckFlags;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\DestinationScope;
@@ -117,7 +118,11 @@ class RoomPriceCheckCommand extends AbstractCronCommand
                 $hotelId = TypeCoerce::toString($hotel['hotel_id']);
                 $has_prices = self::hasPrices($responses[$hotelId]['data'] ?? false);
 
-                if ($has_prices === true) {
+                if ($has_prices === null) {
+                    // No answer: the hotel keeps its flag and is first in line
+                    // next run (PriceCheckFlags).
+                    $invalidCount++;
+                } elseif ($has_prices) {
                     $withPricesIds[] = $hotelId;
                     $hotelName = TypeCoerce::toString($hotel['hotel_name']);
                     $hotelCountry = strtoupper(TypeCoerce::toString($hotel['country'] ?? ''));
@@ -128,13 +133,12 @@ class RoomPriceCheckCommand extends AbstractCronCommand
                     $pricedByCountry[$hotelCountry][] = "NVT-{$hotelId} | {$hotelName}";
                 } else {
                     $withoutPricesIds[] = $hotelId;
-                    if ($has_prices === null) {
-                        $invalidCount++;
-                    }
                 }
             }
 
-            $dbHelper->batchUpdateHasRoomPriceFlag($withPricesIds, $withoutPricesIds);
+            if ($withPricesIds !== [] || $withoutPricesIds !== []) {
+                $dbHelper->batchUpdateHasRoomPriceFlag($withPricesIds, $withoutPricesIds);
+            }
             $withPricesCount += count($withPricesIds);
             $withoutPricesCount += count($withoutPricesIds);
             $withPricesIds = [];
@@ -147,8 +151,8 @@ class RoomPriceCheckCommand extends AbstractCronCommand
         $this->output('');
         $this->output("Hotels WITH prices: {$withPricesCount}");
         $this->output("Hotels WITHOUT prices: {$withoutPricesCount}");
-        $this->output("  of which invalid API response: {$invalidCount}");
-        $this->output('Total checked: ' . ($withPricesCount + $withoutPricesCount));
+        $this->output("No answer (flag left unchanged, checked again next run): {$invalidCount}");
+        $this->output('Total checked: ' . ($withPricesCount + $withoutPricesCount + $invalidCount));
 
         // Grouped-by-country summary of the priced hotels (alphabetical).
         foreach (self::formatCountryGroups($pricedByCountry) as $line) {
@@ -169,17 +173,13 @@ class RoomPriceCheckCommand extends AbstractCronCommand
      * Whether a room_price response carries prices.
      *
      * TRUE when it has at least one <Price>, FALSE for a valid response with
-     * none, NULL when there is no usable response (API or XML error). A
-     * presence check only — the cron sets has_room_price Y/N; it stores no
-     * amount.
+     * none, NULL when there is no usable response (API or XML error), which
+     * leaves the hotel's flag as it was. A presence check only — the cron
+     * sets has_room_price Y/N; it stores no amount.
      */
     public static function hasPrices(mixed $response): ?bool
     {
-        if (!$response instanceof \SimpleXMLElement) {
-            return null;
-        }
-
-        return !empty($response->xpath('//Price'));
+        return PriceCheckFlags::hasPrices($response);
     }
 
     /**

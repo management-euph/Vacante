@@ -420,11 +420,11 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
             }
         }
 
-        // Extract package_name
-        $packageName = $this->packageExtractor->extractPackageName($hotelInfo);
-        if ($packageName !== '') {
-            $update['package_name'] = $packageName;
-        }
+        // No package_name on the hotel row: ?:novoton_hotels has no such
+        // column (package names live in ?:novoton_hotel_packages) and nothing
+        // read it. Had the UPDATE below failed on the unknown column, the
+        // transaction would have rolled back the package upsert with it, so
+        // new-season packages would never have been saved.
 
         // Extract and store packages (has_room_price is set exclusively by room_price check)
         $packages = $this->packageExtractor->extractPackages($hotelInfo);

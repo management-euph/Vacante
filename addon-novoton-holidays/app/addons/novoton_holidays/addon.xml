@@ -1064,10 +1064,12 @@
         <td style="padding: 8px; border: 1px solid #ddd;"><strong>{{ __("check_out") }}:</strong></td>
         <td style="padding: 8px; border: 1px solid #ddd;">{{ check_out }}</td>
     </tr>
+    {% if order_id %}
     <tr>
         <td style="padding: 8px; border: 1px solid #ddd;"><strong>{{ __("order_id") }}:</strong></td>
         <td style="padding: 8px; border: 1px solid #ddd;">#{{ order_id }}</td>
     </tr>
+    {% endif %}
 </table>
 
 <p>{{ __("novoton_holidays.alternatives_request_waiting") }}</p>

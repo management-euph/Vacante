@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
+use Tygh\Addons\NovotonHolidays\Helpers\SeasonDates;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoService;
@@ -115,7 +116,7 @@ class PriceComputeCommand extends AbstractCronCommand
                 }
                 $priceinfo = TypeCoerce::toStringMap($priceinfo);
 
-                $minPrice = self::extractMinPrice($priceinfo);
+                $minPrice = self::extractMinPrice($priceinfo, date('Y-m-d'));
                 $seasonsCount = self::countSeasons($priceinfo);
                 $hasEarlyBooking = self::hasEarlyBooking($priceinfo) ? 'Y' : 'N';
 
@@ -232,7 +233,7 @@ class PriceComputeCommand extends AbstractCronCommand
                 }
                 $priceinfo = TypeCoerce::toStringMap($priceinfo);
 
-                $minPrice = self::extractMinPrice($priceinfo);
+                $minPrice = self::extractMinPrice($priceinfo, date('Y-m-d'));
                 $seasonsCount = self::countSeasons($priceinfo);
                 $hasEarlyBooking = self::hasEarlyBooking($priceinfo) ? 'Y' : 'N';
 
@@ -343,12 +344,17 @@ class PriceComputeCommand extends AbstractCronCommand
      * - Only ADULT age rows (case-insensitive match on IdAge)
      * - Excludes "3 RD ADULT" / "3RD ADULT" supplementary rows
      * - Skips percentage values (e.g. "85%")
-     * - Checks Price1 through Price20
+     * - Checks Price1 through Price20 (PriceN is season N)
+     * - With $today, only the seasons not over yet: last spring's cheapest
+     *   week used to keep the catalog "from" price low all summer. When the
+     *   seasons carry no number or dates every column counts, as before;
+     *   when all are over there is no price (the product keeps its last).
      *
      * @param array<string, mixed> $priceinfo Decoded priceinfo_data JSON
+     * @param string $today Y-m-d; '' = every season
      * @return float|null Minimum price or null if none found
      */
-    public static function extractMinPrice(array $priceinfo): ?float
+    public static function extractMinPrice(array $priceinfo, string $today = ''): ?float
     {
         $minPrice = null;
 
@@ -356,6 +362,8 @@ class PriceComputeCommand extends AbstractCronCommand
         if (empty($seasonPrices)) {
             return null;
         }
+
+        $current = $today === '' ? null : SeasonDates::numbersNotOver($priceinfo, $today);
 
         $seasonPricesMap = TypeCoerce::toStringMap($seasonPrices);
 
@@ -384,7 +392,7 @@ class PriceComputeCommand extends AbstractCronCommand
 
             for ($i = 1; $i <= 20; $i++) {
                 $priceKey = "Price{$i}";
-                if (!isset($sp[$priceKey])) {
+                if (!isset($sp[$priceKey]) || ($current !== null && !isset($current[$i]))) {
                     continue;
                 }
 
@@ -406,24 +414,13 @@ class PriceComputeCommand extends AbstractCronCommand
     }
 
     /**
-     * Count seasons in priceinfo data.
+     * Count seasons in priceinfo data, in either shape (SeasonDates). A single
+     * flat season object used to count as its number of fields.
      * @param array<string, mixed> $priceinfo
      */
     public static function countSeasons(array $priceinfo): int
     {
-        $seasonsRoot = TypeCoerce::toStringMap($priceinfo['seasons'] ?? []);
-        $seasons = $seasonsRoot['season'] ?? $priceinfo['seasons'] ?? [];
-
-        if (empty($seasons) || !is_array($seasons)) {
-            return 0;
-        }
-
-        // Single season (has IdSeason key directly)
-        if (isset($seasons['IdSeason'])) {
-            return 1;
-        }
-
-        return count($seasons);
+        return SeasonDates::count($priceinfo);
     }
 
     /**

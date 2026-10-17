@@ -19,6 +19,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 use Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Helpers\OutputWriterTrait;
+use Tygh\Addons\NovotonHolidays\Helpers\PriceCheckFlags;
 use Tygh\Addons\NovotonHolidays\Repository\CacheRepository;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\TravelConstants;
@@ -112,7 +113,15 @@ class AdminCronService implements AdminCronServiceInterface
                 'children' => TravelConstants::DEFAULT_CHILDREN,
                 'rooms' => TravelConstants::DEFAULT_ROOMS,
             ]);
-            $has_room_price = ((bool) $response && isset($response->hotel)) ? 'Y' : 'N';
+            // A <Price> anywhere in the reply (flat or nested shape) means prices;
+            // no reply keeps the hotel's flag (PriceCheckFlags).
+            $hasPrices = PriceCheckFlags::hasPrices($response);
+            if ($hasPrices === null) {
+                $this->output("[{$hotelId}] {$hotelName}: no answer, flag unchanged");
+                usleep(Constants::API_DELAY_NORMAL);
+                continue;
+            }
+            $has_room_price = $hasPrices ? 'Y' : 'N';
 
             $hotelRepo->update($hotelId, [
                 'has_room_price' => $has_room_price,

@@ -2577,8 +2577,8 @@ msgid "Dear [name],"
 msgstr "Dear [name],"
 
 msgctxt "Languages::novoton_holidays.alternatives_available_body"
-msgid "We have found alternative options for your booking at [hotel] (Order #[order_id])."
-msgstr "We have found alternative options for your booking at [hotel] (Order #[order_id])."
+msgid "We have found alternative options for your request at [hotel]."
+msgstr "We have found alternative options for your request at [hotel]."
 
 msgctxt "Languages::novoton_holidays.available_alternatives"
 msgid "Available Alternatives"
@@ -4383,3 +4383,11 @@ msgstr "Filter resorts…"
 msgctxt "Languages::novoton_holidays.dest_fold"
 msgid "[n] more country has no hotels synced and is not sold.|[n] more countries have no hotels synced and are not sold."
 msgstr "[n] more country has no hotels synced and is not sold.|[n] more countries have no hotels synced and are not sold."
+
+msgctxt "Languages::novoton_holidays.accommodation_period"
+msgid "This hotel offers accommodation from [from] to [to]."
+msgstr "This hotel offers accommodation from [from] to [to]."
+
+msgctxt "Languages::novoton_holidays.customer_greeting_name"
+msgid "customer"
+msgstr "customer"

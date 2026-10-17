@@ -347,13 +347,7 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
     private function sendConfirmationEmail(string $email, array $mailData): void
     {
         try {
-            fn_novoton_holidays_send_mail([
-                'to' => $email,
-                'from' => 'default_company_orders_department',
-                'data' => $mailData,
-                'template_code' => 'novoton_alternatives_request_confirmation',
-                'tpl' => 'addons/novoton_holidays/email/alternatives_request_confirmation.tpl',
-            ], 'A');
+            AlternativeEmail::sendReceived($email, $mailData);
         } catch (\Exception $e) {
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton: Failed to send alternative request confirmation email',

@@ -315,7 +315,7 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
 
             // Compute min_price using canonical method for immediate product price update
             if (!empty($priceData)) {
-                $mp = \Tygh\Addons\NovotonHolidays\Cron\Commands\PriceComputeCommand::extractMinPrice(TypeCoerce::toStringMap($priceData));
+                $mp = \Tygh\Addons\NovotonHolidays\Cron\Commands\PriceComputeCommand::extractMinPrice(TypeCoerce::toStringMap($priceData), date('Y-m-d'));
                 if ($mp !== null && ($lowestPrice === null || $mp < $lowestPrice)) {
                     $lowestPrice = $mp;
                 }
