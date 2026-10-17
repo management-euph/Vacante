@@ -21,7 +21,7 @@ unless they start with another addon's folder.
 | When to hide a hotel with no availability | **An admin setting**: "Hide a hotel after N months without availability", default **12**. |
 | Sell hotels Novoton doesn't offer offline ("Ask us for a price") | **No, not for now.** Those hotels show "online booking unavailable", similar hotels and "notify me"; staff only get the purchasing list (§7.2). |
 | Where the logic lives | **The rules in Travel Core, the data collection in Novoton** (§0.2). |
-| How long to stay report-only | **Open.** Recommendation: until the 2027 early-booking prices are loaded (Feb–Mar 2027) and the "would hide" list has been reviewed once (§0.3). |
+| How long to stay report-only | **The admin switches it by hand** after reviewing the "would hide" list once, around Feb–Mar 2027 when the 2027 early-booking prices are loaded (§0.3). The switch is a Travel Core setting: *Hotel availability → Mode: Off / Report only (default) / Automatic*. |
 
 Still open: §11 questions 3 (hide hotels that left the feed automatically?),
 4 (default redirect target for closed hotels) and 6 (notify-me channels and
@@ -587,7 +587,8 @@ cover:
    always to a hotel an admin chooses? *Open.*
 5. **Not offered:** *decided: no offline sales for now.*
 6. **Notify me:** email only, or phone too? Which consent text? *Open.*
-7. **Report-only until when?** *Open* (§0.3). Recommended: until the 2027
+7. **Report-only until when?** *Decided 2026-10-17: the admin switches Mode
+   to Automatic by hand after one review*, recommended once the 2027
    early-booking prices are loaded (Feb–Mar 2027) and the report has been
    checked. Then enforce for *dormant* and *left the feed* only.
 
@@ -692,9 +693,12 @@ pass.
 
 ## 14. Calibration (to run on the live store)
 
-### API probes
+Fourteen checks: five API probes, seven SQL queries, and two looks in the
+admin and the server. Each says what it tells us.
 
-Run these in PowerShell from the repo root. Use the same values as Admin →
+### API probes (1–5)
+
+Run these in PowerShell from the repo folder. Use the same values as Admin →
 Add-ons → Novoton Holidays → Settings; the probes mask them in their output.
 Without `NOVOTON_API_USER` / `NOVOTON_API_PASSWORD`, the probes send the test
 key with an empty login, and Novoton answers with an empty body.
@@ -705,61 +709,87 @@ $env:NOVOTON_API_ID       = "..."
 $env:NOVOTON_API_USER     = "..."
 $env:NOVOTON_API_PASSWORD = "..."
 
-# 1. Fields per hotel; is there any status flag? (works off-season too)
+# 1. What Novoton sends per hotel: is there any status field?
 php dev/novoton/hotel_list.php --country=BULGARIA --city="SUNNY BEACH" --limit=5
-# 2. Packages of one hotel: are the 2027 packages loaded yet?
+# 2. One hotel's packages (use a hotel id from 1): are the 2027 packages loaded yet?
 php dev/novoton/hotel_info.php <hotel_id>
-# 3. Season field names and dates of one package
+# 3. The season dates of one package (a PackageName from 2): which date format?
 php dev/novoton/price_info.php --hotel_id=<hotel_id> --package="<PackageName>" --limit=5
-# 4. A July 2027 offer for one room (room and board codes from step 2)
+# 4. Can July 2027 be booked already? (IdRoom and IdBoard from 2)
 php dev/novoton/room_price.php --hotel_id=<hotel_id> --room_id="<IdRoom>" --board_id=<IdBoard> --check_in=2027-07-10 --check_out=2027-07-17 --adults=2
-# 5. What Novoton answers for a hotel it no longer lists (pick one from query 2 below)
-php dev/novoton/hotel_info.php <hotel_id_missing_from_feed>
+# 5. What Novoton answers for a hotel it no longer lists (a sample id from SQL 7)
+php dev/novoton/hotel_info.php <hotel_id_from_check_7>
 ```
 
-### SQL on the live database
+### SQL on the live database (6–12)
 
-The default table prefix is `cscart_`.
+Run these in phpMyAdmin. The default table prefix is `cscart_`.
 
 ```sql
--- 1. Hotels by product status and price signals
+-- 6. Hotels by product status and price signals
 SELECT IFNULL(p.status, '-') AS product_status, h.has_room_price,
        h.calendar_prices_raw IS NOT NULL AS has_future_prices, COUNT(*) AS hotels
 FROM cscart_novoton_hotels h
 LEFT JOIN cscart_products p ON p.product_id = h.product_id
 GROUP BY 1, 2, 3 ORDER BY 1, 2, 3;
 
--- 2. Hotels not returned by hotel_list for 10+ days (left the feed?)
-SELECT country, city, COUNT(*) AS hotels, MAX(hotel_list_synced_at) AS last_seen
+-- 7. Hotels Novoton has not listed for 10+ days (left the feed?), with sample ids for probe 5
+SELECT country, city, COUNT(*) AS hotels, MAX(hotel_list_synced_at) AS last_seen,
+       SUBSTRING_INDEX(GROUP_CONCAT(hotel_id ORDER BY hotel_list_synced_at), ',', 3) AS sample_ids
 FROM cscart_novoton_hotels
 WHERE hotel_list_synced_at < NOW() - INTERVAL 10 DAY
 GROUP BY country, city ORDER BY hotels DESC;
 
--- 3. Active products without any future price (what customers can land on today)
+-- 8. Active products with no future price (what customers can land on today)
 SELECT h.country, h.city, COUNT(*) AS active_without_future_prices
 FROM cscart_novoton_hotels h
 JOIN cscart_products p ON p.product_id = h.product_id
 WHERE p.status = 'A' AND h.calendar_prices_raw IS NULL
 GROUP BY 1, 2 ORDER BY 3 DESC;
 
--- 4. The season field names actually stored
+-- 9. The season format actually stored
 SELECT hotel_id, package_name, LEFT(JSON_EXTRACT(priceinfo_data, '$.seasons'), 400) AS seasons
 FROM cscart_novoton_hotel_packages
 WHERE priceinfo_data IS NOT NULL LIMIT 3;
 
--- 5. Does novoton_hotels have the package_name column the hotelinfo sync writes?
-SHOW COLUMNS FROM cscart_novoton_hotels LIKE 'package_name';
+-- 10. Hotels by the year of their last booked stay (input for the backfill)
+SELECT YEAR(last_check_in) AS last_stay_year, COUNT(*) AS hotels
+FROM (SELECT hotel_id, MAX(check_in) AS last_check_in
+      FROM cscart_novoton_bookings
+      WHERE status IN ('confirmed', 'completed')
+      GROUP BY hotel_id) t
+GROUP BY 1 ORDER BY 1;
 
--- 6. Last booked stay per hotel (input for the backfill)
-SELECT hotel_id, MAX(check_in) AS last_check_in, COUNT(*) AS bookings
-FROM cscart_novoton_bookings
-WHERE status IN ('confirmed', 'completed')
-GROUP BY hotel_id ORDER BY last_check_in;
+-- 11. Price lists downloaded in the last hour (a large share = the price sync is cycling)
+SELECT COUNT(*) AS refreshed_last_hour,
+       (SELECT COUNT(*) FROM cscart_novoton_hotel_packages) AS total
+FROM cscart_novoton_hotel_packages
+WHERE synced_at > NOW() - INTERVAL 1 HOUR;
+
+-- 12. Sync log rows per job in the last hour (about 12 per job = cron jobs called by URL)
+SELECT sync_type, COUNT(*) AS runs
+FROM cscart_novoton_sync_log
+WHERE sync_date > NOW() - INTERVAL 1 HOUR
+GROUP BY sync_type;
 ```
 
-The answers set the thresholds in §5 and the effort for phases 1–2. They show:
+### In the admin and on the server (13–14)
+
+13. **Admin → Design → Email templates.** Are
+    `novoton_holidays_alternatives_request` and
+    `novoton_holidays_alternatives_available` listed? CS-Cart imports them only
+    at install. If they're missing, the phase 0 email fix cannot send until
+    they're imported.
+14. **cPanel → Cron Jobs.** Do the Novoton lines start with `php …/cron.php`,
+    or are they URLs (`curl …` / `wget …`)? URL calls are what make the
+    sync log fill up (§13).
+
+The answers tell us:
 
 - how many hotels are affected today;
 - whether 2027 prices are already arriving;
 - the real season format;
-- how Novoton answers for a removed hotel.
+- how Novoton answers for a removed hotel;
+- how hard the batched syncs hit the API.
+
+They set the thresholds in §5 and the effort for phases 1–2.
