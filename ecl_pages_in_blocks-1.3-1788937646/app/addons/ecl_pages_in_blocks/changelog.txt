@@ -1,0 +1,9 @@
+Legend:
+[+] - new feature/improvement
+[*] - functionality changes
+[!] - bugfix
+
+Version 1.3, 22 July 2019
+
+[+] Basic template is not supported anymore
+[*] Social buttons are hidden in blocks now
