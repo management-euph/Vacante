@@ -29,9 +29,9 @@ bash scripts/deploy-addons.sh user@host:/var/www/cscart              # dry run: 
 bash scripts/deploy-addons.sh user@host:/var/www/cscart --go --backup --clear-cache
 ```
 
-Add `--addons travel_core,novoton_holidays,sphinx_holidays,fgo_invoicing,eurosite,netopia_payments`
-where the store has Eurosite and Netopia Payments (the Deploy workflow's
-default), `--port N` for a non-standard SSH port; `--help`
+Add `--addons travel_core,novoton_holidays,sphinx_holidays,fgo_invoicing,eurosite,netopia_payments,euph_pages_in_blocks`
+where the store has Eurosite, Netopia Payments and Pages in blocks (the Deploy
+workflow's default), `--port N` for a non-standard SSH port; `--help`
 lists the rest. It never touches CS-Cart's own files or other add-ons', skips a
 theme the store doesn't have, and refuses a path without `config.php`.
 

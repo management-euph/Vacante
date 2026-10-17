@@ -106,7 +106,7 @@ Classes for a theme's custom CSS: `euph-pib` (the block, plus `euph-pib--stacked
 **Install** (upload the zip as a manual add-on installation, or copy its folders to the store root): nothing is created in the database apart from what CS-Cart keeps for every add-on (its settings section and texts). The *Page content* block type appears in **Add block**.
 
 - Zip: `php scripts/package-addons.php euph_pages_in_blocks` writes `dist/euph_pages_in_blocks-1.0.1.zip`.
-- Deploy to a store: `bash scripts/deploy-addons.sh user@host:/path/to/cscart --addons euph_pages_in_blocks` (dry run; add `--go`).
+- Deploy to a store: **Actions → Deploy → Run workflow** (the add-on is in the form's default list; tick *go* to deploy for real), or by hand `bash scripts/deploy-addons.sh user@host:/path/to/cscart --addons euph_pages_in_blocks` (dry run; add `--go`). Then install it in **Add-ons → Downloaded add-ons**.
 
 **Themes:** the storefront files ship for `responsive` and `nova_theme` (identical copies). The block manager offers a block type only where its templates are in the store's theme itself. For another theme, copy `design/themes/responsive/templates/addons/euph_pages_in_blocks` and `design/themes/responsive/css/addons/euph_pages_in_blocks` into that theme.
 
