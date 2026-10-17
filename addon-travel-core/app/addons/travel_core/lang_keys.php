@@ -1727,8 +1727,12 @@ Dacă ați plătit deja, vă rugăm să ignorați acest email.',
         'ro' => 'Preț furnizor',
     ],
     'travel_core.obc_booked_at' => [
-        'en' => 'Booked [date]',
-        'ro' => 'Rezervat [date]',
+        'en' => 'Added to cart [date]',
+        'ro' => 'Adăugat în coș [date]',
+    ],
+    'travel_core.obc_linked_at' => [
+        'en' => 'Linked to order [date]',
+        'ro' => 'Asociat comenzii [date]',
     ],
     'travel_core.obc_on_booking' => [
         'en' => 'on booking',
