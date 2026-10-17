@@ -576,7 +576,9 @@ cover:
 - **Mode setting:** off / report (default) / enforce.
   - Report mode computes everything and emails a "would hide / would show"
     list, without touching any product.
-- **Only answered checks count**, per resort (the Eurosite rule).
+- **Only answered checks count**, per resort (the Eurosite rule). A refusal
+  (`Api\Refusal`, e.g. a wrong password), a non-XML reply and an empty body
+  are not answers.
 - **Brake against mass hiding:** if a run would hide more than max(10 products,
   5% of visible Novoton products), it hides none and emails the admin. Neither
   existing gate has this.
@@ -666,6 +668,7 @@ pass.
 | `cb7986e` | The price sync looked up its last full run under `sync_priceinfo` while logging as `priceinfo`. It never found one, so full cycles ran back to back all day, downloading every price list many times a day. | It reads its own type: a full cycle every 7 days and, in between, only packages last synced more than 24 h ago. |
 | `f2df745` | The nightly cleanup kept the newest 100 sync-log rows, about 2–3 hours with URL-called cron jobs, so the batched syncs' "last full run" rows were deleted and the hotel info and facilities syncs ran in full every day. | `SyncLogRepository::prune()` keeps 14 days and always each sync's last finished (and last full) run. The hotel info full refresh defaults to 7 days instead of 180 (installed stores: change the setting). |
 | `940d540` | Two Novoton email templates showed in the admin list as raw keys (`_email_template.novoton_holidays_price_…`). | All five templates are named, and the names are seeded to installed stores. |
+| `dad0346` | With a wrong API username or password, Novoton answers `<error><err>Invalid username or password!</err></error>` (probe 3 on the live API, 2026-10-17). That parsed as an empty answer. The price syncs stored it as every package's prices, wiping seasons, "from" price and calendar. The `room_price` checks wrote "no prices" for every hotel. `offers_update` moved its baseline past changes it never fetched. | `Api\Refusal`: a reply whose root is `<error>` is a refusal. `priceinfo` and `offers_update` throw, so nothing is stored and the baseline stays. The price checks leave the flag. Live search and booking calls are unchanged. |
 
 **Still open, on purpose:**
 
@@ -696,10 +699,17 @@ admin and the server. Each says what it tells us.
 
 ### API probes (1–5)
 
-Run these in PowerShell from the repo folder. Use the same values as Admin →
-Add-ons → Novoton Holidays → Settings; the probes mask them in their output.
-Without `NOVOTON_API_USER` / `NOVOTON_API_PASSWORD`, the probes send the test
-key with an empty login, and Novoton answers with an empty body.
+Run these in PowerShell from the repo folder. Copy all four values from Admin
+→ Add-ons → Novoton Holidays → Settings on the live store.
+
+- `hotel_list` and `hotel_info` need only the key and ID.
+- `price_info` and `room_price` also need the username and password. A
+  pair that doesn't match answers "Invalid username or password!".
+- A wrong key or ID answers with an HTML line, `…no connection to dabatase.`
+- `search` sent without a username and password got an empty body.
+
+The probes mask the values in their output. When you share results, paste
+the output only, never the `$env:` lines you typed.
 
 ```powershell
 $env:NOVOTON_API_KEY      = "..."
@@ -715,6 +725,9 @@ php dev/novoton/hotel_info.php <hotel_id>
 php dev/novoton/price_info.php --hotel_id=<hotel_id> --package="<PackageName>" --limit=5
 # 4. Can July 2027 be booked already? (IdRoom and IdBoard from 2)
 php dev/novoton/room_price.php --hotel_id=<hotel_id> --room_id="<IdRoom>" --board_id=<IdBoard> --check_in=2027-07-10 --check_out=2027-07-17 --adults=2
+# 4b. The same for a week no contract covers: what does "no prices" look like?
+#     (dad0346 assumes it is NOT a bare <error>…</error> reply; this confirms it)
+php dev/novoton/room_price.php --hotel_id=<hotel_id> --room_id="<IdRoom>" --board_id=<IdBoard> --check_in=2028-07-10 --check_out=2028-07-17 --adults=2
 # 5. What Novoton answers for a hotel it no longer lists (a sample id from SQL 7)
 php dev/novoton/hotel_info.php <hotel_id_from_check_7>
 ```
@@ -823,3 +836,34 @@ therefore be run on the **live** database and server.
     `940d540`);
   - the alternatives templates are customer templates, so they are on the
     *Customer notifications* tab, which is still to check.
+
+### Results so far: live API probes (2026-10-17)
+
+- **1. `hotel_list`, Sunny Beach:** 206 hotels (e.g. 21 FORUM, 22 IMPERIAL
+  RESORT, 26 LAGUNA PARK).
+  - There is **no status field**. Novoton never says "closed": a closed
+    hotel shows only by leaving the list or by having no future prices, so
+    the rules in §5 stand.
+  - Each hotel carries `PriceFrom` and `Currency`, which the addon doesn't
+    store. That is a cheap signal to look at in phase 1; what an empty or
+    zero `PriceFrom` means is not known yet.
+- **2. `hotelinfo` 476 (Admiral):**
+  - Rooms such as "DBL 2+0 DELUXE NO BALCONY" and "DBL 2+1 DELUXE";
+    boards BB, HB, ULTRA ALL INCL.
+  - Five packages, among them **"ADMIRAL ***** +BEACH 2027" (IdCont
+    1297221)**. Next summer's contract is already listed in October, so
+    "between seasons" can be told from "dormant" by the packages, months
+    before the season.
+- **3. `priceinfo` 476 "ADMIRAL ***** +BEACH": refused**, "Invalid
+  username or password!".
+  - That run used the test key and ID 713, which may not belong to the
+    store's Novoton account.
+  - The refusal is what exposed the bug fixed in `dad0346`.
+- **3, 4, 4b and 5 still to run** with the four values from the live store:
+
+  ```powershell
+  php dev/novoton/price_info.php --hotel_id=476 --package="ADMIRAL ***** +BEACH 2027" --limit=5
+  php dev/novoton/room_price.php --hotel_id=476 --room_id="DBL 2+0 DELUXE NO BALCONY" --board_id=BB --check_in=2027-07-10 --check_out=2027-07-17 --adults=2
+  php dev/novoton/room_price.php --hotel_id=476 --room_id="DBL 2+0 DELUXE NO BALCONY" --board_id=BB --check_in=2028-07-10 --check_out=2028-07-17 --adults=2
+  php dev/novoton/hotel_info.php <hotel_id_from_live_check_7>
+  ```
