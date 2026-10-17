@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<addon scheme="2.0">
+    <id>ecl_pages_in_blocks</id>
+    <name>[eCom Labs] Pages Content In Blocks</name>
+    <description>Show content of the CMS pages, forms and polls in the blocks</description>
+    <version>1.3</version>
+    <priority>4294967294</priority>
+    <position>0</position>
+	<status>active</status>
+    <supplier>eCom Labs</supplier>
+    <supplier_link>https://www.ecom-labs.com</supplier_link>
+    <auto_install>MULTIVENDOR,ULTIMATE</auto_install>
+    <default_language>en</default_language>
+    <authors>
+        <author>
+            <name>eCom Labs</name>
+            <email>contact@ecom-labs.com</email>
+            <url>https://www.ecom-labs.com</url>
+            <phone>+7 963 234 30 03</phone>
+        </author>
+    </authors>
+	<language_variables>
+	    <item id="pages_in_blocks" lang="en">Pages content</item>
+        <item id="pages_in_blocks" lang="ru">&#x421;&#x43E;&#x434;&#x435;&#x440;&#x436;&#x438;&#x43C;&#x43E;&#x435; &#x441;&#x442;&#x440;&#x430;&#x43D;&#x438;&#x446;</item>
+	</language_variables>
+    <translations>
+        <item for="description" lang="ru">&#x41F;&#x43E;&#x437;&#x432;&#x43E;&#x43B;&#x44F;&#x435;&#x442; &#x43F;&#x43E;&#x43A;&#x430;&#x437;&#x44B;&#x432;&#x430;&#x442;&#x44C; &#x441;&#x43E;&#x434;&#x435;&#x440;&#x436;&#x438;&#x43C;&#x43E;&#x435; &#x441;&#x442;&#x440;&#x430;&#x43D;&#x438;&#x446;, &#x444;&#x43E;&#x440;&#x43C; &#x438; &#x43E;&#x43F;&#x440;&#x43E;&#x441;&#x43E;&#x432; &#x432; &#x431;&#x43B;&#x43E;&#x43A;&#x430;&#x445; &#x438;&#x43B;&#x438; &#x43D;&#x430; &#x432;&#x43A;&#x43B;&#x430;&#x434;&#x43A;&#x430;&#x445; &#x442;&#x43E;&#x432;&#x430;&#x440;&#x430;</item>
+        <item for="name" lang="ru">[eCom Labs] &#x421;&#x43E;&#x434;&#x435;&#x440;&#x436;&#x438;&#x43C;&#x43E;&#x435; &#x421;&#x442;&#x440;&#x430;&#x43D;&#x438;&#x446; &#x412; &#x411;&#x43B;&#x43E;&#x43A;&#x430;&#x445;</item>
+    </translations>
+<marketplace_product_id>455</marketplace_product_id><marketplace_license_number>MP255-MSX-K3T-3V54-ML21-X9F4-EJ1I</marketplace_license_number></addon>
