@@ -1677,8 +1677,8 @@ msgid "Hotel info full sync interval (days)"
 msgstr "Hotel info full sync interval (days)"
 
 msgctxt "SettingsTooltips::novoton_holidays::sync_interval_hotel_info_days"
-msgid "How often to perform a full re-sync of hotel info from the API. Between full syncs, only new/changed hotels are updated. Default: 180 (6 months)"
-msgstr "How often to perform a full re-sync of hotel info from the API. Between full syncs, only new/changed hotels are updated. Default: 180 (6 months)"
+msgid "How often to perform a full re-sync of hotel info from the API. Between full syncs, only new/changed hotels are updated. Default: 7 (one week), so a new season's packages are picked up within a week even if the change feed misses one."
+msgstr "How often to perform a full re-sync of hotel info from the API. Between full syncs, only new/changed hotels are updated. Default: 7 (one week), so a new season's packages are picked up within a week even if the change feed misses one."
 
 msgctxt "SettingsOptions::novoton_holidays::sync_interval_price_info_days"
 msgid "Price info full sync interval (days)"
@@ -4391,3 +4391,11 @@ msgstr "This hotel offers accommodation from [from] to [to]."
 msgctxt "Languages::novoton_holidays.customer_greeting_name"
 msgid "customer"
 msgstr "customer"
+
+msgctxt "Languages::email_template.novoton_holidays_price_alert"
+msgid "Novoton: Price Alert (form price below API price)"
+msgstr "Novoton: Price Alert (form price below API price)"
+
+msgctxt "Languages::email_template.novoton_holidays_price_discrepancy"
+msgid "Novoton: Price Discrepancy"
+msgstr "Novoton: Price Discrepancy"

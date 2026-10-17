@@ -41,5 +41,6 @@ interface SyncLogRepositoryInterface
      * @return array<string, mixed>
      */
     public function findPaginated(int $page = 1, int $per_page = 10, string $type = '', string $status = ''): array;
-    public function trimToLatest(int $keep = 100): int;
+    /** Delete rows older than $keepDays, keeping each sync type's last completed (and last full) run. */
+    public function prune(int $keepDays = 14): int;
 }

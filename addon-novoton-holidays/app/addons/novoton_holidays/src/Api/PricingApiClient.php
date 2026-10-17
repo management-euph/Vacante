@@ -416,6 +416,8 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
 
     /**
      * 13. priceinfo - Season prices request
+     *
+     * A refusal throws: stored, it replaced the package's seasons (Refusal).
      */
     #[\Override]
     public function getPriceInfo(string $hotelId, string $packageName, string $lang = 'UK'): \SimpleXMLElement
@@ -427,7 +429,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
             <PackageName>' . htmlspecialchars($packageName) . '</PackageName>
         </priceinfo>';
 
-        return $this->callApiAndParse(Constants::API_FUNCTION_PRICE_INFO, $xml, $lang);
+        return $this->callApiForAnswer(Constants::API_FUNCTION_PRICE_INFO, $xml, $lang);
     }
 
     /**

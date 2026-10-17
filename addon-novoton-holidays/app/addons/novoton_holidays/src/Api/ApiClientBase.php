@@ -73,6 +73,24 @@ abstract class ApiClientBase
         return $this->xmlParser->parse($response);
     }
 
+    /**
+     * callApiAndParse() for a reply that is stored or moves a baseline: a
+     * refusal (Refusal) throws like a failed request instead of reading as an
+     * answer that held no data.
+     *
+     * @throws ApiException
+     */
+    protected function callApiForAnswer(string $function, string $xml, string $lang = 'UK'): \SimpleXMLElement
+    {
+        $reply = $this->callApiAndParse($function, $xml, $lang);
+        $reason = Refusal::reason($reply);
+        if ($reason !== null) {
+            throw ApiException::refused($function, $reason);
+        }
+
+        return $reply;
+    }
+
     public function syncDebugState(): void
     {
         $this->lastResponseRaw = $this->httpClient->lastResponseRaw;

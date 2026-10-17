@@ -1100,4 +1100,27 @@ return [
         'en' => 'We have found alternative options for your request at [hotel].',
         'ro' => 'Am găsit opțiuni alternative pentru cererea dvs. la [hotel].',
     ],
+    // Email template names (Design → Email templates). The two price
+    // templates had none, so the list showed "_email_template.novoton_…";
+    // seeding all five also names them on stores installed before the .po.
+    'email_template.novoton_holidays_import_report' => [
+        'en' => 'Novoton: Hotel Import Report',
+        'ro' => 'Novoton: Raport Import Hoteluri',
+    ],
+    'email_template.novoton_holidays_alternatives_available' => [
+        'en' => 'Novoton: Alternatives Available',
+        'ro' => 'Novoton: Alternative Disponibile',
+    ],
+    'email_template.novoton_holidays_alternatives_request' => [
+        'en' => 'Novoton: Alternatives Request Confirmation',
+        'ro' => 'Novoton: Confirmare Cerere Alternative',
+    ],
+    'email_template.novoton_holidays_price_alert' => [
+        'en' => 'Novoton: Price Alert (form price below API price)',
+        'ro' => 'Novoton: Alertă de preț (preț formular sub prețul API)',
+    ],
+    'email_template.novoton_holidays_price_discrepancy' => [
+        'en' => 'Novoton: Price Discrepancy',
+        'ro' => 'Novoton: Diferență de preț',
+    ],
 ];

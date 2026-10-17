@@ -23,6 +23,10 @@ final class PriceCheckFlagsTest extends TestCase
         self::assertFalse(PriceCheckFlags::hasPrices(new \SimpleXMLElement('<room_price></room_price>')));
         self::assertNull(PriceCheckFlags::hasPrices(false));
         self::assertNull(PriceCheckFlags::hasPrices(null));
+        self::assertNull(
+            PriceCheckFlags::hasPrices(new \SimpleXMLElement('<error><err>Invalid username or password!</err></error>')),
+            'a refusal (a wrong password) is no answer: it wrote "no prices" for every hotel checked',
+        );
     }
 
     public function testAResortCheckLeavesHotelsOfResortsThatDidNotAnswerAlone(): void

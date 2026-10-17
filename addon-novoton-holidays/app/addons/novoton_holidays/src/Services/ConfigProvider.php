@@ -486,7 +486,7 @@ class ConfigProvider extends AbstractConfigProvider
     /** Returns the hotel info full sync interval in seconds. */
     public static function getSyncIntervalHotelInfo(): int
     {
-        $days = max(1, TypeCoerce::toInt(self::settings()['sync_interval_hotel_info_days'] ?? 180));
+        $days = max(1, TypeCoerce::toInt(self::settings()['sync_interval_hotel_info_days'] ?? 7));
         return $days * 86400;
     }
 

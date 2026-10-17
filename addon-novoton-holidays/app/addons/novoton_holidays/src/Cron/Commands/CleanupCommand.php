@@ -10,6 +10,9 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
 
 class CleanupCommand extends AbstractCronCommand
 {
+    /** Days of sync-log history kept (SyncLogRepository::prune()). */
+    public const int LOG_KEEP_DAYS = 14;
+
     /**
      * @return list<string>
      */
@@ -40,13 +43,13 @@ class CleanupCommand extends AbstractCronCommand
         $this->output("   Orphan bookings deleted: {$orphan_count}");
         $this->output('');
 
-        // 2. Clean old sync logs (keep last 100)
+        // 2. Clean old sync logs: LOG_KEEP_DAYS of history, and always each
+        // sync's last finished run, which the batched syncs need (prune()).
         $this->output('2. Cleaning old sync logs...');
         $syncRepo = Container::getInstance()->syncLogRepository();
         $total_logs = $syncRepo->count();
-        $logs_to_keep = 100;
-        $logs_deleted = $syncRepo->trimToLatest($logs_to_keep);
-        $this->output("   Total: {$total_logs}, Kept: {$logs_to_keep}, Deleted: {$logs_deleted}");
+        $logs_deleted = $syncRepo->prune(self::LOG_KEEP_DAYS);
+        $this->output("   Total: {$total_logs}, kept the last " . self::LOG_KEEP_DAYS . " days and each sync's last finished run, deleted: {$logs_deleted}");
         $this->output('');
 
         // 3. Clean expired cache entries — both storage surfaces, every run.

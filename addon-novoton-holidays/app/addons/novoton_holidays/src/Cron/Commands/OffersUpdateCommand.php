@@ -54,7 +54,8 @@ class OffersUpdateCommand extends AbstractCronCommand
         $this->output('Checking offers added/modified after this time...');
         $this->output('');
 
-        // Throws when Novoton does not answer: the baseline then stays put.
+        // Throws when Novoton does not answer or refuses (a wrong password):
+        // the baseline then stays put.
         $response = $this->api->destinations()->getOffersUpdate($since, $country);
 
         if (!isset($response->Offer)) {

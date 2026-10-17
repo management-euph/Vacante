@@ -55,4 +55,10 @@ class ApiException extends NovotonException
             ['attempts' => $attempts],
         );
     }
+
+    /** Novoton answered with a refusal (Api\Refusal), e.g. a wrong username or password. */
+    public static function refused(string $function, string $reason): self
+    {
+        return new self("Novoton refused {$function}: {$reason}", $function, 200, ['refusal' => $reason]);
+    }
 }

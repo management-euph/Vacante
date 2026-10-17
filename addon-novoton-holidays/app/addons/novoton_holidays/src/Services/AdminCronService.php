@@ -18,6 +18,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\NovotonHolidays\Cron\Commands\CleanupCommand;
 use Tygh\Addons\NovotonHolidays\Helpers\OutputWriterTrait;
 use Tygh\Addons\NovotonHolidays\Helpers\PriceCheckFlags;
 use Tygh\Addons\NovotonHolidays\Repository\CacheRepository;
@@ -352,7 +353,7 @@ class AdminCronService implements AdminCronServiceInterface
         $orphans = $bookingRepo->deleteOrphans(48);
         $this->output("Orphan bookings deleted: {$orphans}");
 
-        $logs_deleted = $syncLogRepo->trimToLatest(100);
+        $logs_deleted = $syncLogRepo->prune(CleanupCommand::LOG_KEEP_DAYS);
         $this->output("Sync logs deleted: {$logs_deleted}");
 
         $cache = (new CacheRepository())->deleteExpired();
