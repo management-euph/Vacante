@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\EuphPagesInBlocks\Tests\Unit\Templates;
 
 use PHPUnit\Framework\TestCase;
-use Tygh\Addons\EuphPagesInBlocks\Enum\Layout;
+use Tygh\Addons\EuphPagesInBlocks\Tests\Support\Schema;
 
 /**
  * The template files themselves: named for the Template list, shipped for
@@ -43,23 +43,27 @@ final class TemplateSourceTest extends TestCase
 
     public function testEachLayoutTemplateIsNamedOnItsFirstLine(): void
     {
-        foreach (Layout::cases() as $layout) {
-            $path = self::themes() . 'responsive/templates/' . $layout->template();
+        foreach (Schema::LAYOUTS as $layout) {
+            $path = self::themes() . 'responsive/templates/' . Schema::TEMPLATE_DIR . $layout . '.tpl';
             self::assertFileExists($path);
             $first = strtok((string) file_get_contents($path), "\n");
             // CS-Cart reads block-description as a language variable; without
             // it the Template list shows the file name.
-            self::assertSame('{** block-description:' . $layout->descriptionKey() . ' **}', $first, $layout->value);
+            self::assertSame('{** block-description:tmpl_euph_pib_' . $layout . ' **}', $first, $layout);
         }
     }
 
-    public function testThereAreNoOtherBlockTemplates(): void
+    public function testTheFolderHoldsTheSchemasTemplatesOnly(): void
     {
-        $dir = self::themes() . 'responsive/templates/' . Layout::TEMPLATE_DIR;
-        $files = array_map('basename', glob($dir . '*.tpl') ?: []);
+        $root = self::themes() . 'responsive/templates/';
+        $files = array_map(static fn (string $file): string => substr($file, strlen($root)), glob($root . Schema::TEMPLATE_DIR . '*.tpl') ?: []);
+        $templates = Schema::blockType()['templates'];
+        self::assertIsArray($templates);
+        $expected = array_map('strval', array_keys($templates));
         sort($files);
+        sort($expected);
 
-        self::assertSame(['accordion.tpl', 'cards.tpl', 'stacked.tpl', 'tabs.tpl'], $files, 'a template in the folder but not in the schema would not be offered');
+        self::assertSame($expected, $files, 'a template in the folder but not in the schema would not be offered');
     }
 
     /**
@@ -71,7 +75,7 @@ final class TemplateSourceTest extends TestCase
     {
         $nova = self::themes() . 'nova_theme/';
         $files = self::responsiveFiles();
-        self::assertCount(10, $files);
+        self::assertCount(9, $files);
         foreach ($files as $path => $source) {
             self::assertFileExists($nova . $path);
             self::assertSame($source, (string) file_get_contents($nova . $path), $path . ' differs in nova_theme: run composer mirror');
@@ -104,7 +108,7 @@ final class TemplateSourceTest extends TestCase
                 }
             }
             self::assertStringNotContainsString('{php', $code, $path);
-            self::assertStringNotContainsString('$smarty.const', $code, $path . ': the presenter works the page types out');
+            self::assertStringNotContainsString('$smarty.const', $code, $path . ': func.php works the page types out');
         }
     }
 

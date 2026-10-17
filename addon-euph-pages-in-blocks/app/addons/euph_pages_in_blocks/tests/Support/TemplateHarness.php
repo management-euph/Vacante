@@ -9,7 +9,6 @@ use Smarty\Extension\Base as Extension;
 use Smarty\FunctionHandler\Base as FunctionHandler;
 use Smarty\Smarty;
 use Smarty\Template;
-use Tygh\Addons\EuphPagesInBlocks\View\BlockPresenter;
 
 /**
  * Compiles and renders the add-on's templates with Smarty 5 (the engine of
@@ -22,7 +21,8 @@ use Tygh\Addons\EuphPagesInBlocks\View\BlockPresenter;
  *    hook template does; every hook drawn is recorded;
  *  - {script src=...} and {style src=...};
  *  - __("name", [params]) from the English language pack, fn_url, and the
- *    add-on's fn_euph_pages_in_blocks_view() with a presenter of its own.
+ *    add-on's fn_euph_pages_in_blocks_view(), with block ids of its own (a
+ *    harness is one page).
  */
 final class TemplateHarness
 {
@@ -31,6 +31,9 @@ final class TemplateHarness
 
     /** @var list<string> the hooks drawn, in order */
     public array $hooks = [];
+
+    /** @var array<string, int> the block DOM ids handed out in this page */
+    public array $ids = [];
 
     private readonly Smarty $smarty;
 
@@ -44,7 +47,7 @@ final class TemplateHarness
         $this->smarty->setCompileDir($compileDir);
         $this->smarty->setEscapeHtml(true);
         $this->smarty->setErrorReporting(E_ALL);
-        $this->smarty->addExtension(new CsCartExtension($this, new BlockPresenter(static fn (string $url): string => CsCart::url($url))));
+        $this->smarty->addExtension(new CsCartExtension($this));
     }
 
     /**
@@ -85,7 +88,7 @@ final class TemplateHarness
  */
 final class CsCartExtension extends Extension
 {
-    public function __construct(private readonly TemplateHarness $harness, private readonly BlockPresenter $presenter)
+    public function __construct(private readonly TemplateHarness $harness)
     {
     }
 
@@ -107,7 +110,7 @@ final class CsCartExtension extends Extension
         return match ($modifierName) {
             '__' => static fn (string $name, array $params = []): string => LanguagePack::english()->translate($name, $params),
             'fn_url' => static fn (string $url): string => CsCart::url($url),
-            'fn_euph_pages_in_blocks_view' => fn (mixed $items, mixed $block, mixed $layout = 'stacked'): array => $this->presenter->fromTemplate($items, $block, $layout),
+            'fn_euph_pages_in_blocks_view' => fn (mixed $items, mixed $block, mixed $layout = 'stacked'): array => fn_euph_pages_in_blocks_present($items, $block, $layout, $this->harness->ids),
             default => null,
         };
     }

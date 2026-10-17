@@ -6,7 +6,6 @@ namespace Tygh\Addons\EuphPagesInBlocks\Tests\Unit\Templates;
 
 use PHPUnit\Framework\TestCase;
 use Smarty\Template;
-use Tygh\Addons\EuphPagesInBlocks\BlockSchema;
 use Tygh\Addons\EuphPagesInBlocks\Tests\Support\Html;
 use Tygh\Addons\EuphPagesInBlocks\Tests\Support\Pages;
 use Tygh\Addons\EuphPagesInBlocks\Tests\Support\TemplateHarness;
@@ -58,7 +57,7 @@ final class TemplateRenderTest extends TestCase
         }
         (new TemplateHarness('backend'))->compile('addons/euph_pages_in_blocks/settings/info.tpl');
 
-        self::assertSame(9, $count);
+        self::assertSame(8, $count);
     }
 
     public function testNoPagesNoMarkup(): void
@@ -89,7 +88,7 @@ final class TemplateRenderTest extends TestCase
 
     public function testStackedWithoutNamesStillNamesItsLinks(): void
     {
-        $html = $this->draw('stacked', [BlockSchema::SHOW_TITLES => 'N', BlockSchema::SEPARATORS => 'N']);
+        $html = $this->draw('stacked', ['euph_pib_show_titles' => 'N', 'euph_pib_separators' => 'N']);
 
         self::assertStringNotContainsString('euph-pib--separators', $html->one('//div[@id="euph-pib-12"]')->getAttribute('class'));
         self::assertSame(['Our partner (opens in a new window)', 'Terms'], $html->texts('//h3'));
@@ -153,7 +152,7 @@ final class TemplateRenderTest extends TestCase
 
     public function testExcerptsLinkToThePage(): void
     {
-        $html = $this->draw('stacked', [BlockSchema::CONTENT => 'excerpt']);
+        $html = $this->draw('stacked', ['euph_pib_content' => 'excerpt']);
 
         self::assertSame([], $this->harness->hooks, 'no page body, no page hooks');
         self::assertSame('From 14:00.', Html::text($html->one('//div[@id="euph-pib-12-p5"]//p[' . Html::cls('euph-pib__excerpt') . ']')));
@@ -201,7 +200,7 @@ final class TemplateRenderTest extends TestCase
 
     public function testAccordionSectionsShareANameToStayOneOpen(): void
     {
-        $html = $this->draw('accordion', [BlockSchema::OPEN_FIRST => 'Y']);
+        $html = $this->draw('accordion', ['euph_pib_open_first' => 'Y']);
 
         self::assertTrue($html->one('//div[@id="euph-pib-12"]')->hasAttribute('data-euph-pib-one-open'));
         $sections = $html->all('//details');
@@ -216,7 +215,7 @@ final class TemplateRenderTest extends TestCase
 
     public function testAccordionSectionsOpenFreelyWhenAllowed(): void
     {
-        $html = $this->draw('accordion', [BlockSchema::ONE_OPEN => 'N']);
+        $html = $this->draw('accordion', ['euph_pib_one_open' => 'N']);
 
         self::assertFalse($html->one('//div[@id="euph-pib-12"]')->hasAttribute('data-euph-pib-one-open'));
         self::assertSame(0, $html->count('//details[@name]'));
@@ -225,7 +224,7 @@ final class TemplateRenderTest extends TestCase
 
     public function testCardsAreOneLinkEach(): void
     {
-        $html = $this->draw('cards', [BlockSchema::COLUMNS => '2', BlockSchema::EXCERPT_LENGTH => '40']);
+        $html = $this->draw('cards', ['euph_pib_columns' => '2', 'euph_pib_excerpt_length' => '40']);
 
         self::assertStringContainsString('euph-pib--cols-2', $html->one('//div[@id="euph-pib-12"]')->getAttribute('class'));
         self::assertSame('list', $html->one('//ul')->getAttribute('role'));

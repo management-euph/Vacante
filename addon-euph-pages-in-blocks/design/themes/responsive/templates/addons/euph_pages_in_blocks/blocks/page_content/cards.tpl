@@ -22,7 +22,7 @@
                     {/if}
                     <span class="euph-pib__more" aria-hidden="true">{__("euph_pages_in_blocks.read_more")}</span>
                     {if $item.kind == "popup"}
-                        {include file="addons/euph_pages_in_blocks/components/popup_target.tpl" item=$item}
+                        <div id="{$item.dialog_id}" class="hidden" title="{$item.title}"></div>
                     {/if}
                 </li>
             {/foreach}

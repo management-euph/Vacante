@@ -469,9 +469,9 @@ jobs:
           echo "OK: coverage >= floor."
 
   # ── PHPUnit (euph_pages_in_blocks suite) ──
-  # Unit tests of the typed core, plus the templates compiled and rendered by
-  # Smarty 5 (the engine of CS-Cart 4.19 and later; a dev package of the
-  # add-on) with CS-Cart's own tags emulated.
+  # Unit tests of func.php and the block schema, plus the templates compiled
+  # and rendered by Smarty 5 (the engine of CS-Cart 4.19 and later; a dev
+  # package of the add-on) with CS-Cart's own tags emulated.
   phpunit-euph-pages-in-blocks:
     name: PHPUnit (euph_pages_in_blocks)
     runs-on: ubuntu-latest
@@ -496,9 +496,10 @@ jobs:
         run: vendor/bin/phpunit --colors=always --coverage-text=coverage.txt --coverage-clover=coverage.xml
 
       # ── Coverage floor (same ratchet as the other suites). Floor =
-      # measured coverage at introduction (100.00% on 2026-10-17) minus a
-      # small margin. Raise the floor as coverage grows — never lower it to
-      # make a PR pass; write the missing tests instead.
+      # measured coverage minus a small margin: 98.48% of func.php and the
+      # schema on 2026-10-17, every line but the two files' access guards.
+      # Raise the floor as coverage grows — never lower it to make a PR
+      # pass; write the missing tests instead.
       - name: Enforce coverage floor
         run: |
           floor=97.0

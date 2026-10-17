@@ -2,21 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Tygh\Addons\EuphPagesInBlocks\Tests\Unit\View;
+namespace Tygh\Addons\EuphPagesInBlocks\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
-use Tygh\Addons\EuphPagesInBlocks\BlockSchema;
-use Tygh\Addons\EuphPagesInBlocks\Enum\Layout;
-use Tygh\Addons\EuphPagesInBlocks\Tests\Support\CsCart;
 use Tygh\Addons\EuphPagesInBlocks\Tests\Support\Pages;
-use Tygh\Addons\EuphPagesInBlocks\View\BlockPresenter;
 
-final class BlockPresenterTest extends TestCase
+/**
+ * What a Page content template draws (fn_euph_pages_in_blocks_present()):
+ * the block's settings and one item per page.
+ */
+final class ViewTest extends TestCase
 {
-    private static function presenter(): BlockPresenter
-    {
-        return new BlockPresenter(static fn (string $url): string => CsCart::url($url));
-    }
+    /** @var array<string, int> the block DOM ids handed out in the "page" of a test */
+    private array $ids = [];
 
     /**
      * @param list<array<string, mixed>> $pages
@@ -24,9 +22,9 @@ final class BlockPresenterTest extends TestCase
      *
      * @return array<string, mixed>
      */
-    private static function view(array $pages, Layout $layout = Layout::Stacked, array $properties = []): array
+    private function view(array $pages, string $layout = 'stacked', array $properties = []): array
     {
-        return self::presenter()->present($pages, Pages::block($properties), $layout);
+        return fn_euph_pages_in_blocks_present($pages, Pages::block($properties), $layout, $this->ids);
     }
 
     /**
@@ -44,14 +42,14 @@ final class BlockPresenterTest extends TestCase
 
     public function testNothingToShowIsAnEmptyView(): void
     {
-        self::assertSame([], self::view([]));
-        self::assertSame([], self::view([Pages::page(5, '  ')]), 'a page with no name in this language');
-        self::assertSame([], self::view([Pages::page(0, 'No id')]));
+        self::assertSame([], $this->view([]));
+        self::assertSame([], $this->view([Pages::page(5, '  ')]), 'a page with no name in this language');
+        self::assertSame([], $this->view([Pages::page(0, 'No id')]));
     }
 
     public function testTheBlockAndItsSettings(): void
     {
-        $view = self::view([Pages::page(5, 'Delivery')], Layout::Accordion, [BlockSchema::ONE_OPEN => 'N', BlockSchema::SEPARATORS => 'N']);
+        $view = $this->view([Pages::page(5, 'Delivery')], 'accordion', ['euph_pib_one_open' => 'N', 'euph_pib_separators' => 'N']);
 
         self::assertSame('euph-pib-12', $view['id']);
         self::assertSame('accordion', $view['layout']);
@@ -65,7 +63,6 @@ final class BlockPresenterTest extends TestCase
     public function testATextPage(): void
     {
         $page = Pages::page(5, ' Delivery & returns ', '<p>We deliver.</p>');
-        $item = self::items(self::view([$page]))[0];
 
         self::assertSame([
             'page_id' => 5,
@@ -81,12 +78,12 @@ final class BlockPresenterTest extends TestCase
             'dialog_id' => '',
             'selected' => false,
             'open' => false,
-        ], $item);
+        ], self::items($this->view([$page]))[0]);
     }
 
     public function testALinkPageLinksToItsAddress(): void
     {
-        $items = self::items(self::view([
+        $items = self::items($this->view([
             Pages::link(6, 'Partner', 'https://partner.example/offer', true),
             Pages::link(7, 'Same window', 'index.php?dispatch=products.search'),
         ]));
@@ -99,7 +96,7 @@ final class BlockPresenterTest extends TestCase
 
     public function testALinkPageWithoutAUsableAddressIsLeftOut(): void
     {
-        $items = self::items(self::view([
+        $items = self::items($this->view([
             Pages::link(6, 'Empty', '  '),
             Pages::link(7, 'Script', 'javascript:alert(1)'),
             Pages::link(8, 'Script, padded', ' JavaScript:alert(1)'),
@@ -112,7 +109,7 @@ final class BlockPresenterTest extends TestCase
 
     public function testAPopupPageOpensInTheDialog(): void
     {
-        $item = self::items(self::view([Pages::page(7, 'Terms', '<p>T</p>', ['show_in_popup' => 'Y', 'new_window' => '1'])]))[0];
+        $item = self::items($this->view([Pages::page(7, 'Terms', '<p>T</p>', ['show_in_popup' => 'Y', 'new_window' => '1'])]))[0];
 
         self::assertSame('popup', $item['kind']);
         self::assertSame('https://shop.example/index.php?dispatch=pages.view&page_id=7', $item['url']);
@@ -122,14 +119,14 @@ final class BlockPresenterTest extends TestCase
 
     public function testAPopupLinkPageStaysALink(): void
     {
-        $item = self::items(self::view([Pages::page(7, 'Out', '', ['page_type' => 'L', 'link' => 'https://out.example/', 'show_in_popup' => 'Y'])]))[0];
+        $item = self::items($this->view([Pages::page(7, 'Out', '', ['page_type' => 'L', 'link' => 'https://out.example/', 'show_in_popup' => 'Y'])]))[0];
 
         self::assertSame('link', $item['kind']);
     }
 
     public function testFormsAndPollsTakeTheExtraHook(): void
     {
-        $items = self::items(self::view([
+        $items = self::items($this->view([
             Pages::form(1, 'Form'),
             Pages::page(2, 'Poll', '', ['page_type' => 'P']),
             Pages::page(3, 'Text'),
@@ -146,15 +143,15 @@ final class BlockPresenterTest extends TestCase
     {
         $page = Pages::page(5, 'Rooms', '<p>' . str_repeat('Quiet rooms with a view. ', 20) . '</p>');
 
-        self::assertSame('', self::items(self::view([$page], Layout::Stacked))[0]['excerpt']);
-        self::assertSame('', self::items(self::view([$page], Layout::Tabs))[0]['excerpt']);
-        self::assertSame('', self::items(self::view([$page], Layout::Accordion))[0]['excerpt']);
+        self::assertSame('', self::items($this->view([$page], 'stacked'))[0]['excerpt']);
+        self::assertSame('', self::items($this->view([$page], 'tabs', ['euph_pib_content' => 'excerpt']))[0]['excerpt']);
+        self::assertSame('', self::items($this->view([$page], 'accordion'))[0]['excerpt']);
 
-        $stacked = self::view([$page], Layout::Stacked, [BlockSchema::CONTENT => 'excerpt', BlockSchema::EXCERPT_LENGTH => '60']);
+        $stacked = $this->view([$page], 'stacked', ['euph_pib_content' => 'excerpt', 'euph_pib_excerpt_length' => '60']);
         self::assertTrue($stacked['excerpts']);
         self::assertSame('Quiet rooms with a view. Quiet rooms with a view. Quiet…', self::items($stacked)[0]['excerpt']);
 
-        $cards = self::view([$page], Layout::Cards, [BlockSchema::CONTENT => 'full']);
+        $cards = $this->view([$page], 'cards', ['euph_pib_content' => 'full']);
         self::assertTrue($cards['excerpts'], 'cards always show an excerpt');
         self::assertStringEndsWith('…', self::items($cards)[0]['excerpt']);
         self::assertLessThanOrEqual(201, mb_strlen(self::items($cards)[0]['excerpt']));
@@ -164,22 +161,22 @@ final class BlockPresenterTest extends TestCase
     {
         $pages = [Pages::page(1, 'A'), Pages::page(2, 'B'), Pages::page(3, 'C')];
 
-        self::assertSame([true, false, false], array_column(self::items(self::view($pages, Layout::Tabs)), 'selected'));
-        self::assertSame([false, false, false], array_column(self::items(self::view($pages, Layout::Accordion)), 'selected'));
+        self::assertSame([true, false, false], array_column(self::items($this->view($pages, 'tabs')), 'selected'));
+        self::assertSame([false, false, false], array_column(self::items($this->view($pages, 'accordion')), 'selected'));
     }
 
     public function testTheFirstSectionOpensWhenTheSettingSaysSo(): void
     {
         $pages = [Pages::page(1, 'A'), Pages::page(2, 'B')];
 
-        self::assertSame([false, false], array_column(self::items(self::view($pages, Layout::Accordion)), 'open'));
-        self::assertSame([true, false], array_column(self::items(self::view($pages, Layout::Accordion, [BlockSchema::OPEN_FIRST => 'Y'])), 'open'));
-        self::assertSame([false, false], array_column(self::items(self::view($pages, Layout::Tabs, [BlockSchema::OPEN_FIRST => 'Y'])), 'open'));
+        self::assertSame([false, false], array_column(self::items($this->view($pages, 'accordion')), 'open'));
+        self::assertSame([true, false], array_column(self::items($this->view($pages, 'accordion', ['euph_pib_open_first' => 'Y'])), 'open'));
+        self::assertSame([false, false], array_column(self::items($this->view($pages, 'tabs', ['euph_pib_open_first' => 'Y'])), 'open'));
     }
 
     public function testEachPageOnce(): void
     {
-        $items = self::items(self::view([Pages::page(1, 'A'), Pages::page(2, 'B'), Pages::page(1, 'A again')]));
+        $items = self::items($this->view([Pages::page(1, 'A'), Pages::page(2, 'B'), Pages::page(1, 'A again')]));
 
         self::assertSame([1, 2], array_column($items, 'page_id'));
         self::assertSame(['A', 'B'], array_column($items, 'title'));
@@ -187,32 +184,42 @@ final class BlockPresenterTest extends TestCase
 
     public function testIdsAreStableAndUniqueInThePage(): void
     {
-        $presenter = self::presenter();
+        $ids = [];
         $pages = [Pages::page(5, 'A')];
 
-        self::assertSame('euph-pib-12', $presenter->present($pages, Pages::block([], 12), Layout::Tabs)['id']);
-        self::assertSame('euph-pib-13', $presenter->present($pages, Pages::block([], 13), Layout::Tabs)['id']);
+        self::assertSame('euph-pib-12', fn_euph_pages_in_blocks_present($pages, Pages::block([], 12), 'tabs', $ids)['id']);
+        self::assertSame('euph-pib-13', fn_euph_pages_in_blocks_present($pages, Pages::block([], 13), 'tabs', $ids)['id']);
         // The same placement drawn twice in one page.
-        $again = $presenter->present($pages, Pages::block([], 12), Layout::Tabs);
+        $again = fn_euph_pages_in_blocks_present($pages, Pages::block([], 12), 'tabs', $ids);
         self::assertSame('euph-pib-12-2', $again['id']);
         self::assertSame('euph-pib-12-2-p5', self::items($again)[0]['id']);
         // No placement (a block drawn outside a layout): by the block's id.
-        self::assertSame('euph-pib-b40', $presenter->present($pages, Pages::block([], 0, 40), Layout::Tabs)['id']);
+        self::assertSame('euph-pib-b40', fn_euph_pages_in_blocks_present($pages, Pages::block([], 0, 40), 'tabs', $ids)['id']);
         // An empty block takes no id.
-        self::assertSame([], $presenter->present([], Pages::block([], 14), Layout::Tabs));
-        self::assertSame('euph-pib-14', $presenter->present($pages, Pages::block([], 14), Layout::Tabs)['id']);
+        self::assertSame([], fn_euph_pages_in_blocks_present([], Pages::block([], 14), 'tabs', $ids));
+        self::assertSame('euph-pib-14', fn_euph_pages_in_blocks_present($pages, Pages::block([], 14), 'tabs', $ids)['id']);
+        self::assertSame(['euph-pib-12' => 2, 'euph-pib-13' => 1, 'euph-pib-b40' => 1, 'euph-pib-14' => 1], $ids);
     }
 
-    public function testFromTemplateNarrowsWhatSmartyHandsOver(): void
+    public function testWhatSmartyHandsOverIsNarrowed(): void
     {
-        $presenter = self::presenter();
+        self::assertSame([], fn_euph_pages_in_blocks_present(null, null, null, $this->ids));
+        self::assertSame([], fn_euph_pages_in_blocks_present('items', 'block', 'tabs', $this->ids));
 
-        self::assertSame([], $presenter->fromTemplate(null, null, null));
-        self::assertSame([], $presenter->fromTemplate('items', 'block', 'tabs'));
-
-        $view = $presenter->fromTemplate([3 => Pages::page(5, 'A'), 'x' => 'not a page'], Pages::block(), 'unknown');
+        $view = fn_euph_pages_in_blocks_present([3 => Pages::page(5, 'A'), 'x' => 'not a page'], Pages::block(), 'unknown', $this->ids);
         self::assertSame('stacked', $view['layout']);
         self::assertSame([5], array_column(self::items($view), 'page_id'));
-        self::assertSame('cards', $presenter->fromTemplate([Pages::page(5, 'A')], Pages::block([], 20), 'cards')['layout']);
+        self::assertSame('cards', fn_euph_pages_in_blocks_present([Pages::page(5, 'A')], Pages::block([], 20), 'cards', $this->ids)['layout']);
+    }
+
+    public function testTheTemplatesFunctionKeepsTheIdsOfTheRequest(): void
+    {
+        $view = fn_euph_pages_in_blocks_view([Pages::page(5, 'Delivery')], Pages::block([], 901), 'tabs');
+
+        self::assertSame('euph-pib-901', $view['id']);
+        self::assertSame('tabs', $view['layout']);
+        self::assertSame('https://shop.example/index.php?dispatch=pages.view&page_id=5', self::items($view)[0]['url']);
+        self::assertSame('euph-pib-901-2', fn_euph_pages_in_blocks_view([Pages::page(5, 'Delivery')], Pages::block([], 901))['id']);
+        self::assertSame([], fn_euph_pages_in_blocks_view(null, null));
     }
 }

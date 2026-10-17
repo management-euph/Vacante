@@ -1,6 +1,6 @@
 # `addon-euph-pages-in-blocks/` — Pages in blocks
 
-CS-Cart add-on **`euph_pages_in_blocks`** 1.0.0, by VacanteLitoral.ro
+CS-Cart add-on **`euph_pages_in_blocks`** 1.0.1, by VacanteLitoral.ro
 (office@VacanteLitoral.ro, https://vacantelitoral.ro).
 
 Shows the content of CMS pages — text pages, forms and polls — inside the blocks of
@@ -15,6 +15,7 @@ link to longer pages.
 - **Dependencies:** none. No licence key. Forms need the core *Form builder* add-on, polls the *Polls* add-on.
 - **Languages:** English and Romanian.
 - **Footprint:** no tables, no PHP hooks, no core template overridden. The core *Pages* block is left as it is.
+- **Files:** 26 in the zip. The code is `addon.xml` and two PHP files, `func.php` and the block schema (see [Code layout](#code-layout)).
 
 ## Screens
 
@@ -104,7 +105,7 @@ Classes for a theme's custom CSS: `euph-pib` (the block, plus `euph-pib--stacked
 
 **Install** (upload the zip as a manual add-on installation, or copy its folders to the store root): nothing is created in the database apart from what CS-Cart keeps for every add-on (its settings section and texts). The *Page content* block type appears in **Add block**.
 
-- Zip: `php scripts/package-addons.php euph_pages_in_blocks` writes `dist/euph_pages_in_blocks-1.0.0.zip`.
+- Zip: `php scripts/package-addons.php euph_pages_in_blocks` writes `dist/euph_pages_in_blocks-1.0.1.zip`.
 - Deploy to a store: `bash scripts/deploy-addons.sh user@host:/path/to/cscart --addons euph_pages_in_blocks` (dry run; add `--go`).
 
 **Themes:** the storefront files ship for `responsive` and `nova_theme` (identical copies). The block manager offers a block type only where its templates are in the store's theme itself. For another theme, copy `design/themes/responsive/templates/addons/euph_pages_in_blocks` and `design/themes/responsive/css/addons/euph_pages_in_blocks` into that theme.
@@ -125,9 +126,10 @@ Both can stay installed during the switch: this add-on adds its own block type a
 
 ### How it plugs into CS-Cart
 
-- **Block type** `euph_page_content` in `schemas/block_manager/blocks.post.php` (`BlockSchema`): its content is the core Pages block's manual filling, served by the add-on's items function; four templates, each with its settings. No `cache` key.
-- **Items:** `fn_euph_pages_in_blocks_get_pages($params)` reads `item_ids` with `fn_get_page_data()` (`PageLoader`) and returns `[pages, params]`, as `fn_get_pages()` does.
-- **View:** each template calls `{$pib = fn_euph_pages_in_blocks_view($items, $block, "tabs")}` (`View\BlockPresenter`): ids, links, kinds, excerpts and settings are worked out in PHP; the templates only print.
+- **Two PHP files, no classes.** CS-Cart reads `addon.xml`, loads `func.php` for the active add-on (every function of the add-on is there) and includes `schemas/block_manager/blocks.post.php` when it builds the block manager schema. No `init.php`, no autoloader.
+- **Block type** `euph_page_content` in `schemas/block_manager/blocks.post.php`: its content is the core Pages block's manual filling, served by the add-on's items function; four templates, each with its settings. No `cache` key. The file needs nothing from `func.php`, and builds the type in a closure so that none of its variables leaks into `fn_get_schema()`, which includes it.
+- **Items:** `fn_euph_pages_in_blocks_get_pages($params)` reads `item_ids` with `fn_get_page_data()` and returns `[pages, params]`, as `fn_get_pages()` does.
+- **View:** each template calls `{$pib = fn_euph_pages_in_blocks_view($items, $block, "tabs")}`: ids, links, kinds, excerpts and settings are worked out in PHP; the templates only print.
 - **Template hooks used:** `pages:page_content`, `pages:page_extra` (as `views/pages/view.tpl`), `index:scripts`, `index:styles`.
 - **Smarty 5** (CS-Cart 4.19+): the templates use only Smarty's own modifiers and CS-Cart's `__()` and `fn_url`; no PHP function as a modifier.
 - **Stylesheet:** plain CSS in a `.less` file. CS-Cart compiles the storefront styles with lessphp, which mangles `calc()` and slashes and trips on custom-property declarations, so there are none.
@@ -139,25 +141,26 @@ Both can stay installed during the switch: this add-on adds its own block type a
 | `fn_euph_pages_in_blocks_view($items, $block, $layout)` | The template's view: an empty array when there is nothing to show. |
 | `fn_euph_pages_in_blocks_uninstall()` | Removes the blocks of the type (addon.xml uninstall function). |
 
+The other functions of `func.php` are their parts: `_present()` (the view, given the block ids already used in the page), `_settings()`, `_item()`, `_excerpt()`, `_text()`, `_table_exists()`, and `_int()`, `_string()`, `_flag()`, `_map()`, `_ids()`, which narrow the untyped values CS-Cart hands over.
+
 ### Code layout
 
 ```
 addon-euph-pages-in-blocks/
 ├── app/addons/euph_pages_in_blocks/
 │   ├── addon.xml              id, compatibility, the "How to use" setting, uninstall function
-│   ├── init.php, func.php     func.php only loads functions/
-│   ├── functions/             the CS-Cart boundary: autoloader and container, items/view functions, uninstall
-│   ├── schemas/block_manager/ the Page content block type
-│   ├── src/                   typed core (no CS-Cart calls): BlockSchema, BlockSettings, PageLoader,
-│   │                          Excerpt, View\BlockPresenter, BlockCleaner, Enum, Db
+│   ├── func.php               all the PHP: the items and view functions, uninstall
+│   ├── schemas/block_manager/ the Page content block type (blocks.post.php)
 │   └── tests/                 PHPUnit: unit tests, and the templates rendered by Smarty 5 (Support\TemplateHarness)
 ├── design/backend/…           the Settings tab panel, the icon
-├── design/themes/responsive/… templates (4 layouts, 3 components, 2 asset hooks) and the stylesheet
+├── design/themes/responsive/… templates (4 layouts, 2 components, 2 asset hooks) and the stylesheet
 ├── design/themes/nova_theme/… the same files (composer mirror keeps them identical)
 ├── js/addons/euph_pages_in_blocks/func.js
 ├── var/langs/{en,ro}/addons/euph_pages_in_blocks.po
 └── docs/screens/              the screens above and their sources (not packaged)
 ```
+
+The zip holds 26 files: the 3 of `app/`, 2 in `design/backend`, 9 per theme, the script and the two language packs. `tests/`, the Composer and PHPUnit files and `docs/` stay out of it.
 
 ### Checks
 
@@ -167,7 +170,7 @@ All of them run in CI (`.github/workflows/ci.yml`):
 |---|---|
 | PHPUnit, with the templates rendered by Smarty 5 (CI also measures coverage, floor 97 %) | `composer test:euph-pib` (after `composer install` in `app/addons/euph_pages_in_blocks`) |
 | PHPStan level 10, strict | `composer stan` |
-| Code style: `src/` PSR-12, the rest by the procedural config | `composer fix:dry` |
+| Code style (imports and whitespace: the procedural config) | `composer fix:proc:dry` |
 | Rector | `composer rector:dry` |
 | nova_theme copies identical (travel_core's ThemeMirrorTest) | `php scripts/mirror-themes.php --check` (`composer mirror` syncs) |
 | ESLint | `npx eslint addon-euph-pages-in-blocks/js` |
@@ -207,5 +210,7 @@ CS-Cart Ultimate, Multi-Vendor și Multi-Vendor Plus/Ultimate 4.21.2+, cu PHP 8.
 dezinstalare, blocurile „Conținut pagini” sunt scoase din layouturi, paginile rămân.
 
 ## Changelog
+
+**1.0.1** (2026-10-17) — The same block in fewer files: all the PHP is in `func.php` and the block schema; `init.php`, `functions/` and `src/` are gone, and so is the `popup_target.tpl` component (its one line is in each layout). Nothing changes in the panel or on the storefront. Updating a store that has 1.0.0: copy the new files over the old ones, then delete `app/addons/euph_pages_in_blocks/init.php`, `…/functions/`, `…/src/` and `design/themes/*/templates/addons/euph_pages_in_blocks/components/popup_target.tpl` (left in place they are never loaded).
 
 **1.0.0** (2026-10-17) — First release: the Page content block type with four templates (one under another, tabs, accordion, cards), English and Romanian.
