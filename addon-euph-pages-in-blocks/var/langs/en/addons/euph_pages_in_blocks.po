@@ -1,0 +1,129 @@
+msgid ""
+msgstr "Project-Id-Version: cs-cart-latest\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language-Team: English\n"
+"Language: en_US\n"
+
+msgctxt "Addons::name::euph_pages_in_blocks"
+msgid "Pages in blocks"
+msgstr "Pages in blocks"
+
+msgctxt "Addons::description::euph_pages_in_blocks"
+msgid "Show the content of CMS pages, forms and polls in layout blocks: one under another, as tabs, as an accordion or as cards."
+msgstr "Show the content of CMS pages, forms and polls in layout blocks: one under another, as tabs, as an accordion or as cards."
+
+msgctxt "SettingsSections::euph_pages_in_blocks::general"
+msgid "General"
+msgstr "General"
+
+msgctxt "SettingsOptions::euph_pages_in_blocks::info"
+msgid "How to use"
+msgstr "How to use"
+
+msgctxt "Languages::block_euph_page_content"
+msgid "Page content"
+msgstr "Page content"
+
+msgctxt "Languages::block_euph_page_content_description"
+msgid "The content of the pages you choose: text, forms and polls, one under another, as tabs, as an accordion or as cards."
+msgstr "The content of the pages you choose: text, forms and polls, one under another, as tabs, as an accordion or as cards."
+
+msgctxt "Languages::tmpl_euph_pib_stacked"
+msgid "One under another"
+msgstr "One under another"
+
+msgctxt "Languages::tmpl_euph_pib_tabs"
+msgid "Tabs"
+msgstr "Tabs"
+
+msgctxt "Languages::tmpl_euph_pib_accordion"
+msgid "Accordion"
+msgstr "Accordion"
+
+msgctxt "Languages::tmpl_euph_pib_cards"
+msgid "Cards"
+msgstr "Cards"
+
+msgctxt "Languages::euph_pib_show_titles"
+msgid "Show the page names"
+msgstr "Show the page names"
+
+msgctxt "Languages::euph_pib_separators"
+msgid "Separator lines between pages"
+msgstr "Separator lines between pages"
+
+msgctxt "Languages::euph_pib_content"
+msgid "Show"
+msgstr "Show"
+
+msgctxt "Languages::euph_pib_content_full"
+msgid "The whole page"
+msgstr "The whole page"
+
+msgctxt "Languages::euph_pib_content_excerpt"
+msgid "An excerpt with a \"Read more\" link"
+msgstr "An excerpt with a \"Read more\" link"
+
+msgctxt "Languages::euph_pib_excerpt_length"
+msgid "Excerpt length, in characters"
+msgstr "Excerpt length, in characters"
+
+msgctxt "Languages::euph_pib_open_first"
+msgid "Open the first section"
+msgstr "Open the first section"
+
+msgctxt "Languages::euph_pib_one_open"
+msgid "Keep only one section open"
+msgstr "Keep only one section open"
+
+msgctxt "Languages::euph_pib_columns"
+msgid "Cards per row on wide screens"
+msgstr "Cards per row on wide screens"
+
+msgctxt "Languages::euph_pages_in_blocks.read_more"
+msgid "Read more"
+msgstr "Read more"
+
+msgctxt "Languages::euph_pages_in_blocks.read_more_about"
+msgid "Read more about [title]"
+msgstr "Read more about [title]"
+
+msgctxt "Languages::euph_pages_in_blocks.new_window"
+msgid "(opens in a new window)"
+msgstr "(opens in a new window)"
+
+msgctxt "Languages::euph_pages_in_blocks.open_page"
+msgid "Open the page"
+msgstr "Open the page"
+
+msgctxt "Languages::euph_pages_in_blocks.info_intro"
+msgid "Show the content of your pages, forms and polls anywhere on the storefront with a Page content block:"
+msgstr "Show the content of your pages, forms and polls anywhere on the storefront with a Page content block:"
+
+msgctxt "Languages::euph_pages_in_blocks.info_step_layouts"
+msgid "Open Design → Layouts, then the layout and the location (tab) where the content should appear, for example the product page or the homepage."
+msgstr "Open Design → Layouts, then the layout and the location (tab) where the content should appear, for example the product page or the homepage."
+
+msgctxt "Languages::euph_pages_in_blocks.info_step_add"
+msgid "In a grid, click Add block → Create new block → Page content, and give the block a name."
+msgstr "In a grid, click Add block → Create new block → Page content, and give the block a name."
+
+msgctxt "Languages::euph_pages_in_blocks.info_step_content"
+msgid "On the block's Content tab, pick the pages: they show in the order you pick them."
+msgstr "On the block's Content tab, pick the pages: they show in the order you pick them."
+
+msgctxt "Languages::euph_pages_in_blocks.info_step_template"
+msgid "On the Settings tab, choose the template (One under another, Tabs, Accordion or Cards) and its options."
+msgstr "On the Settings tab, choose the template (One under another, Tabs, Accordion or Cards) and its options."
+
+msgctxt "Languages::euph_pages_in_blocks.info_hidden_pages"
+msgid "Only the pages the visitor may see are shown: a disabled page, a page outside its availability period or one reserved for other user groups is left out. Tip: set a page to Hidden to use it only as block content: it stays out of the menus and the page lists, and the block still shows it."
+msgstr "Only the pages the visitor may see are shown: a disabled page, a page outside its availability period or one reserved for other user groups is left out. Tip: set a page to Hidden to use it only as block content: it stays out of the menus and the page lists, and the block still shows it."
+
+msgctxt "Languages::euph_pages_in_blocks.info_forms"
+msgid "Forms (Form builder add-on) and polls (Polls add-on) work in the block as on their own page. The block is never cached, so a form's confirmation or a poll's result is seen only by the visitor who sent it."
+msgstr "Forms (Form builder add-on) and polls (Polls add-on) work in the block as on their own page. The block is never cached, so a form's confirmation or a poll's result is seen only by the visitor who sent it."
+
+msgctxt "Languages::euph_pages_in_blocks.info_open_layouts"
+msgid "Open Design → Layouts"
+msgstr "Open Design → Layouts"

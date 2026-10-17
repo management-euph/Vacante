@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<addon scheme="3.0">
+    <id>euph_pages_in_blocks</id>
+    <version>1.0.0</version>
+    <priority>5000</priority>
+    <position>100</position>
+    <status>active</status>
+    <default_language>en</default_language>
+    <has_icon>Y</has_icon>
+    <!-- The content of CMS pages, forms and polls in layout blocks.
+
+         The add-on adds the "Page content" block type to the block manager
+         (schemas/block_manager/blocks.post.php): the pages are picked on the
+         block's Content tab, and its template shows them one under another,
+         as tabs, as an accordion or as cards. It registers no PHP hook and
+         overrides no core template.
+
+         The <name> of the setting below is the fallback label: CS-Cart takes
+         the label from the language pack
+         (var/langs/<lang>/addons/euph_pages_in_blocks.po) and falls back to
+         <name> when the pack is missing. -->
+
+    <authors>
+        <author>
+            <name>VacanteLitoral.ro</name>
+            <email>office@VacanteLitoral.ro</email>
+            <url>https://vacantelitoral.ro</url>
+        </author>
+    </authors>
+    <supplier>VacanteLitoral.ro</supplier>
+    <supplier_link>https://vacantelitoral.ro</supplier_link>
+
+    <!-- No <core_edition>: CS-Cart, CS-Cart Ultimate, Multi-Vendor and
+         Multi-Vendor Plus/Ultimate. No <max>: newer cores are not refused. -->
+    <compatibility>
+        <core_version>
+            <min>4.21.2</min>
+        </core_version>
+        <php_version>
+            <min>8.3.0</min>
+        </php_version>
+    </compatibility>
+
+    <settings edition_type="ROOT,ULT:VENDOR">
+        <sections>
+            <section id="general">
+                <name>General</name>
+                <items>
+                    <!-- Not a setting: how to place a Page content block
+                         (design/backend/templates/addons/euph_pages_in_blocks/settings/info.tpl). -->
+                    <item id="info">
+                        <name>How to use</name>
+                        <type>template</type>
+                        <default_value>info.tpl</default_value>
+                        <variants/>
+                    </item>
+                </items>
+            </section>
+        </sections>
+    </settings>
+
+    <!-- No tables. Uninstall removes the Page content blocks from every
+         layout: a block whose type is gone would stay in the layouts. -->
+    <functions>
+        <item for="uninstall">fn_euph_pages_in_blocks_uninstall</item>
+    </functions>
+</addon>

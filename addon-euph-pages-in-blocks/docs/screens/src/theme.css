@@ -1,0 +1,91 @@
+/*
+ * An approximation of the store around the block (Responsive theme): the
+ * fonts, the box title, the buttons and the form fields. The block itself
+ * is styled by the add-on's own stylesheet only.
+ */
+body {
+    margin: 0;
+    background: #f4f5f7;
+    color: #333;
+    font-family: "Open Sans", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+a {
+    color: #1a73e8;
+}
+
+.shop {
+    box-sizing: border-box;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 28px 20px;
+}
+
+.place-sidebar .shop {
+    max-width: 380px;
+}
+
+.ty-sidebox {
+    padding: 20px 22px 24px;
+    border-radius: 6px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.ty-sidebox__title {
+    margin: 0 0 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e3e5e8;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.ty-wysiwyg-content p {
+    margin: 0 0 0.75em;
+}
+
+.ty-wysiwyg-content ul {
+    margin: 0 0 0.75em;
+    padding-left: 1.3em;
+}
+
+.ty-btn {
+    display: inline-block;
+    padding: 7px 16px;
+    border: 0;
+    border-radius: 3px;
+    font: inherit;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.ty-btn__secondary {
+    background: #1a73e8;
+    color: #fff;
+}
+
+.ty-control-group {
+    margin: 0 0 12px;
+}
+
+.ty-control-group__title {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.ty-input-text,
+.ty-input-textarea {
+    width: 100%;
+    padding: 7px 9px;
+    border: 1px solid #ccd0d5;
+    border-radius: 3px;
+    font: inherit;
+}
+
+.hidden {
+    display: none;
+}

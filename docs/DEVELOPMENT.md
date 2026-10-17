@@ -43,7 +43,7 @@ composer fix:dry       # Show PHP CS Fixer diff, both configs (no changes writte
 composer fix:proc:dry  # Procedural-files config only (controllers/functions/hooks)
 composer rector:dry    # Rector dry-run (fails on drift)
 composer test          # PHPUnit — all addon suites
-composer test:novoton  # (or test:travel-core / test:sphinx / test:fgo / test:euph)
+composer test:novoton  # (or test:travel-core / test:sphinx / test:fgo / test:euph / test:euph-pib)
 
 # ── Auto-fix ──
 composer fix           # PHP CS Fixer: apply both configs

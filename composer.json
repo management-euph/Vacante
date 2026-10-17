@@ -56,12 +56,14 @@
         "test:sphinx":      "cd addon-sphinx-holidays/app/addons/sphinx_holidays && vendor/bin/phpunit --no-coverage",
         "test:fgo":         "cd addon-fgo-invoicing/app/addons/fgo_invoicing && vendor/bin/phpunit --no-coverage",
         "test:euph":        "cd Addon-euph-profile_types/app/addons/euph_profile_types && vendor/bin/phpunit --no-coverage",
+        "test:euph-pib":    "cd addon-euph-pages-in-blocks/app/addons/euph_pages_in_blocks && vendor/bin/phpunit --no-coverage",
         "test": [
             "@test:novoton",
             "@test:travel-core",
             "@test:sphinx",
             "@test:fgo",
-            "@test:euph"
+            "@test:euph",
+            "@test:euph-pib"
         ],
 
         "test:integration:novoton": "cd addon-novoton-holidays/app/addons/novoton_holidays && vendor/bin/phpunit -c phpunit-integration.xml --no-coverage",
@@ -88,6 +90,7 @@
         "test:sphinx":      "PHPUnit tests for the sphinx_holidays addon",
         "test:fgo":         "PHPUnit tests for the fgo_invoicing addon",
         "test:euph":        "PHPUnit tests for the euph_profile_types addon",
+        "test:euph-pib":    "PHPUnit tests for the euph_pages_in_blocks addon (templates rendered by Smarty 5)",
         "test":             "Run PHPUnit across all addon suites",
         "test:integration:novoton": "Run novoton DB-backed integration tests (requires docker-compose.test.yml up)",
         "check":         "Run PHPStan + CS Fixer dry-run + Rector dry-run + PHPUnit"

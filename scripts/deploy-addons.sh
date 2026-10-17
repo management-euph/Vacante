@@ -54,6 +54,7 @@ declare -A DIRS=(
     [eurosite]=addon-eurosite
     [netopia_payments]=addon-netopia-payments-main
     [euph_profile_types]=Addon-euph-profile_types
+    [euph_pages_in_blocks]=addon-euph-pages-in-blocks
 )
 # Add-ons whose storefront templates are for the responsive theme only: a
 # store on nova_theme gets those same files (as link-addons.sh links them).

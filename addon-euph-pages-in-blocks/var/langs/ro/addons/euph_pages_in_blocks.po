@@ -1,0 +1,129 @@
+msgid ""
+msgstr "Project-Id-Version: cs-cart-latest\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language-Team: Romanian\n"
+"Language: ro_RO\n"
+
+msgctxt "Addons::name::euph_pages_in_blocks"
+msgid "Pages in blocks"
+msgstr "Pagini în blocuri"
+
+msgctxt "Addons::description::euph_pages_in_blocks"
+msgid "Show the content of CMS pages, forms and polls in layout blocks: one under another, as tabs, as an accordion or as cards."
+msgstr "Afișează conținutul paginilor, formularelor și sondajelor în blocurile din layout: una sub alta, în file (tab-uri), ca acordeon sau ca carduri."
+
+msgctxt "SettingsSections::euph_pages_in_blocks::general"
+msgid "General"
+msgstr "General"
+
+msgctxt "SettingsOptions::euph_pages_in_blocks::info"
+msgid "How to use"
+msgstr "Mod de utilizare"
+
+msgctxt "Languages::block_euph_page_content"
+msgid "Page content"
+msgstr "Conținut pagini"
+
+msgctxt "Languages::block_euph_page_content_description"
+msgid "The content of the pages you choose: text, forms and polls, one under another, as tabs, as an accordion or as cards."
+msgstr "Conținutul paginilor alese: text, formulare și sondaje, una sub alta, în file (tab-uri), ca acordeon sau ca carduri."
+
+msgctxt "Languages::tmpl_euph_pib_stacked"
+msgid "One under another"
+msgstr "Una sub alta"
+
+msgctxt "Languages::tmpl_euph_pib_tabs"
+msgid "Tabs"
+msgstr "File (tab-uri)"
+
+msgctxt "Languages::tmpl_euph_pib_accordion"
+msgid "Accordion"
+msgstr "Acordeon"
+
+msgctxt "Languages::tmpl_euph_pib_cards"
+msgid "Cards"
+msgstr "Carduri"
+
+msgctxt "Languages::euph_pib_show_titles"
+msgid "Show the page names"
+msgstr "Afișează numele paginilor"
+
+msgctxt "Languages::euph_pib_separators"
+msgid "Separator lines between pages"
+msgstr "Linii de separare între pagini"
+
+msgctxt "Languages::euph_pib_content"
+msgid "Show"
+msgstr "Afișează"
+
+msgctxt "Languages::euph_pib_content_full"
+msgid "The whole page"
+msgstr "Toată pagina"
+
+msgctxt "Languages::euph_pib_content_excerpt"
+msgid "An excerpt with a \"Read more\" link"
+msgstr "Un extras cu linkul „Citește mai mult”"
+
+msgctxt "Languages::euph_pib_excerpt_length"
+msgid "Excerpt length, in characters"
+msgstr "Lungimea extrasului, în caractere"
+
+msgctxt "Languages::euph_pib_open_first"
+msgid "Open the first section"
+msgstr "Deschide prima secțiune"
+
+msgctxt "Languages::euph_pib_one_open"
+msgid "Keep only one section open"
+msgstr "Păstrează deschisă o singură secțiune"
+
+msgctxt "Languages::euph_pib_columns"
+msgid "Cards per row on wide screens"
+msgstr "Carduri pe rând, pe ecrane late"
+
+msgctxt "Languages::euph_pages_in_blocks.read_more"
+msgid "Read more"
+msgstr "Citește mai mult"
+
+msgctxt "Languages::euph_pages_in_blocks.read_more_about"
+msgid "Read more about [title]"
+msgstr "Citește mai mult despre [title]"
+
+msgctxt "Languages::euph_pages_in_blocks.new_window"
+msgid "(opens in a new window)"
+msgstr "(se deschide într-o fereastră nouă)"
+
+msgctxt "Languages::euph_pages_in_blocks.open_page"
+msgid "Open the page"
+msgstr "Deschide pagina"
+
+msgctxt "Languages::euph_pages_in_blocks.info_intro"
+msgid "Show the content of your pages, forms and polls anywhere on the storefront with a Page content block:"
+msgstr "Afișează conținutul paginilor, formularelor și sondajelor oriunde în magazin, cu un bloc „Conținut pagini”:"
+
+msgctxt "Languages::euph_pages_in_blocks.info_step_layouts"
+msgid "Open Design → Layouts, then the layout and the location (tab) where the content should appear, for example the product page or the homepage."
+msgstr "Deschide Design → Layouts, apoi layoutul și locația (fila) în care trebuie să apară conținutul, de exemplu pagina de produs sau prima pagină."
+
+msgctxt "Languages::euph_pages_in_blocks.info_step_add"
+msgid "In a grid, click Add block → Create new block → Page content, and give the block a name."
+msgstr "Într-o grilă, adaugă un bloc nou de tipul „Conținut pagini” și dă-i un nume."
+
+msgctxt "Languages::euph_pages_in_blocks.info_step_content"
+msgid "On the block's Content tab, pick the pages: they show in the order you pick them."
+msgstr "În fila Conținut a blocului, alege paginile: apar în ordinea în care le alegi."
+
+msgctxt "Languages::euph_pages_in_blocks.info_step_template"
+msgid "On the Settings tab, choose the template (One under another, Tabs, Accordion or Cards) and its options."
+msgstr "În fila Setări, alege șablonul (Una sub alta, File, Acordeon sau Carduri) și opțiunile lui."
+
+msgctxt "Languages::euph_pages_in_blocks.info_hidden_pages"
+msgid "Only the pages the visitor may see are shown: a disabled page, a page outside its availability period or one reserved for other user groups is left out. Tip: set a page to Hidden to use it only as block content: it stays out of the menus and the page lists, and the block still shows it."
+msgstr "Apar doar paginile pe care vizitatorul le poate vedea: o pagină dezactivată, în afara perioadei de disponibilitate sau rezervată altor grupuri de utilizatori este omisă. Sfat: pune o pagină pe Ascuns ca să o folosești doar drept conținut de bloc: nu apare în meniuri și în listele de pagini, dar blocul o afișează."
+
+msgctxt "Languages::euph_pages_in_blocks.info_forms"
+msgid "Forms (Form builder add-on) and polls (Polls add-on) work in the block as on their own page. The block is never cached, so a form's confirmation or a poll's result is seen only by the visitor who sent it."
+msgstr "Formularele (add-onul Form builder) și sondajele (add-onul Polls) funcționează în bloc ca pe pagina lor. Blocul nu este păstrat în cache, așa că mesajul de confirmare al unui formular sau rezultatul unui sondaj îl vede doar vizitatorul care l-a trimis."
+
+msgctxt "Languages::euph_pages_in_blocks.info_open_layouts"
+msgid "Open Design → Layouts"
+msgstr "Deschide Design → Layouts"

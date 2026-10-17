@@ -42,6 +42,8 @@ declare -A ADDONS=(
     [netopia_payments]=addon-netopia-payments-main
     # Profile types for customers and vendors: install it from Add-ons.
     [euph_profile_types]=Addon-euph-profile_types
+    # Pages in blocks (the Page content block type): install it from Add-ons.
+    [euph_pages_in_blocks]=addon-euph-pages-in-blocks
 )
 
 # Addons that ship templates for the responsive theme only: link those into
