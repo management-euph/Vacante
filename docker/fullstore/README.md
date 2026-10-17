@@ -130,6 +130,19 @@ docker compose exec app bash /repo/docker/fullstore/link-addons.sh
 checked out; `WARNING: … needs CS-Cart 4.21.2 or newer` means the store was
 provisioned from an older kit (see *Changing the CS-Cart version* below).
 
+## Pages in blocks (euph_pages_in_blocks)
+
+`addon-euph-pages-in-blocks` is linked like the other addons; it ships real
+nova_theme copies of its storefront templates (kept identical by `composer mirror`),
+because the block manager offers a block type only where its templates are in the
+store's theme. It needs CS-Cart **4.21.2** and is not installed automatically.
+
+1. Link it: `.\update.ps1` (or `docker compose exec app bash /repo/docker/fullstore/link-addons.sh`).
+2. Admin → **Add-ons** → **Manage add-ons** → *Pages in blocks* → **Install**.
+3. Admin → **Design → Layouts** → a grid → **Add block** → **Create new block** →
+   *Page content*: pick the pages on the Content tab and the template (one under
+   another, tabs, accordion, cards) on the Settings tab. The add-on's README has the rest.
+
 ## Getting your changes to show up (update & verify)
 
 **One command for the usual update** (PowerShell, from `docker\fullstore`):

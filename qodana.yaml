@@ -108,6 +108,8 @@ exclude:
       - addon-fgo-invoicing/app/addons/fgo_invoicing/tests
       - addon-eurosite/app/addons/eurosite/tests
       - Addon-euph-profile_types/app/addons/euph_profile_types/tests
+      - addon-euph-pages-in-blocks/app/addons/euph_pages_in_blocks/tests
+      - addon-euph-pages-in-blocks/docs
       - addon-netopia-payments-main/tests
       # Vendored psr/log copy (namespace Psr\Log under lib/, loaded by the
       # addon's own autoloader); netopia's PHPStan / Psalm / php-cs-fixer

@@ -22,6 +22,7 @@ $finder = PhpCsFixer\Finder::create()
         __DIR__ . '/addon-fgo-invoicing/app/addons/fgo_invoicing/src',
         __DIR__ . '/addon-eurosite/app/addons/eurosite/src',
         __DIR__ . '/Addon-euph-profile_types/app/addons/euph_profile_types/src',
+        __DIR__ . '/addon-euph-pages-in-blocks/app/addons/euph_pages_in_blocks/src',
     ])
     ->name('*.php')
     ->exclude(['vendor', 'var', 'tests', 'node_modules'])

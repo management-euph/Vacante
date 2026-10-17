@@ -468,6 +468,53 @@ jobs:
           }
           echo "OK: coverage >= floor."
 
+  # ── PHPUnit (euph_pages_in_blocks suite) ──
+  # Unit tests of the typed core, plus the templates compiled and rendered by
+  # Smarty 5 (the engine of CS-Cart 4.19 and later; a dev package of the
+  # add-on) with CS-Cart's own tags emulated.
+  phpunit-euph-pages-in-blocks:
+    name: PHPUnit (euph_pages_in_blocks)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: addon-euph-pages-in-blocks/app/addons/euph_pages_in_blocks
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: simplexml, mbstring, dom
+          coverage: pcov
+          tools: composer:v2
+
+      - name: Install addon dependencies
+        run: composer install --no-progress --no-interaction
+
+      - name: Run PHPUnit (with coverage)
+        run: vendor/bin/phpunit --colors=always --coverage-text=coverage.txt --coverage-clover=coverage.xml
+
+      # ── Coverage floor (same ratchet as the other suites). Floor =
+      # measured coverage at introduction (100.00% on 2026-10-17) minus a
+      # small margin. Raise the floor as coverage grows — never lower it to
+      # make a PR pass; write the missing tests instead.
+      - name: Enforce coverage floor
+        run: |
+          floor=97.0
+          pct=$(python3 -c "
+          import xml.etree.ElementTree as ET
+          m = ET.parse('coverage.xml').getroot().find('./project/metrics')
+          total = int(m.get('statements')); covered = int(m.get('coveredstatements'))
+          print(f'{covered / total * 100:.2f}' if total else '0.00')
+          ")
+          echo "euph_pages_in_blocks line coverage: ${pct}% (floor: ${floor}%)"
+          awk -v p="$pct" -v f="$floor" 'BEGIN { exit !(p+0 < f+0) }' && {
+            echo "::error::Line coverage ${pct}% fell below the ${floor}% floor — add tests for the code this PR touches."
+            exit 1
+          }
+          echo "OK: coverage >= floor."
+
   # ── php -l syntax check on all PHP files ──
   lint:
     name: PHP Lint
@@ -490,6 +537,7 @@ jobs:
                addon-fgo-invoicing/app/addons/fgo_invoicing \
                addon-eurosite/app/addons/eurosite \
                Addon-euph-profile_types/app/addons/euph_profile_types \
+               addon-euph-pages-in-blocks/app/addons/euph_pages_in_blocks \
                -path '*/vendor' -prune -o -name '*.php' -print0 | xargs -0 -n 50 php -l
 
   # ── ESLint + Vitest (frontend JS / JSX) ──
@@ -544,6 +592,7 @@ jobs:
       - phpunit-fgo
       - phpunit-eurosite
       - phpunit-euph-profile-types
+      - phpunit-euph-pages-in-blocks
       - lint
       - eslint
     runs-on: ubuntu-latest

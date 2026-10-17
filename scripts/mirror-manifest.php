@@ -16,6 +16,9 @@ return [
     'theme_roots' => [
         'addon-novoton-holidays/design/themes',
         'addon-travel-core/design/themes',
+        // Its block type is offered only where its templates are in the
+        // store's theme itself (see the add-on's TemplateSourceTest).
+        'addon-euph-pages-in-blocks/design/themes',
     ],
 
     // nova_theme files allowed to differ from their responsive counterpart

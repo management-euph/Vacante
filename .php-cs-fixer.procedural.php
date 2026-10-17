@@ -28,6 +28,7 @@ $finder = PhpCsFixer\Finder::create()
         __DIR__ . '/addon-fgo-invoicing/app/addons/fgo_invoicing',
         __DIR__ . '/addon-eurosite/app/addons/eurosite',
         __DIR__ . '/Addon-euph-profile_types/app/addons/euph_profile_types',
+        __DIR__ . '/addon-euph-pages-in-blocks/app/addons/euph_pages_in_blocks',
     ])
     ->name('*.php')
     // src + tests are formatted by the stricter .php-cs-fixer.dist.php

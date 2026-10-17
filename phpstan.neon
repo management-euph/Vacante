@@ -75,6 +75,11 @@ parameters:
         - Addon-euph-profile_types/app/addons/euph_profile_types/schemas
         - Addon-euph-profile_types/app/addons/euph_profile_types/func.php
         - Addon-euph-profile_types/app/addons/euph_profile_types/init.php
+        - addon-euph-pages-in-blocks/app/addons/euph_pages_in_blocks/src
+        - addon-euph-pages-in-blocks/app/addons/euph_pages_in_blocks/functions
+        - addon-euph-pages-in-blocks/app/addons/euph_pages_in_blocks/schemas
+        - addon-euph-pages-in-blocks/app/addons/euph_pages_in_blocks/func.php
+        - addon-euph-pages-in-blocks/app/addons/euph_pages_in_blocks/init.php
         # NOT cron.php: it defines AREA/CONSOLE for standalone runs, and letting
         # PHPStan see those defines constant-folds every AREA comparison in the
         # whole analysis (sibling cron.php files are excluded for the same reason).
@@ -93,6 +98,7 @@ parameters:
         - addon-fgo-invoicing/app/addons/fgo_invoicing/src
         - addon-eurosite/app/addons/eurosite/src
         - Addon-euph-profile_types/app/addons/euph_profile_types/src
+        - addon-euph-pages-in-blocks/app/addons/euph_pages_in_blocks/src
 
     excludePaths:
         - '*/vendor/*'
