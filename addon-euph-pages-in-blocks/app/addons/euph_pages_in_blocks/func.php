@@ -186,10 +186,13 @@ function fn_euph_pages_in_blocks_item(array $page, int $excerpt_length): ?array
     $types = ['T' => 'text', 'L' => 'link', 'F' => 'form', 'P' => 'poll'];
     $type = $types[fn_euph_pages_in_blocks_string($page['page_type'] ?? '')] ?? 'text';
     if ($type === 'link') {
-        $address = trim(fn_euph_pages_in_blocks_string($page['link'] ?? ''));
+        // The address as a browser reads it: the URL standard drops tabs and
+        // line breaks anywhere in an address, and control characters and
+        // spaces at its ends, so "java<tab>script:" is a javascript: address.
+        $address = trim(str_replace(["\t", "\n", "\r"], '', fn_euph_pages_in_blocks_string($page['link'] ?? '')), "\x00..\x20");
         // The address is the administrator's; a script address is never
         // printed into the page.
-        if ($address === '' || preg_match('/^\s*(?:javascript|vbscript|data):/i', $address) === 1) {
+        if ($address === '' || preg_match('/^(?:javascript|vbscript|data):/i', $address) === 1) {
             return null;
         }
         $kind = 'link';

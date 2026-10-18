@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\EuphPagesInBlocks\Tests\Unit;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\EuphPagesInBlocks\Tests\Support\Pages;
 
@@ -105,6 +106,47 @@ final class ViewTest extends TestCase
         ]));
 
         self::assertSame([10], array_column($items, 'page_id'));
+    }
+
+    /**
+     * Browsers drop tabs and line breaks anywhere in an address, and control
+     * characters and spaces at its ends, before they read its scheme: to
+     * them, each of these is a script address.
+     *
+     * @return iterable<string, array{string}>
+     */
+    public static function scriptAddresses(): iterable
+    {
+        yield 'tab in the scheme' => ["java\tscript:alert(1)"];
+        yield 'line break in the scheme' => ["java\nscript:alert(1)"];
+        yield 'carriage return in the scheme' => ["java\rscript:alert(1)"];
+        yield 'tab before the colon' => ["javascript\t:alert(1)"];
+        yield 'control character first' => ["\x01javascript:alert(1)"];
+        yield 'NUL and space first' => ["\x00 JavaScript:alert(1)"];
+        yield 'with index.php, kept as is by fn_url' => ["java\tscript:alert(1)//index.php"];
+        yield 'vbscript, broken' => ["vb\nscript:msgbox(1)"];
+        yield 'data, broken' => ["da\tta:text/html,<b>x</b>"];
+    }
+
+    #[DataProvider('scriptAddresses')]
+    public function testALinkPageToAScriptAddressIsLeftOutHoweverItIsWritten(string $address): void
+    {
+        self::assertSame([], $this->view([Pages::link(6, 'Script', $address)]));
+    }
+
+    public function testALinkPageAddressIsPrintedAsTheBrowserReadsIt(): void
+    {
+        $items = self::items($this->view([
+            Pages::link(6, 'Partner', " https://partner.example/\toffer\n"),
+            Pages::link(7, 'Call us', 'tel:+40712345678'),
+            Pages::link(8, 'WhatsApp', 'whatsapp://send?phone=40712345678'),
+            Pages::link(9, 'Write to us', 'mailto:office@example.ro'),
+        ]));
+
+        self::assertSame(
+            ['https://partner.example/offer', 'tel:+40712345678', 'whatsapp://send?phone=40712345678', 'mailto:office@example.ro'],
+            array_column($items, 'url'),
+        );
     }
 
     public function testAPopupPageOpensInTheDialog(): void

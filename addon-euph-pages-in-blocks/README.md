@@ -1,6 +1,6 @@
 # `addon-euph-pages-in-blocks/` — Pages in blocks
 
-CS-Cart add-on **`euph_pages_in_blocks`** 1.0.1, by VacanteLitoral.ro
+CS-Cart add-on **`euph_pages_in_blocks`** 1.0.2, by VacanteLitoral.ro
 (office@VacanteLitoral.ro, https://vacantelitoral.ro).
 
 Shows the content of CMS pages — text pages, forms and polls — inside the blocks of
@@ -76,7 +76,7 @@ Each page is read the way CS-Cart reads it for the page's own address (`fn_get_p
 | Text page (and any other add-on's page type, such as a blog post) | Its text, with the theme's text styles (`ty-wysiwyg-content`). |
 | Form (*Form builder*) | The form, drawn by the Form builder through the page's own template hook (`pages:page_content`), as on its own page. Sending it works as on that page: the Form builder handles it and shows its confirmation. |
 | Poll (*Polls*) | The poll, drawn by the Polls add-on, as on its own page. |
-| Link page | A link to its address; in a new window when the page says so (`rel="noopener"`, with a hint for screen readers). A link to a `javascript:` or `data:` address is never printed. |
+| Link page | A link to its address; in a new window when the page says so (`rel="noopener"`, with a hint for screen readers). A link to a `javascript:`, `vbscript:` or `data:` address is never printed, even written with the tabs, line breaks or control characters browsers ignore in an address. |
 | Page set to open in a popup | Its name opens it in CS-Cart's dialog. |
 
 Forms and polls also get the `pages:page_extra` hook, as on their page. Text pages do not, so what add-ons draw under a page's text on its own view (such as comments or share buttons) stays out of the block.
@@ -105,7 +105,7 @@ Classes for a theme's custom CSS: `euph-pib` (the block, plus `euph-pib--stacked
 
 **Install** (upload the zip as a manual add-on installation, or copy its folders to the store root): nothing is created in the database apart from what CS-Cart keeps for every add-on (its settings section and texts). The *Page content* block type appears in **Add block**.
 
-- Zip: `php scripts/package-addons.php euph_pages_in_blocks` writes `dist/euph_pages_in_blocks-1.0.1.zip`.
+- Zip: `php scripts/package-addons.php euph_pages_in_blocks` writes `dist/euph_pages_in_blocks-1.0.2.zip`.
 - Deploy to a store: **Actions → Deploy → Run workflow** (the add-on is in the form's default list; tick *go* to deploy for real), or by hand `bash scripts/deploy-addons.sh user@host:/path/to/cscart --addons euph_pages_in_blocks` (dry run; add `--go`). Then install it in **Add-ons → Downloaded add-ons**.
 
 **Themes:** the storefront files ship for `responsive` and `nova_theme` (identical copies). The block manager offers a block type only where its templates are in the store's theme itself. For another theme, copy `design/themes/responsive/templates/addons/euph_pages_in_blocks` and `design/themes/responsive/css/addons/euph_pages_in_blocks` into that theme.
@@ -210,6 +210,8 @@ CS-Cart Ultimate, Multi-Vendor și Multi-Vendor Plus/Ultimate 4.21.2+, cu PHP 8.
 dezinstalare, blocurile „Conținut pagini” sunt scoase din layouturi, paginile rămân.
 
 ## Changelog
+
+**1.0.2** (2026-10-18) — Security hardening, from the add-on's security audit: a link page's address is now read the way browsers read it (without the tabs and line breaks in it, or the control characters and spaces around it) before its scheme is checked, so `java<tab>script:` and the like are refused as `javascript:` is, and the address is printed without those characters. CS-Cart's `fn_url()` already turned such addresses into links to the store, so they could not run; the add-on no longer depends on that.
 
 **1.0.1** (2026-10-17) — The same block in fewer files: all the PHP is in `func.php` and the block schema; `init.php`, `functions/` and `src/` are gone, and so is the `popup_target.tpl` component (its one line is in each layout). Nothing changes in the panel or on the storefront. Updating a store that has 1.0.0: copy the new files over the old ones, then delete `app/addons/euph_pages_in_blocks/init.php`, `…/functions/`, `…/src/` and `design/themes/*/templates/addons/euph_pages_in_blocks/components/popup_target.tpl` (left in place they are never loaded).
 
