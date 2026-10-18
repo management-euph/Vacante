@@ -25,7 +25,6 @@ final class SettingsTest extends TestCase
             'reload_on_change' => 'Y',
             'restrict_login' => 'Y',
             'checkout_choice' => 'guests',
-            'invoice_details_from_profile' => 'Y',
             'vendor_type_in_product' => 'Y',
         ]);
 
@@ -37,7 +36,6 @@ final class SettingsTest extends TestCase
         self::assertTrue($settings->reloadOnChange);
         self::assertTrue($settings->restrictLogin);
         self::assertSame(CheckoutChoice::GuestsOnly, $settings->checkoutChoice);
-        self::assertTrue($settings->invoiceDetailsFromProfile);
         self::assertTrue($settings->vendorTypeInProduct);
     }
 

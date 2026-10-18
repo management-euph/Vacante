@@ -148,14 +148,6 @@ msgctxt "SettingsTooltips::euph_profile_types::checkout_choice"
 msgid "Without the choice a signed-in customer orders with the type of their profile, a guest with the default type."
 msgstr "Fără alegere, un client autentificat comandă cu tipul profilului său, iar un vizitator cu tipul implicit."
 
-msgctxt "SettingsOptions::euph_profile_types::invoice_details_from_profile"
-msgid "Do not ask again for invoice details taken from the profile"
-msgstr "Nu mai cere datele de facturare preluate din profil"
-
-msgctxt "SettingsTooltips::euph_profile_types::invoice_details_from_profile"
-msgid "The \"Issue an invoice\" payment of the Russian Payments add-on: the details are taken from the profile and the customer does not type them twice."
-msgstr "Plata „Emite factură” a modulului Russian Payments: datele sunt preluate din profil și clientul nu le mai introduce a doua oară."
-
 msgctxt "SettingsOptions::euph_profile_types::header_vendors"
 msgid "Multi-Vendor"
 msgstr "Multi-Vendor"
@@ -507,10 +499,6 @@ msgstr "Schimbă"
 msgctxt "Languages::euph_profile_types.change_order_type_hint"
 msgid "Corrects the type of this order only; the customer keeps theirs."
 msgstr "Corectează doar tipul acestei comenzi; clientul își păstrează tipul."
-
-msgctxt "Languages::euph_profile_types.invoice_details_taken"
-msgid "Taken from your profile:"
-msgstr "Preluate din profilul dumneavoastră:"
 
 msgctxt "Languages::euph_profile_types.login_denied_on_storefront"
 msgid "Your account cannot sign in to this store. Please sign in on the store where you registered."

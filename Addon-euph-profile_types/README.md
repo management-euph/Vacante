@@ -30,7 +30,7 @@ Mockups of the main screens. The numbered marks refer to the notes under each im
 <tr>
 <td><a href="docs/mockups/admin-08-settings.png"><img src="docs/mockups/admin-08-settings.png" width="260" alt="Add-on settings"></a><br>Settings</td>
 <td><a href="docs/mockups/storefront-01-registration.png"><img src="docs/mockups/storefront-01-registration.png" width="260" alt="Registration by type"></a><br>Registration: Company vs Private person</td>
-<td><a href="docs/mockups/storefront-02-checkout.png"><img src="docs/mockups/storefront-02-checkout.png" width="260" alt="Checkout with the type choice"></a><br>Checkout: type choice, invoice details</td>
+<td><a href="docs/mockups/storefront-02-checkout.png"><img src="docs/mockups/storefront-02-checkout.png" width="260" alt="Checkout with the type choice"></a><br>Checkout: type choice</td>
 </tr>
 <tr>
 <td><a href="docs/mockups/storefront-03-order-details.png"><img src="docs/mockups/storefront-03-order-details.png" width="260" alt="Order details in the customer account"></a><br>Order in the customer account</td>
@@ -148,15 +148,6 @@ The type's fields are CS-Cart profile fields, so the other add-ons read them as 
   - Show, and require, the company name and the CIF for the company types, and the CNP for the private types when FGO's *Do not issue for individuals without a CNP* is on: FGO refuses an invoice without them only when its settings say so.
 - **Netopia** sends the payment page the billing name, e-mail, phone and address of the order; it has no field for a company or a tax id. Keep the billing first and last name, and the billing address, **shown for every type that pays by card**: a type that hides them sends an empty name.
 
-### Russian Payments: "Issue an invoice"
-
-With *Do not ask again for invoice details taken from the profile* on:
-
-- the invoice payment's details that the customer's profile already holds are filled in, and their inputs are hidden;
-- one line under the payment says what was taken.
-
-Which details are taken depends on the profile fields mapped in the payment method's settings.
-
 ### Multi-Vendor
 
 - Vendors get their own types, with their own fields, user groups and vendor plans.
@@ -177,7 +168,6 @@ Which details are taken depends on the profile fields mapped in the payment meth
 | Reload the page when the type is changed | off | By default the form is redrawn in place. |
 | Let customers sign in only on the storefronts of their profile type | off | See *Storefronts* above. |
 | Profile type choice at checkout | Everybody · Guests only · Nobody | |
-| Do not ask again for invoice details taken from the profile | off | Russian Payments, *Issue an invoice*. |
 | Use the name of the profile type in the vendor information | off | Multi-Vendor. |
 
 **Privileges:** *View profile types* and *Manage profile types* are in the *Add-ons* group of the administrator user groups.
@@ -292,7 +282,7 @@ Register handlers as usual: `fn_register_hooks('euph_update_profile_type_post', 
 - The type choice is a virtual profile field (`euph_profile_type`), so the stock profile, registration and checkout templates draw it.
 - The Profile fields list gets its per-type rows through its own hooks: `profile_fields:field_settings` (each Show / Required cell) and `profile_fields:field_type_description` (the Type column). The field card uses `profile_fields:profile_data`.
 - The `profiles/profile_types` schema gives the customer fields their *Checkout* column back (`FieldsList::withCheckoutArea()`).
-- The add-on's data reaches its script inside its own inline script (`Tygh.euph_profile_types`), never in a `<script type="application/json">` block: CS-Cart joins the inline scripts of a page into one script, where such a block is a syntax error.
+- The add-on's data reaches its script inside its own inline script (`Tygh.euph_profile_types.list`), never in a `<script type="application/json">` block: CS-Cart joins the inline scripts of a page into one script, where such a block is a syntax error.
 - Fields are filtered in the `get_profile_fields` / `get_profile_fields_post` hooks, and an order's values in `get_order_info` (`Service\OrderFields`).
 - The checkout uses its own block filling.
 - **Texts after an update:** CS-Cart reads an add-on's language packs at install only. Whenever the packs change (an update of the add-on), the add-on writes its texts again in every language of the store, English where a language has no pack of its own (`fn_euph_profile_types_refresh_texts()`, from `init.php`). A text edited in *Translations* is replaced then.
@@ -316,7 +306,7 @@ Addon-euph-profile_types/
 ├── design/backend/…         type list and card, Profile fields list by type, field card block,
 │                            list columns, order sidebar
 ├── design/themes/responsive/…  scripts, styles, vendor type badge
-├── js/addons/euph_profile_types/func.js   form redraw, pills, invoice details, Profile fields
+├── js/addons/euph_profile_types/func.js   form redraw, pills, Profile fields
 │                                          list by type, admin helpers
 ├── var/langs/{en,ro}/addons/euph_profile_types.po
 └── docs/mockups/            the screens above and their sources (not packaged)
@@ -378,6 +368,5 @@ The code is checked by static analysis and unit tests, but it was not run inside
    - Customers and Orders export: *Profile type*; import a customer with a type code, then with an unknown code (warning, type unchanged);
    - order editor: the type of a new order.
 9. **Storefronts** (Ultimate / MV Plus/Ultimate): tie a type to one storefront, turn on the sign-in rule, and sign in on another storefront.
-10. **Russian Payments** (if used): turn on *Do not ask again for invoice details…* and check the *Issue an invoice* payment at checkout.
 11. **Multi-Vendor:** vendor types in the application, plans by type, the type next to the vendor name.
 12. **Disable** the add-on: stock profile and checkout forms, and the checkout blocks back to their filling. **Re-enable**: everything back. **Uninstall** on the copy: tables and type columns gone, profile fields still there.
