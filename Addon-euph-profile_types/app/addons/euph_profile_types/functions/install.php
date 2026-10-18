@@ -6,6 +6,8 @@ use Tygh\Addons\EuphProfileTypes\Cast;
 use Tygh\Addons\EuphProfileTypes\Db\Database;
 use Tygh\Addons\EuphProfileTypes\Enum\UserKind;
 use Tygh\Addons\EuphProfileTypes\Service\CheckoutBlockFilling;
+use Tygh\Addons\EuphProfileTypes\Service\LanguagePack;
+use Tygh\Registry;
 
 if (!defined('BOOTSTRAP')) {
     exit('Access denied');
@@ -15,6 +17,12 @@ if (!defined('BOOTSTRAP')) {
 function fn_euph_profile_types_blocks_state_key(): string
 {
     return 'euph_profile_types_checkout_blocks';
+}
+
+/** Storage key of the language packs last written by fn_euph_profile_types_refresh_texts(). */
+function fn_euph_profile_types_texts_key(): string
+{
+    return 'euph_profile_types_texts';
 }
 
 /**
@@ -64,6 +72,51 @@ function fn_euph_profile_types_uninstall(): void
     fn_euph_profile_types_drop_columns($container->db());
     if (function_exists('fn_set_storage_data')) {
         fn_set_storage_data(fn_euph_profile_types_blocks_state_key(), null);
+        fn_set_storage_data(fn_euph_profile_types_texts_key(), null);
+    }
+}
+
+/**
+ * The add-on's texts in every language of the store, written again when its
+ * language packs change. CS-Cart reads the packs at install only, so a text
+ * an update of the add-on changed or added would never show on a store that
+ * already has it. A language without a pack of its own gets the English
+ * texts, as at install. A text edited in Translations is replaced when the
+ * add-on's packs change. Never breaks a page: on a failure the texts stay.
+ */
+function fn_euph_profile_types_refresh_texts(): void
+{
+    try {
+        if (!function_exists('fn_get_storage_data') || !function_exists('fn_set_storage_data')) {
+            return;
+        }
+        $root = Cast::string(Registry::get('config.dir.lang_packs'));
+        if ($root === '') {
+            $root = Cast::string(Registry::get('config.dir.root')) . '/var/langs/';
+        }
+        $files = glob(rtrim($root, '/') . '/*/addons/euph_profile_types.po') ?: [];
+        $stamp = '';
+        foreach ($files as $file) {
+            $stamp .= $file . ':' . (int) filemtime($file) . ':' . (int) filesize($file) . '|';
+        }
+        $stamp = md5($stamp);
+        if ($files === [] || fn_get_storage_data(fn_euph_profile_types_texts_key()) === $stamp) {
+            return;
+        }
+        // Stamped first: packs that cannot be written are tried again after
+        // their next change, not on every request.
+        fn_set_storage_data(fn_euph_profile_types_texts_key(), $stamp);
+        $packs = [];
+        foreach ($files as $file) {
+            $packs[basename(dirname($file, 2))] = LanguagePack::variables((string) file_get_contents($file));
+        }
+        $db = fn_euph_profile_types_container()->db();
+        $languages = array_map(static fn (mixed $code): string => Cast::string($code), $db->column('SELECT lang_code FROM ?:languages'));
+        foreach (array_chunk(LanguagePack::rows($packs, $languages, 'en'), 200) as $rows) {
+            $db->execute('REPLACE INTO ?:language_values ?m', $rows);
+        }
+    } catch (\Throwable $e) {
+        error_log('euph_profile_types: the texts were not refreshed: ' . $e->getMessage());
     }
 }
 

@@ -299,6 +299,57 @@ function fn_euph_profile_types_after_profile_saved(string $action, array $userDa
 }
 
 /**
+ * Customers export: the type code of a user (schemas/exim/users.post.php).
+ */
+function fn_euph_profile_types_exim_get_type(mixed $user_id): string
+{
+    return Cast::string(fn_euph_profile_types_user_row(Cast::int($user_id))['euph_profile_type'] ?? '');
+}
+
+/**
+ * Customers import, the "Profile type" cell of a customer: a code is taken
+ * only when it is the code of a customer type the administrator could give
+ * (any status but disabled), and the customer then moves to the user groups
+ * of the new type, as on a change in the panel. An empty cell leaves the type
+ * as it is, and so does an unknown code, with a warning. A vendor
+ * administrator has the type of their vendor: the cell is left out for them.
+ */
+function fn_euph_profile_types_exim_put_type(mixed $user_id, mixed $code): bool
+{
+    $userId = Cast::int($user_id);
+    $code = CodeValidator::normalize(Cast::string($code));
+    $container = fn_euph_profile_types_container();
+    $catalog = $container->catalog();
+    if ($userId <= 0 || $code === '' || !$catalog->isEnabled(UserKind::Customer)) {
+        return true;
+    }
+    $user = fn_euph_profile_types_user_row($userId);
+    if (Cast::string($user['user_type'] ?? '') !== UserKind::Customer->value) {
+        return true;
+    }
+    $langCode = fn_euph_profile_types_lang();
+    $type = $catalog->assignableByAdmin(UserKind::Customer, $code, $langCode);
+    if ($type === null) {
+        fn_euph_profile_types_notify('W', fn_euph_profile_types_text(
+            'euph_profile_types.import_unknown_type',
+            '"[code]" is not the code of a customer type: the type of the customer #[user_id] was left as it was.',
+            ['[code]' => $code, '[user_id]' => (string) $userId],
+        ));
+
+        return false;
+    }
+    $previous = Cast::string($user['euph_profile_type'] ?? '');
+    if (strcasecmp($previous, $type->code) === 0) {
+        return true;
+    }
+    $container->db()->execute('UPDATE ?:users SET euph_profile_type = ?s WHERE user_id = ?i', $type->code, $userId);
+    $old = $previous !== '' ? $catalog->byCode($previous, $langCode) : null;
+    fn_euph_profile_types_sync_usergroups($userId, $old !== null ? $old->usergroupIds : [], $type->usergroupIds, $container->settings()->groupStatus);
+
+    return true;
+}
+
+/**
  * The registration form remembers the type posted last (it comes back after
  * an error) and the type a locked link fixed; a successful registration
  * forgets both.

@@ -616,7 +616,7 @@
     /* ── Admin panel: CS-Cart's list of profile fields, by type ──────── */
 
     var LIST_VIEW_KEY = 'euph_profile_types.list_view.';
-    var LIST_MODES = ['types', 'general', 'locked', 'twin'];
+    var LIST_MODES = ['types', 'general', 'locked'];
 
     /** Set by the add-on's inline script (hooks/index/scripts.post.tpl). */
     function listConfig() {
@@ -702,7 +702,7 @@
         }
     }
 
-    /** How a field is drawn: its rows (types, twin) or its general line (general, locked). */
+    /** How a field is drawn: its rows (types) or its general line (general, locked). */
     function setFieldMode(form, fieldId, mode) {
         var cells = fieldCells(form, fieldId);
         var storefront = form.querySelector('input[type="checkbox"][name="fields_data[' + fieldId + '][storefront_show]"]');
@@ -719,7 +719,7 @@
         }
         // A vendor field set per type: CS-Cart's "Show on storefront" column does not decide.
         if (storefront && !storefront.closest('.euph-pt-list-cell') && storefront.closest('td')) {
-            storefront.closest('td').classList.toggle('euph-pt-list-inert', mode === 'types' || mode === 'twin');
+            storefront.closest('td').classList.toggle('euph-pt-list-inert', mode === 'types');
         }
     }
 
@@ -858,6 +858,53 @@
         });
     }
 
+    /**
+     * At the top of each section of the list (Contact information, Billing
+     * address, Shipping address...): what each column is, as under the
+     * titles of the list, so a long list needs no scrolling back up.
+     */
+    function addSectionHeads(form, config) {
+        var doc = form.ownerDocument;
+        var bodies = form.querySelectorAll('tbody');
+        var added = 0;
+
+        for (var i = 0; i < bodies.length; i++) {
+            var cellOfList = bodies[i].querySelector('.euph-pt-list-cell');
+            var row = cellOfList ? cellOfList.closest('tr') : null;
+
+            if (!row || row.parentNode !== bodies[i] || bodies[i].querySelector('.euph-pt-list-section-head')) {
+                continue;
+            }
+            var head = doc.createElement('tr');
+
+            head.className = 'euph-pt-list-section-head';
+            for (var c = 0; c < row.cells.length; c++) {
+                var source = row.cells[c];
+                var td = doc.createElement('td');
+                var listCell = source.querySelector('.euph-pt-list-cell');
+
+                if (source.getAttribute('width')) {
+                    td.setAttribute('width', source.getAttribute('width'));
+                }
+                if (source.colSpan > 1) {
+                    td.colSpan = source.colSpan;
+                }
+                if (listCell) {
+                    var area = listCell.getAttribute('data-ca-euph-pt-area');
+                    var first = area === config.first_area;
+
+                    td.className = 'euph-pt-list-col' + (first ? ' euph-pt-list-col--first' : '');
+                    td.appendChild(listFlagsHead(doc, config, area, first));
+                }
+                head.appendChild(td);
+            }
+            bodies[i].insertBefore(head, bodies[i].firstChild);
+            added++;
+        }
+
+        return added;
+    }
+
     function listSwitcher(doc, config) {
         var bar = doc.createElement('div');
         var label = doc.createElement('span');
@@ -990,6 +1037,7 @@
             }
         }
         addListHeads(form, config);
+        addSectionHeads(form, config);
         form.insertBefore(listSwitcher(doc, config), form.firstChild);
         form.setAttribute('data-ca-euph-pt-kind', config.kind || 'C');
         form.classList.add('euph-pt-list');

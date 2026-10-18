@@ -257,8 +257,8 @@ msgid "Fields"
 msgstr "Câmpuri"
 
 msgctxt "Languages::euph_profile_types.for"
-msgid "Type of"
-msgstr "Tip pentru"
+msgid "Account type"
+msgstr "Tip cont"
 
 msgctxt "Languages::euph_profile_types.for_customers"
 msgid "Customers"
@@ -416,14 +416,6 @@ msgctxt "Languages::euph_profile_types.vendor_plans_hint"
 msgid "The plans an applicant of this type can choose. None ticked: every plan."
 msgstr "Planurile pe care le poate alege un solicitant de acest tip. Nebifat niciunul: toate planurile."
 
-msgctxt "Languages::euph_profile_types.field"
-msgid "Field"
-msgstr "Câmp"
-
-msgctxt "Languages::euph_profile_types.section_vendor"
-msgid "Vendor information"
-msgstr "Informații vânzător"
-
 msgctxt "Languages::euph_profile_types.area_profile"
 msgid "In the profile"
 msgstr "În profil"
@@ -451,18 +443,6 @@ msgstr "afișează"
 msgctxt "Languages::euph_profile_types.required"
 msgid "required"
 msgstr "obligatoriu"
-
-msgctxt "Languages::euph_profile_types.general_settings"
-msgid "general checkboxes"
-msgstr "setări generale"
-
-msgctxt "Languages::euph_profile_types.general_settings_tooltip"
-msgid "No type governs this field yet: it works by its general checkboxes. Tick differently for a type to set it per type."
-msgstr "Niciun tip nu guvernează încă acest câmp: funcționează după bifele generale. Bifați diferit pentru un tip ca să îl setați pe tipuri."
-
-msgctxt "Languages::euph_profile_types.fields_tab_note"
-msgid "One common list of fields: what you tick here is what customers of this type see. A field with nothing ticked for any type works by its general checkboxes; once ticked differently for a type, it shows to each type only where that type's checkboxes say so."
-msgstr "O singură listă comună de câmpuri: ce bifați aici vede clientul de acest tip. Un câmp nebifat la niciun tip funcționează după bifele generale; odată bifat diferit pentru un tip, apare fiecărui tip doar unde o spun bifele tipului."
 
 msgctxt "Languages::euph_profile_types.field_governed_note"
 msgid "This field is set per type: the general checkboxes above do not decide where it shows while the add-on is on."
@@ -499,6 +479,10 @@ msgstr "Preia tipurile și câmpurile"
 msgctxt "Languages::euph_profile_types.legacy_imported"
 msgid "Carried over from version 1.x: [types] types, [rules] field settings, [adopted] fields joined the common list, [values] values copied."
 msgstr "Preluate din versiunea 1.x: [types] tipuri, [rules] setări de câmpuri, [adopted] câmpuri adăugate în lista comună, [values] valori copiate."
+
+msgctxt "Languages::euph_profile_types.import_unknown_type"
+msgid "\"[code]\" is not the code of a customer type: the type of the customer #[user_id] was left as it was."
+msgstr "„[code]” nu este codul unui tip de client: tipul clientului #[user_id] a rămas cel de dinainte."
 
 msgctxt "Languages::euph_profile_types.how_it_works"
 msgid "How it works"
@@ -551,10 +535,6 @@ msgstr "general"
 msgctxt "Languages::euph_profile_types.tag_always"
 msgid "always"
 msgstr "mereu"
-
-msgctxt "Languages::euph_profile_types.tag_as_billing"
-msgid "as in the billing address"
-msgstr "ca la adresa de facturare"
 
 msgctxt "Languages::euph_profile_types.set_per_type"
 msgid "Set per type"

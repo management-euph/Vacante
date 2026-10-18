@@ -28,7 +28,7 @@
                         {foreach $card.types as $type}
                             <tr class="euph-pt-row{if $type.status == "D"} euph-pt-row--disabled{/if}">
                                 <td data-th="{__("euph_profile_types.profile_type")}">
-                                    <a href="{"euph_profile_types.update?type_id=`$type.type_id`&selected_section=fields"|fn_url}" class="euph-pt-row__name">{$type.name}</a>
+                                    <a href="{"euph_profile_types.update?type_id=`$type.type_id`"|fn_url}" class="euph-pt-row__name">{$type.name}</a>
                                     <span class="euph-pt-code">{$type.code}</span>
                                     {if $type.is_standard == "Y"}<span class="label">{__("euph_profile_types.standard")}</span>{/if}
                                     {if $type.status == "H"}<span class="label label-info">{__("hidden")}</span>{elseif $type.status == "D"}<span class="label">{__("disabled")}</span>{/if}

@@ -23,19 +23,19 @@ Mockups of the main screens. The numbered marks refer to the notes under each im
 <td><a href="docs/mockups/admin-03-type-card-rules.png"><img src="docs/mockups/admin-03-type-card-rules.png" width="260" alt="Type card, Rules tab"></a><br>Type card: groups, activation, storefronts</td>
 </tr>
 <tr>
-<td><a href="docs/mockups/admin-04-type-card-fields.png"><img src="docs/mockups/admin-04-type-card-fields.png" width="260" alt="Type card, Fields tab"></a><br>Type card: the fields of the type</td>
 <td><a href="docs/mockups/admin-05-profile-field-card.png"><img src="docs/mockups/admin-05-profile-field-card.png" width="260" alt="Profile field card with the Profile types block"></a><br>Profile field card: a row per type</td>
 <td><a href="docs/mockups/admin-06-customer-card.png"><img src="docs/mockups/admin-06-customer-card.png" width="260" alt="Customer card"></a><br>Customer card</td>
+<td><a href="docs/mockups/admin-07-order-details.png"><img src="docs/mockups/admin-07-order-details.png" width="260" alt="Order details"></a><br>Order: the type is the first sidebar block</td>
 </tr>
 <tr>
-<td><a href="docs/mockups/admin-07-order-details.png"><img src="docs/mockups/admin-07-order-details.png" width="260" alt="Order details"></a><br>Order: the type is the first sidebar block</td>
 <td><a href="docs/mockups/admin-08-settings.png"><img src="docs/mockups/admin-08-settings.png" width="260" alt="Add-on settings"></a><br>Settings</td>
 <td><a href="docs/mockups/storefront-01-registration.png"><img src="docs/mockups/storefront-01-registration.png" width="260" alt="Registration by type"></a><br>Registration: Company vs Private person</td>
+<td><a href="docs/mockups/storefront-02-checkout.png"><img src="docs/mockups/storefront-02-checkout.png" width="260" alt="Checkout with the type choice"></a><br>Checkout: type choice, invoice details</td>
 </tr>
 <tr>
-<td><a href="docs/mockups/storefront-02-checkout.png"><img src="docs/mockups/storefront-02-checkout.png" width="260" alt="Checkout with the type choice"></a><br>Checkout: type choice, invoice details</td>
 <td><a href="docs/mockups/storefront-03-order-details.png"><img src="docs/mockups/storefront-03-order-details.png" width="260" alt="Order details in the customer account"></a><br>Order in the customer account</td>
 <td><a href="docs/mockups/storefront-04-vendor-types.png"><img src="docs/mockups/storefront-04-vendor-types.png" width="260" alt="Vendor types"></a><br>Multi-Vendor: vendor types and plans</td>
+<td></td>
 </tr>
 <tr>
 <td><a href="docs/mockups/admin-09-fields-all-types.png"><img src="docs/mockups/admin-09-fields-all-types.png" width="260" alt="Profile fields, all types"></a><br>Profile fields: all types</td>
@@ -81,16 +81,19 @@ Each type has these checkboxes for every profile field:
 | At registration: show | In the application: show |
 | At checkout: show / required | On the storefront (vendor page): show |
 
-They can be ticked in three places, all on the same data:
+They can be ticked in two places, on the same data:
 
 - **CS-Cart's own Profile fields list.** A switcher above the list shows *All types* or one type at a time:
-  - *All types*: a field set per type shows a row per type, the type named once with its colour. A field still on its general checkboxes takes **one line**: CS-Cart's own checkboxes, for all types. **Set per type** opens its rows, filled from those checkboxes. The e-mail stays always shown, and a shipping field follows its billing twin.
+  - *All types*: a field set per type shows a row per type, the type named once with its colour. A field still on its general checkboxes takes **one line**: CS-Cart's own checkboxes, for all types. **Set per type** opens its rows, filled from those checkboxes. The e-mail stays always shown.
   - *One type*: one line per field, the form that type gets. Fields the type does not see are greyed. Ticking a general field here sets it per type; the other types keep what they saw.
   - Everything is saved with the list's own **Save**. The view is remembered, and a type card opens the list on its type.
+  - The names of the columns (show, required, at registration) stand at the top of every section too, not only under the titles of the list.
+  - **Billing and shipping fields are set each on its own**, as in CS-Cart's own list: a field can be on the billing address only, on the shipping address only, or on both, for each type.
   - The list's own template is not replaced: the rows hang on its hook in each Show / Required cell.
   - **Checkout column.** CS-Cart 4.18 and later show only the *Profile* column for customer fields, as the checkout takes its fields from the blocks of the checkout layout. A customer type still decides the fields of its checkout (the *By profile type* filling of those blocks), so while the add-on sets customer types the column comes back, as with the 1.x add-on: *Profile* show / required / at registration, *Checkout* show / required, each with CS-Cart's own checkboxes and the rows of the types. The field card gets CS-Cart's *Checkout* checkboxes too.
 - **The field card:** a **Profile types** block with one row per type.
-- **The type card:** a **Fields** tab with one row per field.
+
+The type card has no list of fields of its own: its *Fields* link opens the Profile fields list on the view of the type.
 
 **How a field is shown:**
 
@@ -127,7 +130,8 @@ The list of fields stays one list. A value survives a change of type, and report
   - the type: `{{ user.profile_type }}` (name) and `{{ user.profile_type_code }}`.
 
   The stock invoice prints only the fields CS-Cart knows about, so add your own fields to it once.
-- **Exports:** *Profile type* is a field of the Customers and Orders exports.
+- **Exports:** *Profile type* is a field of the Customers and Orders exports. The Customers export also carries the vendor administrators, with the type of their vendor.
+- **Import of customers:** the *Profile type* code is checked. Only the code of a customer type is taken (any status but *Disabled*), and the customer moves to the user groups of the new type, as on a change in the panel. An empty cell leaves the type as it is; so does an unknown code, with a warning that names the customer.
 - **Lists:** the Customers list (and the Vendors list) get a *Profile type* column and a search filter.
 - **An order carries only the values of its type's fields.** A customer keeps the values of a type they no longer have, so switching back restores them, and CS-Cart copies the whole profile into the cart. Read through `fn_get_order_info()`, an order therefore leaves out the values of the fields its type shows nowhere (profile, registration, checkout): a custom field is left out of `fields`, CS-Cart's own column (such as `company`) is blank, the e-mail is kept. Reading deletes nothing: change the order's type and they are back (an order saved again in the order editor keeps what its type shows).
 
@@ -291,6 +295,7 @@ Register handlers as usual: `fn_register_hooks('euph_update_profile_type_post', 
 - The add-on's data reaches its script inside its own inline script (`Tygh.euph_profile_types`), never in a `<script type="application/json">` block: CS-Cart joins the inline scripts of a page into one script, where such a block is a syntax error.
 - Fields are filtered in the `get_profile_fields` / `get_profile_fields_post` hooks, and an order's values in `get_order_info` (`Service\OrderFields`).
 - The checkout uses its own block filling.
+- **Texts after an update:** CS-Cart reads an add-on's language packs at install only. Whenever the packs change (an update of the add-on), the add-on writes its texts again in every language of the store, English where a language has no pack of its own (`fn_euph_profile_types_refresh_texts()`, from `init.php`). A text edited in *Translations* is replaced then.
 - The rest goes through hooks on users, companies and orders, pre/post controllers, template hooks, and the `block_manager`, `documents`, `exim`, `menu`, `permissions` and `profiles` schemas.
 
 ### Code layout
@@ -344,11 +349,12 @@ The code is checked by static analysis and unit tests, but it was not run inside
 1. **Install** the add-on, on the store's own theme (`nova_theme` in production).
    - The *Customer profile types* menu item, the two standard types and the settings appear.
    - The checkout blocks show the *By profile type* filling in *Design → Layouts → Checkout*.
-2. **Create a type**, for example Company `B`: tick its fields on the *Fields* tab, give it a user group, set *Wait for approval*.
+2. **Create a type**, for example Company `B`: give it a user group, set *Wait for approval*, and tick its fields in the Profile fields list (the type card's *Fields* link opens it on the type).
 3. **Open Profile fields.**
    - The switcher appears above CS-Cart's list, and customer fields have a *Checkout* column next to *Profile*. Try *All types* and each type.
    - Save the list without touching anything: no field may become "per type".
    - Use *Set per type* on a field, tick one type differently and save. The other types keep what they saw.
+   - Tick a billing field and untick its shipping twin for a type (and the other way round): each keeps its own checkboxes.
    - Open a field card: check the *Profile types* block and its note.
    - If the switcher does not show, the list's hooks are not where this add-on expects them in your CS-Cart version. The field card and the type card still work.
 4. **Register on the storefront.**
@@ -369,7 +375,7 @@ The code is checked by static analysis and unit tests, but it was not run inside
 8. **Admin:**
    - customer card: the type change redraws the card;
    - Customers list: column and filter;
-   - Customers and Orders export: *Profile type*;
+   - Customers and Orders export: *Profile type*; import a customer with a type code, then with an unknown code (warning, type unchanged);
    - order editor: the type of a new order.
 9. **Storefronts** (Ultimate / MV Plus/Ultimate): tie a type to one storefront, turn on the sign-in rule, and sign in on another storefront.
 10. **Russian Payments** (if used): turn on *Do not ask again for invoice details…* and check the *Issue an invoice* payment at checkout.
