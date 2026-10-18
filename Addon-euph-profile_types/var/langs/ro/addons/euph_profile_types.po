@@ -437,12 +437,12 @@ msgid "On the storefront"
 msgstr "Pe magazin"
 
 msgctxt "Languages::euph_profile_types.show"
-msgid "show"
-msgstr "afișează"
+msgid "Show"
+msgstr "Afișează"
 
 msgctxt "Languages::euph_profile_types.required"
-msgid "required"
-msgstr "obligatoriu"
+msgid "Required"
+msgstr "Obligatoriu"
 
 msgctxt "Languages::euph_profile_types.field_governed_note"
 msgid "This field is set per type: the general checkboxes above do not decide where it shows while the add-on is on."
