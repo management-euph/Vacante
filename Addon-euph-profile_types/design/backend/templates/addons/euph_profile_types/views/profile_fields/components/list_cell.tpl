@@ -6,7 +6,7 @@
     all types or for one type (js/addons/euph_profile_types/func.js).
 
     list     fn_euph_profile_types_fields_list(): types, areas, first_area
-    item     the field: mode (types, general, locked, twin), governed, rows
+    item     the field: mode (types, general, locked), governed, rows
              (type id => flags + baseline)
     area     the area of the cell: profile or checkout
     field_id the field
@@ -15,9 +15,6 @@
 {$is_first = ($area == $list.first_area)}
 {$mode = $item.mode}
 {$can_split = ($mode == "general")}
-{if $mode == "twin" && !$item.governed}
-    {$mode = "general"}
-{/if}
 {$name = "euph_pt_list[`$field_id`]"}
 <div class="euph-pt-list-cell" data-ca-euph-pt-field="{$field_id}" data-ca-euph-pt-area="{$area}" data-ca-euph-pt-mode="{$mode}" data-ca-euph-pt-first="{if $is_first}Y{else}N{/if}" style="--euph-pt-cols: {$flags|count};">
     {if $is_first && ($can_split || $mode == "types")}
@@ -49,27 +46,18 @@
                 {if $is_first}
                     <span class="euph-pt-list-label">
                         <span class="euph-pt-dot euph-pt-dot--{$type.tone}"></span>{$type.name}
-                        {if $mode == "twin" && $type@first}
-                            <span class="euph-pt-list-tag">{__("euph_profile_types.tag_as_billing")}</span>
-                        {/if}
                     </span>
-                    {if $mode != "twin"}
-                        <input type="hidden" name="{$name}[{$type.id}][baseline]" value="{$row.baseline}" />
-                    {/if}
+                    <input type="hidden" name="{$name}[{$type.id}][baseline]" value="{$row.baseline}" />
                 {/if}
                 {foreach $flags as $flag}
                     {$required_flag = $flag|replace:"_show":"_required"}
                     {$show_flag = $flag|replace:"_required":"_show"}
                     <span class="euph-pt-list-slot">
-                        {if $mode == "twin"}
-                            <input type="checkbox" disabled="disabled" data-ca-euph-pt-flag="{$flag}" title="{__("euph_profile_types.tag_as_billing")}" {if $row.flags[$flag] == "Y"}checked="checked"{/if} />
-                        {else}
-                            <input type="hidden" name="{$name}[{$type.id}][{$flag}]" value="N" />
-                            <input type="checkbox" name="{$name}[{$type.id}][{$flag}]" value="Y" id="{$id}_{$flag}" data-ca-euph-pt-flag="{$flag}" title="{$type.name}"
-                                {if $required_flag != $flag && in_array($required_flag, $flags)}class="cm-euph-pt-show" data-ca-euph-pt-required="#{$id}_{$required_flag}"{/if}
-                                {if $row.flags[$flag] == "Y"}checked="checked"{/if}
-                                {if $show_flag != $flag && in_array($show_flag, $flags) && $row.flags[$show_flag] != "Y"}disabled="disabled"{/if} />
-                        {/if}
+                        <input type="hidden" name="{$name}[{$type.id}][{$flag}]" value="N" />
+                        <input type="checkbox" name="{$name}[{$type.id}][{$flag}]" value="Y" id="{$id}_{$flag}" data-ca-euph-pt-flag="{$flag}" title="{$type.name}"
+                            {if $required_flag != $flag && in_array($required_flag, $flags)}class="cm-euph-pt-show" data-ca-euph-pt-required="#{$id}_{$required_flag}"{/if}
+                            {if $row.flags[$flag] == "Y"}checked="checked"{/if}
+                            {if $show_flag != $flag && in_array($show_flag, $flags) && $row.flags[$show_flag] != "Y"}disabled="disabled"{/if} />
                     </span>
                 {/foreach}
             </div>

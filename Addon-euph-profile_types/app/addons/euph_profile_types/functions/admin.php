@@ -59,28 +59,6 @@ function fn_euph_profile_types_field_rows(array $fieldIds): array
 }
 
 /**
- * A field and its billing/shipping twin: they always work alike.
- *
- * @param list<int> $fieldIds
- *
- * @return list<int>
- */
-function fn_euph_profile_types_with_twins(array $fieldIds): array
-{
-    if ($fieldIds === []) {
-        return [];
-    }
-    $twins = fn_euph_profile_types_container()->db()->column(
-        'SELECT field_id FROM ?:profile_fields WHERE matching_id IN (?n)'
-        . ' UNION SELECT matching_id FROM ?:profile_fields WHERE field_id IN (?n) AND matching_id > 0',
-        $fieldIds,
-        $fieldIds,
-    );
-
-    return Cast::idList(array_merge($fieldIds, $twins));
-}
-
-/**
  * The "Profile types" block of a profile field card.
  *
  * @param array<array-key, mixed> $field the field being edited ([] for a new one)
@@ -120,7 +98,9 @@ function fn_euph_profile_types_field_card(array $field, string $profileType): ?a
 /**
  * Saves the "Profile types" block of a field card, after CS-Cart saved the
  * field: $fieldId for an existing field, else the fields created by this
- * request (ids above $maxIdBefore: a billing/shipping field is two fields).
+ * request (ids above $maxIdBefore: a new billing/shipping field is two
+ * fields, which start alike). A billing field and its shipping twin are set
+ * each on its own card afterwards.
  *
  * @param array<array-key, mixed> $posted type id => checkboxes + baseline
  */
@@ -130,7 +110,6 @@ function fn_euph_profile_types_save_field_card(array $posted, int $fieldId, int 
     $fieldIds = $fieldId > 0
         ? [$fieldId]
         : Cast::idList($container->db()->column('SELECT field_id FROM ?:profile_fields WHERE field_id > ?i', $maxIdBefore));
-    $fieldIds = fn_euph_profile_types_with_twins($fieldIds);
     if ($fieldIds === []) {
         return;
     }
@@ -152,96 +131,6 @@ function fn_euph_profile_types_save_field_card(array $posted, int $fieldId, int 
     if ($changed) {
         $container->rules()->replaceForFields($fieldIds, $rules);
     }
-}
-
-/**
- * The "Fields" tab of a type card: every field of the kind, by section; a
- * shipping field that has a billing twin rides on the twin's row.
- *
- * @return list<array{section: string, fields: list<array<string, mixed>>}>
- */
-function fn_euph_profile_types_type_field_table(ProfileType $type): array
-{
-    $container = fn_euph_profile_types_container();
-    $rules = $container->rules()->all();
-    $all = Cast::array(fn_get_profile_fields(
-        'ALL',
-        [],
-        fn_euph_profile_types_descr_lang(),
-        ['profile_type' => $type->kind->fieldProfileType(), 'euph_skip' => true],
-    ));
-    $billingIds = array_map(static fn (mixed $id): int => Cast::int($id), array_keys(Cast::array($all['B'] ?? [])));
-
-    $table = [];
-    foreach (['C', 'B', 'S'] as $section) {
-        $rows = [];
-        foreach (Cast::array($all[$section] ?? []) as $field) {
-            $field = Cast::array($field);
-            $fieldId = Cast::int($field['field_id'] ?? 0);
-            if ($fieldId <= 0 || ($section === 'S' && in_array(Cast::int($field['matching_id'] ?? 0), $billingIds, true))) {
-                continue;
-            }
-            $rule = fn_euph_profile_types_effective_rule($rules, $type->id, $fieldId, $field);
-            $rows[] = [
-                'field_id' => $fieldId,
-                'description' => Cast::string($field['description'] ?? ''),
-                'field_name' => Cast::string($field['field_name'] ?? ''),
-                'twin' => $section === 'B' && Cast::int($field['matching_id'] ?? 0) > 0,
-                'governed' => $rules->isGoverned($fieldId),
-                'rule' => $rule->toRow(),
-                'baseline' => $rule->signature(),
-            ];
-        }
-        if ($rows !== []) {
-            $table[] = ['section' => $section, 'fields' => $rows];
-        }
-    }
-
-    return $table;
-}
-
-/**
- * Saves the "Fields" tab of a type card. Returns how many fields changed.
- *
- * @param array<array-key, mixed> $posted field id => checkboxes + baseline
- */
-function fn_euph_profile_types_save_type_fields(int $typeId, array $posted): int
-{
-    $container = fn_euph_profile_types_container();
-    $type = $container->types()->find($typeId, fn_euph_profile_types_descr_lang());
-    if ($type === null) {
-        return 0;
-    }
-    $fieldIds = Cast::idList(array_keys($posted));
-    $fields = fn_euph_profile_types_field_rows(fn_euph_profile_types_with_twins($fieldIds));
-    $changed = [];
-    foreach ($fieldIds as $fieldId) {
-        $row = Cast::array($posted[$fieldId] ?? []);
-        $field = $fields[$fieldId] ?? null;
-        if ($field === null || Cast::string($field['profile_type'] ?? '') !== $type->kind->fieldProfileType()) {
-            continue;
-        }
-        $baseline = Cast::string($row['baseline'] ?? '');
-        $rule = FieldRule::fromFlags($typeId, $fieldId, $row + FieldRule::flagsFromSignature($baseline));
-        if ($rule->signature() === $baseline) {
-            continue;
-        }
-        $changed[$fieldId] = $rule;
-        $twinId = Cast::int($field['matching_id'] ?? 0);
-        if ($twinId > 0 && isset($fields[$twinId])) {
-            $changed[$twinId] = $rule->withFieldId($twinId);
-        }
-    }
-    if ($changed === []) {
-        return 0;
-    }
-    $others = array_map(
-        static fn (ProfileType $other): int => $other->id,
-        array_filter($container->types()->ofKind($type->kind, fn_euph_profile_types_descr_lang()), static fn (ProfileType $other): bool => $other->id !== $typeId),
-    );
-    $container->rules()->replaceForType($typeId, $changed, array_values($others), $fields);
-
-    return count($changed);
 }
 
 /**
@@ -332,7 +221,7 @@ function fn_euph_profile_types_save_fields_list(array $posted, string $profileTy
     $fields = fn_euph_profile_types_field_rows(Cast::idList(array_keys($posted)));
     $changes = FieldsList::changes($kind, $types, $container->rules()->all(), $fields, $posted);
     foreach ($changes as $fieldId => $rules) {
-        $container->rules()->replaceForFields(fn_euph_profile_types_with_twins([$fieldId]), $rules);
+        $container->rules()->replaceForFields([$fieldId], $rules);
     }
 
     return count($changes);

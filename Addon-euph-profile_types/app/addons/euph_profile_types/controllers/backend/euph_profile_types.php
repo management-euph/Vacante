@@ -16,8 +16,8 @@ if (!defined('BOOTSTRAP')) {
  *
  * GET  euph_profile_types.manage?user_type=C|V   the list of types
  * GET  euph_profile_types.add?user_type=C|V      a new type
- * GET  euph_profile_types.update?type_id=N       the type card: General, Rules, Fields
- * POST euph_profile_types.update                 type_id, type_data[...], type_fields[field id][...]
+ * GET  euph_profile_types.update?type_id=N       the type card: General, Rules
+ * POST euph_profile_types.update                 type_id, type_data[...]
  * POST euph_profile_types.m_update               positions (types_data) and the default type
  * POST euph_profile_types.delete                 type_id
  * POST euph_profile_types.m_delete               type_ids[]
@@ -39,7 +39,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($mode === 'update') {
         $typeId = fn_euph_update_profile_type($_REQUEST['type_id'] ?? 0, $_REQUEST['type_data'] ?? [], $langCode);
         if ($typeId > 0) {
-            fn_euph_profile_types_save_type_fields($typeId, Cast::array($_REQUEST['type_fields'] ?? []));
             fn_euph_profile_types_notify('N', Cast::string(__('text_changes_saved')));
             $section = preg_replace('/[^a-z_]/', '', Cast::string($_REQUEST['selected_section'] ?? '')) ?? '';
             $suffix = '.update?type_id=' . $typeId . ($section !== '' ? '&selected_section=' . $section : '');
@@ -136,14 +135,12 @@ if ($mode === 'update' || $mode === 'add') {
     }
     $kind = $type !== null ? $type->kind : $kind;
 
-    $tabs = [
+    // The fields of a type are set in the Profile fields list, on the view of
+    // that type: the General tab links to it.
+    Registry::set('navigation.tabs', [
         'general' => ['title' => __('general'), 'js' => true],
         'rules' => ['title' => __('euph_profile_types.tab_rules'), 'js' => true],
-    ];
-    if ($type !== null) {
-        $tabs['fields'] = ['title' => __('euph_profile_types.tab_fields'), 'js' => true];
-    }
-    Registry::set('navigation.tabs', $tabs);
+    ]);
 
     fn_euph_profile_types_assign('euph_pt_kind', $kind->value);
     fn_euph_profile_types_assign('euph_pt_type', $type !== null ? $type->toArray() : [
@@ -165,7 +162,6 @@ if ($mode === 'update' || $mode === 'add') {
     fn_euph_profile_types_assign('euph_pt_storefronts', fn_euph_profile_types_get_storefronts());
     fn_euph_profile_types_assign('euph_pt_vendor_plans', $kind === UserKind::Vendor ? fn_euph_profile_types_get_vendor_plans() : []);
     if ($type !== null) {
-        fn_euph_profile_types_assign('euph_pt_field_table', fn_euph_profile_types_type_field_table($type));
         fn_euph_profile_types_assign('euph_pt_links', fn_euph_profile_types_registration_links($type));
         fn_euph_profile_types_assign('euph_pt_usage', $container->types()->usage($kind)[$type->code] ?? 0);
     }

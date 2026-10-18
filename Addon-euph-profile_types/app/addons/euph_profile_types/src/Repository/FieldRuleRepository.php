@@ -43,8 +43,9 @@ final class FieldRuleRepository
     }
 
     /**
-     * The field card: replaces every rule of a field (and of its billing or
-     * shipping twin, which always works like it) by the posted ones.
+     * The field card and the list of profile fields: replaces every rule of
+     * the fields (one field, or the two a new billing/shipping field is) by
+     * the posted ones.
      *
      * @param list<int> $fieldIds
      * @param array<int, FieldRule> $rules type id => rule; its field id is ignored
@@ -57,44 +58,6 @@ final class FieldRuleRepository
                 if (!$rule->isEmpty()) {
                     $this->store($rule->withFieldId($fieldId));
                 }
-            }
-        }
-        $this->forget();
-    }
-
-    /**
-     * The "Fields" tab of a type: replaces one type's rules for some fields.
-     *
-     * A field no type governed until now first gets a rule for every other
-     * type of the kind, taken from its general checkboxes: ticking a field for
-     * "Company" must not hide it from everybody else who saw it until then.
-     *
-     * @param array<int, FieldRule> $rules field id => rule of $typeId
-     * @param list<int> $otherTypeIds the other types of the kind
-     * @param array<int, array<array-key, mixed>> $fields field id => ?:profile_fields row
-     */
-    public function replaceForType(int $typeId, array $rules, array $otherTypeIds, array $fields): void
-    {
-        $current = $this->all();
-        foreach ($rules as $fieldId => $rule) {
-            if (!$rule->isEmpty() && !$current->isGoverned($fieldId)) {
-                foreach ($otherTypeIds as $otherTypeId) {
-                    if ($otherTypeId === $typeId || $current->ruleFor($fieldId, $otherTypeId) !== null) {
-                        continue;
-                    }
-                    $seed = FieldRule::fromGeneralFlags($otherTypeId, $fieldId, $fields[$fieldId] ?? []);
-                    if (!$seed->isEmpty()) {
-                        $this->store($seed);
-                    }
-                }
-            }
-            $this->db->execute(
-                'DELETE FROM ?:euph_profile_type_fields WHERE type_id = ?i AND field_id = ?i',
-                $typeId,
-                $fieldId,
-            );
-            if (!$rule->isEmpty()) {
-                $this->store($rule->withTypeId($typeId)->withFieldId($fieldId));
             }
         }
         $this->forget();

@@ -1,5 +1,6 @@
 {*
-    The type card: General, Rules, Fields.
+    The type card: General, Rules. The fields of the type are set in the
+    Profile fields list, on the view of the type (linked from General).
 *}
 {$type = $euph_pt_type}
 {$id = $type.type_id|default:0}
@@ -42,6 +43,16 @@
                     <p class="muted description">{__("euph_profile_types.code_hint")}</p>
                 </div>
             </div>
+
+            {if $id}
+                {if $is_vendor}{$euph_pt_fields_type = "S"}{else}{$euph_pt_fields_type = "U"}{/if}
+                <div class="control-group">
+                    <label class="control-label">{__("euph_profile_types.tab_fields")}:</label>
+                    <div class="controls">
+                        <a class="shift-input euph-pt-fields-link" href="{"profile_fields.manage?profile_type=`$euph_pt_fields_type`&euph_view=`$id`"|fn_url}">{__("euph_profile_types.open_in_profile_fields")}&nbsp;&rsaquo;</a>
+                    </div>
+                </div>
+            {/if}
 
             <div class="control-group">
                 <label for="elm_euph_pt_description" class="control-label">{__("description")}:</label>
@@ -205,16 +216,6 @@
             {/if}
         </div>
 
-        {* ── Fields ──────────────────────────────────────────────── *}
-        {if $id}
-            <div id="content_fields" class="hidden">
-                {if $euph_pt_kind == "V"}{$euph_pt_fields_type = "S"}{else}{$euph_pt_fields_type = "U"}{/if}
-                <p class="euph-pt-fields-link">
-                    <a href="{"profile_fields.manage?profile_type=`$euph_pt_fields_type`&euph_view=`$id`"|fn_url}">{__("euph_profile_types.open_in_profile_fields")}&nbsp;&rsaquo;</a>
-                </p>
-                {include file="addons/euph_profile_types/views/euph_profile_types/components/field_table.tpl" table=$euph_pt_field_table kind=$euph_pt_kind}
-            </div>
-        {/if}
     {/capture}
     {include file="common/tabsbox.tpl" content=$smarty.capture.tabsbox active_tab=$smarty.request.selected_section track=true}
 </form>

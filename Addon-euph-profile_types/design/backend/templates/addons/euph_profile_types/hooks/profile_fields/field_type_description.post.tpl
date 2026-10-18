@@ -7,8 +7,6 @@
     <span class="euph-pt-list-type-tag">
         {if $euph_pt_mode == "locked"}
             {__("euph_profile_types.tag_always")}
-        {elseif $euph_pt_mode == "twin" && $euph_pt_list.fields[$field.field_id].governed}
-            {__("euph_profile_types.tag_as_billing")}
         {else}
             {__("euph_profile_types.tag_general")}
         {/if}

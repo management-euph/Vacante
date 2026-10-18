@@ -50,7 +50,8 @@ final class FieldsListTest extends TestCase
 
     /**
      * Company name set per type (Company only), the e-mail, a general phone,
-     * and a billing city with its shipping twin.
+     * a billing city set per type and its shipping twin on its general
+     * checkboxes.
      *
      * @return array{0: FieldRuleSet, 1: list<array<string, mixed>>}
      */
@@ -59,7 +60,6 @@ final class FieldsListTest extends TestCase
         $rules = new FieldRuleSet([
             new FieldRule(2, 20, profileShow: true, profileRequired: true, registrationShow: true, checkoutShow: true, checkoutRequired: true),
             new FieldRule(1, 31, profileShow: true),
-            new FieldRule(1, 32, profileShow: true),
         ]);
         $fields = [
             self::field(10, 'email', 'C', ['is_default' => 'Y', 'profile_required' => 'Y', 'checkout_required' => 'Y']),
@@ -106,7 +106,7 @@ final class FieldsListTest extends TestCase
         self::assertFalse(FieldsList::isLocked(['field_name' => 'company'], UserKind::Customer));
     }
 
-    public function testEachFieldIsDrawnByTypesOnItsGeneralCheckboxesLockedOrAsItsTwin(): void
+    public function testEachFieldIsDrawnByTypesOnItsGeneralCheckboxesOrLocked(): void
     {
         [$rules, $fields] = self::store();
         $list = FieldsList::build(UserKind::Customer, self::customerTypes(), $rules, $fields);
@@ -122,10 +122,10 @@ final class FieldsListTest extends TestCase
         self::assertSame('locked', $list['fields'][10]['mode']);
         self::assertSame('types', $list['fields'][20]['mode']);
         self::assertSame('general', $list['fields'][21]['mode']);
+        // Billing and shipping are set each on its own.
         self::assertSame('types', $list['fields'][31]['mode']);
-        self::assertSame('twin', $list['fields'][32]['mode']);
-        self::assertSame(31, $list['fields'][32]['twin_of']);
-        self::assertTrue($list['fields'][32]['governed']);
+        self::assertSame('general', $list['fields'][32]['mode']);
+        self::assertFalse($list['fields'][32]['governed']);
 
         // Set per type: each type its own rule, nothing for a type not ticked.
         self::assertSame('YYYYYN', $list['fields'][20]['rows'][2]['baseline']);

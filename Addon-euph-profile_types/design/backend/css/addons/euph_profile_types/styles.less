@@ -70,20 +70,6 @@
     .euph-pt-row--disabled td {
         opacity: .55;
     }
-
-    .euph-pt-section h5 {
-        margin: 10px 0 0;
-        color: @euph-pt-muted;
-        text-transform: uppercase;
-        font-size: 11px;
-        letter-spacing: .04em;
-    }
-
-    .euph-pt-general {
-        margin-left: 6px;
-        background: #fdf3d8;
-        color: #8a6d1d;
-    }
 }
 
 .euph-pt-note {
@@ -174,10 +160,6 @@
     &--8 { background: #64748b; }
 }
 
-.euph-pt-fields-link {
-    margin: 0 0 10px;
-}
-
 .euph-pt-list-views {
     display: flex;
     flex-wrap: wrap;
@@ -257,9 +239,7 @@
     }
 
     &.euph-pt-list--all .euph-pt-list-cell[data-ca-euph-pt-mode="types"] .euph-pt-list-row--type,
-    &.euph-pt-list--all .euph-pt-list-cell[data-ca-euph-pt-mode="twin"] .euph-pt-list-row--type,
     &.euph-pt-list--one .euph-pt-list-cell[data-ca-euph-pt-mode="types"] .euph-pt-list-row--type.is-current,
-    &.euph-pt-list--one .euph-pt-list-cell[data-ca-euph-pt-mode="twin"] .euph-pt-list-row--type.is-current,
     &.euph-pt-list--one .euph-pt-list-cell[data-ca-euph-pt-mode="general"] .euph-pt-list-row--type.is-current,
     &.euph-pt-list--all .euph-pt-list-cell[data-ca-euph-pt-mode="general"] .euph-pt-list-row--general,
     .euph-pt-list-cell[data-ca-euph-pt-mode="locked"] .euph-pt-list-row--general {
@@ -348,6 +328,24 @@
         text-align: center;
     }
 
+    // The column names again at the top of each section.
+    .euph-pt-list-section-head td {
+        padding-top: 6px;
+        padding-bottom: 2px;
+        border-top: 0;
+        background: transparent;
+
+        .euph-pt-list-head {
+            margin-top: 0;
+        }
+    }
+
+    @media (max-width: 767px) {
+        .euph-pt-list-section-head {
+            display: none;
+        }
+    }
+
     &.euph-pt-list--all .euph-pt-list-col--first {
         width: 36%;
     }
@@ -367,8 +365,7 @@
     }
 
     &.euph-pt-list--one tr.euph-pt-row--general .euph-pt-list-type-tag,
-    &.euph-pt-list--one tr.euph-pt-row--locked .euph-pt-list-type-tag,
-    &.euph-pt-list--one tr.euph-pt-row--twin .euph-pt-list-type-tag {
+    &.euph-pt-list--one tr.euph-pt-row--locked .euph-pt-list-type-tag {
         display: inline-block;
         margin-left: 6px;
         padding: 0 6px;

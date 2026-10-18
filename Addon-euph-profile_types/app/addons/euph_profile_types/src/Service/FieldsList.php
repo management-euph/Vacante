@@ -15,22 +15,23 @@ use Tygh\Addons\EuphProfileTypes\Model\ProfileType;
  * CS-Cart's own list of profile fields with the per-type checkboxes: the
  * administrator looks at all types side by side or at one type at a time.
  *
- * Each field of the list is drawn one of four ways:
+ * Each field of the list is drawn one of three ways:
  *  - types:   some type governs it, a row of checkboxes per type;
  *  - general: no type governs it, so it works by CS-Cart's general
  *             checkboxes: one line for all types, until "Set per type"
  *             opens the rows (filled from those checkboxes);
  *  - locked:  CS-Cart keeps it shown and required (the e-mail, a vendor's
- *             company name), there is nothing to set per type;
- *  - twin:    a shipping field that works like its billing twin, whose rows
- *             decide for both.
+ *             company name), there is nothing to set per type.
+ *
+ * A billing field and its shipping twin are two fields, set each on its own
+ * as in CS-Cart's list: a field may be on the billing address only, on the
+ * shipping address only, or on both, for each type.
  */
 final class FieldsList
 {
     public const MODE_TYPES = 'types';
     public const MODE_GENERAL = 'general';
     public const MODE_LOCKED = 'locked';
-    public const MODE_TWIN = 'twin';
 
     /** Colours told apart in the list; a type takes one by its position. */
     private const TONES = 8;
@@ -98,18 +99,11 @@ final class FieldsList
      *
      * @return array{
      *     types: list<array{id: int, code: string, name: string, status: string, tone: int}>,
-     *     fields: array<int, array{mode: string, governed: bool, twin_of: int, rows: array<int, array{flags: array<string, string>, baseline: string}>}>
+     *     fields: array<int, array{mode: string, governed: bool, rows: array<int, array{flags: array<string, string>, baseline: string}>}>
      * }
      */
     public static function build(UserKind $kind, array $types, FieldRuleSet $rules, array $fields): array
     {
-        $billing = [];
-        foreach ($fields as $field) {
-            if (Cast::string($field['section'] ?? '') === 'B') {
-                $billing[Cast::int($field['field_id'] ?? 0)] = true;
-            }
-        }
-
         $typeRows = [];
         foreach ($types as $position => $type) {
             $typeRows[] = [
@@ -127,12 +121,9 @@ final class FieldsList
             if ($fieldId <= 0) {
                 continue;
             }
-            $matchingId = Cast::int($field['matching_id'] ?? 0);
-            $twinOf = Cast::string($field['section'] ?? '') === 'S' && isset($billing[$matchingId]) ? $matchingId : 0;
             $governed = $rules->isGoverned($fieldId);
             $mode = match (true) {
                 self::isLocked($field, $kind) => self::MODE_LOCKED,
-                $twinOf > 0 => self::MODE_TWIN,
                 $governed => self::MODE_TYPES,
                 default => self::MODE_GENERAL,
             };
@@ -147,7 +138,7 @@ final class FieldsList
                 }
                 $rows[$type->id] = ['flags' => $flags, 'baseline' => $rule->signature()];
             }
-            $drawn[$fieldId] = ['mode' => $mode, 'governed' => $governed, 'twin_of' => $twinOf, 'rows' => $rows];
+            $drawn[$fieldId] = ['mode' => $mode, 'governed' => $governed, 'rows' => $rows];
         }
 
         return ['types' => $typeRows, 'fields' => $drawn];

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\EuphProfileTypes\Tests\Unit\Install;
 
 use PHPUnit\Framework\TestCase;
+use Tygh\Addons\EuphProfileTypes\Service\LanguagePack;
 
 /**
  * The language packs are what the panel and the storefront show: English
@@ -107,6 +108,68 @@ final class LanguagePackTest extends TestCase
                 }
             }
         }
+    }
+
+    public function testAStoreThatHasTheAddOnGetsEveryTextOfThePacks(): void
+    {
+        foreach (['en', 'ro'] as $lang) {
+            $expected = [];
+            foreach (self::po($lang) as $context => $text) {
+                if (str_starts_with($context, 'Languages::')) {
+                    $expected[substr($context, strlen('Languages::'))] = $text;
+                }
+            }
+            $file = self::root() . '/var/langs/' . $lang . '/addons/' . self::ADDON . '.po';
+
+            self::assertSame($expected, LanguagePack::variables((string) file_get_contents($file)), $lang);
+        }
+    }
+
+    public function testAPackIsReadAsCsCartReadsIt(): void
+    {
+        $po = <<<'PO'
+            msgid ""
+            msgstr "Project-Id-Version: test\n"
+
+            # A comment.
+            msgctxt "Languages::euph_profile_types.quoted"
+            msgid "Say \"hi\""
+            msgstr "Spune \"salut\""
+
+            msgctxt "Languages::euph_profile_types.long"
+            msgid ""
+            "Two "
+            "lines"
+            msgstr ""
+            "Două "
+            "rânduri"
+
+            msgctxt "Languages::euph_profile_types.untranslated"
+            msgid "Kept"
+            msgstr ""
+
+            msgctxt "SettingsOptions::euph_profile_types::types_for"
+            msgid "Use profile types for"
+            msgstr "Use profile types for"
+            PO;
+
+        self::assertSame([
+            'euph_profile_types.quoted' => 'Spune "salut"',
+            'euph_profile_types.long' => 'Două rânduri',
+            'euph_profile_types.untranslated' => 'Kept',
+        ], LanguagePack::variables($po));
+    }
+
+    public function testEveryLanguageOfTheStoreGetsTheTextsItsPackLacksInEnglish(): void
+    {
+        $packs = ['en' => ['a' => 'A', 'b' => 'B'], 'ro' => ['a' => 'A ro']];
+
+        self::assertSame([
+            ['lang_code' => 'ro', 'name' => 'a', 'value' => 'A ro'],
+            ['lang_code' => 'ro', 'name' => 'b', 'value' => 'B'],
+            ['lang_code' => 'de', 'name' => 'a', 'value' => 'A'],
+            ['lang_code' => 'de', 'name' => 'b', 'value' => 'B'],
+        ], LanguagePack::rows($packs, ['ro', 'de'], 'en'));
     }
 
     public function testNoNameIsAPrefixOfAnotherByADot(): void

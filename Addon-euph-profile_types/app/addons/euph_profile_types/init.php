@@ -30,6 +30,10 @@ fn_register_hooks(
     'update_addon_status_pre',
 );
 
+// Texts changed or added by an update of the add-on reach a store that
+// already has it (CS-Cart reads the language packs at install only).
+fn_euph_profile_types_refresh_texts();
+
 // After the add-on is enabled again, the first admin request switches the
 // checkout blocks back to the "By profile type" filling (disabling had
 // restored theirs). Guarded: a failure here must never break the panel.

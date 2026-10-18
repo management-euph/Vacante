@@ -531,6 +531,17 @@ describe("CS-Cart's list of profile fields, by type", () => {
         expect(heads[4].querySelector('.euph-pt-list-head__title').textContent).toBe('Profile');
         expect([...heads[4].querySelectorAll('.euph-pt-list-head span')].map((s) => s.textContent)).toEqual(['Profile type', 'show', 'required', 'At registration']);
         expect([...heads[5].querySelectorAll('.euph-pt-list-head span')].map((s) => s.textContent)).toEqual(['show', 'required']);
+
+        // The same names again at the top of the section, column under column.
+        const sectionHead = f.querySelector('tbody > tr.euph-pt-list-section-head');
+
+        expect(sectionHead.parentNode.firstElementChild).toBe(sectionHead);
+        expect(sectionHead.cells).toHaveLength(7);
+        expect([...sectionHead.cells[4].querySelectorAll('.euph-pt-list-head span')].map((s) => s.textContent)).toEqual(['Profile type', 'show', 'required', 'At registration']);
+        expect([...sectionHead.cells[5].querySelectorAll('.euph-pt-list-head span')].map((s) => s.textContent)).toEqual(['show', 'required']);
+        expect(sectionHead.cells[4].classList.contains('euph-pt-list-col--first')).toBe(true);
+        expect(sectionHead.cells[2].textContent).toBe('');
+        expect(f.querySelectorAll('tr.euph-pt-list-section-head')).toHaveLength(1);
         expect(f.querySelector('tr[data-ca-profile-fields-row="f5"]').classList.contains('euph-pt-row--types')).toBe(true);
         expect(f.querySelector('tr[data-ca-profile-fields-row="f6"]').classList.contains('euph-pt-row--general')).toBe(true);
     });
