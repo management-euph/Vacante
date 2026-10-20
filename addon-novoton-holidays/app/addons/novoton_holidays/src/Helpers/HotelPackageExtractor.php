@@ -92,4 +92,38 @@ class HotelPackageExtractor
 
         return $packageName;
     }
+
+    /**
+     * The package ids (IdCont) a stored hotelinfo lists, from the JSON of its
+     * "packages" (JSON_EXTRACT(hotel_data, '$.packages')): one object or a
+     * list, nested <Package> elements included. NULL when that is not known —
+     * no stored hotelinfo, or one without packages (a refusal is stored that
+     * way too) — so a caller never drops a package on missing evidence.
+     *
+     * @return list<string>|null
+     */
+    public static function listedIdsFromJson(?string $packagesJson): ?array
+    {
+        if ($packagesJson === null || $packagesJson === '') {
+            return null;
+        }
+
+        $ids = [];
+        $collect = static function (mixed $node) use (&$collect, &$ids): void {
+            if (!is_array($node)) {
+                return;
+            }
+            foreach ($node as $key => $value) {
+                if ($key === 'IdCont' && is_scalar($value) && (string) $value !== '') {
+                    $ids[(string) $value] = true;
+                } else {
+                    $collect($value);
+                }
+            }
+        };
+        $collect(json_decode($packagesJson, true));
+
+        // Numeric ids became integer keys: back to the strings package_id holds.
+        return $ids === [] ? null : array_map('strval', array_keys($ids));
+    }
 }
