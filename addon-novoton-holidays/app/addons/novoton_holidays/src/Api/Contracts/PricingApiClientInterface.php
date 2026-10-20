@@ -26,10 +26,11 @@ interface PricingApiClientInterface
     public function buildRoomPriceXml(array $params): string;
 
     /**
-     * Batch room_price requests using curl_multi.
+     * Batch room_price requests using curl_multi. A reply that did not parse
+     * carries its text in 'unparsed'.
      *
      * @param array<string, array<string, mixed>> $requestParams Keyed array: key => room_price params
-     * @return array<string, array{data: \SimpleXMLElement|false, rawXml: string}>
+     * @return array<string, array{data: \SimpleXMLElement|false, rawXml: string, unparsed?: string}>
      */
     public function getRoomPriceBatch(array $requestParams, int $concurrency = 5): array;
 

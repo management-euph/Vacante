@@ -114,9 +114,9 @@ class AdminCronService implements AdminCronServiceInterface
                 'children' => TravelConstants::DEFAULT_CHILDREN,
                 'rooms' => TravelConstants::DEFAULT_ROOMS,
             ]);
-            // A <Price> anywhere in the reply (flat or nested shape) means prices;
-            // no reply keeps the hotel's flag (PriceCheckFlags).
-            $hasPrices = PriceCheckFlags::hasPrices($response);
+            // A <Price> anywhere in the reply (flat or nested shape) means prices,
+            // an empty document none; no reply keeps the hotel's flag (PriceCheckFlags).
+            $hasPrices = PriceCheckFlags::hasPrices($response, $this->api->debugInfo()->lastResponseRaw);
             if ($hasPrices === null) {
                 $this->output("[{$hotelId}] {$hotelName}: no answer, flag unchanged");
                 usleep(Constants::API_DELAY_NORMAL);
