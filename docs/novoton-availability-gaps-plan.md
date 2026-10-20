@@ -28,13 +28,14 @@ unless they start with another addon's folder.
 | "Notify me" | **Email only.** Consent text in §8. |
 | The batched syncs refreshing far more than designed (§13) | **Fixed now**, in phase 0. |
 
-Nothing in §11 is open any more.
+Nothing in §11 is open any more. Checking Eurosite and Sphinx (2026-10-20) raised
+three new questions, in §15.6.
 
 ### 0.2 Architecture: the rules in Travel Core, the data in Novoton
 
 | Travel Core (shared, one behaviour for the store) | Novoton (provider-specific) |
 |---|---|
-| Settings: hide after N months (default 12); mode off / report / enforce; left-the-feed runs; redirect grace; mass-hide brake | Collecting evidence: still in `hotel_list`, published price window (priceinfo → calendar), resort `room_price` checks, offers on hotel-page searches |
+| Settings: hide after N months (default 12); a mode per supplier, off / report / enforce (§15.3); left-the-feed runs; redirect grace; mass-hide brake | Collecting evidence: still in `hotel_list`, published price window (priceinfo → calendar), resort `room_price` checks, offers on hotel-page searches |
 | The evidence and state table, keyed by provider + hotel id + product, and the change log | The `availability_check` job that feeds it |
 | The state rules (a pure policy) and the date windows (moved from Eurosite's `AvailabilityPlan`) | Novoton's own data fixes (phase 0) |
 | The gate: guarded Active ↔ Hidden flips, brake, overrides, `gateHidden` for booking | |
@@ -618,12 +619,14 @@ cover:
 | Phase | What ships | Customers see it | Size |
 |---|---|---|---|
 | 0 | Fix the data bugs in §13 — **done 2026-10-17**. Calibration (§14) still to run on the live store | Small fixes | S |
-| 1 | Travel Core: the contract, the evidence and log tables (schema self-heal), the policy, the date windows (moved from Eurosite), settings (hide after N months, default 12; mode), the Hotel availability page, CSV, weekly email. Novoton: the evidence source (passive capture, `availability_check` in report mode, backfill), dashboard tile | No | L |
-| 2 | Hotel-page panels; "notify me" and "prices are out" emails; similar hotels; date-picker window; language keys | Yes | M |
-| 3 | Gate in enforce mode: dormant / left the feed → Hidden, and back to Active; brake; overrides; `gateHidden` for bookings | Yes | M |
+| 0b | Eurosite and Sphinx fixes that would corrupt the records or mislead the report (§15.4) | No | S |
+| 1a | Travel Core: the contract with supplier capabilities (§15.3), the evidence and log tables (schema self-heal), the policy, the date windows (moved from Eurosite), settings (a mode per supplier; hide after N months, default 12; what counts as availability), the Hotel availability page with a supplier filter, CSV, weekly email. Novoton: the evidence source (passive capture, `availability_check` in report mode, backfill), dashboard card | No | L |
+| 1b | Eurosite and Sphinx: record what their existing checks and hotel-page searches already fetch, hotel-list completeness, bookings read back, dashboard cards; Sphinx stores `giata_id` (§15.3) | No | M |
+| 2 | Hotel-page panels; "notify me" and "prices are out" emails; similar hotels; date-picker window; language keys. All suppliers; Eurosite first needs a request flow | Yes | M |
+| 3 | Automatic mode, per supplier: dormant / left the list → Hidden, and back to Active; brake; overrides; `gateHidden` for bookings. Novoton first (Feb–Mar 2027) | Yes | M |
 | 4 | Closed hotels: mark closed, redirect target, 301 controller, grace checks | Yes | S |
 | 5 | Purchasing list of not-offered hotels with their demand | Staff only | S |
-| 6 | Eurosite and Sphinx move onto the shared rules (Sphinx gains season dates, Eurosite gains history); listing labels and sorting | Yes | M |
+| 6 | Eurosite and Sphinx switch to Automatic once their records cover a season (about autumn 2027), and their old gates are removed; listing labels and sorting | Yes | M |
 
 **Repo rules every phase must pass:**
 
@@ -867,3 +870,132 @@ therefore be run on the **live** database and server.
   php dev/novoton/room_price.php --hotel_id=476 --room_id="DBL 2+0 DELUXE NO BALCONY" --board_id=BB --check_in=2028-07-10 --check_out=2028-07-17 --adults=2
   php dev/novoton/hotel_info.php <hotel_id_from_live_check_7>
   ```
+
+## 15. Eurosite and Sphinx: what changes (checked 2026-10-20)
+
+Checked before phase 1 starts, from both add-ons' code and their API
+documentation (`Documentation/Specificatii_API_Eurosite.pdf`,
+`Documentation/Sphinx API.txt`). The phase 1 mockup shows the result: a
+supplier filter, Eurosite and Sphinx hotels next to Novoton's, and a mode per
+supplier.
+
+### 15.1 What each supplier can tell us
+
+| Evidence | Novoton | Eurosite | Sphinx |
+|---|---|---|---|
+| Hotel list (to see a hotel leave) | `hotel_list` per country, every 3 days | Own hotels per whitelisted city, daily. Only adds and updates; an empty answer is `[]`; "own hotels" is not everything search sells | Full list only on a full sync; deltas carry no deletion marker. A 404 on `/static/hotels/{id}` confirms a removal |
+| Published prices (season dates) | Yes: priceinfo seasons, about 18 months ahead | **None** | **None** (only a 60-day cached price calendar) |
+| Live check | One `room_price` call per resort and date covers every hotel | One `getHotelPrice` call per city and date covers every hotel, with Immediate / On request / Stop sale | One async search per destination and date: about 15–20 polls, about 1 minute. A search by hotel id returns nothing, and the API documentation asks not to build caches from live search |
+| Bookings | `novoton_bookings` | `eurosite_bookings`: few rows, and "confirmed" is unreliable | `sphinx_bookings`: skip circuits and experiences, require `api_booking_ref` |
+| Peers | the resort's answer | the city's answer | the destination's answer. Hotel-page searches fetch the whole destination, but today they discard the other hotels' offers (`search_poll.php:75-87`) |
+| History at the start | prices and bookings of past seasons (backfill) | bookings only | bookings only |
+| Own gate today | none | `ProductGate`: hides hotels without an Immediate offer on the near and peak dates, so it hides hotels between seasons and hotels sold on request only | `HotelAvailabilityGate`: hides hotels without an immediate offer at +14/+30/+60 days, and deletes hotels that have no product |
+
+### 15.2 What does not change
+
+- The rules in Travel Core, the collection in each add-on (§0.2).
+- The states, "hide after N months" (12), Report only first.
+- Hidden, never Disabled or deleted; guarded flips, the brake, overrides, the
+  301 for closed hotels.
+
+### 15.3 What changes
+
+1. **Supplier capabilities.** The contract declares what each supplier can give:
+   the hotel list (complete per country / per city / full sync only), published
+   prices (yes / no), the live check's scope and cost, bookings. The policy uses
+   only what exists, and the report says "not provided by Eurosite" instead of
+   leaving a cell empty.
+2. **Dormant needs records.** A hotel can be judged dormant only once its
+   supplier's records cover the last N months. Novoton backfills from stored
+   prices and bookings. Eurosite and Sphinx have only bookings, so for them
+   dormant starts about 12 months after recording starts (Nov 2027 if phase 1b
+   ships in Nov 2026). Until then their hotels can only be bookable, between
+   seasons, not offered, left the list, or no data yet.
+3. **Between seasons without published prices** comes from offers seen in the
+   last 13 months, booked stays, and the destination's peers (the whole
+   destination has no offers, so it is out of season). "Next season published"
+   exists only for Novoton; for the others it becomes "next season seen", when a
+   season-date check finds an offer.
+4. **The offer type is kept**: immediate, on request, stop sale. Whether on
+   request counts as availability is decision 1 in §15.6. A stop sale never
+   counts: the supplier has the hotel but sells nothing for those dates, so it
+   points to *not offered*.
+5. **Only complete answers count, per destination and date.**
+   - Novoton: the resort answered, and a refusal is no answer (`dad0346`).
+   - Eurosite: per city and date (audit `eurosite-platform-3`).
+   - Sphinx: only a search polled to the end (`cursor` null).
+   - Any supplier: a run in which no hotel anywhere has an offer counts as no
+     answer. The Sphinx dev account returned zero offers everywhere because no
+     supplier was connected to it (`docs/sphinx-no-availability-report.md`).
+6. **Evidence per supplier hotel id, state per product.** Sphinx links several
+   of its ids to one product; the product is available when any of its ids is.
+   Circuits and experiences are left out.
+7. **A destination key on every evidence row** (Novoton resort, Eurosite city
+   code, Sphinx destination id), for the peer comparison, with a minimum number
+   of checked peers (5) before *not offered* can apply. Sphinx's destination
+   tree is irregular: some hotels hang off a country node.
+8. **A mode per supplier** (off / report only / automatic) instead of one for the
+   store, because each supplier's records mature at a different time. One gate
+   per supplier: switching a supplier to Automatic turns its old gate off.
+9. **No new API sweeps for Eurosite and Sphinx in phase 1.** Record what their
+   existing checks already fetch: Eurosite's daily `availability` job, Sphinx's
+   gate searches, and the full destination results of hotel-page searches. Sphinx
+   adds at most a weekly season-date search, only for destinations with products.
+10. **Start recording Eurosite and Sphinx in phase 1 (1b), not phase 6.** They
+    cannot backfill, so every month without records is lost. Their gates keep
+    running until each switch, and the report shows "hidden by Eurosite's own
+    check" next to what the shared rule would do.
+11. **Store Sphinx's `giata_id`.** The API offers it and the add-on drops it
+    today (`HotelRowMapper`). It is the first step towards "the same hotel at
+    another supplier" (redirect targets, alternatives).
+
+### 15.4 Fix first (phase 0b)
+
+Bugs in the existing gates that would corrupt the records or mislead the report:
+
+- **Sphinx**
+  - The gate deletes hotel rows that have no product (`HotelSkipRepository:119-133`).
+    Mark them instead; the records and the hotel list need the rows.
+  - The gate's flag lives in `product_skip_reason`. "Retry skipped" and the hotel
+    upsert (on a destination or country name change) wipe it, leaving products
+    stuck Hidden. It needs its own column, as Eurosite has.
+  - A search that was accepted but not polled to the end counts as probed, so
+    its hotels can be hidden on half an answer.
+  - `hasMorePages` compares a country-wide count with each chunk's
+    `meta.total`, so a long list can be cut short and its tail marked inactive.
+- **Eurosite**
+  - A city counts as answered when any of its dates answered (audit
+    `eurosite-platform-3`).
+  - A product an admin re-activates is hidden again two runs later.
+  - Outside this plan, but found here: the booking status sync reads `<Status>`,
+    while the API sends `<ItemStatus Code="C|CP|RJ|XP|X">`, so Eurosite booking
+    statuses never update.
+
+### 15.5 Travel Core work this adds
+
+- Travel Core has no cron dispatcher; its own modes are listed by hand in three
+  places (`cron.php`, `controllers/frontend/travel_cron.php`,
+  `CronOverview::CORE_MODES`). The weekly email needs a Travel Core mode, or the
+  three lists become one.
+- A new table needs the addon.xml queries, `fn_travel_core_ensure_schema` and
+  both uninstall lists. New settings reach installed stores through
+  `SettingsMigrator`.
+- Travel Core sends plain `fn_send_mail`; the weekly email should be a
+  registered admin email template, so it can be edited.
+- `travel_alternative_requests` (the "requests" column): Eurosite does not feed
+  it, Novoton's mirror has no `product_id`, and the table is not self-healed
+  (audit `data-perf-2`).
+- `ConvergenceLedgerTest` covers Novoton and Sphinx only; the new contract
+  should cover Eurosite too.
+
+### 15.6 Decisions needed
+
+1. **Does "on request" count as availability?** Recommended: yes. A hotel sold
+   on request is still in business, and on request rooms are shown as such.
+   Eurosite's and Sphinx's own gates count Immediate only, so switching them to
+   the shared rule would show more hotels.
+2. **A mode per supplier?** Recommended: yes (§15.3, point 8).
+3. **Until each switch, Eurosite's and Sphinx's own gates keep hiding hotels
+   between seasons.** This goes against decision 1 in §11. Recommended: keep
+   them after the phase 0b fixes, and compare in the report. The alternative is
+   to turn them off now, which would also show hotels that are truly gone.
