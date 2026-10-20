@@ -154,6 +154,40 @@ enable_dev_mode() {
     fi
 }
 
+serve_own_url() {
+    # CS-Cart's SEO add-on checks URL rewriting by fetching its own URL
+    # (http://${HTTP_HOST}/check_url_rewrite.html) from INSIDE this container
+    # and expects HTTP 200. The store URL carries the HOST's published port
+    # (localhost:8080) while Apache listens on 80 in here, so that request hit
+    # a closed port and the admin said "SEO-friendly URLs are disabled", though
+    # mod_rewrite and .htaccess work. Apache also listens on the store URL's
+    # port, and a store host name other than localhost resolves to this
+    # container. Written at every start: /etc lives in the image, not a volume.
+    local host="${HTTP_HOST%%/*}" name port=80 conf=/etc/apache2/conf-enabled/zz-cscart-own-url.conf
+    name="${host%%:*}"
+    case "$host" in *:*) port="${host##*:}" ;; esac
+
+    if [[ "$port" =~ ^[0-9]+$ ]] && [ "$port" != "80" ]; then
+        cat > "$conf" <<CONF
+# Written by entrypoint.sh: the store URL (${HTTP_HOST}) answers inside the
+# container too, for CS-Cart's SEO-friendly URL check.
+Listen ${port}
+<VirtualHost *:${port}>
+    DocumentRoot /var/www/html
+</VirtualHost>
+CONF
+        log "Apache also listens on ${port}, the store URL's port (CS-Cart's SEO check calls the store from in here)."
+    else
+        rm -f "$conf"
+    fi
+
+    if [ -n "$name" ] && [ "$name" != "localhost" ] && ! [[ "$name" =~ ^[0-9.]+$ ]] \
+        && ! getent hosts "$name" >/dev/null 2>&1; then
+        echo "127.0.0.1 ${name}" >> /etc/hosts
+        log "Mapped ${name} to this container in /etc/hosts (same check)."
+    fi
+}
+
 provision() {
     log "=== First-run provisioning ==="
     ingest_kit
@@ -195,6 +229,7 @@ provision() {
 }
 
 wait_for_db
+serve_own_url
 
 if [ ! -f "$SENTINEL" ]; then
     provision

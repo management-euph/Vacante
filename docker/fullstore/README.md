@@ -290,6 +290,27 @@ http://localhost:8080/index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mod
 hotel like this one — use the **Run (full)** cron link (or the `&full=1` URL). Verify in
 phpMyAdmin: the row's `latitude` flips to `36.88706900` and the PDP map opens at full precision.
 
+### "SEO-friendly URLs are disabled" in the admin
+
+CS-Cart's SEO add-on tests URL rewriting by requesting
+`http://<store URL>/check_url_rewrite.html` **from inside the container** and expects
+HTTP 200. The store URL is `localhost:8080` (your machine's port), but inside the
+container Apache listens on 80, so the request hit a closed port and CS-Cart reported
+rewriting as off, although `mod_rewrite` and `.htaccess` work.
+
+The entrypoint now makes Apache also listen on the store URL's port (taken from
+`CSCART_HTTP_HOST`) and maps a store host name other than `localhost` to the
+container. To pick it up on an existing sandbox:
+
+1. `docker compose up -d --build` (the entrypoint is baked into the image; the
+   volumes, so the store and its data, are kept). The `app` log shows
+   `Apache also listens on 8080…`.
+2. In the admin, open **Add-ons → SEO** and make sure it is **Active** (switch it
+   on again if CS-Cart turned it off), then **Clear cache**.
+
+Check from the host: `docker compose exec app curl -sI http://localhost:8080/check_url_rewrite.html`
+should no longer say "connection refused".
+
 ## Notes & limits
 
 - **Live provider API calls** (Novoton/Sphinx) need real credentials + network
