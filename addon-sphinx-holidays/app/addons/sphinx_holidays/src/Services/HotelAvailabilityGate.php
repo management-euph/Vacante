@@ -18,26 +18,36 @@ use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
  * live search per probe window (PROBE_WINDOWS_DAYS_AHEAD). A hotel with no
  * immediate-confirmation offer in ANY window is handled by link state:
  *
- *  - UNLINKED: the row is DELETED — the hotel list only stores bookable
- *    hotels, and nothing else references the row.
- *  - LINKED: the CS-Cart product is set to HIDDEN (reachable by direct link,
- *    absent from listings and searches) and the hotel row is flagged
- *    no_availability. Nothing is deleted: a seasonal hotel keeps its product
- *    page, URL and SEO, and when a later probe finds an immediate offer
- *    again the flag is cleared and the product reactivated. Products the
- *    admin Hid or Disabled by hand are never touched in either direction
- *    (both status flips are guarded on the current status).
+ *  - UNLINKED: the row stays, flagged no_availability, which keeps it from
+ *    becoming a product. It is checked again on every run and the flag is
+ *    cleared when an immediate offer appears. Deleting it lost the hotel for
+ *    good: incremental hotel syncs never bring a deleted row back, so a
+ *    seaside hotel removed in October could not become a product next summer.
+ *    The admin Hotels grid hides these rows by default.
+ *  - LINKED: decided per PRODUCT, since sibling hotel ids can share one
+ *    (available when any of them has an immediate offer). An Active product
+ *    is set to HIDDEN (reachable by direct link, absent from listings and
+ *    searches) and flagged gate_hidden. Nothing is deleted: a seasonal hotel
+ *    keeps its product page, URL and SEO, and when a later probe finds an
+ *    immediate offer again the product is reactivated. Products the admin
+ *    Hid or Disabled by hand are never touched in either direction (both
+ *    status flips are guarded on the current status), and a gate-hidden
+ *    product the admin changed by hand is released: the gate leaves it as
+ *    the admin set it until the hotel has an immediate offer again.
  *
  * Hotels skipped for other reasons are never candidates.
  *
- * Deletion/hiding is scoped to destinations that were probed successfully,
- * so an API error never mass-affects hotels — only clearing/reactivating
- * (always safe) still applies.
+ * Flagging/hiding is scoped to destinations that ANSWERED: every probe
+ * window's search accepted and polled to its end (cursor:null). A failed
+ * search, a poll that fails or runs out of time, or a circuit-breaker stop
+ * leaves the destination unanswered, so an API problem never mass-affects
+ * hotels — only clearing/reactivating (always safe) still applies, on the
+ * offers seen before the cut.
  *
  * Extracted from HotelSyncService so the availability concern lives behind its
  * own collaborator, paired with HotelSkipRepository. The inter-destination and
- * poll delays are injectable (defaulting to the production constants) so tests
- * can run without real sleeps.
+ * poll delays and the poll deadline are injectable (defaulting to the
+ * production constants) so tests can run without real sleeps.
  */
 class HotelAvailabilityGate
 {
@@ -58,6 +68,7 @@ class HotelAvailabilityGate
         private readonly HotelSkipRepository $skipRepo,
         private readonly int $destDelayUs = self::DEST_DELAY_US,
         private readonly int $pollIntervalSecs = self::POLL_INTERVAL,
+        private readonly int $pollDeadlineSecs = self::POLL_DEADLINE,
     ) {
     }
 
@@ -90,21 +101,15 @@ class HotelAvailabilityGate
             return $stats;
         }
 
-        $output(sprintf(
-            '    %s: availability gate — %d candidate hotel(s) across %d destination(s)',
-            $countryCode,
-            count($candidates),
-            count($destIds),
-        ));
-
-        // Probe each destination across the probe windows; collect the set of
-        // hotel IDs with at least one immediate-confirmation offer in ANY
-        // window, and which destinations answered at least once.
+        // Probe each destination with candidates across the probe windows;
+        // collect the set of hotel IDs with at least one immediate-confirmation
+        // offer in ANY window, and which destinations answered in full.
         $currency = ConfigProvider::getDefaultCurrency();
         $debug = ConfigProvider::isDebugLogging();
 
-        // Per-destination candidate hotel sets, so a destination can stop
-        // probing further windows once every candidate is already available.
+        // Per-destination candidate hotel sets: only these destinations are
+        // searched, and one stops probing further windows once every
+        // candidate is already available.
         /** @var array<int, array<string, true>> $candidatesByDest */
         $candidatesByDest = [];
         foreach ($candidates as $row) {
@@ -115,6 +120,13 @@ class HotelAvailabilityGate
             }
         }
 
+        $output(sprintf(
+            '    %s: availability gate — %d candidate hotel(s) across %d destination(s)',
+            $countryCode,
+            count($candidates),
+            count($candidatesByDest),
+        ));
+
         /** @var array<string, true> $availableSet */
         $availableSet = [];
         /** @var array<int, true> $probedDestinations */
@@ -124,10 +136,17 @@ class HotelAvailabilityGate
         $httpClient = $this->api->getHttpClient();
 
         foreach ($destIds as $destId) {
+            if (!isset($candidatesByDest[$destId])) {
+                continue; // no hotel to decide there: a search would change nothing
+            }
+
+            // Every window this destination ran answered in full.
+            $answered = true;
             foreach (self::PROBE_WINDOWS_DAYS_AHEAD as $daysAhead) {
                 if ($httpClient->isCircuitOpen()) {
                     $output('    Circuit breaker open — stopping availability probe early (unprobed hotels left unchanged)');
                     $stopProbing = true;
+                    $answered = false;
                     break;
                 }
 
@@ -141,6 +160,7 @@ class HotelAvailabilityGate
 
                 if (!is_array($searchResponse)) {
                     $errors++;
+                    $answered = false;
                     if ($errors <= 5) {
                         $output("    [WARN] availability search failed for destination {$destId} (+{$daysAhead}d window)");
                     }
@@ -148,17 +168,24 @@ class HotelAvailabilityGate
                     continue;
                 }
 
-                // Search was accepted → destination counts as probed (zero offers
-                // is a legitimate "no availability" answer, not an error).
-                $probedDestinations[$destId] = true;
-
                 // Inline results (synchronous completion) + cursor-polled results.
+                // Zero offers is a legitimate "no availability" answer, but only
+                // once the search has ended: a poll cut short proves nothing,
+                // though the offers it saw still count.
                 $availableSet += OfferAvailability::collectImmediateHotelIds(
                     TypeCoerce::toRowList($searchResponse['results'] ?? []),
                 );
                 $cursor = TypeCoerce::toString($searchResponse['cursor'] ?? '');
                 if ($cursor !== '') {
-                    $availableSet += $this->pollImmediateHotelIds($cursor);
+                    $poll = $this->pollImmediateHotelIds($cursor);
+                    $availableSet += $poll['ids'];
+                    if (!$poll['complete']) {
+                        $errors++;
+                        $answered = false;
+                        if ($errors <= 5) {
+                            $output("    [WARN] availability search for destination {$destId} (+{$daysAhead}d window) did not finish — its hotels are left as they are");
+                        }
+                    }
                 }
 
                 if ($debug) {
@@ -169,85 +196,143 @@ class HotelAvailabilityGate
 
                 // All of this destination's candidates already available —
                 // further windows can't change the partition below.
-                if (isset($candidatesByDest[$destId])
-                    && array_diff_key($candidatesByDest[$destId], $availableSet) === []
-                ) {
+                if (array_diff_key($candidatesByDest[$destId], $availableSet) === []) {
                     break;
                 }
             }
 
+            if ($answered) {
+                $probedDestinations[$destId] = true;
+            }
             if ($stopProbing) {
                 break;
             }
         }
 
-        // Partition candidates. Unavailable hotels in successfully-probed
-        // destinations: unlinked rows are removed outright, linked hotels
-        // keep row + product but the product goes HIDDEN and the row is
-        // flagged. Available hotels get the flag cleared and — when linked —
-        // the gate-hidden product reactivated.
-        $toDelete = [];
-        /** @var list<string> $toHideHotels */
-        $toHideHotels = [];
-        /** @var list<int> $toHideProducts */
-        $toHideProducts = [];
+        // Partition candidates. A hotel WITHOUT a product is decided on its
+        // own: unavailable in a successfully-probed destination, it waits
+        // (flagged no_availability) for an immediate offer before becoming a
+        // product; available, the flag is cleared. A hotel WITH a product
+        // feeds its product's verdict (gateProducts).
+        /** @var list<string> $toWait */
+        $toWait = [];
+        /** @var list<string> $toClear */
         $toClear = [];
-        /** @var list<int> $toRestoreProducts */
-        $toRestoreProducts = [];
+        /** @var array<int, true> $linkedProducts */
+        $linkedProducts = [];
+        /** @var array<int, true> $availableProducts some sibling has an immediate offer */
+        $availableProducts = [];
+        /** @var array<int, true> $unprobedProducts some sibling's destination did not answer */
+        $unprobedProducts = [];
         foreach ($candidates as $row) {
             $hid = TypeCoerce::toString($row['hotel_id'] ?? '');
             if ($hid === '') {
                 continue;
             }
-            $reason = TypeCoerce::toString($row['product_skip_reason'] ?? '');
+            $available = isset($availableSet[$hid]);
+            $probed = isset($probedDestinations[ValidationHelpers::toInt($row['destination_id'] ?? 0)]);
+            $flagged = TypeCoerce::toString($row['product_skip_reason'] ?? '') === HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY;
             $productId = ValidationHelpers::toInt($row['product_id'] ?? 0);
-            if (isset($availableSet[$hid])) {
-                if ($reason === HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY) {
+
+            if ($productId <= 0) {
+                if ($available && $flagged) {
                     $toClear[] = $hid;
-                    if ($productId > 0) {
-                        $toRestoreProducts[] = $productId;
-                    }
+                } elseif (!$available && $probed) {
+                    $toWait[] = $hid;
                 }
                 continue;
             }
-            $destId = ValidationHelpers::toInt($row['destination_id'] ?? 0);
-            if (isset($probedDestinations[$destId])) {
-                if ($productId > 0) {
-                    $toHideHotels[] = $hid;
-                    $toHideProducts[] = $productId;
-                } else {
-                    $toDelete[] = $hid;
-                }
+
+            // A linked hotel's state lives in gate_hidden / gate_released; a
+            // no_availability left on it (a waiting hotel that got linked) goes.
+            if ($flagged) {
+                $toClear[] = $hid;
+            }
+            $linkedProducts[$productId] = true;
+            if ($available) {
+                $availableProducts[$productId] = true;
+            } elseif (!$probed) {
+                $unprobedProducts[$productId] = true;
             }
         }
 
-        $deleted = $this->skipRepo->deleteUnlinkedBatch($toDelete);
-        // Product first, flag second: the flag is what marks the product as
-        // gate-hidden (vs. admin-hidden), so it must never exist without the
-        // hide attempt having run. Both calls are idempotent re-runs.
-        $hidden = $this->skipRepo->hideProductsBatch($toHideProducts);
-        $this->skipRepo->markSkippedBatch($toHideHotels, HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY);
-        $restored = $this->skipRepo->showProductsBatch($toRestoreProducts);
+        $waiting = $this->skipRepo->markSkippedBatch($toWait, HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY);
         $cleared = $this->skipRepo->clearSkipReasonBatch($toClear, HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY);
+        $products = $this->gateProducts($linkedProducts, $availableProducts, $unprobedProducts);
 
         $stats['availability_probed'] = count($probedDestinations);
-        $stats['availability_deleted'] = $deleted;
-        $stats['availability_products_hidden'] = $hidden;
-        $stats['availability_products_restored'] = $restored;
+        $stats['availability_waiting'] = $waiting;
+        $stats['availability_products_hidden'] = $products['hidden'];
+        $stats['availability_products_restored'] = $products['restored'];
+        $stats['availability_products_released'] = $products['released'];
         $stats['availability_cleared'] = $cleared;
         $stats['availability_errors'] = $errors;
 
         $output(sprintf(
-            '    %s: availability gate — %d removed, %d product(s) hidden (no immediate-confirmation offer), %d cleared, %d product(s) reactivated, %d search error(s)',
+            '    %s: availability gate — %d newly waiting (no product, no immediate-confirmation offer), %d product(s) hidden, %d cleared, %d product(s) reactivated, %d product(s) changed by an admin and left alone, %d search error(s) or unfinished search(es)',
             $countryCode,
-            $deleted,
-            $hidden,
+            $waiting,
+            $products['hidden'],
             $cleared,
-            $restored,
+            $products['restored'],
+            $products['released'],
             $errors,
         ));
 
         return $stats;
+    }
+
+    /**
+     * The gate for hotels with a product, decided per product on its state
+     * read now, after the searches (an admin may have changed it meanwhile):
+     *
+     *  - gate-hidden but no longer Hidden: the admin changed it by hand, so
+     *    the gate releases it and leaves it as the admin set it;
+     *  - an immediate offer (any sibling): show it if the gate hid it, and
+     *    end a release, so the next loss hides it again;
+     *  - no immediate offer and every sibling's destination answered: hide
+     *    it if it is Active and neither gate-hidden nor released.
+     *
+     * @param array<int, true> $products every linked product among the candidates
+     * @param array<int, true> $available products with an immediate offer
+     * @param array<int, true> $unprobed products with an unanswered destination
+     * @return array{hidden: int, restored: int, released: int}
+     */
+    private function gateProducts(array $products, array $available, array $unprobed): array
+    {
+        $toHide = [];
+        $toShow = [];
+        $toRelease = [];
+        $toEndRelease = [];
+        foreach ($this->skipRepo->findGateStates(array_keys($products)) as $productId => $state) {
+            $hidden = $state['hidden'];
+            $released = $state['released'];
+            if ($hidden && $state['status'] !== 'H') {
+                $toRelease[] = $productId;
+                $hidden = false;
+                $released = true;
+            }
+
+            if (isset($available[$productId])) {
+                if ($hidden) {
+                    $toShow[] = $productId;
+                }
+                if ($released) {
+                    $toEndRelease[] = $productId;
+                }
+            } elseif (!isset($unprobed[$productId]) && !$hidden && !$released && $state['status'] === 'A') {
+                $toHide[] = $productId;
+            }
+        }
+
+        $released = $this->skipRepo->releaseProductsBatch($toRelease);
+        $this->skipRepo->clearReleasedBatch($toEndRelease);
+
+        return [
+            'hidden' => $this->skipRepo->hideProductsBatch($toHide),
+            'restored' => $this->skipRepo->showProductsBatch($toShow),
+            'released' => $released,
+        ];
     }
 
     /**
@@ -257,16 +342,17 @@ class HotelAvailabilityGate
      *
      * The Sphinx spec's only definitive terminal is a cursor:null page; empty
      * pages with a live cursor are normal and keep being polled until the
-     * per-destination deadline.
+     * per-destination deadline. A poll that fails or reaches the deadline is
+     * not complete.
      *
-     * @return array<string, true>
+     * @return array{ids: array<string, true>, complete: bool}
      */
     private function pollImmediateHotelIds(string $cursorToken): array
     {
         /** @var array<string, true> $hotelIds */
         $hotelIds = [];
         $cursor = $cursorToken;
-        $deadline = time() + self::POLL_DEADLINE;
+        $deadline = time() + $this->pollDeadlineSecs;
 
         while (time() < $deadline) {
             $response = $this->api->getHotelResults('', $cursor);
@@ -281,7 +367,7 @@ class HotelAvailabilityGate
 
             $nextCursor = TypeCoerce::toString($response['cursor'] ?? '');
             if ($nextCursor === '') {
-                break; // cursor:null → definitive end of search
+                return ['ids' => $hotelIds, 'complete' => true]; // cursor:null → definitive end of search
             }
             $cursor = $nextCursor;
 
@@ -290,6 +376,6 @@ class HotelAvailabilityGate
             }
         }
 
-        return $hotelIds;
+        return ['ids' => $hotelIds, 'complete' => false];
     }
 }

@@ -23,6 +23,11 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  * offer" is on, ProductGate hides the products that lost it and shows the
  * ones that got it back — only for destinations whose check answered.
  *
+ * A destination's answer is whole only when every date answered. When
+ * some did not, one of them may have held an Immediate offer: only the
+ * answers better than what a hotel has are stored, nobody becomes "no
+ * offer", and its products can be shown again but are never hidden.
+ *
  * `&city=CODE` checks one destination (the hotel list's "Check availability
  * now" uses it for the selected hotels' destinations).
  */
@@ -77,6 +82,7 @@ final class AvailabilityCommand extends AbstractSyncCommand
             $synced = 0;
             $errors = [];
             $answeredCities = [];
+            $partlyAnsweredCities = [];
             $sum = ['IM' => 0, 'OR' => 0, 'ST' => 0, 'NONE' => 0, 'not_synced' => 0];
             $now = date('Y-m-d H:i:s');
             $first = true;
@@ -112,24 +118,33 @@ final class AvailabilityCommand extends AbstractSyncCommand
                     // Nothing answered: keep what the hotels had, never mark them "no offer".
                     continue;
                 }
-                $counts = $hotelRepo->applyAvailability($group['tourop_code'], $group['city_code'], $best, $now);
+                $complete = $answered === count($windows);
+                $counts = $hotelRepo->applyAvailability($group['tourop_code'], $group['city_code'], $best, $now, $complete);
                 foreach ($counts as $k => $n) {
                     $sum[$k] += $n;
                 }
-                $synced += $group['hotels'];
-                $answeredCities[] = $group['city_code'];
+                if ($complete) {
+                    $synced += $group['hotels'];
+                    $answeredCities[] = $group['city_code'];
+                } else {
+                    $partlyAnsweredCities[] = $group['city_code'];
+                }
 
                 $cityRow = $cityRepo->findByCode($group['city_code']);
                 $this->output(self::cityLine(
                     $group['city_code'],
                     $cityRow !== null ? TypeCoerce::toString($cityRow['name'] ?? '') : '',
                     $counts,
-                ));
+                ) . ($complete ? '' : sprintf(
+                    ' (%d of %d dates answered: only better answers stored, nothing hidden)',
+                    $answered,
+                    count($windows),
+                )));
             }
 
             $gate = ['hidden' => 0, 'shown' => 0, 'released' => 0];
             if (ConfigProvider::hideUnavailableProducts()) {
-                $gate = (new ProductGate())->apply($answeredCities);
+                $gate = (new ProductGate())->apply($answeredCities, $partlyAnsweredCities);
                 if ($gate['hidden'] + $gate['shown'] > 0) {
                     $this->output("  Products: {$gate['hidden']} hidden (no Immediate offer), {$gate['shown']} shown again");
                 }
@@ -147,6 +162,7 @@ final class AvailabilityCommand extends AbstractSyncCommand
                 'stop_sale' => $sum['ST'],
                 'no_offer' => $sum['NONE'],
                 'not_synced' => $sum['not_synced'],
+                'partly_answered' => count($partlyAnsweredCities),
                 'products_hidden' => $gate['hidden'],
                 'products_shown' => $gate['shown'],
                 'error' => implode('; ', array_slice($errors, 0, 5)),

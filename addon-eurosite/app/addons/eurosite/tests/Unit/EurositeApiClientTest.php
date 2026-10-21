@@ -410,6 +410,35 @@ final class EurositeApiClientTest extends TestCase
         self::assertStringContainsString('ChildAge="5"', $req);
     }
 
+    /** The status is the booking item's ItemStatus code (the spec's getBookingResponse example). */
+    public function testGetBookingReadsTheItemStatusCode(): void
+    {
+        $t = new FakeTransport(self::wrap('getBookingResponse',
+            '<BookingReferences><BookingReference Source="api">EU_XML_12898</BookingReference>'
+            . '<BookingReference Source="client">int1234</BookingReference></BookingReferences>'
+            . '<BookingItems><BookingItem><ItemClientId>1</ItemClientId>'
+            . '<ItemReference Source="api">EU_XMLEU_12890</ItemReference><TourOpCode>EU</TourOpCode>'
+            . '<ProductCode>BG0069</ProductCode><ItemStatus Code="CP">Confirmation pending</ItemStatus>'
+            . '<Confirmation>12520</Confirmation></BookingItem></BookingItems>'));
+
+        $booking = $this->client($t)->getBooking('int1234');
+
+        self::assertSame('CP', $booking['status']);
+        self::assertSame('Confirmation pending', $booking['status_text']);
+        self::assertSame(['api' => 'EU_XML_12898', 'client' => 'int1234'], $booking['references']);
+        self::assertStringContainsString('<BookingReference Source="client">int1234</BookingReference>', $t->lastRequest);
+    }
+
+    public function testGetBookingWithoutAnItemHasNoStatus(): void
+    {
+        $t = new FakeTransport(self::wrap('getBookingResponse', '<BookingReferences/>'));
+
+        $booking = $this->client($t)->getBooking('int1234');
+
+        self::assertSame('', $booking['status']);
+        self::assertSame('', $booking['status_text']);
+    }
+
     public function testCancelBookingReportsSuccessWhenNoErrorNode(): void
     {
         $t = new FakeTransport(self::wrap('CancelBookingResponse', '<Status>Cancelled</Status>'));

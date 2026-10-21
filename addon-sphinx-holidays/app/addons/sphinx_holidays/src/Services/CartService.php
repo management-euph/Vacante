@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\SphinxHolidays\Contracts\CartServiceInterface;
-use Tygh\Addons\SphinxHolidays\Repository\HotelSkipRepository;
 use Tygh\Addons\TravelCore\Helpers\SessionAccessor;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\CartSkipPolicy;
@@ -190,9 +189,10 @@ final class CartService implements CartServiceInterface
     /**
      * The CS-Cart product a hotel booking goes on: the hotel's own product
      * in ?:sphinx_hotels (so it is that hotel's, and a Sphinx product), and
-     * buyable — active, or hidden by the availability gate. A product_id in
-     * the request ($providedId) is accepted only when it is that same
-     * product; 0 means refuse (ProviderCartProduct).
+     * buyable — active, or hidden by the availability gate (gate_hidden on
+     * any hotel row linked to it: sibling hotel ids share the product). A
+     * product_id in the request ($providedId) is accepted only when it is
+     * that same product; 0 means refuse (ProviderCartProduct).
      */
     #[\Override]
     public function resolveProductId(string $entityId, int $providedId = 0): int
@@ -202,7 +202,10 @@ final class CartService implements CartServiceInterface
         }
 
         $row = TypeCoerce::toStringMap(db_get_row(
-            'SELECT product_id, product_skip_reason FROM ?:sphinx_hotels WHERE hotel_id = ?s',
+            "SELECT h.product_id, EXISTS (
+                SELECT 1 FROM ?:sphinx_hotels g WHERE g.product_id = h.product_id AND g.gate_hidden = 'Y'
+             ) AS gate_hidden
+             FROM ?:sphinx_hotels h WHERE h.hotel_id = ?s",
             $entityId,
         ));
 
@@ -210,7 +213,7 @@ final class CartService implements CartServiceInterface
             max(0, $providedId),
             TypeCoerce::toInt($row['product_id'] ?? 0),
             ProviderCartProduct::productStatus(...),
-            TypeCoerce::toString($row['product_skip_reason'] ?? '') === HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY,
+            TypeCoerce::toInt($row['gate_hidden'] ?? 0) === 1,
         );
     }
 

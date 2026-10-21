@@ -59,6 +59,27 @@ final class HotelsWhitelistOnlyTest extends TestCase
         self::assertStringContainsString("sync_status = 'active',\n                    inactive_reason = '',", $repo);
     }
 
+    /**
+     * audit eurosite-platform-3: a city's answer is whole only when every
+     * date answered. A partly answered city stores only better answers,
+     * marks nobody "no offer" and can only have products shown again.
+     */
+    public function testAPartlyAnsweredCityIsNeverJudgedOnHalfAnAnswer(): void
+    {
+        $command = (string) file_get_contents(dirname(__DIR__, 3) . '/src/Cron/Commands/AvailabilityCommand.php');
+        self::assertStringContainsString('$complete = $answered === count($windows);', $command);
+        self::assertStringContainsString('->applyAvailability($group[\'tourop_code\'], $group[\'city_code\'], $best, $now, $complete)', $command);
+        self::assertStringContainsString('(new ProductGate())->apply($answeredCities, $partlyAnsweredCities)', $command);
+
+        $repo = self::src('Repository/HotelRepository.php');
+        self::assertStringContainsString('$best = AvailabilityPlan::improvements($stored, $best);', $repo);
+        self::assertStringContainsString("if (\$complete) {\n                    \$none[] = \$code;", $repo);
+
+        $gate = self::src('Services/ProductGate.php');
+        self::assertStringContainsString('$toHide = $cityCodes === [] ? [] :', $gate);
+        self::assertStringContainsString('[...$cityCodes, ...$partlyAnsweredCityCodes]', $gate);
+    }
+
     /** Everything downstream reads listed hotels only. */
     public function testTheCheckAndTheProductsReadListedHotelsOnly(): void
     {

@@ -150,11 +150,14 @@ class HotelRepository implements HotelRepositoryInterface
                     /* Change-detection FIRST: ON DUPLICATE KEY UPDATE assignments
                        run left to right, so these IF()s must read the OLD column
                        values before the plain assignments below overwrite them
-                       (otherwise old == new always and detection never fires). */
+                       (otherwise old == new always and detection never fires).
+                       A rename can fix a category or country skip, not the
+                       availability gate's no_availability: that one stays. */
                     product_skip_reason = IF(
-                        ?:sphinx_hotels.destination_name != VALUES(destination_name)
+                        (?:sphinx_hotels.destination_name != VALUES(destination_name)
                         OR ?:sphinx_hotels.country_name != VALUES(country_name)
-                        OR ?:sphinx_hotels.country_code != VALUES(country_code),
+                        OR ?:sphinx_hotels.country_code != VALUES(country_code))
+                        AND NOT (?:sphinx_hotels.product_skip_reason <=> 'no_availability'),
                         NULL, ?:sphinx_hotels.product_skip_reason
                     ),
                     product_needs_update = IF(
@@ -397,13 +400,23 @@ class HotelRepository implements HotelRepositoryInterface
     /**
      * Link a hotel to a CS-Cart product.
      *
+     * A hotel that moves to another product leaves the availability gate's
+     * flags of the old one behind (the IF()s read product_id before it is
+     * assigned: single-table UPDATE assignments run left to right).
+     *
      * @return bool True when the hotel row was updated.
      */
     #[\Override]
     public function linkToProduct(string $hotelId, int $productId): bool
     {
         return TypeCoerce::toInt(db_query(
-            'UPDATE ?:sphinx_hotels SET product_id = ?i WHERE hotel_id = ?s',
+            "UPDATE ?:sphinx_hotels
+             SET gate_hidden = IF(product_id <=> ?i, gate_hidden, 'N'),
+                 gate_released = IF(product_id <=> ?i, gate_released, 'N'),
+                 product_id = ?i
+             WHERE hotel_id = ?s",
+            $productId,
+            $productId,
             $productId,
             $hotelId,
         )) > 0;
@@ -413,7 +426,8 @@ class HotelRepository implements HotelRepositoryInterface
      * Remove the hotel↔product association for the given product.
      *
      * Sets product_id to NULL, which findUnlinked()/countLinked() treat as
-     * unlinked (alongside the legacy 0 value).
+     * unlinked (alongside the legacy 0 value), and drops the availability
+     * gate's flags, which belong to the product.
      *
      * @return bool True when a hotel row was unlinked.
      */
@@ -421,7 +435,7 @@ class HotelRepository implements HotelRepositoryInterface
     public function unlinkProduct(int $productId): bool
     {
         return TypeCoerce::toInt(db_query(
-            'UPDATE ?:sphinx_hotels SET product_id = NULL WHERE product_id = ?i',
+            "UPDATE ?:sphinx_hotels SET product_id = NULL, gate_hidden = 'N', gate_released = 'N' WHERE product_id = ?i",
             $productId,
         )) > 0;
     }

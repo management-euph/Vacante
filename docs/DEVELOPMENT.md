@@ -114,7 +114,7 @@ Runs on every `push` (any branch) and `pull_request` to `main`:
 | PHPUnit integration       | no        | novoton DB-backed suite — runs only when `INTEGRATION_TESTDB_READY=true` |
 | PHP Lint                  | yes       | `php -l` on the whole addon trees (excl. vendor)          |
 | ESLint (JS/JSX)           | yes       | `npx eslint .` (addon JS + `react-src`)                   |
-| Qodana                    | scan errors only | `JetBrains/qodana-action` → Qodana Cloud (`QODANA_TOKEN_*` secret) |
+| Qodana                    | scan errors only | `JetBrains/qodana-action` → Qodana Cloud (`QODANA_TOKEN` secret) |
 
 **Qodana is the final gate**: its `needs` list makes it run only after PHPStan,
 CS Fixer, Rector, all PHPUnit suites, Lint, and ESLint have passed. Findings are

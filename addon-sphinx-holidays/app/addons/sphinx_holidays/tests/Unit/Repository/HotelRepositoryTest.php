@@ -111,8 +111,12 @@ class HotelRepositoryTest extends TestCase
         };
 
         $this->assertTrue($this->repo->linkToProduct('3371', 42));
-        $this->assertStringContainsString('UPDATE ?:sphinx_hotels SET product_id = ?i WHERE hotel_id = ?s', $captured[0]);
-        $this->assertSame([42, '3371'], $captured[1]);
+        // A hotel moving to another product leaves the old one's gate flags
+        // behind; the IF()s come before product_id is assigned.
+        $this->assertStringContainsString("SET gate_hidden = IF(product_id <=> ?i, gate_hidden, 'N'),", $captured[0]);
+        $this->assertStringContainsString("gate_released = IF(product_id <=> ?i, gate_released, 'N'),", $captured[0]);
+        $this->assertStringContainsString("product_id = ?i\n             WHERE hotel_id = ?s", $captured[0]);
+        $this->assertSame([42, 42, 42, '3371'], $captured[1]);
     }
 
     public function testLinkToProductReturnsFalseWhenNoRowChanged(): void
@@ -131,7 +135,7 @@ class HotelRepositoryTest extends TestCase
         };
 
         $this->assertTrue($this->repo->unlinkProduct(42));
-        $this->assertStringContainsString('SET product_id = NULL WHERE product_id = ?i', $captured[0]);
+        $this->assertStringContainsString("SET product_id = NULL, gate_hidden = 'N', gate_released = 'N' WHERE product_id = ?i", $captured[0]);
         $this->assertSame([42], $captured[1]);
     }
 

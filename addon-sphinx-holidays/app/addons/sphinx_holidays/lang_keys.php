@@ -112,8 +112,8 @@ return [
         'ro' => 'Hoteluri cu confirmare imediată',
     ],
     'sphinx_holidays.require_immediate_availability.tooltip' => [
-        'en' => 'When enabled, only hotels with at least one confirmation=immediate offer are kept in the hotel list: the hotels cron probes each destination and deletes hotels without such an offer (hotels already linked to CS-Cart products keep the hotel: the product is set to Hidden — reachable only by direct link — and reactivated when immediate availability returns), and the storefront search shows only immediate-confirmation offers. The hotels cron accepts a per-run override: &availability_gate=0 to skip the gate, &availability_gate=1 to force it.',
-        'ro' => 'Când este activ, în lista de hoteluri se păstrează doar hotelurile cu cel puțin o ofertă confirmation=immediate: cronul de hoteluri verifică fiecare destinație și șterge hotelurile fără o astfel de ofertă (hotelurile deja legate de produse CS-Cart rămân: produsul devine Ascuns — accesibil doar prin link direct — și este reactivat când revine disponibilitatea imediată), iar căutarea din storefront afișează doar ofertele cu confirmare imediată. Cronul de hoteluri acceptă o suprascriere per rulare: &availability_gate=0 pentru a omite filtrul, &availability_gate=1 pentru a-l forța.',
+        'en' => 'When enabled, only hotels with at least one confirmation=immediate offer become products and stay visible: the hotels cron probes each destination. A hotel without such an offer and without a product is kept, marked as waiting, and becomes a product once an immediate offer appears (the Hotels grid hides waiting hotels unless you choose them in the Availability filter). A hotel already linked to a CS-Cart product has its product set to Hidden — reachable only by direct link — and reactivated when immediate availability returns. If you activate such a product by hand, it stays active; the gate takes it over again once the hotel has an immediate offer. The storefront search shows only immediate-confirmation offers. The hotels cron accepts a per-run override: &availability_gate=0 to skip the gate, &availability_gate=1 to force it.',
+        'ro' => 'Când este activ, doar hotelurile cu cel puțin o ofertă confirmation=immediate devin produse și rămân vizibile: cronul de hoteluri verifică fiecare destinație. Un hotel fără o astfel de ofertă și fără produs este păstrat, marcat ca fiind în așteptare, și devine produs când apare o ofertă imediată (grila Hoteluri ascunde hotelurile în așteptare, dacă nu le alegeți în filtrul Disponibilitate). Un hotel deja legat de un produs CS-Cart are produsul setat ca Ascuns — accesibil doar prin link direct — și este reactivat când revine disponibilitatea imediată. Dacă activați manual un astfel de produs, acesta rămâne activ; filtrul îl preia din nou după ce hotelul are o ofertă imediată. Căutarea din storefront afișează doar ofertele cu confirmare imediată. Cronul de hoteluri acceptă o suprascriere per rulare: &availability_gate=0 pentru a omite filtrul, &availability_gate=1 pentru a-l forța.',
     ],
     'sphinx_holidays.preorder_cache_ttl' => [
         'en' => 'Checkout verify cache TTL (seconds)',
@@ -173,6 +173,22 @@ return [
     'sphinx_holidays.orphan' => [
         'en' => 'Orphan',
         'ro' => 'Orfan',
+    ],
+    'sphinx_holidays.availability_filter' => [
+        'en' => 'Availability',
+        'ro' => 'Disponibilitate',
+    ],
+    'sphinx_holidays.availability_immediate' => [
+        'en' => 'Immediate confirmation',
+        'ro' => 'Confirmare imediată',
+    ],
+    'sphinx_holidays.availability_waiting' => [
+        'en' => 'Waiting for an immediate offer',
+        'ro' => 'În așteptarea unei oferte imediate',
+    ],
+    'sphinx_holidays.availability_all' => [
+        'en' => 'All hotels',
+        'ro' => 'Toate hotelurile',
     ],
     'sphinx_holidays.product' => [
         'en' => 'Product',

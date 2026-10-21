@@ -122,6 +122,12 @@
             <div class="stat-value">{$unlinked_hotels|default:0}</div>
             <div class="stat-label">{__("sphinx_holidays.unlinked_hotels")}</div>
         </div>
+        {if $waiting_hotels > 0}
+        <div class="stat-card">
+            <div class="stat-value"><a href="{"sphinx_holidays.hotels?availability=waiting"|fn_url}">{$waiting_hotels}</a></div>
+            <div class="stat-label">{__("sphinx_holidays.availability_waiting")}</div>
+        </div>
+        {/if}
         {if $skipped_hotels > 0}
         <div class="stat-card" style="border-top: 3px solid #dc3545;">
             <div class="stat-value" style="color: #dc3545;">{$skipped_hotels}</div>

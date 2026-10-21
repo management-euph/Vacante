@@ -301,6 +301,7 @@ Diferența de 70% cu 21 de zile înainte de check-in.</default_value>
                 `price_currency` VARCHAR(4)   NOT NULL DEFAULT '',
                 `first_image`    VARCHAR(512) NOT NULL DEFAULT '' COMMENT 'FirstImage from the price search',
                 `gate_hidden`    ENUM('Y','N') NOT NULL DEFAULT 'N' COMMENT 'product hidden by the availability check',
+                `gate_released`  ENUM('Y','N') NOT NULL DEFAULT 'N' COMMENT 'gate-hidden product changed by an admin; left alone until an Immediate offer returns',
                 `product_skip_reason` VARCHAR(32) NOT NULL DEFAULT '',
                 `product_updated_at` DATETIME DEFAULT NULL,
                 `hotel_class`    VARCHAR(64)  NOT NULL DEFAULT '' COMMENT 'offer Class: Hotel, Vila, Apartament (property type)',

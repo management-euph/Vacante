@@ -153,8 +153,8 @@ msgid "Hide a product when none of the checked dates has an Immediate offer"
 msgstr "Ascunde produsul când nicio dată verificată nu are ofertă Imediată"
 
 msgctxt "SettingsTooltips::eurosite::hide_unavailable_products"
-msgid "Shown again when an Immediate offer returns. Products you changed by hand are never hidden or shown automatically."
-msgstr "Reafișat când revine o ofertă Imediată. Produsele modificate manual nu sunt niciodată ascunse sau afișate automat."
+msgid "Shown again when an Immediate offer returns. A product you hid or disabled by hand is never shown automatically. A hidden product you activate or disable by hand stays as you set it until the hotel has an Immediate offer again."
+msgstr "Reafișat când revine o ofertă Imediată. Un produs ascuns sau dezactivat manual nu este niciodată afișat automat. Un produs ascuns pe care îl activați sau dezactivați manual rămâne așa până când hotelul are din nou o ofertă Imediată."
 
 msgctxt "Languages::eurosite.addon_name"
 msgid "Eurosite Touring"
