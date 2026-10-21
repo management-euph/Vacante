@@ -194,6 +194,7 @@ namespace Tygh\Addons\SphinxHolidays\Tests\Unit\Hooks {
         {
             self::$rows[30] = ['booking_id' => 30, 'order_id' => 77, 'status' => 'confirmed'] + self::$rows[10];
             Container::override('preOrderPriceVerifier', static fn (): PreOrderPriceVerifier => new class extends PreOrderPriceVerifier {
+                #[\Override]
                 public function verify(array $cart): array
                 {
                     return [

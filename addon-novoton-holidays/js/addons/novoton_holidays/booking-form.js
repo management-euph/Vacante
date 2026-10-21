@@ -935,9 +935,9 @@ function acceptRoomChangeInline() {
     // (booking_form fills it), not the hidden room_id — post the new room there too.
     if (!roomNum) {
         var singleRoomsInput = document.querySelector('input[name="rooms_data"]');
-        var singleRooms = null;
+        var singleRooms = [];
         try {
-            singleRooms = singleRoomsInput && singleRoomsInput.value ? JSON.parse(singleRoomsInput.value) : null;
+            singleRooms = singleRoomsInput && singleRoomsInput.value ? JSON.parse(singleRoomsInput.value) : [];
         } catch {
             // not JSON: nothing to rewrite
         }
