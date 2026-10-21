@@ -12,13 +12,12 @@ use PHPUnit\Framework\TestCase;
  * The confirmation field exists only on live search offers
  * (/api/v1/hotels/results), never in the static hotel catalog the sync
  * imports — so "only immediate hotels" is implemented as: the sync's
- * availability gate probes searches and FLAGS hotels with no
- * confirmation=immediate offer (no_availability). An unlinked flagged hotel
- * never becomes a product; a linked one has its CS-Cart product set to
- * Hidden. Both come back when an immediate offer appears. The admin grid
- * leaves the waiting (unlinked, flagged) hotels out by default and shows
- * them through its Availability filter. One setting drives all of it,
- * default ON.
+ * availability gate probes searches. A hotel with no confirmation=immediate
+ * offer and no product waits (product_skip_reason no_availability) and never
+ * becomes a product meanwhile; a linked one has its CS-Cart product set to
+ * Hidden (gate_hidden). Both come back when an immediate offer appears. The
+ * admin grid leaves the waiting hotels out by default and shows them
+ * through its Availability filter. One setting drives all of it, default ON.
  */
 final class ImmediateConfirmationListTest extends TestCase
 {
@@ -66,6 +65,13 @@ final class ImmediateConfirmationListTest extends TestCase
         self::assertStringContainsString('<select name="availability">', $tpl);
         self::assertStringContainsString('<option value="waiting"', $tpl);
         self::assertStringContainsString('<option value="all"', $tpl);
+        // Sorting a filtered grid keeps the filter, and the dashboard counts
+        // the waiting hotels apart from "Skipped" and links to them.
+        self::assertStringContainsString("'availability' => \$search['availability'],", self::src('controllers/backend/sphinx_holidays.php'));
+        $manage = (string) file_get_contents(
+            dirname(__DIR__, 6) . '/design/backend/templates/addons/sphinx_holidays/views/sphinx_holidays/manage.tpl',
+        );
+        self::assertStringContainsString('{"sphinx_holidays.hotels?availability=waiting"|fn_url}', $manage);
 
         // …and the sync gate reads the ONE setting, so a single checkbox
         // governs list + product catalog + storefront search.
@@ -88,9 +94,9 @@ final class ImmediateConfirmationListTest extends TestCase
         $gate = self::src('src/Services/HotelAvailabilityGate.php');
         self::assertStringContainsString('markSkippedBatch($toWait, HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY)', $gate);
         self::assertStringNotContainsString('deleteUnlinkedBatch', $gate);
-        self::assertStringContainsString('hideProductsBatch($toHideProducts)', $gate);
-        self::assertStringContainsString('markSkippedBatch($toHideHotels', $gate);
-        self::assertStringContainsString('showProductsBatch($toRestoreProducts)', $gate);
+        self::assertStringContainsString('hideProductsBatch($toHide)', $gate);
+        self::assertStringContainsString('showProductsBatch($toShow)', $gate);
+        self::assertStringContainsString('releaseProductsBatch($toRelease)', $gate);
         // The delete-the-product experiment is over.
         self::assertStringNotContainsString('fn_delete_product', $gate);
 
@@ -115,6 +121,37 @@ final class ImmediateConfirmationListTest extends TestCase
         self::assertStringContainsString('is kept, marked as waiting', $xml);
         self::assertStringContainsString('set to Hidden', $xml);
         self::assertStringContainsString('reactivated when immediate availability returns', $xml);
+        self::assertStringContainsString('If you activate such a product by hand, it stays active', $xml);
+    }
+
+    public function testTheGateKeepsItsProductFlagsInItsOwnColumns(): void
+    {
+        // In product_skip_reason the mark was cleared by "Retry skipped" and
+        // by the hotel upsert, and the product stayed Hidden for good.
+        $xml = self::src('addon.xml');
+        $migrator = self::src('src/Install/SchemaMigrator.php');
+        foreach (['gate_hidden', 'gate_released'] as $column) {
+            self::assertMatchesRegularExpression("/`{$column}` +ENUM\\('Y','N'\\) NOT NULL DEFAULT 'N' COMMENT/", $xml, "{$column} in the base CREATE");
+            self::assertStringContainsString("ADD COLUMN `{$column}` ENUM('Y','N') NOT NULL DEFAULT 'N'", $xml, "{$column} upgrade item");
+            self::assertStringContainsString("'{$column}' => \"ADD COLUMN `{$column}`", $migrator, "{$column} in SchemaMigrator");
+        }
+
+        // "Retry skipped" and the rename-driven reset leave the gate's
+        // waiting hotels alone.
+        self::assertStringContainsString(
+            "db_quote('AND product_skip_reason <> ?s', self::SKIP_REASON_NO_AVAILABILITY)",
+            self::src('src/Repository/HotelSkipRepository.php'),
+        );
+        self::assertStringContainsString(
+            "AND NOT (?:sphinx_hotels.product_skip_reason <=> 'no_availability')",
+            self::src('src/Repository/HotelRepository.php'),
+        );
+
+        // Unlinking (product deleted) drops the product's flags.
+        self::assertStringContainsString(
+            "h.gate_hidden = 'N', h.gate_released = 'N'",
+            self::src('src/Cron/Commands/CleanupCommand.php'),
+        );
     }
 
     public function testHotelsGridHasNoHiddenRowsNotice(): void

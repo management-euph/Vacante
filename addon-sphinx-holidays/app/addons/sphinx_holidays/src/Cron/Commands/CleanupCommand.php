@@ -94,7 +94,8 @@ class CleanupCommand extends AbstractSyncCommand
             $cleaned['orphan_products'] = TypeCoerce::toInt(db_query(
                 "UPDATE ?:sphinx_hotels h
                  LEFT JOIN ?:products p ON p.product_id = h.product_id
-                 SET h.product_id = NULL, h.product_skip_reason = NULL, h.product_needs_update = 'N'
+                 SET h.product_id = NULL, h.product_skip_reason = NULL, h.product_needs_update = 'N',
+                     h.gate_hidden = 'N', h.gate_released = 'N'
                  WHERE h.product_id IS NOT NULL AND h.product_id > 0 AND p.product_id IS NULL",
             ));
             if ($cleaned['orphan_products'] > 0) {

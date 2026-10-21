@@ -24,13 +24,16 @@ use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
  *    good: incremental hotel syncs never bring a deleted row back, so a
  *    seaside hotel removed in October could not become a product next summer.
  *    The admin Hotels grid hides these rows by default.
- *  - LINKED: the CS-Cart product is set to HIDDEN (reachable by direct link,
- *    absent from listings and searches) and the hotel row is flagged
- *    no_availability. Nothing is deleted: a seasonal hotel keeps its product
- *    page, URL and SEO, and when a later probe finds an immediate offer
- *    again the flag is cleared and the product reactivated. Products the
- *    admin Hid or Disabled by hand are never touched in either direction
- *    (both status flips are guarded on the current status).
+ *  - LINKED: decided per PRODUCT, since sibling hotel ids can share one
+ *    (available when any of them has an immediate offer). An Active product
+ *    is set to HIDDEN (reachable by direct link, absent from listings and
+ *    searches) and flagged gate_hidden. Nothing is deleted: a seasonal hotel
+ *    keeps its product page, URL and SEO, and when a later probe finds an
+ *    immediate offer again the product is reactivated. Products the admin
+ *    Hid or Disabled by hand are never touched in either direction (both
+ *    status flips are guarded on the current status), and a gate-hidden
+ *    product the admin changed by hand is released: the gate leaves it as
+ *    the admin set it until the hotel has an immediate offer again.
  *
  * Hotels skipped for other reasons are never candidates.
  *
@@ -185,74 +188,130 @@ class HotelAvailabilityGate
             }
         }
 
-        // Partition candidates. Unavailable hotels in successfully-probed
-        // destinations are flagged: unlinked ones wait for an immediate offer
-        // before becoming products, linked ones also get their product
-        // HIDDEN. Available hotels get the flag cleared and — when linked —
-        // the gate-hidden product reactivated.
+        // Partition candidates. A hotel WITHOUT a product is decided on its
+        // own: unavailable in a successfully-probed destination, it waits
+        // (flagged no_availability) for an immediate offer before becoming a
+        // product; available, the flag is cleared. A hotel WITH a product
+        // feeds its product's verdict (gateProducts).
         /** @var list<string> $toWait */
         $toWait = [];
-        /** @var list<string> $toHideHotels */
-        $toHideHotels = [];
-        /** @var list<int> $toHideProducts */
-        $toHideProducts = [];
+        /** @var list<string> $toClear */
         $toClear = [];
-        /** @var list<int> $toRestoreProducts */
-        $toRestoreProducts = [];
+        /** @var array<int, true> $linkedProducts */
+        $linkedProducts = [];
+        /** @var array<int, true> $availableProducts some sibling has an immediate offer */
+        $availableProducts = [];
+        /** @var array<int, true> $unprobedProducts some sibling's destination did not answer */
+        $unprobedProducts = [];
         foreach ($candidates as $row) {
             $hid = TypeCoerce::toString($row['hotel_id'] ?? '');
             if ($hid === '') {
                 continue;
             }
-            $reason = TypeCoerce::toString($row['product_skip_reason'] ?? '');
+            $available = isset($availableSet[$hid]);
+            $probed = isset($probedDestinations[ValidationHelpers::toInt($row['destination_id'] ?? 0)]);
+            $flagged = TypeCoerce::toString($row['product_skip_reason'] ?? '') === HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY;
             $productId = ValidationHelpers::toInt($row['product_id'] ?? 0);
-            if (isset($availableSet[$hid])) {
-                if ($reason === HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY) {
+
+            if ($productId <= 0) {
+                if ($available && $flagged) {
                     $toClear[] = $hid;
-                    if ($productId > 0) {
-                        $toRestoreProducts[] = $productId;
-                    }
+                } elseif (!$available && $probed) {
+                    $toWait[] = $hid;
                 }
                 continue;
             }
-            $destId = ValidationHelpers::toInt($row['destination_id'] ?? 0);
-            if (isset($probedDestinations[$destId])) {
-                if ($productId > 0) {
-                    $toHideHotels[] = $hid;
-                    $toHideProducts[] = $productId;
-                } else {
-                    $toWait[] = $hid;
-                }
+
+            // A linked hotel's state lives in gate_hidden / gate_released; a
+            // no_availability left on it (a waiting hotel that got linked) goes.
+            if ($flagged) {
+                $toClear[] = $hid;
+            }
+            $linkedProducts[$productId] = true;
+            if ($available) {
+                $availableProducts[$productId] = true;
+            } elseif (!$probed) {
+                $unprobedProducts[$productId] = true;
             }
         }
 
         $waiting = $this->skipRepo->markSkippedBatch($toWait, HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY);
-        // Product first, flag second: the flag is what marks the product as
-        // gate-hidden (vs. admin-hidden), so it must never exist without the
-        // hide attempt having run. Both calls are idempotent re-runs.
-        $hidden = $this->skipRepo->hideProductsBatch($toHideProducts);
-        $this->skipRepo->markSkippedBatch($toHideHotels, HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY);
-        $restored = $this->skipRepo->showProductsBatch($toRestoreProducts);
         $cleared = $this->skipRepo->clearSkipReasonBatch($toClear, HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY);
+        $products = $this->gateProducts($linkedProducts, $availableProducts, $unprobedProducts);
 
         $stats['availability_probed'] = count($probedDestinations);
         $stats['availability_waiting'] = $waiting;
-        $stats['availability_products_hidden'] = $hidden;
-        $stats['availability_products_restored'] = $restored;
+        $stats['availability_products_hidden'] = $products['hidden'];
+        $stats['availability_products_restored'] = $products['restored'];
+        $stats['availability_products_released'] = $products['released'];
         $stats['availability_cleared'] = $cleared;
         $stats['availability_errors'] = $errors;
 
         $output(sprintf(
-            '    %s: availability gate — %d newly waiting (no product, no immediate-confirmation offer), %d product(s) hidden, %d cleared, %d product(s) reactivated, %d search error(s)',
+            '    %s: availability gate — %d newly waiting (no product, no immediate-confirmation offer), %d product(s) hidden, %d cleared, %d product(s) reactivated, %d product(s) changed by an admin and left alone, %d search error(s)',
             $countryCode,
             $waiting,
-            $hidden,
+            $products['hidden'],
             $cleared,
-            $restored,
+            $products['restored'],
+            $products['released'],
             $errors,
         ));
 
         return $stats;
+    }
+
+    /**
+     * The gate for hotels with a product, decided per product on its state
+     * read now, after the searches (an admin may have changed it meanwhile):
+     *
+     *  - gate-hidden but no longer Hidden: the admin changed it by hand, so
+     *    the gate releases it and leaves it as the admin set it;
+     *  - an immediate offer (any sibling): show it if the gate hid it, and
+     *    end a release, so the next loss hides it again;
+     *  - no immediate offer and every sibling's destination answered: hide
+     *    it if it is Active and neither gate-hidden nor released.
+     *
+     * @param array<int, true> $products every linked product among the candidates
+     * @param array<int, true> $available products with an immediate offer
+     * @param array<int, true> $unprobed products with an unanswered destination
+     * @return array{hidden: int, restored: int, released: int}
+     */
+    private function gateProducts(array $products, array $available, array $unprobed): array
+    {
+        $toHide = [];
+        $toShow = [];
+        $toRelease = [];
+        $toEndRelease = [];
+        foreach ($this->skipRepo->findGateStates(array_keys($products)) as $productId => $state) {
+            $hidden = $state['hidden'];
+            $released = $state['released'];
+            if ($hidden && $state['status'] !== 'H') {
+                $toRelease[] = $productId;
+                $hidden = false;
+                $released = true;
+            }
+
+            if (isset($available[$productId])) {
+                if ($hidden) {
+                    $toShow[] = $productId;
+                }
+                if ($released) {
+                    $toEndRelease[] = $productId;
+                }
+            } elseif (!isset($unprobed[$productId]) && !$hidden && !$released && $state['status'] === 'A') {
+                $toHide[] = $productId;
+            }
+        }
+
+        $released = $this->skipRepo->releaseProductsBatch($toRelease);
+        $this->skipRepo->clearReleasedBatch($toEndRelease);
+
+        return [
+            'hidden' => $this->skipRepo->hideProductsBatch($toHide),
+            'restored' => $this->skipRepo->showProductsBatch($toShow),
+            'released' => $released,
+        ];
     }
 
     /**

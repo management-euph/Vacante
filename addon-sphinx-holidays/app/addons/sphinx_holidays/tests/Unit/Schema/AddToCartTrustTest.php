@@ -28,10 +28,13 @@ final class AddToCartTrustTest extends TestCase
         $cart = self::read('src/Services/CartService.php');
 
         self::assertStringNotContainsString("if (\$providedId > 0) {\n            return \$providedId;", $cart);
-        self::assertStringContainsString('SELECT product_id, product_skip_reason FROM ?:sphinx_hotels WHERE hotel_id = ?s', $cart);
+        self::assertStringContainsString('FROM ?:sphinx_hotels h WHERE h.hotel_id = ?s', $cart);
         self::assertStringContainsString("FROM ?:sphinx_circuits WHERE circuit_id = ?i AND sync_status = 'active'", $cart);
         self::assertSame(2, substr_count($cart, 'return ProviderCartProduct::resolve('));
-        self::assertStringContainsString('=== HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY', $cart);
+        // Hidden by the availability gate stays bookable from a direct link:
+        // the gate's own flag, on any hotel row linked to the product.
+        self::assertStringContainsString("g.product_id = h.product_id AND g.gate_hidden = 'Y'", $cart);
+        self::assertStringNotContainsString('product_skip_reason', $cart);
     }
 
     public function testTheOfferIsTiedToItsOwnHotel(): void

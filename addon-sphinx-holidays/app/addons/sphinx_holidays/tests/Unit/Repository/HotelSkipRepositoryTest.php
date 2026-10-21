@@ -109,7 +109,7 @@ class HotelSkipRepositoryTest extends TestCase
         $this->assertFalse($called);
     }
 
-    public function testResetSkippedWithoutFiltersClearsAll(): void
+    public function testResetSkippedWithoutReasonKeepsTheGatesWaitingHotels(): void
     {
         $captured = [];
         DbStub::$query = static function (string $query, ...$params) use (&$captured): int {
@@ -122,8 +122,9 @@ class HotelSkipRepositoryTest extends TestCase
         $this->assertSame(7, $result);
         $this->assertStringContainsString('SET product_skip_reason = NULL', $captured[0]);
         $this->assertStringContainsString('WHERE product_skip_reason IS NOT NULL ?p', $captured[0]);
-        // No country/reason → empty condition fragment spliced at ?p.
-        $this->assertSame([''], $captured[1]);
+        // "Retry skipped" leaves hotels waiting for an immediate offer to the
+        // gate: reset, they would become products only to be hidden again.
+        $this->assertSame([" AND product_skip_reason <> 'no_availability'"], $captured[1]);
     }
 
     public function testResetSkippedAppendsCountryAndReasonConditions(): void
@@ -142,7 +143,7 @@ class HotelSkipRepositoryTest extends TestCase
         $this->assertStringContainsString("AND product_skip_reason = 'duplicate'", $condition);
     }
 
-    public function testCountSkippedWithoutReason(): void
+    public function testCountSkippedWithoutReasonLeavesOutWaitingHotels(): void
     {
         $captured = [];
         DbStub::$getField = static function (string $query, ...$params) use (&$captured): string {
@@ -155,7 +156,10 @@ class HotelSkipRepositoryTest extends TestCase
             'SELECT COUNT(*) FROM ?:sphinx_hotels WHERE product_skip_reason IS NOT NULL ?p',
             $captured[0],
         );
-        $this->assertSame([''], $captured[1]);
+        $this->assertSame([" AND product_skip_reason <> 'no_availability'"], $captured[1]);
+
+        $this->repo->countSkipped(HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY);
+        $this->assertSame([" AND product_skip_reason = 'no_availability'"], $captured[1], 'asked by name, they count');
     }
 
     public function testCountSkippedScopedToReason(): void
@@ -209,11 +213,13 @@ class HotelSkipRepositoryTest extends TestCase
         $this->assertSame([[5, 9], 'active', 'no_availability'], $captured[1]);
     }
 
-    public function testHideProductsBatchOnlyTouchesActiveProducts(): void
+    public function testHideProductsBatchFlagsFirstAndOnlyTouchesActiveProducts(): void
     {
         // The linked branch: the gate hides an unavailable hotel's product
         // instead of deleting it. Guarded on status='A' so a product the
         // admin already Hid or Disabled by hand keeps the admin's choice.
+        // Flag first: a run that stops in between leaves a flagged Active
+        // product (released next run), never an unflagged Hidden one.
         $queries = [];
         DbStub::$query = static function (string $query, ...$params) use (&$queries): int {
             $queries[] = [$query, $params];
@@ -224,15 +230,20 @@ class HotelSkipRepositoryTest extends TestCase
         $this->assertSame([], $queries, 'empty input must not touch the DB');
 
         $this->assertSame(1, $this->repo->hideProductsBatch([42, 43]));
-        $this->assertCount(1, $queries);
-        $this->assertStringContainsString(
-            "UPDATE ?:products SET status = 'H' WHERE product_id IN (?n) AND status = 'A'",
+        $this->assertCount(2, $queries);
+        $this->assertSame(
+            "UPDATE ?:sphinx_hotels SET gate_hidden = 'Y' WHERE product_id IN (?n)",
             $queries[0][0],
         );
         $this->assertSame([[42, 43]], $queries[0][1]);
+        $this->assertStringContainsString(
+            "UPDATE ?:products SET status = 'H' WHERE product_id IN (?n) AND status = 'A'",
+            $queries[1][0],
+        );
+        $this->assertSame([[42, 43]], $queries[1][1]);
     }
 
-    public function testShowProductsBatchOnlyReactivatesHiddenProducts(): void
+    public function testShowProductsBatchReactivatesHiddenProductsThenDropsTheFlag(): void
     {
         // The way back — guarded on status='H': a product the admin Disabled
         // while the hotel was unavailable stays exactly as the admin left it.
@@ -246,11 +257,58 @@ class HotelSkipRepositoryTest extends TestCase
         $this->assertSame([], $queries, 'empty input must not touch the DB');
 
         $this->assertSame(1, $this->repo->showProductsBatch([42]));
-        $this->assertCount(1, $queries);
+        $this->assertCount(2, $queries);
         $this->assertStringContainsString(
             "UPDATE ?:products SET status = 'A' WHERE product_id IN (?n) AND status = 'H'",
             $queries[0][0],
         );
         $this->assertSame([[42]], $queries[0][1]);
+        $this->assertSame("UPDATE ?:sphinx_hotels SET gate_hidden = 'N' WHERE product_id IN (?n)", $queries[1][0]);
+        $this->assertSame([[42]], $queries[1][1]);
+    }
+
+    public function testFindGateStatesReadsStatusAndFlagsPerProduct(): void
+    {
+        $this->assertSame([], $this->repo->findGateStates([]));
+
+        $captured = [];
+        DbStub::$getArray = static function (string $query, ...$params) use (&$captured): array {
+            $captured = [$query, $params];
+
+            return [
+                ['product_id' => '42', 'status' => 'H', 'hidden' => '1', 'released' => '0'],
+                ['product_id' => '43', 'status' => 'A', 'hidden' => '0', 'released' => '1'],
+            ];
+        };
+
+        $this->assertSame([
+            42 => ['status' => 'H', 'hidden' => true, 'released' => false],
+            43 => ['status' => 'A', 'hidden' => false, 'released' => true],
+        ], $this->repo->findGateStates([42, 43]));
+        // Sibling hotel rows share their product's flags; deleted products drop out.
+        $this->assertStringContainsString("MAX(h.gate_hidden = 'Y') AS hidden, MAX(h.gate_released = 'Y') AS released", $captured[0]);
+        $this->assertStringContainsString('JOIN ?:products p ON p.product_id = h.product_id', $captured[0]);
+        $this->assertStringContainsString('GROUP BY h.product_id, p.status', $captured[0]);
+        $this->assertSame([[42, 43]], $captured[1]);
+    }
+
+    public function testReleaseAndEndReleaseWriteByProduct(): void
+    {
+        $queries = [];
+        DbStub::$query = static function (string $query, ...$params) use (&$queries): int {
+            $queries[] = [$query, $params];
+            return 3; // rows: sibling hotel ids share a product
+        };
+
+        $this->assertSame(0, $this->repo->releaseProductsBatch([]));
+        $this->repo->clearReleasedBatch([]);
+        $this->assertSame([], $queries, 'empty input must not touch the DB');
+
+        $this->assertSame(1, $this->repo->releaseProductsBatch([42]), 'counted in products, not hotel rows');
+        $this->repo->clearReleasedBatch([42]);
+        $this->assertSame([
+            ["UPDATE ?:sphinx_hotels SET gate_hidden = 'N', gate_released = 'Y' WHERE product_id IN (?n)", [[42]]],
+            ["UPDATE ?:sphinx_hotels SET gate_released = 'N' WHERE product_id IN (?n)", [[42]]],
+        ], $queries);
     }
 }

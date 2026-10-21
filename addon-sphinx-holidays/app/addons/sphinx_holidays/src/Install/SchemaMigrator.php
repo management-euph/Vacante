@@ -52,6 +52,8 @@ final class SchemaMigrator
                 'geocoded_at' => "ADD COLUMN `geocoded_at` DATETIME DEFAULT NULL COMMENT 'Last reverse-geocode attempt (stamped even when nothing was found)' AFTER `street_address`",
                 'location_source' => "ADD COLUMN `location_source` VARCHAR(20) DEFAULT NULL COMMENT 'Weakest rung that produced City/Region: destination|ancestor|address|geocode' AFTER `geocoded_at`",
                 'product_skip_reason' => "ADD COLUMN `product_skip_reason` VARCHAR(50) DEFAULT NULL COMMENT 'Why product linking was skipped (category_failed, invalid_country, etc.)' AFTER `product_id`",
+                'gate_hidden' => "ADD COLUMN `gate_hidden` ENUM('Y','N') NOT NULL DEFAULT 'N' COMMENT 'Product hidden by the availability gate' AFTER `product_skip_reason`",
+                'gate_released' => "ADD COLUMN `gate_released` ENUM('Y','N') NOT NULL DEFAULT 'N' COMMENT 'Gate-hidden product changed by an admin; left alone until an immediate offer returns' AFTER `gate_hidden`",
                 'images_json' => "ADD COLUMN `images_json` JSON DEFAULT NULL COMMENT 'All image objects from API [{url, ...}, ...]' AFTER `image_url`",
                 'product_needs_update' => "ADD COLUMN `product_needs_update` ENUM('Y','N') DEFAULT 'N' COMMENT 'Set to Y when API data differs from CS-Cart product' AFTER `images_json`",
                 'calendar_prices_raw' => "ADD COLUMN `calendar_prices_raw` JSON DEFAULT NULL COMMENT 'Per-date raw from-prices for the booking calendar (calendar_prices cron)' AFTER `sync_status`",
@@ -128,6 +130,7 @@ final class SchemaMigrator
             $haveIndex[$table][$index] = true;
         }
 
+        $added = [];
         foreach ($columns as $table => $defs) {
             if (!isset($haveColumn[$prefix . $table])) {
                 continue; // table absent — addon not (fully) installed; base CREATE owns it
@@ -135,8 +138,26 @@ final class SchemaMigrator
             foreach ($defs as $column => $ddl) {
                 if (!isset($haveColumn[$prefix . $table][$column])) {
                     db_query('ALTER TABLE ?:' . $table . ' ' . $ddl);
+                    $added[$table][$column] = true;
                 }
             }
+        }
+
+        // Once, when gate_hidden arrives: the availability gate marked a
+        // linked hotel's hidden product with product_skip_reason
+        // 'no_availability', which "Retry skipped" and the hotel upsert clear.
+        // Move those marks to the gate's own columns. A Hidden product stays
+        // the gate's; an Active one was re-activated by an admin since the
+        // last run, so the gate leaves it until an immediate offer returns.
+        if (isset($added['sphinx_hotels']['gate_hidden'])) {
+            db_query(
+                "UPDATE ?:sphinx_hotels h
+                 JOIN ?:products p ON p.product_id = h.product_id
+                 SET h.gate_hidden = IF(p.status = 'H', 'Y', 'N'),
+                     h.gate_released = IF(p.status = 'A', 'Y', 'N'),
+                     h.product_skip_reason = NULL
+                 WHERE h.product_skip_reason = 'no_availability' AND h.product_id > 0",
+            );
         }
 
         foreach ($indexes as $table => $defs) {

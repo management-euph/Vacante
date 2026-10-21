@@ -253,6 +253,8 @@
                 `hotel_id`          VARCHAR(100) NOT NULL PRIMARY KEY COMMENT 'Sphinx hotel ID (e.g. s1-hotel-123)',
                 `product_id`        INT UNSIGNED DEFAULT NULL COMMENT 'FK to ?:products',
                 `product_skip_reason` VARCHAR(50) DEFAULT NULL COMMENT 'Why product linking was skipped (category_failed, invalid_country, etc.)',
+                `gate_hidden`       ENUM('Y','N') NOT NULL DEFAULT 'N' COMMENT 'Product hidden by the availability gate',
+                `gate_released`     ENUM('Y','N') NOT NULL DEFAULT 'N' COMMENT 'Gate-hidden product changed by an admin; left alone until an immediate offer returns',
                 `name`              VARCHAR(255) NOT NULL,
                 `classification`    TINYINT UNSIGNED DEFAULT NULL COMMENT 'Star rating 1-5',
                 `property_type`     VARCHAR(30) DEFAULT 'hotel',
@@ -699,6 +701,24 @@
                 MODIFY `longitude` DECIMAL(11,8) DEFAULT NULL;
         </item>
 
+        <!-- Upgrade: the availability gate's own flags. The gate used to mark
+             a hidden product in product_skip_reason, which "Retry skipped" and
+             the hotel upsert clear, leaving the product Hidden for good.
+             Existing installs get these at runtime from SchemaMigrator, which
+             also moves the old flags over. -->
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD COLUMN `gate_hidden` ENUM('Y','N') NOT NULL DEFAULT 'N'
+                COMMENT 'Product hidden by the availability gate'
+                AFTER `product_skip_reason`;
+        </item>
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD COLUMN `gate_released` ENUM('Y','N') NOT NULL DEFAULT 'N'
+                COMMENT 'Gate-hidden product changed by an admin; left alone until an immediate offer returns'
+                AFTER `gate_hidden`;
+        </item>
+
         <!-- Uninstall SQL fallback: guarantees teardown of Sphinx-owned data
              even when the PHP uninstall hook (fn_sphinx_holidays_uninstall)
              does not run. Guarded cross-addon cleanup (travel_api_alias,
@@ -828,8 +848,8 @@
         <item lang="ro" id="sphinx_holidays.preorder_cache_ttl"><![CDATA[TTL cache verificare la checkout (secunde)]]></item>
         <item lang="en" id="sphinx_holidays.preorder_cache_ttl.tooltip"><![CDATA[Reuse the price verified at add-to-cart for this many seconds when the customer clicks Place Order — the checkout skips one API call per hotel in the cart. 0 = always re-verify live.]]></item>
         <item lang="ro" id="sphinx_holidays.preorder_cache_ttl.tooltip"><![CDATA[Refolosește prețul verificat la adăugarea în coș pentru acest număr de secunde când clientul apasă Plasează comanda — checkout-ul omite un apel API pentru fiecare hotel din coș. 0 = re-verifică mereu live.]]></item>
-        <item lang="en" id="sphinx_holidays.require_immediate_availability.tooltip"><![CDATA[When enabled, only hotels with at least one confirmation=immediate offer become products and stay visible: the hotels cron probes each destination. A hotel without such an offer and without a product is kept, marked as waiting, and becomes a product once an immediate offer appears (the Hotels grid hides waiting hotels unless you choose them in the Availability filter). A hotel already linked to a CS-Cart product has its product set to Hidden — reachable only by direct link — and reactivated when immediate availability returns. The storefront search shows only immediate-confirmation offers. The hotels cron accepts a per-run override: &availability_gate=0 to skip the gate, &availability_gate=1 to force it.]]></item>
-        <item lang="ro" id="sphinx_holidays.require_immediate_availability.tooltip"><![CDATA[Când este activ, doar hotelurile cu cel puțin o ofertă confirmation=immediate devin produse și rămân vizibile: cronul de hoteluri verifică fiecare destinație. Un hotel fără o astfel de ofertă și fără produs este păstrat, marcat ca fiind în așteptare, și devine produs când apare o ofertă imediată (grila Hoteluri ascunde hotelurile în așteptare, dacă nu le alegeți în filtrul Disponibilitate). Un hotel deja legat de un produs CS-Cart are produsul setat ca Ascuns — accesibil doar prin link direct — și este reactivat când revine disponibilitatea imediată. Căutarea din storefront afișează doar ofertele cu confirmare imediată. Cronul de hoteluri acceptă o suprascriere per rulare: &availability_gate=0 pentru a omite filtrul, &availability_gate=1 pentru a-l forța.]]></item>
+        <item lang="en" id="sphinx_holidays.require_immediate_availability.tooltip"><![CDATA[When enabled, only hotels with at least one confirmation=immediate offer become products and stay visible: the hotels cron probes each destination. A hotel without such an offer and without a product is kept, marked as waiting, and becomes a product once an immediate offer appears (the Hotels grid hides waiting hotels unless you choose them in the Availability filter). A hotel already linked to a CS-Cart product has its product set to Hidden — reachable only by direct link — and reactivated when immediate availability returns. If you activate such a product by hand, it stays active; the gate takes it over again once the hotel has an immediate offer. The storefront search shows only immediate-confirmation offers. The hotels cron accepts a per-run override: &availability_gate=0 to skip the gate, &availability_gate=1 to force it.]]></item>
+        <item lang="ro" id="sphinx_holidays.require_immediate_availability.tooltip"><![CDATA[Când este activ, doar hotelurile cu cel puțin o ofertă confirmation=immediate devin produse și rămân vizibile: cronul de hoteluri verifică fiecare destinație. Un hotel fără o astfel de ofertă și fără produs este păstrat, marcat ca fiind în așteptare, și devine produs când apare o ofertă imediată (grila Hoteluri ascunde hotelurile în așteptare, dacă nu le alegeți în filtrul Disponibilitate). Un hotel deja legat de un produs CS-Cart are produsul setat ca Ascuns — accesibil doar prin link direct — și este reactivat când revine disponibilitatea imediată. Dacă activați manual un astfel de produs, acesta rămâne activ; filtrul îl preia din nou după ce hotelul are o ofertă imediată. Căutarea din storefront afișează doar ofertele cu confirmare imediată. Cronul de hoteluri acceptă o suprascriere per rulare: &availability_gate=0 pentru a omite filtrul, &availability_gate=1 pentru a-l forța.]]></item>
         <item lang="en" id="sphinx_holidays.default_product_quantity"><![CDATA[Default product quantity]]></item>
         <item lang="ro" id="sphinx_holidays.default_product_quantity"><![CDATA[Cantitate implicită produs]]></item>
         <item lang="en" id="sphinx_holidays.default_product_quantity.tooltip"><![CDATA[Inventory quantity assigned to hotel products on creation. Set high to prevent 'zero inventory' errors.]]></item>
