@@ -561,6 +561,11 @@ final class EurositeApiClient
     /**
      * getBookingRequest — status + details of an existing booking.
      *
+     * The status is on the booking item, as a code with a label:
+     * <ItemStatus Code="CP">Confirmation pending</ItemStatus> (C, CP, RJ, XP,
+     * X: the spec's getBookingRequest). A booking from this store carries
+     * one hotel item, so the first item's status is the booking's.
+     *
      * @return array<string, mixed>
      */
     public function getBooking(string $reference, string $source = 'client'): array
@@ -576,7 +581,8 @@ final class EurositeApiClient
 
         return [
             'references' => $refs,
-            'status' => trim((string) ($details->Status ?? $details->BookingItems->BookingItem->Status ?? '')),
+            'status' => trim((string) ($details->BookingItems->BookingItem->ItemStatus['Code'] ?? '')),
+            'status_text' => trim((string) ($details->BookingItems->BookingItem->ItemStatus ?? '')),
             'raw_xml' => $details->asXML() ?: '',
         ];
     }

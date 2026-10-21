@@ -47,7 +47,7 @@ final class ScriptDataTest extends TestCase
         $storefront = (string) file_get_contents($design . '/themes/responsive/templates/addons/euph_profile_types/hooks/index/scripts.post.tpl');
 
         self::assertStringContainsString('list: {if $euph_pt_list_config}{$euph_pt_list_config nofilter}{else}null{/if}', $backend);
-        self::assertStringContainsString('invoice_prefill: {if $euph_pt_invoice_prefill}{$euph_pt_invoice_prefill nofilter}{else}null{/if}', $storefront);
+        self::assertStringContainsString('pills: {if $addons.euph_profile_types.choice_view == "pills"}true{else}false{/if}', $storefront);
     }
 
     public function testAValueCannotCloseTheScriptOrOpenAComment(): void

@@ -173,8 +173,8 @@ function fn_euph_profile_types_fields_list_config(array $list, string $view): ar
 {
     $vendor = Cast::string($list['kind'] ?? '') === UserKind::Vendor->value;
     $typeIds = array_map(static fn (mixed $type): string => (string) Cast::int(Cast::array($type)['id'] ?? 0), Cast::array($list['types'] ?? []));
-    $show = fn_euph_profile_types_text('euph_profile_types.show', 'show');
-    $required = fn_euph_profile_types_text('euph_profile_types.required', 'required');
+    $show = fn_euph_profile_types_text('euph_profile_types.show', 'Show');
+    $required = fn_euph_profile_types_text('euph_profile_types.required', 'Required');
 
     return [
         'kind' => $vendor ? UserKind::Vendor->value : UserKind::Customer->value,

@@ -410,11 +410,11 @@ describe("CS-Cart's list of profile fields, by type", () => {
             manage_types: 'Manage types',
             profile_type: 'Profile type',
             flags: {
-                profile_show: 'show',
-                profile_required: 'required',
+                profile_show: 'Show',
+                profile_required: 'Required',
                 registration_show: 'At registration',
-                checkout_show: 'show',
-                checkout_required: 'required',
+                checkout_show: 'Show',
+                checkout_required: 'Required',
                 storefront_show: 'On the storefront',
             },
         },
@@ -529,16 +529,16 @@ describe("CS-Cart's list of profile fields, by type", () => {
         const heads = f.querySelectorAll('thead th');
 
         expect(heads[4].querySelector('.euph-pt-list-head__title').textContent).toBe('Profile');
-        expect([...heads[4].querySelectorAll('.euph-pt-list-head span')].map((s) => s.textContent)).toEqual(['Profile type', 'show', 'required', 'At registration']);
-        expect([...heads[5].querySelectorAll('.euph-pt-list-head span')].map((s) => s.textContent)).toEqual(['show', 'required']);
+        expect([...heads[4].querySelectorAll('.euph-pt-list-head span')].map((s) => s.textContent)).toEqual(['Profile type', 'Show', 'Required', 'At registration']);
+        expect([...heads[5].querySelectorAll('.euph-pt-list-head span')].map((s) => s.textContent)).toEqual(['Show', 'Required']);
 
         // The same names again at the top of the section, column under column.
         const sectionHead = f.querySelector('tbody > tr.euph-pt-list-section-head');
 
         expect(sectionHead.parentNode.firstElementChild).toBe(sectionHead);
         expect(sectionHead.cells).toHaveLength(7);
-        expect([...sectionHead.cells[4].querySelectorAll('.euph-pt-list-head span')].map((s) => s.textContent)).toEqual(['Profile type', 'show', 'required', 'At registration']);
-        expect([...sectionHead.cells[5].querySelectorAll('.euph-pt-list-head span')].map((s) => s.textContent)).toEqual(['show', 'required']);
+        expect([...sectionHead.cells[4].querySelectorAll('.euph-pt-list-head span')].map((s) => s.textContent)).toEqual(['Profile type', 'Show', 'Required', 'At registration']);
+        expect([...sectionHead.cells[5].querySelectorAll('.euph-pt-list-head span')].map((s) => s.textContent)).toEqual(['Show', 'Required']);
         expect(sectionHead.cells[4].classList.contains('euph-pt-list-col--first')).toBe(true);
         expect(sectionHead.cells[2].textContent).toBe('');
         expect(f.querySelectorAll('tr.euph-pt-list-section-head')).toHaveLength(1);
@@ -663,7 +663,7 @@ describe('the view of one type greys the fields it does not see', () => {
             list: {
                 kind: 'C', types: [{ id: 1, name: 'Private person', tone: 1 }, { id: 2, name: 'Company', tone: 2 }],
                 areas: { profile: ['profile_show'] }, first_area: 'profile', view: '1', manage_url: '#',
-                labels: { see: 'Customers see:', all_types: 'All types', manage_types: 'Manage types', profile_type: 'Profile type', flags: { profile_show: 'show' } },
+                labels: { see: 'Customers see:', all_types: 'All types', manage_types: 'Manage types', profile_type: 'Profile type', flags: { profile_show: 'Show' } },
             },
         };
         window.localStorage.clear();

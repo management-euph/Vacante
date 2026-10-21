@@ -22,6 +22,7 @@ declare(strict_types=1);
  */
 
 use Tygh\Addons\SphinxHolidays\Cron\Commands\AddProductsCommand;
+use Tygh\Addons\SphinxHolidays\Repository\HotelSkipRepository;
 use Tygh\Addons\SphinxHolidays\Services\CircuitSyncService;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
@@ -576,8 +577,11 @@ if ($mode === 'manage') {
 
     // Product stats
     $linkedCount = $hotelRepo->countLinked();
-    $skippedCount = Container::getHotelSkipRepository()->countSkipped();
-    $unlinkedCount = $totalHotels - $linkedCount - $skippedCount;
+    $skipRepo = Container::getHotelSkipRepository();
+    $skippedCount = $skipRepo->countSkipped();
+    // Waiting for an immediate offer: the availability gate's, not "Retry skipped"'s.
+    $waitingCount = $skipRepo->countSkipped(HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY);
+    $unlinkedCount = $totalHotels - $linkedCount - $skippedCount - $waitingCount;
 
     // API status
     $isConfigured = ConfigProvider::isConfigured();
@@ -596,6 +600,7 @@ if ($mode === 'manage') {
     $view->assign('linked_products', $linkedCount);
     $view->assign('unlinked_hotels', $unlinkedCount);
     $view->assign('skipped_hotels', $skippedCount);
+    $view->assign('waiting_hotels', $waitingCount);
     $view->assign('selected_countries', $selectedCountries);
     $destLoader = new WhitelistPageLoader();
     $view->assign('sphinx_dest_card', DestinationsPicker::card($destLoader->built(), $destLoader->outside(), TypeCoerce::toString(fn_url('sphinx_holidays.whitelist'))));
@@ -689,6 +694,7 @@ if ($mode === 'manage') {
         'classification' => $search['classification'],
         'property_type' => $search['property_type'],
         'link_status' => $search['link_status'],
+        'availability' => $search['availability'],
         'q' => $search['q'],
         'items_per_page' => $search['items_per_page'],
     ], static fn ($v) => $v !== '' && $v !== null);

@@ -47,5 +47,4 @@ h1.title { font-size: 26px; font-weight: 400; margin: 4px 0 20px; color: #222; }
 .legend code { white-space: nowrap; font-family: "Liberation Mono", "DejaVu Sans Mono", monospace; font-size: 12px; }
 .annot { display: flex; align-items: center; gap: 6px; border: 1px dashed #e9b949; background: #fffbea; color: #6b5a1f; font-size: 12px; padding: 6px 10px; border-radius: 4px; margin: 4px 0 0; }
 .annot .mark { flex: none; margin: 0 0 0 auto; }
-.prefilled-summary { margin: 2px 0 10px 30px; padding: 7px 10px; background: #eef7ee; border-left: 3px solid #43a047; color: #2e5e30; font-size: 13px; }
 label .mark, h2 .mark, h3 .mark { margin-top: -6px; margin-bottom: -6px; }

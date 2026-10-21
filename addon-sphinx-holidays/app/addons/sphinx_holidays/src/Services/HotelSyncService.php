@@ -157,8 +157,9 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
             $stats['failed'] = ValidationHelpers::toInt($stats['failed'] ?? 0) + ValidationHelpers::toInt($countryStats['failed'] ?? 0);
 
             foreach ([
-                'availability_probed', 'availability_deleted', 'availability_products_hidden',
-                'availability_products_restored', 'availability_cleared', 'availability_errors',
+                'availability_probed', 'availability_waiting', 'availability_products_hidden',
+                'availability_products_restored', 'availability_products_released',
+                'availability_cleared', 'availability_errors',
             ] as $k) {
                 $stats[$k] = ValidationHelpers::toInt($stats[$k] ?? 0) + ValidationHelpers::toInt($countryStats[$k] ?? 0);
             }
@@ -182,11 +183,12 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
             $this->output('Availability gate: disabled');
         } else {
             $this->output(sprintf(
-                'Availability gate: %d removed, %d product(s) hidden (no immediate offer), %d cleared, %d product(s) reactivated (%d destination(s) probed, %d search error(s))',
-                ValidationHelpers::toInt($stats['availability_deleted'] ?? 0),
+                'Availability gate: %d newly waiting (no product, no immediate offer), %d product(s) hidden, %d cleared, %d product(s) reactivated, %d product(s) changed by an admin and left alone (%d destination(s) answered in full, %d search error(s) or unfinished search(es))',
+                ValidationHelpers::toInt($stats['availability_waiting'] ?? 0),
                 ValidationHelpers::toInt($stats['availability_products_hidden'] ?? 0),
                 ValidationHelpers::toInt($stats['availability_cleared'] ?? 0),
                 ValidationHelpers::toInt($stats['availability_products_restored'] ?? 0),
+                ValidationHelpers::toInt($stats['availability_products_released'] ?? 0),
                 ValidationHelpers::toInt($stats['availability_probed'] ?? 0),
                 ValidationHelpers::toInt($stats['availability_errors'] ?? 0),
             ));
@@ -223,6 +225,12 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
         // Large ID lists create query strings that can exceed server limits.
         $destIdChunks = array_chunk($destinationIds, self::DEST_CHUNK_SIZE);
 
+        // Stale detection (markInactiveBefore) needs the WHOLE list: every
+        // chunk paged to its end, with all the hotels its meta.total
+        // announced. After a page error or a breaker abort, hotels still
+        // there go unseen, and marking them inactive would drop them.
+        $listComplete = true;
+
         foreach ($destIdChunks as $chunkIdx => $destIdChunk) {
             // Wait for circuit breaker cooldown before attempting next chunk
             $httpClient = $this->api->getHttpClient();
@@ -235,6 +243,7 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
                 if ($stillOpen) {
                     $this->output('    Circuit breaker still open after wait. Aborting remaining chunks.');
                     $stats['error'] = 'Circuit breaker open — API unavailable';
+                    $listComplete = false;
                     break;
                 }
             }
@@ -244,6 +253,9 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
             }
 
             $page = 1;
+            // This chunk's items: meta.total counts the hotels of one request,
+            // so a country-wide count would stop the next chunks early.
+            $chunkFetched = 0;
 
             // Stream-and-upsert: fetch each page and upsert immediately
             while (true) {
@@ -252,12 +264,15 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
                 if ($response === null) {
                     $stats['error'] = "API request failed on page {$page}: " . $this->api->getHttpClient()->getLastError();
                     $this->output('    ERROR: ' . $stats['error']);
+                    $listComplete = false;
                     break;
                 }
 
                 $items = $this->extractItems($response);
+                $chunkFetched += count($items);
 
                 if (empty($items)) {
+                    $listComplete = $listComplete && self::fetchedAllAnnounced($response, $chunkFetched);
                     break;
                 }
 
@@ -304,8 +319,8 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
                     $stats['synced'] += $this->hotelRepo->upsertBatch($upsertChunk);
                 }
 
-                $totalPlusSkipped = $stats['total'] + $stats['skipped'];
-                if (!$this->hasMorePages($response, $page, self::PER_PAGE, $totalPlusSkipped)) {
+                if (!$this->hasMorePages($response, $page, self::PER_PAGE, $chunkFetched)) {
+                    $listComplete = $listComplete && self::fetchedAllAnnounced($response, $chunkFetched);
                     break;
                 }
 
@@ -326,7 +341,9 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
 
         // Only mark stale hotels on full sync — incremental returns only changed items
         // Uses timestamp comparison instead of NOT IN (id_list) to avoid memory/SQL limits at scale
-        if ($updatedSince === null) {
+        if ($updatedSince === null && !$listComplete) {
+            $this->output("    {$countryCode}: the hotel list did not come back whole — hotels not seen this run stay as they are");
+        } elseif ($updatedSince === null) {
             $inactive = $this->hotelRepo->markInactiveBefore($syncStartedAt, $countryCode);
             if ($inactive > 0) {
                 $this->output("    Marked {$inactive} stale hotel(s) as inactive");
@@ -336,6 +353,20 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
         $this->output("    {$countryCode}: {$stats['synced']}/{$stats['total']} hotels synced");
 
         return $this->applyAvailabilityGate($countryCode, $destinationIds, $stats);
+    }
+
+    /**
+     * Whether a chunk's listing brought every hotel its meta.total announced
+     * (true when the response gives no total).
+     *
+     * @param array<string, mixed> $response the chunk's last page
+     */
+    private static function fetchedAllAnnounced(array $response, int $fetched): bool
+    {
+        $meta = TypeCoerce::toStringMap($response['meta'] ?? []);
+        $total = $response['total'] ?? $meta['total'] ?? null;
+
+        return $total === null || $fetched >= TypeCoerce::toInt($total);
     }
 
     /**

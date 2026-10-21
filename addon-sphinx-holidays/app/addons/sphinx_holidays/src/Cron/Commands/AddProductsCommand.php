@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
+use Tygh\Addons\SphinxHolidays\Repository\HotelSkipRepository;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
@@ -265,6 +266,7 @@ class AddProductsCommand extends AbstractSyncCommand
                 $this->output('Run with retry_skipped=1 to make them eligible again.');
                 $this->output('  Or use: &cron_mode=add_products&retry_skipped=1');
             }
+            $this->outputWaiting($skipRepo);
         }
 
         $finalAdded = ValidationHelpers::toInt($state['added'] ?? 0);
@@ -464,7 +466,8 @@ class AddProductsCommand extends AbstractSyncCommand
             ));
             $this->output("  Unlinked hotels ready: {$unlinkedCount}");
 
-            $skippedCount = Container::getHotelSkipRepository()->countSkipped();
+            $skipRepo = Container::getHotelSkipRepository();
+            $skippedCount = $skipRepo->countSkipped();
             if ($skippedCount > 0) {
                 $this->output("  Previously skipped: {$skippedCount}");
                 $byReason = $this->getSkippedBreakdown();
@@ -472,6 +475,7 @@ class AddProductsCommand extends AbstractSyncCommand
                     $this->output("    - {$reason}: {$count}");
                 }
             }
+            $this->outputWaiting($skipRepo);
 
             return ['success' => true, 'stats' => ['status' => 'idle', 'unlinked' => $unlinkedCount, 'skipped' => $skippedCount]];
         }
@@ -507,8 +511,19 @@ class AddProductsCommand extends AbstractSyncCommand
         ]];
     }
 
+    /** Hotels the availability gate keeps from becoming products for now. */
+    private function outputWaiting(HotelSkipRepository $skipRepo): void
+    {
+        $waiting = $skipRepo->countSkipped(HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY);
+        if ($waiting > 0) {
+            $this->output("  {$waiting} hotel(s) wait for an immediate-confirmation offer; the hotels cron makes them eligible when one appears.");
+        }
+    }
+
     /**
-     * Get breakdown of skipped hotels by reason.
+     * Get breakdown of skipped hotels by reason. Hotels waiting for an
+     * immediate offer are left out: retry_skipped=1 does not reset them
+     * (HotelSkipRepository::resetSkipped()), see outputWaiting().
      *
      * @return array<string, int> reason => count
      */
@@ -517,9 +532,10 @@ class AddProductsCommand extends AbstractSyncCommand
         $rows = TypeCoerce::toRowList(db_get_array(
             "SELECT product_skip_reason, COUNT(*) AS cnt
              FROM ?:sphinx_hotels
-             WHERE product_skip_reason IS NOT NULL AND sync_status = 'active'
+             WHERE product_skip_reason IS NOT NULL AND product_skip_reason <> ?s AND sync_status = 'active'
              GROUP BY product_skip_reason
              ORDER BY cnt DESC",
+            HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY,
         ));
 
         $result = [];

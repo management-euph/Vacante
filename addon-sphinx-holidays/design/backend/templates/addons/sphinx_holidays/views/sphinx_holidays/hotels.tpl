@@ -69,6 +69,15 @@
         </div>
 
         <div class="sidebar-field">
+            <label>{__("sphinx_holidays.availability_filter")}:</label>
+            <select name="availability">
+                <option value="">{__("sphinx_holidays.availability_immediate")}</option>
+                <option value="waiting" {if $search.availability == "waiting"}selected{/if}>{__("sphinx_holidays.availability_waiting")}</option>
+                <option value="all" {if $search.availability == "all"}selected{/if}>{__("sphinx_holidays.availability_all")}</option>
+            </select>
+        </div>
+
+        <div class="sidebar-field">
             <label>{__("name")}:</label>
             <input type="hidden" name="q" id="hotel_search_q" value="{$search.q|escape:html}" />
             <select id="hotel_name_select2" style="width: 100%;">

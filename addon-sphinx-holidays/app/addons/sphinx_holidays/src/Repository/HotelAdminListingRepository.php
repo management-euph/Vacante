@@ -41,6 +41,7 @@ final class HotelAdminListingRepository
             'classification' => '',
             'property_type' => '',
             'link_status' => '',
+            'availability' => '',
             'q' => '',
             'city' => '',
         ];
@@ -123,12 +124,21 @@ final class HotelAdminListingRepository
             );
         }
 
-        // No hidden-rows filter here: "Hotels with immediate confirmation" is
-        // enforced in the DATA — the availability gate deletes unbookable
-        // hotels (and their CS-Cart products) instead of flagging them — so
-        // the grid always shows exactly what is stored. Rows still carrying
-        // the legacy no_availability flag stay visible until the next hotels
-        // cron resolves them; hiding them would just disguise the backlog.
+        // "Hotels with immediate confirmation": the availability gate keeps a
+        // hotel without a product and without an immediate offer, flagged
+        // no_availability, so it can come back when it becomes bookable. The
+        // grid shows those waiting rows only on request (availability =
+        // waiting / all). <=> because product_skip_reason is usually NULL.
+        $waiting = TypeCoerce::toString(db_quote(
+            '(h.product_id IS NULL OR h.product_id = 0) AND h.product_skip_reason <=> ?s',
+            HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY,
+        ));
+        if ($params['availability'] === 'waiting') {
+            $condition .= ' AND ' . $waiting;
+        } elseif ($params['availability'] !== 'all') {
+            $params['availability'] = '';
+            $condition .= ' AND NOT (' . $waiting . ')';
+        }
 
         // Total count
         $params['total_items'] = TypeCoerce::toInt(db_get_field(
