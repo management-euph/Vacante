@@ -435,6 +435,107 @@ class HotelAvailabilityGateTest extends TestCase
         $this->assertSame([['H9']], $this->flagged);
     }
 
+    public function testDestinationsWithoutCandidatesAreNotSearched(): void
+    {
+        $this->skip->method('findAvailabilityGateCandidates')->willReturn([
+            ['hotel_id' => 'H1', 'destination_id' => 5, 'product_skip_reason' => ''],
+        ]);
+        $searched = [];
+        $this->api->method('searchHotels')->willReturnCallback(function (array $params) use (&$searched): array {
+            $searched[] = $params['destination_id'];
+
+            return ['results' => []];
+        });
+
+        $this->gate()->apply('GR', [5, 6, 7], [], $this->sink());
+
+        $this->assertSame([5, 5, 5], $searched, 'one search per window, for the destination with candidates only');
+    }
+
+    /** A search that was accepted but whose poll failed is no answer: its silence proves nothing. */
+    public function testPollThatFailsLeavesTheDestinationUnanswered(): void
+    {
+        $this->skip->method('findAvailabilityGateCandidates')->willReturn([
+            ['hotel_id' => 'H1', 'destination_id' => 5, 'product_skip_reason' => ''],
+        ]);
+        $this->api->method('searchHotels')->willReturn(['results' => [], 'cursor' => 'CUR-1']);
+        $this->api->method('getHotelResults')->willReturn(null);
+        $this->recordFlags();
+
+        $stats = $this->gate()->apply('GR', [5], [], $this->sink());
+
+        $this->assertSame([[]], $this->flagged, 'H1 is not flagged on half an answer');
+        $this->assertSame(0, $stats['availability_probed']);
+        $this->assertSame(3, $stats['availability_errors']);
+        $this->assertTrue($this->outputContains('did not finish'));
+    }
+
+    public function testPollCutShortByTheDeadlineLeavesTheDestinationUnanswered(): void
+    {
+        $this->skip->method('findAvailabilityGateCandidates')->willReturn([
+            ['hotel_id' => 'H1', 'destination_id' => 5, 'product_skip_reason' => ''],
+        ]);
+        $this->api->method('searchHotels')->willReturn(['results' => [], 'cursor' => 'CUR-1']);
+        $this->api->expects($this->never())->method('getHotelResults');
+        $this->recordFlags();
+
+        // pollDeadlineSecs = 0: the deadline has passed before the first poll.
+        $gate = new HotelAvailabilityGate($this->api, $this->skip, 0, 0, 0);
+        $stats = $gate->apply('GR', [5], [], $this->sink());
+
+        $this->assertSame([[]], $this->flagged);
+        $this->assertSame(0, $stats['availability_probed']);
+    }
+
+    /** Offers seen before a poll was cut short still count: they are evidence of availability. */
+    public function testOffersSeenBeforeAPollIsCutStillCount(): void
+    {
+        $this->skip->method('findAvailabilityGateCandidates')->willReturn([
+            ['hotel_id' => 'H1', 'destination_id' => 5, 'product_skip_reason' => ''],
+            ['hotel_id' => 'H2', 'destination_id' => 5, 'product_skip_reason' => 'no_availability'],
+        ]);
+        $this->api->method('searchHotels')->willReturn(['results' => [], 'cursor' => 'CUR-1']);
+        $polls = 0;
+        $this->api->method('getHotelResults')->willReturnCallback(function () use (&$polls): ?array {
+            $polls++;
+
+            // First page of each search: H2's offer and a live cursor; then the poll fails.
+            return $polls % 2 === 1
+                ? ['results' => [['confirmation' => 'immediate', 'hotel_id' => 'H2']], 'cursor' => 'CUR-2']
+                : null;
+        });
+        $this->recordFlags();
+        $this->skip->expects($this->once())->method('clearSkipReasonBatch')
+            ->with(['H2'], 'no_availability')->willReturn(1);
+
+        $stats = $this->gate()->apply('GR', [5], [], $this->sink());
+
+        $this->assertSame([[]], $this->flagged, 'H1 is left as it is: the destination never answered in full');
+        $this->assertSame(1, $stats['availability_cleared']);
+        $this->assertSame(0, $stats['availability_probed']);
+    }
+
+    public function testOneFailedWindowLeavesTheDestinationUnanswered(): void
+    {
+        $this->skip->method('findAvailabilityGateCandidates')->willReturn([
+            ['hotel_id' => 'H1', 'destination_id' => 5, 'product_skip_reason' => ''],
+        ]);
+        $calls = 0;
+        $this->api->method('searchHotels')->willReturnCallback(function () use (&$calls): ?array {
+            $calls++;
+
+            return $calls === 2 ? null : ['results' => []]; // the +30d window fails
+        });
+        $this->recordFlags();
+
+        $stats = $this->gate()->apply('GR', [5], [], $this->sink());
+
+        $this->assertSame(3, $calls);
+        $this->assertSame([[]], $this->flagged, 'no offer in the windows that answered is not enough');
+        $this->assertSame(0, $stats['availability_probed']);
+        $this->assertSame(1, $stats['availability_errors']);
+    }
+
     public function testPollPathCollectsFromCursor(): void
     {
         $this->skip->method('findAvailabilityGateCandidates')->willReturn([

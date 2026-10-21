@@ -183,7 +183,7 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
             $this->output('Availability gate: disabled');
         } else {
             $this->output(sprintf(
-                'Availability gate: %d newly waiting (no product, no immediate offer), %d product(s) hidden, %d cleared, %d product(s) reactivated, %d product(s) changed by an admin and left alone (%d destination(s) probed, %d search error(s))',
+                'Availability gate: %d newly waiting (no product, no immediate offer), %d product(s) hidden, %d cleared, %d product(s) reactivated, %d product(s) changed by an admin and left alone (%d destination(s) answered in full, %d search error(s) or unfinished search(es))',
                 ValidationHelpers::toInt($stats['availability_waiting'] ?? 0),
                 ValidationHelpers::toInt($stats['availability_products_hidden'] ?? 0),
                 ValidationHelpers::toInt($stats['availability_cleared'] ?? 0),

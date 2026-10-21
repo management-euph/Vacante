@@ -37,14 +37,17 @@ use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
  *
  * Hotels skipped for other reasons are never candidates.
  *
- * Flagging/hiding is scoped to destinations that were probed successfully,
- * so an API error never mass-affects hotels — only clearing/reactivating
- * (always safe) still applies.
+ * Flagging/hiding is scoped to destinations that ANSWERED: every probe
+ * window's search accepted and polled to its end (cursor:null). A failed
+ * search, a poll that fails or runs out of time, or a circuit-breaker stop
+ * leaves the destination unanswered, so an API problem never mass-affects
+ * hotels — only clearing/reactivating (always safe) still applies, on the
+ * offers seen before the cut.
  *
  * Extracted from HotelSyncService so the availability concern lives behind its
  * own collaborator, paired with HotelSkipRepository. The inter-destination and
- * poll delays are injectable (defaulting to the production constants) so tests
- * can run without real sleeps.
+ * poll delays and the poll deadline are injectable (defaulting to the
+ * production constants) so tests can run without real sleeps.
  */
 class HotelAvailabilityGate
 {
@@ -65,6 +68,7 @@ class HotelAvailabilityGate
         private readonly HotelSkipRepository $skipRepo,
         private readonly int $destDelayUs = self::DEST_DELAY_US,
         private readonly int $pollIntervalSecs = self::POLL_INTERVAL,
+        private readonly int $pollDeadlineSecs = self::POLL_DEADLINE,
     ) {
     }
 
@@ -97,21 +101,15 @@ class HotelAvailabilityGate
             return $stats;
         }
 
-        $output(sprintf(
-            '    %s: availability gate — %d candidate hotel(s) across %d destination(s)',
-            $countryCode,
-            count($candidates),
-            count($destIds),
-        ));
-
-        // Probe each destination across the probe windows; collect the set of
-        // hotel IDs with at least one immediate-confirmation offer in ANY
-        // window, and which destinations answered at least once.
+        // Probe each destination with candidates across the probe windows;
+        // collect the set of hotel IDs with at least one immediate-confirmation
+        // offer in ANY window, and which destinations answered in full.
         $currency = ConfigProvider::getDefaultCurrency();
         $debug = ConfigProvider::isDebugLogging();
 
-        // Per-destination candidate hotel sets, so a destination can stop
-        // probing further windows once every candidate is already available.
+        // Per-destination candidate hotel sets: only these destinations are
+        // searched, and one stops probing further windows once every
+        // candidate is already available.
         /** @var array<int, array<string, true>> $candidatesByDest */
         $candidatesByDest = [];
         foreach ($candidates as $row) {
@@ -122,6 +120,13 @@ class HotelAvailabilityGate
             }
         }
 
+        $output(sprintf(
+            '    %s: availability gate — %d candidate hotel(s) across %d destination(s)',
+            $countryCode,
+            count($candidates),
+            count($candidatesByDest),
+        ));
+
         /** @var array<string, true> $availableSet */
         $availableSet = [];
         /** @var array<int, true> $probedDestinations */
@@ -131,10 +136,17 @@ class HotelAvailabilityGate
         $httpClient = $this->api->getHttpClient();
 
         foreach ($destIds as $destId) {
+            if (!isset($candidatesByDest[$destId])) {
+                continue; // no hotel to decide there: a search would change nothing
+            }
+
+            // Every window this destination ran answered in full.
+            $answered = true;
             foreach (self::PROBE_WINDOWS_DAYS_AHEAD as $daysAhead) {
                 if ($httpClient->isCircuitOpen()) {
                     $output('    Circuit breaker open — stopping availability probe early (unprobed hotels left unchanged)');
                     $stopProbing = true;
+                    $answered = false;
                     break;
                 }
 
@@ -148,6 +160,7 @@ class HotelAvailabilityGate
 
                 if (!is_array($searchResponse)) {
                     $errors++;
+                    $answered = false;
                     if ($errors <= 5) {
                         $output("    [WARN] availability search failed for destination {$destId} (+{$daysAhead}d window)");
                     }
@@ -155,17 +168,24 @@ class HotelAvailabilityGate
                     continue;
                 }
 
-                // Search was accepted → destination counts as probed (zero offers
-                // is a legitimate "no availability" answer, not an error).
-                $probedDestinations[$destId] = true;
-
                 // Inline results (synchronous completion) + cursor-polled results.
+                // Zero offers is a legitimate "no availability" answer, but only
+                // once the search has ended: a poll cut short proves nothing,
+                // though the offers it saw still count.
                 $availableSet += OfferAvailability::collectImmediateHotelIds(
                     TypeCoerce::toRowList($searchResponse['results'] ?? []),
                 );
                 $cursor = TypeCoerce::toString($searchResponse['cursor'] ?? '');
                 if ($cursor !== '') {
-                    $availableSet += $this->pollImmediateHotelIds($cursor);
+                    $poll = $this->pollImmediateHotelIds($cursor);
+                    $availableSet += $poll['ids'];
+                    if (!$poll['complete']) {
+                        $errors++;
+                        $answered = false;
+                        if ($errors <= 5) {
+                            $output("    [WARN] availability search for destination {$destId} (+{$daysAhead}d window) did not finish — its hotels are left as they are");
+                        }
+                    }
                 }
 
                 if ($debug) {
@@ -176,13 +196,14 @@ class HotelAvailabilityGate
 
                 // All of this destination's candidates already available —
                 // further windows can't change the partition below.
-                if (isset($candidatesByDest[$destId])
-                    && array_diff_key($candidatesByDest[$destId], $availableSet) === []
-                ) {
+                if (array_diff_key($candidatesByDest[$destId], $availableSet) === []) {
                     break;
                 }
             }
 
+            if ($answered) {
+                $probedDestinations[$destId] = true;
+            }
             if ($stopProbing) {
                 break;
             }
@@ -248,7 +269,7 @@ class HotelAvailabilityGate
         $stats['availability_errors'] = $errors;
 
         $output(sprintf(
-            '    %s: availability gate — %d newly waiting (no product, no immediate-confirmation offer), %d product(s) hidden, %d cleared, %d product(s) reactivated, %d product(s) changed by an admin and left alone, %d search error(s)',
+            '    %s: availability gate — %d newly waiting (no product, no immediate-confirmation offer), %d product(s) hidden, %d cleared, %d product(s) reactivated, %d product(s) changed by an admin and left alone, %d search error(s) or unfinished search(es)',
             $countryCode,
             $waiting,
             $products['hidden'],
@@ -321,16 +342,17 @@ class HotelAvailabilityGate
      *
      * The Sphinx spec's only definitive terminal is a cursor:null page; empty
      * pages with a live cursor are normal and keep being polled until the
-     * per-destination deadline.
+     * per-destination deadline. A poll that fails or reaches the deadline is
+     * not complete.
      *
-     * @return array<string, true>
+     * @return array{ids: array<string, true>, complete: bool}
      */
     private function pollImmediateHotelIds(string $cursorToken): array
     {
         /** @var array<string, true> $hotelIds */
         $hotelIds = [];
         $cursor = $cursorToken;
-        $deadline = time() + self::POLL_DEADLINE;
+        $deadline = time() + $this->pollDeadlineSecs;
 
         while (time() < $deadline) {
             $response = $this->api->getHotelResults('', $cursor);
@@ -345,7 +367,7 @@ class HotelAvailabilityGate
 
             $nextCursor = TypeCoerce::toString($response['cursor'] ?? '');
             if ($nextCursor === '') {
-                break; // cursor:null → definitive end of search
+                return ['ids' => $hotelIds, 'complete' => true]; // cursor:null → definitive end of search
             }
             $cursor = $nextCursor;
 
@@ -354,6 +376,6 @@ class HotelAvailabilityGate
             }
         }
 
-        return $hotelIds;
+        return ['ids' => $hotelIds, 'complete' => false];
     }
 }
