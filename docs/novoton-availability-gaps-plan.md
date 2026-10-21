@@ -27,9 +27,11 @@ unless they start with another addon's folder.
 | Closed hotels | **301 to the resort page by default** after 6 months; the admin can choose another target per hotel. |
 | "Notify me" | **Email only.** Consent text in §8. |
 | The batched syncs refreshing far more than designed (§13) | **Fixed now**, in phase 0. |
+| Does "on request" count as availability? | **Yes** (decided 2026-10-21, §15.6). |
+| One mode for the store, or one per supplier? | **A mode per supplier** (decided 2026-10-21). |
+| Eurosite's and Sphinx's own gates until each switches | **Kept, after the phase 0b fixes**; the report compares them (decided 2026-10-21). |
 
-Nothing in §11 is open any more. Checking Eurosite and Sphinx (2026-10-20) raised
-three new questions, in §15.6.
+Nothing in §11 or §15.6 is open any more.
 
 ### 0.2 Architecture: the rules in Travel Core, the data in Novoton
 
@@ -619,7 +621,7 @@ cover:
 | Phase | What ships | Customers see it | Size |
 |---|---|---|---|
 | 0 | Fix the data bugs in §13 — **done 2026-10-17**. Calibration (§14) still to run on the live store | Small fixes | S |
-| 0b | Eurosite and Sphinx fixes that would corrupt the records or mislead the report (§15.4) | No | S |
+| 0b | Eurosite and Sphinx fixes that would corrupt the records or mislead the report — **done 2026-10-21** (§15.4) | Small fixes | S |
 | 1a | Travel Core: the contract with supplier capabilities (§15.3), the evidence and log tables (schema self-heal), the policy, the date windows (moved from Eurosite), settings (a mode per supplier; hide after N months, default 12; what counts as availability), the Hotel availability page with a supplier filter, CSV, weekly email. Novoton: the evidence source (passive capture, `availability_check` in report mode, backfill), dashboard card | No | L |
 | 1b | Eurosite and Sphinx: record what their existing checks and hotel-page searches already fetch, hotel-list completeness, bookings read back, dashboard cards; Sphinx stores `giata_id` (§15.3) | No | M |
 | 2 | Hotel-page panels; "notify me" and "prices are out" emails; similar hotels; date-picker window; language keys. All suppliers; Eurosite first needs a request flow | Yes | M |
@@ -916,8 +918,8 @@ supplier.
    destination has no offers, so it is out of season). "Next season published"
    exists only for Novoton; for the others it becomes "next season seen", when a
    season-date check finds an offer.
-4. **The offer type is kept**: immediate, on request, stop sale. Whether on
-   request counts as availability is decision 1 in §15.6. A stop sale never
+4. **The offer type is kept**: immediate, on request, stop sale. On request
+   counts as availability (decision 1 in §15.6). A stop sale never
    counts: the supplier has the hotel but sells nothing for those dates, so it
    points to *not offered*.
 5. **Only complete answers count, per destination and date.**
@@ -949,27 +951,38 @@ supplier.
     today (`HotelRowMapper`). It is the first step towards "the same hotel at
     another supplier" (redirect targets, alternatives).
 
-### 15.4 Fix first (phase 0b)
+### 15.4 Fixed first (phase 0b, done 2026-10-21)
 
-Bugs in the existing gates that would corrupt the records or mislead the report:
+Bugs in the existing gates that would corrupt the records or mislead the
+report. Each fix is its own commit on `claude/serene-cray-lxk90u`, with tests;
+PHPStan level 10, both CS Fixer configs, Rector and the Novoton, Travel Core,
+Sphinx and Eurosite suites pass.
 
-- **Sphinx**
-  - The gate deletes hotel rows that have no product (`HotelSkipRepository:119-133`).
-    Mark them instead; the records and the hotel list need the rows.
-  - The gate's flag lives in `product_skip_reason`. "Retry skipped" and the hotel
-    upsert (on a destination or country name change) wipe it, leaving products
-    stuck Hidden. It needs its own column, as Eurosite has.
-  - A search that was accepted but not polled to the end counts as probed, so
-    its hotels can be hidden on half an answer.
-  - `hasMorePages` compares a country-wide count with each chunk's
-    `meta.total`, so a long list can be cut short and its tail marked inactive.
-- **Eurosite**
-  - A city counts as answered when any of its dates answered (audit
-    `eurosite-platform-3`).
-  - A product an admin re-activates is hidden again two runs later.
-  - Outside this plan, but found here: the booking status sync reads `<Status>`,
-    while the API sends `<ItemStatus Code="C|CP|RJ|XP|X">`, so Eurosite booking
-    statuses never update.
+| Commit | What was wrong | Now |
+|---|---|---|
+| `d576b0a` | Sphinx: the gate deleted a hotel without a product when no search found an immediate offer. Incremental hotel syncs never bring a deleted row back, so a seaside hotel deleted in October could never become a product the next summer. | The hotel stays, flagged `no_availability`, and becomes a product once an immediate offer appears. The Hotels grid leaves these hotels out by default; a new Availability filter shows them. |
+| `72904d5` | Sphinx: the gate marked a hidden product in `product_skip_reason`, which "Retry skipped" and the hotel upsert clear, leaving the product Hidden for good. A product an admin re-activated was hidden again on the next run. | Own columns `gate_hidden` and `gate_released`, moved over once by `SchemaMigrator`. Decided per product (sibling hotel ids share it). A gate-hidden product the admin changes by hand is left alone until an immediate offer returns. "Retry skipped" and the rename reset leave waiting hotels alone; the dashboard counts them apart. |
+| `c3b248a` | Sphinx: a search that was accepted but not polled to its end, or a window that failed while another answered, still let the gate flag or hide a destination's hotels. | A destination counts as answered only when every window was polled to `cursor:null`; offers seen before a cut still count. Destinations without hotels to decide are no longer searched. |
+| `6eafad9` | Sphinx: `hasMorePages` compared a country-wide count with each chunk's `meta.total`, so from the second chunk of 200 destinations the paging could stop after one page, and the hotels on the pages never fetched were marked inactive. | Each chunk is paged by its own count. Hotels are marked inactive only after a complete list: every chunk to its end, with all `meta.total` announced, no page error, no breaker abort. |
+| `3a901da` | Eurosite: a destination counted as answered when any one of its dates answered (audit `eurosite-platform-3`); the others' hotels became "no offer" with a zero price, and their products were hidden. | Whole only when every date answered. Otherwise only answers better than what a hotel has are stored (`AvailabilityPlan::improvements()`), nobody becomes "no offer", and products can be shown again but not hidden. |
+| `7eaa75e` | Eurosite: a product an admin re-activated was hidden again two runs later (the release cleared `gate_hidden`, and the product then looked like any Active one). | New `gate_released`: the gate leaves the product as the admin set it until an Immediate offer returns. The release runs first; hiding writes the flag before the product. |
+| `4c59956` | Eurosite, outside this plan: the booking status sync read `<Status>`, while `getBookingResponse` has `<ItemStatus Code="C\|CP\|RJ\|XP\|X">`, so no Eurosite booking ever changed status. | The codes map onto the shared statuses: C confirmed, CP pending, RJ failed, X cancelled; XP (a cancellation waiting for the operator) changes nothing until the answer. |
+
+**Still open, on purpose:**
+
+- **After deploying, open any admin page before the next Sphinx hotels cron.**
+  Sphinx adds `gate_hidden` / `gate_released` (and moves the old marks) on the
+  first admin page load, as for its earlier columns. Eurosite does the same for
+  `gate_released`.
+- **Sphinx products already stuck Hidden** by the old wipe cannot be told
+  apart from products an admin hid. They are Sphinx products in status Hidden
+  whose hotel has neither `gate_hidden` nor `gate_released`; check them by
+  hand.
+- **Eurosite products an admin re-activated before `7eaa75e`** were already
+  released the old way and can be hidden once more; re-activate them again.
+- **Sphinx sibling hotel ids:** hotels skipped as `duplicate` are not
+  searched, so an offer seen only under a duplicate's id does not count for
+  the shared product. The phase 1b records will show how often that happens.
 
 ### 15.5 Travel Core work this adds
 
@@ -988,14 +1001,15 @@ Bugs in the existing gates that would corrupt the records or mislead the report:
 - `ConvergenceLedgerTest` covers Novoton and Sphinx only; the new contract
   should cover Eurosite too.
 
-### 15.6 Decisions needed
+### 15.6 Decisions (2026-10-21)
 
-1. **Does "on request" count as availability?** Recommended: yes. A hotel sold
-   on request is still in business, and on request rooms are shown as such.
-   Eurosite's and Sphinx's own gates count Immediate only, so switching them to
-   the shared rule would show more hotels.
-2. **A mode per supplier?** Recommended: yes (§15.3, point 8).
+1. **"On request" counts as availability: yes.** A hotel sold on request is
+   still in business, and on request rooms are shown as such. Eurosite's and
+   Sphinx's own gates count Immediate only, so switching them to the shared
+   rule will show more hotels.
+2. **A mode per supplier: yes** (§15.3, point 8).
 3. **Until each switch, Eurosite's and Sphinx's own gates keep hiding hotels
-   between seasons.** This goes against decision 1 in §11. Recommended: keep
-   them after the phase 0b fixes, and compare in the report. The alternative is
-   to turn them off now, which would also show hotels that are truly gone.
+   between seasons**, after the phase 0b fixes (§15.4, done), and the report
+   compares them with the shared rule. This goes against decision 1 in §11
+   until each supplier switches; turning them off now would also show hotels
+   that are truly gone.
