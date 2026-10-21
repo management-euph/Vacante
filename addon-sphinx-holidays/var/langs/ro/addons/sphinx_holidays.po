@@ -1064,6 +1064,10 @@ msgctxt "Languages::sphinx_holidays.booking_data_missing"
 msgid "Booking data not available. Please search again."
 msgstr "Datele rezervării nu sunt disponibile. Vă rugăm căutați din nou."
 
+msgctxt "Languages::sphinx_holidays.booking_not_bound"
+msgid "Your booking for \"[hotel]\" could not be confirmed and was removed from the cart. Please book it again."
+msgstr "Rezervarea pentru „[hotel]” nu a putut fi confirmată și a fost eliminată din coș. Vă rugăm să o rezervați din nou."
+
 msgctxt "Languages::sphinx_holidays.booking_error"
 msgid "An error occurred. Please try again."
 msgstr "A apărut o eroare. Vă rugăm încercați din nou."

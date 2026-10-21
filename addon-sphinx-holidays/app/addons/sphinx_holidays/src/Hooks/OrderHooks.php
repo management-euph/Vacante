@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Hooks;
 
 use Tygh\Addons\SphinxHolidays\Services\BookingPayloadFactory;
+use Tygh\Addons\SphinxHolidays\Services\CheckoutBookingBinder;
 use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Helpers\SessionAccessor;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\DepositCartLine;
 use Tygh\Addons\TravelCore\TravelConstants;
@@ -19,6 +21,11 @@ use Tygh\Addons\TravelCore\TravelConstants;
  * pre_place_order removes unavailable offers (deleting their stranded
  * booking rows) instead of blocking mixed-provider orders; place_order_post
  * self-heals booking–order links on BOTH its paths.
+ *
+ * A Sphinx line is a booking only when it is bound to its booking row
+ * (CheckoutBookingBinder, audit H2): pre_place_order removes any other line
+ * and blocks the order, and place_order_post books only a bound row's own
+ * offer_id.
  */
 final class OrderHooks
 {
@@ -32,6 +39,11 @@ final class OrderHooks
      * blocked if the cart would become empty, or a price correction exceeded
      * the absorb allowance (EU CRD: the amount charged must be the amount
      * shown at the order button).
+     *
+     * A line not bound to its booking row (the verifier's "rejected") is
+     * removed too, but its row is NEVER deleted — the line may name another
+     * visitor's booking — and the order is blocked so the customer sees the
+     * changed cart.
      *
      * @param mixed $cart Cart array (by ref — items may be removed, prices corrected)
      * @param mixed $allow Set to false to block order placement
@@ -75,11 +87,12 @@ final class OrderHooks
                 // be stranded forever (order_id=0, unreachable by the order-link
                 // reconcilers since the item leaves the order) and show as a
                 // permanent "Order ID -" row in the admin grid. delete() clears
-                // both ?:sphinx_bookings and the shared mirror.
+                // both ?:sphinx_bookings and the shared mirror. Only such a
+                // row: one on an order is a live booking, never deleted here.
                 $removedProduct = $products[$cartId] ?? null;
                 $removedExtra = is_array($removedProduct) ? ($removedProduct['extra'] ?? null) : null;
                 $strandedBookingId = is_array($removedExtra) ? TypeCoerce::toInt($removedExtra['travel_booking_id'] ?? 0) : 0;
-                if ($strandedBookingId > 0) {
+                if ($strandedBookingId > 0 && self::isStranded(Container::getBookingRepository()->findById($strandedBookingId))) {
                     Container::getBookingRepository()->delete($strandedBookingId);
                 }
 
@@ -102,6 +115,46 @@ final class OrderHooks
             }
         }
 
+        // Lines not bound to their booking row (forged or stale extras, a
+        // booking that is not this visitor's, a line that cannot be checked):
+        // dropped from the cart, the row left alone, the order blocked. Not
+        // the "no longer available" text — the offer may well be: it is the
+        // booking that could not be confirmed, and the customer books it again.
+        $rejected = $result['rejected'];
+        foreach ($rejected as $cartId => $info) {
+            $hotelName = TypeCoerce::toString(!empty($info['hotel_name']) ? $info['hotel_name'] : ($info['offer_id'] ?? ''));
+            fn_set_notification(
+                'W',
+                __('warning'),
+                __('sphinx_holidays.booking_not_bound', [
+                    '[hotel]' => $hotelName,
+                    '[default]' => 'Your booking for "' . $hotelName . '" could not be confirmed and was removed from the cart. Please book it again.',
+                ]),
+            );
+            fn_log_event('general', 'runtime', [
+                'message' => 'Sphinx pre_place_order: removed a line not bound to its booking, order blocked',
+                'cart_id' => $cartId,
+                'booking_id' => $info['booking_id'] ?? 0,
+                'reason' => $info['reason'] ?? '',
+            ]);
+        }
+        if ($rejected !== []) {
+            $products = array_diff_key($products, $rejected);
+            $cart['products'] = $products;
+            $allow = false;
+            if ($products === []) {
+                fn_set_notification(
+                    'E',
+                    __('error'),
+                    __('sphinx_holidays.all_offers_unavailable', [
+                        '[default]' => 'All hotel offers in your cart are no longer available. Please search again.',
+                    ]),
+                );
+            }
+
+            return;
+        }
+
         $corrections = $result['corrections'];
         if ($corrections !== []) {
             foreach ($corrections as $cartId => $correction) {
@@ -117,16 +170,38 @@ final class OrderHooks
                 $lineExtra['price_before_correction'] = $lineExtra['total_price'] ?? $line['price'] ?? null;
                 $lineExtra['total_price'] = $newPrice;
                 $line['extra'] = $lineExtra;
+                // A deposit plan no longer offered: the line pays in full.
+                if (!empty($correction['full_payment'])) {
+                    $line = CheckoutBookingBinder::withoutDeposit(TypeCoerce::toStringMap($line));
+                }
                 // extra.total_price is in the API currency; the line is in
                 // the store's primary currency (CartService converts the same
                 // way). A deposit line keeps charging its deposit, rescaled.
+                // The booking row's currency (the verifier sends it) over the
+                // line's copy, which the request could have written.
                 $primaryCurrency = defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : 'EUR';
-                $apiCurrency = TypeCoerce::toString($lineExtra['currency'] ?? '');
+                $apiCurrency = TypeCoerce::toString($correction['currency'] ?? $lineExtra['currency'] ?? '');
                 $currencyService = new \Tygh\Addons\TravelCore\Services\CurrencyService($apiCurrency !== '' ? $apiCurrency : 'EUR');
+                // One booking line books one reservation.
+                $line['amount'] = 1;
                 $products[$cartId] = DepositCartLine::reprice(
                     TypeCoerce::toStringMap($line),
                     $currencyService->convertFromApiCurrency($newPrice, $primaryCurrency),
                 );
+
+                // A live-price correction: the row is what the line must
+                // charge from now on (the binding check reads it), so it takes
+                // the corrected price too. A correction TO the row's price
+                // leaves the row as it is.
+                $correctedBookingId = TypeCoerce::toInt($correction['booking_id'] ?? 0);
+                if ($correctedBookingId > 0 && !empty($correction['update_row'])) {
+                    $rowPrices = ['total_price' => $newPrice];
+                    $newRaw = TypeCoerce::toFloat($correction['api_price_raw'] ?? 0);
+                    if ($newRaw > 0) {
+                        $rowPrices['base_price'] = $newRaw;
+                    }
+                    Container::getBookingRepository()->update($correctedBookingId, $rowPrices);
+                }
             }
             $cart['products'] = $products;
         }
@@ -179,6 +254,9 @@ final class OrderHooks
         }
 
         $repo = Container::getBookingRepository();
+        $binder = CheckoutBookingBinder::fromSession();
+        /** @var list<int> $refused rows the cart named but may not book: the reconciler must not link them either */
+        $refused = [];
 
         // Booking contact comes from the ORDER's checkout profile — the guest form
         // no longer duplicates the email/phone questions. Legacy cart extras
@@ -198,16 +276,44 @@ final class OrderHooks
             }
 
             $booking_id = TypeCoerce::toInt($extra['travel_booking_id']);
-            $offer_id = TypeCoerce::toString($extra['offer_id'] ?? '');
+
+            // A line names a booking; it is booked only when that row exists
+            // and is this visitor's, for the line's offer (audit H2: with a
+            // forged id, findById() is null, order_id read 0 and extra's
+            // offer was booked at order creation, before any payment).
+            $existing = $repo->findById($booking_id);
+            if ($existing === null) {
+                fn_log_event('general', 'runtime', [
+                    'message' => 'Sphinx place_order_post: line names no booking row, nothing booked',
+                    'booking_id' => $booking_id,
+                    'order_id' => $resolved_order_id,
+                ]);
+                continue;
+            }
 
             // CS-Cart runs place_order_post again for the same cart (order
             // edits, the parent after its vendor sub-orders). A booking already
             // linked to an order was submitted then: resending would book it
             // twice and relinking would reset its confirmed status to pending.
-            $existing = $repo->findById($booking_id);
             if (TypeCoerce::toInt($existing['order_id'] ?? 0) > 0) {
                 continue;
             }
+
+            $refusal = $binder->rejection(TypeCoerce::toStringMap($product), $existing);
+            if ($refusal !== null) {
+                $refused[] = $booking_id;
+                fn_log_event('general', 'runtime', [
+                    'message' => 'Sphinx place_order_post: line not bound to its booking, nothing booked',
+                    'booking_id' => $booking_id,
+                    'order_id' => $resolved_order_id,
+                    'reason' => $refusal,
+                ]);
+                continue;
+            }
+
+            // The row's own offer, travellers and booking type — never the
+            // line's copies, which the request could have written.
+            $offer_id = TypeCoerce::toString($existing['offer_id'] ?? '');
 
             $contact = [
                 'email' => $orderContact['email'] !== ''
@@ -234,11 +340,9 @@ final class OrderHooks
             if (!empty($offer_id)) {
                 try {
                     $api = Container::getApi();
-                    $guests_data = [];
-                    if (!empty($extra['guests_data'])) {
-                        $guests_data = is_string($extra['guests_data'])
-                            ? json_decode($extra['guests_data'], true)
-                            : $extra['guests_data'];
+                    $guests_data = $existing['guests_data'] ?? null;
+                    if (is_string($guests_data)) {
+                        $guests_data = json_decode($guests_data, true);
                     }
 
                     $payload = BookingPayloadFactory::build(
@@ -251,7 +355,7 @@ final class OrderHooks
                     // Dispatch by booking type — packages/circuits/experiences have
                     // their own book endpoints (previously EVERY sphinx product was
                     // sent to bookHotel, so non-hotel bookings hit the wrong one).
-                    $booking_type = TypeCoerce::toString($extra['booking_type'] ?? 'hotel');
+                    $booking_type = CheckoutBookingBinder::bookingTypeOf($existing);
                     $bookResult = match ($booking_type) {
                         'circuit' => $api->bookCircuit($payload),
                         'package' => $api->bookPackage($payload),
@@ -307,8 +411,21 @@ final class OrderHooks
         // sphinx_booking/travel_booking_id extras, pre-persist throw) would leave
         // its booking orphaned forever — the admin grid then shows "Order ID: -"
         // although the order exists. The reconciler is idempotent and cheap, so
-        // always run it after submission (novoton parity).
-        self::linkOrderBookings($resolved_order_id);
+        // always run it after submission (novoton parity). Never for a row
+        // refused above: it is not this order's to carry.
+        self::linkOrderBookings($resolved_order_id, $refused);
+    }
+
+    /**
+     * A cart-stage row nothing else will ever reach: pending, on no order.
+     *
+     * @param array<string, mixed>|null $row
+     */
+    private static function isStranded(?array $row): bool
+    {
+        return $row !== null
+            && TypeCoerce::toInt($row['order_id'] ?? 0) === 0
+            && TypeCoerce::toString($row['status'] ?? '') === TravelConstants::STATUS_PENDING;
     }
 
     /**
@@ -343,6 +460,30 @@ final class OrderHooks
         if ($changed) {
             $cart['products'] = $products;
         }
+
+        self::rememberBoundBookings($cart);
+    }
+
+    /**
+     * Remember the bookings this session's cart may carry
+     * (CheckoutBookingBinder::SESSION_KEY) while the session id still matches
+     * their rows: CS-Cart regenerates it when the guest logs in at checkout,
+     * and the remembered ids keep those bookings theirs. Storefront only.
+     *
+     * @param array<array-key, mixed> $cart
+     */
+    private static function rememberBoundBookings(array $cart): void
+    {
+        $session = new SessionAccessor();
+        $binder = CheckoutBookingBinder::fromSession($session);
+        if ($binder->isAdminArea()) {
+            return;
+        }
+
+        $ids = $binder->boundBookingIds(TypeCoerce::toStringMap($cart));
+        if ($ids !== [] || $session->get(CheckoutBookingBinder::SESSION_KEY) !== null) {
+            $session->set(CheckoutBookingBinder::SESSION_KEY, $ids);
+        }
     }
 
     /**
@@ -350,9 +491,14 @@ final class OrderHooks
      * order. Idempotent: bookings already linked are left untouched; status is
      * NOT changed (a reconciliation must not reset a confirmed booking).
      *
+     * An unlinked row is linked only when it is the item's booking (audit
+     * H2): the row's offer_id is the item's, and its product too when the
+     * row has one; never a row place_order_post refused ($excluded).
+     *
+     * @param list<int> $excluded booking ids never to link
      * @return int Number of bookings newly linked
      */
-    public static function linkOrderBookings(int $order_id): int
+    public static function linkOrderBookings(int $order_id, array $excluded = []): int
     {
         if ($order_id <= 0) {
             return 0;
@@ -380,17 +526,23 @@ final class OrderHooks
             }
 
             $booking_id = TypeCoerce::toInt($extra['travel_booking_id']);
-            if ($booking_id <= 0) {
+            if ($booking_id <= 0 || in_array($booking_id, $excluded, true)) {
                 continue;
             }
 
-            $current_order = TypeCoerce::toInt(db_get_field(
-                'SELECT order_id FROM ?:sphinx_bookings WHERE booking_id = ?i',
-                $booking_id,
-            ));
+            $row = $repo->findById($booking_id);
+            if ($row === null) {
+                continue;
+            }
+            $current_order = TypeCoerce::toInt($row['order_id'] ?? 0);
 
             // Already linked to a DIFFERENT order — never steal it.
             if ($current_order > 0 && $current_order !== $order_id) {
+                continue;
+            }
+
+            // Not linked yet: only the item's own booking.
+            if ($current_order <= 0 && !self::isItemsBooking($product, $extra, $row)) {
                 continue;
             }
 
@@ -415,6 +567,25 @@ final class OrderHooks
         }
 
         return $linked;
+    }
+
+    /**
+     * Whether a row is the booking an order item names: the same offer, and
+     * the same product when the row records one.
+     *
+     * @param array<array-key, mixed> $item
+     * @param array<string, mixed> $extra
+     * @param array<string, mixed> $row
+     */
+    private static function isItemsBooking(array $item, array $extra, array $row): bool
+    {
+        $offerId = TypeCoerce::toString($row['offer_id'] ?? '');
+        if ($offerId === '' || $offerId !== TypeCoerce::toString($extra['offer_id'] ?? '')) {
+            return false;
+        }
+        $productId = TypeCoerce::toInt($row['product_id'] ?? 0);
+
+        return $productId <= 0 || $productId === TypeCoerce::toInt($item['product_id'] ?? 0);
     }
 
     /**

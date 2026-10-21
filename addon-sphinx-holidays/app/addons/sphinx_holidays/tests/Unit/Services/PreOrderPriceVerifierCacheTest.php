@@ -6,6 +6,7 @@ namespace Tygh\Addons\SphinxHolidays\Tests\Unit\Services;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Tygh\Addons\SphinxHolidays\Services\CheckoutBookingBinder;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\PreOrderPriceVerifier;
 use Tygh\Registry;
@@ -26,6 +27,9 @@ use Tygh\Registry;
  * key products by int hashes, and routing them through toStringMap()
  * (which drops int keys) once made this verifier silently iterate nothing.
  * Any regression to that empties every result here.
+ *
+ * Every line is bound to its own pending booking row priced at the form
+ * price (CheckoutBookingBinder), so only the cache decides the outcome.
  */
 #[CoversClass(PreOrderPriceVerifier::class)]
 final class PreOrderPriceVerifierCacheTest extends TestCase
@@ -55,9 +59,13 @@ final class PreOrderPriceVerifierCacheTest extends TestCase
         return [
             'products' => [
                 '7' => [
+                    'product_id' => 100,
+                    'amount' => 1,
                     'price' => $formPrice,
+                    'stored_price' => 'Y',
                     'extra' => [
                         'sphinx_booking' => 1,
+                        'travel_booking_id' => 1,
                         'offer_id' => self::OFFER_ID,
                         'total_price' => $formPrice,
                         'hotel_id' => 'H1',
@@ -66,6 +74,23 @@ final class PreOrderPriceVerifierCacheTest extends TestCase
                 ],
             ],
         ];
+    }
+
+    /** The verifier with line 7 bound to its pending booking row at $formPrice. */
+    private function verifier(float $formPrice): PreOrderPriceVerifier
+    {
+        $row = [
+            'booking_id' => 1, 'order_id' => 0, 'user_id' => 5, 'session_id' => '',
+            'product_id' => 100, 'offer_id' => self::OFFER_ID, 'status' => 'pending',
+            'total_price' => $formPrice, 'currency' => 'EUR',
+        ];
+
+        return new PreOrderPriceVerifier(null, new CheckoutBookingBinder(
+            static fn (int $id): ?array => $id === 1 ? $row : null,
+            static fn (float $amount, string $currency): float => $amount,
+            5,
+            '',
+        ));
     }
 
     private function seedCache(float $rawPrice, int $timestamp): void
@@ -83,7 +108,7 @@ final class PreOrderPriceVerifierCacheTest extends TestCase
         // Verified 10 s ago at 100 — the customer's form still shows 90.
         $this->seedCache(100.0, time() - 10);
 
-        $result = (new PreOrderPriceVerifier())->verify($this->cartWithOffer(90.0));
+        $result = $this->verifier(90.0)->verify($this->cartWithOffer(90.0));
 
         // Commission defaults to 0 in tests, so api_price === the cached raw.
         self::assertSame(100.0, $result['corrections']['7']['api_price'] ?? null);
@@ -96,7 +121,7 @@ final class PreOrderPriceVerifierCacheTest extends TestCase
     {
         $this->seedCache(90.0, time());
 
-        $result = (new PreOrderPriceVerifier())->verify($this->cartWithOffer(90.0));
+        $result = $this->verifier(90.0)->verify($this->cartWithOffer(90.0));
 
         self::assertSame([], $result['corrections']);
         self::assertSame([], $result['notifications']);
@@ -110,7 +135,7 @@ final class PreOrderPriceVerifierCacheTest extends TestCase
         // configured the verifier bails out without corrections.
         $this->seedCache(100.0, time() - 1000);
 
-        $result = (new PreOrderPriceVerifier())->verify($this->cartWithOffer(90.0));
+        $result = $this->verifier(90.0)->verify($this->cartWithOffer(90.0));
 
         self::assertSame([], $result['corrections'], 'a stale cached price must never be trusted');
         self::assertFalse((bool) $result['reconfirm']);
@@ -124,7 +149,7 @@ final class PreOrderPriceVerifierCacheTest extends TestCase
 
         $this->seedCache(100.0, time()); // perfectly fresh — must still be ignored
 
-        $result = (new PreOrderPriceVerifier())->verify($this->cartWithOffer(90.0));
+        $result = $this->verifier(90.0)->verify($this->cartWithOffer(90.0));
 
         self::assertSame([], $result['corrections'], 'TTL 0 must force the live verify on every click');
     }

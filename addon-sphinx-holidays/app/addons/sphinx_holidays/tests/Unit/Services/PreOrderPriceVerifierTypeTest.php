@@ -6,6 +6,7 @@ namespace Tygh\Addons\SphinxHolidays\Tests\Unit\Services;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Tygh\Addons\SphinxHolidays\Services\CheckoutBookingBinder;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\PreOrderPriceVerifier;
@@ -18,6 +19,9 @@ use Tygh\Registry;
  * were dropped as "unavailable" (or never checked). Each type now goes to
  * its own endpoint: packages to verifyPackageOffer, circuits (no verify
  * endpoint) to a fresh getCircuitQuote, services through customize.
+ *
+ * Each line is bound to its own pending booking row (CheckoutBookingBinder)
+ * priced at the line's price, carrying the booked circuit and departure.
  */
 #[CoversClass(PreOrderPriceVerifier::class)]
 final class PreOrderPriceVerifierTypeTest extends TestCase
@@ -92,9 +96,13 @@ final class PreOrderPriceVerifierTypeTest extends TestCase
     private static function cart(string $type, float $price, array $extra = []): array
     {
         return ['products' => [7 => [
+            'product_id' => 100,
+            'amount' => 1,
             'price' => $price,
+            'stored_price' => 'Y',
             'extra' => $extra + [
                 'sphinx_booking' => 1,
+                'travel_booking_id' => 1,
                 'booking_type' => $type,
                 'offer_id' => 'offer-1',
                 'total_price' => $price,
@@ -107,11 +115,33 @@ final class PreOrderPriceVerifierTypeTest extends TestCase
         ]]];
     }
 
+    /**
+     * The verifier with line 7 bound to its pending booking row at $price,
+     * booked as $type (room_type: 'circuit' / 'package', the room name for a hotel).
+     */
+    private static function verifier(float $price, string $type = 'hotel'): PreOrderPriceVerifier
+    {
+        $row = [
+            'booking_id' => 1, 'order_id' => 0, 'user_id' => 5, 'session_id' => '',
+            'product_id' => 100, 'offer_id' => 'offer-1', 'status' => 'pending',
+            'room_type' => $type === 'hotel' ? 'Double Room' : $type,
+            'total_price' => $price, 'currency' => 'EUR',
+            'hotel_id' => '55', 'check_in' => '2026-11-02', 'adults' => 2, 'children_ages' => '',
+        ];
+
+        return new PreOrderPriceVerifier(null, new CheckoutBookingBinder(
+            static fn (int $id): ?array => $id === 1 ? $row : null,
+            static fn (float $amount, string $currency): float => $amount,
+            5,
+            '',
+        ));
+    }
+
     public function testAPackageGoesToThePackageEndpointNotTheHotelOne(): void
     {
         self::$answers['verifyPackageOffer'] = ['offer_id' => 'offer-1', 'pricing' => ['selling_price' => 120.0]];
 
-        $result = (new PreOrderPriceVerifier())->verify(self::cart('package', 100.0));
+        $result = self::verifier(100.0, 'package')->verify(self::cart('package', 100.0));
 
         self::assertSame(['verifyPackageOffer'], self::$calls);
         self::assertSame([], $result['unavailable']);
@@ -123,7 +153,7 @@ final class PreOrderPriceVerifierTypeTest extends TestCase
         self::$answers['verifyPackageOffer'] = ['offer_id' => 'offer-1', 'pricing' => ['selling_price' => 100.0]];
         self::$answers['customizePackage'] = ['pricing' => ['selling_price' => 130.0]];
 
-        $result = (new PreOrderPriceVerifier())->verify(self::cart('package', 130.0, ['additional_services' => ['TRF']]));
+        $result = self::verifier(130.0, 'package')->verify(self::cart('package', 130.0, ['additional_services' => ['TRF']]));
 
         self::assertSame(['verifyPackageOffer', 'customizePackage'], self::$calls);
         self::assertSame([], $result['corrections'], 'priced with its services, it matches');
@@ -132,7 +162,7 @@ final class PreOrderPriceVerifierTypeTest extends TestCase
 
     public function testAPackageNoLongerOfferedIsRemoved(): void
     {
-        $result = (new PreOrderPriceVerifier())->verify(self::cart('package', 100.0));
+        $result = self::verifier(100.0, 'package')->verify(self::cart('package', 100.0));
 
         self::assertArrayHasKey(7, $result['unavailable']);
     }
@@ -144,7 +174,7 @@ final class PreOrderPriceVerifierTypeTest extends TestCase
             ['offer_id' => 'offer-1', 'pricing' => ['selling_price' => 100.0]],
         ];
 
-        $result = (new PreOrderPriceVerifier())->verify(self::cart('circuit', 100.0));
+        $result = self::verifier(100.0, 'circuit')->verify(self::cart('circuit', 100.0));
 
         self::assertSame(['getCircuitQuote'], self::$calls, 'never the hotel endpoint');
         self::assertSame([], $result['corrections'], "this offer's own quote is used");
@@ -153,7 +183,7 @@ final class PreOrderPriceVerifierTypeTest extends TestCase
 
     public function testACircuitDepartureWithNoQuoteIsRemoved(): void
     {
-        $result = (new PreOrderPriceVerifier())->verify(self::cart('circuit', 100.0));
+        $result = self::verifier(100.0, 'circuit')->verify(self::cart('circuit', 100.0));
 
         self::assertArrayHasKey(7, $result['unavailable']);
     }
@@ -162,7 +192,7 @@ final class PreOrderPriceVerifierTypeTest extends TestCase
     {
         self::$answers['getCircuitQuote'] = [['offer_id' => 'offer-1', 'pricing' => ['selling_price' => 50.0]]];
 
-        $result = (new PreOrderPriceVerifier())->verify(self::cart('circuit', 100.0, ['service_codes' => ['X']]));
+        $result = self::verifier(100.0, 'circuit')->verify(self::cart('circuit', 100.0, ['service_codes' => ['X']]));
 
         self::assertSame(['customizeCircuit', 'getCircuitQuote'], self::$calls);
         self::assertSame([], $result['corrections'], 'a base quote without the services would compare wrong');
@@ -173,7 +203,7 @@ final class PreOrderPriceVerifierTypeTest extends TestCase
     {
         self::$answers['verifyHotelOffer'] = ['offer_id' => 'offer-1', 'price' => 100.0];
 
-        $result = (new PreOrderPriceVerifier())->verify(self::cart('hotel', 100.0));
+        $result = self::verifier(100.0, 'hotel')->verify(self::cart('hotel', 100.0));
 
         self::assertSame(['verifyHotelOffer'], self::$calls);
         self::assertSame([], $result['corrections']);
@@ -183,8 +213,8 @@ final class PreOrderPriceVerifierTypeTest extends TestCase
     {
         $_SESSION['sphinx_price_cache'] = [md5('offer-1') => ['api_price_raw' => 100.0, 'timestamp' => time()]];
 
-        (new PreOrderPriceVerifier())->verify(self::cart('circuit', 100.0));
-        (new PreOrderPriceVerifier())->verify(self::cart('package', 100.0));
+        self::verifier(100.0, 'circuit')->verify(self::cart('circuit', 100.0));
+        self::verifier(100.0, 'package')->verify(self::cart('package', 100.0));
 
         self::assertSame([], self::$calls);
     }
