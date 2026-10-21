@@ -277,6 +277,8 @@ final class CronPlanBuilderTest extends TestCase
         self::assertTrue($rows['hotel_info_batched']['batched']);
         self::assertTrue($rows['geocode_addresses']['has_status']);
         self::assertFalse($rows['geocode_addresses']['batched']);
+        self::assertTrue($rows['geocode_addresses']['redo_all'], 'its menu offers "Redo all hotels" (force=1)');
+        self::assertFalse($rows['hotel_info_batched']['redo_all'], 'a batched job has "Force full sync" instead');
         self::assertFalse($rows['cleanup']['has_status']);
         self::assertFalse($rows['cleanup']['recommended']);
 

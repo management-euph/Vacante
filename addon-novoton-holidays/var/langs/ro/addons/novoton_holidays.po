@@ -3441,8 +3441,8 @@ msgid "Geocode streets"
 msgstr "Geocodare străzi"
 
 msgctxt "Languages::novoton_holidays.dash_job_geocode_addresses_desc"
-msgid "Street address from coordinates (needs geocoding on in Travel Core)"
-msgstr "Adresa străzii din coordonate (necesită geocodarea activă în Travel Core)"
+msgid "Street address for hotels that have none (needs geocoding on in Travel Core)"
+msgstr "Adresa străzii pentru hotelurile care nu o au (necesită geocodarea activă în Travel Core)"
 
 msgctxt "Languages::novoton_holidays.dash_job_sync_priceinfo_batched"
 msgid "Price info"
@@ -3695,6 +3695,14 @@ msgstr "Forțează sincronizarea completă"
 msgctxt "Languages::novoton_holidays.dash_force_full_confirm"
 msgid "Run a full sync of [job] now? It re-reads every hotel and makes many API calls."
 msgstr "Rulezi acum sincronizarea completă pentru [job]? Recitește toate hotelurile și face multe apeluri API."
+
+msgctxt "Languages::novoton_holidays.dash_redo_all"
+msgid "Redo all hotels"
+msgstr "Refă toate hotelurile"
+
+msgctxt "Languages::novoton_holidays.dash_redo_all_confirm"
+msgid "Run [job] again for every hotel, including the ones already done? It continues in the scheduled runs until every hotel is done."
+msgstr "Rulezi din nou [job] pentru fiecare hotel, inclusiv pentru cele deja făcute? Continuă în rulările programate până termină toate hotelurile."
 
 msgctxt "Languages::novoton_holidays.dash_reset_progress"
 msgid "Reset progress…"

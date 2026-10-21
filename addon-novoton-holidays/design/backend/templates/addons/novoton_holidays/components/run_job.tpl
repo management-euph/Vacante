@@ -7,7 +7,7 @@
    dashboard.js opens it and posts into it (CS-Cart's admin scripts took the
    submit over and ignored target="_blank", which stays as the no-JS fallback).
 
-   Params: job (mode), label, action (status|force_full|reset, optional),
+   Params: job (mode), label, action (status|force_full|reset|force, optional),
            class (button classes), confirm (question to ask first, optional),
            menuitem (true inside a ⋯ menu). *}
 <form action="{""|fn_url}" method="post" target="_blank" class="novoton-run-form"{if $confirm} data-novoton-confirm="{$confirm|escape:html}"{/if}>

@@ -106,11 +106,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
         }
 
-        // The batched jobs' extra actions, passed on as the flags their
-        // commands already read from the cron URL.
+        // The extra actions (the batched jobs' status/force_full/reset, a
+        // backlog job's force), passed on as the flags their commands
+        // already read from the cron URL.
         $params = [];
         $action = RequestCoerce::string($_REQUEST, 'job_action');
-        if (in_array($action, ['status', 'force_full', 'reset'], true)) {
+        if (in_array($action, ['status', 'force_full', 'reset', 'force'], true)) {
             $params[$action] = '1';
         }
 

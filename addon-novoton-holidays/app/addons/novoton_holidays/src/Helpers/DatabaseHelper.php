@@ -108,6 +108,10 @@ class DatabaseHelper implements DatabaseHelperInterface
     /**
      * Bulk upsert hotels (INSERT ... ON DUPLICATE KEY UPDATE)
      *
+     * A hotel whose coordinates moved loses its geocode stamp, so the
+     * geocode_addresses cron finds its street again (it only asks for
+     * hotels without a stamp, or without a street).
+     *
      * @return array{inserted: int, updated: int}
      * @param list<array<string, mixed>> $hotels
      */
@@ -117,6 +121,7 @@ class DatabaseHelper implements DatabaseHelperInterface
             return ['inserted' => 0, 'updated' => 0];
         }
 
+        $moved = $this->movedHotelIds($hotels);
         $now = date('Y-m-d H:i:s');
         $inserted = 0;
         $updated = 0;
@@ -142,7 +147,55 @@ class DatabaseHelper implements DatabaseHelperInterface
             }
         }
 
+        if ($moved !== []) {
+            \db_query('UPDATE ?:novoton_hotels SET geocoded_at = NULL WHERE hotel_id IN (?a)', $moved);
+        }
+
         return ['inserted' => $inserted, 'updated' => $updated];
+    }
+
+    /**
+     * Geocoded hotels of the batch whose coordinates moved more than
+     * MOVED_DEGREES (about 55 m): their street was looked up for the old spot.
+     * A hotel getting its first coordinates was never geocoded, so it is not
+     * "moved".
+     *
+     * @param list<array<string, mixed>> $hotels
+     * @return list<string>
+     */
+    private function movedHotelIds(array $hotels): array
+    {
+        $incoming = [];
+        foreach ($hotels as $hotel) {
+            $lat = TypeCoerce::toFloat($hotel['latitude'] ?? 0);
+            $lng = TypeCoerce::toFloat($hotel['longitude'] ?? 0);
+            $hotelId = TypeCoerce::toString($hotel['hotel_id'] ?? '');
+            if ($hotelId !== '' && $lat !== 0.0 && $lng !== 0.0) {
+                $incoming[$hotelId] = [$lat, $lng];
+            }
+        }
+        if ($incoming === []) {
+            return [];
+        }
+
+        $moved = [];
+        $stored = \db_get_array(
+            'SELECT hotel_id, latitude, longitude FROM ?:novoton_hotels WHERE hotel_id IN (?a) AND geocoded_at IS NOT NULL',
+            array_map('strval', array_keys($incoming)),
+        );
+        foreach (TypeCoerce::toRowList($stored) as $row) {
+            $hotelId = TypeCoerce::toString($row['hotel_id'] ?? '');
+            $was = [TypeCoerce::toFloat($row['latitude'] ?? 0), TypeCoerce::toFloat($row['longitude'] ?? 0)];
+            $now = $incoming[$hotelId] ?? null;
+            if ($now === null || $was[0] === 0.0 || $was[1] === 0.0) {
+                continue;
+            }
+            if (abs($now[0] - $was[0]) > self::MOVED_DEGREES || abs($now[1] - $was[1]) > self::MOVED_DEGREES) {
+                $moved[] = $hotelId;
+            }
+        }
+
+        return $moved;
     }
 
     /**
@@ -219,6 +272,9 @@ class DatabaseHelper implements DatabaseHelperInterface
 
         return $count;
     }
+
+    /** Coordinates that moved more than this (about 55 m) need their street looked up again. */
+    private const float MOVED_DEGREES = 0.0005;
 
     /** @var string[] Allowed column names for dynamic queries */
     private const array ALLOWED_COLUMNS = [

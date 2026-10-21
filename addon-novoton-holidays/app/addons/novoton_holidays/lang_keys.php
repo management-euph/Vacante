@@ -136,8 +136,8 @@ return [
         'ro' => 'Geocodare străzi',
     ],
     'novoton_holidays.dash_job_geocode_addresses_desc' => [
-        'en' => 'Street address from coordinates (needs geocoding on in Travel Core)',
-        'ro' => 'Adresa străzii din coordonate (necesită geocodarea activă în Travel Core)',
+        'en' => 'Street address for hotels that have none (needs geocoding on in Travel Core)',
+        'ro' => 'Adresa străzii pentru hotelurile care nu o au (necesită geocodarea activă în Travel Core)',
     ],
     'novoton_holidays.dash_job_sync_priceinfo_batched' => [
         'en' => 'Price info',
@@ -398,6 +398,14 @@ return [
     'novoton_holidays.dash_force_full_confirm' => [
         'en' => 'Run a full sync of [job] now? It re-reads every hotel and makes many API calls.',
         'ro' => 'Rulezi acum sincronizarea completă pentru [job]? Recitește toate hotelurile și face multe apeluri API.',
+    ],
+    'novoton_holidays.dash_redo_all' => [
+        'en' => 'Redo all hotels',
+        'ro' => 'Refă toate hotelurile',
+    ],
+    'novoton_holidays.dash_redo_all_confirm' => [
+        'en' => 'Run [job] again for every hotel, including the ones already done? It continues in the scheduled runs until every hotel is done.',
+        'ro' => 'Rulezi din nou [job] pentru fiecare hotel, inclusiv pentru cele deja făcute? Continuă în rulările programate până termină toate hotelurile.',
     ],
     'novoton_holidays.dash_reset_progress' => [
         'en' => 'Reset progress…',

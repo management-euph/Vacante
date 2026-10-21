@@ -462,7 +462,11 @@ Duration:    ~5 minutes per run (300 hotels @ 1 request/second)
 Frequency:   Hourly until the backlog drains, then it's a near-instant no-op
 
 What it does:
-  - Selects hotels with real coordinates that were never geocoded
+  - Selects only hotels with real coordinates and NO street address:
+    never tried (new hotels, and hotels whose coordinates the hotel_list
+    sync moved by more than ~55 m), or tried without finding a street more
+    than 30 days ago. A hotel that has a street is not asked again, so
+    once the backlog is done the hourly run costs nothing.
   - Calls Nominatim /reverse (1 req/s, public-instance usage policy)
   - Stores street_address and stamps geocoded_at (stamped even when no
     street was found, so hotels are not retried every run)
@@ -478,13 +482,15 @@ Requirements:
 
 Parameters:
   &limit=N           Hotels per run (default: 300)
-  &status=1          Show backlog counters (no processing)
-  &force=1           Clear all stamps first (full re-geocode)
+  &status=1          Show the counters (no processing)
+  &force=1           Re-geocode EVERY hotel, streets included: the next
+                     runs (scheduled ones too) take 300 at a time until
+                     all are done. Also on the dashboard: ⋯ → Redo all hotels.
 
 Examples:
-  mode=geocode_addresses                 # Process next 300 hotels
-  mode=geocode_addresses&status=1        # Check backlog
-  mode=geocode_addresses&force=1         # Re-geocode everything
+  mode=geocode_addresses                 # Next 300 hotels without a street
+  mode=geocode_addresses&status=1        # Check the counters
+  mode=geocode_addresses&force=1         # Start a re-geocode of every hotel
 
 Crontab:
   0 * * * * curl -s "...&mode=geocode_addresses"

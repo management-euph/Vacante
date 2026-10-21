@@ -61,6 +61,9 @@ final class CronPlanBuilder
     /** Jobs that answer status=1 without being batched (they drain a backlog). */
     public const array HAS_STATUS = ['geocode_addresses', 'backfill_images', 'backfill_descriptions'];
 
+    /** Backlog jobs that answer force=1: redo every hotel, also the ones already done. */
+    public const array REDO_ALL = ['geocode_addresses'];
+
     /**
      * Jobs that are real but not part of the schedule: `full` repeats jobs the
      * stages already run, and the alternative-request jobs are driven by
@@ -375,6 +378,7 @@ final class CronPlanBuilder
             'recommended' => in_array($mode, self::RECOMMENDED, true),
             'batched' => in_array($mode, self::BATCHED, true),
             'has_status' => in_array($mode, self::BATCHED, true) || in_array($mode, self::HAS_STATUS, true),
+            'redo_all' => in_array($mode, self::REDO_ALL, true),
             'cron' => $cron,
             'schedule_key' => $words['key'],
             'schedule_params' => $words['params'],
