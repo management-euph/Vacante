@@ -20,12 +20,10 @@ use Tygh\Addons\TravelCore\TravelConstants;
  */
 final class OrderCardFacts
 {
-    /** Markup that separates text (a space is left where it was): an alternation, and a list for tagGap(). */
-    private const string BLOCK_TAGS = 'p|br|div|li|ul|ol|h1|h2|h3|h4|h5|h6|tr|td|th|table|tbody|thead';
+    /** Markup that separates text (a space is left where it was). */
+    private const array BLOCK_TAGS = ['p', 'br', 'div', 'li', 'ul', 'ol', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'tr', 'td', 'th', 'table', 'tbody', 'thead'];
     /** Markup inside a sentence. */
-    private const string INLINE_TAGS = 'b|i|u|em|strong|span|a|font|small|sup|sub';
-    /** Either kind, one alternation. */
-    private const string TAGS = self::BLOCK_TAGS . '|' . self::INLINE_TAGS;
+    private const array INLINE_TAGS = ['b', 'i', 'u', 'em', 'strong', 'span', 'a', 'font', 'small', 'sup', 'sub'];
 
     public function __construct(private readonly ?BookingRepository $repo = null)
     {
@@ -107,7 +105,7 @@ final class OrderCardFacts
     {
         $tag = self::tagGap(...);
         $text = (string) preg_replace_callback(
-            '/(?<!&)lt;\/?(' . self::TAGS . ')(?=[\s\/]|gt;)[^<>]{0,200}?gt;/i',
+            '/(?<!&)lt;\/?(' . implode('|', [...self::BLOCK_TAGS, ...self::INLINE_TAGS]) . ')(?=[\s\/]|gt;)[^<>]{0,200}?gt;/i',
             $tag,
             TypeCoerce::toString($value),
         );
@@ -129,6 +127,6 @@ final class OrderCardFacts
      */
     private static function tagGap(array $m): string
     {
-        return in_array(strtolower($m[1] ?? ''), explode('|', self::BLOCK_TAGS), true) ? ' ' : '';
+        return in_array(strtolower($m[1] ?? ''), self::BLOCK_TAGS, true) ? ' ' : '';
     }
 }
