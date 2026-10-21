@@ -225,6 +225,12 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
         // Large ID lists create query strings that can exceed server limits.
         $destIdChunks = array_chunk($destinationIds, self::DEST_CHUNK_SIZE);
 
+        // Stale detection (markInactiveBefore) needs the WHOLE list: every
+        // chunk paged to its end, with all the hotels its meta.total
+        // announced. After a page error or a breaker abort, hotels still
+        // there go unseen, and marking them inactive would drop them.
+        $listComplete = true;
+
         foreach ($destIdChunks as $chunkIdx => $destIdChunk) {
             // Wait for circuit breaker cooldown before attempting next chunk
             $httpClient = $this->api->getHttpClient();
@@ -237,6 +243,7 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
                 if ($stillOpen) {
                     $this->output('    Circuit breaker still open after wait. Aborting remaining chunks.');
                     $stats['error'] = 'Circuit breaker open — API unavailable';
+                    $listComplete = false;
                     break;
                 }
             }
@@ -246,6 +253,9 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
             }
 
             $page = 1;
+            // This chunk's items: meta.total counts the hotels of one request,
+            // so a country-wide count would stop the next chunks early.
+            $chunkFetched = 0;
 
             // Stream-and-upsert: fetch each page and upsert immediately
             while (true) {
@@ -254,12 +264,15 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
                 if ($response === null) {
                     $stats['error'] = "API request failed on page {$page}: " . $this->api->getHttpClient()->getLastError();
                     $this->output('    ERROR: ' . $stats['error']);
+                    $listComplete = false;
                     break;
                 }
 
                 $items = $this->extractItems($response);
+                $chunkFetched += count($items);
 
                 if (empty($items)) {
+                    $listComplete = $listComplete && self::fetchedAllAnnounced($response, $chunkFetched);
                     break;
                 }
 
@@ -306,8 +319,8 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
                     $stats['synced'] += $this->hotelRepo->upsertBatch($upsertChunk);
                 }
 
-                $totalPlusSkipped = $stats['total'] + $stats['skipped'];
-                if (!$this->hasMorePages($response, $page, self::PER_PAGE, $totalPlusSkipped)) {
+                if (!$this->hasMorePages($response, $page, self::PER_PAGE, $chunkFetched)) {
+                    $listComplete = $listComplete && self::fetchedAllAnnounced($response, $chunkFetched);
                     break;
                 }
 
@@ -328,7 +341,9 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
 
         // Only mark stale hotels on full sync — incremental returns only changed items
         // Uses timestamp comparison instead of NOT IN (id_list) to avoid memory/SQL limits at scale
-        if ($updatedSince === null) {
+        if ($updatedSince === null && !$listComplete) {
+            $this->output("    {$countryCode}: the hotel list did not come back whole — hotels not seen this run stay as they are");
+        } elseif ($updatedSince === null) {
             $inactive = $this->hotelRepo->markInactiveBefore($syncStartedAt, $countryCode);
             if ($inactive > 0) {
                 $this->output("    Marked {$inactive} stale hotel(s) as inactive");
@@ -338,6 +353,20 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
         $this->output("    {$countryCode}: {$stats['synced']}/{$stats['total']} hotels synced");
 
         return $this->applyAvailabilityGate($countryCode, $destinationIds, $stats);
+    }
+
+    /**
+     * Whether a chunk's listing brought every hotel its meta.total announced
+     * (true when the response gives no total).
+     *
+     * @param array<string, mixed> $response the chunk's last page
+     */
+    private static function fetchedAllAnnounced(array $response, int $fetched): bool
+    {
+        $meta = TypeCoerce::toStringMap($response['meta'] ?? []);
+        $total = $response['total'] ?? $meta['total'] ?? null;
+
+        return $total === null || $fetched >= TypeCoerce::toInt($total);
     }
 
     /**
