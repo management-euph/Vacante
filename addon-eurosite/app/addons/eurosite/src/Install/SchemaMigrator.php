@@ -63,6 +63,7 @@ final class SchemaMigrator
         'price_currency' => "ADD COLUMN `price_currency` VARCHAR(4) NOT NULL DEFAULT '' AFTER `min_gross`",
         'first_image' => "ADD COLUMN `first_image` VARCHAR(512) NOT NULL DEFAULT '' AFTER `price_currency`",
         'gate_hidden' => "ADD COLUMN `gate_hidden` ENUM('Y','N') NOT NULL DEFAULT 'N' AFTER `first_image`",
+        'gate_released' => "ADD COLUMN `gate_released` ENUM('Y','N') NOT NULL DEFAULT 'N' AFTER `gate_hidden`",
         'product_skip_reason' => "ADD COLUMN `product_skip_reason` VARCHAR(32) NOT NULL DEFAULT '' AFTER `gate_hidden`",
         'product_updated_at' => 'ADD COLUMN `product_updated_at` DATETIME DEFAULT NULL AFTER `product_skip_reason`',
         'hotel_class' => "ADD COLUMN `hotel_class` VARCHAR(64) NOT NULL DEFAULT '' AFTER `product_updated_at`",
