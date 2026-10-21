@@ -62,7 +62,8 @@ class BookingStatusService
             return ['changed' => false, 'old_status' => $oldStatus, 'new_status' => $oldStatus, 'error' => $e->getMessage()];
         }
 
-        $newStatus = self::mapApiStatus(TypeCoerce::toString($info['status'] ?? ''));
+        $code = TypeCoerce::toString($info['status'] ?? '');
+        $newStatus = self::mapApiStatus($code !== '' ? $code : TypeCoerce::toString($info['status_text'] ?? ''));
         if ($newStatus === '' || $newStatus === $oldStatus) {
             return ['changed' => false, 'old_status' => $oldStatus, 'new_status' => $oldStatus, 'error' => null];
         }
@@ -73,21 +74,41 @@ class BookingStatusService
     }
 
     /**
-     * Best-effort mapping of Eurosite's status strings (RO/EN mixed in the
-     * wild) onto the shared vocabulary; unknown values pass through
-     * lowercased so nothing is silently rewritten.
+     * getBookingRequest's ItemStatus codes (the API spec). XP, a cancellation
+     * still waiting for the operator's answer, changes nothing until the
+     * operator answers with X or C.
+     */
+    private const ITEM_STATUS = [
+        'C' => TravelConstants::STATUS_CONFIRMED,
+        'CP' => TravelConstants::STATUS_PENDING,
+        'RJ' => TravelConstants::STATUS_FAILED,
+        'XP' => '',
+        'X' => TravelConstants::STATUS_CANCELLED,
+    ];
+
+    /**
+     * An ItemStatus code onto the shared vocabulary; '' = leave the booking
+     * as it is. Anything else is read as a status label, best effort (RO/EN
+     * mixed in the wild), "pending" first: "Confirmation pending" is not a
+     * confirmation. Unknown values pass through lowercased so nothing is
+     * silently rewritten.
      */
     public static function mapApiStatus(string $apiStatus): string
     {
+        $code = strtoupper(trim($apiStatus));
+        if (array_key_exists($code, self::ITEM_STATUS)) {
+            return self::ITEM_STATUS[$code];
+        }
+
         $s = strtolower(trim($apiStatus));
         if ($s === '') {
             return '';
         }
 
         return match (true) {
+            str_contains($s, 'pending') || str_contains($s, 'asteptare') || str_contains($s, 'request') => TravelConstants::STATUS_PENDING,
             str_contains($s, 'confirm') => TravelConstants::STATUS_CONFIRMED,
             str_contains($s, 'anulat') || str_contains($s, 'cancel') => TravelConstants::STATUS_CANCELLED,
-            str_contains($s, 'pending') || str_contains($s, 'asteptare') || str_contains($s, 'request') => TravelConstants::STATUS_PENDING,
             default => $s,
         };
     }
