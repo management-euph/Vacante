@@ -27,6 +27,8 @@ class HotelAvailabilityGateTest extends TestCase
     private HotelSkipRepository $skip;
     /** @var list<string> */
     private array $output = [];
+    /** @var list<list<string>> hotel-id lists passed to markSkippedBatch, in call order */
+    private array $flagged = [];
 
     protected function setUp(): void
     {
@@ -36,6 +38,18 @@ class HotelAvailabilityGateTest extends TestCase
         $this->api->method('getHttpClient')->willReturn($this->httpClient);
         $this->skip = $this->createMock(HotelSkipRepository::class);
         $this->output = [];
+        $this->flagged = [];
+    }
+
+    /** markSkippedBatch is called for unlinked hotels first, then for linked ones. */
+    private function recordFlags(): void
+    {
+        $this->skip->method('markSkippedBatch')->willReturnCallback(function (array $ids, string $reason): int {
+            $this->assertSame('no_availability', $reason);
+            $this->flagged[] = array_values(array_map('strval', $ids));
+
+            return count($ids);
+        });
     }
 
     private function gate(): HotelAvailabilityGate
@@ -80,7 +94,13 @@ class HotelAvailabilityGateTest extends TestCase
         $this->assertTrue($this->outputContains('no hotels to check'));
     }
 
-    public function testDeletesUnavailableAndClearsAvailable(): void
+    /**
+     * A hotel without a product and without an immediate offer is kept and
+     * flagged, never deleted: incremental hotel syncs never bring a deleted
+     * row back, so a seaside hotel removed in October could not become a
+     * product next summer. The flag keeps it from becoming a product meanwhile.
+     */
+    public function testUnavailableHotelWithoutProductWaitsAndAvailableIsCleared(): void
     {
         $this->skip->method('findAvailabilityGateCandidates')->willReturn([
             ['hotel_id' => 'H1', 'destination_id' => 5, 'product_skip_reason' => ''],
@@ -90,18 +110,15 @@ class HotelAvailabilityGateTest extends TestCase
         $this->api->method('searchHotels')->willReturn([
             'results' => [['confirmation' => 'immediate', 'hotel_id' => 'H2']],
         ]);
-
-        // H1 (destination probed, no immediate offer) is deleted outright;
-        // H2 (was flagged, now available) gets its legacy flag cleared.
-        $this->skip->expects($this->once())->method('deleteUnlinkedBatch')
-            ->with(['H1'])->willReturn(1);
+        $this->recordFlags();
         $this->skip->expects($this->once())->method('clearSkipReasonBatch')
             ->with(['H2'], 'no_availability')->willReturn(1);
 
         $stats = $this->gate()->apply('GR', [5], [], $this->sink());
 
+        $this->assertSame([['H1'], []], $this->flagged, 'H1 waits for an immediate offer; no linked hotel to flag');
         $this->assertSame(1, $stats['availability_probed']);
-        $this->assertSame(1, $stats['availability_deleted']);
+        $this->assertSame(1, $stats['availability_waiting']);
         $this->assertSame(1, $stats['availability_cleared']);
         $this->assertSame(0, $stats['availability_errors']);
     }
@@ -120,16 +137,14 @@ class HotelAvailabilityGateTest extends TestCase
         ]);
         $this->api->method('searchHotels')->willReturn(['results' => []]);
 
-        $this->skip->expects($this->once())->method('deleteUnlinkedBatch')
-            ->with([])->willReturn(0);
         $this->skip->expects($this->once())->method('hideProductsBatch')
             ->with([42])->willReturn(1);
-        $this->skip->expects($this->once())->method('markSkippedBatch')
-            ->with(['H1'], 'no_availability')->willReturn(1);
+        $this->recordFlags();
 
         $stats = $this->gate()->apply('GR', [5], [], $this->sink());
 
-        $this->assertSame(0, $stats['availability_deleted'], 'linked hotels are never deleted');
+        $this->assertSame([[], ['H1']], $this->flagged, 'the linked row is flagged after its product is hidden');
+        $this->assertSame(0, $stats['availability_waiting']);
         $this->assertSame(1, $stats['availability_products_hidden']);
         $this->assertSame(0, $stats['availability_products_restored']);
     }
@@ -164,9 +179,9 @@ class HotelAvailabilityGateTest extends TestCase
     /**
      * The probe is multi-window: a hotel with inventory only in a later
      * window (e.g. summer-only availability missing from the +14d probe)
-     * must NOT be deleted.
+     * must NOT be flagged.
      */
-    public function testHotelAvailableOnlyInLaterWindowIsNotDeleted(): void
+    public function testHotelAvailableOnlyInLaterWindowIsNotFlagged(): void
     {
         $this->skip->method('findAvailabilityGateCandidates')->willReturn([
             ['hotel_id' => 'H1', 'destination_id' => 5, 'product_skip_reason' => ''],
@@ -180,15 +195,15 @@ class HotelAvailabilityGateTest extends TestCase
                 : ['results' => [['confirmation' => 'immediate', 'hotel_id' => 'H1']]];
         });
 
-        $this->skip->expects($this->once())->method('deleteUnlinkedBatch')
-            ->with([])->willReturn(0);
+        $this->recordFlags();
         $this->skip->expects($this->once())->method('clearSkipReasonBatch')
             ->with([], 'no_availability')->willReturn(0);
 
         $stats = $this->gate()->apply('GR', [5], [], $this->sink());
 
         $this->assertGreaterThanOrEqual(2, $calls, 'later windows must be probed');
-        $this->assertSame(0, $stats['availability_deleted']);
+        $this->assertSame([[], []], $this->flagged);
+        $this->assertSame(0, $stats['availability_waiting']);
     }
 
     public function testStopsProbingFurtherWindowsOnceAllCandidatesAvailable(): void
@@ -201,7 +216,6 @@ class HotelAvailabilityGateTest extends TestCase
             $calls++;
             return ['results' => [['confirmation' => 'immediate', 'hotel_id' => 'H1']]];
         });
-        $this->skip->method('deleteUnlinkedBatch')->willReturn(0);
         $this->skip->method('clearSkipReasonBatch')->willReturn(0);
 
         $this->gate()->apply('GR', [5], [], $this->sink());
@@ -219,7 +233,6 @@ class HotelAvailabilityGateTest extends TestCase
             $captured = $params;
             return ['results' => []];
         });
-        $this->skip->method('deleteUnlinkedBatch')->willReturn(1);
         $this->skip->method('clearSkipReasonBatch')->willReturn(0);
 
         $this->gate()->apply('GR', [5], [], $this->sink());
@@ -231,7 +244,7 @@ class HotelAvailabilityGateTest extends TestCase
         $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}$/', $captured['check_in']);
     }
 
-    public function testCircuitBreakerStopsProbeAndDeletesNothing(): void
+    public function testCircuitBreakerStopsProbeAndFlagsNothing(): void
     {
         $httpClient = $this->createMock(SphinxHttpClient::class);
         $httpClient->method('isCircuitOpen')->willReturn(true);
@@ -242,13 +255,14 @@ class HotelAvailabilityGateTest extends TestCase
         $this->skip->method('findAvailabilityGateCandidates')->willReturn([
             ['hotel_id' => 'H1', 'destination_id' => 5, 'product_skip_reason' => ''],
         ]);
-        // Nothing probed → nothing deleted or cleared (called with empty lists).
-        $this->skip->expects($this->once())->method('deleteUnlinkedBatch')->with([])->willReturn(0);
+        // Nothing probed → nothing flagged or cleared (called with empty lists).
+        $this->recordFlags();
         $this->skip->expects($this->once())->method('clearSkipReasonBatch')->with([], 'no_availability')->willReturn(0);
 
         $gate = new HotelAvailabilityGate($api, $this->skip, 0, 0);
         $stats = $gate->apply('GR', [5], [], $this->sink());
 
+        $this->assertSame([[], []], $this->flagged);
         $this->assertSame(0, $stats['availability_probed']);
         $this->assertTrue($this->outputContains('Circuit breaker open'));
     }
@@ -260,35 +274,35 @@ class HotelAvailabilityGateTest extends TestCase
         ]);
         $this->api->method('searchHotels')->willReturn(null); // request failed
 
-        // Destination not probed → H1 survives; nothing to clear.
-        $this->skip->expects($this->once())->method('deleteUnlinkedBatch')->with([])->willReturn(0);
+        // Destination not probed → H1 is left as it was; nothing to clear.
+        $this->recordFlags();
         $this->skip->method('clearSkipReasonBatch')->willReturn(0);
 
         $stats = $this->gate()->apply('GR', [5], [], $this->sink());
 
+        $this->assertSame([[], []], $this->flagged);
         $this->assertSame(0, $stats['availability_probed']);
         // One error per probe window (the destination is retried for each).
         $this->assertSame(3, $stats['availability_errors']);
     }
 
-    public function testLegacyFlaggedCandidateStillUnavailableIsPurged(): void
+    public function testWaitingHotelStillUnavailableStaysWaiting(): void
     {
-        // Rows flagged by the old flag-mode gate are candidates too — when
-        // the probe still finds no immediate offer, they are deleted, so a
-        // store that ran the previous behavior converges on first sync.
+        // A flagged hotel without a product is checked again on every run;
+        // still no immediate offer → it stays flagged (markSkippedBatch only
+        // writes NULL reasons, so the row is unchanged) and is never removed.
         $this->skip->method('findAvailabilityGateCandidates')->willReturn([
             ['hotel_id' => 'H9', 'destination_id' => 5, 'product_skip_reason' => 'no_availability'],
         ]);
         $this->api->method('searchHotels')->willReturn(['results' => []]);
 
-        $this->skip->expects($this->once())->method('deleteUnlinkedBatch')
-            ->with(['H9'])->willReturn(1);
+        $this->recordFlags();
         $this->skip->expects($this->once())->method('clearSkipReasonBatch')
             ->with([], 'no_availability')->willReturn(0);
 
-        $stats = $this->gate()->apply('GR', [5], [], $this->sink());
+        $this->gate()->apply('GR', [5], [], $this->sink());
 
-        $this->assertSame(1, $stats['availability_deleted']);
+        $this->assertSame([['H9'], []], $this->flagged);
     }
 
     public function testPollPathCollectsFromCursor(): void
@@ -303,7 +317,6 @@ class HotelAvailabilityGateTest extends TestCase
             'cursor' => '', // terminal page
         ]);
 
-        $this->skip->method('deleteUnlinkedBatch')->willReturn(0);
         $this->skip->expects($this->once())->method('clearSkipReasonBatch')
             ->with(['H1'], 'no_availability')->willReturn(1);
 

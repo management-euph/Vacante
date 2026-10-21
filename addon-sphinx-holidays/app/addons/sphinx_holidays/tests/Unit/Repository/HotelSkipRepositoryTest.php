@@ -81,36 +81,6 @@ class HotelSkipRepositoryTest extends TestCase
         $this->assertFalse($called, 'db_query must not run for an empty hotel id list');
     }
 
-    public function testDeleteUnlinkedBatchGuardsProductLinkAndPurgesImageQueue(): void
-    {
-        $captured = [];
-        DbStub::$query = static function (string $query, ...$params) use (&$captured): int {
-            $captured[] = [$query, $params];
-            return 2;
-        };
-
-        $result = $this->repo->deleteUnlinkedBatch(['a', 'b']);
-
-        $this->assertSame(2, $result);
-        $this->assertCount(2, $captured, 'hotels delete + image-queue purge');
-        $this->assertStringContainsString('DELETE FROM ?:sphinx_hotels', (string) $captured[0][0]);
-        $this->assertStringContainsString('(product_id IS NULL OR product_id = 0)', (string) $captured[0][0]);
-        $this->assertSame([['a', 'b']], $captured[0][1]);
-        $this->assertStringContainsString('DELETE FROM ?:sphinx_image_sync_queue', (string) $captured[1][0]);
-    }
-
-    public function testDeleteUnlinkedBatchShortCircuitsOnEmpty(): void
-    {
-        $called = false;
-        DbStub::$query = static function () use (&$called): int {
-            $called = true;
-            return 0;
-        };
-
-        $this->assertSame(0, $this->repo->deleteUnlinkedBatch([]));
-        $this->assertFalse($called, 'db_query must not run for an empty hotel id list');
-    }
-
     public function testClearSkipReasonBatchScopesToReason(): void
     {
         $captured = [];

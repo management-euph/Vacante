@@ -27,12 +27,12 @@ class HotelSkipRepository
 
     /**
      * Skip reason set by the availability gate for hotels that have no
-     * immediate-confirmation offer. On a LINKED hotel it records that the
-     * gate set the CS-Cart product to Hidden — which is what lets a later
-     * run reactivate the product when availability returns, without ever
-     * touching products an admin hid or disabled by hand. Unlinked hotels
-     * are deleted outright instead of flagged, and flagged hotels are
-     * excluded from product creation by HotelRepository::findUnlinked().
+     * immediate-confirmation offer. On an UNLINKED hotel it keeps the hotel
+     * from becoming a product (HotelRepository::findUnlinked() excludes
+     * flagged rows) until an immediate offer appears. On a LINKED hotel it
+     * records that the gate set the CS-Cart product to Hidden — which is what
+     * lets a later run reactivate the product when availability returns,
+     * without ever touching products an admin hid or disabled by hand.
      */
     public const string SKIP_REASON_NO_AVAILABILITY = 'no_availability';
 
@@ -55,11 +55,10 @@ class HotelSkipRepository
      * Find hotels eligible for the availability gate within the given destinations.
      *
      * Candidates are ALL active hotels — linked to a CS-Cart product or not —
-     * with either no skip reason or the availability gate's own reason.
-     * "Hotels with immediate confirmation" means only bookable hotels exist
-     * anywhere, the product catalog included, so a linked hotel that lost its
-     * immediate offer is deleted together with its product rather than kept.
-     * Hotels skipped for other reasons (invalid_country, …) stay untouched.
+     * with either no skip reason or the availability gate's own reason, so a
+     * flagged hotel is checked again on every run and comes back as soon as
+     * it has an immediate offer. Hotels skipped for other reasons
+     * (invalid_country, …) stay untouched.
      *
      * @param int[] $destinationIds
      * @return list<array<string, mixed>> Rows of {hotel_id, destination_id, product_id, product_skip_reason}
@@ -103,33 +102,6 @@ class HotelSkipRepository
             $reason,
             $hotelIds,
         ));
-    }
-
-    /**
-     * Delete unlinked hotels outright ("Hotels with immediate confirmation"):
-     * the availability gate removes hotels whose destination probe found no
-     * immediate-confirmation offer instead of flagging them, so the hotel
-     * list only stores bookable hotels. The product guard is re-checked in
-     * SQL — a hotel that gained a CS-Cart product between probe and delete
-     * is never dropped. Pending image-queue rows go with the deleted hotels.
-     *
-     * @param string[] $hotelIds
-     * @return int Number of hotels deleted
-     */
-    public function deleteUnlinkedBatch(array $hotelIds): int
-    {
-        if ($hotelIds === []) {
-            return 0;
-        }
-
-        $deleted = TypeCoerce::toInt(db_query(
-            'DELETE FROM ?:sphinx_hotels
-             WHERE hotel_id IN (?a) AND (product_id IS NULL OR product_id = 0)',
-            $hotelIds,
-        ));
-        db_query('DELETE FROM ?:sphinx_image_sync_queue WHERE hotel_id IN (?a)', $hotelIds);
-
-        return $deleted;
     }
 
     /**

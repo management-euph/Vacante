@@ -157,7 +157,7 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
             $stats['failed'] = ValidationHelpers::toInt($stats['failed'] ?? 0) + ValidationHelpers::toInt($countryStats['failed'] ?? 0);
 
             foreach ([
-                'availability_probed', 'availability_deleted', 'availability_products_hidden',
+                'availability_probed', 'availability_waiting', 'availability_products_hidden',
                 'availability_products_restored', 'availability_cleared', 'availability_errors',
             ] as $k) {
                 $stats[$k] = ValidationHelpers::toInt($stats[$k] ?? 0) + ValidationHelpers::toInt($countryStats[$k] ?? 0);
@@ -182,8 +182,8 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
             $this->output('Availability gate: disabled');
         } else {
             $this->output(sprintf(
-                'Availability gate: %d removed, %d product(s) hidden (no immediate offer), %d cleared, %d product(s) reactivated (%d destination(s) probed, %d search error(s))',
-                ValidationHelpers::toInt($stats['availability_deleted'] ?? 0),
+                'Availability gate: %d newly waiting (no product, no immediate offer), %d product(s) hidden, %d cleared, %d product(s) reactivated (%d destination(s) probed, %d search error(s))',
+                ValidationHelpers::toInt($stats['availability_waiting'] ?? 0),
                 ValidationHelpers::toInt($stats['availability_products_hidden'] ?? 0),
                 ValidationHelpers::toInt($stats['availability_cleared'] ?? 0),
                 ValidationHelpers::toInt($stats['availability_products_restored'] ?? 0),

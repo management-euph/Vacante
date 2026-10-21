@@ -12,12 +12,13 @@ use PHPUnit\Framework\TestCase;
  * The confirmation field exists only on live search offers
  * (/api/v1/hotels/results), never in the static hotel catalog the sync
  * imports — so "only immediate hotels" is implemented as: the sync's
- * availability gate probes searches and DELETES hotels with no
- * confirmation=immediate offer. That reaches the product catalog too — a
- * LINKED hotel loses its CS-Cart product first and its row second — so
- * unbookable hotels exist nowhere: not in the hotel list, not as products.
- * The grid consequently has NO hide-filter: it shows exactly what is
- * stored. One setting drives all of it, default ON.
+ * availability gate probes searches and FLAGS hotels with no
+ * confirmation=immediate offer (no_availability). An unlinked flagged hotel
+ * never becomes a product; a linked one has its CS-Cart product set to
+ * Hidden. Both come back when an immediate offer appears. The admin grid
+ * leaves the waiting (unlinked, flagged) hotels out by default and shows
+ * them through its Availability filter. One setting drives all of it,
+ * default ON.
  */
 final class ImmediateConfirmationListTest extends TestCase
 {
@@ -40,19 +41,31 @@ final class ImmediateConfirmationListTest extends TestCase
         self::assertStringContainsString('<![CDATA[Hoteluri cu confirmare imediată]]>', $xml);
     }
 
-    public function testGridShowsExactlyWhatIsStoredWithNoHideFilter(): void
+    public function testGridLeavesOutWaitingHotelsUnlessTheAvailabilityFilterAsks(): void
     {
-        // The rule lives in the DATA (the gate deletes unbookable hotels and
-        // their products), so the grid never filters — hiding rows would just
-        // disguise legacy-flagged backlog until the next cron resolves it.
+        // Default view = what the grid showed when waiting hotels were
+        // deleted; the Availability filter (waiting / all) brings them back.
         self::assertStringContainsString(
             'HotelAdminListingRepository($perPage > 0 ? $perPage : 50)',
             self::src('func.php'),
         );
 
         $repo = self::src('src/Repository/HotelAdminListingRepository.php');
+        self::assertStringContainsString("'availability' => ''", $repo);
+        self::assertStringContainsString(
+            '(h.product_id IS NULL OR h.product_id = 0) AND h.product_skip_reason <=> ?s',
+            $repo,
+        );
         self::assertStringNotContainsString('onlyImmediateConfirmation', $repo);
         self::assertStringNotContainsString('hidden_no_availability', $repo);
+
+        $tpl = (string) file_get_contents(
+            dirname(__DIR__, 6)
+            . '/design/backend/templates/addons/sphinx_holidays/views/sphinx_holidays/hotels.tpl',
+        );
+        self::assertStringContainsString('<select name="availability">', $tpl);
+        self::assertStringContainsString('<option value="waiting"', $tpl);
+        self::assertStringContainsString('<option value="all"', $tpl);
 
         // …and the sync gate reads the ONE setting, so a single checkbox
         // governs list + product catalog + storefront search.
@@ -62,15 +75,19 @@ final class ImmediateConfirmationListTest extends TestCase
         );
     }
 
-    public function testGateDeletesUnlinkedButHidesLinkedProductsAndRestoresThem(): void
+    public function testGateKeepsUnlinkedHotelsWaitingAndHidesLinkedProducts(): void
     {
-        // User ruling, second iteration: unbookable UNLINKED hotels are
-        // deleted, but a LINKED hotel keeps row + product — the product is
-        // set to Hidden (reachable by direct link, absent from listings and
-        // searches) and reactivated when immediate availability returns.
-        // Deleting a seasonal hotel's product would burn its URL and SEO.
+        // Third iteration (2026-10-21): an unbookable UNLINKED hotel is kept,
+        // flagged no_availability, instead of deleted. Incremental hotel
+        // syncs never re-import a deleted row, so a seasonal hotel deleted
+        // out of season could never become a product again. A LINKED hotel
+        // keeps row + product as before — the product is set to Hidden
+        // (reachable by direct link, absent from listings and searches) and
+        // reactivated when immediate availability returns. Deleting a
+        // seasonal hotel's product would burn its URL and SEO.
         $gate = self::src('src/Services/HotelAvailabilityGate.php');
-        self::assertStringContainsString('deleteUnlinkedBatch($toDelete)', $gate);
+        self::assertStringContainsString('markSkippedBatch($toWait, HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY)', $gate);
+        self::assertStringNotContainsString('deleteUnlinkedBatch', $gate);
         self::assertStringContainsString('hideProductsBatch($toHideProducts)', $gate);
         self::assertStringContainsString('markSkippedBatch($toHideHotels', $gate);
         self::assertStringContainsString('showProductsBatch($toRestoreProducts)', $gate);
@@ -80,6 +97,7 @@ final class ImmediateConfirmationListTest extends TestCase
         // Both status flips are guarded so an admin's manual Hidden/Disabled
         // choice is never overridden in either direction.
         $repo = self::src('src/Repository/HotelSkipRepository.php');
+        self::assertStringNotContainsString('DELETE FROM ?:sphinx_hotels', $repo);
         self::assertStringContainsString("SET status = 'H' WHERE product_id IN (?n) AND status = 'A'", $repo);
         self::assertStringContainsString("SET status = 'A' WHERE product_id IN (?n) AND status = 'H'", $repo);
 
@@ -90,19 +108,21 @@ final class ImmediateConfirmationListTest extends TestCase
             $repo,
         );
 
-        // The setting tooltip documents the hide/restore behaviour.
+        // The setting tooltip documents the wait and hide/restore behaviour.
         $xml = self::src('addon.xml');
         self::assertStringNotContainsString('are never deleted', $xml);
+        self::assertStringNotContainsString('deletes hotels without such an offer', $xml);
+        self::assertStringContainsString('is kept, marked as waiting', $xml);
         self::assertStringContainsString('set to Hidden', $xml);
         self::assertStringContainsString('reactivated when immediate availability returns', $xml);
     }
 
     public function testHotelsGridHasNoHiddenRowsNotice(): void
     {
-        // The notice ("[count] hotel(s) hidden…") described the hide-filter;
-        // both are gone, and with them the raw
-        // "_sphinx_holidays.hotels_hidden_no_availability" label that stores
-        // with an unseeded lang table rendered above the grid.
+        // The old notice ("[count] hotel(s) hidden…") is gone, and with it the
+        // raw "_sphinx_holidays.hotels_hidden_no_availability" label that
+        // stores with an unseeded lang table rendered above the grid. The
+        // Availability filter replaced it.
         $tpl = (string) file_get_contents(
             dirname(__DIR__, 6)
             . '/design/backend/templates/addons/sphinx_holidays/views/sphinx_holidays/hotels.tpl',

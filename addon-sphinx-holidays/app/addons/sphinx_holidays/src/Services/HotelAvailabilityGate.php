@@ -18,8 +18,12 @@ use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
  * live search per probe window (PROBE_WINDOWS_DAYS_AHEAD). A hotel with no
  * immediate-confirmation offer in ANY window is handled by link state:
  *
- *  - UNLINKED: the row is DELETED — the hotel list only stores bookable
- *    hotels, and nothing else references the row.
+ *  - UNLINKED: the row stays, flagged no_availability, which keeps it from
+ *    becoming a product. It is checked again on every run and the flag is
+ *    cleared when an immediate offer appears. Deleting it lost the hotel for
+ *    good: incremental hotel syncs never bring a deleted row back, so a
+ *    seaside hotel removed in October could not become a product next summer.
+ *    The admin Hotels grid hides these rows by default.
  *  - LINKED: the CS-Cart product is set to HIDDEN (reachable by direct link,
  *    absent from listings and searches) and the hotel row is flagged
  *    no_availability. Nothing is deleted: a seasonal hotel keeps its product
@@ -30,7 +34,7 @@ use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
  *
  * Hotels skipped for other reasons are never candidates.
  *
- * Deletion/hiding is scoped to destinations that were probed successfully,
+ * Flagging/hiding is scoped to destinations that were probed successfully,
  * so an API error never mass-affects hotels — only clearing/reactivating
  * (always safe) still applies.
  *
@@ -182,11 +186,12 @@ class HotelAvailabilityGate
         }
 
         // Partition candidates. Unavailable hotels in successfully-probed
-        // destinations: unlinked rows are removed outright, linked hotels
-        // keep row + product but the product goes HIDDEN and the row is
-        // flagged. Available hotels get the flag cleared and — when linked —
+        // destinations are flagged: unlinked ones wait for an immediate offer
+        // before becoming products, linked ones also get their product
+        // HIDDEN. Available hotels get the flag cleared and — when linked —
         // the gate-hidden product reactivated.
-        $toDelete = [];
+        /** @var list<string> $toWait */
+        $toWait = [];
         /** @var list<string> $toHideHotels */
         $toHideHotels = [];
         /** @var list<int> $toHideProducts */
@@ -216,12 +221,12 @@ class HotelAvailabilityGate
                     $toHideHotels[] = $hid;
                     $toHideProducts[] = $productId;
                 } else {
-                    $toDelete[] = $hid;
+                    $toWait[] = $hid;
                 }
             }
         }
 
-        $deleted = $this->skipRepo->deleteUnlinkedBatch($toDelete);
+        $waiting = $this->skipRepo->markSkippedBatch($toWait, HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY);
         // Product first, flag second: the flag is what marks the product as
         // gate-hidden (vs. admin-hidden), so it must never exist without the
         // hide attempt having run. Both calls are idempotent re-runs.
@@ -231,16 +236,16 @@ class HotelAvailabilityGate
         $cleared = $this->skipRepo->clearSkipReasonBatch($toClear, HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY);
 
         $stats['availability_probed'] = count($probedDestinations);
-        $stats['availability_deleted'] = $deleted;
+        $stats['availability_waiting'] = $waiting;
         $stats['availability_products_hidden'] = $hidden;
         $stats['availability_products_restored'] = $restored;
         $stats['availability_cleared'] = $cleared;
         $stats['availability_errors'] = $errors;
 
         $output(sprintf(
-            '    %s: availability gate — %d removed, %d product(s) hidden (no immediate-confirmation offer), %d cleared, %d product(s) reactivated, %d search error(s)',
+            '    %s: availability gate — %d newly waiting (no product, no immediate-confirmation offer), %d product(s) hidden, %d cleared, %d product(s) reactivated, %d search error(s)',
             $countryCode,
-            $deleted,
+            $waiting,
             $hidden,
             $cleared,
             $restored,

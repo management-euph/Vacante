@@ -58,28 +58,58 @@ final class HotelAdminListingRepositoryTest extends TestCase
         self::assertSame('asc', $params['sort_order'], 'garbage sort order falls back to asc');
         self::assertSame('desc', $params['sort_order_toggle']);
         self::assertSame(42, $params['total_items'], 'COUNT(*) feeds pagination');
-        self::assertArrayNotHasKey('hidden_no_availability', $params, 'the grid has no hide-filter — the gate deletes instead');
+        self::assertSame('', $params['availability'], 'default view: hotels with immediate confirmation');
         self::assertArrayNotHasKey('unknown_param', $params, 'foreign request params are dropped');
     }
 
-    public function testGridShowsExactlyWhatIsStoredNoHiddenRowsFilter(): void
+    /**
+     * The gate keeps a hotel without a product and without an immediate offer
+     * (flagged no_availability) so it can come back when bookable. By default
+     * the grid still lists only hotels with immediate confirmation, as when
+     * those rows were deleted. <=> because the reason is usually NULL: a
+     * plain = would make NOT(...) drop every unflagged row too.
+     */
+    public function testDefaultViewLeavesOutHotelsWaitingForAnImmediateOffer(): void
     {
-        // "Hotels with immediate confirmation" is enforced in the DATA: the
-        // availability gate deletes unbookable hotels together with their
-        // CS-Cart products. The grid therefore never filters on the legacy
-        // no_availability flag — hiding flagged rows would just disguise the
-        // backlog until the next hotels cron resolves it.
         $repo = new HotelAdminListingRepository(50);
         [, $params] = $repo->getListing(['country_code' => 'TR']);
 
         self::assertSame(42, $params['total_items']);
-        self::assertArrayNotHasKey('hidden_no_availability', $params);
+        $condition = $this->lastCondition();
+        self::assertStringContainsString("h.country_code = 'TR'", $condition);
+        self::assertStringContainsString(
+            "AND NOT ((h.product_id IS NULL OR h.product_id = 0) AND h.product_skip_reason <=> 'no_availability')",
+            $condition,
+        );
+    }
 
+    public function testAvailabilityFilterShowsTheWaitingHotelsOrAll(): void
+    {
+        $repo = new HotelAdminListingRepository(50);
+
+        [, $params] = $repo->getListing(['availability' => 'waiting']);
+        self::assertSame('waiting', $params['availability']);
+        self::assertStringContainsString(
+            "AND (h.product_id IS NULL OR h.product_id = 0) AND h.product_skip_reason <=> 'no_availability'",
+            $this->lastCondition(),
+        );
+        self::assertStringNotContainsString('NOT (', $this->lastCondition());
+
+        [, $params] = $repo->getListing(['availability' => 'all']);
+        self::assertSame('all', $params['availability']);
+        self::assertStringNotContainsString('product_skip_reason', $this->lastCondition());
+
+        [, $params] = $repo->getListing(['availability' => ['x']]);
+        self::assertSame('', $params['availability'], 'anything else is the default view');
+        self::assertStringContainsString('AND NOT (', $this->lastCondition());
+    }
+
+    private function lastCondition(): string
+    {
         $listingParams = end($this->queryParams);
         self::assertIsArray($listingParams);
-        $condition = (string) ($listingParams[0] ?? '');
-        self::assertStringContainsString("h.country_code = 'TR'", $condition);
-        self::assertStringNotContainsString('product_skip_reason', $condition);
+
+        return (string) ($listingParams[0] ?? '');
     }
 
     public function testFiltersLandInTheWhereFragment(): void
