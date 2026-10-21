@@ -23,10 +23,6 @@
  * locks "required"), "Same as the general checkboxes", "Clear", and the copy
  * buttons of the registration links.
  *
- * Russian Payments, "Issue an invoice": the details the profile already
- * holds are filled in and their inputs hidden ("Do not ask again for invoice
- * details taken from the profile").
- *
  * The helpers that need no page are on window.EuphProfileTypes, for
  * tests/js/euph-profile-types.test.mjs.
  */
@@ -551,47 +547,6 @@
 
         if (pill) {
             pill.checked = radio.checked;
-        }
-    }
-
-    /* ── Russian Payments: invoice details taken from the profile ─────── */
-
-    /** Set by the add-on's inline script (hooks/index/scripts.post.tpl). */
-    function invoiceDetails() {
-        var data = _.euph_profile_types ? _.euph_profile_types.invoice_prefill : null;
-
-        return data && typeof data === 'object' ? data : null;
-    }
-
-    function applyInvoiceDetails(context) {
-        var details = invoiceDetails();
-
-        if (!details) {
-            return;
-        }
-        var $context = $(context || document);
-        var taken = [];
-
-        Object.keys(details).forEach(function (key) {
-            var $input = $context.find('[name="payment_info[' + cssEscape(key) + ']"]');
-
-            if (!$input.length || $input.hasClass('euph-pt-prefilled-input')) {
-                return;
-            }
-            $input.val(details[key]).addClass('euph-pt-prefilled-input');
-            var $group = $input.closest('.ty-control-group, .litecheckout__field, .control-group');
-
-            ($group.length ? $group : $input).addClass('euph-pt-prefilled');
-            var label = $.trim(($group.find('label').first().text() || key).replace(/[:*]\s*$/, ''));
-
-            taken.push(label);
-        });
-
-        if (taken.length) {
-            var $summary = $('<p class="euph-pt-prefilled-summary"></p>');
-
-            $summary.text((_.tr('euph_profile_types.invoice_details_taken') || 'Taken from your profile:') + ' ' + taken.join(', '));
-            $context.find('.euph-pt-prefilled').first().before($summary);
         }
     }
 
@@ -1162,7 +1117,6 @@
     if ($.ceEvent) {
         $.ceEvent('on', 'ce.commoninit', function (context) {
             applyPills(context);
-            applyInvoiceDetails(context);
         });
     }
     $(function () {
@@ -1194,7 +1148,6 @@
         syncRequired: syncRequired,
         pickPill: pickPill,
         syncPill: syncPill,
-        optionText: optionText,
-        applyInvoiceDetails: applyInvoiceDetails
+        optionText: optionText
     };
 }(Tygh, Tygh.$));

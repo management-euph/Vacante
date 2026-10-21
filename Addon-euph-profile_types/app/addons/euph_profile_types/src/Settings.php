@@ -25,7 +25,6 @@ final readonly class Settings
         public bool $reloadOnChange = false,
         public bool $restrictLogin = false,
         public CheckoutChoice $checkoutChoice = CheckoutChoice::Everybody,
-        public bool $invoiceDetailsFromProfile = false,
         public bool $vendorTypeInProduct = false,
     ) {
     }
@@ -44,7 +43,6 @@ final readonly class Settings
             reloadOnChange: Cast::flag($settings['reload_on_change'] ?? 'N'),
             restrictLogin: Cast::flag($settings['restrict_login'] ?? 'N'),
             checkoutChoice: CheckoutChoice::tryFrom(Cast::string($settings['checkout_choice'] ?? '')) ?? CheckoutChoice::Everybody,
-            invoiceDetailsFromProfile: Cast::flag($settings['invoice_details_from_profile'] ?? 'N'),
             vendorTypeInProduct: Cast::flag($settings['vendor_type_in_product'] ?? 'N'),
         );
     }

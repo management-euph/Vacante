@@ -126,12 +126,6 @@
                             <item id="none"><name>Nobody</name></item>
                         </variants>
                     </item>
-                    <item id="invoice_details_from_profile">
-                        <name>Do not ask again for invoice details taken from the profile</name>
-                        <type>checkbox</type>
-                        <default_value>N</default_value>
-                        <variants/>
-                    </item>
 
                     <item id="header_vendors">
                         <name>Multi-Vendor</name>

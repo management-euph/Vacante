@@ -77,6 +77,56 @@ function fn_euph_profile_types_uninstall(): void
 }
 
 /**
+ * Settings earlier versions of the add-on had and this one dropped.
+ *
+ * @return list<string>
+ */
+function fn_euph_profile_types_obsolete_settings(): array
+{
+    return ['invoice_details_from_profile'];
+}
+
+/**
+ * Removes the settings this version dropped from a store that has the add-on
+ * installed: CS-Cart keeps the settings an add-on had at install, so the
+ * settings page would go on showing options that do nothing. Returns how many
+ * were removed. Never breaks a page: on a failure they just stay.
+ */
+function fn_euph_profile_types_remove_obsolete_settings(): int
+{
+    try {
+        $db = fn_euph_profile_types_container()->db();
+        if (!$db->tableExists('?:settings_objects') || !$db->tableExists('?:settings_sections')) {
+            return 0;
+        }
+        $ids = Cast::idList($db->column(
+            'SELECT o.object_id FROM ?:settings_objects AS o'
+            . ' INNER JOIN ?:settings_sections AS s ON s.section_id = o.section_id'
+            . ' WHERE s.name = ?s AND s.type = ?s AND o.name IN (?a)',
+            'euph_profile_types',
+            'ADDON',
+            fn_euph_profile_types_obsolete_settings(),
+        ));
+        if ($ids === []) {
+            return 0;
+        }
+        $db->execute('DELETE FROM ?:settings_objects WHERE object_id IN (?n)', $ids);
+        if ($db->tableExists('?:settings_descriptions')) {
+            $db->execute('DELETE FROM ?:settings_descriptions WHERE object_id IN (?n) AND object_type = ?s', $ids, 'O');
+        }
+        if ($db->tableExists('?:settings_vendor_values')) {
+            $db->execute('DELETE FROM ?:settings_vendor_values WHERE object_id IN (?n)', $ids);
+        }
+
+        return count($ids);
+    } catch (\Throwable $e) {
+        error_log('euph_profile_types: old settings were not removed: ' . $e->getMessage());
+
+        return 0;
+    }
+}
+
+/**
  * The add-on's texts in every language of the store, written again when its
  * language packs change. CS-Cart reads the packs at install only, so a text
  * an update of the add-on changed or added would never show on a store that
@@ -143,6 +193,7 @@ function fn_euph_profile_types_ensure_schema(): void
         }
     }
     $container->types()->fillLinkKeys();
+    fn_euph_profile_types_remove_obsolete_settings();
 }
 
 /**
