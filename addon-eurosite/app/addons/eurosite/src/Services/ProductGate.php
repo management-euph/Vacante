@@ -19,24 +19,27 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  *    product by hand, the gate lets go of it.
  *
  * Runs only over destinations whose check answered: an API outage must
- * never hide a whole destination's products.
+ * never hide a whole destination's products. A destination where only some
+ * dates answered can have products shown again, never hidden: a date that
+ * did not answer may have held the Immediate offer.
  */
 final class ProductGate
 {
     /**
-     * @param list<string> $cityCodes destinations the check just answered for
+     * @param list<string> $cityCodes destinations the check just answered for, on every date
+     * @param list<string> $partlyAnsweredCityCodes destinations where only some dates answered
      *
      * @return array{hidden: int, shown: int, released: int}
      */
-    public function apply(array $cityCodes): array
+    public function apply(array $cityCodes, array $partlyAnsweredCityCodes = []): array
     {
         $result = ['hidden' => 0, 'shown' => 0, 'released' => 0];
-        if ($cityCodes === []) {
+        if ($cityCodes === [] && $partlyAnsweredCityCodes === []) {
             return $result;
         }
 
         // Lost every Immediate offer: hide.
-        $toHide = TypeCoerce::toIntList(db_get_fields(
+        $toHide = $cityCodes === [] ? [] : TypeCoerce::toIntList(db_get_fields(
             "SELECT h.product_id FROM ?:eurosite_hotels h
              JOIN ?:products p ON p.product_id = h.product_id
              WHERE h.city_code IN (?a) AND h.sync_status = 'active'
@@ -54,7 +57,7 @@ final class ProductGate
             "SELECT h.product_id FROM ?:eurosite_hotels h
              JOIN ?:products p ON p.product_id = h.product_id
              WHERE h.city_code IN (?a) AND h.availability = 'IM' AND h.gate_hidden = 'Y' AND p.status = 'H'",
-            $cityCodes,
+            [...$cityCodes, ...$partlyAnsweredCityCodes],
         ));
         if ($toShow !== []) {
             db_query("UPDATE ?:products SET status = 'A' WHERE product_id IN (?n) AND status = 'H'", $toShow);

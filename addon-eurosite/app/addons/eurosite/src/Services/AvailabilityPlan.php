@@ -198,6 +198,31 @@ final class AvailabilityPlan
         return array_map('strval', array_keys($names));
     }
 
+    /**
+     * What a check that only partly answered may store: the answers better
+     * than what each hotel already has. A date that did not answer may have
+     * held a better offer, so a worse or equal answer, or none, proves
+     * nothing about the hotel. A hotel never checked ('') takes any answer.
+     *
+     * @param array<string, string> $stored product_code => stored availability
+     * @param array<array-key, array<string, mixed>> $best product_code => merge() result
+     *
+     * @return array<array-key, array<string, mixed>>
+     */
+    public static function improvements(array $stored, array $best): array
+    {
+        $out = [];
+        foreach ($best as $code => $answer) {
+            $new = $answer['availability'] ?? '';
+            $rankNew = is_string($new) ? (self::RANK[$new] ?? -1) : -1;
+            if ($rankNew > (self::RANK[$stored[(string) $code] ?? ''] ?? -1)) {
+                $out[$code] = $answer;
+            }
+        }
+
+        return $out;
+    }
+
     /** Only Immediate counts: On request and Stop sale hotels are listed, never published. */
     public static function isAvailable(string $code): bool
     {

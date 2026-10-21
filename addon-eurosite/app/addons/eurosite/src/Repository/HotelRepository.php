@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\Eurosite\Repository;
 
+use Tygh\Addons\Eurosite\Services\AvailabilityPlan;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
 
@@ -271,25 +272,35 @@ class HotelRepository
     /**
      * Store what one destination's check found.
      *
-     * Every listed hotel of the group gets an answer: the ones in $best get
-     * their best offer, the rest are recorded as checked with no offer
-     * (NONE), which is different from never checked (''). Offers for hotels
-     * this store has not synced are counted, not stored.
+     * When every date answered ($complete), every listed hotel of the group
+     * gets an answer: the ones in $best get their best offer, the rest are
+     * recorded as checked with no offer (NONE), which is different from
+     * never checked (''). When some dates did not answer, only the answers
+     * better than what a hotel has are stored, and nobody becomes NONE
+     * (AvailabilityPlan::improvements()). Offers for hotels this store has
+     * not synced are counted, not stored.
      *
      * @param array<string, array<string, mixed>> $best product_code => AvailabilityPlan::merge() result
      *
      * @return array{IM: int, OR: int, ST: int, NONE: int, not_synced: int}
      */
-    public function applyAvailability(string $tourop, string $cityCode, array $best, string $now): array
+    public function applyAvailability(string $tourop, string $cityCode, array $best, string $now, bool $complete = true): array
     {
-        $codes = array_map(
-            static fn ($v): string => TypeCoerce::toString($v),
-            (array) db_get_fields(
-                "SELECT product_code FROM ?:eurosite_hotels WHERE tourop_code = ?s AND city_code = ?s AND sync_status = 'active'",
-                $tourop,
-                $cityCode,
-            ),
-        );
+        $codes = [];
+        $stored = [];
+        foreach ((array) db_get_array(
+            "SELECT product_code, availability FROM ?:eurosite_hotels WHERE tourop_code = ?s AND city_code = ?s AND sync_status = 'active'",
+            $tourop,
+            $cityCode,
+        ) as $row) {
+            $row = TypeCoerce::toStringMap($row);
+            $code = TypeCoerce::toString($row['product_code'] ?? '');
+            $codes[] = $code;
+            $stored[$code] = TypeCoerce::toString($row['availability'] ?? '');
+        }
+        if (!$complete) {
+            $best = AvailabilityPlan::improvements($stored, $best);
+        }
         $counts = ['IM' => 0, 'OR' => 0, 'ST' => 0, 'NONE' => 0, 'not_synced' => 0];
         $local = array_flip($codes);
         foreach (array_keys($best) as $code) {
@@ -302,7 +313,9 @@ class HotelRepository
         foreach ($codes as $code) {
             $b = $best[$code] ?? null;
             if ($b === null) {
-                $none[] = $code;
+                if ($complete) {
+                    $none[] = $code;
+                }
                 continue;
             }
             $availability = TypeCoerce::toString($b['availability'] ?? 'NONE');

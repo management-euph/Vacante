@@ -156,4 +156,24 @@ final class AvailabilityPlanTest extends TestCase
         self::assertSame(['Mic dejun', 'Demipensiune'], $b['meals']);
         self::assertSame('Vila', $b['class'], 'a fact about the hotel, kept from the answer that carried it');
     }
+
+    /**
+     * When some dates did not answer, one of them may have held a better
+     * offer: only answers that beat what a hotel has are kept.
+     */
+    public function testAPartlyAnsweredCheckKeepsOnlyBetterAnswers(): void
+    {
+        $stored = ['A' => 'OR', 'B' => 'IM', 'C' => 'NONE', 'D' => '', 'E' => 'IM'];
+        $best = [
+            'A' => ['availability' => 'IM', 'min_price' => 500.0], // OR -> IM: better
+            'B' => ['availability' => 'OR', 'min_price' => 400.0], // IM -> OR: worse, proves nothing
+            'C' => ['availability' => 'ST', 'min_price' => 0.0],   // no offer -> Stop sale: better
+            'D' => ['availability' => 'OR', 'min_price' => 300.0], // never checked: any answer
+            'E' => ['availability' => 'IM', 'min_price' => 900.0], // same: the cheaper stay may be on the missing date
+            'F' => ['availability' => 'IM', 'min_price' => 100.0], // not synced: passed on, counted by the caller
+        ];
+
+        self::assertSame(['A', 'C', 'D', 'F'], array_keys(AvailabilityPlan::improvements($stored, $best)));
+        self::assertSame([], AvailabilityPlan::improvements($stored, []), 'no answer stores nothing');
+    }
 }
