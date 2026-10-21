@@ -574,8 +574,9 @@ jobs:
   # (.github/workflows/qodana_code_quality.yml) was added by the Qodana Cloud
   # setup automation in #1 and removed again on 2026-09-19: it duplicated every
   # scan, bypassed the `needs` gate below, and pointed at a different cloud
-  # project token. The token below prefers the newer project and falls back to
-  # the original one, so whichever secret the repo actually holds is used.
+  # project token. The token below prefers a secret named plainly QODANA_TOKEN
+  # (where a regenerated token goes), then the newer project's secret, then the
+  # original one, so whichever secret the repo actually holds is used.
   # Gated behind the rest of the gauntlet via `needs`, so Qodana runs only
   # AFTER PHPStan / php-cs-fixer / Rector / PHPUnit / Lint / ESLint have all
   # passed — it is the final quality gate, not a parallel one. (If any of those
@@ -612,5 +613,5 @@ jobs:
           pr-mode: false
           upload-result: true   # publish qodana.sarif.json as a build artifact for offline triage
         env:
-          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN_28473803 || secrets.QODANA_TOKEN_1757207161 }}
+          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN || secrets.QODANA_TOKEN_28473803 || secrets.QODANA_TOKEN_1757207161 }}
           QODANA_ENDPOINT: 'https://qodana.cloud'
