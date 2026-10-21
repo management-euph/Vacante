@@ -14,7 +14,7 @@ declare(strict_types=1);
  * - CacheService::remember() instead of _nvt_cached_fetch()
  * - SearchService::parseSearchParams() for search parameter parsing
  * - SearchService::calculateRoomTotals() for room totals
- * - BookingService::createBooking() and addToCart() for bookings
+ * - BookingService::createBooking() for bookings
  * - RoomPriceService::getRoomPrice() for room prices (has built-in caching)
  *
  * v2.8.0: Split into mode handler files under novoton_booking/ directory.

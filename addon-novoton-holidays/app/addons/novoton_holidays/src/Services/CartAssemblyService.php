@@ -226,7 +226,7 @@ class CartAssemblyService implements CartAssemblyServiceInterface
     /**
      * Build cart extra metadata from a booking record.
      *
-     * Used by addToCart() for the simpler path (existing booking → cart).
+     * (Its add-to-cart caller is gone: add_to_cart.php builds the line itself.)
      *
      * @param array<string, mixed> $booking Booking record from DB
      * @param array<string, mixed> $bookingData Additional data from form

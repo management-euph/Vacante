@@ -234,41 +234,6 @@ class BookingService implements BookingServiceInterface
     }
 
     /**
-     * Add booking to cart
-     *
-     * @param int $booking_id Booking ID
-     * @param int $product_id Product ID
-     * @param array<string, mixed> $bookingData Additional booking data
-     * @return bool Success
-     */
-    public function addToCart(int $booking_id, int $product_id, array $bookingData): bool
-    {
-        $booking = $this->getBooking($booking_id);
-        if (empty($booking)) {
-            return false;
-        }
-
-        // Build cart product
-        $product = [
-            'product_id' => $product_id,
-            'amount' => 1,
-            'extra' => $this->cartAssembly->buildCartExtra($booking, $bookingData),
-        ];
-
-        // Add to cart — reference-based CS-Cart procedural flow lives in
-        // functions/helpers.php (allowlisted boundary). Keeps Tygh::\$app
-        // out of this service class.
-        fn_novoton_holidays_add_to_session_cart($product);
-
-        $this->log('Added to cart', [
-            'booking_id' => $booking_id,
-            'product_id' => $product_id,
-        ]);
-
-        return true;
-    }
-
-    /**
      * Parse rooms data from booking form
      *
      * @param array<string, mixed> $bookingData Form data

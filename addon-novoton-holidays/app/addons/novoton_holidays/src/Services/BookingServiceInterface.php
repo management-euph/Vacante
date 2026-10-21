@@ -34,10 +34,6 @@ interface BookingServiceInterface
     public function linkToOrder(int $booking_id, int $order_id): bool;
     /**
      * @param array<string, mixed> $bookingData
-     */
-    public function addToCart(int $booking_id, int $product_id, array $bookingData): bool;
-    /**
-     * @param array<string, mixed> $bookingData
      * @return array<string, mixed>
      */
     public function parseRoomsData(array $bookingData): array;

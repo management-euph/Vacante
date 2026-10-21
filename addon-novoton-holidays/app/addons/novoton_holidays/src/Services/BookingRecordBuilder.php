@@ -125,7 +125,7 @@ class BookingRecordBuilder
      *
      * Priority:
      *   1. Update by originalBookingId (from cart) for group 1
-     *   2. Update existing row matching (order + hotel + dates) to prevent duplicates
+     *   2. Update existing row matching (order + hotel + dates + group) to prevent duplicates
      *   3. Insert new row
      * @param array<string, mixed> $record
      */
@@ -141,12 +141,15 @@ class BookingRecordBuilder
             return $originalBookingId;
         }
 
-        // Dedup: find existing booking for this order + hotel + dates
+        // Dedup: find this group's existing row for this order + hotel +
+        // dates (all groups share those: without the group number, group 2
+        // overwrote group 1's row and the booking lost a group's record)
         $existingId = $this->bookingRepo->findIdByOrderAndHotelDates(
             $orderId,
             PriceInfoFormatter::toScalar($record['hotel_id'] ?? ''),
             PriceInfoFormatter::toScalar($record['check_in'] ?? ''),
             PriceInfoFormatter::toScalar($record['check_out'] ?? ''),
+            $groupNum,
         );
 
         if ($existingId !== null && $existingId !== 0) {

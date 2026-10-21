@@ -94,6 +94,21 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
         return [CONTROLLER_STATUS_REDIRECT, 'checkout.cart'];
     }
 
+    // The reservation sends each child at its guest's age (a new date of
+    // birth is a new age), but the stay was priced for the ages in the
+    // booking's rooms: guests that change a priced age, or do not fit the
+    // booked rooms, are refused rather than booked unpriced (audit C2/H4).
+    if (!\Tygh\Addons\NovotonHolidays\Services\BookedRooms::keepsPricedChildAges($existing_booking, $guests_data)) {
+        $security->logSecurityEvent('booking_update_guests_mismatch', [
+            'booking_id' => $booking_id,
+            'user_id' => $current_user_id,
+        ]);
+        fn_set_notification('E', __('error'), __('novoton_holidays.guests_do_not_match_priced_stay', [
+            '[default]' => 'These guest details do not match the stay that was priced (for example, a date of birth gives a child a different age). Please check the details, or search for the stay again with the correct ages and book it again.',
+        ]));
+        return [CONTROLLER_STATUS_REDIRECT, "novoton_booking.edit_booking?booking_id={$booking_id}&cart_id={$cart_id}"];
+    }
+
     // Build api_request with updated guest names - use api_name for Novoton XML
     $api_guests = [];
     foreach ($guests_data as $key => $guest) {

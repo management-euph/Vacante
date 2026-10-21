@@ -63,7 +63,8 @@ interface BookingRepositoryInterface
     public function findUnassignedByHotelDates(string $hotel_id, string $check_in, string $check_out): ?array;
     /** @return array<string, mixed>|null */
     public function getTerms(int $booking_id): ?array;
-    public function findIdByOrderAndHotelDates(int $order_id, string $hotel_id, string $check_in, string $check_out): ?int;
+    /** $room_number > 0: only that package group's row (room_number column). */
+    public function findIdByOrderAndHotelDates(int $order_id, string $hotel_id, string $check_in, string $check_out, int $room_number = 0): ?int;
     /** @return list<BookingRow> */
     public function findWithReservationId(int $limit = 1000): array;
 

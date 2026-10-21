@@ -4407,3 +4407,15 @@ msgstr "Novoton: Price Alert (form price below API price)"
 msgctxt "Languages::email_template.novoton_holidays_price_discrepancy"
 msgid "Novoton: Price Discrepancy"
 msgstr "Novoton: Price Discrepancy"
+
+msgctxt "Languages::novoton_holidays.booking_removed_from_cart"
+msgid "A hotel reservation in your cart is no longer available and was removed. Please search for the stay and book it again."
+msgstr "A hotel reservation in your cart is no longer available and was removed. Please search for the stay and book it again."
+
+msgctxt "Languages::novoton_holidays.booking_price_update_failed"
+msgid "The price of a hotel reservation in your cart has changed, but it could not be updated. Please try placing your order again in a moment."
+msgstr "The price of a hotel reservation in your cart has changed, but it could not be updated. Please try placing your order again in a moment."
+
+msgctxt "Languages::novoton_holidays.guests_do_not_match_priced_stay"
+msgid "These guest details do not match the stay that was priced (for example, a date of birth gives a child a different age). Please check the details, or search for the stay again with the correct ages and book it again."
+msgstr "These guest details do not match the stay that was priced (for example, a date of birth gives a child a different age). Please check the details, or search for the stay again with the correct ages and book it again."

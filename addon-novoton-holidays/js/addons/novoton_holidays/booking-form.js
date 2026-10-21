@@ -924,7 +924,27 @@ function acceptRoomChangeInline() {
                 if (data.board_id) window.bookingData.roomsData[idx].board_id = data.board_id;
                 if (data.board_name) window.bookingData.roomsData[idx].board_name = data.board_name;
                 if (data.new_price) window.bookingData.roomsData[idx].price = parseFloat(data.new_price);
+                // The server prices and books the posted rooms_data: post the changed room
+                var roomsDataInput = document.querySelector('input[name="rooms_data"]');
+                if (roomsDataInput) roomsDataInput.value = JSON.stringify(window.bookingData.roomsData);
             }
+        }
+    }
+
+    // Single room: the server books rooms_data[0]'s room when it names one
+    // (booking_form fills it), not the hidden room_id — post the new room there too.
+    if (!roomNum) {
+        var singleRoomsInput = document.querySelector('input[name="rooms_data"]');
+        var singleRooms = null;
+        try {
+            singleRooms = singleRoomsInput && singleRoomsInput.value ? JSON.parse(singleRoomsInput.value) : null;
+        } catch {
+            // not JSON: nothing to rewrite
+        }
+        if (Array.isArray(singleRooms) && singleRooms.length === 1 && singleRooms[0] && typeof singleRooms[0] === 'object') {
+            singleRooms[0].room_id = data.new_room || '';
+            if (data.board_id) singleRooms[0].board_id = data.board_id;
+            singleRoomsInput.value = JSON.stringify(singleRooms);
         }
     }
     

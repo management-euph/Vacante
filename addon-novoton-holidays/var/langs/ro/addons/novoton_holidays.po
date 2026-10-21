@@ -4407,3 +4407,15 @@ msgstr "Novoton: Alertă de preț (preț formular sub prețul API)"
 msgctxt "Languages::email_template.novoton_holidays_price_discrepancy"
 msgid "Novoton: Price Discrepancy"
 msgstr "Novoton: Diferență de preț"
+
+msgctxt "Languages::novoton_holidays.booking_removed_from_cart"
+msgid "A hotel reservation in your cart is no longer available and was removed. Please search for the stay and book it again."
+msgstr "O rezervare de hotel din coșul dvs. nu mai este disponibilă și a fost eliminată. Vă rugăm să căutați din nou sejurul și să îl rezervați."
+
+msgctxt "Languages::novoton_holidays.booking_price_update_failed"
+msgid "The price of a hotel reservation in your cart has changed, but it could not be updated. Please try placing your order again in a moment."
+msgstr "Prețul unei rezervări de hotel din coșul dvs. s-a modificat, dar nu a putut fi actualizat. Vă rugăm să încercați să plasați comanda din nou peste câteva momente."
+
+msgctxt "Languages::novoton_holidays.guests_do_not_match_priced_stay"
+msgid "These guest details do not match the stay that was priced (for example, a date of birth gives a child a different age). Please check the details, or search for the stay again with the correct ages and book it again."
+msgstr "Datele oaspeților nu corespund sejurului pentru care a fost calculat prețul (de exemplu, data nașterii indică o altă vârstă pentru un copil). Vă rugăm să verificați datele sau să căutați din nou sejurul cu vârstele corecte și să îl rezervați."
