@@ -54,6 +54,7 @@ final class EurositeHttpClient implements EurositeTransportInterface
 
     /**
      * @param array<string, mixed> $settings ConfigProvider::toClientSettings()
+     * @param ResiliencePolicy|null $resilience the circuit breaker (default: one built from $settings)
      * @param (callable(string, array<int, mixed>): array{string|false, int, string, int})|null $curlExec
      */
     public function __construct(array $settings, ?ResiliencePolicy $resilience = null, ?callable $curlExec = null)

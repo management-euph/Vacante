@@ -93,7 +93,8 @@ final class CartBookingRepository
         $rows = db_get_array(
             'SELECT booking_id, product_id, total_price, currency, order_id, status, hotel_id, check_in, check_out FROM ?:novoton_bookings'
             . ' WHERE booking_id IN (?n) AND ' . $stage . ' AND (' . implode(' OR ', $owners) . ')',
-            ...[...$params, ...$ownerParams],
+            ...$params,
+            ...$ownerParams,
         );
 
         $byId = [];

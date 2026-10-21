@@ -68,6 +68,8 @@ final class CheckoutBookingBinder
      *
      * @param \Closure(int): (array<string, mixed>|null) $findBooking the ?:sphinx_bookings row of a booking id
      * @param \Closure(float, string): float $toPrimary an amount in the given (API) currency, in the store's primary currency
+     * @param int $userId the visitor's account (0 = a guest)
+     * @param string $sessionId the visitor's session ('' = none)
      * @param list<int> $verifiedIds booking ids this session's cart bound earlier (SESSION_KEY)
      * @param bool $adminArea the admin panel (order management), where a placed order is edited
      * @param bool $depositsOffered DepositPolicy offers a deposit for sphinx_holidays
