@@ -24,8 +24,6 @@ final class OrderCardFacts
     private const string BLOCK_TAGS = 'p|br|div|li|ul|ol|h[1-6]|tr|td|th|table|tbody|thead';
     /** Markup inside a sentence. */
     private const string INLINE_TAGS = 'b|i|u|em|strong|span|a|font|small|sup|sub';
-    /** Either kind. */
-    private const string ALL_TAGS = self::BLOCK_TAGS . '|' . self::INLINE_TAGS;
 
     public function __construct(private readonly ?BookingRepository $repo = null)
     {
@@ -108,7 +106,7 @@ final class OrderCardFacts
     {
         $tag = self::tagGap(...);
         $text = (string) preg_replace_callback(
-            '/(?<!&)lt;\/?(' . self::ALL_TAGS . ')(?=[\s\/]|gt;)[^<>]{0,200}?gt;/i',
+            '/(?<!&)lt;\/?(' . implode('|', [self::BLOCK_TAGS, self::INLINE_TAGS]) . ')(?=[\s\/]|gt;)[^<>]{0,200}?gt;/i',
             $tag,
             TypeCoerce::toString($value),
         );
