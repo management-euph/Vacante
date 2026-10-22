@@ -65,8 +65,9 @@ final class OrderCardFacts
         }
         $reference = '';
         foreach (['novoton_confirm_id', 'novoton_invoice_id', 'novoton_res_num'] as $column) {
-            $reference = trim(TypeCoerce::toString($row[$column] ?? ''));
-            if ($reference !== '') {
+            $candidate = trim(TypeCoerce::toString($row[$column] ?? ''));
+            if ($candidate !== '') {
+                $reference = $candidate;
                 break;
             }
         }
