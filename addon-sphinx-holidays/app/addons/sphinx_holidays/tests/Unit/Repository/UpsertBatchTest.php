@@ -77,6 +77,35 @@ class UpsertBatchTest extends TestCase
         self::assertSame('h3', $params[2 * self::HOTEL_PARAMS_PER_ROW]);
     }
 
+    public function testTheGiataIdIsSavedOnceTheColumnExists(): void
+    {
+        // SchemaMigrator has added the column.
+        DbStub::$getField = static fn (string $query): string => str_contains($query, "LIKE 'giata_id'") ? 'giata_id' : '';
+
+        $repo = new HotelRepository();
+        $repo->upsertBatch([$this->hotel('h1') + ['giata_id' => 123456], $this->hotel('h2')]);
+
+        $query = $this->calls[0]['query'];
+        self::assertStringContainsString('rating, rating_count, giata_id,', $query);
+        self::assertStringContainsString("?i, ?p, 'active', ?s)", $query);
+        self::assertStringContainsString('giata_id = VALUES(giata_id),', $query, "the API's value, also when it drops one");
+
+        $params = $this->calls[0]['params'];
+        self::assertCount(2 * (self::HOTEL_PARAMS_PER_ROW + 1), $params);
+        self::assertSame('123456', $params[self::HOTEL_PARAMS_PER_ROW - 1]);
+        self::assertSame('NULL', $params[2 * (self::HOTEL_PARAMS_PER_ROW + 1) - 2], 'no GIATA id: NULL, not 0');
+    }
+
+    public function testBeforeTheColumnExistsTheHotelsAreStillSaved(): void
+    {
+        // A hotels cron after a deploy, before an admin page added the column.
+        $repo = new HotelRepository();
+        $repo->upsertBatch([$this->hotel('h1') + ['giata_id' => 123456]]);
+
+        self::assertStringNotContainsString('giata_id', $this->calls[0]['query']);
+        self::assertCount(self::HOTEL_PARAMS_PER_ROW, $this->calls[0]['params']);
+    }
+
     public function testHotelRowsWithoutIdAreSkippedWithinTheBatch(): void
     {
         $repo = new HotelRepository();

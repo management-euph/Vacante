@@ -57,6 +57,7 @@ final class SchemaMigrator
                 'images_json' => "ADD COLUMN `images_json` JSON DEFAULT NULL COMMENT 'All image objects from API [{url, ...}, ...]' AFTER `image_url`",
                 'product_needs_update' => "ADD COLUMN `product_needs_update` ENUM('Y','N') DEFAULT 'N' COMMENT 'Set to Y when API data differs from CS-Cart product' AFTER `images_json`",
                 'calendar_prices_raw' => "ADD COLUMN `calendar_prices_raw` JSON DEFAULT NULL COMMENT 'Per-date raw from-prices for the booking calendar (calendar_prices cron)' AFTER `sync_status`",
+                'giata_id' => "ADD COLUMN `giata_id` INT UNSIGNED DEFAULT NULL COMMENT 'GIATA id (external_ids): the same hotel at another supplier' AFTER `name`",
             ],
             'sphinx_destinations' => [
                 'full_path' => "ADD COLUMN `full_path` VARCHAR(500) DEFAULT NULL COMMENT 'Breadcrumb: City, Region, Country, Continent' AFTER `country_code`",
@@ -83,6 +84,8 @@ final class SchemaMigrator
                 // Hotels admin grid sorts by name by default — without this,
                 // every page load filesorts the whole table.
                 'idx_name' => 'ADD KEY `idx_name` (`name`)',
+                // The same hotel at another supplier, by its GIATA id.
+                'idx_giata' => 'ADD KEY `idx_giata` (`giata_id`)',
             ],
             'sphinx_destinations' => [
                 'idx_full_path' => 'ADD KEY `idx_full_path` (`full_path`(100))',

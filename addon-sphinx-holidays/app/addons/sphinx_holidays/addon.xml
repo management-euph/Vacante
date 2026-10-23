@@ -256,6 +256,7 @@
                 `gate_hidden`       ENUM('Y','N') NOT NULL DEFAULT 'N' COMMENT 'Product hidden by the availability gate',
                 `gate_released`     ENUM('Y','N') NOT NULL DEFAULT 'N' COMMENT 'Gate-hidden product changed by an admin; left alone until an immediate offer returns',
                 `name`              VARCHAR(255) NOT NULL,
+                `giata_id`          INT UNSIGNED DEFAULT NULL COMMENT 'GIATA id (external_ids): the same hotel at another supplier',
                 `classification`    TINYINT UNSIGNED DEFAULT NULL COMMENT 'Star rating 1-5',
                 `property_type`     VARCHAR(30) DEFAULT 'hotel',
                 `destination_id`    INT UNSIGNED DEFAULT NULL,
@@ -304,7 +305,8 @@
                 KEY `idx_sync_product` (`sync_status`, `product_id`),
                 KEY `idx_sync_country` (`sync_status`, `country_code`),
                 KEY `idx_country_sync_synced` (`country_code`, `sync_status`, `last_synced_at`),
-                KEY `idx_name` (`name`)
+                KEY `idx_name` (`name`),
+                KEY `idx_giata` (`giata_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         </item>
 
@@ -717,6 +719,15 @@
                 ADD COLUMN `gate_released` ENUM('Y','N') NOT NULL DEFAULT 'N'
                 COMMENT 'Gate-hidden product changed by an admin; left alone until an immediate offer returns'
                 AFTER `gate_hidden`;
+        </item>
+        <!-- Sphinx's GIATA id (plan §15.3, point 11), the first step towards
+             "the same hotel at another supplier". -->
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD COLUMN `giata_id` INT UNSIGNED DEFAULT NULL
+                COMMENT 'GIATA id (external_ids): the same hotel at another supplier'
+                AFTER `name`,
+                ADD KEY `idx_giata` (`giata_id`);
         </item>
 
         <!-- Uninstall SQL fallback: guarantees teardown of Sphinx-owned data

@@ -27,6 +27,7 @@ use Tygh\Addons\SphinxHolidays\Helpers\SearchOfferNormalizer;
 use Tygh\Addons\SphinxHolidays\Services\AlternativeDateProber;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\SphinxHolidays\Services\SphinxAvailabilityRecorder;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Tygh;
@@ -72,6 +73,8 @@ try {
     }
     $searchMeta = TypeCoerce::toStringMap($session['sphinx_search_' . $searchId] ?? null);
     $filterHotelId = TypeCoerce::toString($searchMeta['filter_hotel_id'] ?? '');
+    // The whole destination's offers, for Travel Core's availability records.
+    (new SphinxAvailabilityRecorder())->searchFound($results, TypeCoerce::toString($searchMeta['check_in'] ?? ''), date('Y-m-d H:i:s'));
     if ($filterHotelId === '') {
         // No hotel in the meta (unknown or expired search): there is no
         // destination browse, so never hand out a whole destination's offers.

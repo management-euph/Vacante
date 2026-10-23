@@ -33,6 +33,20 @@ class HotelRowMapperTest extends TestCase
 
     // ── normalize ────────────────────────────────────────────────────────────
 
+    public function testTheGiataIdIsKeptWhenSphinxHasOne(): void
+    {
+        $mapped = $this->mapper->normalize(['id' => 'h1', 'name' => 'Hotel', 'external_ids' => ['giata_id' => 123456]]);
+        self::assertNotNull($mapped);
+        self::assertSame(123456, $mapped['giata_id']);
+
+        foreach ([['external_ids' => ['giata_id' => null]], []] as $extra) {
+            $mapped = $this->mapper->normalize(['id' => 'h1', 'name' => 'Hotel'] + $extra);
+            self::assertNotNull($mapped);
+            self::assertArrayHasKey('giata_id', $mapped);
+            self::assertNull($mapped['giata_id'], 'not mapped in GIATA, or no external ids');
+        }
+    }
+
     public function testNormalizeMapsAllFields(): void
     {
         $row = $this->mapper->normalize([

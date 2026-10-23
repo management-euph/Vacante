@@ -64,6 +64,25 @@ class HotelRepository implements HotelRepositoryInterface
     private const UPSERT_ROW_PLACEHOLDERS = '(?s, ?s, ?i, ?s, ?i, ?s, ?i, ?s, ?s, ?s, ?s, ?s, '
         . "?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?i, 'active', ?s)";
 
+    /** The same with giata_id (a ready fragment: the id, or NULL) before sync_status. */
+    private const UPSERT_ROW_PLACEHOLDERS_GIATA = '(?s, ?s, ?i, ?s, ?i, ?s, ?i, ?s, ?s, ?s, ?s, ?s, '
+        . "?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?i, ?p, 'active', ?s)";
+
+    /** Whether sphinx_hotels has giata_id yet; null until this repository first asks. */
+    private ?bool $hasGiataId = null;
+
+    /**
+     * SchemaMigrator adds giata_id on an admin page load. A hotels cron that
+     * runs after a deploy, before any admin page opened, must still save its
+     * hotels, so the upsert names the column only once it exists.
+     */
+    private function hasGiataId(): bool
+    {
+        return $this->hasGiataId ??= TypeCoerce::toString(
+            db_get_field("SHOW COLUMNS FROM ?:sphinx_hotels LIKE 'giata_id'"),
+        ) !== '';
+    }
+
     /**
      * Upsert a batch of hotels (multi-row INSERT ... ON DUPLICATE KEY UPDATE).
      *
@@ -85,6 +104,7 @@ class HotelRepository implements HotelRepositoryInterface
 
         $now = date('Y-m-d H:i:s');
         $submitted = 0;
+        $giata = $this->hasGiataId();
 
         foreach (array_chunk($hotels, self::UPSERT_CHUNK_SIZE) as $chunk) {
             $tuples = [];
@@ -96,7 +116,7 @@ class HotelRepository implements HotelRepositoryInterface
                     continue;
                 }
 
-                $tuples[] = self::UPSERT_ROW_PLACEHOLDERS;
+                $tuples[] = $giata ? self::UPSERT_ROW_PLACEHOLDERS_GIATA : self::UPSERT_ROW_PLACEHOLDERS;
                 array_push(
                     $params,
                     $hotelId,
@@ -126,8 +146,12 @@ class HotelRepository implements HotelRepositoryInterface
                     TypeCoerce::toString($hotel['is_adults_only'] ?? 'N'),
                     TypeCoerce::toDecimalString($hotel['rating'] ?? 0, 1),
                     TypeCoerce::toInt($hotel['rating_count'] ?? 0),
-                    $now,
                 );
+                if ($giata) {
+                    $giataId = TypeCoerce::toInt($hotel['giata_id'] ?? 0);
+                    $params[] = $giataId > 0 ? (string) $giataId : 'NULL';
+                }
+                $params[] = $now;
             }
 
             if ($tuples === []) {
@@ -143,7 +167,7 @@ class HotelRepository implements HotelRepositoryInterface
                      address_city, address_country, location_source,
                      description, short_description, image_url,
                      images_json, facilities_json, is_adults_only,
-                     rating, rating_count,
+                     rating, rating_count,' . ($giata ? ' giata_id,' : '') . '
                      sync_status, last_synced_at)
                  VALUES ' . implode(', ', $tuples) . "
                  ON DUPLICATE KEY UPDATE
@@ -195,7 +219,9 @@ class HotelRepository implements HotelRepositoryInterface
                     facilities_json = VALUES(facilities_json),
                     is_adults_only = VALUES(is_adults_only),
                     rating = VALUES(rating),
-                    rating_count = VALUES(rating_count),
+                    rating_count = VALUES(rating_count),"
+                    // The API's own value: it drops a GIATA id it could not map.
+                    . ($giata ? ' giata_id = VALUES(giata_id),' : '') . "
                     sync_status = 'active',
                     last_synced_at = VALUES(last_synced_at)",
                 ...$params,
