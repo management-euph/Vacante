@@ -91,6 +91,13 @@ final class HotelAvailabilityRepository
     /** Rows per multi-row statement. */
     private const int CHUNK = 500;
 
+    /**
+     * Days a hotel stays in its group's size (listedCount()) after the last
+     * list that had it: a group that really shrank is measured by its new
+     * size after this long, instead of every later list looking short.
+     */
+    public const int LIST_MEMORY_DAYS = 30;
+
     /** Creates both tables, and any column added since, when missing; once per request. */
     public static function ensureTables(): void
     {
@@ -159,6 +166,31 @@ final class HotelAvailabilityRepository
     }
 
     /**
+     * The group's size, which ListCompleteness measures a new list against:
+     * its hotels a list had within the last LIST_MEMORY_DAYS and that no
+     * complete list has missed since.
+     *
+     * @param list<string> $hotelIds every hotel of the group (a country, a city)
+     */
+    public function listedCount(string $provider, array $hotelIds, string $now): int
+    {
+        self::ensureTables();
+        $since = date('Y-m-d H:i:s', (int) strtotime($now . ' -' . self::LIST_MEMORY_DAYS . ' days'));
+        $count = 0;
+        foreach (array_chunk($hotelIds, self::CHUNK * 2) as $chunk) {
+            $count += TypeCoerce::toInt(db_get_field(
+                'SELECT COUNT(*) FROM ?:travel_hotel_availability
+                 WHERE provider = ?s AND hotel_id IN (?a) AND listed_missing_runs = 0 AND listed_last_seen_at >= ?s',
+                $provider,
+                $chunk,
+                $since,
+            ));
+        }
+
+        return $count;
+    }
+
+    /**
      * The hotel's published price window, rewritten whenever its prices are:
      * the first and last priced future date (both null when none is left).
      * The latest priced date ever seen only moves forward, so past seasons
@@ -219,6 +251,144 @@ final class HotelAvailabilityRepository
             $due,
             $due,
         );
+    }
+
+    /**
+     * A destination's whole answer to a supplier's check (§4.3, §15.3 point
+     * 5): every hotel the destination holds was checked now, and those with
+     * an offer were seen, with their stays. Call it only for an answer that
+     * came back whole (every date answered, every search polled to its end);
+     * a part of an answer goes to recordOffersSeen(), which writes positives
+     * only, since a date that did not answer may have held the offer.
+     *
+     * @param list<array{hotel_id: string, product_id: int, destination_key: string, hotel_name: string}> $hotels every hotel of the destination
+     * @param array<array-key, array{stay_date: string, next_date: string, immediate: bool, months: list<string>}> $offers OfferTally::offers()
+     */
+    public function recordCheck(string $provider, array $hotels, array $offers, string $now): void
+    {
+        self::ensureTables();
+        foreach (array_chunk($hotels, self::CHUNK) as $chunk) {
+            $values = [];
+            foreach ($chunk as $hotel) {
+                $offer = $offers[$hotel['hotel_id']] ?? null;
+                $values[] = '(' . implode(', ', [
+                    ...self::identityValues($provider, $hotel),
+                    db_quote('?s', $now),
+                    self::orNull($offer['next_date'] ?? null),
+                    ...self::offerValues($offer, $now),
+                ]) . ')';
+            }
+            // offer_seen_at goes last, so the IF() before it reads the old one.
+            db_query(
+                'INSERT INTO ?:travel_hotel_availability
+                    (provider, hotel_id, product_id, destination_key, hotel_name, offer_checked_at, offer_next_date,
+                     offer_seen_at, offer_stay_date, immediate_seen_at, offer_months)
+                 VALUES ?p
+                 ON DUPLICATE KEY UPDATE
+                    product_id = VALUES(product_id),
+                    destination_key = IF(VALUES(destination_key) <> \'\', VALUES(destination_key), destination_key),
+                    hotel_name = IF(VALUES(hotel_name) <> \'\', VALUES(hotel_name), hotel_name),
+                    offer_checked_at = VALUES(offer_checked_at),
+                    offer_next_date = VALUES(offer_next_date),
+                    offer_months = IF(VALUES(offer_months) IS NULL, offer_months, JSON_MERGE_PATCH(COALESCE(offer_months, \'{}\'), VALUES(offer_months))),
+                    immediate_seen_at = COALESCE(VALUES(immediate_seen_at), immediate_seen_at),
+                    offer_stay_date = IF(VALUES(offer_seen_at) IS NULL, offer_stay_date, VALUES(offer_stay_date)),
+                    offer_seen_at = COALESCE(VALUES(offer_seen_at), offer_seen_at)',
+                implode(', ', $values),
+            );
+        }
+    }
+
+    /**
+     * Offers a search found for several hotels at once (a destination's
+     * answer to a customer's search, or the part of a check that answered).
+     * Positives only, at most one write per hotel an hour, like
+     * recordOfferSeen(). A hotel without an offer in $offers is left alone;
+     * the identity fills a new record, or the fields an older one lacks.
+     *
+     * @param list<array{hotel_id: string, product_id: int, destination_key: string, hotel_name: string}> $hotels the hotels to record, as the supplier stores them
+     * @param array<array-key, array{stay_date: string, next_date: string, immediate: bool, months: list<string>}> $offers OfferTally::offers()
+     */
+    public function recordOffersSeen(string $provider, array $hotels, array $offers, string $now): void
+    {
+        $values = [];
+        foreach ($hotels as $hotel) {
+            $offer = $offers[$hotel['hotel_id']] ?? null;
+            if ($offer !== null) {
+                $values[] = '(' . implode(', ', [...self::identityValues($provider, $hotel), ...self::offerValues($offer, $now)]) . ')';
+            }
+        }
+        if ($values === []) {
+            return;
+        }
+        self::ensureTables();
+        // As in recordOfferSeen(): offer_seen_at goes last, so every IF()
+        // reads the old one. An immediate offer has its own hour, so an
+        // on-request offer seen first does not hide it.
+        $due = 'offer_seen_at IS NULL OR offer_seen_at < VALUES(offer_seen_at) - INTERVAL 1 HOUR';
+        foreach (array_chunk($values, self::CHUNK) as $chunk) {
+            db_query(
+                'INSERT INTO ?:travel_hotel_availability
+                    (provider, hotel_id, product_id, destination_key, hotel_name,
+                     offer_seen_at, offer_stay_date, immediate_seen_at, offer_months)
+                 VALUES ?p
+                 ON DUPLICATE KEY UPDATE
+                    product_id = IF(product_id = 0, VALUES(product_id), product_id),
+                    destination_key = IF(destination_key = \'\', VALUES(destination_key), destination_key),
+                    hotel_name = IF(hotel_name = \'\', VALUES(hotel_name), hotel_name),
+                    immediate_seen_at = IF(VALUES(immediate_seen_at) IS NOT NULL
+                        AND (immediate_seen_at IS NULL OR immediate_seen_at < VALUES(immediate_seen_at) - INTERVAL 1 HOUR),
+                        VALUES(immediate_seen_at), immediate_seen_at),
+                    offer_months = IF(?p, JSON_MERGE_PATCH(COALESCE(offer_months, \'{}\'), VALUES(offer_months)), offer_months),
+                    offer_stay_date = IF(?p, VALUES(offer_stay_date), offer_stay_date),
+                    offer_seen_at = IF(?p, VALUES(offer_seen_at), offer_seen_at)',
+                implode(', ', $chunk),
+                $due,
+                $due,
+                $due,
+            );
+        }
+    }
+
+    /**
+     * provider, hotel_id, product_id, destination_key, hotel_name, quoted.
+     *
+     * @param array{hotel_id: string, product_id: int, destination_key: string, hotel_name: string} $hotel
+     *
+     * @return list<string>
+     */
+    private static function identityValues(string $provider, array $hotel): array
+    {
+        return [
+            db_quote('?s', $provider),
+            db_quote('?s', $hotel['hotel_id']),
+            db_quote('?i', max(0, $hotel['product_id'])),
+            db_quote('?s', mb_substr($hotel['destination_key'], 0, 128)),
+            db_quote('?s', mb_substr($hotel['hotel_name'], 0, 255)),
+        ];
+    }
+
+    /**
+     * offer_seen_at, offer_stay_date, immediate_seen_at, offer_months (stay
+     * month => the day it was seen), quoted; four NULLs without an offer.
+     *
+     * @param array{stay_date: string, next_date: string, immediate: bool, months: list<string>}|null $offer
+     *
+     * @return list<string>
+     */
+    private static function offerValues(?array $offer, string $now): array
+    {
+        if ($offer === null) {
+            return ['NULL', 'NULL', 'NULL', 'NULL'];
+        }
+        $months = (string) json_encode(array_fill_keys($offer['months'], substr($now, 0, 10)), JSON_FORCE_OBJECT);
+
+        return [
+            db_quote('?s', $now),
+            self::orNull($offer['stay_date']),
+            $offer['immediate'] ? db_quote('?s', $now) : 'NULL',
+            db_quote('?s', $months),
+        ];
     }
 
     /**
