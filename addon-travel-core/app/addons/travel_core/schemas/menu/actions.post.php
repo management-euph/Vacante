@@ -22,6 +22,11 @@ $tabs = [
         'text'     => __('travel_core.alternative_requests'),
         'position' => 150,
     ],
+    'travel_hotel_availability' => [
+        'href'     => 'travel_hotel_availability.manage',
+        'text'     => __('travel_core.hotel_availability'),
+        'position' => 175,
+    ],
     'travel_feature_mappings' => [
         'href'     => 'travel_feature_mappings.manage',
         'text'     => __('travel_core.feature_mappings'),
@@ -44,6 +49,7 @@ $pages = [
     'travel_bookings.manage',
     'travel_bookings.view',
     'travel_alternatives.manage',
+    'travel_hotel_availability.manage',
     'travel_feature_mappings.manage',
     'travel_feature_mappings.edit',
     'travel_booking_styles.manage',

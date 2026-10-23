@@ -505,6 +505,12 @@
     border-color: #d5dbe1;
 }
 
+.travel-cron-pill--info {
+    background: #e2eefb;
+    color: #1f4f82;
+    border-color: #b9d2ee;
+}
+
 .travel-cron-hint {
     font-size: 12px;
     color: #555;
@@ -1145,4 +1151,75 @@ a.travel-fm-chip:hover {
 
 @media (max-width: 767px) {
     .travel-obc__grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+
+/* ─── Hotel availability (travel_hotel_availability.manage) ───
+ * Reuses the Tools page tiles, cards and pills; a state is always its
+ * words too, never colour alone. */
+
+.travel-avail-counts {
+    list-style: none;
+    margin: 6px 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+}
+
+.travel-avail-counts a {
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.travel-avail-actions {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+.travel-avail-actions form {
+    margin: 0;
+}
+
+.travel-avail-changes__title {
+    font-size: 14px;
+    margin: 12px 0 4px;
+}
+
+.travel-avail-changes {
+    margin: 0 0 8px 18px;
+}
+
+.travel-avail-legend {
+    margin-bottom: 16px;
+}
+
+.travel-avail-legend summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.travel-avail-legend dl {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 6px 12px;
+    margin: 10px 0 0;
+}
+
+.travel-avail-legend dd {
+    margin: 0;
+}
+
+.travel-avail-sub {
+    font-size: 11px;
+}
+
+@media (max-width: 767px) {
+    .travel-avail-actions {
+        flex-direction: column;
+    }
+
+    .travel-avail-legend dl {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }

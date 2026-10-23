@@ -30,6 +30,12 @@ $schema['central']['travel_core'] = [
             'position' => 150,
             'title' => __('travel_core.alternative_requests'),
         ],
+        'travel_hotel_availability' => [
+            'attrs' => ['class' => 'is-addon'],
+            'href' => 'travel_hotel_availability.manage',
+            'position' => 175,
+            'title' => __('travel_core.hotel_availability'),
+        ],
         'travel_feature_mappings' => [
             'attrs' => ['class' => 'is-addon'],
             'href' => 'travel_feature_mappings.manage',

@@ -2593,3 +2593,275 @@ msgstr "Off"
 msgctxt "Languages::travel_core.availability_mode_report"
 msgid "Report only"
 msgstr "Report only"
+
+msgctxt "Languages::travel_core.availability_state_bookable"
+msgid "Bookable"
+msgstr "Bookable"
+
+msgctxt "Languages::travel_core.availability_state_between_seasons"
+msgid "Between seasons"
+msgstr "Between seasons"
+
+msgctxt "Languages::travel_core.availability_state_not_offered"
+msgid "Not offered"
+msgstr "Not offered"
+
+msgctxt "Languages::travel_core.availability_state_dormant"
+msgid "Dormant"
+msgstr "Dormant"
+
+msgctxt "Languages::travel_core.availability_state_left_feed"
+msgid "Left the supplier's list"
+msgstr "Left the supplier's list"
+
+msgctxt "Languages::travel_core.availability_state_closed"
+msgid "Closed"
+msgstr "Closed"
+
+msgctxt "Languages::travel_core.availability_state_no_data"
+msgid "No data yet"
+msgstr "No data yet"
+
+msgctxt "Languages::travel_core.availability_state_bookable_hint"
+msgid "An offer was seen in the last 8 days, or its destination sells and its last offer is under 14 days old."
+msgstr "An offer was seen in the last 8 days, or its destination sells and its last offer is under 14 days old."
+
+msgctxt "Languages::travel_core.availability_state_between_seasons_hint"
+msgid "No offer now, but it had offers, prices or bookings in the last 13 months, or has prices for a future date. Normal outside the season."
+msgstr "No offer now, but it had offers, prices or bookings in the last 13 months, or has prices for a future date. Normal outside the season."
+
+msgctxt "Languages::travel_core.availability_state_not_offered_hint"
+msgid "Its destination sells (at least 25% of 5 or more checked hotels had offers), but this hotel had none for 14 days."
+msgstr "Its destination sells (at least 25% of 5 or more checked hotels had offers), but this hotel had none for 14 days."
+
+msgctxt "Languages::travel_core.availability_state_dormant_hint"
+msgid "No offer, price or booked stay for [months] months, although the supplier still lists it."
+msgstr "No offer, price or booked stay for [months] months, although the supplier still lists it."
+
+msgctxt "Languages::travel_core.availability_state_left_feed_hint"
+msgid "Missing from the supplier's complete hotel list 3 times in a row."
+msgstr "Missing from the supplier's complete hotel list 3 times in a row."
+
+msgctxt "Languages::travel_core.availability_state_closed_hint"
+msgid "An admin marked it closed."
+msgstr "An admin marked it closed."
+
+msgctxt "Languages::travel_core.availability_state_no_data_hint"
+msgid "Nothing recorded for it yet."
+msgstr "Nothing recorded for it yet."
+
+msgctxt "Languages::travel_core.availability_reason_offer_seen"
+msgid "Offer seen in the last 8 days"
+msgstr "Offer seen in the last 8 days"
+
+msgctxt "Languages::travel_core.availability_reason_offer_recent"
+msgid "Destination sells; last offer under 14 days old"
+msgstr "Destination sells; last offer under 14 days old"
+
+msgctxt "Languages::travel_core.availability_reason_peers_selling"
+msgid "Destination sells; this hotel has no offer"
+msgstr "Destination sells; this hotel has no offer"
+
+msgctxt "Languages::travel_core.availability_reason_season_memory"
+msgid "Offers, prices or bookings in the last 13 months"
+msgstr "Offers, prices or bookings in the last 13 months"
+
+msgctxt "Languages::travel_core.availability_reason_no_availability"
+msgid "No offer, price or booking for a long time"
+msgstr "No offer, price or booking for a long time"
+
+msgctxt "Languages::travel_core.availability_reason_left_feed"
+msgid "Missing from the hotel list"
+msgstr "Missing from the hotel list"
+
+msgctxt "Languages::travel_core.availability_reason_override_closed"
+msgid "Marked closed by an admin"
+msgstr "Marked closed by an admin"
+
+msgctxt "Languages::travel_core.availability_reason_no_evidence"
+msgid "Nothing recorded yet"
+msgstr "Nothing recorded yet"
+
+msgctxt "Languages::travel_core.availability_mail_intro"
+msgid "The weekly hotel availability review is done. Report only: no product was changed."
+msgstr "The weekly hotel availability review is done. Report only: no product was changed."
+
+msgctxt "Languages::travel_core.availability_mail_first"
+msgid "[n] hotels classified for the first time."
+msgstr "[n] hotels classified for the first time."
+
+msgctxt "Languages::travel_core.availability_mail_changes"
+msgid "Changes"
+msgstr "Changes"
+
+msgctxt "Languages::travel_core.availability_mail_more"
+msgid "...and [n] more on the page."
+msgstr "...and [n] more on the page."
+
+msgctxt "Languages::travel_core.availability_mail_page"
+msgid "Every hotel: [url]"
+msgstr "Every hotel: [url]"
+
+msgctxt "Languages::travel_core.availability_mail_subject"
+msgid "Hotel availability: [changed] changes this week"
+msgstr "Hotel availability: [changed] changes this week"
+
+msgctxt "Languages::travel_core.hotel_availability"
+msgid "Hotel availability"
+msgstr "Hotel availability"
+
+msgctxt "Languages::travel_core.availability_page_intro"
+msgid "Report only: each supplier hotel's state from the weekly review. Nothing here hides or changes a product."
+msgstr "Report only: each supplier hotel's state from the weekly review. Nothing here hides or changes a product."
+
+msgctxt "Languages::travel_core.availability_state"
+msgid "State"
+msgstr "State"
+
+msgctxt "Languages::travel_core.availability_reason"
+msgid "Why"
+msgstr "Why"
+
+msgctxt "Languages::travel_core.availability_since"
+msgid "since [date]"
+msgstr "since [date]"
+
+msgctxt "Languages::travel_core.availability_next_season"
+msgid "Next season published"
+msgstr "Next season published"
+
+msgctxt "Languages::travel_core.availability_last_offer"
+msgid "Last offer seen"
+msgstr "Last offer seen"
+
+msgctxt "Languages::travel_core.availability_for_stay"
+msgid "stay on [date]"
+msgstr "stay on [date]"
+
+msgctxt "Languages::travel_core.availability_never"
+msgid "never"
+msgstr "never"
+
+msgctxt "Languages::travel_core.availability_prices"
+msgid "Prices published"
+msgstr "Prices published"
+
+msgctxt "Languages::travel_core.availability_none_published"
+msgid "none"
+msgstr "none"
+
+msgctxt "Languages::travel_core.availability_last_priced"
+msgid "last priced date [date]"
+msgstr "last priced date [date]"
+
+msgctxt "Languages::travel_core.availability_last_booking"
+msgid "Last booked stay"
+msgstr "Last booked stay"
+
+msgctxt "Languages::travel_core.availability_hotel_list"
+msgid "In hotel list"
+msgstr "In hotel list"
+
+msgctxt "Languages::travel_core.availability_missed_lists"
+msgid "missing from [n] lists"
+msgstr "missing from [n] lists"
+
+msgctxt "Languages::travel_core.availability_no_product"
+msgid "no product"
+msgstr "no product"
+
+msgctxt "Languages::travel_core.availability_no_offer_for"
+msgid "No offer for"
+msgstr "No offer for"
+
+msgctxt "Languages::travel_core.availability_months"
+msgid "[n] months"
+msgstr "[n] months"
+
+msgctxt "Languages::travel_core.availability_sort"
+msgid "Sort by"
+msgstr "Sort by"
+
+msgctxt "Languages::travel_core.availability_sort_hotel"
+msgid "Hotel name"
+msgstr "Hotel name"
+
+msgctxt "Languages::travel_core.availability_sort_offer"
+msgid "Longest without an offer"
+msgstr "Longest without an offer"
+
+msgctxt "Languages::travel_core.availability_sort_changed"
+msgid "Latest state change"
+msgstr "Latest state change"
+
+msgctxt "Languages::travel_core.availability_search_placeholder"
+msgid "Hotel, destination or id"
+msgstr "Hotel, destination or id"
+
+msgctxt "Languages::travel_core.availability_export_csv"
+msgid "Export CSV"
+msgstr "Export CSV"
+
+msgctxt "Languages::travel_core.availability_review_title"
+msgid "Weekly review"
+msgstr "Weekly review"
+
+msgctxt "Languages::travel_core.availability_review_now"
+msgid "Review now"
+msgstr "Review now"
+
+msgctxt "Languages::travel_core.availability_last_review"
+msgid "Last review: [date]"
+msgstr "Last review: [date]"
+
+msgctxt "Languages::travel_core.availability_next_review"
+msgid "the next from [date]"
+msgstr "the next from [date]"
+
+msgctxt "Languages::travel_core.availability_no_review_yet"
+msgid "No review yet. The first runs with Travel Core's next daily cron, or press Review now."
+msgstr "No review yet. The first runs with Travel Core's next daily cron, or press Review now."
+
+msgctxt "Languages::travel_core.availability_review_done"
+msgid "Review done: [hotels] hotels classified, [changed] state changes."
+msgstr "Review done: [hotels] hotels classified, [changed] state changes."
+
+msgctxt "Languages::travel_core.availability_review_busy"
+msgid "The review waits while [jobs] runs. Try again when it ends."
+msgstr "The review waits while [jobs] runs. Try again when it ends."
+
+msgctxt "Languages::travel_core.availability_review_none"
+msgid "No supplier records hotel availability yet."
+msgstr "No supplier records hotel availability yet."
+
+msgctxt "Languages::travel_core.availability_review_failed"
+msgid "The review failed: [error]"
+msgstr "The review failed: [error]"
+
+msgctxt "Languages::travel_core.availability_no_records"
+msgid "No hotel records yet: the suppliers' jobs fill them as they run."
+msgstr "No hotel records yet: the suppliers' jobs fill them as they run."
+
+msgctxt "Languages::travel_core.availability_no_hotels_supplier"
+msgid "No hotels recorded yet."
+msgstr "No hotels recorded yet."
+
+msgctxt "Languages::travel_core.availability_legend"
+msgid "What the states mean"
+msgstr "What the states mean"
+
+msgctxt "Languages::travel_core.availability_tools_desc"
+msgid "Weekly report of supplier hotels with no offers, between seasons or gone from the supplier's list. Report only."
+msgstr "Weekly report of supplier hotels with no offers, between seasons or gone from the supplier's list. Report only."
+
+msgctxt "Languages::travel_core.availability_open_page"
+msgid "Open the report"
+msgstr "Open the report"
+
+msgctxt "Languages::travel_core.availability_review_counts"
+msgid "[hotels] hotels, [changed] state changes"
+msgstr "[hotels] hotels, [changed] state changes"
+
+msgctxt "Languages::travel_core.availability_mail_subject_first"
+msgid "Hotel availability: first review, [n] hotels"
+msgstr "Hotel availability: first review, [n] hotels"

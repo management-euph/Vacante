@@ -24,8 +24,11 @@ final class CronOverview
     /** Travel Core's scheduled job on the page; expire_alternative_requests is HTTP-only and stays off it. */
     public const string CORE_JOB = 'exchange_rates';
 
-    /** Every mode Travel Core's cron entry points record under 'travel_core'. */
-    public const array CORE_MODES = ['exchange_rates', 'expire_alternative_requests', 'balances'];
+    /**
+     * Every mode Travel Core's cron entry points record under 'travel_core';
+     * hotel_availability is the weekly review the exchange rates line runs.
+     */
+    public const array CORE_MODES = ['exchange_rates', 'expire_alternative_requests', 'balances', 'hotel_availability'];
 
     /**
      * The command that runs Travel Core's job, in both forms.

@@ -38,8 +38,8 @@ final class DestinationSyncScopeTest extends TestCase
         $scope = DestinationScope::fromRows([]);
         DestinationScope::setCurrent($scope);
 
-        self::assertSame("h.country IN (BULGARIA,GREECE)", $scope->syncWhere('h'));
-        self::assertSame("country IN (BULGARIA,GREECE)", $scope->syncWhere());
+        self::assertSame("h.country IN ('BULGARIA', 'GREECE')", $scope->syncWhere('h'));
+        self::assertSame("country IN ('BULGARIA', 'GREECE')", $scope->syncWhere());
     }
 
     public function testASavedWhitelistSyncsItsResortsAndEveryLiveProduct(): void
@@ -53,9 +53,9 @@ final class DestinationSyncScopeTest extends TestCase
 
         self::assertSame(
             "((("
-            . "(h.country = 'BULGARIA' AND TRIM(h.city) IN (SUNNY BEACH,ST.CONSTANTINE & ELENA))"
+            . "(h.country = 'BULGARIA' AND TRIM(h.city) IN ('SUNNY BEACH', 'ST.CONSTANTINE & ELENA'))"
             . " OR h.country = 'ALBANIA')"
-            . " AND (h.city IS NULL OR h.city NOT IN (GIFT VOUCHER)))"
+            . " AND (h.city IS NULL OR h.city NOT IN ('GIFT VOUCHER')))"
             . " OR h.product_id IN (SELECT product_id FROM ?:products WHERE status = 'A'))",
             $scope->syncWhere('h'),
         );

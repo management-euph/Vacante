@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Api\PropertyTypeDetector;
+use Tygh\Addons\NovotonHolidays\Api\Refusal;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\NovotonHolidays\Services\NovotonAvailabilityRecorder;
 
 class HotelListSyncCommand extends AbstractCronCommand
 {
@@ -42,11 +44,28 @@ class HotelListSyncCommand extends AbstractCronCommand
         $total = 0;
         $added = 0;
         $updated = 0;
+        $recorder = new NovotonAvailabilityRecorder();
+        // Countries that did not answer. Their hotels are left as they are:
+        // an outage is never a hotel gone (availability records, plan §4.2).
+        // The other countries still sync; one failure used to abort them all.
+        $failed = [];
 
         foreach ($countries as $country) {
             $this->output("Fetching {$country}... ", false);
 
-            $hotels = $this->api->hotels()->getHotelList($country);
+            try {
+                $hotels = $this->api->hotels()->getHotelList($country);
+            } catch (\Throwable $e) {
+                $failed[] = $country;
+                $this->output('no answer: ' . $e->getMessage());
+                continue;
+            }
+            $refusal = Refusal::reason($hotels);
+            if ($refusal !== null) {
+                $failed[] = $country;
+                $this->output("refused: {$refusal}");
+                continue;
+            }
 
             if (empty($hotels)) {
                 $this->output('0 hotels (or error)');
@@ -90,6 +109,11 @@ class HotelListSyncCommand extends AbstractCronCommand
             $updated += $result['updated'];
 
             $this->output("  -> Inserted: {$result['inserted']}, Updated: {$result['updated']}");
+
+            $recorded = $recorder->hotelList($country, $hotelBatch, date('Y-m-d H:i:s'));
+            $this->output($recorded['complete']
+                ? "  -> Availability records: {$recorded['seen']} listed, {$recorded['missing']} missing from this list"
+                : "  -> Availability records: {$recorded['seen']} listed; not taken as a complete list, so none counted missing");
         }
 
         $this->output('');
@@ -103,6 +127,10 @@ class HotelListSyncCommand extends AbstractCronCommand
 
         $stats = ['total' => $total, 'added' => $added, 'updated' => $updated];
         $this->logComplete('hotel_list', $stats);
+        if ($failed !== []) {
+            return ['success' => false, 'error' => 'No hotel list for: ' . implode(', ', $failed), 'stats' => $stats];
+        }
+
         return ['success' => true, 'stats' => $stats];
     }
 

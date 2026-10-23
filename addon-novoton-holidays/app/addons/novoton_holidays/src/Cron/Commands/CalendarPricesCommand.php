@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
+use Tygh\Addons\NovotonHolidays\Services\NovotonAvailabilityRecorder;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoService;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
@@ -28,6 +29,11 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  */
 class CalendarPricesCommand extends AbstractCronCommand
 {
+    /** The availability backfill's share of a run (seconds) and its hotels per batch. */
+    private const int BACKFILL_SECONDS = 300;
+
+    private const int BACKFILL_BATCH = 200;
+
     /**
      * @return list<string>
      */
@@ -56,6 +62,8 @@ class CalendarPricesCommand extends AbstractCronCommand
         if (!empty($singleHotel)) {
             return $this->recomputeSingle(TypeCoerce::toString($singleHotel));
         }
+
+        $this->backfillAvailability();
 
         $staleOnly = !empty($this->params['stale_only']);
 
@@ -122,6 +130,28 @@ class CalendarPricesCommand extends AbstractCronCommand
                 'duration_sec' => $duration,
             ],
         ];
+    }
+
+    /**
+     * The first runs after this ships also fill in past seasons for the hotel
+     * availability records (docs/novoton-availability-gaps-plan.md §4.4):
+     * stored data only, at most BACKFILL_SECONDS a run, resumed the next
+     * night, then never again.
+     */
+    private function backfillAvailability(): void
+    {
+        $recorder = new NovotonAvailabilityRecorder();
+        $deadline = microtime(true) + self::BACKFILL_SECONDS;
+        $hotels = 0;
+        do {
+            $step = $recorder->backfill(self::BACKFILL_BATCH, date('Y-m-d H:i:s'));
+            $hotels += $step['hotels'];
+        } while (!$step['done'] && $step['hotels'] > 0 && microtime(true) < $deadline);
+
+        if ($hotels > 0) {
+            $this->output("Availability records: past seasons filled in for {$hotels} hotels" . ($step['done'] ? ' (all done)' : ' (continues next run)'));
+            $this->output('');
+        }
     }
 
     /**

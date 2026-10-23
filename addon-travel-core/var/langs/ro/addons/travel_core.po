@@ -2593,3 +2593,275 @@ msgstr "Oprit"
 msgctxt "Languages::travel_core.availability_mode_report"
 msgid "Report only"
 msgstr "Doar raport"
+
+msgctxt "Languages::travel_core.availability_state_bookable"
+msgid "Bookable"
+msgstr "Rezervabil"
+
+msgctxt "Languages::travel_core.availability_state_between_seasons"
+msgid "Between seasons"
+msgstr "Între sezoane"
+
+msgctxt "Languages::travel_core.availability_state_not_offered"
+msgid "Not offered"
+msgstr "Neoferit"
+
+msgctxt "Languages::travel_core.availability_state_dormant"
+msgid "Dormant"
+msgstr "Inactiv"
+
+msgctxt "Languages::travel_core.availability_state_left_feed"
+msgid "Left the supplier's list"
+msgstr "Ieșit din lista furnizorului"
+
+msgctxt "Languages::travel_core.availability_state_closed"
+msgid "Closed"
+msgstr "Închis"
+
+msgctxt "Languages::travel_core.availability_state_no_data"
+msgid "No data yet"
+msgstr "Fără date încă"
+
+msgctxt "Languages::travel_core.availability_state_bookable_hint"
+msgid "An offer was seen in the last 8 days, or its destination sells and its last offer is under 14 days old."
+msgstr "S-a văzut o ofertă în ultimele 8 zile, sau destinația se vinde și ultima ofertă a hotelului are sub 14 zile."
+
+msgctxt "Languages::travel_core.availability_state_between_seasons_hint"
+msgid "No offer now, but it had offers, prices or bookings in the last 13 months, or has prices for a future date. Normal outside the season."
+msgstr "Fără ofertă acum, dar a avut oferte, prețuri sau rezervări în ultimele 13 luni, ori are prețuri pentru o dată viitoare. Normal în afara sezonului."
+
+msgctxt "Languages::travel_core.availability_state_not_offered_hint"
+msgid "Its destination sells (at least 25% of 5 or more checked hotels had offers), but this hotel had none for 14 days."
+msgstr "Destinația se vinde (cel puțin 25% din minimum 5 hoteluri verificate au avut oferte), dar acest hotel nu a avut niciuna de 14 zile."
+
+msgctxt "Languages::travel_core.availability_state_dormant_hint"
+msgid "No offer, price or booked stay for [months] months, although the supplier still lists it."
+msgstr "Nicio ofertă, niciun preț și niciun sejur rezervat de [months] luni, deși furnizorul încă îl listează."
+
+msgctxt "Languages::travel_core.availability_state_left_feed_hint"
+msgid "Missing from the supplier's complete hotel list 3 times in a row."
+msgstr "Lipsește de 3 ori la rând din lista completă de hoteluri a furnizorului."
+
+msgctxt "Languages::travel_core.availability_state_closed_hint"
+msgid "An admin marked it closed."
+msgstr "Un administrator l-a marcat ca închis."
+
+msgctxt "Languages::travel_core.availability_state_no_data_hint"
+msgid "Nothing recorded for it yet."
+msgstr "Nimic înregistrat încă pentru el."
+
+msgctxt "Languages::travel_core.availability_reason_offer_seen"
+msgid "Offer seen in the last 8 days"
+msgstr "Ofertă văzută în ultimele 8 zile"
+
+msgctxt "Languages::travel_core.availability_reason_offer_recent"
+msgid "Destination sells; last offer under 14 days old"
+msgstr "Destinația se vinde; ultima ofertă are sub 14 zile"
+
+msgctxt "Languages::travel_core.availability_reason_peers_selling"
+msgid "Destination sells; this hotel has no offer"
+msgstr "Destinația se vinde; hotelul nu are ofertă"
+
+msgctxt "Languages::travel_core.availability_reason_season_memory"
+msgid "Offers, prices or bookings in the last 13 months"
+msgstr "Oferte, prețuri sau rezervări în ultimele 13 luni"
+
+msgctxt "Languages::travel_core.availability_reason_no_availability"
+msgid "No offer, price or booking for a long time"
+msgstr "Fără ofertă, preț sau rezervare de mult timp"
+
+msgctxt "Languages::travel_core.availability_reason_left_feed"
+msgid "Missing from the hotel list"
+msgstr "Lipsește din lista de hoteluri"
+
+msgctxt "Languages::travel_core.availability_reason_override_closed"
+msgid "Marked closed by an admin"
+msgstr "Marcat închis de un administrator"
+
+msgctxt "Languages::travel_core.availability_reason_no_evidence"
+msgid "Nothing recorded yet"
+msgstr "Nimic înregistrat încă"
+
+msgctxt "Languages::travel_core.availability_mail_intro"
+msgid "The weekly hotel availability review is done. Report only: no product was changed."
+msgstr "Revizuirea săptămânală a disponibilității hotelurilor s-a încheiat. Doar raport: niciun produs nu a fost modificat."
+
+msgctxt "Languages::travel_core.availability_mail_first"
+msgid "[n] hotels classified for the first time."
+msgstr "[n] hoteluri clasificate pentru prima dată."
+
+msgctxt "Languages::travel_core.availability_mail_changes"
+msgid "Changes"
+msgstr "Schimbări"
+
+msgctxt "Languages::travel_core.availability_mail_more"
+msgid "...and [n] more on the page."
+msgstr "...și încă [n] pe pagină."
+
+msgctxt "Languages::travel_core.availability_mail_page"
+msgid "Every hotel: [url]"
+msgstr "Toate hotelurile: [url]"
+
+msgctxt "Languages::travel_core.availability_mail_subject"
+msgid "Hotel availability: [changed] changes this week"
+msgstr "Disponibilitate hoteluri: [changed] schimbări săptămâna aceasta"
+
+msgctxt "Languages::travel_core.hotel_availability"
+msgid "Hotel availability"
+msgstr "Disponibilitate hoteluri"
+
+msgctxt "Languages::travel_core.availability_page_intro"
+msgid "Report only: each supplier hotel's state from the weekly review. Nothing here hides or changes a product."
+msgstr "Doar raport: starea fiecărui hotel al furnizorilor, din revizuirea săptămânală. Nimic de aici nu ascunde și nu modifică produse."
+
+msgctxt "Languages::travel_core.availability_state"
+msgid "State"
+msgstr "Stare"
+
+msgctxt "Languages::travel_core.availability_reason"
+msgid "Why"
+msgstr "Motiv"
+
+msgctxt "Languages::travel_core.availability_since"
+msgid "since [date]"
+msgstr "din [date]"
+
+msgctxt "Languages::travel_core.availability_next_season"
+msgid "Next season published"
+msgstr "Sezonul următor publicat"
+
+msgctxt "Languages::travel_core.availability_last_offer"
+msgid "Last offer seen"
+msgstr "Ultima ofertă văzută"
+
+msgctxt "Languages::travel_core.availability_for_stay"
+msgid "stay on [date]"
+msgstr "sejur pe [date]"
+
+msgctxt "Languages::travel_core.availability_never"
+msgid "never"
+msgstr "niciodată"
+
+msgctxt "Languages::travel_core.availability_prices"
+msgid "Prices published"
+msgstr "Prețuri publicate"
+
+msgctxt "Languages::travel_core.availability_none_published"
+msgid "none"
+msgstr "fără"
+
+msgctxt "Languages::travel_core.availability_last_priced"
+msgid "last priced date [date]"
+msgstr "ultima dată cu preț [date]"
+
+msgctxt "Languages::travel_core.availability_last_booking"
+msgid "Last booked stay"
+msgstr "Ultimul sejur rezervat"
+
+msgctxt "Languages::travel_core.availability_hotel_list"
+msgid "In hotel list"
+msgstr "În lista de hoteluri"
+
+msgctxt "Languages::travel_core.availability_missed_lists"
+msgid "missing from [n] lists"
+msgstr "lipsește din [n] liste"
+
+msgctxt "Languages::travel_core.availability_no_product"
+msgid "no product"
+msgstr "fără produs"
+
+msgctxt "Languages::travel_core.availability_no_offer_for"
+msgid "No offer for"
+msgstr "Fără ofertă de"
+
+msgctxt "Languages::travel_core.availability_months"
+msgid "[n] months"
+msgstr "[n] luni"
+
+msgctxt "Languages::travel_core.availability_sort"
+msgid "Sort by"
+msgstr "Sortare"
+
+msgctxt "Languages::travel_core.availability_sort_hotel"
+msgid "Hotel name"
+msgstr "Numele hotelului"
+
+msgctxt "Languages::travel_core.availability_sort_offer"
+msgid "Longest without an offer"
+msgstr "Cel mai mult timp fără ofertă"
+
+msgctxt "Languages::travel_core.availability_sort_changed"
+msgid "Latest state change"
+msgstr "Cea mai recentă schimbare de stare"
+
+msgctxt "Languages::travel_core.availability_search_placeholder"
+msgid "Hotel, destination or id"
+msgstr "Hotel, destinație sau id"
+
+msgctxt "Languages::travel_core.availability_export_csv"
+msgid "Export CSV"
+msgstr "Export CSV"
+
+msgctxt "Languages::travel_core.availability_review_title"
+msgid "Weekly review"
+msgstr "Revizuirea săptămânală"
+
+msgctxt "Languages::travel_core.availability_review_now"
+msgid "Review now"
+msgstr "Revizuiește acum"
+
+msgctxt "Languages::travel_core.availability_last_review"
+msgid "Last review: [date]"
+msgstr "Ultima revizuire: [date]"
+
+msgctxt "Languages::travel_core.availability_next_review"
+msgid "the next from [date]"
+msgstr "următoarea de la [date]"
+
+msgctxt "Languages::travel_core.availability_no_review_yet"
+msgid "No review yet. The first runs with Travel Core's next daily cron, or press Review now."
+msgstr "Nicio revizuire încă. Prima rulează cu următorul cron zilnic Travel Core, sau apăsați Revizuiește acum."
+
+msgctxt "Languages::travel_core.availability_review_done"
+msgid "Review done: [hotels] hotels classified, [changed] state changes."
+msgstr "Revizuire încheiată: [hotels] hoteluri clasificate, [changed] schimbări de stare."
+
+msgctxt "Languages::travel_core.availability_review_busy"
+msgid "The review waits while [jobs] runs. Try again when it ends."
+msgstr "Revizuirea așteaptă cât timp rulează [jobs]. Încercați din nou după ce se termină."
+
+msgctxt "Languages::travel_core.availability_review_none"
+msgid "No supplier records hotel availability yet."
+msgstr "Niciun furnizor nu înregistrează încă disponibilitatea hotelurilor."
+
+msgctxt "Languages::travel_core.availability_review_failed"
+msgid "The review failed: [error]"
+msgstr "Revizuirea a eșuat: [error]"
+
+msgctxt "Languages::travel_core.availability_no_records"
+msgid "No hotel records yet: the suppliers' jobs fill them as they run."
+msgstr "Nicio înregistrare încă: joburile furnizorilor le completează pe măsură ce rulează."
+
+msgctxt "Languages::travel_core.availability_no_hotels_supplier"
+msgid "No hotels recorded yet."
+msgstr "Niciun hotel înregistrat încă."
+
+msgctxt "Languages::travel_core.availability_legend"
+msgid "What the states mean"
+msgstr "Ce înseamnă stările"
+
+msgctxt "Languages::travel_core.availability_tools_desc"
+msgid "Weekly report of supplier hotels with no offers, between seasons or gone from the supplier's list. Report only."
+msgstr "Raport săptămânal al hotelurilor furnizorilor fără oferte, între sezoane sau ieșite din lista furnizorului. Doar raport."
+
+msgctxt "Languages::travel_core.availability_open_page"
+msgid "Open the report"
+msgstr "Deschide raportul"
+
+msgctxt "Languages::travel_core.availability_review_counts"
+msgid "[hotels] hotels, [changed] state changes"
+msgstr "[hotels] hoteluri, [changed] schimbări de stare"
+
+msgctxt "Languages::travel_core.availability_mail_subject_first"
+msgid "Hotel availability: first review, [n] hotels"
+msgstr "Disponibilitate hoteluri: prima revizuire, [n] hoteluri"

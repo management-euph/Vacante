@@ -13,6 +13,10 @@ $schema['travel_tools'] = [
     'permissions' => ['GET', 'POST'],
 ];
 
+$schema['travel_hotel_availability'] = [
+    'permissions' => ['GET', 'POST'],
+];
+
 $schema['travel_booking_styles'] = [
     'permissions' => ['GET', 'POST'],
 ];

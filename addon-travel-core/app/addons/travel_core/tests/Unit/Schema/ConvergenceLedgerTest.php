@@ -59,6 +59,22 @@ final class ConvergenceLedgerTest extends TestCase
         }
     }
 
+    /** Suppliers join one by one; each that records availability implements the contract. */
+    public function testAvailabilitySourcesImplementTheContract(): void
+    {
+        foreach ([
+            'addon-novoton-holidays/app/addons/novoton_holidays/src/Services/NovotonAvailabilitySource.php',
+        ] as $rel) {
+            $path = self::repoRoot() . '/' . $rel;
+            self::assertFileExists($path, $rel);
+            self::assertMatchesRegularExpression(
+                '/implements[^{]*\\bHotelAvailabilitySourceInterface\\b/s',
+                (string) file_get_contents($path),
+                "{$rel} must implement HotelAvailabilitySourceInterface (see docs/CONVERGENCE.md)",
+            );
+        }
+    }
+
     public function testFullyConvergedSharedPiecesExist(): void
     {
         foreach ([

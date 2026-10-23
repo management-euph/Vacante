@@ -116,6 +116,11 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
         'novoton',
         new \Tygh\Addons\NovotonHolidays\Providers\NovotonHotelProductProvider()
     );
+    // What Novoton records for Travel Core's hotel availability rules.
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setAvailabilitySource(
+        'novoton',
+        new \Tygh\Addons\NovotonHolidays\Services\NovotonAvailabilitySource(),
+    );
     // What the booking row knows about an order line (supplier reference,
     // failure, the offer's remarks), for travel_core's order booking card.
     \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setOrderCardResolver(

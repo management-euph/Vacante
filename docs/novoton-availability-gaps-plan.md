@@ -260,10 +260,11 @@ can then be explained, and the log feeds the weekly email.
   - Increment `listed_missing_runs` for the country's other hotels, but **only**
     when that country's answer is complete: no exception, not empty, and at least
     90% of the previous count.
-  - Today an exception aborts the whole run (the call at
-    `HotelListSyncCommand.php:49` is outside any try/catch), and an empty answer
-    is skipped.
-  - Both cases must count as "no information", never as "missing".
+  - An exception used to abort the whole run, and an empty answer was
+    skipped. Both now count as "no information", never as "missing": each
+    country is asked in its own try, a refused or failed country leaves its
+    hotels as they are, and the other countries still sync (done in step 2,
+    §16.2).
 - **Calendar:** whenever `calendar_prices_raw` is rewritten, set
   `contract_from/to` from its first and last key, and move `contract_last_date`
   forward.
@@ -323,8 +324,11 @@ on its existing line (decided 2026-10-22, §4.5).
 
 ### 4.4 Backfill on the first run
 
-Done once by the reworked `room_price`, before its first checks: stored data
-only, no API calls, resumed the next night if the time budget runs out.
+Done once by the nightly calendar rebuild (`recompute_calendar_prices`,
+03:30), before it rebuilds the calendars: stored data only, no API calls, at
+most 5 minutes a night, resumed the next night until every hotel is done. It
+was planned for the reworked `room_price`, which waits for Novoton's answer on
+the request volume.
 
 - **`contract_last_date`** comes from the stored `priceinfo_data` of every
   package.
@@ -349,8 +353,8 @@ job that changes is Novoton's `room_price`, on its existing line.
 | Job (existing line) | What it records for this plan | Extra API calls |
 |---|---|---|
 | Novoton `hotel_list` (`0 2 */3 * *`) | Seen in / missing from the list (§4.2) | None |
-| Novoton `recompute_calendar_prices` (`30 3 * * *`) and `compute_prices` (every 5 minutes) | The published price window (§4.2) | None |
-| Novoton `room_price` (`0 4 * * *`), reworked | The weekly resort check and `has_room_price` (§4.3); the backfill, once (§4.4) | Fewer: about 60 calls a night instead of up to 500 |
+| Novoton `recompute_calendar_prices` (`30 3 * * *`) and `compute_prices` (every 5 minutes) | The published price window (§4.2); the backfill, once (§4.4) | None |
+| Novoton `room_price` (`0 4 * * *`), reworked | The weekly resort check and `has_room_price` (§4.3) | Fewer: about 60 calls a night instead of up to 500 |
 | Novoton `add_hotels_as_products` (`30 4 * * *`) | Nothing new; it reads `has_room_price` as today | None |
 | Eurosite `hotels` (`0 3 * * *`, or inside `full`) and `availability` (`30 4 * * *`) | Seen in the list; the per-city answers its gate already fetches (phase 1b) | None |
 | Sphinx `hotels` (daily; 02:00 on its settings tab, 03:00 on its dashboard, §14 item 14) | List completeness; the destination answers its gate searches already fetch (phase 1b). Only if needed: a season-date search for one seventh of the destinations with products each night (§15.3, point 9) | None, or that search |
@@ -698,7 +702,7 @@ cover:
 |---|---|---|---|
 | 0 | Fix the data bugs in §13 — **done 2026-10-17**. Calibration (§14) still to run on the live store | Small fixes | S |
 | 0b | Eurosite and Sphinx fixes that would corrupt the records or mislead the report — **done 2026-10-21** (§15.4) | Small fixes | S |
-| 1a | Travel Core: the contract with supplier capabilities (§15.3), the evidence and log tables (schema self-heal), the policy, the date windows (moved from Eurosite), settings (a mode per supplier; hide after N months, default 12; what counts as availability) — **these done 2026-10-23 (§16)** —, the Hotel availability page with a supplier filter, CSV, weekly email; the daily and weekly step in Travel Core's existing cron (§4.5). Novoton: the evidence source (passive capture, `room_price` reworked into the weekly resort check, backfill), dashboard card | No | L |
+| 1a | Travel Core: the contract with supplier capabilities (§15.3), the evidence and log tables (schema self-heal), the policy, the date windows (moved from Eurosite), settings (a mode per supplier; hide after N months, default 12; what counts as availability), the Hotel availability page with a supplier filter, CSV, weekly email; the weekly step in Travel Core's existing cron (§4.5). Novoton: the evidence source (passive capture, backfill), the Tools page card — **these done 2026-10-23 (§16)**. Still to do: `room_price` reworked into the weekly resort check (§4.3) | No | L |
 | 1b | Eurosite and Sphinx: record what their existing checks and hotel-page searches already fetch, hotel-list completeness, bookings read back, dashboard cards; Sphinx stores `giata_id` (§15.3); Eurosite's `full` takes its steps' run locks (§4.5) | No | M |
 | 2 | Hotel-page panels; "notify me" and "prices are out" emails; similar hotels; date-picker window; language keys. All suppliers; Eurosite first needs a request flow | Yes | M |
 | 3 | Automatic mode, per supplier: dormant / left the list → Hidden, and back to Active; brake; overrides; `gateHidden` for bookings. Novoton first (Feb–Mar 2027) | Yes | M |
@@ -1114,9 +1118,68 @@ pass; the two tables were created twice on MariaDB 10.11 without error.
 | The date windows | `Services\AvailabilityWindows` | Moved from Eurosite's `AvailabilityPlan`, which now calls it; `docs/CONVERGENCE.md` updated |
 | Settings | Travel Core → Settings → Hotel availability: a mode per supplier (Off / Report only, default Report only), "Hide a hotel after N months without availability" (12), "Count on-request offers as availability" (on) | Reach installed stores through `SettingsMigrator`; the mode options come from a variants function so they keep their labels. Automatic is offered once the gate exists (phase 3). The other thresholds are fixed defaults for now |
 
-### 16.2 Next
+### 16.2 Step 2, Novoton records availability (done 2026-10-23)
 
-2. Novoton recording from the jobs that already run (§4.2), and the backfill (§4.4).
-3. The weekly step in Travel Core's daily cron (§4.5), the Hotel availability
-   page, its CSV and dashboard tile, and the weekly email.
+Novoton now writes what its existing jobs see; no extra API call, and still
+nothing is classified or changed in the store. The writes are Travel Core's
+(`HotelAvailabilityRepository::recordList / recordPriceWindow /
+recordOfferSeen / recordBackfill`), so Eurosite and Sphinx will use the same
+ones. Each was run on MariaDB 10.11 against tables with different collations.
 
+| Evidence | Written by | Notes |
+|---|---|---|
+| Seen in / missing from the hotel list | `hotel_list`, per country | Missing counts only from a complete answer (`ListCompleteness`: not empty, at least 90% of the last complete list). A country that fails or refuses no longer stops the others; the run then reports which country gave no list |
+| Published price window | Every calendar rebuild (`PriceInfoService::precomputeCalendarPrices`) | First and last priced date; the latest priced date ever seen only moves forward |
+| Offers on hotel-page searches | `novoton_booking.search`, the main and the alternative-date search | Positives only, at most one write per hotel an hour, `immediate_seen_at` when any room is not on request, `offer_months` per stay month |
+| Past seasons (the backfill) | `recompute_calendar_prices`, its first runs | Latest priced date from every stored season, the last confirmed stay (`novoton_bookings`), the last hotel_list, when Novoton first listed the hotel; a cursor in storage_data |
+
+`NovotonAvailabilitySource` declares Novoton's capabilities and the modes the
+weekly step waits for (`hotel_list`, `recompute_calendar_prices`,
+`room_price`); it is registered from `init.php` and pinned in
+`ConvergenceLedgerTest`. The peer group is `COUNTRY|Resort`.
+
+Recording runs in every mode: Off stops the classification, not the
+records, because records cannot be recovered later.
+
+### 16.3 Step 3, the weekly review and the report (done 2026-10-23)
+
+Every supplier's records are now classified once a week and shown to the
+admin. Still report only: no product is hidden, shown or changed. PHPStan
+level 10, both CS Fixer configs, Rector and the four suites pass; the review
+and the page's queries were run on MariaDB 10.11, and both templates were
+compiled and rendered with Smarty 5.
+
+| Piece | Where (travel_core) | Notes |
+|---|---|---|
+| The weekly review | `Services\AvailabilityReview` | Runs at the end of Travel Core's daily `exchange_rates` line, in `cron.php` and in `travel_cron.run` (§4.5: no new crontab line, no new mode). Due 7 days after the last complete review; a failed one is due again the next day. Waits, until the next daily run, while a supplier mode that writes records is running (a run open over 6 hours counts as dead). Logged as `travel_core` / `hotel_availability`, so it counts in Travel Core's cron health on the Tools page |
+| What it does | the same | Carries each hotel's last confirmed stay over from `travel_bookings`, counts each destination's peers over the last two weekly checks, runs `AvailabilityPolicy` on every record of every supplier not set to Off, writes only the rows whose state, reason or "next season published" changed, and logs each state change in `travel_hotel_state_log`. A hotel's first classification is logged but not reported as a change |
+| Hotel availability page | `controllers/backend/travel_hotel_availability.php`, `views/travel_hotel_availability/manage.tpl`, `Repository\HotelAvailabilityListing` | Travel menu and tabs, with a permission entry. Counts per supplier and state (each links to its hotels), the last review and what it changed, a "What the states mean" legend, and the list: hotel (linked to its product), supplier, state and since when, why, last offer seen and its stay date, prices published, last booked stay, last seen in the hotel list and missed lists. Filters: supplier, state, "no offer for 3/6/12/18/24 months", text (hotel, destination or id); sorted by name, longest without an offer, or latest change |
+| Review now | the page, POST `run` | Runs the review at once unless a recording job is running; says why when it cannot |
+| CSV | the page, `export` | What the filters match, up to 20,000 rows, semicolon-separated with a UTF-8 BOM so Excel opens it in columns with diacritics; states and reasons as codes; a cell starting with `=`, `+` or `@` cannot run as a formula |
+| Weekly email | `Services\AvailabilityReportMail` | To the orders department, only when the review changed a state or classified hotels for the first time: counts per supplier and state, up to 50 changes by hotel name, a link to the page. Its wording comes from language keys (editable under Translations), not a registered email template as §6 and §15.5 planned: a template reaches a store only at install, and this project updates stores by pulling code |
+| Tools page | the Maintenance card | The last review in one line, and a link to the page |
+| Hotel names in the records | `hotel_name`, written by Novoton's hotel list and backfill | For the page and the email without joining a supplier table. The table heal adds the column to a table created by step 2 (`HotelAvailabilityRepository::ADDED_COLUMNS`), checked on MariaDB |
+
+**Until `room_price` is reworked (§4.3), the report shows four of the seven
+states.** "Dormant" and "not offered" both need the destination's latest
+check to have answered (rules 4 and 5), and only that weekly resort check
+writes `offer_checked_at`; the searches record offers, not empty answers. So
+Novoton's hotels show as bookable, between seasons, left the supplier's list
+or no data yet, and a hotel that would be dormant shows as "no data yet",
+never as something it is not. The rework waits for Novoton's answer on how
+often it may be called (Production Cron Plan).
+
+Left for phase 3, when there is something to decide: the product status,
+page views, notify-me and suggested-action columns, the bulk actions and
+overrides, the "has bookings" and "has an override" filters, and an
+attention line on the CS-Cart dashboard for hotels waiting for a decision.
+
+### 16.4 Next
+
+4. Eurosite and Sphinx recording (phase 1b): each implements
+   `HotelAvailabilitySourceInterface` and writes through the same repository
+   methods; the review and the page pick them up without changes.
+5. `room_price` reworked into the weekly resort check (§4.3), once Novoton
+   answers on call frequency: it brings "dormant" and "not offered".
+6. Calibration on the live store (§14) once Novoton has recorded for a few
+   weeks, then phase 2 (the hotel page and listings, §8).
