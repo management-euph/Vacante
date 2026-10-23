@@ -37,7 +37,7 @@ CONTRACT is the shared surface new code must type against.
 | HotelRepository | `Contracts\HotelRepositoryInterface` | both implement |
 | CronDispatcher | `Contracts\CronDispatcherInterface` | both implement; discovery shared (C1) |
 | ConfigProvider | `AbstractConfigProvider` (+ sphinx `ConfigProviderInterface`) | per-addon settings by design |
-| Availability records source | `Contracts\HotelAvailabilitySourceInterface` | no implementation yet: novoton next, then eurosite and sphinx (docs/novoton-availability-gaps-plan.md §12); pin each in `ConvergenceLedgerTest` as it lands |
+| Availability records source | `Contracts\HotelAvailabilitySourceInterface` | novoton implements it (`NovotonAvailabilitySource`); eurosite and sphinx next (docs/novoton-availability-gaps-plan.md §12). Each is pinned in `ConvergenceLedgerTest` as it lands |
 
 ## Intentionally divergent — reviewed, left apart (with reasons)
 

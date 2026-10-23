@@ -126,6 +126,14 @@ if (!function_exists('db_quote')) {
             static function (array $m) use (&$i, $params): string {
                 $value = $params[$i] ?? null;
                 $i++;
+                // ?p is a ready SQL fragment and ?a a list of quoted
+                // strings, as in CS-Cart.
+                if ($m[0] === '?p') {
+                    return is_scalar($value) ? (string) $value : '';
+                }
+                if ($m[0] === '?a' && is_array($value)) {
+                    return implode(', ', array_map(static fn ($v): string => "'" . (is_scalar($v) ? (string) $v : '') . "'", $value));
+                }
                 if (is_array($value)) {
                     return implode(',', array_map(static fn ($v): string => is_scalar($v) ? (string) $v : '', $value));
                 }

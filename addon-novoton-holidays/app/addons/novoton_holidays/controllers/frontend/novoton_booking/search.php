@@ -18,6 +18,7 @@ use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\HotelAvailabilitySearcher;
 use Tygh\Addons\NovotonHolidays\Services\AlternativeDateSearcher;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\NovotonHolidays\Services\NovotonAvailabilityRecorder;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 try {
@@ -53,6 +54,11 @@ try {
         $results      = $searchResult['results'];
         $altResult    = ['results' => [], 'check_in' => '', 'check_out' => ''];
 
+        // Offers a customer's search found are evidence for the hotel
+        // availability records; an empty answer proves nothing.
+        $availabilityRecorder = new NovotonAvailabilityRecorder();
+        $availabilityRecorder->searchFound($query->hotelId, $query->checkIn, $results, date('Y-m-d H:i:s'));
+
         // ── 5. Alternative dates if no availability ──────────────────
         if ($searchResult['no_availability']) {
             $rooms      = $searcher->getRooms($query->hotelId);
@@ -70,6 +76,7 @@ try {
                 TypeCoerce::toStringMap($boardTypes)
             );
             $debugLog = array_merge($debugLog, $altSearcher->getDebugLog());
+            $availabilityRecorder->searchFound($query->hotelId, $altResult['check_in'], $altResult['results'], date('Y-m-d H:i:s'));
         }
 
         // ── 5b. Pre-render booking engine as pure PHP string ────────────

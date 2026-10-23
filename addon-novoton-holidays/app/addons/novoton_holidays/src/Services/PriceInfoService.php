@@ -297,6 +297,9 @@ class PriceInfoService implements PriceInfoServiceInterface
         } catch (\Throwable) {
             // Column doesn't exist yet — skip silently
         }
+
+        // The published price window, for the hotel availability records.
+        (new NovotonAvailabilityRecorder())->calendarComputed($hotelId, $rawPrices);
     }
 
     // Pure priceinfo-response shaping (extract / format / group-by-room) was
