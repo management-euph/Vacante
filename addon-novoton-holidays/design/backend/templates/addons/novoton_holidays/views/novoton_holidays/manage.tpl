@@ -138,6 +138,11 @@
     {** Destinations: what we sell, per country (Travel Core's shared card). Chosen on Novoton -> Destinations. **}
     {include file="addons/travel_core/components/destinations_card.tpl" card=$novoton_dest_card}
 
+    {** Hotel availability: its hotels per state (Travel Core's shared card). **}
+    {if $novoton_availability_card}
+        {include file="addons/travel_core/components/availability_card.tpl" card=$novoton_availability_card}
+    {/if}
+
     {** Scheduled jobs — id: the target of the "Open Novoton cron" link on Travel Core -> Tools.
        One row per job, in the order the jobs run (CronPlanBuilder). No
        command with the cron key is ever printed: they are shown masked and

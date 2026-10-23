@@ -167,7 +167,9 @@ from your repo (`/repo`) and opcache re-checks the file every request.
 | Addon PHP (`app/addons/<id>`), Smarty `.tpl`, hand-written JS/CSS | **browser refresh** (symlinked; dev mode recompiles templates) |
 | React JSX (`addon-travel-core/react-src/src`) | **`npm run build`** in `react-src/`, then refresh (regenerates the committed bundle the symlink serves) |
 | Sphinx language label (`lang_keys.php` / `addon.xml`) | load any **admin page** once — it self-reseeds on a content-hash change and clears cache |
-| Novoton / travel_core language, a **new DB table**, or an `addon.xml` scheme change | **re-install** the addon (Admin → Add-ons, or `install-addons.php` once it's inactive) |
+| Novoton / Travel Core / Eurosite language label (`lang_keys.php`) | load any **admin page** once — each re-seeds its labels on a content-hash change |
+| A new Travel Core table, column or setting (e.g. the hotel availability records) | load any **admin page** once: Travel Core adds them itself. **Don't re-install Travel Core for this**: uninstalling drops its tables, `travel_bookings` and the availability records included |
+| A new **Novoton** DB table, or an `addon.xml` scheme change | **re-install** the addon (Admin → Add-ons, or `install-addons.php` once it's inactive): this drops the add-on's tables and their data |
 | DB column covered by an addon's auto-heal map | load any **admin page** once (it runs the `ALTER TABLE`) |
 | `link-addons.sh` (e.g. a new addon in its map) | **`.\update.ps1`** or **`docker compose restart app`**: the container runs the working tree's copy (an image built before that change runs its own copy: rebuild it once) |
 | `entrypoint.sh` / `install-addons.php` / `php-dev.ini` / `apache-cscart.conf` / `Dockerfile` | **`docker compose up -d --build`** — these are baked into the image |

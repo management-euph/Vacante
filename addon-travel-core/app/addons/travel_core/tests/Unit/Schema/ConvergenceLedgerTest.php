@@ -64,6 +64,8 @@ final class ConvergenceLedgerTest extends TestCase
     {
         foreach ([
             'addon-novoton-holidays/app/addons/novoton_holidays/src/Services/NovotonAvailabilitySource.php',
+            'addon-eurosite/app/addons/eurosite/src/Services/EurositeAvailabilitySource.php',
+            'addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/SphinxAvailabilitySource.php',
         ] as $rel) {
             $path = self::repoRoot() . '/' . $rel;
             self::assertFileExists($path, $rel);
@@ -91,6 +93,7 @@ final class ConvergenceLedgerTest extends TestCase
             'src/Services/AvailabilityWindows.php',
             'src/Services/AvailabilityPolicy.php',
             'src/ValueObjects/AvailabilityThresholds.php',
+            'src/Services/OfferTally.php',
             'src/Contracts/HotelAvailabilitySourceInterface.php',
         ] as $rel) {
             self::assertFileExists(dirname(__DIR__, 3) . '/' . $rel, $rel);

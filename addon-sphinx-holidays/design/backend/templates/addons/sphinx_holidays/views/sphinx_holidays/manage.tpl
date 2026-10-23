@@ -59,6 +59,11 @@
         {include file="addons/travel_core/components/destinations_card.tpl" card=$sphinx_dest_card}
     {/if}
 
+    {* ── Hotel availability: its hotels per state (Travel Core's shared card) ── *}
+    {if $sphinx_availability_card}
+        {include file="addons/travel_core/components/availability_card.tpl" card=$sphinx_availability_card}
+    {/if}
+
     {* ── Destination Stats ── *}
     <h4>{__("sphinx_holidays.destinations")}</h4>
     <div class="sync-stats">
