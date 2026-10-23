@@ -7,6 +7,7 @@ namespace Tygh\Addons\Eurosite\Services;
 use Tygh\Addons\TravelCore\Cron\CronKeyService;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\AbstractConfigProvider;
+use Tygh\Addons\TravelCore\Services\AvailabilityWindows;
 
 /**
  * Eurosite configuration provider.
@@ -107,10 +108,10 @@ class ConfigProvider extends AbstractConfigProvider
     /** @return list<int> days ahead to check, e.g. [14, 30, 60] */
     public static function getAvailabilityNearDays(): array
     {
-        return AvailabilityPlan::parseDays(TypeCoerce::toString(self::getSetting('availability_near_days', '14, 30, 60')));
+        return AvailabilityWindows::parseDays(TypeCoerce::toString(self::getSetting('availability_near_days', '14, 30, 60')));
     }
 
-    /** Raw peak-season dates ("07-15, 08-15"); AvailabilityPlan resolves them. */
+    /** Raw peak-season dates ("07-15, 08-15"); AvailabilityWindows resolves them. */
     public static function getAvailabilitySeasonDates(): string
     {
         return TypeCoerce::toString(self::getSetting('availability_season_dates', '07-15, 08-15'));

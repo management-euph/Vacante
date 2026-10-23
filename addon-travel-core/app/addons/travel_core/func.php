@@ -67,6 +67,8 @@ function fn_travel_core_uninstall(): bool
     db_query('DROP TABLE IF EXISTS ?:travel_bookings');
     db_query('DROP TABLE IF EXISTS ?:travel_alternative_requests');
     db_query('DROP TABLE IF EXISTS ?:travel_balances');
+    db_query('DROP TABLE IF EXISTS ?:travel_hotel_availability');
+    db_query('DROP TABLE IF EXISTS ?:travel_hotel_state_log');
     db_query('DROP TABLE IF EXISTS ?:travel_feature_map');
 
     // Placed stay-summary blocks (dedicated type travel_stay_summary), with
@@ -213,6 +215,10 @@ function fn_travel_core_ensure_schema(): void
     // Required by path: post_install runs before the PSR-4 autoloader.
     require_once __DIR__ . '/src/Repository/BalanceRepository.php';
     db_query(\Tygh\Addons\TravelCore\Repository\BalanceRepository::CREATE_SQL);
+    // Hotel availability records and their change log, for stores that
+    // upgraded by pulling code.
+    require_once __DIR__ . '/src/Repository/HotelAvailabilityRepository.php';
+    \Tygh\Addons\TravelCore\Repository\HotelAvailabilityRepository::ensureTables();
 }
 
 /**
@@ -307,6 +313,40 @@ function fn_settings_variants_addons_travel_core_feature_id_room_facility(): arr
 function fn_settings_variants_addons_travel_core_feature_id_beach_access(): array
 {
     return fn_travel_core_get_feature_variants();
+}
+
+/**
+ * Options of the per-supplier hotel availability mode settings.
+ *
+ * A function rather than addon.xml <variants>: on stores updated by pulling
+ * code, SettingsMigrator creates the setting with bare option ids and no
+ * labels, while these labels come from language keys, which self-seed.
+ *
+ * @return array<string, string>
+ */
+function fn_travel_core_availability_mode_variants(): array
+{
+    $variants = [];
+    foreach (\Tygh\Addons\TravelCore\Enums\AvailabilityMode::offered() as $mode) {
+        $variants[$mode->value] = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toString(__('travel_core.availability_mode_' . $mode->value));
+    }
+
+    return $variants;
+}
+/** @return array<string, string> */
+function fn_settings_variants_addons_travel_core_availability_mode_novoton(): array
+{
+    return fn_travel_core_availability_mode_variants();
+}
+/** @return array<string, string> */
+function fn_settings_variants_addons_travel_core_availability_mode_eurosite(): array
+{
+    return fn_travel_core_availability_mode_variants();
+}
+/** @return array<string, string> */
+function fn_settings_variants_addons_travel_core_availability_mode_sphinx(): array
+{
+    return fn_travel_core_availability_mode_variants();
 }
 
 /**

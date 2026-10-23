@@ -65,8 +65,9 @@ final class OrderCardFacts
         }
         $reference = '';
         foreach (['novoton_confirm_id', 'novoton_invoice_id', 'novoton_res_num'] as $column) {
-            $reference = trim(TypeCoerce::toString($row[$column] ?? ''));
-            if ($reference !== '') {
+            $candidate = trim(TypeCoerce::toString($row[$column] ?? ''));
+            if ($candidate !== '') {
+                $reference = $candidate;
                 break;
             }
         }
@@ -105,7 +106,7 @@ final class OrderCardFacts
     {
         $tag = self::tagGap(...);
         $text = (string) preg_replace_callback(
-            '/(?<!&)lt;\/?(' . self::BLOCK_TAGS . '|' . self::INLINE_TAGS . ')(?=[\s\/]|gt;)[^<>]{0,200}?gt;/i',
+            '/(?<!&)lt;\/?(' . implode('|', [self::BLOCK_TAGS, self::INLINE_TAGS]) . ')(?=[\s\/]|gt;)[^<>]{0,200}?gt;/i',
             $tag,
             TypeCoerce::toString($value),
         );
@@ -127,6 +128,6 @@ final class OrderCardFacts
      */
     private static function tagGap(array $m): string
     {
-        return preg_match('/^(?:' . self::BLOCK_TAGS . ')$/i', $m[1] ?? '') === 1 ? ' ' : '';
+        return preg_match('/^(' . self::BLOCK_TAGS . ')$/i', $m[1] ?? '') === 1 ? ' ' : '';
     }
 }

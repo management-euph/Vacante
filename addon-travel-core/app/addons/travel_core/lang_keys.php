@@ -1746,4 +1746,12 @@ Dacă ați plătit deja, vă rugăm să ignorați acest email.',
         'en' => 'Your booking',
         'ro' => 'Rezervarea ta',
     ],
+    'travel_core.availability_mode_off' => [
+        'en' => 'Off',
+        'ro' => 'Oprit',
+    ],
+    'travel_core.availability_mode_report' => [
+        'en' => 'Report only',
+        'ro' => 'Doar raport',
+    ],
 ];

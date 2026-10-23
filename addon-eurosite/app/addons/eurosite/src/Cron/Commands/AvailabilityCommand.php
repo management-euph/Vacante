@@ -9,12 +9,13 @@ use Tygh\Addons\Eurosite\Services\ConfigProvider;
 use Tygh\Addons\Eurosite\Services\Container;
 use Tygh\Addons\Eurosite\Services\ProductGate;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Services\AvailabilityWindows;
 
 /**
  * mode `availability` — which listed hotels have an Immediate offer.
  *
  * One getHotelPriceRequest per destination and date (near dates + the
- * store's peak-season dates, see AvailabilityPlan), not one per hotel: a
+ * store's peak-season dates, see AvailabilityWindows), not one per hotel: a
  * city search answers for every hotel in it. Each listed hotel then carries
  * its best answer (IM > OR > ST > none), the lowest price for it and the
  * date that proved it. Only Immediate hotels become products.
@@ -53,7 +54,7 @@ final class AvailabilityCommand extends AbstractSyncCommand
     {
         return $this->runLogged('availability', function () use ($params): array {
             $only = strtoupper(trim(TypeCoerce::toString($params['city'] ?? '')));
-            $windows = AvailabilityPlan::windows(
+            $windows = AvailabilityWindows::windows(
                 new \DateTimeImmutable('today'),
                 ConfigProvider::getAvailabilityNearDays(),
                 ConfigProvider::getAvailabilitySeasonDates(),

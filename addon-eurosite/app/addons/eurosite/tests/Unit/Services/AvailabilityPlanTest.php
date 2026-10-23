@@ -9,15 +9,11 @@ use Tygh\Addons\Eurosite\Dto\HotelOffer;
 use Tygh\Addons\Eurosite\Services\AvailabilityPlan;
 
 /**
- * Which stays the availability check asks about, and how it reads the answers.
+ * How the availability check reads the answers. Which stays it asks about is
+ * Travel Core's AvailabilityWindows (tested there).
  */
 final class AvailabilityPlanTest extends TestCase
 {
-    private static function today(): \DateTimeImmutable
-    {
-        return new \DateTimeImmutable('2026-09-24');
-    }
-
     private static function offer(string $code, float $price, int $stars = 0, string $image = '', string $product = 'RO0363'): HotelOffer
     {
         return new HotelOffer(
@@ -44,47 +40,6 @@ final class AvailabilityPlanTest extends TestCase
             grila: '',
             availabilityCode: $code,
         );
-    }
-
-    public function testNearDaysAreParsedSortedAndBounded(): void
-    {
-        self::assertSame([14, 30, 60], AvailabilityPlan::parseDays('60, 14,30'));
-        self::assertSame([7, 30], AvailabilityPlan::parseDays('30;7 7 x -3 0 400'));
-        self::assertSame([], AvailabilityPlan::parseDays(''));
-    }
-
-    /** "07-15" means the next 15 July; a full date only while it is ahead. */
-    public function testSeasonDatesResolveToTheirNextOccurrence(): void
-    {
-        self::assertSame(
-            ['2027-07-15', '2027-08-15'],
-            AvailabilityPlan::parseSeasonDates('07-15, 08-15', self::today()),
-            'both have passed this year, so next year',
-        );
-        self::assertSame(['2026-12-20', '2027-07-15'], AvailabilityPlan::parseSeasonDates('12-20 2027-07-15', self::today()));
-        self::assertSame([], AvailabilityPlan::parseSeasonDates('2026-07-15, 2026-09-24', self::today()), 'past and today are dropped');
-        self::assertSame([], AvailabilityPlan::parseSeasonDates('13-01, 02-30, July, 2027-02-30', self::today()), 'not dates');
-        self::assertSame(['2028-02-29'], AvailabilityPlan::parseSeasonDates('2028-02-29', self::today()));
-    }
-
-    public function testWindowsAreNearFirstThenSeasonEachWithItsStayLength(): void
-    {
-        $w = AvailabilityPlan::windows(self::today(), [14, 30], '07-15', 7);
-
-        self::assertSame([
-            ['kind' => 'near', 'check_in' => '2026-10-08', 'check_out' => '2026-10-15'],
-            ['kind' => 'near', 'check_in' => '2026-10-24', 'check_out' => '2026-10-31'],
-            ['kind' => 'season', 'check_in' => '2027-07-15', 'check_out' => '2027-07-22'],
-        ], $w);
-    }
-
-    public function testASeasonDateOnANearDateIsCheckedOnce(): void
-    {
-        $w = AvailabilityPlan::windows(self::today(), [14], '10-08', 3);
-
-        self::assertCount(1, $w);
-        self::assertSame('near', $w[0]['kind']);
-        self::assertSame('2026-10-11', $w[0]['check_out']);
     }
 
     public function testTheBetterAvailabilityWinsWhateverThePrice(): void

@@ -97,6 +97,10 @@ final class OrderCardFactsTest extends TestCase
         yield 'a lone "gt;" and "lt;"' => ['lt;pgt;Copii gt; 12 ani, bebelusi lt; 2 anilt;/pgt;', 'Copii > 12 ani, bebelusi < 2 ani'];
         yield 'escaped self-closing tag' => ['Pool&lt;br /&gt;Spa', 'Pool Spa'];
         yield 'escaped tag with attributes' => ['&lt;p style="x"&gt;Late check-in&lt;/p&gt;', 'Late check-in'];
+        // Headings and capitals separate text like any block tag.
+        yield 'a heading, lost ampersands' => ['Ruleslt;h2gt;Check-inlt;/h2gt;14:00', 'Rules Check-in 14:00'];
+        yield 'capitals, lost ampersands' => ['Onelt;BR/gt;Twolt;Bgt;Threelt;/Bgt;', 'One TwoThree'];
+        yield 'a heading in capitals, escaped' => ['&lt;H6&gt;Title&lt;/H6&gt;Text', 'Title Text'];
     }
 
     #[DataProvider('remarks')]
