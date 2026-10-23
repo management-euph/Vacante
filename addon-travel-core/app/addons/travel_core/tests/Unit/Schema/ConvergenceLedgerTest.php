@@ -72,6 +72,10 @@ final class ConvergenceLedgerTest extends TestCase
             'src/ViewModels/HotelHeaderFactory.php',
             'src/ViewModels/HotelHeaderViewModel.php',
             'src/Contracts/CacheServiceInterface.php',
+            'src/Services/AvailabilityWindows.php',
+            'src/Services/AvailabilityPolicy.php',
+            'src/ValueObjects/AvailabilityThresholds.php',
+            'src/Contracts/HotelAvailabilitySourceInterface.php',
         ] as $rel) {
             self::assertFileExists(dirname(__DIR__, 3) . '/' . $rel, $rel);
         }

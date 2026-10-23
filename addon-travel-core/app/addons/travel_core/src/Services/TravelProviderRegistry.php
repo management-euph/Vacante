@@ -6,6 +6,7 @@ namespace Tygh\Addons\TravelCore\Services;
 
 use Tygh\Addons\TravelCore\Contracts\BookingAdminProviderInterface;
 use Tygh\Addons\TravelCore\Contracts\CronDispatcherInterface;
+use Tygh\Addons\TravelCore\Contracts\HotelAvailabilitySourceInterface;
 use Tygh\Addons\TravelCore\Contracts\HotelProductProviderInterface;
 use Tygh\Addons\TravelCore\Contracts\ProviderNormalizerInterface;
 use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
@@ -36,6 +37,9 @@ class TravelProviderRegistry
 
     /** @var array<string, callable(array<string, mixed>): array<string, mixed>> provider name => order-line facts resolver */
     private static array $orderCardFacts = [];
+
+    /** @var array<string, HotelAvailabilitySourceInterface> provider name => availability records source */
+    private static array $availability = [];
 
     /**
      * Register a travel provider.
@@ -149,6 +153,35 @@ class TravelProviderRegistry
     public static function getHotelProductProvider(string $name): ?HotelProductProviderInterface
     {
         return self::$providers[$name]['hotel_product_provider'] ?? null;
+    }
+
+    /**
+     * Register the provider's availability records source (the hotel
+     * availability rules). Ignored unless register() ran first, and unless the
+     * source speaks for that same provider: its records are keyed by it.
+     */
+    public static function setAvailabilitySource(string $name, HotelAvailabilitySourceInterface $source): void
+    {
+        if (isset(self::$providers[$name]) && $source->provider() === $name) {
+            self::$availability[$name] = $source;
+        }
+    }
+
+    /**
+     * Every registered provider's availability source, in registration order.
+     *
+     * @return array<string, HotelAvailabilitySourceInterface>
+     */
+    public static function getAvailabilitySources(): array
+    {
+        $sources = [];
+        foreach (array_keys(self::$providers) as $name) {
+            if (isset(self::$availability[$name])) {
+                $sources[$name] = self::$availability[$name];
+            }
+        }
+
+        return $sources;
     }
 
     /**
@@ -384,5 +417,6 @@ class TravelProviderRegistry
         self::$cron = [];
         self::$cartTerms = [];
         self::$orderCardFacts = [];
+        self::$availability = [];
     }
 }

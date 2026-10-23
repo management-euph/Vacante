@@ -263,6 +263,42 @@
                         <default_value>https://nominatim.openstreetmap.org</default_value>
                         <variants/>
                     </item>
+
+                    <!-- Hotel availability (docs/novoton-availability-gaps-plan.md):
+                         ONE set of rules for every supplier, a mode per supplier
+                         because each supplier's records mature at a different
+                         time. The mode options come from
+                         fn_settings_variants_addons_travel_core_availability_mode_*
+                         (labels from language keys). -->
+                    <item id="availability_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="availability_mode_novoton">
+                        <type>selectbox</type>
+                        <default_value>report</default_value>
+                        <variants/>
+                    </item>
+                    <item id="availability_mode_eurosite">
+                        <type>selectbox</type>
+                        <default_value>report</default_value>
+                        <variants/>
+                    </item>
+                    <item id="availability_mode_sphinx">
+                        <type>selectbox</type>
+                        <default_value>report</default_value>
+                        <variants/>
+                    </item>
+                    <item id="availability_dormant_months">
+                        <type>input</type>
+                        <default_value>12</default_value>
+                        <variants/>
+                    </item>
+                    <item id="availability_on_request">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                        <variants/>
+                    </item>
                 </items>
             </section>
         </sections>
@@ -497,6 +533,118 @@
         KEY `idx_balance_order` (`balance_order_id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         </item>
+        <!-- Hotel availability records and their change log (HotelAvailabilityRepository;
+             docs/novoton-availability-gaps-plan.md §4.1) -->
+        <item>
+            CREATE TABLE IF NOT EXISTS `?:travel_hotel_availability` (
+        `provider`              VARCHAR(32)       NOT NULL COMMENT 'Registry name: novoton, eurosite, sphinx',
+        `hotel_id`              VARCHAR(64)       NOT NULL COMMENT 'Supplier hotel id',
+        `product_id`            INT UNSIGNED      NOT NULL DEFAULT 0,
+        `destination_key`       VARCHAR(64)       NOT NULL DEFAULT '' COMMENT 'Resort, city code or destination id: the peer group',
+        `known_since`           DATE              DEFAULT NULL COMMENT 'When the supplier first listed the hotel',
+        `listed_last_seen_at`   DATETIME          DEFAULT NULL COMMENT 'Last complete hotel list that had it',
+        `listed_missing_runs`   SMALLINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Complete lists in a row without it',
+        `contract_from`         DATE              DEFAULT NULL COMMENT 'First future date with a published price',
+        `contract_to`           DATE              DEFAULT NULL COMMENT 'Last future date with a published price',
+        `contract_last_date`    DATE              DEFAULT NULL COMMENT 'Latest priced date ever seen',
+        `offer_seen_at`         DATETIME          DEFAULT NULL COMMENT 'Last bookable offer seen, on request included',
+        `offer_stay_date`       DATE              DEFAULT NULL COMMENT 'Check-in of that offer',
+        `immediate_seen_at`     DATETIME          DEFAULT NULL COMMENT 'Last offer that could be booked at once',
+        `offer_next_date`       DATE              DEFAULT NULL COMMENT 'Earliest future check-in with an offer in the latest check',
+        `offer_checked_at`      DATETIME          DEFAULT NULL COMMENT 'Last check that answered for this hotel, offer or not',
+        `offer_months`          TEXT              DEFAULT NULL COMMENT 'JSON: stay month => date it was last seen',
+        `last_booking_check_in` DATE              DEFAULT NULL COMMENT 'Check-in of the latest confirmed booking',
+        `backfilled_at`         DATETIME          DEFAULT NULL COMMENT 'Past seasons filled in from stored data',
+        `state`                 VARCHAR(20)       NOT NULL DEFAULT 'no_data',
+        `state_since`           DATETIME          DEFAULT NULL,
+        `state_reason`          VARCHAR(32)       NOT NULL DEFAULT '',
+        `season_published`      CHAR(1)           NOT NULL DEFAULT 'N' COMMENT 'Between seasons, next season already priced or offered',
+        `gate_hidden`           CHAR(1)           NOT NULL DEFAULT 'N' COMMENT 'This gate set the product to Hidden',
+        `override`              VARCHAR(16)       NOT NULL DEFAULT '' COMMENT 'Admin decision: keep_visible, keep_hidden, closed',
+        `override_note`         VARCHAR(255)      NOT NULL DEFAULT '',
+        `override_by`           INT UNSIGNED      NOT NULL DEFAULT 0,
+        `override_at`           DATETIME          DEFAULT NULL,
+        `redirect_to`           VARCHAR(255)      NOT NULL DEFAULT '' COMMENT 'Closed hotels: target product, category or URL',
+        `created_at`            DATETIME          NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Recording started',
+        `updated_at`            TIMESTAMP         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (`provider`, `hotel_id`),
+        KEY `idx_product` (`product_id`),
+        KEY `idx_state` (`provider`, `state`),
+        KEY `idx_destination` (`provider`, `destination_key`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        </item>
+        <item for="upgrade">
+            CREATE TABLE IF NOT EXISTS `?:travel_hotel_availability` (
+        `provider`              VARCHAR(32)       NOT NULL COMMENT 'Registry name: novoton, eurosite, sphinx',
+        `hotel_id`              VARCHAR(64)       NOT NULL COMMENT 'Supplier hotel id',
+        `product_id`            INT UNSIGNED      NOT NULL DEFAULT 0,
+        `destination_key`       VARCHAR(64)       NOT NULL DEFAULT '' COMMENT 'Resort, city code or destination id: the peer group',
+        `known_since`           DATE              DEFAULT NULL COMMENT 'When the supplier first listed the hotel',
+        `listed_last_seen_at`   DATETIME          DEFAULT NULL COMMENT 'Last complete hotel list that had it',
+        `listed_missing_runs`   SMALLINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Complete lists in a row without it',
+        `contract_from`         DATE              DEFAULT NULL COMMENT 'First future date with a published price',
+        `contract_to`           DATE              DEFAULT NULL COMMENT 'Last future date with a published price',
+        `contract_last_date`    DATE              DEFAULT NULL COMMENT 'Latest priced date ever seen',
+        `offer_seen_at`         DATETIME          DEFAULT NULL COMMENT 'Last bookable offer seen, on request included',
+        `offer_stay_date`       DATE              DEFAULT NULL COMMENT 'Check-in of that offer',
+        `immediate_seen_at`     DATETIME          DEFAULT NULL COMMENT 'Last offer that could be booked at once',
+        `offer_next_date`       DATE              DEFAULT NULL COMMENT 'Earliest future check-in with an offer in the latest check',
+        `offer_checked_at`      DATETIME          DEFAULT NULL COMMENT 'Last check that answered for this hotel, offer or not',
+        `offer_months`          TEXT              DEFAULT NULL COMMENT 'JSON: stay month => date it was last seen',
+        `last_booking_check_in` DATE              DEFAULT NULL COMMENT 'Check-in of the latest confirmed booking',
+        `backfilled_at`         DATETIME          DEFAULT NULL COMMENT 'Past seasons filled in from stored data',
+        `state`                 VARCHAR(20)       NOT NULL DEFAULT 'no_data',
+        `state_since`           DATETIME          DEFAULT NULL,
+        `state_reason`          VARCHAR(32)       NOT NULL DEFAULT '',
+        `season_published`      CHAR(1)           NOT NULL DEFAULT 'N' COMMENT 'Between seasons, next season already priced or offered',
+        `gate_hidden`           CHAR(1)           NOT NULL DEFAULT 'N' COMMENT 'This gate set the product to Hidden',
+        `override`              VARCHAR(16)       NOT NULL DEFAULT '' COMMENT 'Admin decision: keep_visible, keep_hidden, closed',
+        `override_note`         VARCHAR(255)      NOT NULL DEFAULT '',
+        `override_by`           INT UNSIGNED      NOT NULL DEFAULT 0,
+        `override_at`           DATETIME          DEFAULT NULL,
+        `redirect_to`           VARCHAR(255)      NOT NULL DEFAULT '' COMMENT 'Closed hotels: target product, category or URL',
+        `created_at`            DATETIME          NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Recording started',
+        `updated_at`            TIMESTAMP         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (`provider`, `hotel_id`),
+        KEY `idx_product` (`product_id`),
+        KEY `idx_state` (`provider`, `state`),
+        KEY `idx_destination` (`provider`, `destination_key`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        </item>
+        <item>
+            CREATE TABLE IF NOT EXISTS `?:travel_hotel_state_log` (
+        `log_id`     BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        `provider`   VARCHAR(32)  NOT NULL,
+        `hotel_id`   VARCHAR(64)  NOT NULL,
+        `product_id` INT UNSIGNED NOT NULL DEFAULT 0,
+        `old_state`  VARCHAR(20)  NOT NULL DEFAULT '',
+        `new_state`  VARCHAR(20)  NOT NULL DEFAULT '',
+        `old_status` CHAR(1)      NOT NULL DEFAULT '' COMMENT 'Product status before: A, H or D; empty if unchanged',
+        `new_status` CHAR(1)      NOT NULL DEFAULT '',
+        `reason`     VARCHAR(32)  NOT NULL DEFAULT '',
+        `user_id`    INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '0 = the weekly step',
+        `created_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        KEY `idx_hotel` (`provider`, `hotel_id`),
+        KEY `idx_created` (`created_at`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        </item>
+        <item for="upgrade">
+            CREATE TABLE IF NOT EXISTS `?:travel_hotel_state_log` (
+        `log_id`     BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        `provider`   VARCHAR(32)  NOT NULL,
+        `hotel_id`   VARCHAR(64)  NOT NULL,
+        `product_id` INT UNSIGNED NOT NULL DEFAULT 0,
+        `old_state`  VARCHAR(20)  NOT NULL DEFAULT '',
+        `new_state`  VARCHAR(20)  NOT NULL DEFAULT '',
+        `old_status` CHAR(1)      NOT NULL DEFAULT '' COMMENT 'Product status before: A, H or D; empty if unchanged',
+        `new_status` CHAR(1)      NOT NULL DEFAULT '',
+        `reason`     VARCHAR(32)  NOT NULL DEFAULT '',
+        `user_id`    INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '0 = the weekly step',
+        `created_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        KEY `idx_hotel` (`provider`, `hotel_id`),
+        KEY `idx_created` (`created_at`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        </item>
         <item for="uninstall">DELETE FROM ?:language_values WHERE name LIKE 'travel_core.%'</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:travel_api_alias`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:travel_unmapped_values`</item>
@@ -504,6 +652,8 @@
         <item for="uninstall">DROP TABLE IF EXISTS `?:travel_feature_map`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:travel_alternative_requests`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:travel_balances`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:travel_hotel_availability`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:travel_hotel_state_log`</item>
     </queries>
 
     <language_variables>

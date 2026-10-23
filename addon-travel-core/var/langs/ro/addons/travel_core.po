@@ -714,6 +714,50 @@ msgctxt "SettingsTooltips::travel_core::geocoding_endpoint"
 msgid "Base URL of the Nominatim server. Change only if you run your own instance (removes the 1 request/second limit of the public server)."
 msgstr "URL-ul de bază al serverului Nominatim. Schimbați doar dacă rulați propria instanță (elimină limita de 1 cerere/secundă a serverului public)."
 
+msgctxt "SettingsOptions::travel_core::availability_header"
+msgid "Hotel availability"
+msgstr "Disponibilitatea hotelurilor"
+
+msgctxt "SettingsOptions::travel_core::availability_mode_novoton"
+msgid "Novoton: availability rules"
+msgstr "Novoton: reguli de disponibilitate"
+
+msgctxt "SettingsTooltips::travel_core::availability_mode_novoton"
+msgid "Off: this supplier's hotels are not classified. Report only: the rules classify its hotels and list what they would hide or show, without changing any product."
+msgstr "Oprit: hotelurile acestui furnizor nu sunt clasificate. Doar raport: regulile îi clasifică hotelurile și arată ce ar ascunde sau afișa, fără să modifice vreun produs."
+
+msgctxt "SettingsOptions::travel_core::availability_mode_eurosite"
+msgid "Eurosite: availability rules"
+msgstr "Eurosite: reguli de disponibilitate"
+
+msgctxt "SettingsTooltips::travel_core::availability_mode_eurosite"
+msgid "Off: this supplier's hotels are not classified. Report only: the rules classify its hotels and list what they would hide or show, without changing any product."
+msgstr "Oprit: hotelurile acestui furnizor nu sunt clasificate. Doar raport: regulile îi clasifică hotelurile și arată ce ar ascunde sau afișa, fără să modifice vreun produs."
+
+msgctxt "SettingsOptions::travel_core::availability_mode_sphinx"
+msgid "Sphinx: availability rules"
+msgstr "Sphinx: reguli de disponibilitate"
+
+msgctxt "SettingsTooltips::travel_core::availability_mode_sphinx"
+msgid "Off: this supplier's hotels are not classified. Report only: the rules classify its hotels and list what they would hide or show, without changing any product."
+msgstr "Oprit: hotelurile acestui furnizor nu sunt clasificate. Doar raport: regulile îi clasifică hotelurile și arată ce ar ascunde sau afișa, fără să modifice vreun produs."
+
+msgctxt "SettingsOptions::travel_core::availability_dormant_months"
+msgid "Hide a hotel after N months without availability"
+msgstr "Ascunde un hotel după N luni fără disponibilitate"
+
+msgctxt "SettingsTooltips::travel_core::availability_dormant_months"
+msgid "How many months without any offer, published price or booked stay make a hotel dormant. Under 12 would also catch seaside hotels during their winter break."
+msgstr "După câte luni fără nicio ofertă, preț publicat sau sejur rezervat un hotel devine inactiv. Sub 12 ar prinde și hotelurile de pe litoral în pauza de iarnă."
+
+msgctxt "SettingsOptions::travel_core::availability_on_request"
+msgid "Count on-request offers as availability"
+msgstr "Ofertele la cerere contează ca disponibilitate"
+
+msgctxt "SettingsTooltips::travel_core::availability_on_request"
+msgid "A hotel sold on request is still in business. Turn off to count only offers that can be booked at once."
+msgstr "Un hotel vândut la cerere este încă activ. Dezactivați pentru a număra doar ofertele care se pot rezerva imediat."
+
 msgctxt "SettingsOptions::travel_core::deposit_header"
 msgid "Deposit payments"
 msgstr "Plata cu avans"
@@ -2541,3 +2585,11 @@ msgstr "Actualizat [date]"
 msgctxt "Languages::travel_core.obc_your_booking"
 msgid "Your booking"
 msgstr "Rezervarea ta"
+
+msgctxt "Languages::travel_core.availability_mode_off"
+msgid "Off"
+msgstr "Oprit"
+
+msgctxt "Languages::travel_core.availability_mode_report"
+msgid "Report only"
+msgstr "Doar raport"

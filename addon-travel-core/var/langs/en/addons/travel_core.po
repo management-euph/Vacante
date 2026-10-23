@@ -714,6 +714,50 @@ msgctxt "SettingsTooltips::travel_core::geocoding_endpoint"
 msgid "Base URL of the Nominatim server. Change only if you run your own instance (removes the 1 request/second limit of the public server)."
 msgstr "Base URL of the Nominatim server. Change only if you run your own instance (removes the 1 request/second limit of the public server)."
 
+msgctxt "SettingsOptions::travel_core::availability_header"
+msgid "Hotel availability"
+msgstr "Hotel availability"
+
+msgctxt "SettingsOptions::travel_core::availability_mode_novoton"
+msgid "Novoton: availability rules"
+msgstr "Novoton: availability rules"
+
+msgctxt "SettingsTooltips::travel_core::availability_mode_novoton"
+msgid "Off: this supplier's hotels are not classified. Report only: the rules classify its hotels and list what they would hide or show, without changing any product."
+msgstr "Off: this supplier's hotels are not classified. Report only: the rules classify its hotels and list what they would hide or show, without changing any product."
+
+msgctxt "SettingsOptions::travel_core::availability_mode_eurosite"
+msgid "Eurosite: availability rules"
+msgstr "Eurosite: availability rules"
+
+msgctxt "SettingsTooltips::travel_core::availability_mode_eurosite"
+msgid "Off: this supplier's hotels are not classified. Report only: the rules classify its hotels and list what they would hide or show, without changing any product."
+msgstr "Off: this supplier's hotels are not classified. Report only: the rules classify its hotels and list what they would hide or show, without changing any product."
+
+msgctxt "SettingsOptions::travel_core::availability_mode_sphinx"
+msgid "Sphinx: availability rules"
+msgstr "Sphinx: availability rules"
+
+msgctxt "SettingsTooltips::travel_core::availability_mode_sphinx"
+msgid "Off: this supplier's hotels are not classified. Report only: the rules classify its hotels and list what they would hide or show, without changing any product."
+msgstr "Off: this supplier's hotels are not classified. Report only: the rules classify its hotels and list what they would hide or show, without changing any product."
+
+msgctxt "SettingsOptions::travel_core::availability_dormant_months"
+msgid "Hide a hotel after N months without availability"
+msgstr "Hide a hotel after N months without availability"
+
+msgctxt "SettingsTooltips::travel_core::availability_dormant_months"
+msgid "How many months without any offer, published price or booked stay make a hotel dormant. Under 12 would also catch seaside hotels during their winter break."
+msgstr "How many months without any offer, published price or booked stay make a hotel dormant. Under 12 would also catch seaside hotels during their winter break."
+
+msgctxt "SettingsOptions::travel_core::availability_on_request"
+msgid "Count on-request offers as availability"
+msgstr "Count on-request offers as availability"
+
+msgctxt "SettingsTooltips::travel_core::availability_on_request"
+msgid "A hotel sold on request is still in business. Turn off to count only offers that can be booked at once."
+msgstr "A hotel sold on request is still in business. Turn off to count only offers that can be booked at once."
+
 msgctxt "SettingsOptions::travel_core::deposit_header"
 msgid "Deposit payments"
 msgstr "Deposit payments"
@@ -2541,3 +2585,11 @@ msgstr "Updated [date]"
 msgctxt "Languages::travel_core.obc_your_booking"
 msgid "Your booking"
 msgstr "Your booking"
+
+msgctxt "Languages::travel_core.availability_mode_off"
+msgid "Off"
+msgstr "Off"
+
+msgctxt "Languages::travel_core.availability_mode_report"
+msgid "Report only"
+msgstr "Report only"

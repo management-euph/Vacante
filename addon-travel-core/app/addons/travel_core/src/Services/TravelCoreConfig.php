@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Services;
 
+use Tygh\Addons\TravelCore\Enums\AvailabilityMode;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\Geocoding\NominatimClient;
+use Tygh\Addons\TravelCore\ValueObjects\AvailabilityThresholds;
 use Tygh\Registry;
 
 /**
@@ -104,6 +106,23 @@ final class TravelCoreConfig
         $value = Registry::get('addons.travel_core.booking_sidebar_max_features');
 
         return is_numeric($value) && (int) $value > 0 ? (int) $value : 6;
+    }
+
+    // ── Hotel availability (docs/novoton-availability-gaps-plan.md) ──
+
+    /** What the availability rules do for one supplier ('novoton', 'eurosite', 'sphinx'). */
+    public static function getAvailabilityMode(string $provider): AvailabilityMode
+    {
+        return AvailabilityMode::fromSetting(Registry::get('addons.travel_core.availability_mode_' . $provider));
+    }
+
+    /** The admin's months and "on request counts", with the plan's other thresholds. */
+    public static function getAvailabilityThresholds(): AvailabilityThresholds
+    {
+        return AvailabilityThresholds::fromSettings([
+            'availability_dormant_months' => Registry::get('addons.travel_core.availability_dormant_months'),
+            'availability_on_request' => Registry::get('addons.travel_core.availability_on_request'),
+        ]);
     }
 
     // ── Reverse geocoding (OSM Nominatim) ──
