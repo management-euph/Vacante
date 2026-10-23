@@ -223,17 +223,21 @@ columns below are what Novoton fills; other providers fill what they can.
 
 | Column | Meaning | Written by |
 |---|---|---|
+| `destination_key` | Resort, city code or destination id: the peer group for rule 5 (§5) | Each supplier |
+| `known_since` | When the supplier first listed the hotel | Each supplier (Novoton: `novoton_hotels.created_at`) |
 | `listed_last_seen_at` | Last `hotel_list` run that returned the hotel | `hotel_list` |
 | `listed_missing_runs` | Consecutive good runs without it | `hotel_list` |
 | `contract_from`, `contract_to` | First and last future date with a season price (NULL = none) | After `recompute_calendar_prices` / `compute_prices` |
 | `contract_last_date` | Latest priced date ever seen (keeps past seasons) | Same, plus the backfill |
 | `offer_seen_at` | **Last time we saw a bookable offer** ("on request" counts) | `room_price` (§4.3), hotel-page searches, bookings |
 | `offer_stay_date` | Check-in date of that offer | Same |
+| `immediate_seen_at` | Last offer that could be booked at once, for the setting that stops "on request" counting | Same |
 | `offer_next_date` | Earliest future check-in with an offer in the latest check | `room_price` |
 | `offer_checked_at` | Last check that answered for this hotel, offer or not | `room_price` |
 | `offer_months` | JSON: stay months with offers → when last seen, e.g. `{"2026-07":"2026-06-28"}` | Same |
+| `backfilled_at` | Past seasons filled in from stored data (§4.4); records then count as covering the months before | The backfill |
 | `last_booking_check_in` | Check-in of the latest confirmed booking | The weekly Travel Core step (§4.5), from the provider's bookings (`novoton_bookings`) |
-| `state`, `state_since`, `state_reason` | Derived state (§5) | The weekly Travel Core step (§4.5) |
+| `state`, `state_since`, `state_reason`, `season_published` | Derived state (§5), its reason code, and whether next season is already priced or offered | The weekly Travel Core step (§4.5) |
 | `gate_hidden` | This gate set the product to H | The gate |
 | `override`, `override_note`, `override_by`, `override_at` | Admin decision: keep visible / keep hidden / closed | Admin page |
 | `redirect_to` | For closed hotels: target product, category or URL | Admin page |
@@ -400,14 +404,18 @@ and the first match wins:
 3. Missing from `hotel_list` for 3 good runs → **left the feed**. After 6 months
    it is proposed as **closed**.
 4. Last availability (§4.4) is older than N months (the admin setting, default
-   12), the hotel has been known for at least that long, and the latest check
-   of its resort answered →
-   **dormant**.
+   12), the hotel has been known and recorded for at least that long (or its
+   records were backfilled), and the latest check of its resort answered →
+   **dormant**. Last availability is the latest of: the last offer, its stay
+   date, the latest priced date and the latest booked stay, so a hotel priced
+   for next summer is never dormant.
 5. The resort is selling but this hotel has had no offer for 14 days →
-   **not offered**. "Selling" means at least 25% of its checked hotels had offers
-   on the same dates in the last 2 weekly checks.
+   **not offered**. "Selling" means at least 25% of at least 5 checked hotels had
+   offers on the same dates in the last 2 weekly checks.
    - If the hotel had offers in the last 30 days, label it *sold out* instead.
      It is the same state and the same panel.
+   - Under 14 days it stays **bookable**: one empty weekly check is not enough
+     (decided while building it, 2026-10-23).
 6. An offer, a published price or a booked stay within the last 13 months, or
    prices published for a future date → **between seasons**. A flag records
    whether next season is already published.
@@ -690,7 +698,7 @@ cover:
 |---|---|---|---|
 | 0 | Fix the data bugs in §13 — **done 2026-10-17**. Calibration (§14) still to run on the live store | Small fixes | S |
 | 0b | Eurosite and Sphinx fixes that would corrupt the records or mislead the report — **done 2026-10-21** (§15.4) | Small fixes | S |
-| 1a | Travel Core: the contract with supplier capabilities (§15.3), the evidence and log tables (schema self-heal), the policy, the date windows (moved from Eurosite), settings (a mode per supplier; hide after N months, default 12; what counts as availability), the Hotel availability page with a supplier filter, CSV, weekly email; the daily and weekly step in Travel Core's existing cron (§4.5). Novoton: the evidence source (passive capture, `room_price` reworked into the weekly resort check, backfill), dashboard card | No | L |
+| 1a | Travel Core: the contract with supplier capabilities (§15.3), the evidence and log tables (schema self-heal), the policy, the date windows (moved from Eurosite), settings (a mode per supplier; hide after N months, default 12; what counts as availability) — **these done 2026-10-23 (§16)** —, the Hotel availability page with a supplier filter, CSV, weekly email; the daily and weekly step in Travel Core's existing cron (§4.5). Novoton: the evidence source (passive capture, `room_price` reworked into the weekly resort check, backfill), dashboard card | No | L |
 | 1b | Eurosite and Sphinx: record what their existing checks and hotel-page searches already fetch, hotel-list completeness, bookings read back, dashboard cards; Sphinx stores `giata_id` (§15.3); Eurosite's `full` takes its steps' run locks (§4.5) | No | M |
 | 2 | Hotel-page panels; "notify me" and "prices are out" emails; similar hotels; date-picker window; language keys. All suppliers; Eurosite first needs a request flow | Yes | M |
 | 3 | Automatic mode, per supplier: dormant / left the list → Hidden, and back to Active; brake; overrides; `gateHidden` for bookings. Novoton first (Feb–Mar 2027) | Yes | M |
@@ -1088,3 +1096,27 @@ Sphinx and Eurosite suites pass.
    compares them with the shared rule. This goes against decision 1 in §11
    until each supplier switches; turning them off now would also show hotels
    that are truly gone.
+
+## 16. Phase 1a progress
+
+### 16.1 Step 1, the Travel Core foundation (done 2026-10-23)
+
+Nothing records, classifies or changes a product yet: the pieces below are
+what the next steps write to and call. PHPStan level 10, both CS Fixer
+configs, Rector and the Travel Core, Novoton, Eurosite and Sphinx suites
+pass; the two tables were created twice on MariaDB 10.11 without error.
+
+| Piece | Where (travel_core `src/`) | Notes |
+|---|---|---|
+| Contract and supplier capabilities | `Contracts\HotelAvailabilitySourceInterface`, `ValueObjects\AvailabilityCapabilities`, `Enums\HotelListCoverage`; `TravelProviderRegistry::setAvailabilitySource()` | Each supplier declares its hotel-list coverage, published prices, live-check scope, past prices, bookings, and the cron modes that write records (§4.5, rule 5). No supplier implements it yet |
+| The two tables | `Repository\HotelAvailabilityRepository` (the DDL), addon.xml install/upgrade/uninstall items, `fn_travel_core_ensure_schema`, the PHP uninstall list | Columns of §4.1 plus `immediate_seen_at`; `AvailabilityTablesTest` pins addon.xml to the repository |
+| The rules | `Services\AvailabilityPolicy`, `Enums\HotelAvailabilityState`, `Dto\Availability\*`, `ValueObjects\AvailabilityThresholds` | §5, with fresh_days 8 and the rule 5 refinement above; 21 tests, including October, July, sold out, left the feed and the August example |
+| The date windows | `Services\AvailabilityWindows` | Moved from Eurosite's `AvailabilityPlan`, which now calls it; `docs/CONVERGENCE.md` updated |
+| Settings | Travel Core → Settings → Hotel availability: a mode per supplier (Off / Report only, default Report only), "Hide a hotel after N months without availability" (12), "Count on-request offers as availability" (on) | Reach installed stores through `SettingsMigrator`; the mode options come from a variants function so they keep their labels. Automatic is offered once the gate exists (phase 3). The other thresholds are fixed defaults for now |
+
+### 16.2 Next
+
+2. Novoton recording from the jobs that already run (§4.2), and the backfill (§4.4).
+3. The weekly step in Travel Core's daily cron (§4.5), the Hotel availability
+   page, its CSV and dashboard tile, and the weekly email.
+
