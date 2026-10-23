@@ -14,6 +14,7 @@ namespace Tygh\Addons\Eurosite\Tests\Unit\Hooks {
 
     use PHPUnit\Framework\Attributes\CoversNothing;
     use PHPUnit\Framework\TestCase;
+    use Tygh\Addons\Eurosite\Tests\Support\DbStub;
 
     /**
      * REGRESSION: eurosite lines showed no booking details on the order
@@ -70,7 +71,16 @@ namespace Tygh\Addons\Eurosite\Tests\Unit\Hooks {
             $order = ['order_id' => 12, 'products' => [['extra' => ['travel_booking' => true, 'eurosite_booking_id' => 41]]]];
             $copy = $order;
 
-            fn_eurosite_get_order_info($order, []);
+            // The database fails while the booking row is read.
+            $down = static fn (): never => throw new \RuntimeException('database down');
+            DbStub::$getRow = $down;
+            DbStub::$getArray = $down;
+            DbStub::$getField = $down;
+            try {
+                fn_eurosite_get_order_info($order, []);
+            } finally {
+                DbStub::reset();
+            }
 
             self::assertSame($copy, $order);
             self::assertIsArray($GLOBALS['eurosite_logged_events']);

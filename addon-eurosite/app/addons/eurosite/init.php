@@ -147,6 +147,11 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
         'eurosite',
         new \Tygh\Addons\Eurosite\Providers\EurositeHotelProductProvider(),
     );
+    // What Eurosite records for Travel Core's hotel availability rules.
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setAvailabilitySource(
+        'eurosite',
+        new \Tygh\Addons\Eurosite\Services\EurositeAvailabilitySource(),
+    );
     // What the booking row knows about an order line (supplier reference,
     // whether it reached Eurosite, why it failed) and the line's terms, for
     // travel_core's booking cards (order pages; checkout).
