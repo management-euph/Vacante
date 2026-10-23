@@ -9,6 +9,7 @@ use Tygh\Addons\SphinxHolidays\Repository\HotelSkipRepository;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
+use Tygh\Addons\TravelCore\Services\OfferTally;
 
 /**
  * Gates ALL hotels on immediate availability.
@@ -69,6 +70,7 @@ class HotelAvailabilityGate
         private readonly int $destDelayUs = self::DEST_DELAY_US,
         private readonly int $pollIntervalSecs = self::POLL_INTERVAL,
         private readonly int $pollDeadlineSecs = self::POLL_DEADLINE,
+        private readonly SphinxAvailabilityRecorder $recorder = new SphinxAvailabilityRecorder(),
     ) {
     }
 
@@ -131,6 +133,10 @@ class HotelAvailabilityGate
         $availableSet = [];
         /** @var array<int, true> $probedDestinations */
         $probedDestinations = [];
+        // Every offer each destination's searches found, immediate or not,
+        // for Travel Core's availability records.
+        /** @var array<int, OfferTally> $offersByDest */
+        $offersByDest = [];
         $errors = 0;
         $stopProbing = false;
         $httpClient = $this->api->getHttpClient();
@@ -142,6 +148,8 @@ class HotelAvailabilityGate
 
             // Every window this destination ran answered in full.
             $answered = true;
+            $tally = new OfferTally();
+            $offersByDest[$destId] = $tally;
             foreach (self::PROBE_WINDOWS_DAYS_AHEAD as $daysAhead) {
                 if ($httpClient->isCircuitOpen()) {
                     $output('    Circuit breaker open — stopping availability probe early (unprobed hotels left unchanged)');
@@ -150,9 +158,10 @@ class HotelAvailabilityGate
                     break;
                 }
 
+                $checkIn = date('Y-m-d', strtotime("+{$daysAhead} days"));
                 $searchResponse = $this->api->searchHotels([
                     'destination_id' => $destId,
-                    'check_in' => date('Y-m-d', strtotime("+{$daysAhead} days")),
+                    'check_in' => $checkIn,
                     'check_out' => date('Y-m-d', strtotime('+' . ($daysAhead + self::NIGHTS) . ' days')),
                     'occupancy' => [['adults' => self::ADULTS, 'children_ages' => []]],
                     'currency' => $currency,
@@ -172,12 +181,12 @@ class HotelAvailabilityGate
                 // Zero offers is a legitimate "no availability" answer, but only
                 // once the search has ended: a poll cut short proves nothing,
                 // though the offers it saw still count.
-                $availableSet += OfferAvailability::collectImmediateHotelIds(
-                    TypeCoerce::toRowList($searchResponse['results'] ?? []),
-                );
+                $inline = TypeCoerce::toRowList($searchResponse['results'] ?? []);
+                $availableSet += OfferAvailability::collectImmediateHotelIds($inline);
+                SphinxAvailabilityRecorder::addOffers($tally, $inline, $checkIn);
                 $cursor = TypeCoerce::toString($searchResponse['cursor'] ?? '');
                 if ($cursor !== '') {
-                    $poll = $this->pollImmediateHotelIds($cursor);
+                    $poll = $this->pollImmediateHotelIds($cursor, $tally, $checkIn);
                     $availableSet += $poll['ids'];
                     if (!$poll['complete']) {
                         $errors++;
@@ -259,6 +268,13 @@ class HotelAvailabilityGate
         $waiting = $this->skipRepo->markSkippedBatch($toWait, HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY);
         $cleared = $this->skipRepo->clearSkipReasonBatch($toClear, HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY);
         $products = $this->gateProducts($linkedProducts, $availableProducts, $unprobedProducts);
+
+        // Travel Core's records: the hotels decided in a destination that
+        // answered in full were checked; elsewhere only the offers found count.
+        $recorded = $this->recorder->gateChecked($candidatesByDest, $probedDestinations, $offersByDest, date('Y-m-d H:i:s'));
+        if ($offersByDest !== [] && !$recorded['recorded']) {
+            $output("    {$countryCode}: availability records — no hotel had an offer anywhere, so no hotel is recorded as checked");
+        }
 
         $stats['availability_probed'] = count($probedDestinations);
         $stats['availability_waiting'] = $waiting;
@@ -345,9 +361,12 @@ class HotelAvailabilityGate
      * per-destination deadline. A poll that fails or reaches the deadline is
      * not complete.
      *
+     * Every offer polled, immediate or not, also goes into $offers, for
+     * Travel Core's availability records.
+     *
      * @return array{ids: array<string, true>, complete: bool}
      */
-    private function pollImmediateHotelIds(string $cursorToken): array
+    private function pollImmediateHotelIds(string $cursorToken, OfferTally $offers, string $checkIn): array
     {
         /** @var array<string, true> $hotelIds */
         $hotelIds = [];
@@ -363,6 +382,7 @@ class HotelAvailabilityGate
             $batch = TypeCoerce::toRowList($response['results'] ?? []);
             if ($batch !== []) {
                 $hotelIds += OfferAvailability::collectImmediateHotelIds($batch);
+                SphinxAvailabilityRecorder::addOffers($offers, $batch, $checkIn);
             }
 
             $nextCursor = TypeCoerce::toString($response['cursor'] ?? '');

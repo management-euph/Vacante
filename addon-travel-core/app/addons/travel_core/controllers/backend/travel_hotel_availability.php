@@ -18,6 +18,7 @@ use Tygh\Addons\TravelCore\Dto\Availability\AvailabilityVerdict;
 use Tygh\Addons\TravelCore\Enums\HotelAvailabilityState;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Repository\HotelAvailabilityListing;
+use Tygh\Addons\TravelCore\Services\AvailabilityCard;
 use Tygh\Addons\TravelCore\Services\AvailabilityReview;
 use Tygh\Addons\TravelCore\Services\TravelCoreConfig;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
@@ -95,16 +96,7 @@ if ($mode === 'manage') {
             AvailabilityVerdict::REASON_OVERRIDE_CLOSED,
             AvailabilityVerdict::REASON_NO_EVIDENCE,
         ]);
-        // Each state's pill: colour plus its words, so it reads in greyscale too.
-        $view->assign('availability_pills', [
-            HotelAvailabilityState::Bookable->value => 'ok',
-            HotelAvailabilityState::BetweenSeasons->value => 'info',
-            HotelAvailabilityState::NotOffered->value => 'warn',
-            HotelAvailabilityState::Dormant->value => 'warn',
-            HotelAvailabilityState::LeftFeed->value => 'bad',
-            HotelAvailabilityState::Closed->value => 'none',
-            HotelAvailabilityState::NoData->value => 'none',
-        ]);
+        $view->assign('availability_pills', AvailabilityCard::PILLS);
         $view->assign('availability_dormant_months', TravelCoreConfig::getAvailabilityThresholds()->dormantMonths);
         $view->assign('availability_offer_months', HotelAvailabilityListing::OFFER_MONTHS);
         $view->assign('availability_summary', AvailabilityReview::lastSummary());

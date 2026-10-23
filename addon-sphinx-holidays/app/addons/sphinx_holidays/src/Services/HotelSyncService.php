@@ -35,6 +35,7 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
 
     private readonly HotelRowMapper $rowMapper;
     private readonly HotelAvailabilityGate $availabilityGate;
+    private readonly SphinxAvailabilityRecorder $availabilityRecorder;
 
     /** Whether the availability gate runs this sync (resolved in doSync). */
     private bool $availabilityGateEnabled = true;
@@ -47,12 +48,14 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
         ?SphinxNormalizer $normalizer = null,
         ?HotelRowMapper $rowMapper = null,
         ?HotelAvailabilityGate $availabilityGate = null,
+        ?SphinxAvailabilityRecorder $availabilityRecorder = null,
     ) {
         parent::__construct($api);
         // The mapper shares this service's DestinationRepository so the parent
         // lookup preloaded in doSync() is visible to enrichFromHierarchy().
         $this->rowMapper = $rowMapper ?? new HotelRowMapper($normalizer ?? Container::getNormalizer(), $destRepo);
         $this->availabilityGate = $availabilityGate ?? new HotelAvailabilityGate($api, $skipRepo);
+        $this->availabilityRecorder = $availabilityRecorder ?? new SphinxAvailabilityRecorder();
     }
 
     #[\Override]
@@ -230,6 +233,8 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
         // announced. After a page error or a breaker abort, hotels still
         // there go unseen, and marking them inactive would drop them.
         $listComplete = true;
+        // The hotels saved this run, for Travel Core's availability records.
+        $seenIds = [];
 
         foreach ($destIdChunks as $chunkIdx => $destIdChunk) {
             // Wait for circuit breaker cooldown before attempting next chunk
@@ -313,6 +318,7 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
                     $countryCode,
                     $this->hotelRepo->findGeoLocations($batchIds),
                 );
+                $seenIds = [...$seenIds, ...$batchIds];
 
                 // Upsert in sub-batches
                 foreach (array_chunk($pageBatch, self::UPSERT_BATCH_SIZE) as $upsertChunk) {
@@ -349,6 +355,10 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
                 $this->output("    Marked {$inactive} stale hotel(s) as inactive");
             }
         }
+
+        // Seen, and after a whole full list missing, for Travel Core's
+        // availability records (a daily sync brings only changed hotels).
+        $this->availabilityRecorder->hotelsListed($countryCode, array_values($destinationIds), $seenIds, $updatedSince === null && $listComplete, $syncStartedAt);
 
         $this->output("    {$countryCode}: {$stats['synced']}/{$stats['total']} hotels synced");
 

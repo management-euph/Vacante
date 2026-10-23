@@ -31,6 +31,7 @@ use Tygh\Addons\SphinxHolidays\Helpers\SearchOfferNormalizer;
 use Tygh\Addons\SphinxHolidays\Services\CacheService;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\SphinxHolidays\Services\SphinxAvailabilityRecorder;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Tygh;
@@ -352,6 +353,8 @@ try {
     $searchIdStr = $searchToken;
     $initialStatus = TypeCoerce::toString($searchResponse['status'] ?? 'pending');
     $initialResults = TypeCoerce::toRowList($searchResponse['results'] ?? []);
+    // The whole destination's offers, for Travel Core's availability records.
+    (new SphinxAvailabilityRecorder())->searchFound($initialResults, $check_in, date('Y-m-d H:i:s'));
 
     // Narrow to the requested hotel when this is a product-page (hotel_id)
     // search — searching by destination can return the whole destination.

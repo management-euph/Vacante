@@ -7,9 +7,11 @@ namespace Tygh\Addons\Eurosite\Cron\Commands;
 use Tygh\Addons\Eurosite\Services\AvailabilityPlan;
 use Tygh\Addons\Eurosite\Services\ConfigProvider;
 use Tygh\Addons\Eurosite\Services\Container;
+use Tygh\Addons\Eurosite\Services\EurositeAvailabilityRecorder;
 use Tygh\Addons\Eurosite\Services\ProductGate;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\AvailabilityWindows;
+use Tygh\Addons\TravelCore\Services\OfferTally;
 
 /**
  * mode `availability` — which listed hotels have an Immediate offer.
@@ -87,17 +89,20 @@ final class AvailabilityCommand extends AbstractSyncCommand
             $sum = ['IM' => 0, 'OR' => 0, 'ST' => 0, 'NONE' => 0, 'not_synced' => 0];
             $now = date('Y-m-d H:i:s');
             $first = true;
+            // Each city's offers, for Travel Core's availability records.
+            $checks = [];
 
             foreach ($groups as $group) {
                 $total += $group['hotels'];
                 $best = [];
+                $tally = new OfferTally();
                 $answered = 0;
                 foreach ($windows as $window) {
                     if (!$first) {
                         usleep(self::PAUSE_US);
                     }
                     $first = false;
-                    $this->trySyncItem(function () use ($api, $group, $window, &$best, &$answered): void {
+                    $this->trySyncItem(function () use ($api, $group, $window, $tally, &$best, &$answered): void {
                         $offers = $api->searchHotels([
                             'country_code' => $group['country_code'],
                             'city_code' => $group['city_code'],
@@ -111,6 +116,7 @@ final class AvailabilityCommand extends AbstractSyncCommand
                         $answered++;
                         foreach ($offers as $offer) {
                             $best[$offer->productCode] = AvailabilityPlan::merge($best[$offer->productCode] ?? null, $offer, $window);
+                            EurositeAvailabilityRecorder::addOffer($tally, $offer, $window['check_in']);
                         }
                     }, "{$group['city_code']} {$window['check_in']}", $errors);
                 }
@@ -120,6 +126,7 @@ final class AvailabilityCommand extends AbstractSyncCommand
                     continue;
                 }
                 $complete = $answered === count($windows);
+                $checks[] = ['tourop' => $group['tourop_code'], 'city' => $group['city_code'], 'offers' => $tally, 'complete' => $complete];
                 $counts = $hotelRepo->applyAvailability($group['tourop_code'], $group['city_code'], $best, $now, $complete);
                 foreach ($counts as $k => $n) {
                     $sum[$k] += $n;
@@ -141,6 +148,13 @@ final class AvailabilityCommand extends AbstractSyncCommand
                     $answered,
                     count($windows),
                 )));
+            }
+
+            // Travel Core's records: every hotel of a city that answered on
+            // every date was checked; elsewhere only the offers found count.
+            $recorded = (new EurositeAvailabilityRecorder())->runChecked($checks, $now);
+            if ($checks !== [] && !$recorded['recorded']) {
+                $this->output('  Availability records: no hotel had an offer anywhere, so no hotel is recorded as checked');
             }
 
             $gate = ['hidden' => 0, 'shown' => 0, 'released' => 0];

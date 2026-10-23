@@ -632,6 +632,8 @@ if ($mode === 'manage' || empty($mode)) {
     $apiUser = ConfigProvider::getApiUser();
     $view->assign('eurosite_counts', $counts);
     $view->assign('eurosite_dest_card', $destCard);
+    // Its hotels per availability state, from Travel Core's weekly review.
+    $view->assign('eurosite_availability_card', \Tygh\Addons\TravelCore\Services\AvailabilityCard::build('eurosite'));
     $view->assign('eurosite_recent_bookings', $recentBookings);
     $view->assign('eurosite_sync_modes', $syncModes);
     $view->assign('eurosite_cron_urls', $cronUrls);

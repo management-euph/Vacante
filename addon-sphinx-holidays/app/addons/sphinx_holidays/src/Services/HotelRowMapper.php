@@ -97,6 +97,9 @@ class HotelRowMapper
             'website' => trim(TypeCoerce::toString($address['website'] ?? '')),
             'rating' => isset($raw['rating']) ? TypeCoerce::toFloat($raw['rating']) : null,
             'rating_count' => isset($raw['rating_count']) ? TypeCoerce::toInt($raw['rating_count']) : null,
+            // The GIATA id, null when Sphinx has none or could not map the
+            // hotel: the first step towards "the same hotel at another supplier".
+            'giata_id' => max(0, TypeCoerce::toInt(TypeCoerce::toStringMap($raw['external_ids'] ?? [])['giata_id'] ?? 0)) ?: null,
         ];
     }
 

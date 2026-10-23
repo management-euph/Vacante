@@ -165,6 +165,11 @@
         {include file="addons/travel_core/components/destinations_card.tpl" card=$eurosite_dest_card}
     {/if}
 
+    {* ── Hotel availability: its hotels per state (Travel Core's shared card) ── *}
+    {if $eurosite_availability_card}
+        {include file="addons/travel_core/components/availability_card.tpl" card=$eurosite_availability_card}
+    {/if}
+
     {* ── Recent bookings ── *}
     <h4 style="margin-top: 20px;">{__("eurosite.recent_bookings", ["[default]" => "Recent bookings"])} ({$eurosite_counts.bookings})</h4>
     {if $eurosite_recent_bookings}

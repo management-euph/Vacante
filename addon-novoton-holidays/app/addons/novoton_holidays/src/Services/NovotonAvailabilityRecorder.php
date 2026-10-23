@@ -22,9 +22,6 @@ final class NovotonAvailabilityRecorder
 {
     private const string PROVIDER = NovotonAvailabilitySource::PROVIDER;
 
-    /** Hotel ids per IN (...) list. */
-    private const int CHUNK = 1000;
-
     /** storage_data key of the backfill's cursor: the last hotel_id done, or BACKFILL_DONE. */
     public const string BACKFILL_KEY = 'novoton_availability_backfill';
 
@@ -39,8 +36,9 @@ final class NovotonAvailabilityRecorder
      * One country's hotel_list answer, after its hotels were saved.
      *
      * Its hotels were seen. The country's other hotels missed one more list,
-     * but only when the answer is complete (ListCompleteness): a short list
-     * may be an outage, and an outage must never count as hotels gone.
+     * but only when the answer is complete (ListCompleteness, against the
+     * hotels it listed this past month): a short list may be an outage, and
+     * an outage must never count as hotels gone.
      *
      * @param list<array<string, mixed>> $answer the answer's hotels as saved (hotel_id, country)
      *
@@ -70,16 +68,11 @@ final class NovotonAvailabilityRecorder
                 array_keys($countries),
             ));
 
-            HotelAvailabilityRepository::ensureTables();
-            $previous = 0;
-            foreach (array_chunk(array_column($group, 'hotel_id'), self::CHUNK) as $ids) {
-                $previous += TypeCoerce::toInt(db_get_field(
-                    'SELECT COUNT(*) FROM ?:travel_hotel_availability
-                     WHERE provider = ?s AND hotel_id IN (?a) AND listed_missing_runs = 0 AND listed_last_seen_at IS NOT NULL',
-                    self::PROVIDER,
-                    $ids,
-                ));
-            }
+            $previous = $this->records->listedCount(
+                self::PROVIDER,
+                array_map(static fn (array $row): string => TypeCoerce::toString($row['hotel_id'] ?? ''), $group),
+                $now,
+            );
             $complete = ListCompleteness::complete(count($answerIds), $previous);
 
             $seen = [];

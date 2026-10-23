@@ -76,7 +76,7 @@ class CronDispatcher implements CronDispatcherInterface
 
         $lock = null;
         if (!$isReadOnly) {
-            $lock = new CronRunLock($this->getLockPath($mode));
+            $lock = new CronRunLock(self::lockPath($mode));
             if (!$lock->acquire()) {
                 return [
                     'success' => false,
@@ -122,7 +122,8 @@ class CronDispatcher implements CronDispatcherInterface
         return $normalized;
     }
 
-    private function getLockPath(string $mode): string
+    /** A mode's run lock file; `full` takes its steps' locks too. */
+    public static function lockPath(string $mode): string
     {
         $cacheDir = TypeCoerce::toString(defined('DIR_CACHE') ? DIR_CACHE : sys_get_temp_dir());
 

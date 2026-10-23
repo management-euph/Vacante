@@ -65,22 +65,68 @@ if (!function_exists('__')) {
     }
 }
 
-// db_quote with the placeholders the addon uses (?s ?l ?i ?d ?a), quoted the
-// way CS-Cart does, so SQL-building code can be tested without a database.
+// db_quote with the placeholders the addon uses (?s ?l ?i ?d ?a ?n ?p),
+// quoted the way CS-Cart does, so SQL-building code can be tested without a
+// database. ?p is a ready SQL fragment, inserted as it is.
 if (!function_exists('db_quote')) {
     function db_quote(string $pattern, mixed ...$args): string
     {
-        $quote = static fn ($v): string => "'" . addslashes((string) $v) . "'";
+        $quote = static fn ($v): string => "'" . addslashes(is_scalar($v) ? (string) $v : '') . "'";
 
-        return (string) preg_replace_callback('/\?([sliad])/', static function (array $m) use (&$args, $quote): string {
+        return (string) preg_replace_callback('/\?([sliadnp])/', static function (array $m) use (&$args, $quote): string {
             $v = array_shift($args);
 
             return match ($m[1]) {
                 's', 'l' => $quote($v),
-                'i' => (string) (int) $v,
-                'd' => (string) (float) $v,
+                'i' => (string) (int) (is_scalar($v) ? $v : 0),
+                'd' => (string) (float) (is_scalar($v) ? $v : 0),
                 'a' => implode(', ', array_map($quote, (array) $v)),
+                'n' => implode(', ', array_map(static fn ($x): string => (string) (int) (is_scalar($x) ? $x : 0), (array) $v)),
+                'p' => is_scalar($v) ? (string) $v : '',
             };
         }, $pattern);
+    }
+}
+
+// The other db_* helpers route through Tests\Support\DbStub: a test sets
+// the closure it needs; without one they answer null / [] / 0.
+if (!function_exists('db_query')) {
+    function db_query(string $query, mixed ...$params): mixed
+    {
+        $fn = \Tygh\Addons\Eurosite\Tests\Support\DbStub::$query;
+
+        return $fn !== null ? $fn($query, ...$params) : 0;
+    }
+}
+if (!function_exists('db_get_field')) {
+    function db_get_field(string $query, mixed ...$params): mixed
+    {
+        $fn = \Tygh\Addons\Eurosite\Tests\Support\DbStub::$getField;
+
+        return $fn !== null ? $fn($query, ...$params) : null;
+    }
+}
+if (!function_exists('db_get_row')) {
+    function db_get_row(string $query, mixed ...$params): mixed
+    {
+        $fn = \Tygh\Addons\Eurosite\Tests\Support\DbStub::$getRow;
+
+        return $fn !== null ? $fn($query, ...$params) : [];
+    }
+}
+if (!function_exists('db_get_array')) {
+    function db_get_array(string $query, mixed ...$params): mixed
+    {
+        $fn = \Tygh\Addons\Eurosite\Tests\Support\DbStub::$getArray;
+
+        return $fn !== null ? $fn($query, ...$params) : [];
+    }
+}
+if (!function_exists('db_get_fields')) {
+    function db_get_fields(string $query, mixed ...$params): mixed
+    {
+        $fn = \Tygh\Addons\Eurosite\Tests\Support\DbStub::$getFields;
+
+        return $fn !== null ? $fn($query, ...$params) : [];
     }
 }

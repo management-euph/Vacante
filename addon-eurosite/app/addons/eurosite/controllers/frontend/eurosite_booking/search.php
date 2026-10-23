@@ -16,6 +16,7 @@ use Tygh\Addons\Eurosite\Exception\EurositeApiException;
 use Tygh\Addons\Eurosite\Services\BookingCartProduct;
 use Tygh\Addons\Eurosite\Services\ConfigProvider;
 use Tygh\Addons\Eurosite\Services\Container;
+use Tygh\Addons\Eurosite\Services\EurositeAvailabilityRecorder;
 use Tygh\Addons\Eurosite\Services\OfferContextStore;
 use Tygh\Addons\Eurosite\Services\RoomOccupancy;
 use Tygh\Addons\TravelCore\Helpers\LocationLine;
@@ -153,6 +154,9 @@ if ($country !== '' && $city !== '' && $checkIn !== '' && $checkOut !== '') {
         }
 
         if ($searchError === '' && $offers !== []) {
+            // The whole city's offers, for Travel Core's availability records.
+            (new EurositeAvailabilityRecorder())->searchFound($offers, $checkIn, date('Y-m-d H:i:s'));
+
             $offerKeys = OfferContextStore::remember($offers, [
                 'adults'          => $adults,
                 'children_ages'   => $childrenAges,

@@ -2865,3 +2865,15 @@ msgstr "[hotels] hoteluri, [changed] schimbări de stare"
 msgctxt "Languages::travel_core.availability_mail_subject_first"
 msgid "Hotel availability: first review, [n] hotels"
 msgstr "Disponibilitate hoteluri: prima revizuire, [n] hoteluri"
+
+msgctxt "Languages::travel_core.availability_card_intro"
+msgid "What [supplier]'s jobs record, reviewed once a week"
+msgstr "Ce înregistrează joburile [supplier], revizuit o dată pe săptămână"
+
+msgctxt "Languages::travel_core.availability_card_none"
+msgid "No hotel recorded yet: [supplier]'s jobs add them as they run."
+msgstr "Niciun hotel înregistrat încă: joburile [supplier] le adaugă pe măsură ce rulează."
+
+msgctxt "Languages::travel_core.availability_card_not_reviewed"
+msgid "Not reviewed yet: the review runs with Travel Core's next daily cron."
+msgstr "Nerevizuit încă: revizuirea rulează cu următorul cron zilnic Travel Core."

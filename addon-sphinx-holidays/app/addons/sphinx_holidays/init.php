@@ -63,6 +63,11 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
         'sphinx',
         new \Tygh\Addons\SphinxHolidays\Providers\SphinxHotelProductProvider()
     );
+    // What Sphinx records for Travel Core's hotel availability rules.
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setAvailabilitySource(
+        'sphinx',
+        new \Tygh\Addons\SphinxHolidays\Services\SphinxAvailabilitySource(),
+    );
     // What the booking row knows about an order line (confirmation number,
     // failure, the kind of trip), for travel_core's order booking card.
     \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setOrderCardResolver(

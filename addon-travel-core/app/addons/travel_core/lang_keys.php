@@ -2026,4 +2026,16 @@ Dacă ați plătit deja, vă rugăm să ignorați acest email.',
         'en' => 'Hotel availability: first review, [n] hotels',
         'ro' => 'Disponibilitate hoteluri: prima revizuire, [n] hoteluri',
     ],
+    'travel_core.availability_card_intro' => [
+        'en' => 'What [supplier]\'s jobs record, reviewed once a week',
+        'ro' => 'Ce înregistrează joburile [supplier], revizuit o dată pe săptămână',
+    ],
+    'travel_core.availability_card_none' => [
+        'en' => 'No hotel recorded yet: [supplier]\'s jobs add them as they run.',
+        'ro' => 'Niciun hotel înregistrat încă: joburile [supplier] le adaugă pe măsură ce rulează.',
+    ],
+    'travel_core.availability_card_not_reviewed' => [
+        'en' => 'Not reviewed yet: the review runs with Travel Core\'s next daily cron.',
+        'ro' => 'Nerevizuit încă: revizuirea rulează cu următorul cron zilnic Travel Core.',
+    ],
 ];

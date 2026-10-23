@@ -604,6 +604,8 @@ if ($mode === 'manage') {
     $view->assign('selected_countries', $selectedCountries);
     $destLoader = new WhitelistPageLoader();
     $view->assign('sphinx_dest_card', DestinationsPicker::card($destLoader->built(), $destLoader->outside(), TypeCoerce::toString(fn_url('sphinx_holidays.whitelist'))));
+    // Its hotels per availability state, from Travel Core's weekly review.
+    $view->assign('sphinx_availability_card', \Tygh\Addons\TravelCore\Services\AvailabilityCard::build('sphinx'));
     $view->assign('is_configured', $isConfigured);
     // Sphinx-shaped products with NO hotel row linked to them — what the
     // relink action actually repairs. (The old gate used the orphan count —

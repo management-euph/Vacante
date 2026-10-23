@@ -469,6 +469,8 @@ if ($mode === 'manage' || empty($mode)) {
     $view->assign('novoton_destinations', $destinations);
     $view->assign('novoton_dest_card', \Tygh\Addons\NovotonHolidays\Services\DestinationsPicker::card($destinations, \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toString(fn_url('novoton_destinations.manage'))));
     $view->assign('novoton_dest_alerts', \Tygh\Addons\NovotonHolidays\Services\DashboardSummary::destinationAlerts($destinations));
+    // Its hotels per availability state, from Travel Core's weekly review.
+    $view->assign('novoton_availability_card', \Tygh\Addons\TravelCore\Services\AvailabilityCard::build('novoton'));
 
     // The top of the page: which figures are a problem, and what fixes them.
     $view->assign('novoton_job_health', \Tygh\Addons\NovotonHolidays\Services\DashboardSummary::jobHealth($job_stages));

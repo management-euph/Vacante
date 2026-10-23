@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\Eurosite\Cron\Commands;
 
 use Tygh\Addons\Eurosite\Services\Container;
+use Tygh\Addons\Eurosite\Services\EurositeAvailabilityRecorder;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
@@ -60,6 +61,8 @@ final class HotelsSyncCommand extends AbstractSyncCommand
             $api = Container::getApi();
             $hotelRepo = Container::hotels();
             $cityRepo = Container::cities();
+            $recorder = new EurositeAvailabilityRecorder();
+            $now = date('Y-m-d H:i:s');
             $total = 0;
             $synced = 0;
             $errors = [];
@@ -71,10 +74,13 @@ final class HotelsSyncCommand extends AbstractSyncCommand
                     $country = TypeCoerce::toString($cityRow['country_code'] ?? '');
                     $cityName = TypeCoerce::toString($cityRow['name'] ?? '');
                 }
-                $this->trySyncItem(function () use ($api, $hotelRepo, $cityCode, $cityName, $country, &$total, &$synced): void {
+                $this->trySyncItem(function () use ($api, $hotelRepo, $recorder, $now, $cityCode, $cityName, $country, &$total, &$synced): void {
                     $hotels = $api->getOwnHotels($cityCode);
                     $total += count($hotels);
                     $synced += $hotelRepo->upsertBatch($hotels, $country);
+                    // Seen, and (from a complete list) missing, for Travel
+                    // Core's hotel availability records.
+                    $recorder->hotelList($cityCode, $hotels, $now);
                     if ($hotels !== []) {
                         $this->output(self::cityLine($cityCode, $cityName, count($hotels)));
                     }
