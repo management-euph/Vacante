@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Repository;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+
 /**
  * The hotel availability records (docs/novoton-availability-gaps-plan.md §4.1).
  *
@@ -25,6 +27,7 @@ final class HotelAvailabilityRepository
         `hotel_id`              VARCHAR(64)       NOT NULL COMMENT \'Supplier hotel id\',
         `product_id`            INT UNSIGNED      NOT NULL DEFAULT 0,
         `destination_key`       VARCHAR(128)      NOT NULL DEFAULT \'\' COMMENT \'Resort, city code or destination id: the peer group\',
+        `hotel_name`            VARCHAR(255)      NOT NULL DEFAULT \'\' COMMENT \'As the supplier lists it, for the report\',
         `known_since`           DATE              DEFAULT NULL COMMENT \'When the supplier first listed the hotel\',
         `listed_last_seen_at`   DATETIME          DEFAULT NULL COMMENT \'Last complete hotel list that had it\',
         `listed_missing_runs`   SMALLINT UNSIGNED NOT NULL DEFAULT 0 COMMENT \'Complete lists in a row without it\',
@@ -74,19 +77,39 @@ final class HotelAvailabilityRepository
         KEY `idx_created` (`created_at`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4';
 
+    /**
+     * Columns added to ?:travel_hotel_availability after it first shipped:
+     * name => definition, placed as in CREATE_RECORDS_SQL. CREATE TABLE IF
+     * NOT EXISTS leaves an existing table as it is, so these are added.
+     */
+    public const array ADDED_COLUMNS = [
+        'hotel_name' => "VARCHAR(255) NOT NULL DEFAULT '' COMMENT 'As the supplier lists it, for the report' AFTER `destination_key`",
+    ];
+
     private static bool $ensured = false;
 
     /** Rows per multi-row statement. */
     private const int CHUNK = 500;
 
-    /** Creates both tables when missing; once per request. */
+    /** Creates both tables, and any column added since, when missing; once per request. */
     public static function ensureTables(): void
     {
         if (!self::$ensured) {
             db_query(self::CREATE_RECORDS_SQL);
             db_query(self::CREATE_LOG_SQL);
+            foreach (self::ADDED_COLUMNS as $column => $definition) {
+                if (TypeCoerce::toString(db_get_field('SHOW COLUMNS FROM ?:travel_hotel_availability LIKE ?s', $column)) === '') {
+                    db_query('ALTER TABLE ?:travel_hotel_availability ADD COLUMN `' . $column . '` ' . $definition);
+                }
+            }
             self::$ensured = true;
         }
+    }
+
+    /** Lets a test run the heal again (it runs once per request). */
+    public static function resetEnsured(): void
+    {
+        self::$ensured = false;
     }
 
     /**
@@ -95,7 +118,7 @@ final class HotelAvailabilityRepository
      * Call it only for an answer ListCompleteness accepts: an outage must
      * never count as hotels gone.
      *
-     * @param list<array{hotel_id: string, product_id: int, destination_key: string, known_since: ?string}> $seen
+     * @param list<array{hotel_id: string, product_id: int, destination_key: string, hotel_name: string, known_since: ?string}> $seen
      * @param list<string> $missing hotel ids of the group that this answer left out
      */
     public function recordList(string $provider, array $seen, array $missing, string $now): void
@@ -107,16 +130,18 @@ final class HotelAvailabilityRepository
                 db_quote('?s', $row['hotel_id']),
                 db_quote('?i', $row['product_id']),
                 db_quote('?s', $row['destination_key']),
+                db_quote('?s', $row['hotel_name']),
                 self::orNull($row['known_since']),
                 db_quote('?s', $now),
             ]) . ', 0)', $chunk);
             db_query(
                 'INSERT INTO ?:travel_hotel_availability
-                    (provider, hotel_id, product_id, destination_key, known_since, listed_last_seen_at, listed_missing_runs)
+                    (provider, hotel_id, product_id, destination_key, hotel_name, known_since, listed_last_seen_at, listed_missing_runs)
                  VALUES ?p
                  ON DUPLICATE KEY UPDATE
                     product_id = VALUES(product_id),
                     destination_key = VALUES(destination_key),
+                    hotel_name = VALUES(hotel_name),
                     known_since = COALESCE(known_since, VALUES(known_since)),
                     listed_last_seen_at = VALUES(listed_last_seen_at),
                     listed_missing_runs = 0',
@@ -201,7 +226,7 @@ final class HotelAvailabilityRepository
      * rules can judge "no availability for N months" from the first run.
      * Never moves a value back: a later date already recorded wins.
      *
-     * @param list<array{hotel_id: string, product_id: int, destination_key: string, known_since: ?string, listed_last_seen_at: ?string, contract_last_date: ?string, last_booking_check_in: ?string}> $rows
+     * @param list<array{hotel_id: string, product_id: int, destination_key: string, hotel_name: string, known_since: ?string, listed_last_seen_at: ?string, contract_last_date: ?string, last_booking_check_in: ?string}> $rows
      */
     public function recordBackfill(string $provider, array $rows, string $now): void
     {
@@ -212,6 +237,7 @@ final class HotelAvailabilityRepository
                 db_quote('?s', $row['hotel_id']),
                 db_quote('?i', $row['product_id']),
                 db_quote('?s', $row['destination_key']),
+                db_quote('?s', $row['hotel_name']),
                 self::orNull($row['known_since']),
                 self::orNull($row['listed_last_seen_at']),
                 self::orNull($row['contract_last_date']),
@@ -220,12 +246,13 @@ final class HotelAvailabilityRepository
             ]) . ')', $chunk);
             db_query(
                 'INSERT INTO ?:travel_hotel_availability
-                    (provider, hotel_id, product_id, destination_key, known_since, listed_last_seen_at,
+                    (provider, hotel_id, product_id, destination_key, hotel_name, known_since, listed_last_seen_at,
                      contract_last_date, last_booking_check_in, backfilled_at)
                  VALUES ?p
                  ON DUPLICATE KEY UPDATE
                     product_id = IF(VALUES(product_id) > 0, VALUES(product_id), product_id),
                     destination_key = IF(VALUES(destination_key) <> \'\', VALUES(destination_key), destination_key),
+                    hotel_name = IF(VALUES(hotel_name) <> \'\', VALUES(hotel_name), hotel_name),
                     known_since = COALESCE(known_since, VALUES(known_since)),
                     listed_last_seen_at = COALESCE(listed_last_seen_at, VALUES(listed_last_seen_at)),
                     contract_last_date = GREATEST(COALESCE(contract_last_date, VALUES(contract_last_date)), COALESCE(VALUES(contract_last_date), contract_last_date)),

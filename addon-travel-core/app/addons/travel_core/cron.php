@@ -41,7 +41,7 @@ $supported_modes = ['exchange_rates', 'balances'];
 
 if (empty($mode) || !in_array($mode, $supported_modes, true)) {
     echo "Travel Core Cron - Available modes:\n";
-    echo "  exchange_rates - Update BNR exchange rates (shared across all addons)\n";
+    echo "  exchange_rates - Update BNR exchange rates (shared across all addons); also the weekly hotel availability review\n";
     echo "  balances       - Deposit bookings: balance reminders (7 and 2 days before) and overdue alerts\n";
     exit(1);
 }
@@ -79,6 +79,10 @@ $result = \Tygh\Addons\TravelCore\Cron\CronRunLog::record(
 );
 
 echo fn_travel_core_format_exchange_rate_output($result) . "\n";
+
+// The weekly hotel availability review rides on this daily line, so it has
+// no crontab entry of its own; it decides itself whether it is due.
+echo \Tygh\Addons\TravelCore\Services\AvailabilityReview::runDaily() . "\n";
 
 $exitCode = TypeCoerce::toBool($result['success'] ?? false) ? 0 : 1;
 echo "\n[" . date('Y-m-d H:i:s') . "] Cron job completed.\n";

@@ -111,6 +111,15 @@ if (!function_exists('db_get_fields')) {
     }
 }
 
+if (!function_exists('db_get_hash_single_array')) {
+    /** @param array<int, string> $keys */
+    function db_get_hash_single_array(string $query, array $keys, ...$params)
+    {
+        $fn = \Tygh\Addons\TravelCore\Tests\Support\DbStub::$getHashSingleArray;
+        return $fn !== null ? $fn($query, $keys, ...$params) : [];
+    }
+}
+
 // db_quote interpolates parameters into a SQL fragment and returns the string.
 // CS-Cart isn't loaded in tests, so emulate enough of it (left-to-right
 // placeholder substitution) for repositories that build conditional WHERE

@@ -23,7 +23,8 @@ final class HotelAvailabilityRepositoryTest extends TestCase
         DbStub::reset();
         $this->sql = [];
         DbStub::$query = function (string $query, mixed ...$params): int {
-            if (!str_starts_with(ltrim($query), 'CREATE TABLE')) {
+            // Not the tables heal, which runs once per request (process).
+            if (preg_match('/^\s*(CREATE|ALTER) TABLE/', $query) !== 1) {
                 $this->sql[] = db_quote($query, ...$params);
             }
 
@@ -39,13 +40,13 @@ final class HotelAvailabilityRepositoryTest extends TestCase
     public function testAListAnswerMarksItsHotelsSeenAndCountsTheOthersMissing(): void
     {
         (new HotelAvailabilityRepository())->recordList('novoton', [
-            ['hotel_id' => '476', 'product_id' => 1203, 'destination_key' => 'BULGARIA|Sunny Beach', 'known_since' => '2023-05-01'],
-            ['hotel_id' => '477', 'product_id' => 0, 'destination_key' => 'BULGARIA|Sunny Beach', 'known_since' => null],
+            ['hotel_id' => '476', 'product_id' => 1203, 'destination_key' => 'BULGARIA|Sunny Beach', 'hotel_name' => 'Sol Nessebar', 'known_since' => '2023-05-01'],
+            ['hotel_id' => '477', 'product_id' => 0, 'destination_key' => 'BULGARIA|Sunny Beach', 'hotel_name' => 'Kuban', 'known_since' => null],
         ], ['480'], '2026-10-26 02:00:00');
 
         self::assertCount(2, $this->sql);
-        self::assertStringContainsString("('novoton', '476', 1203, 'BULGARIA|Sunny Beach', '2023-05-01', '2026-10-26 02:00:00', 0)", $this->sql[0]);
-        self::assertStringContainsString("('novoton', '477', 0, 'BULGARIA|Sunny Beach', NULL, '2026-10-26 02:00:00', 0)", $this->sql[0]);
+        self::assertStringContainsString("('novoton', '476', 1203, 'BULGARIA|Sunny Beach', 'Sol Nessebar', '2023-05-01', '2026-10-26 02:00:00', 0)", $this->sql[0]);
+        self::assertStringContainsString("('novoton', '477', 0, 'BULGARIA|Sunny Beach', 'Kuban', NULL, '2026-10-26 02:00:00', 0)", $this->sql[0]);
         self::assertStringContainsString('listed_missing_runs = 0', $this->sql[0]);
         self::assertStringContainsString('known_since = COALESCE(known_since, VALUES(known_since))', $this->sql[0], 'the first listing date is kept');
         self::assertStringContainsString('SET listed_missing_runs = listed_missing_runs + 1', $this->sql[1]);
@@ -91,12 +92,13 @@ final class HotelAvailabilityRepositoryTest extends TestCase
     public function testTheBackfillNeverMovesAValueBack(): void
     {
         (new HotelAvailabilityRepository())->recordBackfill('novoton', [[
-            'hotel_id' => '476', 'product_id' => 0, 'destination_key' => '', 'known_since' => '2023-05-01',
+            'hotel_id' => '476', 'product_id' => 0, 'destination_key' => '', 'hotel_name' => '', 'known_since' => '2023-05-01',
             'listed_last_seen_at' => null, 'contract_last_date' => '2025-09-30', 'last_booking_check_in' => '2025-08-01',
         ]], '2026-10-23 03:30:00');
 
         $sql = $this->sql[0];
-        self::assertStringContainsString("('novoton', '476', 0, '', '2023-05-01', NULL, '2025-09-30', '2025-08-01', '2026-10-23 03:30:00')", $sql);
+        self::assertStringContainsString("('novoton', '476', 0, '', '', '2023-05-01', NULL, '2025-09-30', '2025-08-01', '2026-10-23 03:30:00')", $sql);
+        self::assertStringContainsString("hotel_name = IF(VALUES(hotel_name) <> '', VALUES(hotel_name), hotel_name)", $sql, 'an empty name never erases one');
         self::assertStringContainsString('listed_last_seen_at = COALESCE(listed_last_seen_at, VALUES(listed_last_seen_at))', $sql);
         self::assertStringContainsString('last_booking_check_in = GREATEST(', $sql);
         self::assertStringContainsString('product_id = IF(VALUES(product_id) > 0, VALUES(product_id), product_id)', $sql);

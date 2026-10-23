@@ -1754,4 +1754,276 @@ Dacă ați plătit deja, vă rugăm să ignorați acest email.',
         'en' => 'Report only',
         'ro' => 'Doar raport',
     ],
+    'travel_core.availability_state_bookable' => [
+        'en' => 'Bookable',
+        'ro' => 'Rezervabil',
+    ],
+    'travel_core.availability_state_between_seasons' => [
+        'en' => 'Between seasons',
+        'ro' => 'Între sezoane',
+    ],
+    'travel_core.availability_state_not_offered' => [
+        'en' => 'Not offered',
+        'ro' => 'Neoferit',
+    ],
+    'travel_core.availability_state_dormant' => [
+        'en' => 'Dormant',
+        'ro' => 'Inactiv',
+    ],
+    'travel_core.availability_state_left_feed' => [
+        'en' => 'Left the supplier\'s list',
+        'ro' => 'Ieșit din lista furnizorului',
+    ],
+    'travel_core.availability_state_closed' => [
+        'en' => 'Closed',
+        'ro' => 'Închis',
+    ],
+    'travel_core.availability_state_no_data' => [
+        'en' => 'No data yet',
+        'ro' => 'Fără date încă',
+    ],
+    'travel_core.availability_state_bookable_hint' => [
+        'en' => 'An offer was seen in the last 8 days, or its destination sells and its last offer is under 14 days old.',
+        'ro' => 'S-a văzut o ofertă în ultimele 8 zile, sau destinația se vinde și ultima ofertă a hotelului are sub 14 zile.',
+    ],
+    'travel_core.availability_state_between_seasons_hint' => [
+        'en' => 'No offer now, but it had offers, prices or bookings in the last 13 months, or has prices for a future date. Normal outside the season.',
+        'ro' => 'Fără ofertă acum, dar a avut oferte, prețuri sau rezervări în ultimele 13 luni, ori are prețuri pentru o dată viitoare. Normal în afara sezonului.',
+    ],
+    'travel_core.availability_state_not_offered_hint' => [
+        'en' => 'Its destination sells (at least 25% of 5 or more checked hotels had offers), but this hotel had none for 14 days.',
+        'ro' => 'Destinația se vinde (cel puțin 25% din minimum 5 hoteluri verificate au avut oferte), dar acest hotel nu a avut niciuna de 14 zile.',
+    ],
+    'travel_core.availability_state_dormant_hint' => [
+        'en' => 'No offer, price or booked stay for [months] months, although the supplier still lists it.',
+        'ro' => 'Nicio ofertă, niciun preț și niciun sejur rezervat de [months] luni, deși furnizorul încă îl listează.',
+    ],
+    'travel_core.availability_state_left_feed_hint' => [
+        'en' => 'Missing from the supplier\'s complete hotel list 3 times in a row.',
+        'ro' => 'Lipsește de 3 ori la rând din lista completă de hoteluri a furnizorului.',
+    ],
+    'travel_core.availability_state_closed_hint' => [
+        'en' => 'An admin marked it closed.',
+        'ro' => 'Un administrator l-a marcat ca închis.',
+    ],
+    'travel_core.availability_state_no_data_hint' => [
+        'en' => 'Nothing recorded for it yet.',
+        'ro' => 'Nimic înregistrat încă pentru el.',
+    ],
+    'travel_core.availability_reason_offer_seen' => [
+        'en' => 'Offer seen in the last 8 days',
+        'ro' => 'Ofertă văzută în ultimele 8 zile',
+    ],
+    'travel_core.availability_reason_offer_recent' => [
+        'en' => 'Destination sells; last offer under 14 days old',
+        'ro' => 'Destinația se vinde; ultima ofertă are sub 14 zile',
+    ],
+    'travel_core.availability_reason_peers_selling' => [
+        'en' => 'Destination sells; this hotel has no offer',
+        'ro' => 'Destinația se vinde; hotelul nu are ofertă',
+    ],
+    'travel_core.availability_reason_season_memory' => [
+        'en' => 'Offers, prices or bookings in the last 13 months',
+        'ro' => 'Oferte, prețuri sau rezervări în ultimele 13 luni',
+    ],
+    'travel_core.availability_reason_no_availability' => [
+        'en' => 'No offer, price or booking for a long time',
+        'ro' => 'Fără ofertă, preț sau rezervare de mult timp',
+    ],
+    'travel_core.availability_reason_left_feed' => [
+        'en' => 'Missing from the hotel list',
+        'ro' => 'Lipsește din lista de hoteluri',
+    ],
+    'travel_core.availability_reason_override_closed' => [
+        'en' => 'Marked closed by an admin',
+        'ro' => 'Marcat închis de un administrator',
+    ],
+    'travel_core.availability_reason_no_evidence' => [
+        'en' => 'Nothing recorded yet',
+        'ro' => 'Nimic înregistrat încă',
+    ],
+    'travel_core.availability_mail_intro' => [
+        'en' => 'The weekly hotel availability review is done. Report only: no product was changed.',
+        'ro' => 'Revizuirea săptămânală a disponibilității hotelurilor s-a încheiat. Doar raport: niciun produs nu a fost modificat.',
+    ],
+    'travel_core.availability_mail_first' => [
+        'en' => '[n] hotels classified for the first time.',
+        'ro' => '[n] hoteluri clasificate pentru prima dată.',
+    ],
+    'travel_core.availability_mail_changes' => [
+        'en' => 'Changes',
+        'ro' => 'Schimbări',
+    ],
+    'travel_core.availability_mail_more' => [
+        'en' => '...and [n] more on the page.',
+        'ro' => '...și încă [n] pe pagină.',
+    ],
+    'travel_core.availability_mail_page' => [
+        'en' => 'Every hotel: [url]',
+        'ro' => 'Toate hotelurile: [url]',
+    ],
+    'travel_core.availability_mail_subject' => [
+        'en' => 'Hotel availability: [changed] changes this week',
+        'ro' => 'Disponibilitate hoteluri: [changed] schimbări săptămâna aceasta',
+    ],
+    'travel_core.hotel_availability' => [
+        'en' => 'Hotel availability',
+        'ro' => 'Disponibilitate hoteluri',
+    ],
+    'travel_core.availability_page_intro' => [
+        'en' => 'Report only: each supplier hotel\'s state from the weekly review. Nothing here hides or changes a product.',
+        'ro' => 'Doar raport: starea fiecărui hotel al furnizorilor, din revizuirea săptămânală. Nimic de aici nu ascunde și nu modifică produse.',
+    ],
+    'travel_core.availability_state' => [
+        'en' => 'State',
+        'ro' => 'Stare',
+    ],
+    'travel_core.availability_reason' => [
+        'en' => 'Why',
+        'ro' => 'Motiv',
+    ],
+    'travel_core.availability_since' => [
+        'en' => 'since [date]',
+        'ro' => 'din [date]',
+    ],
+    'travel_core.availability_next_season' => [
+        'en' => 'Next season published',
+        'ro' => 'Sezonul următor publicat',
+    ],
+    'travel_core.availability_last_offer' => [
+        'en' => 'Last offer seen',
+        'ro' => 'Ultima ofertă văzută',
+    ],
+    'travel_core.availability_for_stay' => [
+        'en' => 'stay on [date]',
+        'ro' => 'sejur pe [date]',
+    ],
+    'travel_core.availability_never' => [
+        'en' => 'never',
+        'ro' => 'niciodată',
+    ],
+    'travel_core.availability_prices' => [
+        'en' => 'Prices published',
+        'ro' => 'Prețuri publicate',
+    ],
+    'travel_core.availability_none_published' => [
+        'en' => 'none',
+        'ro' => 'fără',
+    ],
+    'travel_core.availability_last_priced' => [
+        'en' => 'last priced date [date]',
+        'ro' => 'ultima dată cu preț [date]',
+    ],
+    'travel_core.availability_last_booking' => [
+        'en' => 'Last booked stay',
+        'ro' => 'Ultimul sejur rezervat',
+    ],
+    'travel_core.availability_hotel_list' => [
+        'en' => 'In hotel list',
+        'ro' => 'În lista de hoteluri',
+    ],
+    'travel_core.availability_missed_lists' => [
+        'en' => 'missing from [n] lists',
+        'ro' => 'lipsește din [n] liste',
+    ],
+    'travel_core.availability_no_product' => [
+        'en' => 'no product',
+        'ro' => 'fără produs',
+    ],
+    'travel_core.availability_no_offer_for' => [
+        'en' => 'No offer for',
+        'ro' => 'Fără ofertă de',
+    ],
+    'travel_core.availability_months' => [
+        'en' => '[n] months',
+        'ro' => '[n] luni',
+    ],
+    'travel_core.availability_sort' => [
+        'en' => 'Sort by',
+        'ro' => 'Sortare',
+    ],
+    'travel_core.availability_sort_hotel' => [
+        'en' => 'Hotel name',
+        'ro' => 'Numele hotelului',
+    ],
+    'travel_core.availability_sort_offer' => [
+        'en' => 'Longest without an offer',
+        'ro' => 'Cel mai mult timp fără ofertă',
+    ],
+    'travel_core.availability_sort_changed' => [
+        'en' => 'Latest state change',
+        'ro' => 'Cea mai recentă schimbare de stare',
+    ],
+    'travel_core.availability_search_placeholder' => [
+        'en' => 'Hotel, destination or id',
+        'ro' => 'Hotel, destinație sau id',
+    ],
+    'travel_core.availability_export_csv' => [
+        'en' => 'Export CSV',
+        'ro' => 'Export CSV',
+    ],
+    'travel_core.availability_review_title' => [
+        'en' => 'Weekly review',
+        'ro' => 'Revizuirea săptămânală',
+    ],
+    'travel_core.availability_review_now' => [
+        'en' => 'Review now',
+        'ro' => 'Revizuiește acum',
+    ],
+    'travel_core.availability_last_review' => [
+        'en' => 'Last review: [date]',
+        'ro' => 'Ultima revizuire: [date]',
+    ],
+    'travel_core.availability_next_review' => [
+        'en' => 'the next from [date]',
+        'ro' => 'următoarea de la [date]',
+    ],
+    'travel_core.availability_no_review_yet' => [
+        'en' => 'No review yet. The first runs with Travel Core\'s next daily cron, or press Review now.',
+        'ro' => 'Nicio revizuire încă. Prima rulează cu următorul cron zilnic Travel Core, sau apăsați Revizuiește acum.',
+    ],
+    'travel_core.availability_review_done' => [
+        'en' => 'Review done: [hotels] hotels classified, [changed] state changes.',
+        'ro' => 'Revizuire încheiată: [hotels] hoteluri clasificate, [changed] schimbări de stare.',
+    ],
+    'travel_core.availability_review_busy' => [
+        'en' => 'The review waits while [jobs] runs. Try again when it ends.',
+        'ro' => 'Revizuirea așteaptă cât timp rulează [jobs]. Încercați din nou după ce se termină.',
+    ],
+    'travel_core.availability_review_none' => [
+        'en' => 'No supplier records hotel availability yet.',
+        'ro' => 'Niciun furnizor nu înregistrează încă disponibilitatea hotelurilor.',
+    ],
+    'travel_core.availability_review_failed' => [
+        'en' => 'The review failed: [error]',
+        'ro' => 'Revizuirea a eșuat: [error]',
+    ],
+    'travel_core.availability_no_records' => [
+        'en' => 'No hotel records yet: the suppliers\' jobs fill them as they run.',
+        'ro' => 'Nicio înregistrare încă: joburile furnizorilor le completează pe măsură ce rulează.',
+    ],
+    'travel_core.availability_no_hotels_supplier' => [
+        'en' => 'No hotels recorded yet.',
+        'ro' => 'Niciun hotel înregistrat încă.',
+    ],
+    'travel_core.availability_legend' => [
+        'en' => 'What the states mean',
+        'ro' => 'Ce înseamnă stările',
+    ],
+    'travel_core.availability_tools_desc' => [
+        'en' => 'Weekly report of supplier hotels with no offers, between seasons or gone from the supplier\'s list. Report only.',
+        'ro' => 'Raport săptămânal al hotelurilor furnizorilor fără oferte, între sezoane sau ieșite din lista furnizorului. Doar raport.',
+    ],
+    'travel_core.availability_open_page' => [
+        'en' => 'Open the report',
+        'ro' => 'Deschide raportul',
+    ],
+    'travel_core.availability_review_counts' => [
+        'en' => '[hotels] hotels, [changed] state changes',
+        'ro' => '[hotels] hoteluri, [changed] schimbări de stare',
+    ],
+    'travel_core.availability_mail_subject_first' => [
+        'en' => 'Hotel availability: first review, [n] hotels',
+        'ro' => 'Disponibilitate hoteluri: prima revizuire, [n] hoteluri',
+    ],
 ];

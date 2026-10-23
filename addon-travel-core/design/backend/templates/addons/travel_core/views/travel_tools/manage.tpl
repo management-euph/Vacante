@@ -277,6 +277,22 @@
                     <button type="submit" class="btn btn-primary">{__("travel_core.tools_run_now")}</button>
                 </form>
             </div>
+            {* The weekly hotel availability review runs inside the job above. *}
+            <div class="travel-cron-task">
+                <div>
+                    <strong>{__("travel_core.hotel_availability")}</strong>
+                    <div class="muted">{__("travel_core.availability_tools_desc")}</div>
+                    <div class="travel-cron-hint">
+                        {if $availability_totals}
+                            {__("travel_core.availability_last_review", ["[date]" => $availability_totals.at|date_format:"%d.%m.%Y %H:%M"])}
+                            · {__("travel_core.availability_review_counts", ["[hotels]" => $availability_totals.hotels, "[changed]" => $availability_totals.changed])}
+                        {else}
+                            {__("travel_core.availability_no_review_yet")}
+                        {/if}
+                    </div>
+                </div>
+                <a class="btn" href="{"travel_hotel_availability.manage"|fn_url}">{__("travel_core.availability_open_page")}</a>
+            </div>
         </section>
 
         <section class="travel-cron-card travel-cron-card--info" aria-labelledby="travel-cron-help-title">

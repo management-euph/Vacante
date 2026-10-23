@@ -66,7 +66,7 @@ final class NovotonAvailabilityRecorder
 
             // Every hotel Novoton has listed in this country, the answer's included.
             $group = TypeCoerce::toRowList(db_get_array(
-                'SELECT hotel_id, product_id, city, country, created_at FROM ?:novoton_hotels WHERE country IN (?a)',
+                'SELECT hotel_id, product_id, hotel_name, city, country, created_at FROM ?:novoton_hotels WHERE country IN (?a)',
                 array_keys($countries),
             ));
 
@@ -165,7 +165,7 @@ final class NovotonAvailabilityRecorder
 
         return $this->guard('backfill', ['hotels' => 0, 'done' => false], function () use ($cursor, $batch, $now): array {
             $hotels = TypeCoerce::toRowList(db_get_array(
-                'SELECT hotel_id, product_id, city, country, created_at, hotel_list_synced_at FROM ?:novoton_hotels
+                'SELECT hotel_id, product_id, hotel_name, city, country, created_at, hotel_list_synced_at FROM ?:novoton_hotels
                  WHERE hotel_id > ?s ORDER BY hotel_id LIMIT ?i',
                 $cursor,
                 max(1, $batch),
@@ -228,11 +228,11 @@ final class NovotonAvailabilityRecorder
 
     /**
      * Who the hotel is in the records: its product, its resort (the peer
-     * group) and when Novoton first listed it.
+     * group), its name and when Novoton first listed it.
      *
      * @param array<string, mixed> $row a ?:novoton_hotels row
      *
-     * @return array{hotel_id: string, product_id: int, destination_key: string, known_since: ?string}
+     * @return array{hotel_id: string, product_id: int, destination_key: string, hotel_name: string, known_since: ?string}
      */
     public static function identity(array $row): array
     {
@@ -242,6 +242,7 @@ final class NovotonAvailabilityRecorder
             'hotel_id' => TypeCoerce::toString($row['hotel_id'] ?? ''),
             'product_id' => max(0, TypeCoerce::toInt($row['product_id'] ?? 0)),
             'destination_key' => self::destinationKey(TypeCoerce::toString($row['country'] ?? ''), TypeCoerce::toString($row['city'] ?? '')),
+            'hotel_name' => mb_substr(trim(TypeCoerce::toString($row['hotel_name'] ?? '')), 0, 255),
             'known_since' => preg_match('/^\d{4}-\d{2}-\d{2}/', $created) === 1 && !str_starts_with($created, '0000') ? substr($created, 0, 10) : null,
         ];
     }

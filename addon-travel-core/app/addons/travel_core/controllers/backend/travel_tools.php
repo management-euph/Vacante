@@ -19,6 +19,7 @@ use Tygh\Addons\TravelCore\Cron\CronOverview;
 use Tygh\Addons\TravelCore\Cron\CronRunLog;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Services\AvailabilityReview;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
 use Tygh\Addons\TravelCore\Repository\OrderLinkCandidateRepository;
 
@@ -213,5 +214,6 @@ if ($mode === 'manage') {
         $view->assign('cron_recopy', $recopy);
         $view->assign('cron_recopy_open', $recopy_open);
         $view->assign('cron_recopy_done', count(array_filter(array_column($recopy, 'done'))));
+        $view->assign('availability_totals', AvailabilityReview::lastTotals());
     }
 }

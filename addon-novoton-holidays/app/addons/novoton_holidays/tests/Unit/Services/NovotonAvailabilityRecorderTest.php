@@ -25,7 +25,8 @@ final class NovotonAvailabilityRecorderTest extends TestCase
         DbStub::reset();
         $this->sql = [];
         DbStub::$query = function (string $query, mixed ...$params): int {
-            if (!str_starts_with(ltrim($query), 'CREATE TABLE')) {
+            // Not the tables heal, which runs once per request (process).
+            if (preg_match('/^\s*(CREATE|ALTER) TABLE/', $query) !== 1) {
                 $this->sql[] = db_quote($query, ...$params);
             }
 
@@ -42,8 +43,8 @@ final class NovotonAvailabilityRecorderTest extends TestCase
     private function bulgaria(int $previous): void
     {
         DbStub::$getArray = static fn (): array => [
-            ['hotel_id' => '476', 'product_id' => '1203', 'city' => 'Sunny Beach', 'country' => 'BULGARIA', 'created_at' => '2023-05-01 10:00:00'],
-            ['hotel_id' => '477', 'product_id' => null, 'city' => 'Sunny Beach', 'country' => 'BULGARIA', 'created_at' => '2024-02-02 10:00:00'],
+            ['hotel_id' => '476', 'product_id' => '1203', 'hotel_name' => 'Sol Nessebar', 'city' => 'Sunny Beach', 'country' => 'BULGARIA', 'created_at' => '2023-05-01 10:00:00'],
+            ['hotel_id' => '477', 'product_id' => null, 'hotel_name' => 'Kuban', 'city' => 'Sunny Beach', 'country' => 'BULGARIA', 'created_at' => '2024-02-02 10:00:00'],
             ['hotel_id' => '480', 'product_id' => '1300', 'city' => 'Albena', 'country' => 'BULGARIA', 'created_at' => '2023-05-01 10:00:00'],
         ];
         DbStub::$getField = static fn (): int => $previous;
@@ -63,8 +64,8 @@ final class NovotonAvailabilityRecorderTest extends TestCase
 
         self::assertSame(['complete' => true, 'seen' => 2, 'missing' => 1], $result);
         self::assertCount(2, $this->sql);
-        self::assertStringContainsString("('novoton', '476', 1203, 'BULGARIA|Sunny Beach', '2023-05-01', '2026-10-26 02:00:00', 0)", $this->sql[0]);
-        self::assertStringContainsString("('novoton', '477', 0, 'BULGARIA|Sunny Beach', '2024-02-02', '2026-10-26 02:00:00', 0)", $this->sql[0]);
+        self::assertStringContainsString("('novoton', '476', 1203, 'BULGARIA|Sunny Beach', 'Sol Nessebar', '2023-05-01', '2026-10-26 02:00:00', 0)", $this->sql[0]);
+        self::assertStringContainsString("('novoton', '477', 0, 'BULGARIA|Sunny Beach', 'Kuban', '2024-02-02', '2026-10-26 02:00:00', 0)", $this->sql[0]);
         self::assertStringContainsString("hotel_id IN ('480')", $this->sql[1]);
     }
 
@@ -136,7 +137,7 @@ final class NovotonAvailabilityRecorderTest extends TestCase
         DbStub::$getArray = static fn (string $query): array => str_contains($query, 'novoton_hotel_packages')
             ? [['hotel_id' => '100', 'priceinfo_data' => (string) json_encode($past)], ['hotel_id' => '200', 'priceinfo_data' => null]]
             : [
-                ['hotel_id' => '100', 'product_id' => '1203', 'city' => 'Sunny Beach', 'country' => 'BULGARIA', 'created_at' => '2023-05-01 10:00:00', 'hotel_list_synced_at' => '2026-10-20 02:00:00'],
+                ['hotel_id' => '100', 'product_id' => '1203', 'hotel_name' => 'Past Hotel', 'city' => 'Sunny Beach', 'country' => 'BULGARIA', 'created_at' => '2023-05-01 10:00:00', 'hotel_list_synced_at' => '2026-10-20 02:00:00'],
                 ['hotel_id' => '200', 'product_id' => null, 'city' => 'Albena', 'country' => 'BULGARIA', 'created_at' => '2024-02-02 10:00:00', 'hotel_list_synced_at' => null],
             ];
         DbStub::$getHashSingleArray = static fn (): array => [100 => '2025-08-01'];
@@ -145,10 +146,10 @@ final class NovotonAvailabilityRecorderTest extends TestCase
 
         self::assertSame(['hotels' => 2, 'done' => false], $step);
         self::assertStringContainsString(
-            "('novoton', '100', 1203, 'BULGARIA|Sunny Beach', '2023-05-01', '2026-10-20 02:00:00', '2025-09-30', '2025-08-01', '2026-10-23 03:30:00')",
+            "('novoton', '100', 1203, 'BULGARIA|Sunny Beach', 'Past Hotel', '2023-05-01', '2026-10-20 02:00:00', '2025-09-30', '2025-08-01', '2026-10-23 03:30:00')",
             $this->sql[0],
         );
-        self::assertStringContainsString("('novoton', '200', 0, 'BULGARIA|Albena', '2024-02-02', NULL, NULL, NULL, '2026-10-23 03:30:00')", $this->sql[0]);
+        self::assertStringContainsString("('novoton', '200', 0, 'BULGARIA|Albena', '', '2024-02-02', NULL, NULL, NULL, '2026-10-23 03:30:00')", $this->sql[0]);
     }
 
     public function testNovotonDeclaresWhatItCanTell(): void
