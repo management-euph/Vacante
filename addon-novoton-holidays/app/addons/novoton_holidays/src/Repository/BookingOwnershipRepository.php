@@ -25,58 +25,6 @@ class BookingOwnershipRepository implements BookingOwnershipRepositoryInterface
     use RowNarrowingTrait;
 
     /**
-     * Find bookings by multiple product IDs (batch query for cart).
-     *
-     * @param list<int> $product_ids Product IDs
-     * @param list<string> $statuses Optional status filter (default: pending + confirmed)
-     * @return list<array<string, mixed>> Booking rows
-     */
-    public function findByProductIds(array $product_ids, array $statuses = [TravelConstants::STATUS_PENDING, TravelConstants::STATUS_CONFIRMED], string $session_id = '', int $user_id = 0): array
-    {
-        if (empty($product_ids)) {
-            return [];
-        }
-
-        // Safety: if no ownership context is provided, return nothing rather than
-        // leaking all users' bookings. Callers must provide session_id and/or user_id.
-        if ($user_id <= 0 && empty($session_id)) {
-            return [];
-        }
-
-        $select = 'SELECT booking_id, product_id, hotel_id, hotel_name, room_id, room_type,
-                    board_id, check_in, check_out, nights, adults, children, children_ages,
-                    num_rooms, rooms_data, total_price, currency, status, guests_data,
-                    package_name, session_id, holder_name, guest_name
-             FROM ?:novoton_bookings
-             WHERE product_id IN (?n) AND status IN (?a)';
-
-        // Scope to current user/session to prevent cross-user booking leakage
-        if ($user_id > 0 && !empty($session_id)) {
-            return self::asRowList(db_get_array(
-                $select . ' AND (session_id = ?s OR user_id = ?i) ORDER BY booking_id DESC',
-                $product_ids,
-                $statuses,
-                $session_id,
-                $user_id,
-            ));
-        } elseif ($user_id > 0) {
-            return self::asRowList(db_get_array(
-                $select . ' AND user_id = ?i ORDER BY booking_id DESC',
-                $product_ids,
-                $statuses,
-                $user_id,
-            ));
-        }
-
-        return self::asRowList(db_get_array(
-            $select . ' AND session_id = ?s ORDER BY booking_id DESC',
-            $product_ids,
-            $statuses,
-            $session_id,
-        ));
-    }
-
-    /**
      * Cart-stage booking owned by the caller — the guard behind the guest-facing
      * edit_booking / update_booking modes.
      *

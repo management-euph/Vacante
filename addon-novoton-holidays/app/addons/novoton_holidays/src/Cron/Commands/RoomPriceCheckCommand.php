@@ -116,7 +116,7 @@ class RoomPriceCheckCommand extends AbstractCronCommand
 
             foreach ($batch as $hotel) {
                 $hotelId = TypeCoerce::toString($hotel['hotel_id']);
-                $has_prices = self::hasPrices($responses[$hotelId]['data'] ?? false);
+                $has_prices = self::hasPrices($responses[$hotelId]['data'] ?? false, $responses[$hotelId]['unparsed'] ?? '');
 
                 if ($has_prices === null) {
                     // No answer: the hotel keeps its flag and is first in line
@@ -173,13 +173,14 @@ class RoomPriceCheckCommand extends AbstractCronCommand
      * Whether a room_price response carries prices.
      *
      * TRUE when it has at least one <Price>, FALSE for a valid response with
-     * none, NULL when there is no usable response (API or XML error), which
-     * leaves the hotel's flag as it was. A presence check only — the cron
-     * sets has_room_price Y/N; it stores no amount.
+     * none or an empty document ($unparsedBody, PriceCheckFlags), NULL when
+     * there is no usable response (API or XML error), which leaves the
+     * hotel's flag as it was. A presence check only — the cron sets
+     * has_room_price Y/N; it stores no amount.
      */
-    public static function hasPrices(mixed $response): ?bool
+    public static function hasPrices(mixed $response, string $unparsedBody = ''): ?bool
     {
-        return PriceCheckFlags::hasPrices($response);
+        return PriceCheckFlags::hasPrices($response, $unparsedBody);
     }
 
     /**

@@ -156,6 +156,23 @@ class BookingRecordBuilderTest extends TestCase
         $this->assertSame(7, $id);
     }
 
+    /**
+     * A booking whose rooms use two packages is submitted as two groups of
+     * the same order, hotel and dates: group 2 must find its own row, not
+     * group 1's (which it overwrote, losing group 1's record).
+     */
+    public function testPersistDedupesWithinTheGroup(): void
+    {
+        $record = ['hotel_id' => 'H1', 'check_in' => '2026-07-01', 'check_out' => '2026-07-08'];
+        $this->repo->expects($this->once())->method('findIdByOrderAndHotelDates')
+            ->with(900, 'H1', '2026-07-01', '2026-07-08', 2)
+            ->willReturn(null);
+        $this->repo->expects($this->never())->method('update');
+        $this->repo->expects($this->once())->method('create')->willReturn(99);
+
+        $this->assertSame(99, $this->builder()->persist($record, 42, 2, 900));
+    }
+
     public function testPersistInsertsWhenNoExistingRow(): void
     {
         $record = ['hotel_id' => 'H1', 'check_in' => '2026-07-01', 'check_out' => '2026-07-08'];

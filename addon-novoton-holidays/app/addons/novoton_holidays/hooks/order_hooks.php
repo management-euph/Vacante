@@ -48,9 +48,16 @@ use Tygh\Addons\TravelCore\TravelConstants;
  * customer reviews and re-confirms the new total (EU CRD: the amount charged
  * must be the amount shown at the order button). Admin is notified either way.
  *
- * A correction is written everywhere the price lives — the cart line, the
- * saved cart, the booking record and the Silent Sync entry — so the second
- * click sees the corrected price instead of re-querying (and re-correcting).
+ * A correction is written everywhere the price lives — the booking record
+ * (total, base and each room's price in rooms_data, which the submission
+ * builds the records from), the cart line (extra.rooms_data too), the saved
+ * cart and the Silent Sync entry — so the second click sees the corrected
+ * price instead of re-querying (and re-correcting). The booking record is
+ * written first: when that fails, the line is left as it was (line and
+ * booking stay in step) and the click is refused.
+ *
+ * A line the cart guard removed during this same request also refuses the
+ * click (CartBookingGuard::takeRemoval()).
  *
  * @param array<string, mixed> $cart
  * @param bool $allow
@@ -58,6 +65,14 @@ use Tygh\Addons\TravelCore\TravelConstants;
  */
 function fn_novoton_holidays_pre_place_order(&$cart, &$allow, &$product_groups): void
 {
+    // A cart line was removed by this request's cart calculation (it could
+    // no longer carry its booking): CS-Cart may still count it in the totals
+    // of this click, so the customer re-confirms the cart without it. The
+    // removal notice is already shown (calculate_cart_items).
+    if (\Tygh\Addons\NovotonHolidays\Services\CartBookingGuard::takeRemoval()) {
+        $allow = false;
+    }
+
     $verifier = Container::getInstance()->preOrderPriceVerifier();
     $result = $verifier->verify($cart);
     $session = new \Tygh\Addons\TravelCore\Helpers\SessionAccessor();
@@ -65,6 +80,7 @@ function fn_novoton_holidays_pre_place_order(&$cart, &$allow, &$product_groups):
     // Apply price corrections: bump cart prices to the current API price
     $corrections = $result['corrections'];
     $corrected = false;
+    $recordUpdateFailed = false;
     if (!empty($corrections) && is_array($cart['products'] ?? null)) {
         foreach ($corrections as $cartId => $correction) {
             if (!is_array($correction) || !isset($cart['products'][$cartId]) || !is_array($cart['products'][$cartId])) {
@@ -84,6 +100,43 @@ function fn_novoton_holidays_pre_place_order(&$cart, &$allow, &$product_groups):
             $existingExtra['price_before_correction'] = $existingExtra['total_price'] ?? $existingProduct['price'] ?? null;
             $existingExtra['total_price'] = $newPrice;
 
+            // Each room's corrected price (one room: the line's): the booking
+            // records are built from rooms_data at submission, which would
+            // otherwise write the pre-correction sum back (novoton-money-9).
+            $correctedRooms = \Tygh\Addons\NovotonHolidays\Services\CorrectedRoomPrices::apply($existingExtra['rooms_data'] ?? null, TypeCoerce::toStringMap($correction));
+            if ($correctedRooms !== null) {
+                $existingExtra['rooms_data'] = $correctedRooms;
+            }
+
+            // The booking record holds the price too (admin grid, the
+            // Novoton submission, travel_bookings). It is written FIRST: a
+            // line corrected over a booking left at the old price no longer
+            // matches its booking, and the cart guard would drop the
+            // reservation instead of charging the corrected price.
+            $bookingId = PriceInfoFormatter::toInt($existingExtra['novoton_booking_id'] ?? 0);
+            if ($bookingId > 0) {
+                $bookingPrices = ['total_price' => $newPrice];
+                if ($rawPrice > 0) {
+                    $bookingPrices['base_price'] = $rawPrice; // raw API price, before commission
+                }
+                if ($correctedRooms !== null) {
+                    $bookingPrices['rooms_data'] = json_encode($correctedRooms, JSON_UNESCAPED_UNICODE);
+                }
+                try {
+                    Container::getInstance()->bookingRepository()->update($bookingId, $bookingPrices);
+                } catch (\Throwable $e) {
+                    // Line and booking stay as they were (in step); this click
+                    // is blocked and the next one corrects again.
+                    fn_log_event('general', 'runtime', [
+                        'message' => '[Novoton] pre_place_order: booking price update failed, order blocked',
+                        'booking_id' => $bookingId,
+                        'error' => $e->getMessage(),
+                    ]);
+                    $recordUpdateFailed = true;
+                    continue;
+                }
+            }
+
             $existingProduct['extra']          = $existingExtra;
             // extra.total_price is in the API currency; the line is in the
             // store's primary currency (add_to_cart converts the same way).
@@ -95,28 +148,6 @@ function fn_novoton_holidays_pre_place_order(&$cart, &$allow, &$product_groups):
             );
             $cart['products'][$cartId]         = $existingProduct;
             $corrected = true;
-
-            // The booking record holds the price too (admin grid, the
-            // Novoton submission, travel_bookings); left alone it kept the
-            // pre-correction price while the order charged the new one.
-            $bookingId = PriceInfoFormatter::toInt($existingExtra['novoton_booking_id'] ?? 0);
-            if ($bookingId > 0) {
-                $bookingPrices = ['total_price' => $newPrice];
-                if ($rawPrice > 0) {
-                    $bookingPrices['base_price'] = $rawPrice; // raw API price, before commission
-                }
-                try {
-                    Container::getInstance()->bookingRepository()->update($bookingId, $bookingPrices);
-                } catch (\Throwable $e) {
-                    // The cart is already corrected; a failed record update
-                    // must not stop the customer from re-confirming.
-                    fn_log_event('general', 'runtime', [
-                        'message' => '[Novoton] pre_place_order: booking price update failed',
-                        'booking_id' => $bookingId,
-                        'error' => $e->getMessage(),
-                    ]);
-                }
-            }
 
             // Refresh the Silent Sync entry with the corrected price: the
             // second click then trusts it instead of re-querying the API.
@@ -139,6 +170,19 @@ function fn_novoton_holidays_pre_place_order(&$cart, &$allow, &$product_groups):
         fn_save_cart_content($cart, TypeCoerce::toInt($session->auth()['user_id'] ?? 0));
     }
 
+    // The new price could not be recorded on a booking: never charge a price
+    // its booking does not hold. Nothing was changed for that line.
+    if ($recordUpdateFailed) {
+        fn_set_notification(
+            'E',
+            __('error'),
+            __('novoton_holidays.booking_price_update_failed', [
+                '[default]' => 'The price of a hotel reservation in your cart has changed, but it could not be updated. Please try placing your order again in a moment.',
+            ]),
+        );
+        $allow = false;
+    }
+
     // Send email notifications for any price discrepancies (lower, higher,
     // absorbed, or the booked offer no longer offered)
     foreach ($result['notifications'] as $notification) {
@@ -147,7 +191,9 @@ function fn_novoton_holidays_pre_place_order(&$cart, &$allow, &$product_groups):
 
     // A correction exceeded the absorb allowance: the cart now shows the new
     // price — block this click so the customer re-confirms the updated total.
-    if (!empty($result['reconfirm'])) {
+    // (Not when the only corrections could not be recorded: the cart still
+    // shows the old price, the error above says why the click was refused.)
+    if (!empty($result['reconfirm']) && ($corrected || !$recordUpdateFailed)) {
         fn_set_notification(
             'W',
             __('travel_core.price_change', ['[default]' => 'Price update']),

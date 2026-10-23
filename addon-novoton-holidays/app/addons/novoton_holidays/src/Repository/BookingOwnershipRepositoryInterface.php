@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
-use Tygh\Addons\TravelCore\TravelConstants;
-
 /**
  * Ownership-scoped read access to novoton_bookings.
  *
@@ -17,16 +15,6 @@ use Tygh\Addons\TravelCore\TravelConstants;
  */
 interface BookingOwnershipRepositoryInterface
 {
-    /**
-     * Find bookings by multiple product IDs (batch query for cart), scoped to
-     * the owning user and/or session.
-     *
-     * @param list<int> $product_ids Product IDs
-     * @param list<string> $statuses Optional status filter (default: pending + confirmed)
-     * @return list<array<string, mixed>> Booking rows
-     */
-    public function findByProductIds(array $product_ids, array $statuses = [TravelConstants::STATUS_PENDING, TravelConstants::STATUS_CONFIRMED], string $session_id = '', int $user_id = 0): array;
-
     /**
      * Find a cart-stage booking (order_id = 0, status pending) by ID only when
      * it belongs to the given user or session. user_id counts only when > 0

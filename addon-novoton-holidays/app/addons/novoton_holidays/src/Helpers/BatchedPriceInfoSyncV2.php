@@ -54,12 +54,22 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
      */
     private array $packageNameCache = [];
 
+    private readonly PriceInfoRefusals $refusals;
+
+    /** @var array<string, string> "hotelId/packageId" => reason, refused in this process (the end-of-run retry skips them) */
+    private array $refusedThisRun = [];
+
+    /** @var list<string>|null the incremental selection determineSyncType() counted, reused by getItemsToSync() */
+    private ?array $incrementalItems = null;
+
     public function __construct(
         ?StateManagerInterface $state = null,
         ?SyncLoggerInterface $logger = null,
+        ?PriceInfoRefusals $refusals = null,
     ) {
         parent::__construct($state, $logger);
         $this->fullSyncInterval = ConfigProvider::getSyncIntervalPriceInfo();
+        $this->refusals = $refusals ?? new PriceInfoRefusals();
     }
 
     /**
@@ -135,12 +145,11 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
             return 'full';
         }
 
-        // Incremental branch: count stale packages.
-        $staleCount = TypeCoerce::toInt(db_get_field(
-            'SELECT COUNT(*) FROM ?:novoton_hotel_packages
-             WHERE synced_at IS NULL OR synced_at < DATE_SUB(NOW(), INTERVAL ?i HOUR)',
-            $this->staleHours,
-        ));
+        // Incremental branch: the stale packages an incremental run would ask
+        // about. Counting every stale row instead started a run each cron tick
+        // for packages it then skips (out of scope, dropped, recently refused).
+        $this->incrementalItems = $this->selectItems('incremental');
+        $staleCount = count($this->incrementalItems);
 
         if ($staleCount > 0) {
             $this->logger->output("Found {$staleCount} stale packages (older than {$this->staleHours}h).");
@@ -157,13 +166,37 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
     #[\Override]
     protected function getItemsToSync(string $syncType, array $options): array
     {
+        if ($syncType !== 'full' && $this->incrementalItems !== null) {
+            return $this->incrementalItems;
+        }
+
+        return $this->selectItems($syncType);
+    }
+
+    /**
+     * The packages a run asks Novoton about, as "hotelId/packageId" strings.
+     *
+     * Two kinds are left out before any API call, each with a log line:
+     *  - a package Novoton dropped: its hotel's latest stored hotelinfo no
+     *    longer lists it (noLongerListed). Package rows are never deleted,
+     *    their past seasons are kept, and Novoton refuses a price list for a
+     *    package it no longer has;
+     *  - on an incremental run, a package Novoton refused within the full-sync
+     *    interval (PriceInfoRefusals); the next full sync asks once more.
+     *
+     * @return list<string>
+     */
+    private function selectItems(string $syncType): array
+    {
         // The destinations we sell (+ hotels with live products); the selected
         // countries until a whitelist is saved. One priceinfo call per package.
         $scope = DestinationScope::current()->syncWhere('h');
+        $columns = 'p.hotel_id, p.package_id, p.created_at, h.hotelinfo_synced_at,'
+            . ' JSON_EXTRACT(h.hotel_data, \'$.packages\') AS listed_packages';
 
         if ($syncType === 'full') {
             $rows = db_get_array(
-                'SELECT p.hotel_id, p.package_id
+                'SELECT ' . $columns . '
                  FROM ?:novoton_hotel_packages p
                  JOIN ?:novoton_hotels h ON p.hotel_id = h.hotel_id
                  WHERE ' . $scope . '
@@ -171,7 +204,7 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
             );
         } else {
             $rows = db_get_array(
-                'SELECT p.hotel_id, p.package_id
+                'SELECT ' . $columns . '
                  FROM ?:novoton_hotel_packages p
                  JOIN ?:novoton_hotels h ON p.hotel_id = h.hotel_id
                  WHERE ' . $scope . '
@@ -181,12 +214,59 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
             );
         }
 
-        // Encode composite (hotel_id, package_id) as "hotelId/packageId" string.
-        return array_map(
-            static fn (array $row): string => TypeCoerce::toString($row['hotel_id'] ?? '')
-                . '/' . TypeCoerce::toString($row['package_id'] ?? ''),
-            TypeCoerce::toRowList($rows),
-        );
+        $refused = $syncType === 'full' ? [] : $this->refusals->refusedWithin($this->fullSyncInterval, time());
+        $listedByHotel = [];
+        $items = [];
+        $dropped = 0;
+        $waiting = 0;
+        foreach (TypeCoerce::toRowList($rows) as $row) {
+            // Encode composite (hotel_id, package_id) as "hotelId/packageId" string.
+            $item = TypeCoerce::toString($row['hotel_id'] ?? '') . '/' . TypeCoerce::toString($row['package_id'] ?? '');
+            if (self::noLongerListed($row, $listedByHotel)) {
+                $dropped++;
+            } elseif (isset($refused[$item])) {
+                $waiting++;
+            } else {
+                $items[] = $item;
+            }
+        }
+
+        if ($dropped > 0) {
+            $this->logger->output("Skipped {$dropped} packages Novoton no longer lists for their hotel (kept for their past seasons).");
+        }
+        if ($waiting > 0) {
+            $days = (int) round($this->fullSyncInterval / 86400);
+            $this->logger->output("Skipped {$waiting} packages Novoton refused in the last {$days} days; the next full sync asks again.");
+        }
+
+        return $items;
+    }
+
+    /**
+     * A package its hotel's latest stored hotelinfo does not list, although
+     * the package was known before that hotelinfo was fetched: Novoton
+     * dropped it. With no list stored (HotelPackageExtractor::listedIdsFromJson
+     * gives NULL), or for a package added since, it counts as listed.
+     *
+     * @param array<string, mixed> $row with hotel_id, package_id, created_at, hotelinfo_synced_at, listed_packages
+     * @param array<string, list<string>|null> $listedByHotel hotel_id => listed ids, filled as rows are read
+     */
+    private static function noLongerListed(array $row, array &$listedByHotel): bool
+    {
+        $hotelId = TypeCoerce::toString($row['hotel_id'] ?? '');
+        if (!array_key_exists($hotelId, $listedByHotel)) {
+            $json = $row['listed_packages'] ?? null;
+            $listedByHotel[$hotelId] = HotelPackageExtractor::listedIdsFromJson(is_string($json) ? $json : null);
+        }
+        $listed = $listedByHotel[$hotelId];
+        if ($listed === null || in_array(TypeCoerce::toString($row['package_id'] ?? ''), $listed, true)) {
+            return false;
+        }
+
+        $known = strtotime(TypeCoerce::toString($row['created_at'] ?? ''));
+        $fetched = strtotime(TypeCoerce::toString($row['hotelinfo_synced_at'] ?? ''));
+
+        return $known !== false && $fetched !== false && $known <= $fetched;
     }
 
     /**
@@ -265,12 +345,25 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
             return ['success' => false, 'message' => 'no_package_name', 'data' => null];
         }
 
+        if (isset($this->refusedThisRun[$key])) {
+            // The end-of-run retry: Novoton would refuse it the same way.
+            $this->logger->output("[{$hotelId}/{$packageId}] {$packageName}: refused earlier in this run, not asked again");
+            return ['success' => false, 'message' => 'refused: ' . $this->refusedThisRun[$key], 'data' => null];
+        }
+
         $this->logger->output("[{$hotelId}/{$packageId}] {$packageName} ... ", false);
 
         try {
             // The Novoton API requires PackageName, not package_id (IdCont).
             $priceInfo = $this->getApi()->pricing()->getPriceInfo($hotelId, $packageName);
         } catch (ApiException $e) {
+            $reason = TypeCoerce::toString($e->getContext()['refusal'] ?? '');
+            if ($reason !== '' && PriceInfoRefusals::isAboutThePackage($reason)) {
+                $this->refusedThisRun[$key] = $reason;
+                $this->refusals->record($key, $reason, time());
+                $this->logger->output("REFUSED: Novoton gives no price list for this package ({$reason}). Its stored prices stay; the next full sync asks again.");
+                return ['success' => false, 'message' => 'refused: ' . $reason, 'data' => null];
+            }
             $this->logger->output('ERROR: ' . $e->getMessage());
             return ['success' => false, 'message' => $e->getMessage(), 'data' => null];
         }
@@ -281,6 +374,7 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
         }
 
         $seasonsCount = $this->processPriceInfo($hotelId, $packageId, $priceInfo, date('Y-m-d H:i:s'));
+        $this->refusals->forget($key, time());
         $this->logger->output("OK ({$seasonsCount} seasons)");
 
         return [

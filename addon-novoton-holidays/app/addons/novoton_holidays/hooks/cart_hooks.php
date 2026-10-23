@@ -6,7 +6,7 @@ declare(strict_types=1);
  *
  * Responsible for:
  *   - get_cart_product_data_post: Format cart line items for hotel bookings
- *   - calculate_cart_items: Inject booking data from DB into cart products
+ *   - calculate_cart_items: Remove lines that may not carry the booking they claim
  *   - calculate_cart_items_post: Ensure rooms_data is preserved as array
  *   - checkout_pre_dispatch: Debug info on checkout pages
  *   - dispatch_before_display: Meta variables, Smarty modifiers, CSS loading,
@@ -20,17 +20,19 @@ declare(strict_types=1);
  */
 
 use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
+use Tygh\Addons\NovotonHolidays\Repository\CartBookingRepository;
+use Tygh\Addons\NovotonHolidays\Services\CartBookingGuard;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
+use Tygh\Addons\TravelCore\Helpers\SessionAccessor;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Registry;
 
 if (!defined('BOOTSTRAP')) {
     exit('Access denied');
 }
-
-use Tygh\Addons\TravelCore\TravelConstants;
 
 /**
  * Hook: Format cart product info for hotel bookings
@@ -48,75 +50,86 @@ function fn_novoton_holidays_get_cart_product_data_post(&$product, $cart, $auth)
 }
 
 /**
- * Hook: After cart is calculated - inject booking data from database.
+ * Hook: After the cart lines are priced - verify every Novoton booking line.
  *
- * Ensures booking details are shown even if extra data was lost.
- * Supports multiple bookings for the same hotel product.
+ * A line keeps its booking only while the booking is this visitor's to buy
+ * (pending with no order yet, or linked to this cart's own processed/failed
+ * order after a failed payment; owned by this account, this session, or
+ * verified by this session's cart before the login regenerated the session
+ * id), is for the line's product, is held by no other line, and the line
+ * charges its price (CartBookingGuard). Any other line claiming a booking is
+ * removed from the cart and the customer is asked to book again: kept
+ * without its booking it would be the hotel at the catalogue price. Lines of
+ * a placed order being edited (cart.order_id) are left alone.
+ *
+ * This hook used to do the opposite as well: hand a hotel line WITHOUT
+ * booking keys (e.g. added through CS-Cart's own checkout.add) the session's
+ * first unused booking, writing only extra - so the line kept the catalogue
+ * "from" price while the full reservation was submitted (audit H3). That
+ * injection is gone: no flow loses a line's extra (add_to_cart writes the
+ * cart directly; saved carts store the whole line), and Sphinx and Eurosite
+ * never had it. A booking reaches the cart through add_to_cart only.
  *
  * @param array<string, mixed> $cart
- * @param array<string, mixed> $cart_products
+ * @param array<array-key, mixed> $cart_products cart id => row (CS-Cart cart ids are numeric keys)
  * @param array<string, mixed> $auth
  */
 function fn_novoton_holidays_calculate_cart_items(&$cart, &$cart_products, $auth): void
 {
-    if (empty($cart_products)) {
+    if (empty($cart_products) && empty($cart['products'])) {
         return;
     }
 
-    $product_ids = TypeCoerce::toIntList(array_column($cart_products, 'product_id'));
+    $session = new SessionAccessor();
+    $user_id = PriceInfoFormatter::toInt($auth['user_id'] ?? 0);
+    $session_id = session_id() ?: '';
+    $own_order_ids = CartBookingGuard::ownOrderIds($cart);
+    $verified_ids = TypeCoerce::toIntList($session->get(CartBookingGuard::SESSION_KEY));
+    $primary_currency = defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : 'EUR';
+    $currency = _nvt_currency_service();
 
-    $repo = Container::getInstance()->bookingOwnershipRepository();
-    $auth_user_id = PriceInfoFormatter::toInt($auth['user_id'] ?? 0);
-    $current_session_id = session_id() ?: '';
-    $default_statuses = [TravelConstants::STATUS_PENDING, TravelConstants::STATUS_CONFIRMED];
-    $all_bookings = $repo->findByProductIds($product_ids, $default_statuses, $current_session_id, $auth_user_id);
+    $guard = new CartBookingGuard(
+        static fn (array $ids): array => (new CartBookingRepository())
+            ->findCartStage($ids, $user_id, $session_id, $own_order_ids, $verified_ids),
+        static fn (float $amount): float => $currency->convertFromApiCurrency($amount, $primary_currency),
+        $primary_currency === ConfigProvider::getApiCurrency() ? 0.0 : CartBookingGuard::RATE_DRIFT,
+    );
+    $result = $guard->reconcile($cart, $cart_products);
 
-    if (empty($all_bookings)) {
-        return;
+    if ($result['booking_ids'] !== null) {
+        $session->set(CartBookingGuard::SESSION_KEY, $result['booking_ids']);
     }
 
-    // Group by product_id
-    $bookings_by_product = [];
-    foreach ($all_bookings as $booking) {
-        $bProdId = PriceInfoFormatter::toScalar($booking['product_id'] ?? '');
-        $bookings_by_product[$bProdId][] = $booking;
+    if ($result['removed'] !== []) {
+        foreach ($result['removed'] as $cart_id => $reason) {
+            fn_log_event('general', 'runtime', [
+                'message' => '[Novoton] cart line removed: it may not carry the booking it claims',
+                'cart_id' => (string) $cart_id,
+                'reason' => $reason,
+            ]);
+        }
+        fn_set_notification(
+            'W',
+            __('warning'),
+            __('novoton_holidays.booking_removed_from_cart', [
+                '[default]' => 'A hotel reservation in your cart is no longer available and was removed. Please search for the stay and book it again.',
+            ]),
+        );
+        // The saved cart still holds the removed line; a later restore would
+        // bring it back (only to be removed again).
+        if (function_exists('fn_save_cart_content')) {
+            fn_save_cart_content($cart, $user_id);
+        }
     }
 
-    // Assign bookings to cart items (first-come, first-served)
-    $used_booking_ids = [];
-
-    foreach ($cart_products as $cart_id => &$product) {
+    foreach ($result['kept'] as $cart_id) {
+        $product = $cart_products[$cart_id] ?? null;
         if (!is_array($product)) {
             continue;
         }
         /** @var array<string, mixed> $product */
-        $product_id = PriceInfoFormatter::toScalar($product['product_id'] ?? '');
-        /** @var array<string, mixed> $pExtra */
-        $pExtra = is_array($product['extra'] ?? null) ? $product['extra'] : [];
-
-        // Already has booking data with ID — keep it
-        if (!empty($pExtra['novoton_booking']) && !empty($pExtra['novoton_booking_id'])) {
-            fn_novoton_holidays_add_booking_display_data($product, $cart);
-            $used_booking_ids[] = PriceInfoFormatter::toInt($pExtra['novoton_booking_id']);
-            continue;
-        }
-
-        // Find first unused booking for this product
-        if (!isset($bookings_by_product[$product_id])) {
-            continue;
-        }
-
-        foreach ($bookings_by_product[$product_id] as $booking) {
-            $bookingId = PriceInfoFormatter::toInt($booking['booking_id'] ?? 0);
-            if (in_array($bookingId, $used_booking_ids, true)) {
-                continue;
-            }
-
-            $used_booking_ids[] = $bookingId;
-            _nvt_inject_booking_into_cart_product($product, $booking, $cart, (string) $cart_id);
-            fn_novoton_holidays_add_booking_display_data($product, $cart);
-            break;
-        }
+        fn_novoton_holidays_add_booking_display_data($product, $cart);
+        $cart_products[$cart_id] = $product;
     }
 }
 
@@ -316,65 +329,6 @@ function smarty_modifier_json_decode($string, $assoc = true)
 // ============================================================================
 // CART HELPERS (private-by-convention)
 // ============================================================================
-
-/**
- * Inject DB booking fields into a cart product's extra data.
- *
- * @param array<string, mixed> $product
- * @param array<string, mixed> $booking
- * @param array<string, mixed> $cart
- */
-function _nvt_inject_booking_into_cart_product(
-    array &$product,
-    array  $booking,
-    array &$cart,
-    string $cart_id,
-): void {
-    $bRoomId = PriceInfoFormatter::toScalar($booking['room_id'] ?? '');
-    $bBoardId = PriceInfoFormatter::toScalar($booking['board_id'] ?? '');
-
-    /** @var array<string, mixed> $extra */
-    $extra = is_array($product['extra'] ?? null) ? $product['extra'] : [];
-
-    $extra['travel_booking'] = true;
-    $extra['novoton_booking'] = true;
-    $extra['novoton_booking_id'] = $booking['booking_id'] ?? 0;
-    $extra['hotel_id'] = PriceInfoFormatter::toScalar($booking['hotel_id'] ?? '');
-    $extra['room_id'] = $bRoomId;
-    $extra['room_name'] = fn_novoton_holidays_format_room_type($bRoomId, PriceInfoFormatter::toScalar($booking['room_type'] ?? ''));
-    $extra['board_id'] = $bBoardId;
-    $extra['board_name'] = fn_novoton_holidays_format_board_name($bBoardId);
-    $extra['check_in'] = PriceInfoFormatter::toScalar($booking['check_in'] ?? '');
-    $extra['check_out'] = PriceInfoFormatter::toScalar($booking['check_out'] ?? '');
-    $extra['nights'] = PriceInfoFormatter::toInt($booking['nights'] ?? 0);
-    $extra['adults'] = PriceInfoFormatter::toInt($booking['adults'] ?? 2);
-    $extra['children'] = PriceInfoFormatter::toInt($booking['children'] ?? 0);
-    $extra['children_ages'] = PriceInfoFormatter::toScalar($booking['children_ages'] ?? '');
-    $extra['holder_name'] = PriceInfoFormatter::toScalar($booking['holder_name'] ?? '');
-    $extra['guest_names'] = PriceInfoFormatter::toScalar($booking['guest_name'] ?? '');
-    $extra['guests_data'] = class_exists(\Tygh\Addons\TravelCore\Services\GuestDataNormalizer::class)
-        ? (new \Tygh\Addons\TravelCore\Services\GuestDataNormalizer())->toJson(TypeCoerce::toString($booking['guests_data'] ?? ''))
-        : PriceInfoFormatter::toScalar($booking['guests_data'] ?? '');
-    $extra['total_price'] = PriceInfoFormatter::toFloat($booking['total_price'] ?? 0);
-    $extra['package_name'] = PriceInfoFormatter::toScalar($booking['package_name'] ?? '');
-    $extra['num_rooms'] = PriceInfoFormatter::toInt($booking['num_rooms'] ?? 1);
-
-    if (!empty($booking['rooms_data'])) {
-        $rooms = json_decode(PriceInfoFormatter::toScalar($booking['rooms_data']), true);
-        if (is_array($rooms)) {
-            $extra['rooms_data'] = $rooms;
-        }
-    }
-
-    $product['extra'] = $extra;
-
-    // Sync back to cart session
-    if (is_array($cart['products'] ?? null) && isset($cart['products'][$cart_id]) && is_array($cart['products'][$cart_id])) {
-        $cartProduct = $cart['products'][$cart_id];
-        $cartProduct['extra'] = $extra;
-        $cart['products'][$cart_id] = $cartProduct;
-    }
-}
 
 /**
  * Helper: Add booking display data to a product.

@@ -18,8 +18,20 @@ use Tygh\Addons\TravelCore\Services\Geocoding\ReverseGeocodeResult;
  *
  * Every attempt stamps geocoded_at, even when no street was found, so the
  * backlog drains monotonically and re-runs are naturally resumable with no
- * state file: a candidate is simply a row with real coordinates and no
- * stamp.
+ * state file.
+ *
+ * Which hotels a run takes (only hotels with real coordinates):
+ *  - by default, hotels WITHOUT a street address: never tried (geocoded_at
+ *    NULL: new hotels, and hotels whose coordinates moved, which the
+ *    hotel_list sync un-stamps), or tried without a street more than
+ *    RETRY_AFTER_DAYS ago (OpenStreetMap keeps filling in). A hotel that has
+ *    a street is not asked again, so the hourly run costs nothing once the
+ *    backlog is done;
+ *  - force=1 re-geocodes EVERY hotel, streets included: it records "redo
+ *    everything stamped before now" (REDO_KEY, storage_data) and every run,
+ *    the scheduled ones too, takes the next batch until none is left. It
+ *    used to wipe all stamps up front, which also lost which hotels had
+ *    already been tried without a street.
  *
  * The loop, the 1 req/sec pacing and the abort-on-transport-failure rule
  * belong to travel_core's GeocodeBacklogRunner, NOT to this class: the
@@ -30,20 +42,33 @@ use Tygh\Addons\TravelCore\Services\Geocoding\ReverseGeocodeResult;
  *
  * Params:
  *   limit=N   hotels per run (default 300 ≈ 5 min at 1 req/s)
- *   status=1  print backlog counters, no processing
- *   force=1   clear all stamps first (full re-geocode)
+ *   status=1  print the counters, no processing
+ *   force=1   re-geocode every hotel, streets included (in batches, over runs)
  */
 class GeocodeAddressesCommand extends AbstractCronCommand
 {
     private const int DEFAULT_LIMIT = 300;
 
-    /** Rows with real coordinates that have never been attempted. */
-    private const string ELIGIBLE_WHERE = 'latitude IS NOT NULL AND longitude IS NOT NULL AND latitude <> 0 AND longitude <> 0 AND geocoded_at IS NULL';
+    /** A hotel tried without finding a street is tried again after this many days. */
+    public const int RETRY_AFTER_DAYS = 30;
+
+    /** storage_data: while set, hotels stamped before this (database) time are redone (force=1). */
+    public const string REDO_KEY = 'novoton_geocode_redo_before';
+
+    private const string HAS_COORDINATES = 'latitude IS NOT NULL AND longitude IS NOT NULL AND latitude <> 0 AND longitude <> 0';
+
+    private const string NO_STREET = "(street_address IS NULL OR street_address = '')";
 
     private ?NominatimClient $client = null;
 
     /** Pacing hook (seconds), injectable for tests. */
     private ?\Closure $sleeper = null;
+
+    /** @var (\Closure(): string)|null reads REDO_KEY, injectable for tests */
+    private ?\Closure $readRedo = null;
+
+    /** @var (\Closure(string): void)|null writes REDO_KEY ('' clears it), injectable for tests */
+    private ?\Closure $writeRedo = null;
 
     /**
      * @return list<string>
@@ -70,6 +95,18 @@ class GeocodeAddressesCommand extends AbstractCronCommand
     }
 
     /**
+     * Where force=1 keeps its "redo before" time (default: CS-Cart storage_data).
+     *
+     * @param \Closure(): string $read
+     * @param \Closure(string): void $write '' clears it
+     */
+    public function setRedoStore(\Closure $read, \Closure $write): void
+    {
+        $this->readRedo = $read;
+        $this->writeRedo = $write;
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function execute(): array
@@ -91,20 +128,26 @@ class GeocodeAddressesCommand extends AbstractCronCommand
             return ['success' => false, 'error' => 'Missing geocoding contact email'];
         }
 
-        if (!empty($this->getParam('force'))) {
-            db_query('UPDATE ?:novoton_hotels SET geocoded_at = NULL');
-            $this->output('force=1: cleared all geocode stamps — full re-geocode.');
-        }
-
         $limit = TypeCoerce::toInt($this->getParam('limit', self::DEFAULT_LIMIT));
         if ($limit <= 0) {
             $limit = self::DEFAULT_LIMIT;
         }
 
-        $hotels = $this->getCandidates($limit);
+        if (!empty($this->getParam('force'))) {
+            // The database's clock: the stamps are written with NOW().
+            $this->writeRedo(TypeCoerce::toString(db_get_field('SELECT NOW()')));
+            $this->output("force=1: every hotel with coordinates is geocoded again, streets included, {$limit} per run until done.");
+        }
+        $redoBefore = $this->readRedo();
+
+        $hotels = $this->getCandidates($limit, $redoBefore);
 
         if ($hotels === []) {
-            $this->output('Nothing to geocode — every hotel with coordinates is already stamped.');
+            if ($redoBefore !== '') {
+                $this->writeRedo('');
+                $this->output('The re-geocode of every hotel is complete.');
+            }
+            $this->output('Nothing to geocode: every hotel with coordinates has a street, or was tried without one in the last ' . self::RETRY_AFTER_DAYS . ' days.');
             $this->output('(Hotels without coordinates become eligible after a hotel_list sync.)');
             $stats = ['geocoded' => 0, 'no_street' => 0, 'remaining' => 0];
             $this->logComplete('geocode_addresses', $stats);
@@ -168,7 +211,11 @@ class GeocodeAddressesCommand extends AbstractCronCommand
         $aborted = (bool) $runStats['aborted'];
         $abortError = TypeCoerce::toString($runStats['error']);
 
-        $remaining = $this->countCandidates();
+        $remaining = $this->countCandidates($redoBefore);
+        if ($redoBefore !== '' && $remaining === 0) {
+            $this->writeRedo('');
+            $this->output('The re-geocode of every hotel is complete.');
+        }
 
         $this->output('');
         $this->output("Done: {$withStreet} with street, {$noStreet} without. Remaining backlog: {$remaining}.");
@@ -194,49 +241,98 @@ class GeocodeAddressesCommand extends AbstractCronCommand
      */
     private function printStatus(): array
     {
-        $pending = $this->countCandidates();
-        $attempted = TypeCoerce::toInt(db_get_field(
-            'SELECT COUNT(*) FROM ?:novoton_hotels WHERE geocoded_at IS NOT NULL',
-        ));
+        $redoBefore = $this->readRedo();
+        $pending = $this->countCandidates($redoBefore);
         $withStreet = TypeCoerce::toInt(db_get_field(
-            "SELECT COUNT(*) FROM ?:novoton_hotels WHERE street_address IS NOT NULL AND street_address != ''",
+            'SELECT COUNT(*) FROM ?:novoton_hotels WHERE ' . self::HAS_COORDINATES . ' AND NOT ' . self::NO_STREET,
+        ));
+        $neverTried = TypeCoerce::toInt(db_get_field(
+            'SELECT COUNT(*) FROM ?:novoton_hotels WHERE ' . self::HAS_COORDINATES . ' AND geocoded_at IS NULL',
+        ));
+        $triedNoStreet = TypeCoerce::toInt(db_get_field(
+            'SELECT COUNT(*) FROM ?:novoton_hotels WHERE ' . self::HAS_COORDINATES . ' AND geocoded_at IS NOT NULL AND ' . self::NO_STREET,
         ));
         $noCoords = TypeCoerce::toInt(db_get_field(
             'SELECT COUNT(*) FROM ?:novoton_hotels WHERE latitude IS NULL OR longitude IS NULL OR latitude = 0 OR longitude = 0',
         ));
 
         $this->output('Geocoding status:');
-        $this->output("  Pending (have coordinates, not yet attempted): {$pending}");
-        $this->output("  Attempted: {$attempted} (streets found: {$withStreet})");
+        $this->output("  With a street address: {$withStreet} (not asked again)");
+        $this->output("  Never tried (new, or coordinates moved): {$neverTried}");
+        $this->output("  Tried, no street found: {$triedNoStreet} (tried again after " . self::RETRY_AFTER_DAYS . ' days)');
+        $this->output("  Due now: {$pending}" . ($redoBefore !== '' ? " (re-geocoding every hotel, since {$redoBefore})" : ''));
         $this->output("  Without usable coordinates (run mode=hotel_list first): {$noCoords}");
 
         return [
             'success' => true,
             'stats' => [
                 'pending' => $pending,
-                'attempted' => $attempted,
                 'with_street' => $withStreet,
+                'never_tried' => $neverTried,
+                'tried_no_street' => $triedNoStreet,
+                'attempted' => $withStreet + $triedNoStreet,
+                'redo_all_since' => $redoBefore,
                 'no_coordinates' => $noCoords,
             ],
         ];
     }
 
     /**
+     * The hotels due: see the class doc. While a force=1 re-geocode runs
+     * ($redoBefore set), every hotel stamped before it, streets included.
+     *
+     * @return array{0: string, 1: list<int|string>} WHERE clause and its parameters
+     */
+    private static function dueWhere(string $redoBefore): array
+    {
+        if ($redoBefore !== '') {
+            return [self::HAS_COORDINATES . ' AND (geocoded_at IS NULL OR geocoded_at < ?s)', [$redoBefore]];
+        }
+
+        return [
+            self::HAS_COORDINATES . ' AND (geocoded_at IS NULL OR (' . self::NO_STREET . ' AND geocoded_at < DATE_SUB(NOW(), INTERVAL ?i DAY)))',
+            [self::RETRY_AFTER_DAYS],
+        ];
+    }
+
+    /**
+     * Never-tried hotels first (NULL sorts first), then the oldest attempts.
+     *
      * @return list<array<string, mixed>>
      */
-    private function getCandidates(int $limit): array
+    private function getCandidates(int $limit, string $redoBefore): array
     {
+        [$where, $params] = self::dueWhere($redoBefore);
+
         return TypeCoerce::toRowList(db_get_array(
             'SELECT hotel_id, hotel_name, latitude, longitude FROM ?:novoton_hotels WHERE '
-                . self::ELIGIBLE_WHERE . ' ORDER BY hotel_id LIMIT ?i',
-            $limit,
+                . $where . ' ORDER BY geocoded_at, hotel_id LIMIT ?i',
+            ...[...$params, $limit],
         ));
     }
 
-    private function countCandidates(): int
+    private function countCandidates(string $redoBefore): int
     {
-        return TypeCoerce::toInt(db_get_field(
-            'SELECT COUNT(*) FROM ?:novoton_hotels WHERE ' . self::ELIGIBLE_WHERE,
-        ));
+        [$where, $params] = self::dueWhere($redoBefore);
+
+        return TypeCoerce::toInt(db_get_field('SELECT COUNT(*) FROM ?:novoton_hotels WHERE ' . $where, ...$params));
+    }
+
+    private function readRedo(): string
+    {
+        if ($this->readRedo !== null) {
+            return trim(($this->readRedo)());
+        }
+
+        return function_exists('fn_get_storage_data') ? trim(TypeCoerce::toString(fn_get_storage_data(self::REDO_KEY))) : '';
+    }
+
+    private function writeRedo(string $before): void
+    {
+        if ($this->writeRedo !== null) {
+            ($this->writeRedo)($before);
+        } elseif (function_exists('fn_set_storage_data')) {
+            fn_set_storage_data(self::REDO_KEY, $before);
+        }
     }
 }

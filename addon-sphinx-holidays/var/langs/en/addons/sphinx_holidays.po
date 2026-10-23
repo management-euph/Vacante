@@ -1080,6 +1080,10 @@ msgctxt "Languages::sphinx_holidays.booking_data_missing"
 msgid "Booking data not available. Please search again."
 msgstr "Booking data not available. Please search again."
 
+msgctxt "Languages::sphinx_holidays.booking_not_bound"
+msgid "Your booking for \"[hotel]\" could not be confirmed and was removed from the cart. Please book it again."
+msgstr "Your booking for \"[hotel]\" could not be confirmed and was removed from the cart. Please book it again."
+
 msgctxt "Languages::sphinx_holidays.booking_error"
 msgid "An error occurred. Please try again."
 msgstr "An error occurred. Please try again."

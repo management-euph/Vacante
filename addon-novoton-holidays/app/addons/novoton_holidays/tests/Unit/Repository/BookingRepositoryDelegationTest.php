@@ -160,6 +160,45 @@ class BookingRepositoryDelegationTest extends TestCase
         $this->assertSame([['assignUser', 42, ['10', '11']]], $this->sync->calls);
     }
 
+    /**
+     * C1: user_id 0 is every guest, and an empty session id is every
+     * session-less guest booking - neither may claim anything.
+     */
+    public function testLinkToUserBySessionClaimsNothingWithoutAnAccountOrASession(): void
+    {
+        DbStub::$getFields = static fn (string $q, ...$p): array => ['10', '11'];
+        $this->routeQueries(affected: 2);
+
+        $this->assertSame(0, $this->repo->linkToUserBySession(0, 'sess-1'));
+        $this->assertSame(0, $this->repo->linkToUserBySession(-1, 'sess-1'));
+        $this->assertSame(0, $this->repo->linkToUserBySession(42, ''));
+        $this->assertSame(0, $this->repo->linkToUserBySession(42, "  \t"));
+
+        $this->assertSame([], $this->queries, 'no UPDATE is run');
+        $this->assertSame([], $this->sync->calls);
+    }
+
+    /**
+     * Every package group of one booking shares order, hotel and dates: the
+     * submission's dedup must look for its own group's row only.
+     */
+    public function testOrderHotelDatesLookupIsScopedToTheGroup(): void
+    {
+        $seen = [];
+        DbStub::$getField = static function (string $q, mixed ...$p) use (&$seen): int {
+            $seen[] = [$q, $p];
+
+            return 7;
+        };
+
+        $this->assertSame(7, $this->repo->findIdByOrderAndHotelDates(900, 'H1', '2026-07-01', '2026-07-08', 2));
+        $this->assertSame(7, $this->repo->findIdByOrderAndHotelDates(900, 'H1', '2026-07-01', '2026-07-08'));
+
+        $this->assertStringContainsString('?p', $seen[0][0]);
+        $this->assertSame([900, 'H1', '2026-07-01', '2026-07-08', 'AND room_number = 2'], $seen[0][1]);
+        $this->assertSame([900, 'H1', '2026-07-01', '2026-07-08', ''], $seen[1][1], 'no group: any row of the stay');
+    }
+
     public function testLinkToUserBySessionSkipsDelegationWhenNothingClaimed(): void
     {
         $this->routeQueries(affected: 0);

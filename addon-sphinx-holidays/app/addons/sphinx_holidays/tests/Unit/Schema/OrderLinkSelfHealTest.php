@@ -38,7 +38,8 @@ final class OrderLinkSelfHealTest extends TestCase
 
         self::assertSame(
             2,
-            substr_count($hookBody, 'self::linkOrderBookings($resolved_order_id)'),
+            // the submission path also passes the ids it refused (audit H2)
+            substr_count($hookBody, 'self::linkOrderBookings($resolved_order_id'),
             'place_order_post must self-heal on both paths: the empty-cart '
                 . 'fallback AND after the submission loop (novoton parity — '
                 . 'without these, the grid shows "Order ID: -" until manual reconcile)',

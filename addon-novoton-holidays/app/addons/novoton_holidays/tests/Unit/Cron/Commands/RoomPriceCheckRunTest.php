@@ -50,7 +50,7 @@ final class RoomPriceCheckRunTest extends TestCase
 
     /**
      * @param list<array<string, mixed>> $hotels
-     * @param array<string, \SimpleXMLElement|false> $answers hotel_id => response
+     * @param array<string, \SimpleXMLElement|false|string> $answers hotel_id => response; a string is a reply that did not parse
      *
      * @return array{result: array<string, mixed>, batches: list<array{ids: list<string>, concurrency: int, nocache: bool}>, updates: list<array{0: list<string>, 1: list<string>}>, limit: int}
      */
@@ -79,7 +79,10 @@ final class RoomPriceCheckRunTest extends TestCase
             ];
             $out = [];
             foreach (array_keys($requests) as $id) {
-                $out[(string) $id] = ['data' => $answers[(string) $id] ?? self::xml(false), 'rawXml' => ''];
+                $answer = $answers[(string) $id] ?? self::xml(false);
+                $out[(string) $id] = is_string($answer)
+                    ? ['data' => false, 'rawXml' => '', 'unparsed' => $answer]
+                    : ['data' => $answer, 'rawXml' => ''];
             }
 
             return $out;
@@ -132,6 +135,24 @@ final class RoomPriceCheckRunTest extends TestCase
         self::assertSame(27, $stats['without_prices']);
         self::assertSame(1, $stats['invalid'], 'a failed response is counted, and left unchanged');
         self::assertSame(['BULGARIA' => 1, 'ALBANIA' => 1], $stats['by_country']);
+    }
+
+    /**
+     * Novoton answers a hotel with nothing priced on the dates with an empty
+     * document, which does not parse: it was counted as "no answer" and the
+     * hotel kept has_room_price = 'Y' for prices Novoton no longer has.
+     */
+    public function testAnEmptyDocumentMeansNoPricesAndAnythingElseUnreadableStaysUnchanged(): void
+    {
+        $run = $this->runCheck(self::hotels(3), [
+            '1' => "<?xml version=\"1.0\" encoding=\"windows-1251\"?>\n",
+            '2' => 'Error: no connection to dabatase.',
+            '3' => self::xml(true),
+        ]);
+
+        self::assertSame([[['3'], ['1']]], $run['updates'], 'hotel 1: no prices; hotel 2: no answer, flag kept');
+        self::assertSame(1, $run['result']['stats']['without_prices']);
+        self::assertSame(1, $run['result']['stats']['invalid']);
     }
 
     public function testConcurrencyAndLimitCanBeSetAndAreBounded(): void

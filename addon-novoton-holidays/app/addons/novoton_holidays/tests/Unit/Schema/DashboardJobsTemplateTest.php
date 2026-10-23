@@ -97,12 +97,13 @@ final class DashboardJobsTemplateTest extends TestCase
 
         $row = self::dashboardTemplates()['job_row'];
         self::assertStringContainsString('components/run_job.tpl" job=$job.mode label=__("novoton_holidays.dash_run")', $row);
-        foreach (['status', 'force_full', 'reset'] as $action) {
+        foreach (['status', 'force_full', 'reset', 'force'] as $action) {
             self::assertStringContainsString('action="' . $action . '"', $row);
         }
-        // The two that undo or redo work ask first.
+        // The ones that undo or redo work ask first.
         self::assertMatchesRegularExpression('/action="force_full"[^}]*confirm=__\("novoton_holidays\.dash_force_full_confirm"/', $row);
         self::assertMatchesRegularExpression('/action="reset"[^}]*confirm=__\("novoton_holidays\.dash_reset_confirm"/', $row);
+        self::assertMatchesRegularExpression('/action="force"[^}]*confirm=__\("novoton_holidays\.dash_redo_all_confirm"/', $row);
         self::assertStringContainsString('data-novoton-confirm="{$confirm|escape:html}"', self::dashboardTemplates()['run_job']);
     }
 

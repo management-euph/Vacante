@@ -8,7 +8,9 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\NovotonHolidays\Helpers\BatchedPriceInfoSyncV2;
 use Tygh\Addons\NovotonHolidays\Helpers\StateManagerInterface;
+use Tygh\Addons\NovotonHolidays\Helpers\PriceInfoRefusals;
 use Tygh\Addons\NovotonHolidays\Helpers\SyncLoggerInterface;
+use Tygh\Addons\NovotonHolidays\Services\DestinationScope;
 use Tygh\Addons\NovotonHolidays\Tests\Support\DbStub;
 
 /**
@@ -20,9 +22,15 @@ use Tygh\Addons\NovotonHolidays\Tests\Support\DbStub;
 #[CoversClass(BatchedPriceInfoSyncV2::class)]
 final class BatchedPriceInfoSyncTypeTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        DestinationScope::setCurrent(DestinationScope::fromRows([]));
+    }
+
     protected function tearDown(): void
     {
         DbStub::reset();
+        DestinationScope::setCurrent(null);
     }
 
     /**
@@ -31,17 +39,23 @@ final class BatchedPriceInfoSyncTypeTest extends TestCase
      */
     private function syncType(?string $lastFull, int $stalePackages, array &$askedTypes): string
     {
-        DbStub::$getField = static function (string $query, mixed ...$params) use ($lastFull, $stalePackages, &$askedTypes): mixed {
+        DbStub::$getField = static function (string $query, mixed ...$params) use ($lastFull, &$askedTypes): mixed {
             if (str_contains($query, 'novoton_sync_log')) {
                 $askedTypes[] = is_string($params[0] ?? null) ? $params[0] : '(literal in SQL)';
 
                 return ($params[0] ?? null) === 'priceinfo' ? $lastFull : null;
             }
 
-            return $stalePackages;
+            return null;
         };
+        // The stale packages an incremental run would ask about.
+        $rows = $stalePackages > 0
+            ? array_map(static fn (int $i): array => ['hotel_id' => '476', 'package_id' => (string) $i], range(1, $stalePackages))
+            : [];
+        DbStub::$getArray = static fn (string $query): array => str_contains($query, 'novoton_hotel_packages') ? $rows : [];
 
-        $sync = new BatchedPriceInfoSyncV2($this->createStub(StateManagerInterface::class), $this->createStub(SyncLoggerInterface::class));
+        $refusals = new PriceInfoRefusals(static fn (): string => '', static function (): void {});
+        $sync = new BatchedPriceInfoSyncV2($this->createStub(StateManagerInterface::class), $this->createStub(SyncLoggerInterface::class), $refusals);
         $method = new \ReflectionMethod($sync, 'determineSyncType');
         $type = $method->invoke($sync, []);
         self::assertIsString($type);

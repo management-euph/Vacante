@@ -65,6 +65,9 @@
                         <div class="novoton-menu__divider" role="separator"></div>
                         {include file="addons/novoton_holidays/components/run_job.tpl" job=$job.mode action="status" label=__("novoton_holidays.dash_check_status") class="novoton-menu__item" menuitem=true}
                     {/if}
+                    {if $job.redo_all}
+                        {include file="addons/novoton_holidays/components/run_job.tpl" job=$job.mode action="force" label=__("novoton_holidays.dash_redo_all") class="novoton-menu__item" menuitem=true confirm=__("novoton_holidays.dash_redo_all_confirm", ["[job]" => $_job_name])}
+                    {/if}
                     {if $job.batched}
                         {include file="addons/novoton_holidays/components/run_job.tpl" job=$job.mode action="force_full" label=__("novoton_holidays.dash_force_full") class="novoton-menu__item" menuitem=true confirm=__("novoton_holidays.dash_force_full_confirm", ["[job]" => $_job_name])}
                         {include file="addons/novoton_holidays/components/run_job.tpl" job=$job.mode action="reset" label=__("novoton_holidays.dash_reset_progress") class="novoton-menu__item novoton-menu__item--danger" menuitem=true confirm=__("novoton_holidays.dash_reset_confirm", ["[job]" => $_job_name])}

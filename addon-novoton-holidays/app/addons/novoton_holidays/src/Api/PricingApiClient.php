@@ -110,9 +110,13 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
      * 'nocache' => true), then sends uncached requests in parallel.
      * Returns both the parsed SimpleXMLElement and the raw cleaned XML for each key.
      *
+     * A reply that did not parse comes back with its text in 'unparsed', so a
+     * price check can tell Novoton's empty document ("no prices") from a
+     * failure (PriceCheckFlags).
+     *
      * @param array<string, array<string, mixed>> $requestParams Keyed array: key => room_price params
      * @param int $concurrency Max simultaneous requests (default 5)
-     * @return array<string, array{data: \SimpleXMLElement|false, rawXml: string}> key => result
+     * @return array<string, array{data: \SimpleXMLElement|false, rawXml: string, unparsed?: string}> key => result
      */
     #[\Override]
     public function getRoomPriceBatch(array $requestParams, int $concurrency = 5): array
@@ -191,7 +195,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
                         $this->saveToCache(Constants::API_FUNCTION_ROOM_PRICE, $cacheKey, $cleaned);
                     }
                 } catch (\Exception) {
-                    $results[$key] = ['data' => false, 'rawXml' => ''];
+                    $results[$key] = ['data' => false, 'rawXml' => '', 'unparsed' => $raw];
                 }
             }
         }

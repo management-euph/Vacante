@@ -19,7 +19,6 @@ declare(strict_types=1);
  */
 
 use Tygh\Tygh;
-use Tygh\Addons\NovotonHolidays\Api\Refusal;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Helpers\PriceCheckFlags;
@@ -253,6 +252,7 @@ if ($mode === 'check_prices') {
                         flush();
                     }
 
+                    $xml = $xml === false && PriceCheckFlags::isEmptyAnswer($rawResponseRaw) ? PriceCheckFlags::emptyAnswer() : $xml; // an empty document: no prices
                     if ($xml === false) {
                         $errorDetail = $api->getLastError() ?: 'no error info';
                         echo "<span class='skip'>  Empty/invalid response (cleaned: {$response_kb} KB, raw: {$raw_kb} KB, error: " . htmlspecialchars($errorDetail) . ")</span><br>\n";
@@ -501,7 +501,7 @@ if ($mode === 'check_prices_hotel') {
 
                 // Only an answer sets the flag: no answer, or a refusal such as a
                 // wrong password, keeps the stored one (PriceCheckFlags).
-                $answer = PriceCheckFlags::hasPrices($result);
+                $answer = PriceCheckFlags::hasPrices($result, $api->getLastResponseRaw());
                 $has_room_price = $answer === true;
                 $min_price = 0;
                 if ($has_room_price && $result instanceof \SimpleXMLElement) {
@@ -523,7 +523,7 @@ if ($mode === 'check_prices_hotel') {
                     echo "<span class='success'>✓ [{$hotel_num}] {$hotel_name} ({$city}){$price_display}</span><br>\n";
                 } elseif ($answer === null) {
                     $errors++;
-                    $why = $result instanceof \SimpleXMLElement ? 'Novoton: ' . (Refusal::reason($result) ?? '') : ($api->getLastError() ?: 'invalid response');
+                    $why = PriceCheckFlags::noAnswerReason($result, $api->getLastError(), $api->getLastResponseRaw());
                     if ($errors <= 20) {
                         echo "<span class='skip'>○ [{$hotel_num}] {$hotel_name} ({$city}) - no answer (" . htmlspecialchars($why) . "), flag unchanged</span><br>\n";
                     } elseif ($errors === 21) {

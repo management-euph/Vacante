@@ -6,7 +6,9 @@ namespace Tygh\Addons\NovotonHolidays\Tests\Unit\Helpers;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 use Tygh\Addons\NovotonHolidays\Helpers\PriceCheckFlags;
+use Tygh\Addons\NovotonHolidays\NovotonXmlParser;
 
 /**
  * A room_price check may only write what an answer proved. "No prices" for a
@@ -27,6 +29,81 @@ final class PriceCheckFlagsTest extends TestCase
             PriceCheckFlags::hasPrices(new \SimpleXMLElement('<error><err>Invalid username or password!</err></error>')),
             'a refusal (a wrong password) is no answer: it wrote "no prices" for every hotel checked',
         );
+    }
+
+    /**
+     * check_prices_hotel listed hotels with nothing priced for 7-14 July 2027
+     * as "no answer (XML Parse Error: Line 2: Start tag expected, '<' not
+     * found), flag unchanged": Novoton answered them with an empty document.
+     */
+    public function testNovotonsEmptyDocumentIsWhatTheParserRejectsOnLine2(): void
+    {
+        try {
+            (new NovotonXmlParser())->parse("<?xml version=\"1.0\" encoding=\"windows-1251\"?>\n");
+            self::fail('an empty document does not parse');
+        } catch (XmlParsingException $e) {
+            self::assertStringContainsString("Line 2: Start tag expected, '<' not found", $e->getMessage());
+        }
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function emptyDocuments(): iterable
+    {
+        yield 'declaration and a line break' => ["<?xml version=\"1.0\" encoding=\"windows-1251\"?>\n"];
+        yield 'declaration only' => ['<?xml version="1.0" encoding="windows-1251"?>'];
+        yield 'a line break' => ["\n"];
+        yield 'CRLF' => ["\r\n"];
+        yield 'BOM and declaration' => ["\xEF\xBB\xBF<?xml version=\"1.0\"?>\r\n"];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('emptyDocuments')]
+    public function testAnEmptyDocumentIsAnAnswerWithoutPrices(string $reply): void
+    {
+        self::assertTrue(PriceCheckFlags::isEmptyAnswer($reply));
+        self::assertFalse(PriceCheckFlags::hasPrices(false, $reply), 'Novoton answered: nothing priced on those dates');
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function unreadableReplies(): iterable
+    {
+        yield 'no reply at all' => [''];
+        yield 'a wrong API key or ID' => ['Error: no connection to dabatase.'];
+        yield 'text after the declaration' => ["<?xml version=\"1.0\"?>\nService unavailable"];
+        yield 'an HTML error page' => ['<html><body>502 Bad Gateway</body>'];
+        yield 'a cut-off answer' => ['<room_price><Price>120'];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('unreadableReplies')]
+    public function testAnyOtherUnreadableReplyIsStillNoAnswer(string $reply): void
+    {
+        self::assertFalse(PriceCheckFlags::isEmptyAnswer($reply));
+        self::assertNull(PriceCheckFlags::hasPrices(false, $reply), 'nothing proven: the flag stays');
+    }
+
+    public function testAnEmptyAnswerHasNoHotelAndNoPrice(): void
+    {
+        $answer = PriceCheckFlags::emptyAnswer();
+
+        self::assertSame([], $answer->xpath('//IdHotel'));
+        self::assertFalse(PriceCheckFlags::hasPrices($answer));
+    }
+
+    public function testANoAnswerLineQuotesWhatNovotonSent(): void
+    {
+        self::assertSame(
+            'XML Parse Error: Line 1: Start tag expected — reply: "Error: no connection to dabatase.\\n"',
+            PriceCheckFlags::noAnswerReason(false, 'XML Parse Error: Line 1: Start tag expected', "Error: no connection to dabatase.\n"),
+        );
+        self::assertSame('invalid response (empty reply)', PriceCheckFlags::noAnswerReason(false, '', ''));
+        self::assertSame(
+            'Novoton: Invalid username or password!',
+            PriceCheckFlags::noAnswerReason(new \SimpleXMLElement('<error><err>Invalid username or password!</err></error>'), '', ''),
+        );
+        self::assertStringEndsWith('…"', PriceCheckFlags::noAnswerReason(false, 'x', str_repeat('a', 200)), 'a long reply is cut');
     }
 
     public function testAResortCheckLeavesHotelsOfResortsThatDidNotAnswerAlone(): void

@@ -20,14 +20,73 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  */
 final class PriceCheckFlags
 {
-    /** TRUE: the reply has a <Price>. FALSE: an answer without one. NULL: no answer to judge. */
-    public static function hasPrices(mixed $response): ?bool
+    /** How much of an unparsable reply a "no answer" line quotes. */
+    private const int REPLY_EXCERPT = 80;
+
+    /**
+     * TRUE: the reply has a <Price>. FALSE: an answer without one. NULL: no answer to judge.
+     *
+     * $unparsedBody is the reply's text when it did not parse as XML (the
+     * client then returns false). Novoton answers a room_price for a hotel
+     * with nothing priced on those dates with an empty document: the XML
+     * declaration and a line break, no element. libxml rejects that with
+     * "Line 2: Start tag expected, '<' not found", so those hotels read "no
+     * answer" and kept a flag Novoton had just contradicted. An empty
+     * document is an answer without prices (isEmptyAnswer); any other text
+     * that does not parse is still no answer.
+     */
+    public static function hasPrices(mixed $response, string $unparsedBody = ''): ?bool
     {
-        if (!$response instanceof \SimpleXMLElement || Refusal::reason($response) !== null) {
+        if (!$response instanceof \SimpleXMLElement) {
+            return self::isEmptyAnswer($unparsedBody) ? false : null;
+        }
+        if (Refusal::reason($response) !== null) {
             return null;
         }
 
         return !empty($response->xpath('//Price'));
+    }
+
+    /**
+     * Whether a reply is an empty document: an XML declaration and/or
+     * whitespace (a UTF-8 BOM allowed) and nothing else. A zero-byte body is
+     * not one: that is what a failed transfer looks like.
+     */
+    public static function isEmptyAnswer(string $body): bool
+    {
+        if ($body === '') {
+            return false;
+        }
+        $rest = preg_replace('/^\xEF\xBB\xBF/', '', $body) ?? $body;
+        $rest = preg_replace('/^\s*<\?xml\b[^>]*\?>/i', '', $rest) ?? $rest;
+
+        return trim($rest) === '';
+    }
+
+    /** What an empty document stands for in a resort check: an answer with no hotel and no <Price>. */
+    public static function emptyAnswer(): \SimpleXMLElement
+    {
+        return new \SimpleXMLElement('<room_prices/>');
+    }
+
+    /**
+     * Why a check got no answer, for its log line: Novoton's refusal, else
+     * the client's error, with the start of a reply that did not parse so
+     * the log shows what Novoton actually sent.
+     */
+    public static function noAnswerReason(mixed $response, string $lastError, string $unparsedBody): string
+    {
+        if ($response instanceof \SimpleXMLElement) {
+            return 'Novoton: ' . (Refusal::reason($response) ?? 'an answer that could not be read');
+        }
+
+        $reason = $lastError !== '' ? $lastError : 'invalid response';
+        if ($unparsedBody === '') {
+            return $reason . ' (empty reply)';
+        }
+        $excerpt = addcslashes(mb_strcut($unparsedBody, 0, self::REPLY_EXCERPT, 'UTF-8'), "\0..\37");
+
+        return $reason . ' — reply: "' . $excerpt . (strlen($unparsedBody) > self::REPLY_EXCERPT ? '…' : '') . '"';
     }
 
     /**

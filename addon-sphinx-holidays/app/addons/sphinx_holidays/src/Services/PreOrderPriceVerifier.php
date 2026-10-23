@@ -16,6 +16,20 @@ declare(strict_types=1);
  * checked. If the offer is no longer available or the price has changed,
  * applies corrections or blocks the order.
  *
+ * Before any of that, every line claiming a Sphinx booking is bound to its
+ * booking row (CheckoutBookingBinder, audit H2): the row must be this
+ * visitor's pending booking for the line's offer, and the line must charge
+ * the row's price (converted, the deposit of it on a deposit line, whose
+ * saved full / deposit / balance amounts must be the row price's too). A
+ * line that fails the binding is REJECTED (the hook removes it and blocks
+ * the click); one that charges another price or saves other deposit
+ * amounts is corrected to the row's price and re-confirmed (a deposit plan
+ * from before deposits were switched off: to the full price). The provider re-check then compares the ROW's price,
+ * never extra.total_price, with the live offer, for the type the row was
+ * booked as. None of this needs the API: an API outage skips only the
+ * provider re-check, never the binding. A row already on the cart's own
+ * placed order (a retried payment) gets no provider re-check at all.
+ *
  * "Silent Sync" optimisation (same trust model as novoton): every add-to-cart
  * (hotel, circuit, package) prices its offer from the provider moments before
  * checkout and caches that raw price in the session. While that entry is
@@ -35,20 +49,30 @@ use Tygh\Addons\TravelCore\Enums\PriceComparisonOutcome;
 use Tygh\Addons\TravelCore\Helpers\SessionAccessor;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\CheckoutPriceGuard;
+use Tygh\Addons\TravelCore\Services\DepositCartLine;
 
 class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 {
     private readonly SessionAccessor $session;
 
-    public function __construct(?SessionAccessor $session = null)
+    /**
+     * @param CheckoutBookingBinder|null $binder null = the current request's (CheckoutBookingBinder::fromSession)
+     */
+    public function __construct(?SessionAccessor $session = null, private readonly ?CheckoutBookingBinder $binder = null)
     {
         $this->session = $session ?? new SessionAccessor();
     }
 
     /**
      * {@inheritdoc}
+     *
+     * Provider-specific keys: unavailable (cart id => offer gone, the hook
+     * removes the line and deletes its booking row) and rejected (cart id =>
+     * the line may not carry the booking it names, the hook removes the line,
+     * never the row, and blocks the order).
+     *
      * @param array<string, mixed> $cart
-     * @return array{allow: bool, corrections: array<int|string, array<string, float>>, notifications: array<int, array<string, mixed>>, unavailable: array<int|string, array<string, mixed>>, reconfirm: bool}
+     * @return array{allow: bool, corrections: array<int|string, array<string, float|int|string>>, notifications: array<int, array<string, mixed>>, unavailable: array<int|string, array<string, mixed>>, rejected: array<int|string, array<string, mixed>>, reconfirm: bool}
      */
     #[\Override]
     public function verify(array $cart): array
@@ -58,6 +82,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             'corrections' => [],
             'notifications' => [],
             'unavailable' => [],  // Cart IDs of unavailable Sphinx offers (to be removed by caller)
+            'rejected' => [],     // Cart IDs of lines not bound to their booking (removed by caller, order blocked)
             'reconfirm' => false, // a correction exceeded the absorb allowance — hook must block for re-confirmation
         ];
 
@@ -65,8 +90,17 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             return $result;
         }
 
+        $binder = $this->binder ?? CheckoutBookingBinder::fromSession($this->session);
+        if ($binder->editsPlacedOrder($cart)) {
+            return $result;
+        }
+        $ownOrderIds = CheckoutBookingBinder::ownOrderIds($cart);
+
         $api = null;
+        $apiDown = false;
         $cacheTtl = ConfigProvider::getPreorderCacheTtl();
+        /** @var array<int, true> $held booking ids already carried by an earlier line */
+        $held = [];
 
         // toArrayMap, NOT toStringMap: cart product ids are NUMERIC (PHP int
         // keys), and toStringMap drops every int-keyed entry — with it this
@@ -78,10 +112,77 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                 continue;
             }
 
-            $offerId = TypeCoerce::toString($extra['offer_id'] ?? '');
-            $formPrice = TypeCoerce::toFloat($extra['total_price'] ?? $productData['price'] ?? 0);
+            // ── Binding: the line's booking row, from the server (no API) ──
+            $bookingId = CheckoutBookingBinder::bookingIdOf($productData);
+            $row = $binder->rowOf($productData);
+            $reason = isset($held[$bookingId])
+                ? 'booking already held by another cart line'
+                : $binder->rejection($productData, $row, $ownOrderIds);
+            if ($reason !== null || $row === null) {
+                $result['rejected'][$cartId] = self::rejected($extra, $bookingId, $reason ?? 'no such booking');
+                continue;
+            }
+            $canonical = $binder->canonicalLine($productData, $row);
+            if ($canonical === null) {
+                $result['rejected'][$cartId] = self::rejected($extra, $bookingId, 'booking has no price');
+                continue;
+            }
+            $expected = TypeCoerce::toFloat($canonical['price'] ?? 0);
+            if (TypeCoerce::toString($productData['stored_price'] ?? '') !== 'Y') {
+                $result['rejected'][$cartId] = self::rejected($extra, $bookingId, 'line is charged the catalogue price');
+                continue;
+            }
+            $held[$bookingId] = true;
 
-            if (empty($offerId) || $formPrice <= 0) {
+            // The row's price (API currency) is what is booked: the line must
+            // charge it, and it is what the provider re-check compares.
+            $offerId = TypeCoerce::toString($row['offer_id'] ?? '');
+            $formPrice = TypeCoerce::toFloat($row['total_price'] ?? 0);
+            $currency = TypeCoerce::toString($row['currency'] ?? '');
+
+            // The deposit amounts the line saves decide the balance travel_core
+            // records as still owed: a line charging the right deposit but
+            // saving balance 0 would leave the rest of the booking unpaid.
+            if (!CheckoutBookingBinder::charges($productData, $expected)
+                || !CheckoutBookingBinder::savesDepositOf($productData, $canonical)) {
+                fn_log_event('general', 'runtime', [
+                    'message' => 'Sphinx PreOrderPriceVerifier: line does not charge its booking price — correcting to it',
+                    'offer_id' => $offerId,
+                    'booking_id' => $bookingId,
+                    'line_price' => TypeCoerce::toFloat($productData['price'] ?? 0),
+                    'expected' => $expected,
+                ]);
+                // The row keeps its price (update_row 0): the line now charges
+                // it — in full when its deposit plan is no longer offered
+                // (full_payment 1).
+                $result['corrections'][$cartId] = [
+                    'api_price' => $formPrice,
+                    'api_price_raw' => TypeCoerce::toFloat($row['base_price'] ?? 0),
+                    'currency' => $currency,
+                    'booking_id' => $bookingId,
+                    'update_row' => 0,
+                    'full_payment' => DepositCartLine::plan($productData) !== null && DepositCartLine::plan($canonical) === null ? 1 : 0,
+                ];
+                $result['reconfirm'] = true;
+                continue;
+            }
+
+            // A row on the cart's own placed order (the customer is back after
+            // a failed payment) is booked there already: the line charging its
+            // price is all that is asked — no provider re-check, so neither a
+            // removal that would delete it nor a correction written over it.
+            if (TypeCoerce::toInt($row['order_id'] ?? 0) > 0) {
+                continue;
+            }
+
+            // The type the row was booked as, never extra.booking_type.
+            // Circuits are re-quoted for the booked departure (the row's):
+            // without a circuit or a date the line can never be checked.
+            $bookingType = CheckoutBookingBinder::bookingTypeOf($row);
+            $extra = self::withBookedTrip($extra, $row);
+            if ($bookingType === 'circuit'
+                && (TypeCoerce::toInt($extra['hotel_id'] ?? 0) <= 0 || TypeCoerce::toString($extra['check_in'] ?? '') === '')) {
+                $result['rejected'][$cartId] = self::rejected($extra, $bookingId, 'circuit booking has no circuit or departure date');
                 continue;
             }
 
@@ -89,19 +190,24 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             $apiPriceRaw = $this->getCachedRawPrice($offerId, $cacheTtl);
 
             if ($apiPriceRaw === null) {
-                // Cache miss / stale — verify against the live API.
+                // Cache miss / stale — verify against the live API. A genuine
+                // outage skips only this re-check: the line is bound and
+                // charges its booking's price already.
+                if ($apiDown) {
+                    continue;
+                }
                 if ($api === null) {
                     try {
                         $api = Container::getApi();
                     } catch (\Throwable) {
                         fn_log_event('general', 'runtime', [
-                            'message' => 'Sphinx PreOrderPriceVerifier: API unavailable, skipping',
+                            'message' => 'Sphinx PreOrderPriceVerifier: API unavailable, skipping the live re-check',
                         ]);
-                        return $result;
+                        $apiDown = true;
+                        continue;
                     }
                 }
 
-                $bookingType = TypeCoerce::toString($extra['booking_type'] ?? 'hotel');
                 try {
                     $live = match ($bookingType) {
                         'package' => $this->livePackagePrice($api, $offerId, $extra),
@@ -131,6 +237,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                     $result['unavailable'][$cartId] = [
                         'offer_id' => $offerId,
                         'hotel_name' => $extra['hotel_name'] ?? '',
+                        'booking_id' => $bookingId,
                     ];
                     continue;
                 }
@@ -187,9 +294,14 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                     'api_price' => $apiPrice,
                 ]);
 
+                // The row takes the live price too (update_row 1): the
+                // binding check compares the line with it on the next click.
                 $result['corrections'][$cartId] = [
                     'api_price' => $apiPrice,
                     'api_price_raw' => $apiPriceRaw,
+                    'currency' => $currency,
+                    'booking_id' => $bookingId,
+                    'update_row' => 1,
                 ];
                 $result['notifications'][] = $notificationData;
                 $result['reconfirm'] = true;
@@ -207,6 +319,53 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
         }
 
         return $result;
+    }
+
+    /**
+     * A rejected line's entry (logged): what the hook names in its notice.
+     *
+     * @param array<string, mixed> $extra
+     * @return array<string, mixed>
+     */
+    private static function rejected(array $extra, int $bookingId, string $reason): array
+    {
+        fn_log_event('general', 'runtime', [
+            'message' => 'Sphinx PreOrderPriceVerifier: line not bound to its booking — rejecting',
+            'offer_id' => $extra['offer_id'] ?? '',
+            'booking_id' => $bookingId,
+            'reason' => $reason,
+        ]);
+
+        return [
+            'offer_id' => TypeCoerce::toString($extra['offer_id'] ?? ''),
+            'hotel_name' => TypeCoerce::toString($extra['hotel_name'] ?? ''),
+            'booking_id' => $bookingId,
+            'reason' => $reason,
+        ];
+    }
+
+    /**
+     * The line's extra with the trip as booked: the row's circuit/hotel,
+     * date and occupancy win over the cart line's copies.
+     *
+     * @param array<string, mixed> $extra
+     * @param array<string, mixed> $row
+     * @return array<string, mixed>
+     */
+    private static function withBookedTrip(array $extra, array $row): array
+    {
+        foreach (['hotel_id', 'check_in', 'adults'] as $field) {
+            $value = TypeCoerce::toString($row[$field] ?? '');
+            if ($value !== '' && $value !== '0000-00-00') {
+                $extra[$field] = $value;
+            }
+        }
+        // No children is a value too: '' on the row means none.
+        if (array_key_exists('children_ages', $row)) {
+            $extra['children_ages'] = TypeCoerce::toString($row['children_ages']);
+        }
+
+        return $extra;
     }
 
     /**

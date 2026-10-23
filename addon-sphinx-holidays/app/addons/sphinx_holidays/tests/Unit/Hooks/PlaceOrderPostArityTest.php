@@ -48,6 +48,9 @@ namespace Tygh\Addons\SphinxHolidays\Tests\Unit\Hooks {
 
         private static ?\Throwable $orderInfoFailure = null;
 
+        /** What fn_get_order_info() answers: [] (an order without products) unless a test sets it. */
+        public static mixed $orderInfoAnswer = [];
+
         /**
          * fn_get_order_info() stand-in: records the id and answers with an
          * order without products, so the link self-heal links nothing.
@@ -59,7 +62,7 @@ namespace Tygh\Addons\SphinxHolidays\Tests\Unit\Hooks {
                 throw self::$orderInfoFailure;
             }
 
-            return [];
+            return self::$orderInfoAnswer;
         }
 
         protected function setUp(): void
@@ -67,6 +70,7 @@ namespace Tygh\Addons\SphinxHolidays\Tests\Unit\Hooks {
             DbStub::reset();
             self::$orderInfoCalls = [];
             self::$orderInfoFailure = null;
+            self::$orderInfoAnswer = [];
         }
 
         protected function tearDown(): void

@@ -21,6 +21,17 @@ declare(strict_types=1);
  * reading the first <Price> compared a 600 line against 795 and pushed the
  * customer to another package's price.
  *
+ * A multi-room line is the sum of its rooms (rooms_data), each priced with
+ * its own room, board, package, adults and child ages, each with its own
+ * Silent Sync entry — the reservation books every room, so every room is
+ * checked, not only the line's top-level room (audit C2/H4).
+ *
+ * The rooms are priced as the reservation will send them: the booking
+ * row's room fields and guests over the cart line's (the submission reads
+ * the row first), each child at its guest's age when the guest has one
+ * (BookingRoomAssembler) — an Edit Booking that moves a child's age is
+ * re-priced here, not booked at the old age's price.
+ *
  * Scenarios:
  *   1. Form price < API price → CORRECT cart price to API price, notify admin
  *   2. Form price > API price by > threshold% → ALLOW order, notify admin
@@ -40,6 +51,7 @@ use Tygh\Addons\TravelCore\Enums\PriceComparisonOutcome;
 use Tygh\Addons\TravelCore\Helpers\SessionAccessor;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\CheckoutPriceGuard;
+use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 
 /**
  * @phpstan-import-type OfferRow from RoomOfferRows
@@ -48,6 +60,15 @@ final class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 {
     /** Session bag of the Silent Sync entries (written by add_to_cart). */
     public const string PRICE_CACHE_SESSION_KEY = 'novoton_price_cache';
+
+    /**
+     * The booking row's fields the reservation is built from: non-empty,
+     * they win over the cart line's (BookingSubmissionService::hydrateBookingFromDb).
+     */
+    private const array BOOKED_FIELDS = [
+        'hotel_id', 'package_name', 'room_id', 'board_id', 'check_in', 'check_out',
+        'adults', 'children', 'children_ages', 'rooms_data', 'guests_data',
+    ];
 
     private readonly SessionAccessor $session;
 
@@ -63,12 +84,16 @@ final class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
     /** @var \Closure(string): string */
     private readonly \Closure $hotelName;
 
+    /** @var \Closure(int): (array<string, mixed>|null) */
+    private readonly \Closure $bookingRow;
+
     /**
      * @param (\Closure(): (PricingApiClientInterface|null))|null $pricing the live room_price client;
      *                                                                     null = the add-on's API (null when it is not configured)
      * @param (\Closure(float): string)|null $formatAmount an API-currency amount written as the cart shows it
      * @param (\Closure(string, string, string): void)|null $notify storefront toast (type, title, message)
      * @param (\Closure(string): string)|null $hotelName catalogue hotel name for a hotel id ('' = unknown)
+     * @param (\Closure(int): (array<string, mixed>|null))|null $bookingRow the novoton_bookings row of a booking id
      */
     public function __construct(
         ?SessionAccessor $session = null,
@@ -76,6 +101,7 @@ final class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
         ?\Closure $formatAmount = null,
         ?\Closure $notify = null,
         ?\Closure $hotelName = null,
+        ?\Closure $bookingRow = null,
     ) {
         $this->session = $session ?? new SessionAccessor();
         $this->pricing = $pricing ?? static function (): ?PricingApiClientInterface {
@@ -94,6 +120,7 @@ final class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 
             return TypeCoerce::toString($hotel['hotel_name'] ?? '');
         };
+        $this->bookingRow = $bookingRow ?? static fn (int $bookingId): ?array => Container::getInstance()->bookingRepository()->findById($bookingId);
     }
 
     /**
@@ -125,6 +152,13 @@ final class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             return $result;
         }
 
+        // An admin editing a placed order (cart.order_id) re-places it: its
+        // bookings were priced and submitted with the order, and today's
+        // live price must not correct them or block the save.
+        if (TypeCoerce::toInt($cart['order_id'] ?? 0) > 0) {
+            return $result;
+        }
+
         $cacheTtl = ConfigProvider::getPreorderCacheTtl();
         $debug = ConfigProvider::isDebugLogging();
 
@@ -150,68 +184,94 @@ final class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             // The admin email and log name the hotel; an empty name made
             // them read "for hotel  [476]".
             $extra['hotel_name'] = $this->resolveHotelName($extra, $product);
+            $extra = $this->withBookingRow($extra);
 
-            // ── Silent Sync: try session cache first ──
-            $cached = $this->getCachedPrice($extra, $cacheTtl);
+            // Every room the reservation books is priced on its own (audit
+            // C2/H4): one line per room, the line's price is their sum.
+            $roomLines = self::roomLines($extra);
+            $multiRoom = count($roomLines) > 1;
+            $apiPriceWithCommission = 0.0;
+            $rawApiPrice = 0.0;
+            $roomPrices = [];
 
-            if ($cached !== null) {
-                $apiPriceWithCommission = PriceInfoFormatter::toFloat($cached['api_price'] ?? 0);
-                $rawApiPrice = PriceInfoFormatter::toFloat($cached['api_price_raw'] ?? 0);
+            // ── Silent Sync: a multi-room line's own entry (the hook writes it
+            // after a correction), else each room's entry (add_to_cart) ──
+            $lineCached = $multiRoom ? $this->getCachedPrice($extra, $cacheTtl) : null;
+            if ($lineCached !== null) {
+                $apiPriceWithCommission = PriceInfoFormatter::toFloat($lineCached['api_price'] ?? 0);
+                $rawApiPrice = PriceInfoFormatter::toFloat($lineCached['api_price_raw'] ?? 0);
+                $roomLines = [];
+            }
 
-                if ($debug) {
-                    fn_log_event('general', 'runtime', [
-                        'message' => 'PreOrderPriceVerifier: using session-cached price (Silent Sync)',
-                        'hotel_id' => PriceInfoFormatter::toScalar($extra['hotel_id'] ?? ''),
-                        'age_sec' => time() - PriceInfoFormatter::toInt($cached['timestamp'] ?? 0),
-                        'api_price' => $apiPriceWithCommission,
-                    ]);
-                }
-            } else {
-                // Cache miss / stale — call the API
-                if ($pricing === null) {
-                    $pricing = ($this->pricing)();
+            foreach ($roomLines as $roomLine) {
+                $cached = $this->getCachedPrice($roomLine, $cacheTtl);
+
+                if ($cached !== null) {
+                    $roomApiPrice = PriceInfoFormatter::toFloat($cached['api_price'] ?? 0);
+                    $roomRawPrice = PriceInfoFormatter::toFloat($cached['api_price_raw'] ?? 0);
+
+                    if ($debug) {
+                        fn_log_event('general', 'runtime', [
+                            'message' => 'PreOrderPriceVerifier: using session-cached price (Silent Sync)',
+                            'hotel_id' => PriceInfoFormatter::toScalar($roomLine['hotel_id'] ?? ''),
+                            'room_id' => PriceInfoFormatter::toScalar($roomLine['room_id'] ?? ''),
+                            'age_sec' => time() - PriceInfoFormatter::toInt($cached['timestamp'] ?? 0),
+                            'api_price' => $roomApiPrice,
+                        ]);
+                    }
+                } else {
+                    // Cache miss / stale — call the API
                     if ($pricing === null) {
-                        fn_log_event('general', 'runtime', [
-                            'message' => 'PreOrderPriceVerifier: API unavailable, skipping price check',
-                        ]);
-                        return $result;
+                        $pricing = ($this->pricing)();
+                        if ($pricing === null) {
+                            fn_log_event('general', 'runtime', [
+                                'message' => 'PreOrderPriceVerifier: API unavailable, skipping price check',
+                            ]);
+                            return $result;
+                        }
                     }
-                }
 
-                $priceParams = [
-                    'hotel_id' => PriceInfoFormatter::toScalar($extra['hotel_id'] ?? ''),
-                    'room_id' => PriceInfoFormatter::toScalar($extra['room_id'] ?? ''),
-                    'board_id' => PriceInfoFormatter::toScalar($extra['board_id'] ?? ''),
-                    'star_rating' => '',
-                    'check_in' => PriceInfoFormatter::toScalar($extra['check_in'] ?? ''),
-                    'check_out' => PriceInfoFormatter::toScalar($extra['check_out'] ?? ''),
-                    'adults' => PriceInfoFormatter::toInt($extra['adults'] ?? 2),
-                    'children' => self::parseChildrenAges($extra),
-                ];
+                    $priceParams = [
+                        'hotel_id' => PriceInfoFormatter::toScalar($roomLine['hotel_id'] ?? ''),
+                        'room_id' => PriceInfoFormatter::toScalar($roomLine['room_id'] ?? ''),
+                        'board_id' => PriceInfoFormatter::toScalar($roomLine['board_id'] ?? ''),
+                        'star_rating' => '',
+                        'check_in' => PriceInfoFormatter::toScalar($roomLine['check_in'] ?? ''),
+                        'check_out' => PriceInfoFormatter::toScalar($roomLine['check_out'] ?? ''),
+                        'adults' => PriceInfoFormatter::toInt($roomLine['adults'] ?? 2),
+                        'children' => self::parseChildrenAges($roomLine),
+                    ];
 
-                if (empty($priceParams['hotel_id']) || empty($priceParams['check_in'])) {
-                    continue;
-                }
-
-                $priceData = $pricing->getRoomPrice($priceParams);
-                $rows = $priceData instanceof \SimpleXMLElement ? RoomOfferRows::fromXml($priceData) : [];
-                $offer = self::lineOffer($rows, $extra);
-
-                if ($offer['row'] === null) {
-                    if ($offer['offer_missing']) {
-                        $result['notifications'][] = $this->offerMissing($extra, $formPrice, $rows, PriceInfoFormatter::toScalar($cartId));
-                    } elseif ($debug) {
-                        fn_log_event('general', 'runtime', [
-                            'message' => 'PreOrderPriceVerifier: API returned no price, allowing order',
-                            'hotel_id' => $priceParams['hotel_id'],
-                            'room_id' => $priceParams['room_id'],
-                        ]);
+                    if (empty($priceParams['hotel_id']) || empty($priceParams['check_in'])) {
+                        continue 2;
                     }
-                    continue;
+
+                    $priceData = $pricing->getRoomPrice($priceParams);
+                    $rows = $priceData instanceof \SimpleXMLElement ? RoomOfferRows::fromXml($priceData) : [];
+                    $offer = self::lineOffer($rows, $roomLine);
+
+                    // A room without a price leaves the whole line at the
+                    // shown price, as a single room always did.
+                    if ($offer['row'] === null) {
+                        if ($offer['offer_missing']) {
+                            $result['notifications'][] = $this->offerMissing($roomLine, $formPrice, $rows, PriceInfoFormatter::toScalar($cartId));
+                        } elseif ($debug) {
+                            fn_log_event('general', 'runtime', [
+                                'message' => 'PreOrderPriceVerifier: API returned no price, allowing order',
+                                'hotel_id' => $priceParams['hotel_id'],
+                                'room_id' => $priceParams['room_id'],
+                            ]);
+                        }
+                        continue 2;
+                    }
+
+                    $roomRawPrice = $offer['row']['price'];
+                    $roomApiPrice = $pricing->applyCommission($roomRawPrice);
                 }
 
-                $rawApiPrice = $offer['row']['price'];
-                $apiPriceWithCommission = $pricing->applyCommission($rawApiPrice);
+                $apiPriceWithCommission += $roomApiPrice;
+                $rawApiPrice += $roomRawPrice;
+                $roomPrices[] = ['price' => $roomApiPrice, 'price_raw' => $roomRawPrice];
             }
 
             $checkResult = $this->comparePrice(
@@ -223,6 +283,11 @@ final class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             );
 
             if (!empty($checkResult['correction'])) {
+                if ($multiRoom && $roomPrices !== []) {
+                    // Each room's live price, in rooms_data order, for whoever
+                    // writes the correction back into the booking's rooms.
+                    $checkResult['correction']['room_prices'] = $roomPrices;
+                }
                 $result['corrections'][(string) $cartId] = $checkResult['correction'];
             }
 
@@ -276,7 +341,131 @@ final class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
      */
     public static function priceCacheKey(array $extra): string
     {
-        return md5(implode('|', [
+        $roomLines = self::roomLines($extra);
+        if (count($roomLines) > 1) {
+            // A multi-room line: its own entry, made of every room's recipe,
+            // so it can never be read as one room's price (or the reverse).
+            return md5('rooms|' . implode('#', array_map(self::cacheKeyParts(...), $roomLines)));
+        }
+
+        // One room: the room as booked. add_to_cart writes the line's
+        // top-level tuple equal to it, so the key is the one it always was.
+        return md5(self::cacheKeyParts($roomLines[0]));
+    }
+
+    /**
+     * The rooms a cart line books, each as a line of its own: the line's
+     * extra with that room's room_id, board_id, package_name, adults,
+     * children and children_ages — the values the reservation sends
+     * (BookingRoomsGuestsResolver, BookingRoomAssembler, ApiBookingRequestBuilder):
+     *   - the rooms of rooms_data; without it, the line's own tuple;
+     *   - room, board and package: the room's own, else the line's;
+     *   - adults: the room's own, else 2; children: the room's count;
+     *   - child i of room N: the age of guest room{N}_child_{i} when the
+     *     guest has one (guests_data), else the room's childrenAges[i - 1].
+     *
+     * A room line carries no rooms_data and no guests_data, so it is its own
+     * single room line.
+     *
+     * @param array<string, mixed> $extra cart line extra
+     * @return non-empty-list<array<string, mixed>>
+     */
+    public static function roomLines(array $extra): array
+    {
+        $rooms = $extra['rooms_data'] ?? null;
+        if (is_string($rooms) && $rooms !== '') {
+            $rooms = json_decode($rooms, true);
+        }
+        $rooms = TypeCoerce::toRowList($rooms);
+        if ($rooms === []) {
+            // No rooms_data: the reservation books the line's tuple.
+            $ages = self::parseChildrenAges($extra);
+            $rooms = [[
+                'adults' => $extra['adults'] ?? 2,
+                'children' => array_key_exists('children', $extra) ? $extra['children'] : count($ages),
+                'childrenAges' => $ages,
+            ]];
+        }
+        $guests = self::guests($extra['guests_data'] ?? null);
+
+        $line = $extra;
+        unset($line['rooms_data'], $line['guests_data']);
+        $lines = [];
+        foreach ($rooms as $index => $room) {
+            $roomNum = $index + 1;
+            $roomAges = TypeCoerce::toIntList(TypeCoerce::toList($room['childrenAges'] ?? []));
+            $ages = [];
+            for ($i = 1, $children = PriceInfoFormatter::toInt($room['children'] ?? 0); $i <= $children; $i++) {
+                $guest = $guests["room{$roomNum}_child_{$i}"] ?? null;
+                $ages[] = is_array($guest) && isset($guest['age'])
+                    ? PriceInfoFormatter::toInt($guest['age'])
+                    : ($roomAges[$i - 1] ?? 0);
+            }
+            $lines[] = [
+                'room_id' => PriceInfoFormatter::toScalar($room['room_id'] ?? $extra['room_id'] ?? ''),
+                'board_id' => PriceInfoFormatter::toScalar($room['board_id'] ?? $extra['board_id'] ?? ''),
+                'package_name' => PriceInfoFormatter::toScalar($room['package_name'] ?? $extra['package_name'] ?? ''),
+                'adults' => PriceInfoFormatter::toInt($room['adults'] ?? 2),
+                'children' => count($ages),
+                'children_ages' => implode(',', $ages),
+            ] + $line;
+        }
+
+        return $lines;
+    }
+
+    /**
+     * A line's guests as the reservation reads them (keyed room{N}_{type}_{i}).
+     *
+     * @return array<string, mixed>
+     */
+    private static function guests(mixed $raw): array
+    {
+        if (is_array($raw)) {
+            $raw = json_encode($raw);
+        }
+        if (!is_string($raw) || $raw === '') {
+            return [];
+        }
+
+        return (new GuestDataNormalizer())->normalize($raw);
+    }
+
+    /**
+     * The cart line with the booking row's room fields and guests over its
+     * own, as the submission reads them. A failed lookup keeps the line.
+     *
+     * @param array<string, mixed> $extra
+     * @return array<string, mixed>
+     */
+    private function withBookingRow(array $extra): array
+    {
+        $bookingId = PriceInfoFormatter::toInt($extra['novoton_booking_id'] ?? 0);
+        if ($bookingId <= 0) {
+            return $extra;
+        }
+        try {
+            $row = ($this->bookingRow)($bookingId) ?? [];
+        } catch (\Throwable) {
+            return $extra;
+        }
+        foreach (self::BOOKED_FIELDS as $field) {
+            if (!empty($row[$field])) {
+                $extra[$field] = $row[$field];
+            }
+        }
+
+        return $extra;
+    }
+
+    /**
+     * One room's Silent Sync recipe.
+     *
+     * @param array<string, mixed> $extra
+     */
+    private static function cacheKeyParts(array $extra): string
+    {
+        return implode('|', [
             PriceInfoFormatter::toScalar($extra['hotel_id'] ?? ''),
             PriceInfoFormatter::toScalar($extra['room_id'] ?? ''),
             PriceInfoFormatter::toScalar($extra['board_id'] ?? ''),
@@ -285,7 +474,7 @@ final class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             PriceInfoFormatter::toInt($extra['adults'] ?? 2),
             implode(',', self::parseChildrenAges($extra)),
             RoomOfferRows::packageName(PriceInfoFormatter::toScalar($extra['package_name'] ?? '')),
-        ]));
+        ]);
     }
 
     /**

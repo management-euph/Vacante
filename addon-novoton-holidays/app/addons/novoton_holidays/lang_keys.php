@@ -136,8 +136,8 @@ return [
         'ro' => 'Geocodare străzi',
     ],
     'novoton_holidays.dash_job_geocode_addresses_desc' => [
-        'en' => 'Street address from coordinates (needs geocoding on in Travel Core)',
-        'ro' => 'Adresa străzii din coordonate (necesită geocodarea activă în Travel Core)',
+        'en' => 'Street address for hotels that have none (needs geocoding on in Travel Core)',
+        'ro' => 'Adresa străzii pentru hotelurile care nu o au (necesită geocodarea activă în Travel Core)',
     ],
     'novoton_holidays.dash_job_sync_priceinfo_batched' => [
         'en' => 'Price info',
@@ -398,6 +398,14 @@ return [
     'novoton_holidays.dash_force_full_confirm' => [
         'en' => 'Run a full sync of [job] now? It re-reads every hotel and makes many API calls.',
         'ro' => 'Rulezi acum sincronizarea completă pentru [job]? Recitește toate hotelurile și face multe apeluri API.',
+    ],
+    'novoton_holidays.dash_redo_all' => [
+        'en' => 'Redo all hotels',
+        'ro' => 'Refă toate hotelurile',
+    ],
+    'novoton_holidays.dash_redo_all_confirm' => [
+        'en' => 'Run [job] again for every hotel, including the ones already done? It continues in the scheduled runs until every hotel is done.',
+        'ro' => 'Rulezi din nou [job] pentru fiecare hotel, inclusiv pentru cele deja făcute? Continuă în rulările programate până termină toate hotelurile.',
     ],
     'novoton_holidays.dash_reset_progress' => [
         'en' => 'Reset progress…',
@@ -1122,5 +1130,20 @@ return [
     'email_template.novoton_holidays_price_discrepancy' => [
         'en' => 'Novoton: Price Discrepancy',
         'ro' => 'Novoton: Diferență de preț',
+    ],
+    // Checkout safety notices (audit H3, C2/H4): a cart line that could no
+    // longer carry its booking was removed; a corrected price could not be
+    // recorded on the booking; edited guests change a priced child age.
+    'novoton_holidays.booking_removed_from_cart' => [
+        'en' => 'A hotel reservation in your cart is no longer available and was removed. Please search for the stay and book it again.',
+        'ro' => 'O rezervare de hotel din coșul dvs. nu mai este disponibilă și a fost eliminată. Vă rugăm să căutați din nou sejurul și să îl rezervați.',
+    ],
+    'novoton_holidays.booking_price_update_failed' => [
+        'en' => 'The price of a hotel reservation in your cart has changed, but it could not be updated. Please try placing your order again in a moment.',
+        'ro' => 'Prețul unei rezervări de hotel din coșul dvs. s-a modificat, dar nu a putut fi actualizat. Vă rugăm să încercați să plasați comanda din nou peste câteva momente.',
+    ],
+    'novoton_holidays.guests_do_not_match_priced_stay' => [
+        'en' => 'These guest details do not match the stay that was priced (for example, a date of birth gives a child a different age). Please check the details, or search for the stay again with the correct ages and book it again.',
+        'ro' => 'Datele oaspeților nu corespund sejurului pentru care a fost calculat prețul (de exemplu, data nașterii indică o altă vârstă pentru un copil). Vă rugăm să verificați datele sau să căutați din nou sejurul cu vârstele corecte și să îl rezervați.',
     ],
 ];

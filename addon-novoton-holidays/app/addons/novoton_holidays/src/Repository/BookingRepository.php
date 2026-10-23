@@ -355,6 +355,12 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function linkToUserBySession(int $user_id, string $session_id): int
     {
+        // No account, or no session: an empty session id would claim every
+        // session-less guest booking (C1).
+        if ($user_id <= 0 || trim($session_id) === '') {
+            return 0;
+        }
+
         $affected = TypeCoerce::toInt(db_query(
             'UPDATE ?:novoton_bookings SET user_id = ?i WHERE session_id = ?s AND user_id = 0 AND order_id = 0',
             $user_id,
@@ -476,16 +482,21 @@ class BookingRepository implements BookingRepositoryInterface
     /**
      * Find existing booking ID by order + hotel + dates (for dedup).
      */
-    public function findIdByOrderAndHotelDates(int $order_id, string $hotel_id, string $check_in, string $check_out): ?int
+    public function findIdByOrderAndHotelDates(int $order_id, string $hotel_id, string $check_in, string $check_out, int $room_number = 0): ?int
     {
+        // With a room group number: that group's row only. Every package
+        // group of one booking shares the order, hotel and dates, so without
+        // it group 2 found (and overwrote) group 1's row.
+        $group = $room_number > 0 ? db_quote('AND room_number = ?i', $room_number) : '';
         $id = TypeCoerce::toInt(db_get_field(
             'SELECT booking_id FROM ?:novoton_bookings
-             WHERE order_id = ?i AND hotel_id = ?s AND check_in = ?s AND check_out = ?s
+             WHERE order_id = ?i AND hotel_id = ?s AND check_in = ?s AND check_out = ?s ?p
              LIMIT 1',
             $order_id,
             $hotel_id,
             $check_in,
             $check_out,
+            $group,
         ));
         return $id > 0 ? $id : null;
     }

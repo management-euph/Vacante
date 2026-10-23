@@ -540,6 +540,10 @@ return [
         'en' => 'Booking data not available. Please search again.',
         'ro' => 'Datele rezervării nu sunt disponibile. Vă rugăm căutați din nou.',
     ],
+    'sphinx_holidays.booking_not_bound' => [
+        'en' => 'Your booking for "[hotel]" could not be confirmed and was removed from the cart. Please book it again.',
+        'ro' => 'Rezervarea pentru „[hotel]” nu a putut fi confirmată și a fost eliminată din coș. Vă rugăm să o rezervați din nou.',
+    ],
     'sphinx_holidays.booking_error' => [
         'en' => 'An error occurred. Please try again.',
         'ro' => 'A apărut o eroare. Vă rugăm încercați din nou.',

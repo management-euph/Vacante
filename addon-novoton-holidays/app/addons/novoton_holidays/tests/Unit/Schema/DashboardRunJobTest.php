@@ -63,8 +63,9 @@ final class DashboardRunJobTest extends TestCase
         self::assertStringContainsString("fn_check_permissions('manage_catalog', 'update', 'admin')", $body);
         self::assertStringContainsString('CronDispatcher::getAvailableModes()', $body);
         self::assertStringContainsString("preg_replace('/[^a-z0-9_]/', ''", $body);
-        // Only the batched jobs' own flags are passed on; nothing else from the request.
-        self::assertStringContainsString("in_array(\$action, ['status', 'force_full', 'reset'], true)", $body);
+        // Only the jobs' own flags are passed on (the batched jobs' status /
+        // force_full / reset, a backlog job's force); nothing else from the request.
+        self::assertStringContainsString("in_array(\$action, ['status', 'force_full', 'reset', 'force'], true)", $body);
         self::assertStringContainsString('->dispatch($job, $params)', $body);
         self::assertStringNotContainsString('$_REQUEST)', $body, 'the whole request must not reach the job');
         self::assertStringNotContainsString('access_key', $body);

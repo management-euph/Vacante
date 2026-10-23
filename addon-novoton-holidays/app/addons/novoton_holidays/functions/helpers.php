@@ -87,39 +87,6 @@ function fn_novoton_holidays_is_debug(): bool
  * @return NovotonApi|null
  */
 /**
- * Add a pre-built cart-product row to the current session's cart.
- *
- * Thin wrapper around CS-Cart's procedural trio
- * (fn_add_product_to_cart / fn_save_cart_content / fn_calculate_cart_content)
- * that absorbs the reference-based `$cart` + `$auth` handling required by
- * those APIs. Living in `functions/` (the allowlisted boundary) keeps the
- * `\Tygh::$app` access out of service classes like BookingService.
- *
- * @param array<string, mixed> $product
- */
-function fn_novoton_holidays_add_to_session_cart(array $product): void
-{
-    // By-ref binds into $_SESSION — the authoritative session store (see
-    // travel_core SessionAccessor). Never assign to \Tygh::$app['session']:
-    // it is a frozen Pimple service and offsetSet throws
-    // FrozenServiceException. Narrowing happens THROUGH the references, so
-    // the initialised arrays land in the live session.
-    $cart = &$_SESSION['cart'];
-    $auth = &$_SESSION['auth'];
-    if (!is_array($cart)) {
-        $cart = [];
-    }
-    if (!is_array($auth)) {
-        $auth = [];
-    }
-
-    fn_add_product_to_cart($product, $cart, $auth);
-    $userId = is_numeric($auth['user_id'] ?? null) ? (int) $auth['user_id'] : 0;
-    fn_save_cart_content($cart, $userId);
-    fn_calculate_cart_content($cart, $auth, 'S', true, 'F', true);
-}
-
-/**
  * Get the global Smarty view instance.
  *
  * Thin boundary over `\Tygh\Tygh::$app['view']`. Lives at the functions/
