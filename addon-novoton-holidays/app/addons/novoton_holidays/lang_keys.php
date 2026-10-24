@@ -1146,4 +1146,66 @@ return [
         'en' => 'These guest details do not match the stay that was priced (for example, a date of birth gives a child a different age). Please check the details, or search for the stay again with the correct ages and book it again.',
         'ro' => 'Datele oaspeților nu corespund sejurului pentru care a fost calculat prețul (de exemplu, data nașterii indică o altă vârstă pentru un copil). Vă rugăm să verificați datele sau să căutați din nou sejurul cu vârstele corecte și să îl rezervați.',
     ],
+    // Labels the code used without ever defining them: the admin menu showed
+    // "(_novoton_holidays.addon_name)" and these rendered as raw "_novoton_holidays.*".
+    'novoton_holidays.addon_name' => [
+        'en' => 'Novoton Holidays',
+        'ro' => 'Novoton Holidays',
+    ],
+    'novoton_holidays.api_unavailable' => [
+        'en' => 'The hotel search is temporarily unavailable. Please try again later.',
+        'ro' => 'Căutarea hotelurilor este temporar indisponibilă. Vă rugăm să încercați mai târziu.',
+    ],
+    'novoton_holidays.search_error' => [
+        'en' => 'An error occurred while searching. Please try again later.',
+        'ro' => 'A apărut o eroare la căutare. Vă rugăm să încercați mai târziu.',
+    ],
+    'novoton_holidays.booking_update_failed' => [
+        'en' => 'Could not save the guest details. Please try again.',
+        'ro' => 'Datele oaspeților nu au putut fi salvate. Vă rugăm să încercați din nou.',
+    ],
+    'novoton_holidays.missing_required_fields' => [
+        'en' => 'Please fill in all required fields.',
+        'ro' => 'Vă rugăm să completați toate câmpurile obligatorii.',
+    ],
+    'novoton_holidays.invalid_email' => [
+        'en' => 'Please enter a valid email address.',
+        'ro' => 'Vă rugăm să introduceți o adresă de email validă.',
+    ],
+    'novoton_holidays.email_send_failed' => [
+        'en' => 'The email could not be sent. Please try again.',
+        'ro' => 'Emailul nu a putut fi trimis. Vă rugăm să încercați din nou.',
+    ],
+    'novoton_holidays.job_unknown' => [
+        'en' => 'Unknown job: [job]',
+        'ro' => 'Job necunoscut: [job]',
+    ],
+    'novoton_holidays.manage_bookings' => [
+        'en' => 'Novoton Bookings',
+        'ro' => 'Rezervări Novoton',
+    ],
+    'novoton_holidays.prices_use_search_form' => [
+        'en' => 'Use the search form above to see prices and availability for your dates.',
+        'ro' => 'Folosiți formularul de căutare de mai sus pentru a vedea prețurile și disponibilitatea pentru datele dorite.',
+    ],
+    'novoton_holidays.price_verified_at_checkout' => [
+        'en' => 'The price will be verified at checkout',
+        'ro' => 'Prețul va fi verificat la finalizare',
+    ],
+    'novoton_holidays.self_catering' => [
+        'en' => 'Self Catering',
+        'ro' => 'Fără masă',
+    ],
+    'novoton_holidays.tourists' => [
+        'en' => 'Tourists',
+        'ro' => 'Turiști',
+    ],
+    'novoton_holidays.payment_conditions' => [
+        'en' => 'Payment conditions',
+        'ro' => 'Condiții de plată',
+    ],
+    'novoton_holidays.cancellation_conditions' => [
+        'en' => 'Cancellation conditions',
+        'ro' => 'Condiții de anulare',
+    ],
 ];

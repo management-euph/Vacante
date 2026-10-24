@@ -4419,3 +4419,63 @@ msgstr "Prețul unei rezervări de hotel din coșul dvs. s-a modificat, dar nu a
 msgctxt "Languages::novoton_holidays.guests_do_not_match_priced_stay"
 msgid "These guest details do not match the stay that was priced (for example, a date of birth gives a child a different age). Please check the details, or search for the stay again with the correct ages and book it again."
 msgstr "Datele oaspeților nu corespund sejurului pentru care a fost calculat prețul (de exemplu, data nașterii indică o altă vârstă pentru un copil). Vă rugăm să verificați datele sau să căutați din nou sejurul cu vârstele corecte și să îl rezervați."
+
+msgctxt "Languages::novoton_holidays.addon_name"
+msgid "Novoton Holidays"
+msgstr "Novoton Holidays"
+
+msgctxt "Languages::novoton_holidays.api_unavailable"
+msgid "The hotel search is temporarily unavailable. Please try again later."
+msgstr "Căutarea hotelurilor este temporar indisponibilă. Vă rugăm să încercați mai târziu."
+
+msgctxt "Languages::novoton_holidays.search_error"
+msgid "An error occurred while searching. Please try again later."
+msgstr "A apărut o eroare la căutare. Vă rugăm să încercați mai târziu."
+
+msgctxt "Languages::novoton_holidays.booking_update_failed"
+msgid "Could not save the guest details. Please try again."
+msgstr "Datele oaspeților nu au putut fi salvate. Vă rugăm să încercați din nou."
+
+msgctxt "Languages::novoton_holidays.missing_required_fields"
+msgid "Please fill in all required fields."
+msgstr "Vă rugăm să completați toate câmpurile obligatorii."
+
+msgctxt "Languages::novoton_holidays.invalid_email"
+msgid "Please enter a valid email address."
+msgstr "Vă rugăm să introduceți o adresă de email validă."
+
+msgctxt "Languages::novoton_holidays.email_send_failed"
+msgid "The email could not be sent. Please try again."
+msgstr "Emailul nu a putut fi trimis. Vă rugăm să încercați din nou."
+
+msgctxt "Languages::novoton_holidays.job_unknown"
+msgid "Unknown job: [job]"
+msgstr "Job necunoscut: [job]"
+
+msgctxt "Languages::novoton_holidays.manage_bookings"
+msgid "Novoton Bookings"
+msgstr "Rezervări Novoton"
+
+msgctxt "Languages::novoton_holidays.prices_use_search_form"
+msgid "Use the search form above to see prices and availability for your dates."
+msgstr "Folosiți formularul de căutare de mai sus pentru a vedea prețurile și disponibilitatea pentru datele dorite."
+
+msgctxt "Languages::novoton_holidays.price_verified_at_checkout"
+msgid "The price will be verified at checkout"
+msgstr "Prețul va fi verificat la finalizare"
+
+msgctxt "Languages::novoton_holidays.self_catering"
+msgid "Self Catering"
+msgstr "Fără masă"
+
+msgctxt "Languages::novoton_holidays.tourists"
+msgid "Tourists"
+msgstr "Turiști"
+
+msgctxt "Languages::novoton_holidays.payment_conditions"
+msgid "Payment conditions"
+msgstr "Condiții de plată"
+
+msgctxt "Languages::novoton_holidays.cancellation_conditions"
+msgid "Cancellation conditions"
+msgstr "Condiții de anulare"
