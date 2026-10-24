@@ -180,6 +180,7 @@ final class GeocodeAddressesCommandTest extends TestCase
         $cmd->setClient($this->clientWithResponses([
             [200, (string) json_encode(['address' => ['road' => 'Rruga e Plazhit', 'house_number' => '3']])],
             [200, (string) json_encode(['address' => ['city' => 'Golem']])],
+            [200, (string) json_encode(['address' => ['city' => 'Golem']])], // the street-level retry
         ]));
 
         $result = $cmd->execute();
@@ -203,8 +204,9 @@ final class GeocodeAddressesCommandTest extends TestCase
         self::assertStringContainsString('SET street_address = NULL, geocoded_at = NOW()', $updates[1][0]);
         self::assertSame(['4536'], $updates[1][1]);
 
-        // Paced BETWEEN requests only: 2 requests → 1 second slept.
-        self::assertSame(1, $this->sleeps);
+        // Paced BETWEEN requests only: 3 requests (the second hotel is asked
+        // again at street level) → 2 seconds slept.
+        self::assertSame(2, $this->sleeps);
 
         self::assertTrue($result['success']);
         self::assertSame(1, $result['stats']['geocoded'] ?? null);

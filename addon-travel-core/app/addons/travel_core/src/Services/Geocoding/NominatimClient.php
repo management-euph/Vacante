@@ -32,6 +32,12 @@ final class NominatimClient
 
     private const int TIMEOUT_SECONDS = 15;
 
+    /** Building level: the hotel's own address when it is mapped. */
+    public const int ZOOM_BUILDING = 18;
+
+    /** Street level: snaps to the nearest named way. */
+    public const int ZOOM_STREET = 17;
+
     /**
      * HTTP GET transport, injectable for tests.
      * Receives (url, userAgent), returns [httpCode, body]; throws
@@ -69,18 +75,23 @@ final class NominatimClient
     /**
      * Reverse-geocode coordinates into street + city + region.
      *
+     * @param int $zoom ZOOM_BUILDING, or ZOOM_STREET for the nearest named way
+     *                  when the building level names none (a hotel drawn as a
+     *                  resort area, a beach or a park has no road of its own)
+     *
      * @throws GeocodeTransportException on HTTP/transport failure — the
      *                                   caller should stop its run
      */
-    public function reverseDetailed(float $lat, float $lng): ReverseGeocodeResult
+    public function reverseDetailed(float $lat, float $lng, int $zoom = self::ZOOM_BUILDING): ReverseGeocodeResult
     {
-        // zoom=18 asks for building/street-level detail; accept-language=ro
-        // matches the storefront's primary locale for street names.
+        // accept-language=ro,en: the Romanian name where OSM has one, else the
+        // English one ("Kiten" rather than "Китен"); only then the local name,
+        // which ReverseGeocodeResult writes in Latin letters.
         $url = $this->endpoint
-            . '/reverse?format=jsonv2&zoom=18&addressdetails=1'
+            . '/reverse?format=jsonv2&zoom=' . $zoom . '&addressdetails=1'
             . '&lat=' . rawurlencode(number_format($lat, 7, '.', ''))
             . '&lon=' . rawurlencode(number_format($lng, 7, '.', ''))
-            . '&accept-language=ro';
+            . '&accept-language=ro,en';
 
         [$httpCode, $body] = ($this->transport)($url, $this->userAgent);
 

@@ -71,10 +71,18 @@ final class GeocodeBacklogRunner
             }
 
             try {
-                $result = $this->client->reverseDetailed(
-                    is_numeric($row['lat'] ?? null) ? (float) $row['lat'] : 0.0,
-                    is_numeric($row['lng'] ?? null) ? (float) $row['lng'] : 0.0,
-                );
+                $lat = is_numeric($row['lat'] ?? null) ? (float) $row['lat'] : 0.0;
+                $lng = is_numeric($row['lng'] ?? null) ? (float) $row['lng'] : 0.0;
+                $result = $this->client->reverseDetailed($lat, $lng);
+                if ($result->street === '') {
+                    // The building level named no road (a resort area, a
+                    // beach): ask once more at street level, after the same
+                    // one-second pause as between rows.
+                    ($this->sleeper)(1);
+                    $result = $result->withStreetFrom(
+                        $this->client->reverseDetailed($lat, $lng, NominatimClient::ZOOM_STREET),
+                    );
+                }
             } catch (GeocodeTransportException $e) {
                 // Stop the whole run: a failing endpoint (or a rate-limit
                 // block) would otherwise burn the entire backlog on errors.
