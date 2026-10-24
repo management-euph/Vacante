@@ -4419,3 +4419,63 @@ msgstr "The price of a hotel reservation in your cart has changed, but it could 
 msgctxt "Languages::novoton_holidays.guests_do_not_match_priced_stay"
 msgid "These guest details do not match the stay that was priced (for example, a date of birth gives a child a different age). Please check the details, or search for the stay again with the correct ages and book it again."
 msgstr "These guest details do not match the stay that was priced (for example, a date of birth gives a child a different age). Please check the details, or search for the stay again with the correct ages and book it again."
+
+msgctxt "Languages::novoton_holidays.addon_name"
+msgid "Novoton Holidays"
+msgstr "Novoton Holidays"
+
+msgctxt "Languages::novoton_holidays.api_unavailable"
+msgid "The hotel search is temporarily unavailable. Please try again later."
+msgstr "The hotel search is temporarily unavailable. Please try again later."
+
+msgctxt "Languages::novoton_holidays.search_error"
+msgid "An error occurred while searching. Please try again later."
+msgstr "An error occurred while searching. Please try again later."
+
+msgctxt "Languages::novoton_holidays.booking_update_failed"
+msgid "Could not save the guest details. Please try again."
+msgstr "Could not save the guest details. Please try again."
+
+msgctxt "Languages::novoton_holidays.missing_required_fields"
+msgid "Please fill in all required fields."
+msgstr "Please fill in all required fields."
+
+msgctxt "Languages::novoton_holidays.invalid_email"
+msgid "Please enter a valid email address."
+msgstr "Please enter a valid email address."
+
+msgctxt "Languages::novoton_holidays.email_send_failed"
+msgid "The email could not be sent. Please try again."
+msgstr "The email could not be sent. Please try again."
+
+msgctxt "Languages::novoton_holidays.job_unknown"
+msgid "Unknown job: [job]"
+msgstr "Unknown job: [job]"
+
+msgctxt "Languages::novoton_holidays.manage_bookings"
+msgid "Novoton Bookings"
+msgstr "Novoton Bookings"
+
+msgctxt "Languages::novoton_holidays.prices_use_search_form"
+msgid "Use the search form above to see prices and availability for your dates."
+msgstr "Use the search form above to see prices and availability for your dates."
+
+msgctxt "Languages::novoton_holidays.price_verified_at_checkout"
+msgid "The price will be verified at checkout"
+msgstr "The price will be verified at checkout"
+
+msgctxt "Languages::novoton_holidays.self_catering"
+msgid "Self Catering"
+msgstr "Self Catering"
+
+msgctxt "Languages::novoton_holidays.tourists"
+msgid "Tourists"
+msgstr "Tourists"
+
+msgctxt "Languages::novoton_holidays.payment_conditions"
+msgid "Payment conditions"
+msgstr "Payment conditions"
+
+msgctxt "Languages::novoton_holidays.cancellation_conditions"
+msgid "Cancellation conditions"
+msgstr "Cancellation conditions"
