@@ -137,5 +137,17 @@ an internal code.
   `SphinxIndicativePrice` (the calendar_prices cron now stores the nights it
   priced under `sphinx_calendar_prices_nights`), `EurositeIndicativePrice`;
   `travel_pdp_from_price` is formatted by `MoneyFormatter::forStore(true)`.
-- Next: phase 2 — the bar itself (Check-in / Check-out fields,
-  "Vezi prețurile").
+- 25 Oct 2026 — **phase 2 (search bar) done**: the engine detects a Design A
+  page (`[data-travel-design="a"]`) and asks `booking_config` with
+  `design=a`, which adds per-night calendar prices (two adults, shopper's
+  currency) from `IndicativePriceSourceInterface::nightlyCalendar()` and the
+  bar's texts. Split Check-in / Check-out fields, "Oaspeți", "Vezi
+  prețurile"; calendar (`variant="a"`): stay header with nights, legend,
+  "Schimbă oaspeții", "Șterge datele", its own search button; opening from
+  Check-out moves only the check-out; the check-out day shows no price.
+  Shared calendar fixes: even day columns, full-width phone calendar.
+  `TRAVEL_CACHE_VER` 9. Test: `DesignASearchBarTest`.
+- Next: phase 3 — room-first results (shared view model + component,
+  R1–R3, best 4, payment line, on-request wording), then the title row's
+  after-search state ("26–31 oct. · de la 502 €", "Vezi camerele") and the
+  compact summary's price, which need the results' data.
