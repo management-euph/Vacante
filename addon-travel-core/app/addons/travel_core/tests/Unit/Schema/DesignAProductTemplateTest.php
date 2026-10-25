@@ -121,7 +121,27 @@ final class DesignAProductTemplateTest extends TestCase
         self::assertStringContainsString('{$travel_hotel_location_line|escape:html}', $src);
         self::assertStringContainsString('href="{$travel_hotel_map_url|escape:html}" target="_blank" rel="noopener"', $src);
         self::assertStringContainsString('travel_core.pdpa_show_map', $src);
-        // The hook's own line (current page wording) is hidden by the stylesheet.
+    }
+
+    public function testTheCurrentPagesLocationLineIsNotPrintedTwice(): void
+    {
+        // Design A says so before the title hook runs …
+        $src = self::template();
+        $capture = strpos($src, '{capture name="travel_pdp_design"}a{/capture}');
+        $hook = strpos($src, '{hook name="products:main_info_title"}');
+        self::assertIsInt($capture);
+        self::assertIsInt($hook);
+        self::assertLessThan($hook, $capture);
+
+        // … and the shared hook then leaves its own line out.
+        foreach (['responsive', 'nova_theme'] as $theme) {
+            $post = (string) file_get_contents(
+                self::themeFile($theme, 'templates/addons/travel_core/hooks/products/main_info_title.post.tpl'),
+            );
+            self::assertStringContainsString('{if $smarty.capture.travel_pdp_design != "a" && (', $post, $theme);
+        }
+
+        // A stale compiled hook would still be hidden.
         self::assertStringContainsString('.travel-pdpa .travel-pdp-location {', self::css());
     }
 

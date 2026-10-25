@@ -50,6 +50,12 @@
 {$thumbnails_size = $thumbnails_size|default:68}
 {* /Product data *}
 
+{* This page prints its own location line (#10); the shared hook
+   (main_info_title.post.tpl) skips the current page's one when it sees this
+   capture. A capture, not a variable: hook templates read it without going
+   up the Smarty scope chain. *}
+{capture name="travel_pdp_design"}a{/capture}
+
 <div class="ty-product-block ty-product-detail travel-pdpa" data-travel-design="a">
 
     <div class="ty-product-block__wrapper travel-pdpa__wrapper">
@@ -96,11 +102,10 @@
                             {/hook}
                         {/hook}
 
-                        {* Location line + map link. The hook above also
-                           prints the current page's line (main_info_title
-                           .post.tpl); Design A hides that one (CSS) and
-                           shows this layout, from the same server-built
-                           values (HotelLocationLine / HotelMapUrl). *}
+                        {* Location line + map link, from the same
+                           server-built values as the current page's line
+                           (HotelLocationLine / HotelMapUrl), which the hook
+                           above leaves out on this page. *}
                         {if $travel_hotel_location_line || $travel_hotel_map_url}
                             <p class="travel-pdpa-location">
                                 {if $travel_hotel_location_line}

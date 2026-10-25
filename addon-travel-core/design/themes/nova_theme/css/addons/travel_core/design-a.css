@@ -55,9 +55,9 @@
     vertical-align: middle;
 }
 
-/* The products:main_info_title hook also prints the current page's location
-   line (main_info_title.post.tpl); Design A shows its own (below). That
-   span carries an inline display:block, hence the !important. */
+/* The current page's location line (main_info_title.post.tpl) is left out on
+   this page; should a stale compiled copy of that hook still print it, it
+   stays hidden (its inline display:block needs the !important). */
 .travel-pdpa .travel-pdp-location {
     display: none !important;
 }
