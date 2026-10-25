@@ -70,7 +70,95 @@ page, re-runs same-origin scripts in the copied part, then fires
 
 ## Novoton
 
-(pending)
+**Flow** (`controllers/frontend/novoton_booking/search.php`)
+- Params pass `SecurityService::validateSearchParams`;
+  `SearchParameterNormalizer` parses `rooms_data`. No `check_in` → defaults
+  only; no `hotel_id` → redirect to `products.search`.
+- `HotelAvailabilitySearcher::search`: cached hotelinfo (1800 s) gives the
+  room-code → room-type map.
+  - One room: one `room_price` call for the whole hotel + one `hotel_quota`
+    call, then `SearchService::parseRoomPriceResponse` + `deduplicateResults`.
+  - Several rooms: `MultiRoomSearchBatcher`, one `room_price` per room in
+    parallel, no quota call, no dedup; `all_room_results` keyed 1..N.
+  - No availability: `AlternativeDateSearcher` (±`flex_days`, ≤ 50 calls).
+- Caching: `room_price` 300 s (only answers with a price), quota 180 s; no
+  whole-result cache; `refresh=1` ignored.
+- View variables (`SearchResultFormatter::assignToView`): `novoton_results`,
+  `novoton_params` (dates, nights, guests, rooms_data…), display currency
+  (`novoton_display_currency`, `_coefficient`, `_symbol`,
+  `novoton_round_prices`), `all_room_results` / `is_multi_room_search`,
+  `max_room_capacity`, early-booking info, alternatives, hotel identity,
+  `novoton_room_facilities` (hotel-level list).
+
+**One result row** (`SearchService.php:172-333`)
+- A flat list in API order, **not grouped by room**, with no offer id.
+- **The search parser lines up separate XML lists by position**, which
+  `RoomOfferRows` (used at checkout) documents can attach values to the wrong
+  offer. Design A should read Novoton offers through `RoomOfferRows`.
+- Room: `room_id` (raw code, e.g. "DBL 2+1"), `room_type_display`
+  ("Camera Dublă (DBL 2+1)"). No room photo, no per-room facilities, no
+  per-row max occupancy.
+- Board: `board_id` (raw) + `board_name`; the template rebuilds the label from
+  a hard-coded map.
+- Rate type: no field — offers differ by `package_name`,
+  `early_booking_discount` (%) and `extras` ("7 = 6"); single-room dedup keeps
+  the cheapest per room|board|package and folds the promo into `extras_price`.
+- Price: `total_price` = whole stay for that room's occupancy, EUR, with
+  commission; `price_per_night` exists but is not shown. The struck "was"
+  price is computed in the template (also in
+  `NovotonBookingSidebarBuilder::discount`).
+- Availability: `rooms_available` / `is_on_request` from quota (per room
+  code); no quota entry → bookable with nothing shown; no stop-sale state.
+  Multi-room rows always null/false.
+- Cancellation: raw `<Penalty>` XML + `free_cancellation_date` (first
+  zero-penalty date); no non-refundable flag. Payment: raw `<Percent>` XML;
+  deposit only on the booking form and at add-to-cart.
+
+**Markup** (`views/novoton_booking/search.tpl`, 729 lines)
+- Root `.travel-search-results-page.novoton-search-results-page`, form wrapper,
+  early-booking banner.
+- Multi-room: `#multi-room-selection.novoton-mr` (data-* config), one
+  `section.room-type-selection[data-room][data-occupancy]` per room with
+  radios `room_N_selection` carrying data-room-id, board-id, price,
+  standard-price, was-price, quota…, a summary aside and the hidden GET form
+  `#multi-room-booking-form`. **`js/addons/travel_core/multiroom-booking.js`
+  depends on this DOM** (ids, classes `is-open/is-chosen/is-selected`,
+  sessionStorage `travel_mr_selection:{search-key}`).
+- One room: `.novoton-results-list` > `.travel-offer-card.novoton-offer-card`
+  in three zones (room, choices with terms modal, price + Book).
+- Book (one room) = GET `novoton_booking.booking_form` with room/board codes,
+  dates, guests, price, standard_price, package, extras, early_booking,
+  is_on_request, rooms_available (no product id). `add_to_cart` re-prices
+  everything (`RoomsQuote` / `BookedOffer`), never trusting posted prices.
+
+**"From" prices before dates**
+- Calendar prices (`CalendarPriceBuilder` → `novoton_hotels.calendar_prices_raw`):
+  per date, the cheapest regular room's **1-night total for 2 adults**, raw
+  EUR; commission and currency are added at display. They reach only the
+  booking form's date picker; the product-page engine passes
+  `calendarPrices: null`, so the hotel page calendar shows none.
+- The catalog product price is one priceinfo cell (per person or per room),
+  not normalized for occupancy.
+
+**Found while mapping (to fix)**
+- "Change search", nearby dates and the alternatives button link to the
+  standalone results page and drop `rooms_data`.
+- `nearby_availability` is read by the template but never produced.
+
+**Tests pinning it**: `AvailabilityBadgeTest`, novoton `SmartyCompatTest`
+(no `style=` except display:none), `NovotonBookingSidebarDiscountTest`,
+`IntegrationPathsTest`, `MultiRoomSearchBatcherTest`, `RoomOfferRowsTest`,
+`CalendarPriceBuilderTest`; JS `tests/js/multiroom-booking.test.mjs`,
+`tests/js/novoton-search-results.test.mjs`; travel_core
+`InlineResultsOnPdpTest`, `HotelHeaderComponentTest`, `ClientI18nTest`.
+
+## Indicative "de la X € / noapte" for the title row
+
+| Supplier | Source | Basis | Per night, 2 adults |
+| --- | --- | --- | --- |
+| Novoton | `calendar_prices_raw` | 1-night total, 2 adults, per date | min over future dates (+ commission) |
+| Sphinx | `calendar_prices_json` | 7-night total, 2 adults, per check-in | min ÷ 7 (+ commission) |
+| Eurosite | `eurosite_hotels.min_price` | stay total, 1 double room, 2 adults, `availability_nights` | min_price ÷ nights |
 
 ## Sphinx
 
