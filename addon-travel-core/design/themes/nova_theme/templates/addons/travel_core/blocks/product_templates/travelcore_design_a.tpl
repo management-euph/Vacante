@@ -44,7 +44,10 @@
 {$add_to_cart_class = $add_to_cart_class|default:"ty-products-buttons-block"}
 {$show_product_company_data = $show_product_company_data|default:true}
 {$show_product_company_data_in_advanced_options = $show_product_company_data_in_advanced_options|default:false}
-{$show_product_features_short_list = $show_product_features_short_list|default:true}
+{* No feature list under the hotel name on this page ("TV, Air
+   Conditioning, … 3 Stars, Resort"): facilities live in the tabs, and the
+   stars sit next to the name. *}
+{$show_product_features_short_list = false}
 {$product_details_thumbnail_width = $product_details_thumbnail_width|default:$settings.Thumbnails.product_details_thumbnail_width}
 {$product_details_thumbnail_height = $product_details_thumbnail_height|default:$settings.Thumbnails.product_details_thumbnail_height}
 {$thumbnails_size = $thumbnails_size|default:68}
@@ -58,7 +61,10 @@
 
 <div class="ty-product-block ty-product-detail travel-pdpa" data-travel-design="a">
 
-    <div class="ty-product-block__wrapper travel-pdpa__wrapper">
+    {* Not the stock ty-product-block__wrapper: themes lay out that wrapper's
+       children side by side (image left, info right), which put the title
+       row next to the photos. This page stacks them (design-a.css). *}
+    <div class="travel-pdpa__wrapper">
 
         {hook name="products:view_main_info"}
 

@@ -23,6 +23,20 @@
     --travel-pdpa-radius: 8px;
 }
 
+/* The page stacks its rows (title, photos) full width, whatever layout the
+   theme gives product blocks (grid / floats for its image-left design). */
+.travel-pdpa .travel-pdpa__wrapper {
+    display: block;
+}
+.travel-pdpa .travel-pdpa__wrapper > * {
+    float: none;
+    clear: both;
+    width: auto;
+    max-width: none;
+    margin-right: 0;
+    margin-left: 0;
+}
+
 /* ── #10 Title row ───────────────────────────────────────────────────── */
 
 .travel-pdpa-head {
@@ -199,19 +213,32 @@
     overflow: hidden;
     background: var(--travel-pdpa-tile);
 }
-/* common/image.tpl may wrap the <img> (picture, span); every layer fills. */
-.travel-pdpa-gallery__tile > *,
-.travel-pdpa-gallery__tile picture {
-    display: block;
-    width: 100%;
-    height: 100%;
+/* Every photo fills its tile, cropped, whatever size, wrapper or alignment
+   the theme gives product images (common/image.tpl) — on a real store the
+   theme's rules kept the large photo at its own proportions, centred with
+   white bands, hence the !important. The tile is the photo's frame: its
+   wrappers get no box of their own. */
+.travel-pdpa .travel-pdpa-gallery > .travel-pdpa-gallery__tile {
+    position: relative !important;
+    align-self: stretch !important;
+    justify-self: stretch !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+.travel-pdpa .travel-pdpa-gallery__tile * {
+    position: static !important;
 }
 .travel-pdpa .travel-pdpa-gallery__tile img {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
     display: block;
-    width: 100%;
-    height: 100%;
-    max-width: none;
-    object-fit: cover;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    margin: 0 !important;
+    object-fit: cover !important;
     transition: opacity 0.15s ease;
 }
 .travel-pdpa .travel-pdpa-gallery__tile:hover img {
@@ -545,10 +572,14 @@
     .travel-pdpa-gallery--5 {
         display: block;
         height: auto;
-        margin-right: -16px;
-        margin-left: -16px;
         border-radius: 0;
         aspect-ratio: 4 / 3;
+    }
+    /* Edge to edge, whatever side padding the theme's page has. */
+    .travel-pdpa .travel-pdpa__wrapper > .travel-pdpa-gallery {
+        width: 100vw;
+        margin-right: 0;
+        margin-left: calc(50% - 50vw);
     }
     .travel-pdpa-gallery__tile {
         display: none;
