@@ -311,14 +311,14 @@
     /* the mount keeps an inline 20px bottom margin under the bar */
     margin-top: -8px;
 }
-.travel-pdp-trust {
+.travel-pdpa .travel-pdp-trust {
     flex-wrap: wrap;
     gap: 6px 24px;
     margin: 10px 0 0;
     padding: 0;
     list-style: none;
 }
-.travel-pdp-trust__item {
+.travel-pdpa .travel-pdp-trust__item {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -326,7 +326,7 @@
     font-size: 13px;
     color: var(--travel-pdpa-text);
 }
-.travel-pdp-trust__item::before {
+.travel-pdpa .travel-pdp-trust__item::before {
     content: "";
     flex: 0 0 16px;
     width: 16px;
