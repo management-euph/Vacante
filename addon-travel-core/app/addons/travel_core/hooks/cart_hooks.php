@@ -308,6 +308,14 @@ function _travel_core_prepare_hotel_seo_data(int $productId): void
         // Stars next to the hotel name on the Design A page
         // (travelcore_design_a.tpl); 0 when the supplier gives none.
         $view->assign('travel_pdp_stars', max(0, min(5, $hotel->classification ?? 0)));
+        // Indicative "de la X / noapte" next to it: the owning supplier's
+        // lowest one-night price for two adults from data it already stores,
+        // in the shopper's currency, whole units; '' when it has none.
+        $nightly = TravelProviderRegistry::indicativeNightlyPrice($hotel->providerName, $hotel->hotelId);
+        $view->assign(
+            'travel_pdp_from_price',
+            $nightly !== null ? \Tygh\Addons\TravelCore\Services\MoneyFormatter::forStore(true)->format($nightly) : '',
+        );
     }
 }
 

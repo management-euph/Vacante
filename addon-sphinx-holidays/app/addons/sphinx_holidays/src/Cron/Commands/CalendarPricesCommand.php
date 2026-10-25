@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
+use Tygh\Addons\SphinxHolidays\Providers\SphinxIndicativePrice;
 use Tygh\Addons\SphinxHolidays\Services\CalendarPriceBuilder;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
@@ -94,6 +95,13 @@ class CalendarPricesCommand extends AbstractSyncCommand
                 $destinationId,
                 count($byHotel),
             ));
+        }
+
+        // The prices are stay totals: remember how many nights they cover, so
+        // the hotel page's per-night "from" price divides by the right number
+        // (SphinxIndicativePrice).
+        if ($hotelsUpdated > 0 && function_exists('fn_set_storage_data')) {
+            fn_set_storage_data(SphinxIndicativePrice::NIGHTS_STORAGE_KEY, (string) $nights);
         }
 
         $this->output('');

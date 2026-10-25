@@ -45,9 +45,10 @@ final class MoneyFormatter
 
     /**
      * The storefront formatter: the shopper's selected currency, CS-Cart's
-     * conversion, the travel_core rounding setting.
+     * conversion, the travel_core rounding setting — or whole units always
+     * when $wholeUnits (indicative "from" prices).
      */
-    public static function forStore(): self
+    public static function forStore(bool $wholeUnits = false): self
     {
         $primary = defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : '';
         $display = CurrencyService::getDisplayCurrency();
@@ -64,7 +65,7 @@ final class MoneyFormatter
             );
         }
 
-        return new self($row, $toDisplay, TravelCoreConfig::isRoundPrices());
+        return new self($row, $toDisplay, $wholeUnits || TravelCoreConfig::isRoundPrices());
     }
 
     /**

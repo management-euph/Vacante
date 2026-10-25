@@ -132,7 +132,7 @@
                         {if $travel_pdp_from_price}
                             <p class="travel-pdpa-from">
                                 <span class="travel-pdpa-from__label">{__("travel_core.pdpa_from")}</span>
-                                <span class="travel-pdpa-from__price">{include file="common/price.tpl" value=$travel_pdp_from_price span_id="travel_pdpa_from_`$obj_id`" class="travel-pdpa-from__amount"} {__("travel_core.pdpa_per_night")}</span>
+                                <span class="travel-pdpa-from__price">{$travel_pdp_from_price|escape:html} {__("travel_core.pdpa_per_night")}</span>
                                 <span class="travel-pdpa-from__note">{__("travel_core.pdpa_from_note")}</span>
                             </p>
                         {/if}
