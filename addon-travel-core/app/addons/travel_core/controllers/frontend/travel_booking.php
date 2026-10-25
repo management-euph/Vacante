@@ -136,6 +136,9 @@ if ($mode === 'booking_config') {
                 'remove', 'please_enter_dates', 'select_check_in',
                 'select_missing_ages', 'select_age_for_one_child',
                 'select_age_for_children', 'calendar_price_footer',
+                // Design A bar and calendar (travelcore_design_a.tpl)
+                'guests', 'add_date', 'see_prices', 'clear_dates',
+                'change_guests', 'lowest_prices', 'nightly_prices_note',
             ];
             $translations = [];
             foreach ($translationKeys as $key) {
@@ -164,6 +167,22 @@ if ($mode === 'booking_config') {
                 'colors' => $colors,
                 'translations' => $translations,
             ];
+
+            // Design A hotel page (the engine asks with design=a): its bar,
+            // and per-night prices for two adults in the calendar, from the
+            // owning supplier's stored data, in the shopper's currency.
+            if (RequestCoerce::string($_REQUEST, 'design') === 'a') {
+                $config['design'] = 'a';
+                $money = \Tygh\Addons\TravelCore\Services\MoneyFormatter::forStore(true);
+                $calendar = [];
+                foreach (TravelProviderRegistry::indicativeNightlyCalendar($providerName, $hotelId) as $day => $nightly) {
+                    $calendar[$day] = round($money->toDisplay($nightly));
+                }
+                if ($calendar !== []) {
+                    $config['calendarPrices'] = $calendar;
+                    $config['calendarPricesCurrency'] = \Tygh\Addons\TravelCore\Services\CurrencyService::getDisplayCurrency();
+                }
+            }
         }
     }
 

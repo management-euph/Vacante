@@ -10,12 +10,17 @@
  *
  * Mobile (<= 768px): full-screen overlay with scrollable months, sticky
  * weekday header, close (X) button, and confirm button at the bottom.
+ *
+ * variant="a" (the Design A hotel page): a header with the stay and its
+ * nights, a footer with the price legend, "Schimbă oaspeții", "Șterge
+ * datele" and the search button; `selecting` says which date the next click
+ * sets (the field that opened it); the check-out day shows no price.
  */
 
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { getLocale, nightsBetween, formatDateShort, t, tPlural, useFocusTrap } from './utils';
+import { getLocale, nightsBetween, formatDateShort, formatDateField, t, tPlural, useFocusTrap } from './utils';
 import { MONTHS_EN, MONTHS_RO, WEEKDAYS_EN, WEEKDAYS_RO } from './translations';
-import { ChevronLeft, ChevronRight, XIcon } from './icons';
+import { CalendarIcon, ChevronLeft, ChevronRight, XIcon } from './icons';
 
 /**
  * Build a matrix of weeks (rows of 7 cells) for a given month.
@@ -94,7 +99,11 @@ function useIsMobile(breakpoint = 768) {
     return isMobile;
 }
 
-export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices, pricesCurrency, triggerRef }) {
+export default function Calendar({
+    checkIn, checkOut, onSelect, onClose, prices, pricesCurrency, triggerRef,
+    variant = '', selecting = 'checkIn', onSearch, onChangeGuests, triggerRefs,
+}) {
+    const isVariantA = variant === 'a';
     const locale = getLocale();
     const monthNames = locale === 'ro' ? MONTHS_RO : MONTHS_EN;
     const weekdays = locale === 'ro' ? WEEKDAYS_RO : WEEKDAYS_EN;
@@ -117,7 +126,16 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
     const [viewDate, setViewDate] = useState(startMonth);
     const [tempCheckIn, setTempCheckIn] = useState(checkIn);
     const [tempCheckOut, setTempCheckOut] = useState(checkOut);
+    // Which date the next click sets. Opened from the Check-out field (Design A)
+    // with a check-in already chosen, a click after it moves only the check-out.
+    const [phase, setPhase] = useState(() => (selecting === 'checkOut' && checkIn ? 'checkOut' : 'checkIn'));
     const popupRef = useRef(null);
+
+    // Only a change of the field that opened the calendar moves the phase
+    // from outside (deps on purpose: not on every date pick).
+    useEffect(() => {
+        setPhase(selecting === 'checkOut' && tempCheckIn ? 'checkOut' : 'checkIn');
+    }, [selecting]);
 
     // WCAG 2.1: trap focus within the calendar dialog
     useFocusTrap(popupRef);
@@ -127,8 +145,9 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
     // and can set a flag to prevent the close handler from interfering.
     useEffect(() => {
         function handleClick(e) {
-            // Ignore clicks on the trigger button (prevents close-then-reopen flicker)
-            if (triggerRef && triggerRef.current && triggerRef.current.contains(e.target)) return;
+            // Ignore clicks on the trigger button(s) (prevents close-then-reopen flicker)
+            const triggers = triggerRefs || (triggerRef ? [triggerRef] : []);
+            if (triggers.some(ref => ref && ref.current && ref.current.contains(e.target))) return;
             if (popupRef.current && !popupRef.current.contains(e.target)) {
                 onClose && onClose();
             }
@@ -144,7 +163,7 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
             document.removeEventListener('mousedown', handleClick);
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [onClose, triggerRef]);
+    }, [onClose, triggerRef, triggerRefs]);
 
     const goToPrev = useCallback(() => {
         setViewDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
@@ -157,24 +176,29 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
     const handleDayClick = useCallback((date) => {
         if (date < today) return;
 
-        // CASE 1 & 4: No dates or both dates selected → fresh CHECK-IN
-        if (!tempCheckIn || (tempCheckIn && tempCheckOut)) {
-            setTempCheckIn(date);
-            setTempCheckOut(null);
-            onSelect(date, null);
-        }
-        // CASE 3: Only check-in + click before/on → new CHECK-IN
-        else if (date <= tempCheckIn) {
-            setTempCheckIn(date);
-            setTempCheckOut(null);
-            onSelect(date, null);
-        }
-        // CASE 2: Only check-in + click after → CHECK-OUT (complete)
-        else {
+        // Check-out: a check-in is chosen, the click is after it, and either
+        // no check-out yet or the Check-out field opened the calendar. A
+        // complete stay makes the next click start a new one.
+        if (tempCheckIn && date > tempCheckIn && (!tempCheckOut || phase === 'checkOut')) {
             setTempCheckOut(date);
+            setPhase('checkIn');
             onSelect(tempCheckIn, date);
+            return;
         }
-    }, [tempCheckIn, tempCheckOut, today, onSelect]);
+        // Otherwise a fresh check-in (no dates, both dates chosen from the
+        // Check-in side, or a click on or before the current check-in).
+        setTempCheckIn(date);
+        setTempCheckOut(null);
+        setPhase('checkOut');
+        onSelect(date, null);
+    }, [tempCheckIn, tempCheckOut, phase, today, onSelect]);
+
+    const clearDates = useCallback(() => {
+        setTempCheckIn(null);
+        setTempCheckOut(null);
+        setPhase('checkIn');
+        onSelect(null, null);
+    }, [onSelect]);
 
     // -----------------------------------------------------------------------
     // Month lists
@@ -300,6 +324,8 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
                         const tooltip = hasPrices && dayPrice !== undefined && !isPast
                             ? `${dayPrice} ${pricesCurrency || ''}`.trim()
                             : undefined;
+                        // Design A: the departure day is not a night of the stay.
+                        const showPrice = hasPrices && !isPast && !(isVariantA && isSelectedCheckOut);
 
                         return (
                             <button
@@ -313,7 +339,7 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
                                 title={tooltip}
                             >
                                 <span className="nvt-calendar-day-num">{day}</span>
-                                {hasPrices && !isPast && (
+                                {showPrice && (
                                     <span className="nvt-calendar-day-price">
                                         {dayPrice !== undefined ? formatCalendarPrice(dayPrice) : '_'}
                                     </span>
@@ -344,12 +370,55 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
         : '';
 
     // Confirm button label (bilingual)
-    const confirmLabel = locale === 'ro'
-        ? t('selectThisDate', 'Selectează această dată')
-        : t('selectThisDate', 'Select this date');
+    const confirmLabel = isVariantA
+        ? t('seePrices', 'See prices')
+        : (locale === 'ro'
+            ? t('selectThisDate', 'Selectează această dată')
+            : t('selectThisDate', 'Select this date'));
+
+    // Design A header: "lun. 26 oct. 2026 – sâm. 31 oct. 2026 · 5 nopți"
+    const stayText = (() => {
+        if (tempCheckIn && tempCheckOut) {
+            const nightLabel = tPlural(nights, 'night', 'nights', 'nightsMany', 'night', 'nights', 'nights');
+            return `${formatDateField(tempCheckIn)} \u2013 ${formatDateField(tempCheckOut)} \u00b7 ${nights} ${nightLabel}`;
+        }
+        if (tempCheckIn) {
+            return `${formatDateField(tempCheckIn)} \u2013 ${t('selectCheckOut', 'Select check-out date')}`;
+        }
+        return t('selectCheckIn', 'Select check-in date');
+    })();
+
+    const search = () => {
+        if (tempCheckIn && tempCheckOut && onSearch) {
+            onSearch();
+        } else if (onClose) {
+            onClose();
+        }
+    };
 
     return (
-        <div className="nvt-calendar-popup" ref={popupRef} role="dialog" aria-modal="true" aria-label={t('datePicker', 'Date picker')}>
+        <div
+            className={`nvt-calendar-popup${isVariantA ? ' nvt-calendar-popup--a' : ''}`}
+            ref={popupRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={t('datePicker', 'Date picker')}
+        >
+            {isVariantA && (
+                <div className="nvt-calendar-stay">
+                    <span className="nvt-calendar-stay-icon"><CalendarIcon /></span>
+                    <span className="nvt-calendar-stay-text" aria-live="polite">{stayText}</span>
+                    <button
+                        type="button"
+                        className="nvt-calendar-stay-close"
+                        onClick={() => onClose && onClose()}
+                        aria-label={t('close', 'Close')}
+                    >
+                        <XIcon />
+                    </button>
+                </div>
+            )}
+
             {/* Close (X) button — visible on mobile only (hidden via CSS on desktop) */}
             <button
                 type="button"
@@ -403,22 +472,52 @@ export default function Calendar({ checkIn, checkOut, onSelect, onClose, prices,
                 </div>
             )}
 
-            {priceFooterText && (
-                <div className="nvt-calendar-price-footer">
-                    {priceFooterText}
+            {isVariantA ? (
+                <div className="nvt-calendar-actions">
+                    <div className="nvt-calendar-legend">
+                        {hasPrices && (
+                            <span className="nvt-calendar-legend-lowest">{t('lowestPrices', 'Lowest prices')}</span>
+                        )}
+                        <span className="nvt-calendar-legend-note">
+                            {hasPrices && `${t('nightlyPricesNote', 'Indicative prices per night, for 2 adults.')} `}
+                            {onChangeGuests && (
+                                <button type="button" className="nvt-calendar-link" onClick={onChangeGuests}>
+                                    {t('changeGuests', 'Change guests')}
+                                </button>
+                            )}
+                        </span>
+                    </div>
+                    <div className="nvt-calendar-buttons">
+                        {(tempCheckIn || tempCheckOut) && (
+                            <button type="button" className="nvt-calendar-link" onClick={clearDates}>
+                                {t('clearDates', 'Clear dates')}
+                            </button>
+                        )}
+                        <button type="button" className="nvt-btn-search nvt-calendar-search" onClick={search}>
+                            {t('seePrices', 'See prices')}
+                        </button>
+                    </div>
                 </div>
-            )}
+            ) : (
+                <>
+                    {priceFooterText && (
+                        <div className="nvt-calendar-price-footer">
+                            {priceFooterText}
+                        </div>
+                    )}
 
-            <div className="nvt-calendar-footer">
-                <span>{footerText}</span>
-            </div>
+                    <div className="nvt-calendar-footer">
+                        <span>{footerText}</span>
+                    </div>
+                </>
+            )}
 
             {/* Confirm button — visible on mobile only (hidden via CSS on desktop) */}
             <div className="nvt-calendar-confirm">
                 <button
                     type="button"
                     className="nvt-done-btn"
-                    onClick={() => onClose && onClose()}
+                    onClick={isVariantA ? search : () => onClose && onClose()}
                     disabled={!tempCheckIn}
                 >
                     {confirmLabel}

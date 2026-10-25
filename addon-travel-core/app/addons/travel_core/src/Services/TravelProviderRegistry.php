@@ -8,6 +8,7 @@ use Tygh\Addons\TravelCore\Contracts\BookingAdminProviderInterface;
 use Tygh\Addons\TravelCore\Contracts\CronDispatcherInterface;
 use Tygh\Addons\TravelCore\Contracts\HotelAvailabilitySourceInterface;
 use Tygh\Addons\TravelCore\Contracts\HotelProductProviderInterface;
+use Tygh\Addons\TravelCore\Contracts\IndicativePriceSourceInterface;
 use Tygh\Addons\TravelCore\Contracts\ProviderNormalizerInterface;
 use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
 
@@ -40,6 +41,9 @@ class TravelProviderRegistry
 
     /** @var array<string, HotelAvailabilitySourceInterface> provider name => availability records source */
     private static array $availability = [];
+
+    /** @var array<string, IndicativePriceSourceInterface> provider name => indicative nightly price source */
+    private static array $indicativePrices = [];
 
     /**
      * Register a travel provider.
@@ -182,6 +186,60 @@ class TravelProviderRegistry
         }
 
         return $sources;
+    }
+
+    /**
+     * Register the provider's indicative "from" price source (the Design A
+     * hotel page title row). Ignored unless register() ran first, and unless
+     * the source speaks for that same provider.
+     */
+    public static function setIndicativePriceSource(string $name, IndicativePriceSourceInterface $source): void
+    {
+        if (isset(self::$providers[$name]) && $source->provider() === $name) {
+            self::$indicativePrices[$name] = $source;
+        }
+    }
+
+    /**
+     * The owning provider's lowest price for one night for two adults (store
+     * primary currency, commission included), or null — no source, no figure,
+     * or a source that failed: the hotel page renders without it.
+     */
+    public static function indicativeNightlyPrice(string $name, string $hotelId): ?float
+    {
+        $source = self::$indicativePrices[$name] ?? null;
+        if ($source === null || $hotelId === '' || !isset(self::$providers[$name])) {
+            return null;
+        }
+        try {
+            $price = $source->nightlyFromPrice($hotelId);
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return $price !== null && $price > 0 ? $price : null;
+    }
+
+    /**
+     * The owning provider's per-night prices by check-in date (store primary
+     * currency, commission included), for the Design A calendar; [] when it
+     * has none or its source failed.
+     *
+     * @return array<string, float> 'Y-m-d' => price
+     */
+    public static function indicativeNightlyCalendar(string $name, string $hotelId): array
+    {
+        $source = self::$indicativePrices[$name] ?? null;
+        if ($source === null || $hotelId === '' || !isset(self::$providers[$name])) {
+            return [];
+        }
+        try {
+            $calendar = $source->nightlyCalendar($hotelId);
+        } catch (\Throwable) {
+            return [];
+        }
+
+        return array_filter($calendar, static fn (float $price): bool => $price > 0);
     }
 
     /**
@@ -418,5 +476,6 @@ class TravelProviderRegistry
         self::$cartTerms = [];
         self::$orderCardFacts = [];
         self::$availability = [];
+        self::$indicativePrices = [];
     }
 }

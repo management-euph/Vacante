@@ -26,3 +26,7 @@
 {* Shared booking-page design system (summary, guest cards, terms,
    services, submit) — the class contract provider booking forms use *}
 {style src="addons/travel_core/booking-pages.css"}
+
+{* Hotel page Design A (blocks/product_templates/travelcore_design_a.tpl);
+   every rule is scoped under .travel-pdpa *}
+{style src="addons/travel_core/design-a.css"}

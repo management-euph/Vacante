@@ -889,6 +889,10 @@
              lang_keys.php entry (addon.xml wins at seed time). -->
         <item lang="en" id="travelcore_template"><![CDATA[Travel Core Template]]></item>
         <item lang="ro" id="travelcore_template"><![CDATA[Travel Core Template]]></item>
+        <!-- Same convention for blocks/product_templates/travelcore_design_a.tpl
+             (hotel page Design A). Value IDENTICAL to lang_keys.php. -->
+        <item lang="en" id="travelcore_design_a"><![CDATA[Travel Core · Design A]]></item>
+        <item lang="ro" id="travelcore_design_a"><![CDATA[Travel Core · Design A]]></item>
         <item lang="en" id="travel_core.reserve_now"><![CDATA[Reserve]]></item>
         <item lang="ro" id="travel_core.reserve_now"><![CDATA[Rezervați acum]]></item>
         <!-- Exchange rates -->

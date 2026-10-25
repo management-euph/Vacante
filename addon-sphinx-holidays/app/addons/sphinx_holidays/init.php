@@ -68,6 +68,11 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
         'sphinx',
         new \Tygh\Addons\SphinxHolidays\Services\SphinxAvailabilitySource(),
     );
+    // The hotel page's indicative "de la X / noapte" (Design A title row).
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setIndicativePriceSource(
+        'sphinx',
+        new \Tygh\Addons\SphinxHolidays\Providers\SphinxIndicativePrice(),
+    );
     // What the booking row knows about an order line (confirmation number,
     // failure, the kind of trip), for travel_core's order booking card.
     \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setOrderCardResolver(

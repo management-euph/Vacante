@@ -2877,3 +2877,79 @@ msgstr "No hotel recorded yet: [supplier]'s jobs add them as they run."
 msgctxt "Languages::travel_core.availability_card_not_reviewed"
 msgid "Not reviewed yet: the review runs with Travel Core's next daily cron."
 msgstr "Not reviewed yet: the review runs with Travel Core's next daily cron."
+
+msgctxt "Languages::travelcore_design_a"
+msgid "Travel Core · Design A"
+msgstr "Travel Core · Design A"
+
+msgctxt "Languages::travel_core.pdpa_choose_dates"
+msgid "Choose dates"
+msgstr "Choose dates"
+
+msgctxt "Languages::travel_core.pdpa_show_map"
+msgid "Show on map"
+msgstr "Show on map"
+
+msgctxt "Languages::travel_core.pdpa_from"
+msgid "from"
+msgstr "from"
+
+msgctxt "Languages::travel_core.pdpa_per_night"
+msgid "/ night"
+msgstr "/ night"
+
+msgctxt "Languages::travel_core.pdpa_from_note"
+msgid "indicative price, 2 adults"
+msgstr "indicative price, 2 adults"
+
+msgctxt "Languages::travel_core.pdpa_open_photo"
+msgid "Open photo [n] of [total]"
+msgstr "Open photo [n] of [total]"
+
+msgctxt "Languages::travel_core.pdpa_all_photos"
+msgid "All photos ([n])"
+msgstr "All photos ([n])"
+
+msgctxt "Languages::travel_core.pdpa_trust_instant"
+msgid "Instant confirmation for available rooms"
+msgstr "Instant confirmation for available rooms"
+
+msgctxt "Languages::travel_core.pdpa_trust_total"
+msgid "The total price, meals included, before you book"
+msgstr "The total price, meals included, before you book"
+
+msgctxt "Languages::travel_core.pdpa_summary_label"
+msgid "Search summary"
+msgstr "Search summary"
+
+msgctxt "Languages::travel_core.pdpa_change"
+msgid "Change"
+msgstr "Change"
+
+msgctxt "Languages::travel_core.pdpa_rooms_link"
+msgid "Rooms"
+msgstr "Rooms"
+
+msgctxt "Languages::travel_core.add_date"
+msgid "Add date"
+msgstr "Add date"
+
+msgctxt "Languages::travel_core.see_prices"
+msgid "See prices"
+msgstr "See prices"
+
+msgctxt "Languages::travel_core.clear_dates"
+msgid "Clear dates"
+msgstr "Clear dates"
+
+msgctxt "Languages::travel_core.change_guests"
+msgid "Change guests"
+msgstr "Change guests"
+
+msgctxt "Languages::travel_core.lowest_prices"
+msgid "Lowest prices"
+msgstr "Lowest prices"
+
+msgctxt "Languages::travel_core.nightly_prices_note"
+msgid "Indicative prices per night, for 2 adults."
+msgstr "Indicative prices per night, for 2 adults."

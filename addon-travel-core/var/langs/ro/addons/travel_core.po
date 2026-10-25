@@ -2877,3 +2877,79 @@ msgstr "Niciun hotel înregistrat încă: joburile [supplier] le adaugă pe măs
 msgctxt "Languages::travel_core.availability_card_not_reviewed"
 msgid "Not reviewed yet: the review runs with Travel Core's next daily cron."
 msgstr "Nerevizuit încă: revizuirea rulează cu următorul cron zilnic Travel Core."
+
+msgctxt "Languages::travelcore_design_a"
+msgid "Travel Core · Design A"
+msgstr "Travel Core · Design A"
+
+msgctxt "Languages::travel_core.pdpa_choose_dates"
+msgid "Choose dates"
+msgstr "Alege datele"
+
+msgctxt "Languages::travel_core.pdpa_show_map"
+msgid "Show on map"
+msgstr "Vezi pe hartă"
+
+msgctxt "Languages::travel_core.pdpa_from"
+msgid "from"
+msgstr "de la"
+
+msgctxt "Languages::travel_core.pdpa_per_night"
+msgid "/ night"
+msgstr "/ noapte"
+
+msgctxt "Languages::travel_core.pdpa_from_note"
+msgid "indicative price, 2 adults"
+msgstr "preț orientativ, 2 adulți"
+
+msgctxt "Languages::travel_core.pdpa_open_photo"
+msgid "Open photo [n] of [total]"
+msgstr "Deschide fotografia [n] din [total]"
+
+msgctxt "Languages::travel_core.pdpa_all_photos"
+msgid "All photos ([n])"
+msgstr "Toate fotografiile ([n])"
+
+msgctxt "Languages::travel_core.pdpa_trust_instant"
+msgid "Instant confirmation for available rooms"
+msgstr "Confirmare imediată pentru camerele disponibile"
+
+msgctxt "Languages::travel_core.pdpa_trust_total"
+msgid "The total price, meals included, before you book"
+msgstr "Prețul total, cu masa inclusă, înainte să rezervi"
+
+msgctxt "Languages::travel_core.pdpa_summary_label"
+msgid "Search summary"
+msgstr "Rezumatul căutării"
+
+msgctxt "Languages::travel_core.pdpa_change"
+msgid "Change"
+msgstr "Modifică"
+
+msgctxt "Languages::travel_core.pdpa_rooms_link"
+msgid "Rooms"
+msgstr "Camere"
+
+msgctxt "Languages::travel_core.add_date"
+msgid "Add date"
+msgstr "Adaugă data"
+
+msgctxt "Languages::travel_core.see_prices"
+msgid "See prices"
+msgstr "Vezi prețurile"
+
+msgctxt "Languages::travel_core.clear_dates"
+msgid "Clear dates"
+msgstr "Șterge datele"
+
+msgctxt "Languages::travel_core.change_guests"
+msgid "Change guests"
+msgstr "Schimbă oaspeții"
+
+msgctxt "Languages::travel_core.lowest_prices"
+msgid "Lowest prices"
+msgstr "Cele mai mici prețuri"
+
+msgctxt "Languages::travel_core.nightly_prices_note"
+msgid "Indicative prices per night, for 2 adults."
+msgstr "Prețuri orientative pe noapte, pentru 2 adulți."

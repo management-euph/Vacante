@@ -121,6 +121,11 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
         'novoton',
         new \Tygh\Addons\NovotonHolidays\Services\NovotonAvailabilitySource(),
     );
+    // The hotel page's indicative "de la X / noapte" (Design A title row).
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setIndicativePriceSource(
+        'novoton',
+        new \Tygh\Addons\NovotonHolidays\Providers\NovotonIndicativePrice(),
+    );
     // What the booking row knows about an order line (supplier reference,
     // failure, the offer's remarks), for travel_core's order booking card.
     \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setOrderCardResolver(

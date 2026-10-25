@@ -152,6 +152,11 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
         'eurosite',
         new \Tygh\Addons\Eurosite\Services\EurositeAvailabilitySource(),
     );
+    // The hotel page's indicative "de la X / noapte" (Design A title row).
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setIndicativePriceSource(
+        'eurosite',
+        new \Tygh\Addons\Eurosite\Providers\EurositeIndicativePrice(),
+    );
     // What the booking row knows about an order line (supplier reference,
     // whether it reached Eurosite, why it failed) and the line's terms, for
     // travel_core's booking cards (order pages; checkout).

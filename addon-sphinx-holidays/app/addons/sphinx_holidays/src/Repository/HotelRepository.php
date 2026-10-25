@@ -531,6 +531,18 @@ class HotelRepository implements HotelRepositoryInterface
     }
 
     /**
+     * The stored per-date calendar from-prices (raw API currency, no
+     * commission) as JSON; '' when the hotel has none.
+     */
+    public function getCalendarPricesRaw(string $hotelId): string
+    {
+        return TypeCoerce::toString(db_get_field(
+            'SELECT calendar_prices_raw FROM ?:sphinx_hotels WHERE hotel_id = ?s',
+            $hotelId,
+        ));
+    }
+
+    /**
      * Persist per-date calendar from-prices (raw API currency, no commission).
      *
      * @param array<string, float> $datePrices check-in date => price
