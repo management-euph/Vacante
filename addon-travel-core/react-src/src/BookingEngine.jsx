@@ -11,6 +11,10 @@
  *   "search"   – on search results (shows "Change search" option)
  *   "homepage" – on the homepage (includes a location search input)
  *
+ * config.design === 'a' (the Design A hotel page, travelcore_design_a.tpl):
+ * separate Check-in / Check-out fields with labels, "Vezi prețurile", and a
+ * calendar with a stay header, per-night prices and its own search button.
+ *
  * Provider-agnostic: the search dispatch route is read from
  * config.searchDispatch (set via data-search-dispatch on the mount element).
  */
@@ -19,7 +23,7 @@ import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import Calendar from './Calendar';
 import GuestPicker from './GuestPicker';
 import { CalendarIcon, GuestIcon, ChevronDown } from './icons';
-import { parseDate, toDateString, formatDateShort, nightsBetween, t, tPlural } from './utils';
+import { parseDate, toDateString, formatDateShort, formatDateField, nightsBetween, t, tPlural } from './utils';
 import { injectStyles } from './styles';
 import { syncSwitcherLinks } from './switcherLinks';
 
@@ -86,7 +90,9 @@ export default function BookingEngine({ config }) {
         roomsData = '',
         calendarPrices: configCalendarPrices = null,
         calendarPricesCurrency: configCalendarPricesCurrency = '',
+        design = '',
     } = config;
+    const isDesignA = design === 'a';
 
     // -----------------------------------------------------------------------
     // State
@@ -143,6 +149,8 @@ export default function BookingEngine({ config }) {
     }, [configCalendarPrices, configCalendarPricesCurrency]);
 
     const [showCalendar, setShowCalendar] = useState(false);
+    // Design A: which date field opened the calendar (it shows as active)
+    const [calendarField, setCalendarField] = useState('checkIn');
     const [showGuests, setShowGuests] = useState(false);
     const [validationError, setValidationError] = useState('');
     const [ageErrors, setAgeErrors] = useState([]);
@@ -158,6 +166,7 @@ export default function BookingEngine({ config }) {
     const engineRef = useRef(null);
     const retryTimerRef = useRef(null);
     const dateTriggerRef = useRef(null);
+    const checkOutTriggerRef = useRef(null);
     const guestTriggerRef = useRef(null);
 
     useEffect(() => () => { clearTimeout(retryTimerRef.current); }, []);
@@ -176,14 +185,17 @@ export default function BookingEngine({ config }) {
         const adultLabel = (totalAdults === 1 ? t('adult', 'adult') : t('adults', 'adults')).toLowerCase();
         parts.push(`${totalAdults} ${adultLabel}`);
 
-        const childLabel = (totalChildren === 1 ? t('child', 'child') : t('children', 'children')).toLowerCase();
-        parts.push(`${totalChildren} ${childLabel}`);
+        // Design A leaves out "0 children" ("2 adulți · 1 cameră").
+        if (!isDesignA || totalChildren > 0) {
+            const childLabel = (totalChildren === 1 ? t('child', 'child') : t('children', 'children')).toLowerCase();
+            parts.push(`${totalChildren} ${childLabel}`);
+        }
 
         const roomLabel = (rooms.length === 1 ? t('room', 'room') : t('rooms', 'rooms')).toLowerCase();
         parts.push(`${rooms.length} ${roomLabel}`);
 
         return parts.join(' \u00b7 ');
-    }, [totalAdults, totalChildren, rooms.length]);
+    }, [totalAdults, totalChildren, rooms.length, isDesignA]);
 
     const dateDisplayText = useMemo(() => {
         if (checkIn && checkOut) {
@@ -204,8 +216,23 @@ export default function BookingEngine({ config }) {
         setCheckIn(newCheckIn);
         setCheckOut(newCheckOut);
         setValidationError('');
+        // Design A: once check-in is picked, the check-out field is next.
+        setCalendarField(newCheckIn ? 'checkOut' : 'checkIn');
         if (hasSearched) setParamsChanged(true);
     }, [hasSearched]);
+
+    // Design A: each date field opens the calendar for itself; clicking the
+    // field that is already open closes it.
+    const openCalendar = useCallback((field) => {
+        setShowGuests(false);
+        setValidationError('');
+        if (showCalendar && calendarField === field) {
+            setShowCalendar(false);
+            return;
+        }
+        setCalendarField(field);
+        setShowCalendar(true);
+    }, [showCalendar, calendarField]);
 
     const handleRoomsUpdate = useCallback((newRooms) => {
         setRooms(newRooms);
@@ -544,10 +571,11 @@ export default function BookingEngine({ config }) {
     const searchBtnText = useMemo(() => {
         if (isSearching) return t('searching', 'Searching...');
         if (buttonText) return buttonText;
+        if (isDesignA) return t('seePrices', 'See prices');
         if (hasSearched && paramsChanged) return t('applyChanges', 'Apply changes');
         if (hasSearched) return t('changeSearch', 'Change search');
         return t('search', 'Search');
-    }, [isSearching, buttonText, hasSearched, paramsChanged]);
+    }, [isSearching, buttonText, hasSearched, paramsChanged, isDesignA]);
 
     return (
         <div className="nvt-booking-engine" ref={engineRef}>
@@ -571,7 +599,60 @@ export default function BookingEngine({ config }) {
                     </div>
                 )}
 
-                {/* Date field */}
+                {/* Date field(s) */}
+                {isDesignA ? (
+                    ['checkIn', 'checkOut'].map((field) => {
+                        const value = field === 'checkIn' ? checkIn : checkOut;
+                        const active = showCalendar && calendarField === field;
+                        return (
+                            <div
+                                key={field}
+                                className={`nvt-field nvt-field--date nvt-field--date-split${validationError && !value ? ' nvt-field--error' : ''}`}
+                            >
+                                <button
+                                    ref={field === 'checkIn' ? dateTriggerRef : checkOutTriggerRef}
+                                    type="button"
+                                    className={`nvt-field-input${active ? ' nvt-field-input--active' : ''}`}
+                                    onClick={() => openCalendar(field)}
+                                    aria-expanded={active}
+                                    aria-haspopup="dialog"
+                                >
+                                    <span className="nvt-field-input-icon"><CalendarIcon /></span>
+                                    <span className="nvt-field-input-text nvt-field-input-text--stacked">
+                                        <span className="nvt-label">
+                                            {field === 'checkIn' ? t('checkIn', 'Check-in') : t('checkOut', 'Check-out')}
+                                        </span>
+                                        <span className={`nvt-value${value ? '' : ' nvt-value--placeholder'}`}>
+                                            {value ? formatDateField(value) : t('addDate', 'Add date')}
+                                        </span>
+                                    </span>
+                                </button>
+
+                                {field === 'checkIn' && showCalendar && (
+                                    <Calendar
+                                        variant="a"
+                                        checkIn={checkIn}
+                                        checkOut={checkOut}
+                                        selecting={calendarField}
+                                        onSelect={handleDateSelect}
+                                        onClose={() => setShowCalendar(false)}
+                                        onSearch={() => { setShowCalendar(false); handleSearch(); }}
+                                        onChangeGuests={() => { setShowCalendar(false); setShowGuests(true); }}
+                                        prices={calendarPrices.prices}
+                                        pricesCurrency={calendarPrices.currency}
+                                        triggerRefs={[dateTriggerRef, checkOutTriggerRef]}
+                                    />
+                                )}
+
+                                {field === 'checkIn' && validationError && !showCalendar && (
+                                    <div className="nvt-validation-message">
+                                        {validationError}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })
+                ) : (
                 <div className={`nvt-field nvt-field--date${validationError ? ' nvt-field--error' : ''}`}>
                     <button
                         ref={dateTriggerRef}
@@ -612,6 +693,7 @@ export default function BookingEngine({ config }) {
                         </div>
                     )}
                 </div>
+                )}
 
                 {/* Guests field */}
                 <div className="nvt-field nvt-field--guests">
@@ -624,7 +706,8 @@ export default function BookingEngine({ config }) {
                         aria-haspopup="dialog"
                     >
                         <span className="nvt-field-input-icon"><GuestIcon /></span>
-                        <span className="nvt-field-input-text">
+                        <span className={`nvt-field-input-text${isDesignA ? ' nvt-field-input-text--stacked' : ''}`}>
+                            {isDesignA && <span className="nvt-label">{t('guests', 'Guests')}</span>}
                             <span className="nvt-value">{guestSummary}</span>
                         </span>
                         <span className="nvt-field-input-arrow"><ChevronDown /></span>

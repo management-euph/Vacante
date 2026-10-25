@@ -338,6 +338,159 @@
     mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
+/* ── #35 Bar fields and calendar (the engine's design "a") ────────────── */
+
+.travel-pdpa .nvt-field--date-split {
+    flex: 1 1 0;
+}
+.travel-pdpa .nvt-field--guests {
+    flex: 1.15 1 0;
+}
+.travel-pdpa .nvt-field-input-text--stacked {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+}
+.travel-pdpa .nvt-field-input-text--stacked .nvt-label {
+    margin: 0 0 2px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--travel-pdpa-muted);
+}
+.travel-pdpa .nvt-field-input-text--stacked .nvt-value {
+    font-weight: 700;
+}
+.travel-pdpa .nvt-field-input-text--stacked .nvt-value--placeholder {
+    font-weight: 400;
+    color: var(--travel-pdpa-muted);
+}
+/* The field that opened the calendar. booking-engine.css forces a
+   transparent background on every state of the field, hence !important. */
+.travel-pdpa .nvt-field-input.nvt-field-input--active {
+    background: #ebf3ff !important;
+    border-radius: 6px;
+}
+.travel-pdpa .nvt-calendar-stay {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 16px;
+    padding: 0 0 16px;
+    border-bottom: 1px solid #e3e7ee;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--travel-pdpa-text);
+}
+.travel-pdpa .nvt-calendar-stay-icon {
+    display: flex;
+    color: var(--travel-pdpa-navy);
+}
+.travel-pdpa .nvt-calendar-stay-text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.travel-pdpa .nvt-calendar-stay-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid #d9dee7;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--travel-pdpa-text);
+    cursor: pointer;
+}
+.travel-pdpa .nvt-calendar-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 24px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e3e7ee;
+}
+.travel-pdpa .nvt-calendar-legend {
+    display: grid;
+    gap: 4px;
+    font-size: 13px;
+    color: var(--travel-pdpa-muted);
+}
+.travel-pdpa .nvt-calendar-legend-lowest {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    color: var(--travel-pdpa-text);
+}
+.travel-pdpa .nvt-calendar-legend-lowest::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--nvt-cal-cheapest-color, #2e7d32);
+}
+.travel-pdpa .nvt-calendar-link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--travel-pdpa-link);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.travel-pdpa .nvt-calendar-link:hover {
+    text-decoration: underline;
+}
+.travel-pdpa .nvt-calendar-buttons {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.travel-pdpa .nvt-calendar-search {
+    width: auto;
+    height: auto;
+    min-height: 44px;
+    padding: 0 24px;
+    font-size: 16px;
+}
+@media (min-width: 769px) {
+    /* Under the check-in field, as wide as the two date fields. */
+    .travel-pdpa .nvt-calendar-popup--a {
+        left: 0;
+        width: 760px;
+        min-width: 0;
+        padding: 20px 24px;
+    }
+    .travel-pdpa .nvt-calendar-popup--a .nvt-calendar-day-price {
+        font-size: 12px;
+    }
+}
+@media (max-width: 768px) {
+    /* The full-screen phone calendar has its own close and bottom button. */
+    .travel-pdpa .nvt-calendar-stay {
+        margin: 56px 16px 0;
+        font-size: 14px;
+    }
+    .travel-pdpa .nvt-calendar-stay-close,
+    .travel-pdpa .nvt-calendar-search {
+        display: none;
+    }
+    .travel-pdpa .nvt-calendar-actions {
+        margin: 0 16px;
+        padding: 12px 0;
+    }
+    /* the stay line already clears the close button */
+    .travel-pdpa .nvt-calendar-popup--a .nvt-calendar-sticky-weekdays {
+        margin-top: 8px;
+    }
+}
+
 /* ── #40 Compact search summary (shown by pdp-design-a.js) ───────────── */
 
 .travel-pdpa-compact {

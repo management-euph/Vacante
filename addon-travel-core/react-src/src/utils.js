@@ -102,6 +102,16 @@ export function formatDateShort(date) {
 }
 
 /**
+ * Date with weekday and year, for the Design A bar and calendar —
+ * "lun. 26 oct. 2026" / "Mon. 26 Oct. 2026".
+ */
+export function formatDateField(date) {
+    if (!date) return '';
+    const text = `${formatDateShort(date)} ${date.getFullYear()}`;
+    return getLocale() === 'ro' ? text.toLowerCase() : text;
+}
+
+/**
  * Count nights between two dates.
  */
 export function nightsBetween(checkIn, checkOut) {

@@ -2929,3 +2929,27 @@ msgstr "Modifică"
 msgctxt "Languages::travel_core.pdpa_rooms_link"
 msgid "Rooms"
 msgstr "Camere"
+
+msgctxt "Languages::travel_core.add_date"
+msgid "Add date"
+msgstr "Adaugă data"
+
+msgctxt "Languages::travel_core.see_prices"
+msgid "See prices"
+msgstr "Vezi prețurile"
+
+msgctxt "Languages::travel_core.clear_dates"
+msgid "Clear dates"
+msgstr "Șterge datele"
+
+msgctxt "Languages::travel_core.change_guests"
+msgid "Change guests"
+msgstr "Schimbă oaspeții"
+
+msgctxt "Languages::travel_core.lowest_prices"
+msgid "Lowest prices"
+msgstr "Cele mai mici prețuri"
+
+msgctxt "Languages::travel_core.nightly_prices_note"
+msgid "Indicative prices per night, for 2 adults."
+msgstr "Prețuri orientative pe noapte, pentru 2 adulți."

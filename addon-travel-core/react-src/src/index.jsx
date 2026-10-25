@@ -161,14 +161,18 @@ function loadTranslations(el) {
  * Caches per product_id to avoid duplicate fetches on the same page.
  */
 const _configCache = {};
-async function fetchConfig(productId) {
-    if (_configCache[productId]) {
-        dbg('fetchConfig: cache hit for', productId);
-        return _configCache[productId];
+async function fetchConfig(productId, design = '') {
+    const cacheKey = `${productId}|${design}`;
+    if (_configCache[cacheKey]) {
+        dbg('fetchConfig: cache hit for', cacheKey);
+        return _configCache[cacheKey];
     }
 
     const baseUrl = (window.Tygh?.current_location || window.location.origin) + '/index.php';
-    const url = `${baseUrl}?dispatch=travel_booking.booking_config&product_id=${encodeURIComponent(productId)}`;
+    // design=a: the Design A hotel page (travelcore_design_a.tpl) also gets
+    // its calendar prices and bar texts.
+    const url = `${baseUrl}?dispatch=travel_booking.booking_config&product_id=${encodeURIComponent(productId)}`
+        + (design ? `&design=${encodeURIComponent(design)}` : '');
     dbg('fetchConfig: GET', url);
 
     try {
@@ -182,7 +186,7 @@ async function fetchConfig(productId) {
         dbg('fetchConfig: response length', text.length, 'chars');
         try {
             const data = JSON.parse(text);
-            _configCache[productId] = data;
+            _configCache[cacheKey] = data;
             return data;
         } catch (parseErr) {
             dbg('fetchConfig: JSON parse error:', parseErr.message, 'Response:', text.substring(0, 500));
@@ -240,8 +244,9 @@ function init() {
         } else if (el.dataset.productId) {
             // ── AJAX mode: fetch config from server ──
             const pid = el.dataset.productId;
-            dbg('→ AJAX mode, fetching config for product_id=' + pid);
-            fetchConfig(pid).then(serverConfig => {
+            const design = el.closest('[data-travel-design="a"]') ? 'a' : '';
+            dbg('→ AJAX mode, fetching config for product_id=' + pid + (design ? ' (design ' + design + ')' : ''));
+            fetchConfig(pid, design).then(serverConfig => {
                 dbg('fetchConfig response:', serverConfig);
 
                 if (!serverConfig || !serverConfig.isHotel) {
@@ -277,8 +282,9 @@ function init() {
                     maxChildren:         4,
                     buttonText:          '',
                     roomsData:           url.get('rooms_data') || '',
-                    calendarPrices:      null,
-                    calendarPricesCurrency: '',
+                    calendarPrices:      serverConfig.calendarPrices || null,
+                    calendarPricesCurrency: serverConfig.calendarPricesCurrency || '',
+                    design:              serverConfig.design || '',
                 };
                 dbg('Rendering with config:', config);
                 renderMount(el, config);

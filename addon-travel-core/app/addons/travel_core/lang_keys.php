@@ -2093,4 +2093,29 @@ Dacă ați plătit deja, vă rugăm să ignorați acest email.',
         'en' => 'Rooms',
         'ro' => 'Camere',
     ],
+    // Design A search bar and calendar (React engine, design=a booking config).
+    'travel_core.add_date' => [
+        'en' => 'Add date',
+        'ro' => 'Adaugă data',
+    ],
+    'travel_core.see_prices' => [
+        'en' => 'See prices',
+        'ro' => 'Vezi prețurile',
+    ],
+    'travel_core.clear_dates' => [
+        'en' => 'Clear dates',
+        'ro' => 'Șterge datele',
+    ],
+    'travel_core.change_guests' => [
+        'en' => 'Change guests',
+        'ro' => 'Schimbă oaspeții',
+    ],
+    'travel_core.lowest_prices' => [
+        'en' => 'Lowest prices',
+        'ro' => 'Cele mai mici prețuri',
+    ],
+    'travel_core.nightly_prices_note' => [
+        'en' => 'Indicative prices per night, for 2 adults.',
+        'ro' => 'Prețuri orientative pe noapte, pentru 2 adulți.',
+    ],
 ];
