@@ -35,6 +35,19 @@ final class NovotonIndicativePriceTest extends TestCase
         self::assertSame([['1234', 'EUR']], $asked, 'asked once, in the primary currency, for that hotel');
     }
 
+    public function testTheCalendarFollowsTheShowCalendarPricesSetting(): void
+    {
+        $day = date('Y-m-d', strtotime('+3 days'));
+        $calendar = static fn (string $hotelId, string $currency): array => ['prices' => [$day => 104.5, '2000-01-01' => 50.0]];
+
+        $shown = new NovotonIndicativePrice($calendar, 'EUR', static fn (): bool => true);
+        self::assertSame([$day => 104.5], $shown->nightlyCalendar('1234'), 'past dates left out');
+
+        $hidden = new NovotonIndicativePrice($calendar, 'EUR', static fn (): bool => false);
+        self::assertSame([], $hidden->nightlyCalendar('1234'));
+        self::assertSame(104.5, $hidden->nightlyFromPrice('1234'), 'the title row price does not depend on it');
+    }
+
     public function testNoPriceWithoutCalendarOrHotel(): void
     {
         $empty = new NovotonIndicativePrice(static fn (string $hotelId, string $currency): array => ['prices' => [], 'currency' => $currency], 'EUR');

@@ -13,10 +13,11 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
 use Tygh\Addons\TravelCore\Services\IndicativeNightlyPrice;
 
 /**
- * Sphinx's "from" price for the hotel page title row: the lowest of the
- * hotel's stored calendar prices (the calendar_prices cron — per check-in
- * date, the cheapest stay of N nights for two adults, raw API currency),
- * with commission, in the store's primary currency, divided by N.
+ * Sphinx's indicative prices for the hotel page: the hotel's stored calendar
+ * prices (the calendar_prices cron — per check-in date, the cheapest stay of
+ * N nights for two adults, raw API currency), with commission, in the
+ * store's primary currency, divided by N. The title row's "from" price is
+ * the lowest.
  */
 final class SphinxIndicativePrice implements IndicativePriceSourceInterface
 {
@@ -61,16 +62,37 @@ final class SphinxIndicativePrice implements IndicativePriceSourceInterface
     #[\Override]
     public function nightlyFromPrice(string $hotelId): ?float
     {
+        $stays = $this->stays($hotelId);
+
+        return $stays === [] ? null : ($this->toStorePrice)(min($stays)) / $this->nightCount();
+    }
+
+    #[\Override]
+    public function nightlyCalendar(string $hotelId): array
+    {
+        $nights = $this->nightCount();
+        $calendar = [];
+        foreach ($this->stays($hotelId) as $date => $stay) {
+            $calendar[$date] = ($this->toStorePrice)($stay) / $nights;
+        }
+
+        return $calendar;
+    }
+
+    /** @return array<string, float> check-in date => raw stay total, from today on */
+    private function stays(string $hotelId): array
+    {
         if ($hotelId === '') {
-            return null;
+            return [];
         }
         $raw = json_decode(($this->rawCalendar)($hotelId), true);
-        if (!is_array($raw)) {
-            return null;
-        }
-        $stay = IndicativeNightlyPrice::lowest($raw, date('Y-m-d'));
 
-        return $stay === null ? null : ($this->toStorePrice)($stay) / max(1, ($this->nights)());
+        return is_array($raw) ? IndicativeNightlyPrice::perNight($raw, date('Y-m-d')) : [];
+    }
+
+    private function nightCount(): int
+    {
+        return max(1, ($this->nights)());
     }
 
     /** The nights the last calendar_prices run priced; the cron's default when unknown. */

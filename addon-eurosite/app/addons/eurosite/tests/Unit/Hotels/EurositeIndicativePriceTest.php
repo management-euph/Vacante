@@ -51,4 +51,11 @@ final class EurositeIndicativePriceTest extends TestCase
         self::assertNull($source->nightlyFromPrice('MISSING'));
         self::assertNull($source->nightlyFromPrice(''));
     }
+
+    public function testNoCalendarPrices(): void
+    {
+        $source = self::source(['H1' => ['availability' => 'IM', 'min_price' => 644.0, 'price_currency' => 'EUR']]);
+
+        self::assertSame([], $source->nightlyCalendar('H1'), 'one price per hotel, not per date');
+    }
 }

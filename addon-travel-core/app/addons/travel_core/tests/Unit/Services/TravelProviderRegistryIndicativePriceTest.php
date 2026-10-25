@@ -55,6 +55,14 @@ final class TravelProviderRegistryIndicativePriceTest extends TestCase
             {
                 return ($this->price)($hotelId);
             }
+
+            #[\Override]
+            public function nightlyCalendar(string $hotelId): array
+            {
+                $price = ($this->price)($hotelId);
+
+                return $price === null ? [] : ['2026-11-02' => $price, '2026-11-03' => 0.0];
+            }
         };
     }
 
@@ -105,6 +113,19 @@ final class TravelProviderRegistryIndicativePriceTest extends TestCase
         self::assertSame(80.0, TravelProviderRegistry::indicativeNightlyPrice('novoton', 'ok'));
     }
 
+    public function testTheCalendarComesFromTheOwningSourceWithoutEmptyDays(): void
+    {
+        $this->registerProvider('sphinx');
+        TravelProviderRegistry::setIndicativePriceSource('sphinx', self::source('sphinx', static function (string $id): ?float {
+            return $id === 'boom' ? throw new \RuntimeException('db down') : 88.0;
+        }));
+
+        self::assertSame(['2026-11-02' => 88.0], TravelProviderRegistry::indicativeNightlyCalendar('sphinx', '7'));
+        self::assertSame([], TravelProviderRegistry::indicativeNightlyCalendar('sphinx', 'boom'));
+        self::assertSame([], TravelProviderRegistry::indicativeNightlyCalendar('sphinx', ''));
+        self::assertSame([], TravelProviderRegistry::indicativeNightlyCalendar('novoton', '7'));
+    }
+
     public function testLowestTakesFutureDatesAndDividesAStayIntoNights(): void
     {
         $prices = [
@@ -120,5 +141,9 @@ final class TravelProviderRegistryIndicativePriceTest extends TestCase
         self::assertNull(IndicativeNightlyPrice::lowest(['2026-10-01' => 40], '2026-10-25'));
         self::assertNull(IndicativeNightlyPrice::lowest([], '2026-10-25'));
         self::assertSame(630.0, IndicativeNightlyPrice::lowest($prices, '2026-10-25', 0), 'nights never below one');
+        self::assertSame(
+            ['2026-10-25' => 100.0, '2026-11-02' => 90.0],
+            IndicativeNightlyPrice::perNight($prices, '2026-10-25', 7),
+        );
     }
 }

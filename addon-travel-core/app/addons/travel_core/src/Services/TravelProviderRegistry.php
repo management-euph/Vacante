@@ -221,6 +221,28 @@ class TravelProviderRegistry
     }
 
     /**
+     * The owning provider's per-night prices by check-in date (store primary
+     * currency, commission included), for the Design A calendar; [] when it
+     * has none or its source failed.
+     *
+     * @return array<string, float> 'Y-m-d' => price
+     */
+    public static function indicativeNightlyCalendar(string $name, string $hotelId): array
+    {
+        $source = self::$indicativePrices[$name] ?? null;
+        if ($source === null || $hotelId === '' || !isset(self::$providers[$name])) {
+            return [];
+        }
+        try {
+            $calendar = $source->nightlyCalendar($hotelId);
+        } catch (\Throwable) {
+            return [];
+        }
+
+        return array_filter($calendar, static fn (float $price): bool => $price > 0);
+    }
+
+    /**
      * Register how a provider reads the cancellation & payment terms of its
      * own cart lines, for the cart / checkout booking card
      * (ViewModels\CartBookingCardFactory). The resolver gets the line's extra

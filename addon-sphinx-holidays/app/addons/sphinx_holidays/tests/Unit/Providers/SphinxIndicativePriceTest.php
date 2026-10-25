@@ -38,6 +38,23 @@ final class SphinxIndicativePriceTest extends TestCase
         self::assertSame([700.0], $priced, 'only the cheapest stay is priced');
     }
 
+    public function testTheCalendarShowsEachStayAsAPricePerNight(): void
+    {
+        $soon = date('Y-m-d', strtotime('+5 days'));
+        $later = date('Y-m-d', strtotime('+12 days'));
+        $source = new SphinxIndicativePrice(
+            static fn (string $hotelId): string => (string) json_encode([$soon => 840.0, $later => 700.0, '2000-01-01' => 10.0]),
+            static fn (float $stay): float => $stay * 1.1,
+            static fn (): int => 7,
+        );
+
+        $calendar = $source->nightlyCalendar('3612');
+
+        self::assertSame([$soon, $later], array_keys($calendar));
+        self::assertEqualsWithDelta(132.0, $calendar[$soon], 0.0001);
+        self::assertEqualsWithDelta(110.0, $calendar[$later], 0.0001);
+    }
+
     public function testNoPriceWithoutAStoredCalendar(): void
     {
         $source = new SphinxIndicativePrice(
@@ -49,6 +66,7 @@ final class SphinxIndicativePriceTest extends TestCase
         self::assertNull($source->nightlyFromPrice('1'));
         self::assertNull($source->nightlyFromPrice('broken'));
         self::assertNull($source->nightlyFromPrice(''));
+        self::assertSame([], $source->nightlyCalendar('broken'));
     }
 
     public function testNightsDefaultToTheCronDefaultUntilARunRecordsThem(): void

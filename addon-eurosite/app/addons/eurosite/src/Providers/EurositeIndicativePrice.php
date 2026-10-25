@@ -69,4 +69,11 @@ final class EurositeIndicativePrice implements IndicativePriceSourceInterface
 
         return EurositeProductFactory::toStorePrice($stay, ($this->coefficient)($currency)) / max(1, ($this->nights)());
     }
+
+    /** Eurosite stores one price per hotel, not one per date: no calendar prices. */
+    #[\Override]
+    public function nightlyCalendar(string $hotelId): array
+    {
+        return [];
+    }
 }
