@@ -107,3 +107,29 @@ an internal code.
 ## Progress log
 
 - 25 Oct 2026 — plan written; branch restarted from `main` after #80 merged.
+  Supplier data maps saved in `hotel-page-design-a-supplier-map.md`.
+- 25 Oct 2026 — **phase 1 (page shell) done**:
+  - `blocks/product_templates/travelcore_design_a.tpl` (both themes), label
+    "Travel Core · Design A"; `css/addons/travel_core/design-a.css` (every
+    rule under `.travel-pdpa`); `js/addons/travel_core/pdp-design-a.js`.
+  - Title row with stars (`travel_pdp_stars`, assigned in
+    `dispatch_before_display`), location + "Vezi pe hartă", wishlist/compare,
+    "Alege datele" (opens the calendar); the "de la X € / noapte" slot
+    renders when `travel_pdp_from_price` is assigned (not yet — phase 1b).
+  - Photo mosaic 60/40 opening the theme previewer through the hidden stock
+    gallery; phone: one photo with "1 / N".
+  - Bar and inline results under the photos, above the tabs (existing
+    mount hooks); two trust lines under the bar (shipped hidden in
+    `booking_form_mount.tpl`, shown only by Design A).
+  - Compact search summary after a search ("Rezumatul căutării").
+  - Photo height `clamp(320px, 100vh - 330px, 480px)`.
+  - Verified by compiling/rendering with Smarty 5.8 and the real CSS/JS:
+    bar ends at 748px of 900, 586px of 657; tests:
+    `DesignAProductTemplateTest`, `tests/js/pdp-design-a.test.mjs`.
+  - **To check on the dev store**: the previewer opens from the mosaic
+    (it relies on the theme's `a.cm-image-previewer` links), wishlist /
+    compare buttons in the title row, a theme sticky header vs the compact
+    summary (fixed at the top).
+- Next: phase 1b — indicative per-night price (table in the supplier map),
+  then phase 2 — the bar itself (Check-in / Check-out fields,
+  "Vezi prețurile").
