@@ -74,4 +74,74 @@ page, re-runs same-origin scripts in the copied part, then fires
 
 ## Sphinx
 
-(pending)
+**Flow** (`controllers/frontend/sphinx_booking/search.php`, `search_poll.php`)
+- The hotel comes from `hotel_id` (404 without a row). No `check_in` → a
+  warning and nothing in the results area.
+- Occupancy: `SearchOccupancyResolver` (one `{adults, children_ages}` per room
+  from `rooms_data`). The API search covers the whole destination
+  (`hotel_ids` returns nothing) and is narrowed to this hotel afterwards.
+- Cache: `search:v2:<md5>` in `?:sphinx_cache` when `enable_api_cache` and
+  `cache_ttl_search` (900 s) allow; `refresh=1` evicts.
+- Usually the first answer is only a cursor → status `pending`; the page
+  polls `sphinx_booking.search_poll` (JSON, 250 ms interval, `search_max_polls`
+  30) from `js/addons/sphinx_holidays/search-results.js` (`armPoll`, re-armed
+  on `travel:results-swapped`), appending cards in arrival order (no sort, no
+  de-duplication). An older poll loop is not cancelled by a new search.
+- **Offers cover the whole party** (`rooms[]` one per occupancy), but booking
+  is single-room: `booking_form.php` builds one room with totals
+  (`'num_rooms' => 1`), and `ProviderRoomLimit` gives Sphinx 12 rooms.
+
+**Data** (raw offer, `Documentation/Sphinx API.txt`)
+- `offer_id`, `confirmation` (`immediate` / `on_request`), `check_in/out`,
+  `pricing` (`marketing_price` before discount, `discount`, `selling_price` =
+  stay total for the party, commission/supplier price — never shown,
+  currency, taxes, additional fees), `rooms[{code, name, adults,
+  children_ages}]`, `meal_type_name`, `labels`, `special_deal`,
+  `payment_terms{is_loaded, rules}`, `cancellation_fees{is_loaded, is_free,
+  rules}`, `must_verify`.
+- **No room photos or facilities exist**; hotel images/facilities/stars sit on
+  `?:sphinx_hotels` but are not joined into results.
+- Flattened (`SearchOfferNormalizer`): room_name, board_name, price (with
+  commission; `original_price` = before commission, not before discount),
+  currency, room_lines.
+- **The poll path slims rows to a whitelist** (`search_poll.php`): offer_id,
+  hotel_id, product_id, names, image, stars, destination, room_name/type,
+  room_lines, board_name/type, price, original_price, currency, confirmation.
+  Missing there: marketing price/discount, room codes, labels, must_verify,
+  `cancellation_fees.is_free`, payment terms, dates. Design A's "free
+  cancellation" and "−X € vs the standard rate" need that whitelist widened.
+- On-request: setting `require_immediate_availability` (default Y) drops
+  on-request offers; only `immediate` offers get the "Instant confirmation"
+  badge; there is no on-request label.
+- Cancellation/payment terms load on demand: `sphinx_booking.offer_terms`
+  (verify) returns `free_until`, `is_free`, payment and cancellation rules;
+  before that the card shows only the terms link.
+- Deposit: `DepositPolicy` covers Sphinx, applied at booking only.
+- "From" price: `sphinx_from_price` (stay total for `nights`, from
+  `cache/hotels`) exists only on a cache miss with dates — null before dates.
+  Before dates only `calendar_prices_json` exists: the lowest price per
+  check-in date for a **7-night, 2-adult stay**.
+
+**Markup** (`views/sphinx_booking/search.tpl`, mirrored by the JS card)
+- Root `.travel-search-results-page.sphinx-search-results`, form wrapper,
+  skeleton, `#sphinx-results-container[data-search-id][data-search-status]
+  [data-client-params][data-client-config]`, cards
+  `.travel-offer-card.sphinx-offer-card[data-offer-id]` (rooms list, board,
+  dates, instant badge, terms link, price, per night = price ÷ nights, Book),
+  `#sphinx-no-results` + alternative dates, `#sphinx-terms-modal`.
+- Book = plain GET `sphinx_booking.booking_form?offer_id, hotel_id,
+  product_id, dates, guests, room_name, board_name`.
+
+**Found while mapping (to fix)**
+- The server-rendered card prints `$sphinx_search_params.currency`, a key that
+  doesn't exist, so it always says "EUR".
+- The engine's calendar footer says "1-night stay" while Sphinx calendar
+  prices are for 7 nights.
+
+**Tests pinning it**: `SearchLayoutBadgeTest`, `SearchTermsModalTest`,
+`VerifySkipWiringTest`, `VerifyOutageTest`, `HotelOnlySearchTest`,
+`ImmediateConfirmationListTest`, `SearchOfferNormalizerTest`,
+`OfferLocationTest` (poll whitelist), `OfferSnapshotStoreTest`,
+`TermsFormatterTest`; JS `tests/js/sphinx-search-results.test.mjs`,
+`tests/js/sphinx-multiroom-cards.test.mjs`; travel_core
+`InlineResultsOnPdpTest`, `ProviderRoomLimitTest`.
