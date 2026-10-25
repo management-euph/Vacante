@@ -9,6 +9,10 @@
  */
 
 .travel-pdpa {
+    /* The photos give way on shorter screens so the search bar stays on the
+       first screen: 480px from about 810px of window height, never under
+       320px (330px ≈ store header, title row, bar and gaps). */
+    --travel-pdpa-gallery-h: clamp(320px, calc(100vh - 330px), 480px);
     --travel-pdpa-navy: #003580;
     --travel-pdpa-yellow: #febb02;
     --travel-pdpa-blue: var(--nvt-search-btn-bg, #006ce4);
@@ -17,7 +21,6 @@
     --travel-pdpa-muted: #595959;
     --travel-pdpa-tile: #e5e9f0;
     --travel-pdpa-radius: 8px;
-    --travel-pdpa-gallery-h: 480px;
 }
 
 /* ── #10 Title row ───────────────────────────────────────────────────── */
@@ -53,9 +56,10 @@
 }
 
 /* The products:main_info_title hook also prints the current page's location
-   line (main_info_title.post.tpl); Design A shows its own (below). */
+   line (main_info_title.post.tpl); Design A shows its own (below). That
+   span carries an inline display:block, hence the !important. */
 .travel-pdpa .travel-pdp-location {
-    display: none;
+    display: none !important;
 }
 .travel-pdpa-location {
     display: flex;
@@ -255,11 +259,8 @@
     display: none;
 }
 
-/* Short laptop screens: keep the search bar on the first screen. */
+/* Short laptop screens (1366 × 768 and the like): a tighter title row. */
 @media (min-width: 768px) and (max-height: 720px) {
-    .travel-pdpa {
-        --travel-pdpa-gallery-h: clamp(400px, calc(100vh - 270px), 480px);
-    }
     .travel-pdpa-head {
         margin-bottom: 12px;
     }
@@ -299,6 +300,7 @@
     font-size: 15px;
 }
 .travel-pdpa .nvt-btn-search {
+    min-height: 52px;
     padding: 0 32px;
     font-size: 18px;
     font-weight: 700;
@@ -352,6 +354,7 @@
     display: none;
 }
 .travel-pdpa-compact__inner {
+    box-sizing: border-box;
     display: flex;
     align-items: center;
     gap: 8px 20px;
