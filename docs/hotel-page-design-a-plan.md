@@ -130,6 +130,12 @@ an internal code.
     (it relies on the theme's `a.cm-image-previewer` links), wishlist /
     compare buttons in the title row, a theme sticky header vs the compact
     summary (fixed at the top).
-- Next: phase 1b — indicative per-night price (table in the supplier map),
-  then phase 2 — the bar itself (Check-in / Check-out fields,
+- 25 Oct 2026 — **phase 1b (indicative price) done**: travel_core
+  `Contracts\IndicativePriceSourceInterface` +
+  `TravelProviderRegistry::setIndicativePriceSource()` /
+  `indicativeNightlyPrice()`; sources `NovotonIndicativePrice`,
+  `SphinxIndicativePrice` (the calendar_prices cron now stores the nights it
+  priced under `sphinx_calendar_prices_nights`), `EurositeIndicativePrice`;
+  `travel_pdp_from_price` is formatted by `MoneyFormatter::forStore(true)`.
+- Next: phase 2 — the bar itself (Check-in / Check-out fields,
   "Vezi prețurile").
