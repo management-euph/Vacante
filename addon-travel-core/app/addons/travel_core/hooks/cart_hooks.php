@@ -305,6 +305,9 @@ function _travel_core_prepare_hotel_seo_data(int $productId): void
         $locationLine = \Tygh\Addons\TravelCore\Services\HotelLocationLine::build($hotel);
         $view->assign('travel_hotel_location_line', $locationLine);
         $view->assign('travel_hotel_map_url', \Tygh\Addons\TravelCore\Services\HotelMapUrl::build($hotel, $locationLine) ?? '');
+        // Stars next to the hotel name on the Design A page
+        // (travelcore_design_a.tpl); 0 when the supplier gives none.
+        $view->assign('travel_pdp_stars', max(0, min(5, $hotel->classification ?? 0)));
     }
 }
 

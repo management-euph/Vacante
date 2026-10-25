@@ -1,0 +1,473 @@
+/**
+ * Travel Core — hotel page Design A
+ * (blocks/product_templates/travelcore_design_a.tpl).
+ *
+ * Every rule is scoped under .travel-pdpa, the template's outer block, so the
+ * current hotel page (travelcore_template.tpl) and every other page are
+ * untouched. The owner's Design A colours: navy #003580, yellow #febb02.
+ * Plan and mockups: docs/hotel-page-design-a-plan.md.
+ */
+
+.travel-pdpa {
+    --travel-pdpa-navy: #003580;
+    --travel-pdpa-yellow: #febb02;
+    --travel-pdpa-blue: var(--nvt-search-btn-bg, #006ce4);
+    --travel-pdpa-link: #006ce4;
+    --travel-pdpa-text: var(--nvt-text, #1a1a1a);
+    --travel-pdpa-muted: #595959;
+    --travel-pdpa-tile: #e5e9f0;
+    --travel-pdpa-radius: 8px;
+    --travel-pdpa-gallery-h: 480px;
+}
+
+/* ── #10 Title row ───────────────────────────────────────────────────── */
+
+.travel-pdpa-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px 24px;
+    margin: 0 0 16px;
+}
+.travel-pdpa-head__main {
+    flex: 1 1 420px;
+    min-width: 0;
+}
+.travel-pdpa .travel-pdpa-head__title {
+    margin: 0;
+    padding: 0;
+    text-align: left;
+    font-size: 28px;
+    line-height: 1.2;
+    font-weight: 700;
+    color: var(--travel-pdpa-text);
+}
+.travel-pdpa-stars {
+    margin-left: 8px;
+    font-size: 16px;
+    letter-spacing: 2px;
+    color: var(--nvt-stars, #f5a623);
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+/* The products:main_info_title hook also prints the current page's location
+   line (main_info_title.post.tpl); Design A shows its own (below). */
+.travel-pdpa .travel-pdp-location {
+    display: none;
+}
+.travel-pdpa-location {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 12px;
+    margin: 8px 0 0;
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--travel-pdpa-muted);
+}
+.travel-pdpa .travel-pdpa-location__map {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+    color: var(--travel-pdpa-link);
+    text-decoration: none;
+    white-space: nowrap;
+}
+.travel-pdpa .travel-pdpa-location__map:hover {
+    text-decoration: underline;
+}
+.travel-pdpa-location__map::before {
+    content: "";
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
+    background: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.travel-pdpa-head__side {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px 16px;
+    flex: 0 1 auto;
+}
+.travel-pdpa-head__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.travel-pdpa-head__actions form {
+    margin: 0;
+}
+/* A hotel is booked from the search results, never as a bare cart line. */
+.travel-pdpa-head__actions .ty-btn__add-to-cart {
+    display: none;
+}
+.travel-pdpa-from {
+    display: grid;
+    justify-items: end;
+    margin: 0;
+    line-height: 1.25;
+    text-align: right;
+}
+.travel-pdpa-from__label,
+.travel-pdpa-from__note {
+    font-size: 12px;
+    color: var(--travel-pdpa-muted);
+}
+.travel-pdpa-from__price {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--travel-pdpa-navy);
+}
+.travel-pdpa .travel-pdpa-head__dates,
+.travel-pdpa .travel-pdpa-head__dates:hover,
+.travel-pdpa .travel-pdpa-head__dates:focus {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 22px;
+    border: 1px solid var(--travel-pdpa-navy);
+    border-radius: 4px;
+    background: #fff;
+    color: var(--travel-pdpa-navy);
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.travel-pdpa .travel-pdpa-head__dates:hover {
+    background: #f0f6ff;
+}
+.travel-pdpa .travel-pdpa-head__dates[hidden] {
+    display: none;
+}
+.travel-pdpa .travel-pdpa-head__dates:focus-visible {
+    outline: 3px solid var(--travel-pdpa-navy);
+    outline-offset: 2px;
+}
+
+/* ── #20 Photo mosaic: 60 / 40 ───────────────────────────────────────── */
+
+.travel-pdpa-gallery {
+    position: relative;
+    display: grid;
+    gap: 8px;
+    height: var(--travel-pdpa-gallery-h);
+    margin: 0 0 16px;
+    border-radius: var(--travel-pdpa-radius);
+    overflow: hidden;
+}
+.travel-pdpa-gallery--1 {
+    grid-template-columns: 1fr;
+}
+.travel-pdpa-gallery--2 {
+    grid-template-columns: 3fr 2fr;
+}
+.travel-pdpa-gallery--3 {
+    grid-template-columns: 3fr 2fr;
+    grid-template-rows: 1fr 1fr;
+}
+.travel-pdpa-gallery--4,
+.travel-pdpa-gallery--5 {
+    grid-template-columns: 3fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+}
+.travel-pdpa-gallery--3 .travel-pdpa-gallery__tile--main,
+.travel-pdpa-gallery--4 .travel-pdpa-gallery__tile--main,
+.travel-pdpa-gallery--5 .travel-pdpa-gallery__tile--main {
+    grid-row: 1 / 3;
+}
+.travel-pdpa-gallery--4 .travel-pdpa-gallery__tile:nth-child(4) {
+    grid-column: 2 / 4;
+}
+.travel-pdpa-gallery__tile {
+    position: relative;
+    display: block;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--travel-pdpa-tile);
+}
+/* common/image.tpl may wrap the <img> (picture, span); every layer fills. */
+.travel-pdpa-gallery__tile > *,
+.travel-pdpa-gallery__tile picture {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+.travel-pdpa .travel-pdpa-gallery__tile img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+    transition: opacity 0.15s ease;
+}
+.travel-pdpa .travel-pdpa-gallery__tile:hover img {
+    opacity: 0.92;
+}
+.travel-pdpa-gallery__tile:focus-visible {
+    outline: 3px solid var(--travel-pdpa-navy);
+    outline-offset: -3px;
+}
+.travel-pdpa .travel-pdpa-gallery__all {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1px solid #1a1a1a;
+    border-radius: var(--travel-pdpa-radius);
+    background: #fff;
+    color: #1a1a1a;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.travel-pdpa .travel-pdpa-gallery__all:focus-visible {
+    outline: 3px solid var(--travel-pdpa-navy);
+    outline-offset: 2px;
+}
+.travel-pdpa-gallery__all-icon {
+    width: 16px;
+    height: 16px;
+    background: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Crect x='3' y='3' width='7' height='7' rx='1'/%3E%3Crect x='14' y='3' width='7' height='7' rx='1'/%3E%3Crect x='3' y='14' width='7' height='7' rx='1'/%3E%3Crect x='14' y='14' width='7' height='7' rx='1'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Crect x='3' y='3' width='7' height='7' rx='1'/%3E%3Crect x='14' y='3' width='7' height='7' rx='1'/%3E%3Crect x='3' y='14' width='7' height='7' rx='1'/%3E%3Crect x='14' y='14' width='7' height='7' rx='1'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.travel-pdpa-gallery__count {
+    display: none;
+}
+
+/* The theme's gallery stays in the page only for its image previewer
+   (pdp-design-a.js opens it from the mosaic). */
+.travel-pdpa-stock-gallery {
+    display: none;
+}
+
+/* Short laptop screens: keep the search bar on the first screen. */
+@media (min-width: 768px) and (max-height: 720px) {
+    .travel-pdpa {
+        --travel-pdpa-gallery-h: clamp(400px, calc(100vh - 270px), 480px);
+    }
+    .travel-pdpa-head {
+        margin-bottom: 12px;
+    }
+    .travel-pdpa .travel-pdpa-head__title {
+        font-size: 24px;
+    }
+}
+
+/* ── #30 Search bar and results ──────────────────────────────────────── */
+
+.travel-pdpa .travel-pdp-results {
+    margin: 0 0 24px;
+}
+/* The engine's "Availability" heading stays for screen readers only: the
+   bar sits right under the photos and speaks for itself. */
+.travel-pdpa .nvt-availability-header {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
+.travel-pdpa .nvt-form-row {
+    border-width: 4px;
+    border-color: var(--travel-pdpa-yellow);
+    background: var(--travel-pdpa-yellow);
+    border-radius: var(--travel-pdpa-radius);
+}
+.travel-pdpa .nvt-field-input {
+    min-height: 56px;
+}
+.travel-pdpa .nvt-field-input-text .nvt-value {
+    font-size: 15px;
+}
+.travel-pdpa .nvt-btn-search {
+    padding: 0 32px;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+/* Two facts under the bar (booking_form_mount.tpl ships them hidden; only
+   Design A shows them). */
+.travel-pdpa .travel-pdp-trust[hidden] {
+    display: flex;
+    /* the mount keeps an inline 20px bottom margin under the bar */
+    margin-top: -8px;
+}
+.travel-pdp-trust {
+    flex-wrap: wrap;
+    gap: 6px 24px;
+    margin: 10px 0 0;
+    padding: 0;
+    list-style: none;
+}
+.travel-pdp-trust__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    font-size: 13px;
+    color: var(--travel-pdpa-text);
+}
+.travel-pdp-trust__item::before {
+    content: "";
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
+    background: var(--nvt-success, #008234);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* ── #40 Compact search summary (shown by pdp-design-a.js) ───────────── */
+
+.travel-pdpa-compact {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 1000;
+    background: #fff;
+    border-bottom: 1px solid #e3e7ee;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+.travel-pdpa-compact[hidden] {
+    display: none;
+}
+.travel-pdpa-compact__inner {
+    display: flex;
+    align-items: center;
+    gap: 8px 20px;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 12px 24px;
+}
+.travel-pdpa-compact__hotel {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--travel-pdpa-text);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.travel-pdpa-compact__hotel .travel-pdpa-stars {
+    font-size: 13px;
+}
+.travel-pdpa-compact__summary {
+    margin: 0;
+    font-size: 14px;
+    color: var(--travel-pdpa-text);
+    white-space: nowrap;
+}
+.travel-pdpa .travel-pdpa-compact__link {
+    min-height: 44px;
+    padding: 0 4px;
+    border: 0;
+    background: none;
+    color: var(--travel-pdpa-link);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.travel-pdpa .travel-pdpa-compact__link:hover {
+    text-decoration: underline;
+}
+.travel-pdpa .travel-pdpa-compact__link:focus-visible {
+    outline: 3px solid var(--travel-pdpa-navy);
+    outline-offset: 2px;
+}
+
+/* ── Phone ───────────────────────────────────────────────────────────── */
+
+@media (max-width: 767px) {
+    .travel-pdpa .travel-pdpa-head__title {
+        font-size: 22px;
+    }
+    .travel-pdpa-head__side {
+        flex: 1 1 100%;
+        justify-content: space-between;
+    }
+    .travel-pdpa-from {
+        justify-items: start;
+        text-align: left;
+    }
+
+    /* One photo, full width, with a "1 / N" counter. */
+    .travel-pdpa-gallery,
+    .travel-pdpa-gallery--2,
+    .travel-pdpa-gallery--3,
+    .travel-pdpa-gallery--4,
+    .travel-pdpa-gallery--5 {
+        display: block;
+        height: auto;
+        margin-right: -16px;
+        margin-left: -16px;
+        border-radius: 0;
+        aspect-ratio: 4 / 3;
+    }
+    .travel-pdpa-gallery__tile {
+        display: none;
+    }
+    .travel-pdpa-gallery__tile--main {
+        display: block;
+        height: 100%;
+    }
+    .travel-pdpa .travel-pdpa-gallery__all {
+        display: none;
+    }
+    .travel-pdpa-gallery__count {
+        position: absolute;
+        right: 12px;
+        bottom: 12px;
+        display: block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        background: rgba(15, 23, 42, 0.75);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        pointer-events: none;
+    }
+
+    .travel-pdpa-compact__inner {
+        flex-wrap: wrap;
+        gap: 0 12px;
+        padding: 8px 16px;
+    }
+    .travel-pdpa-compact__hotel {
+        flex: 1 1 100%;
+        font-size: 15px;
+    }
+    .travel-pdpa-compact__summary {
+        flex: 1 1 auto;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .travel-pdpa .travel-pdpa-gallery__tile img {
+        transition: none;
+    }
+}

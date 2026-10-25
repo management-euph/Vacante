@@ -2038,4 +2038,59 @@ Dacă ați plătit deja, vă rugăm să ignorați acest email.',
         'en' => 'Not reviewed yet: the review runs with Travel Core\'s next daily cron.',
         'ro' => 'Nerevizuit încă: revizuirea rulează cu următorul cron zilnic Travel Core.',
     ],
+    // Hotel page Design A (blocks/product_templates/travelcore_design_a.tpl).
+    // The BARE travelcore_design_a key labels its entry in the Appearance
+    // "Product detailed page view" dropdown, like travelcore_template.
+    'travelcore_design_a' => [
+        'en' => 'Travel Core · Design A',
+        'ro' => 'Travel Core · Design A',
+    ],
+    'travel_core.pdpa_choose_dates' => [
+        'en' => 'Choose dates',
+        'ro' => 'Alege datele',
+    ],
+    'travel_core.pdpa_show_map' => [
+        'en' => 'Show on map',
+        'ro' => 'Vezi pe hartă',
+    ],
+    'travel_core.pdpa_from' => [
+        'en' => 'from',
+        'ro' => 'de la',
+    ],
+    'travel_core.pdpa_per_night' => [
+        'en' => '/ night',
+        'ro' => '/ noapte',
+    ],
+    'travel_core.pdpa_from_note' => [
+        'en' => 'indicative price, 2 adults',
+        'ro' => 'preț orientativ, 2 adulți',
+    ],
+    'travel_core.pdpa_open_photo' => [
+        'en' => 'Open photo [n] of [total]',
+        'ro' => 'Deschide fotografia [n] din [total]',
+    ],
+    'travel_core.pdpa_all_photos' => [
+        'en' => 'All photos ([n])',
+        'ro' => 'Toate fotografiile ([n])',
+    ],
+    'travel_core.pdpa_trust_instant' => [
+        'en' => 'Instant confirmation for available rooms',
+        'ro' => 'Confirmare imediată pentru camerele disponibile',
+    ],
+    'travel_core.pdpa_trust_total' => [
+        'en' => 'The total price, meals included, before you book',
+        'ro' => 'Prețul total, cu masa inclusă, înainte să rezervi',
+    ],
+    'travel_core.pdpa_summary_label' => [
+        'en' => 'Search summary',
+        'ro' => 'Rezumatul căutării',
+    ],
+    'travel_core.pdpa_change' => [
+        'en' => 'Change',
+        'ro' => 'Modifică',
+    ],
+    'travel_core.pdpa_rooms_link' => [
+        'en' => 'Rooms',
+        'ro' => 'Camere',
+    ],
 ];
