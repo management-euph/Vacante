@@ -2073,14 +2073,6 @@ Dacă ați plătit deja, vă rugăm să ignorați acest email.',
         'en' => 'All photos ([n])',
         'ro' => 'Toate fotografiile ([n])',
     ],
-    'travel_core.pdpa_trust_instant' => [
-        'en' => 'Instant confirmation for available rooms',
-        'ro' => 'Confirmare imediată pentru camerele disponibile',
-    ],
-    'travel_core.pdpa_trust_total' => [
-        'en' => 'The total price, meals included, before you book',
-        'ro' => 'Prețul total, cu masa inclusă, înainte să rezervi',
-    ],
     'travel_core.pdpa_summary_label' => [
         'en' => 'Search summary',
         'ro' => 'Rezumatul căutării',

@@ -206,26 +206,6 @@ final class DesignAProductTemplateTest extends TestCase
         self::assertSame([], $unscoped, 'every Design A rule must start with .travel-pdpa');
     }
 
-    public function testTrustLinesShipHiddenInsideTheFormWrapper(): void
-    {
-        $mount = (string) file_get_contents(
-            self::themeFile('responsive', 'templates/addons/travel_core/components/booking_form_mount.tpl'),
-        );
-
-        $form = strpos($mount, '<div class="travel-search-form-wrapper">');
-        $root = strpos($mount, 'id="travel-booking-root"');
-        $trust = strpos($mount, '<ul class="travel-pdp-trust" hidden>');
-        self::assertIsInt($form);
-        self::assertIsInt($root);
-        self::assertIsInt($trust, 'hidden by default: only the Design A stylesheet shows them');
-        self::assertLessThan($trust, $root, 'under the bar');
-
-        // Still inside the form wrapper: the inline swap replaces everything
-        // AFTER the wrapper, so the lines survive every search.
-        $afterTrust = substr($mount, $trust);
-        self::assertMatchesRegularExpression('~</ul>\s*</div>\s*</div>~', $afterTrust);
-    }
-
     private static function css(): string
     {
         return (string) file_get_contents(self::themeFile('responsive', self::CSS_REL));

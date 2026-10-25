@@ -2910,14 +2910,6 @@ msgctxt "Languages::travel_core.pdpa_all_photos"
 msgid "All photos ([n])"
 msgstr "Toate fotografiile ([n])"
 
-msgctxt "Languages::travel_core.pdpa_trust_instant"
-msgid "Instant confirmation for available rooms"
-msgstr "Confirmare imediată pentru camerele disponibile"
-
-msgctxt "Languages::travel_core.pdpa_trust_total"
-msgid "The total price, meals included, before you book"
-msgstr "Prețul total, cu masa inclusă, înainte să rezervi"
-
 msgctxt "Languages::travel_core.pdpa_summary_label"
 msgid "Search summary"
 msgstr "Rezumatul căutării"

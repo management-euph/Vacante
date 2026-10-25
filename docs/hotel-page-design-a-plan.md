@@ -119,8 +119,9 @@ an internal code.
   - Photo mosaic 60/40 opening the theme previewer through the hidden stock
     gallery; phone: one photo with "1 / N".
   - Bar and inline results under the photos, above the tabs (existing
-    mount hooks); two trust lines under the bar (shipped hidden in
-    `booking_form_mount.tpl`, shown only by Design A).
+    mount hooks). Nothing under the bar: the owner had the two facts that
+    sat there ("Confirmare imediată pentru camerele disponibile", "Prețul
+    total, cu masa inclusă, înainte să rezervi") removed on 25 Oct 2026.
   - Compact search summary after a search ("Rezumatul căutării").
   - Photo height `clamp(320px, 100vh - 330px, 480px)`.
   - Verified by compiling/rendering with Smarty 5.8 and the real CSS/JS:

@@ -306,38 +306,6 @@
     font-weight: 700;
 }
 
-/* Two facts under the bar (booking_form_mount.tpl ships them hidden; only
-   Design A shows them). */
-.travel-pdpa .travel-pdp-trust[hidden] {
-    display: flex;
-    /* the mount keeps an inline 20px bottom margin under the bar */
-    margin-top: -8px;
-}
-.travel-pdpa .travel-pdp-trust {
-    flex-wrap: wrap;
-    gap: 6px 24px;
-    margin: 10px 0 0;
-    padding: 0;
-    list-style: none;
-}
-.travel-pdpa .travel-pdp-trust__item {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin: 0;
-    font-size: 13px;
-    color: var(--travel-pdpa-text);
-}
-.travel-pdpa .travel-pdp-trust__item::before {
-    content: "";
-    flex: 0 0 16px;
-    width: 16px;
-    height: 16px;
-    background: var(--nvt-success, #008234);
-    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3C/svg%3E") center / contain no-repeat;
-    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3C/svg%3E") center / contain no-repeat;
-}
-
 /* ── #35 Bar fields and calendar (the engine's design "a") ────────────── */
 
 .travel-pdpa .nvt-field--date-split {

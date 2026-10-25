@@ -34,12 +34,6 @@
                 </div>
             </div>
         </div>
-        {* Two facts under the search bar. Shipped hidden: only the Design A
-           page (travelcore_design_a.tpl, design-a.css) shows them. *}
-        <ul class="travel-pdp-trust" hidden>
-            <li class="travel-pdp-trust__item">{__("travel_core.pdpa_trust_instant")}</li>
-            <li class="travel-pdp-trust__item">{__("travel_core.pdpa_trust_total")}</li>
-        </ul>
     </div>
 </div>
 {if $travel_booking_scripts}
