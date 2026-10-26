@@ -155,6 +155,16 @@ an internal code.
   the large photo at its own proportions → every photo fills its tile
   (`!important`, the tile is the frame); the header feature list under the
   name is gone. Location line printed once (capture `travel_pdp_design`).
+- 26 Oct 2026 — **checked against the store's own files** (export of
+  `docker/fullstore/export-theme.sh`: CS-Cart 4.21.2, Nova Theme, product 433,
+  a Eurosite hotel): the fixes above hold with the real CSS (title row full
+  width, photos fill their tiles). The theme's header and breadcrumbs take
+  244px, so `pdp-design-a.js` now sizes the photos to keep the bar on the
+  first screen (240–480px). Phones: the price beside wishlist/compare,
+  "Alege datele" full width. The stock gallery's links carry
+  `cm-image-previewer` (Swiper previewer), as the mosaic expects. The
+  Eurosite search for 2–8 Nov returned no offers (out of season), so the
+  room cards still need an export with offers.
 - Next: phase 3 — room-first results (shared view model + component,
   R1–R3, best 4, payment line, on-request wording), then the title row's
   after-search state ("26–31 oct. · de la 502 €", "Vezi camerele") and the
