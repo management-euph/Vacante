@@ -69,15 +69,11 @@ for theme in design/themes/*/; do
     done
 done
 
-# The compiled CSS, newest first (CS-Cart builds it on a storefront visit).
-css_count=0
-while IFS= read -r css; do
-    [ -n "$css" ] || continue
-    copy "$css"
-    css_count=$((css_count + 1))
-done < <(find var/cache -type f -name 'standalone*.css' -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -n 3 | cut -d' ' -f2-)
-
 grep -h "PRODUCT_VERSION" config.php > "$OUT/version.txt" 2>/dev/null || true
+
+# A storefront page first: clearing the cache (update.ps1) drops the compiled
+# CSS until the store renders a page again.
+php -r '@file_get_contents($argv[1] . "/", false, stream_context_create(["http" => ["timeout" => 90]]));' -- "$STORE_URL" || true
 
 # The hotel page and, with dates, the supplier's results, as a visitor gets them.
 if [ -n "$PRODUCT_ID" ]; then
@@ -121,6 +117,14 @@ if [ -n "$PRODUCT_ID" ]; then
         }
     ' -- "$STORE_URL" "$PRODUCT_ID" "$CHECK_IN" "$CHECK_OUT" "$OUT"
 fi
+
+# The compiled CSS, newest first (CS-Cart builds it on a storefront visit).
+css_count=0
+while IFS= read -r css; do
+    [ -n "$css" ] || continue
+    copy "$css"
+    css_count=$((css_count + 1))
+done < <(find var/cache -type f -name 'standalone*.css' -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -n 3 | cut -d' ' -f2-)
 
 rm -f -- "$ARCHIVE"
 tar czf "$ARCHIVE" -C "$REPO/var" theme-export
