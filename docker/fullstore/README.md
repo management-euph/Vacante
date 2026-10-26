@@ -73,6 +73,15 @@ touching devx.
   docker compose exec app php /usr/local/bin/install-addons.php
   ```
 - **Shell into the store**: `docker compose exec app bash`
+- **Share the theme with a session that can't reach this machine** (hotel page
+  layout work): packs the product page / photo / tabs templates of every theme,
+  the compiled theme CSS and the CS-Cart version into `var/theme-export.tgz` of
+  your checkout (git ignores `var/`; these are licensed CS-Cart files, never
+  commit them). With a product id, the hotel page as a visitor sees it; with
+  dates too, the supplier's results for that stay:
+  ```bash
+  docker compose exec app bash /repo/docker/fullstore/export-theme.sh 123 2026-11-02 2026-11-08
+  ```
 - **Logs**: `docker compose logs -f app`
 - **Provider API probes** (the `dev/` folder — `dev/novoton`, `dev/sphinx` and the
   `dev/sphinx_api_dev` sandbox) are **bind-mounted** straight into the web root as
