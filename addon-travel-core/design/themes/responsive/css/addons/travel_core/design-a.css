@@ -577,6 +577,675 @@
     outline-offset: 2px;
 }
 
+/* ── #60 Room-first results (components/design_a_results.tpl) ────────── */
+
+/* From the Design A board (frames 3, 10, 12 and the phone frame 11): one
+   card per room — its facts in a tinted column, its rates in rows of
+   what / price / button. Pressed or chosen = the control's own state plus
+   the #eef5fd tint, never a coloured ring or stripe (owner's rule). */
+.travel-pdpa .travel-pdpa-results {
+    margin: 24px 0 8px;
+    color: #1f2937;
+    font-size: 14px;
+    line-height: 1.45;
+}
+.travel-pdpa .travel-pdpa-results *,
+.travel-pdpa .travel-pdpa-results *::before,
+.travel-pdpa .travel-pdpa-results *::after {
+    box-sizing: border-box;
+}
+.travel-pdpa .travel-pdpa-results [hidden] {
+    display: none !important;
+}
+.travel-pdpa .travel-pdpa-ico {
+    display: inline-block;
+    flex: none;
+    vertical-align: -3px;
+}
+.travel-pdpa .travel-pdpa-rhead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 16px;
+}
+.travel-pdpa .travel-pdpa-rhead__title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #0f172a;
+}
+.travel-pdpa .travel-pdpa-rhead__count {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+/* R1: the meal strip — its tiles share the row, more than six scroll. */
+.travel-pdpa .travel-pdpa-meals {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(max(140px, calc((100% - 40px) / 6)), 1fr));
+    gap: 8px;
+    margin-top: 16px;
+}
+.travel-pdpa .travel-pdpa-meals:has(> :nth-child(7)) {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: calc((100% - 48px) / 6.5);
+    overflow-x: auto;
+}
+.travel-pdpa .travel-pdpa-meal {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-width: 0;
+    min-height: 96px;
+    margin: 0;
+    padding: 12px;
+    border: 1px solid #e0e7ef;
+    border-radius: 12px;
+    background: #fff;
+    color: #0f172a;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.travel-pdpa .travel-pdpa-meal:hover {
+    background: #f6f8fb;
+}
+.travel-pdpa .travel-pdpa-meal[aria-pressed="true"] {
+    background: #eef5fd;
+}
+.travel-pdpa .travel-pdpa-meal > .travel-pdpa-ico {
+    color: var(--travel-pdpa-navy);
+}
+.travel-pdpa .travel-pdpa-meal__n {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+.travel-pdpa .travel-pdpa-meal[aria-pressed="true"] .travel-pdpa-meal__n {
+    color: var(--travel-pdpa-navy);
+}
+.travel-pdpa .travel-pdpa-meal__p {
+    margin-top: auto;
+    font-size: 13px;
+    color: var(--travel-pdpa-navy);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.travel-pdpa .travel-pdpa-meal__p--n {
+    color: #4b5563;
+}
+
+/* R2 / R3: what every rate shares. */
+.travel-pdpa .travel-pdpa-rfacts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 20px;
+    margin: 12px 0 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #0f172a;
+}
+.travel-pdpa .travel-pdpa-rfacts__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.travel-pdpa .travel-pdpa-rfacts__item > .travel-pdpa-ico {
+    color: var(--travel-pdpa-navy);
+}
+
+.travel-pdpa .travel-pdpa-rtools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 12px;
+    margin-top: 16px;
+}
+.travel-pdpa .travel-pdpa-rtools__chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+.travel-pdpa .travel-pdpa-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+    margin: 0;
+    padding: 0 12px;
+    border: 1px solid #e0e7ef;
+    border-radius: 999px;
+    background: #fff;
+    color: #1f2937;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+}
+.travel-pdpa .travel-pdpa-chip[aria-pressed="true"] {
+    border-color: var(--travel-pdpa-navy);
+    background: #e9eff8;
+    color: var(--travel-pdpa-navy);
+}
+.travel-pdpa .travel-pdpa-chip__n {
+    font-weight: 400;
+    color: #6b7280;
+}
+.travel-pdpa .travel-pdpa-sort {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 0 auto;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1f2937;
+}
+.travel-pdpa .travel-pdpa-sort__select {
+    width: auto;
+    min-height: 36px;
+    margin: 0;
+    padding: 0 8px;
+    border: 1px solid #e0e7ef;
+    border-radius: 6px;
+    background: #fff;
+    color: #1f2937;
+    font: inherit;
+}
+
+.travel-pdpa .travel-pdpa-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 0;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #f6f8fb;
+    font-size: 13px;
+    color: #1f2937;
+}
+.travel-pdpa .travel-pdpa-note > .travel-pdpa-ico {
+    margin-top: 1px;
+    color: var(--travel-pdpa-navy);
+}
+.travel-pdpa .travel-pdpa-rnote {
+    width: fit-content;
+    max-width: 100%;
+    margin-top: 16px;
+}
+
+.travel-pdpa .travel-pdpa-rlist {
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+/* A room card: facts | rates. */
+.travel-pdpa .travel-pdpa-rcard {
+    display: grid;
+    grid-template-columns: 392px minmax(0, 1fr);
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid #e0e7ef;
+    border-radius: 14px;
+    background: #fff;
+}
+.travel-pdpa .travel-pdpa-rcard + .travel-pdpa-rcard {
+    margin-top: 16px;
+}
+.travel-pdpa .travel-pdpa-rcard::before,
+.travel-pdpa .travel-pdpa-rcard::after {
+    content: none;
+}
+.travel-pdpa .travel-pdpa-rcard__info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    min-width: 0;
+    padding: 16px;
+    border-right: 1px solid #e0e7ef;
+    background: #f6f8fb;
+}
+.travel-pdpa .travel-pdpa-rcard__head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+.travel-pdpa .travel-pdpa-icontile {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: #fff;
+    color: var(--travel-pdpa-navy);
+}
+.travel-pdpa .travel-pdpa-rcard__name {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #0f172a;
+}
+.travel-pdpa .travel-pdpa-rcard__who {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+.travel-pdpa .travel-pdpa-attr {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border: 1px solid #e0e7ef;
+    border-radius: 14px;
+    background: #f2f5f8;
+    font-size: 12px;
+    color: #1f2937;
+}
+.travel-pdpa .travel-pdpa-rcard__info .travel-pdpa-attr {
+    background: #fff;
+}
+.travel-pdpa .travel-pdpa-for {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #4b5563;
+}
+.travel-pdpa .travel-pdpa-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 9px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
+}
+.travel-pdpa .travel-pdpa-pill--ok {
+    background: #e3f4e8;
+    color: #1e6b34;
+}
+.travel-pdpa .travel-pdpa-pill--warn {
+    background: #fff1d1;
+    color: #7a4a00;
+}
+.travel-pdpa .travel-pdpa-pill--muted {
+    background: #eceff3;
+    color: #4b5563;
+}
+.travel-pdpa .travel-pdpa-hoist {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #14532d;
+}
+.travel-pdpa .travel-pdpa-hoist > .travel-pdpa-ico {
+    margin-top: 1px;
+    color: #16a34a;
+}
+.travel-pdpa .travel-pdpa-hoist--var {
+    font-weight: 400;
+    color: #1f2937;
+}
+.travel-pdpa .travel-pdpa-hoist--var > .travel-pdpa-ico,
+.travel-pdpa .travel-pdpa-hoist--pay > .travel-pdpa-ico {
+    color: #4b5563;
+}
+.travel-pdpa .travel-pdpa-hoist--pay {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1f2937;
+}
+.travel-pdpa .travel-pdpa-hoist__sub,
+.travel-pdpa .travel-pdpa-pay {
+    display: block;
+    margin-top: 2px;
+    font-size: 12px;
+    font-weight: 400;
+    color: #4b5563;
+}
+.travel-pdpa .travel-pdpa-rcard__facrow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0 12px;
+    width: 100%;
+}
+.travel-pdpa .travel-pdpa-rcard__fac {
+    margin: 0;
+    font-size: 13px;
+    color: #4b5563;
+}
+.travel-pdpa .travel-pdpa-linkbtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 32px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: #0071c2;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.travel-pdpa .travel-pdpa-linkbtn:hover {
+    text-decoration: underline;
+}
+.travel-pdpa .travel-pdpa-linkbtn:focus-visible,
+.travel-pdpa .travel-pdpa-meal:focus-visible,
+.travel-pdpa .travel-pdpa-chip:focus-visible,
+.travel-pdpa .travel-pdpa-btn:focus-visible {
+    outline: 3px solid var(--travel-pdpa-navy);
+    outline-offset: 2px;
+}
+
+/* Terms in full, opened in place. */
+.travel-pdpa .travel-pdpa-terms {
+    width: 100%;
+    margin: 0;
+}
+.travel-pdpa .travel-pdpa-terms__toggle {
+    list-style: none;
+}
+.travel-pdpa .travel-pdpa-terms__toggle::-webkit-details-marker {
+    display: none;
+}
+.travel-pdpa .travel-pdpa-terms__body {
+    margin-top: 4px;
+    padding: 10px 12px;
+    border: 1px solid #e0e7ef;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 13px;
+    color: #1f2937;
+}
+.travel-pdpa .travel-pdpa-terms__title {
+    margin: 8px 0 2px;
+    font-weight: 700;
+}
+.travel-pdpa .travel-pdpa-terms__title:first-child {
+    margin-top: 0;
+}
+.travel-pdpa .travel-pdpa-terms__list {
+    margin: 0;
+    padding: 0 0 0 18px;
+    list-style: disc;
+}
+
+/* The rates column: meal groups of rate rows. */
+.travel-pdpa .travel-pdpa-rcard__rates {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+.travel-pdpa .travel-pdpa-rcard__note {
+    padding: 16px 20px 0;
+}
+.travel-pdpa .travel-pdpa-rcard__list,
+.travel-pdpa .travel-pdpa-rcard__compact {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+}
+.travel-pdpa .travel-pdpa-rgrp {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+}
+.travel-pdpa .travel-pdpa-rcard__meal {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    padding: 8px 20px;
+    border-top: 1px solid #eef2f7;
+    background: #f6f8fb;
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+}
+.travel-pdpa .travel-pdpa-rcard__meal > .travel-pdpa-ico {
+    color: #4b5563;
+}
+.travel-pdpa .travel-pdpa-rgrp:first-child > .travel-pdpa-rcard__meal {
+    border-top: 0;
+}
+.travel-pdpa .travel-pdpa-rcard__mealm {
+    font-size: 12px;
+    font-weight: 400;
+    color: #6b7280;
+}
+.travel-pdpa .travel-pdpa-rrow {
+    display: grid;
+    flex: 1 1 auto;
+    grid-template-columns: minmax(0, 1fr) 200px 148px;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    border-top: 1px solid #eef2f7;
+}
+.travel-pdpa .travel-pdpa-rcard__list > .travel-pdpa-rgrp:first-child > .travel-pdpa-rrow:first-child,
+.travel-pdpa .travel-pdpa-rcard__compact > .travel-pdpa-rrow:first-child {
+    border-top: 0;
+}
+.travel-pdpa .travel-pdpa-rcard__note + .travel-pdpa-rcard__list > .travel-pdpa-rgrp:first-child > .travel-pdpa-rrow:first-child {
+    border-top: 0;
+}
+.travel-pdpa .travel-pdpa-rrow--best {
+    background: #eef5fd;
+}
+.travel-pdpa .travel-pdpa-rrow__what {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-width: 0;
+}
+.travel-pdpa .travel-pdpa-rrow__title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #0f172a;
+}
+.travel-pdpa .travel-pdpa-rrow__cond {
+    font-size: 13px;
+    color: #4b5563;
+}
+.travel-pdpa .travel-pdpa-cue {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #e9eff8;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--travel-pdpa-navy);
+    white-space: nowrap;
+}
+.travel-pdpa .travel-pdpa-incl {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    color: #15803d;
+}
+.travel-pdpa .travel-pdpa-rrow--best .travel-pdpa-incl,
+.travel-pdpa .travel-pdpa-rrow--best .travel-pdpa-delta {
+    color: #14532d;
+}
+.travel-pdpa .travel-pdpa-rrow__price {
+    margin: 0;
+    text-align: right;
+}
+.travel-pdpa .travel-pdpa-price,
+.travel-pdpa .travel-pdpa-unit,
+.travel-pdpa .travel-pdpa-delta {
+    display: block;
+}
+.travel-pdpa .travel-pdpa-price {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--travel-pdpa-navy);
+    font-variant-numeric: tabular-nums;
+}
+.travel-pdpa .travel-pdpa-unit {
+    font-size: 12px;
+    color: #4b5563;
+    text-wrap: balance;
+}
+.travel-pdpa .travel-pdpa-delta {
+    font-size: 12px;
+    font-weight: 600;
+    color: #15803d;
+}
+.travel-pdpa .travel-pdpa-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid var(--travel-pdpa-blue);
+    border-radius: 6px;
+    background: var(--travel-pdpa-blue);
+    color: #fff;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+}
+.travel-pdpa .travel-pdpa-btn:hover {
+    background: #0057b8;
+    color: #fff;
+    text-decoration: none;
+}
+.travel-pdpa .travel-pdpa-btn--sec {
+    border-color: var(--travel-pdpa-navy);
+    background: #fff;
+    color: var(--travel-pdpa-navy);
+}
+.travel-pdpa .travel-pdpa-btn--sec:hover {
+    background: #eef5fd;
+    color: var(--travel-pdpa-navy);
+}
+.travel-pdpa .travel-pdpa-rrow__btn {
+    width: 100%;
+}
+.travel-pdpa .travel-pdpa-rcard__all {
+    justify-content: center;
+    width: 100%;
+    min-height: 44px;
+    border-top: 1px solid #eef2f7;
+    font-size: 14px;
+}
+
+.travel-pdpa .travel-pdpa-rempty {
+    margin-top: 16px;
+    padding: 20px;
+    border: 1px dashed #c9d3df;
+    border-radius: 14px;
+    text-align: center;
+}
+.travel-pdpa .travel-pdpa-rempty p {
+    margin: 0 0 4px;
+}
+.travel-pdpa .travel-pdpa-rfoot {
+    margin: 14px 0 0;
+    font-size: 12px;
+    color: #4b5563;
+}
+
+/* Narrower desktops and tablets: a slimmer facts column and rows. */
+@media (max-width: 1100px) {
+    .travel-pdpa .travel-pdpa-rcard {
+        grid-template-columns: 300px minmax(0, 1fr);
+    }
+    .travel-pdpa .travel-pdpa-rrow {
+        grid-template-columns: minmax(0, 1fr) 150px 132px;
+        gap: 12px;
+        padding: 14px 16px;
+    }
+}
+
+/* Phones (board frame 11): the facts above the rates, each rate's price
+   and button side by side under what it is. */
+@media (max-width: 767px) {
+    .travel-pdpa .travel-pdpa-rcard {
+        grid-template-columns: minmax(0, 1fr);
+        border-radius: 12px;
+    }
+    .travel-pdpa .travel-pdpa-rcard + .travel-pdpa-rcard {
+        margin-top: 12px;
+    }
+    .travel-pdpa .travel-pdpa-rcard__info {
+        padding: 14px 16px;
+        border-right: 0;
+        border-bottom: 1px solid #e0e7ef;
+    }
+    .travel-pdpa .travel-pdpa-rcard__meal {
+        padding: 8px 16px;
+    }
+    .travel-pdpa .travel-pdpa-rcard__note {
+        padding: 12px 16px 0;
+    }
+    .travel-pdpa .travel-pdpa-rrow {
+        grid-template-areas: "what what" "price btn";
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px 12px;
+        padding: 14px 16px;
+    }
+    .travel-pdpa .travel-pdpa-rrow__what {
+        grid-area: what;
+    }
+    .travel-pdpa .travel-pdpa-rrow__price {
+        grid-area: price;
+        text-align: left;
+    }
+    .travel-pdpa .travel-pdpa-rrow__btn {
+        grid-area: btn;
+        width: auto;
+        min-width: 132px;
+        padding: 10px 16px;
+    }
+    .travel-pdpa .travel-pdpa-rcard__facrow .travel-pdpa-linkbtn {
+        min-height: 44px;
+    }
+    .travel-pdpa .travel-pdpa-meals {
+        grid-template-columns: none;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(140px, 42%);
+        overflow-x: auto;
+    }
+    .travel-pdpa .travel-pdpa-sort {
+        margin-left: 0;
+    }
+}
+
 /* ── Phone ───────────────────────────────────────────────────────────── */
 
 @media (max-width: 767px) {

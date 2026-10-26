@@ -82,6 +82,10 @@ final class RoomResultsBuilderTest extends TestCase
         );
         self::assertSame([], $view['chips'], 'R3: every rate is free, instant and special — no chip splits the list');
         self::assertSame('1.485 €', $view['cheapest']);
+        self::assertSame([7, 'few', 2, 'few', 0, 'few'], [
+            $view['nights'], $view['nights_form'], $view['adults'], $view['adults_form'], $view['children'], $view['children_form'],
+        ]);
+        self::assertTrue($view['meals_included'], '"… cu masa inclusă"');
 
         foreach ($view['rooms'] as $room) {
             self::assertSame('', $room['status'], 'the fact line already says "instant"');
@@ -183,6 +187,12 @@ final class RoomResultsBuilderTest extends TestCase
         self::assertSame(RoomResultsBuilder::STATUS_ON_REQUEST, $sea['status']);
         self::assertSame(['on_request' => true, 'deposit_percent' => 0, 'balance_due' => ''], $sea['payment']);
         self::assertTrue($deluxe['groups'][0]['rates'][0]['cheapest']);
+        self::assertSame(
+            [true, false, false],
+            [$deluxe['groups'][0]['rates'][0]['primary'], $deluxe['groups'][0]['rates'][1]['primary'], $deluxe['groups'][1]['rates'][0]['primary']],
+            'one filled button per room: its cheapest rate',
+        );
+        self::assertTrue($sea['groups'][0]['rates'][0]['primary']);
     }
 
     public function testADepositIsSaidOnlyWhenItCanBePaid(): void
@@ -216,8 +226,9 @@ final class RoomResultsBuilderTest extends TestCase
                 $rates[] = new RateOffer($room, $room, $meal, $from + 50.0 * $i, 'book', mealRank: $rank);
             }
         }
-        $view = self::builder()->build($rates, 5);
+        $view = self::builder()->build($rates, 5, 2, 1);
 
+        self::assertSame([1, 'one'], [$view['children'], $view['children_form']]);
         self::assertSame(30, $view['rate_count']);
         self::assertSame('many', $view['rate_form'], '"30 de tarife"');
         [$standard, $superior, $sea, $family] = $view['rooms'];
@@ -264,6 +275,7 @@ final class RoomResultsBuilderTest extends TestCase
         $view = self::builder()->build([new RateOffer('R', 'R', 'BB', 0.0, 'b')], 7);
 
         self::assertSame(0, $view['rate_count']);
+        self::assertFalse($view['meals_included']);
         self::assertSame([], $view['rooms']);
         self::assertSame('', $view['cheapest']);
     }

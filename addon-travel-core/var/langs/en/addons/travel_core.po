@@ -2945,3 +2945,247 @@ msgstr "Lowest prices"
 msgctxt "Languages::travel_core.nightly_prices_note"
 msgid "Indicative prices per night, for 2 adults."
 msgstr "Indicative prices per night, for 2 adults."
+
+msgctxt "Languages::travel_core.pdpa_r_title"
+msgid "Rooms and prices"
+msgstr "Rooms and prices"
+
+msgctxt "Languages::travel_core.pdpa_r_count"
+msgid "[rates] in [rooms]"
+msgstr "[rates] in [rooms]"
+
+msgctxt "Languages::travel_core.pdpa_r_rates_one"
+msgid "[n] rate"
+msgstr "[n] rate"
+
+msgctxt "Languages::travel_core.pdpa_r_rates_few"
+msgid "[n] rates"
+msgstr "[n] rates"
+
+msgctxt "Languages::travel_core.pdpa_r_rates_many"
+msgid "[n] rates"
+msgstr "[n] rates"
+
+msgctxt "Languages::travel_core.pdpa_r_room_types_one"
+msgid "[n] room type"
+msgstr "[n] room type"
+
+msgctxt "Languages::travel_core.pdpa_r_room_types_few"
+msgid "[n] room types"
+msgstr "[n] room types"
+
+msgctxt "Languages::travel_core.pdpa_r_room_types_many"
+msgid "[n] room types"
+msgstr "[n] room types"
+
+msgctxt "Languages::travel_core.pdpa_r_meals_label"
+msgid "Meal plan: the lowest price of each"
+msgstr "Meal plan: the lowest price of each"
+
+msgctxt "Languages::travel_core.pdpa_r_all_meals"
+msgid "All meal plans"
+msgstr "All meal plans"
+
+msgctxt "Languages::travel_core.pdpa_r_filters_label"
+msgid "Filter the rates"
+msgstr "Filter the rates"
+
+msgctxt "Languages::travel_core.pdpa_r_chip_free"
+msgid "Free cancellation"
+msgstr "Free cancellation"
+
+msgctxt "Languages::travel_core.pdpa_r_chip_immediate"
+msgid "Instant confirmation"
+msgstr "Instant confirmation"
+
+msgctxt "Languages::travel_core.pdpa_r_chip_special"
+msgid "Special offers"
+msgstr "Special offers"
+
+msgctxt "Languages::travel_core.pdpa_r_sort"
+msgid "Sort"
+msgstr "Sort"
+
+msgctxt "Languages::travel_core.pdpa_r_sort_low"
+msgid "Lowest price"
+msgstr "Lowest price"
+
+msgctxt "Languages::travel_core.pdpa_r_sort_high"
+msgid "Highest price"
+msgstr "Highest price"
+
+msgctxt "Languages::travel_core.pdpa_r_not_yet"
+msgid "You don't pay yet. We check the price and availability at the next step."
+msgstr "You don't pay yet. We check the price and availability at the next step."
+
+msgctxt "Languages::travel_core.pdpa_r_fact_meal"
+msgid "Every rate includes [meal]"
+msgstr "Every rate includes [meal]"
+
+msgctxt "Languages::travel_core.pdpa_r_fact_immediate"
+msgid "All confirmed instantly"
+msgstr "All confirmed instantly"
+
+msgctxt "Languages::travel_core.pdpa_r_fact_free"
+msgid "Free cancellation until [date] inclusive"
+msgstr "Free cancellation until [date] inclusive"
+
+msgctxt "Languages::travel_core.pdpa_r_for"
+msgid "For [guests]"
+msgstr "For [guests]"
+
+msgctxt "Languages::travel_core.pdpa_r_adults_one"
+msgid "[n] adult"
+msgstr "[n] adult"
+
+msgctxt "Languages::travel_core.pdpa_r_adults_few"
+msgid "[n] adults"
+msgstr "[n] adults"
+
+msgctxt "Languages::travel_core.pdpa_r_adults_many"
+msgid "[n] adults"
+msgstr "[n] adults"
+
+msgctxt "Languages::travel_core.pdpa_r_children_one"
+msgid "[n] child"
+msgstr "[n] child"
+
+msgctxt "Languages::travel_core.pdpa_r_children_few"
+msgid "[n] children"
+msgstr "[n] children"
+
+msgctxt "Languages::travel_core.pdpa_r_children_many"
+msgid "[n] children"
+msgstr "[n] children"
+
+msgctxt "Languages::travel_core.pdpa_r_nights_one"
+msgid "[n] night"
+msgstr "[n] night"
+
+msgctxt "Languages::travel_core.pdpa_r_nights_few"
+msgid "[n] nights"
+msgstr "[n] nights"
+
+msgctxt "Languages::travel_core.pdpa_r_nights_many"
+msgid "[n] nights"
+msgstr "[n] nights"
+
+msgctxt "Languages::travel_core.pdpa_r_and"
+msgid "and"
+msgstr "and"
+
+msgctxt "Languages::travel_core.pdpa_r_immediate"
+msgid "Instant confirmation"
+msgstr "Instant confirmation"
+
+msgctxt "Languages::travel_core.pdpa_r_on_request"
+msgid "On request · reply within 48 h"
+msgstr "On request · reply within 48 h"
+
+msgctxt "Languages::travel_core.pdpa_r_on_request_tag"
+msgid "On request"
+msgstr "On request"
+
+msgctxt "Languages::travel_core.pdpa_r_on_request_note"
+msgid "The hotel replies within 48 h. You pay nothing until the hotel confirms. If it does not, we email you similar alternatives: hotels in the same area, of the same category."
+msgstr "The hotel replies within 48 h. You pay nothing until the hotel confirms. If it does not, we email you similar alternatives: hotels in the same area, of the same category."
+
+msgctxt "Languages::travel_core.pdpa_r_last_room"
+msgid "Last room of this type"
+msgstr "Last room of this type"
+
+msgctxt "Languages::travel_core.pdpa_r_few_left"
+msgid "Only [n] rooms of this type left"
+msgstr "Only [n] rooms of this type left"
+
+msgctxt "Languages::travel_core.pdpa_r_cancel_free"
+msgid "Every rate: free cancellation until [date] inclusive"
+msgstr "Every rate: free cancellation until [date] inclusive"
+
+msgctxt "Languages::travel_core.pdpa_r_cancel_non_refundable"
+msgid "Every rate: non-refundable"
+msgstr "Every rate: non-refundable"
+
+msgctxt "Languages::travel_core.pdpa_r_cancel_differs"
+msgid "Cancellation terms differ by rate"
+msgstr "Cancellation terms differ by rate"
+
+msgctxt "Languages::travel_core.pdpa_r_cancel_differs_sub"
+msgid "Shown with each rate"
+msgstr "Shown with each rate"
+
+msgctxt "Languages::travel_core.pdpa_r_pay_full"
+msgid "Full payment when you book"
+msgstr "Full payment when you book"
+
+msgctxt "Languages::travel_core.pdpa_r_pay_deposit"
+msgid "[percent]% deposit now, the rest by [date]"
+msgstr "[percent]% deposit now, the rest by [date]"
+
+msgctxt "Languages::travel_core.pdpa_r_pay_on_request"
+msgid "You pay only once the hotel confirms"
+msgstr "You pay only once the hotel confirms"
+
+msgctxt "Languages::travel_core.pdpa_r_every_rate"
+msgid "Every rate"
+msgstr "Every rate"
+
+msgctxt "Languages::travel_core.pdpa_r_terms"
+msgid "Payment and cancellation terms"
+msgstr "Payment and cancellation terms"
+
+msgctxt "Languages::travel_core.pdpa_r_cheapest"
+msgid "Lowest price"
+msgstr "Lowest price"
+
+msgctxt "Languages::travel_core.pdpa_r_standard_rate"
+msgid "Standard rate"
+msgstr "Standard rate"
+
+msgctxt "Languages::travel_core.pdpa_r_non_refundable"
+msgid "Non-refundable"
+msgstr "Non-refundable"
+
+msgctxt "Languages::travel_core.pdpa_r_free_until"
+msgid "Free cancellation until [date] inclusive"
+msgstr "Free cancellation until [date] inclusive"
+
+msgctxt "Languages::travel_core.pdpa_r_per_night"
+msgid "≈ [price] / night"
+msgstr "≈ [price] / night"
+
+msgctxt "Languages::travel_core.pdpa_r_saving"
+msgid "−[amount] vs the standard rate"
+msgstr "−[amount] vs the standard rate"
+
+msgctxt "Languages::travel_core.pdpa_r_book"
+msgid "Book"
+msgstr "Book"
+
+msgctxt "Languages::travel_core.pdpa_r_request"
+msgid "Request booking"
+msgstr "Request booking"
+
+msgctxt "Languages::travel_core.pdpa_r_see_all_room"
+msgid "See all [rates] for this room · [range]"
+msgstr "See all [rates] for this room · [range]"
+
+msgctxt "Languages::travel_core.pdpa_r_see_all"
+msgid "See all [rates] · [range]"
+msgstr "See all [rates] · [range]"
+
+msgctxt "Languages::travel_core.pdpa_r_no_match"
+msgid "No rate matches these filters."
+msgstr "No rate matches these filters."
+
+msgctxt "Languages::travel_core.pdpa_r_clear_filters"
+msgid "Show all rates"
+msgstr "Show all rates"
+
+msgctxt "Languages::travel_core.pdpa_r_footnote"
+msgid "Prices are reconfirmed when you book. Total prices for [nights] and [guests]."
+msgstr "Prices are reconfirmed when you book. Total prices for [nights] and [guests]."
+
+msgctxt "Languages::travel_core.pdpa_r_footnote_meals"
+msgid "Prices are reconfirmed when you book. Total prices for [nights] and [guests], meals included."
+msgstr "Prices are reconfirmed when you book. Total prices for [nights] and [guests], meals included."

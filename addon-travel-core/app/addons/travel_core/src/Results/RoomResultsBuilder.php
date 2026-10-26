@@ -20,7 +20,8 @@ use Tygh\Addons\TravelCore\Services\MoneyFormatter;
  *    instant confirmation, special offers); what holds for every rate joins
  *    the fact line instead and is not repeated on the rooms.
  *  - A room says once what all its rates share (cancellation, payment,
- *    terms); otherwise each rate says its own.
+ *    terms); otherwise each rate says its own. Its cheapest rate gets the
+ *    filled button (`primary`), the others the outline one.
  *  - Many rates: a room shows its best BEST (the cheapest of each meal plan
  *    first), then "see all N rates · min – max"; above COLLAPSE_OVER rates
  *    in all, the rooms after the first show only their cheapest rate.
@@ -33,11 +34,11 @@ use Tygh\Addons\TravelCore\Services\MoneyFormatter;
  * @phpstan-type RateView array{
  *     meal: string, meal_key: string, name: string, amount: float, price: string,
  *     per_night: string, saving: string, discount: string, perks: list<string>,
- *     cheapest: bool, free_until: string, non_refundable: bool, on_request: bool,
+ *     cheapest: bool, primary: bool, free_until: string, non_refundable: bool, on_request: bool,
  *     free: bool, special: bool, payment: Payment, terms: Terms, book_url: string,
  *     shown: bool
  * }
- * @phpstan-type GroupView array{meal: string, meal_key: string, count: int, shown: bool, rates: list<RateView>}
+ * @phpstan-type GroupView array{meal: string, meal_key: string, count: int, form: string, shown: bool, rates: list<RateView>}
  * @phpstan-type RoomView array{
  *     key: string, name: string, detail: string, facilities: string, from: float,
  *     status: string, left: int, cancellation: string, free_until: string,
@@ -46,7 +47,9 @@ use Tygh\Addons\TravelCore\Services\MoneyFormatter;
  * }
  * @phpstan-type ResultsView array{
  *     rate_count: int, rate_form: string, room_count: int, room_form: string,
- *     nights: int, cheapest: string, grouped: bool,
+ *     nights: int, nights_form: string, adults: int, adults_form: string,
+ *     children: int, children_form: string, meals_included: bool,
+ *     cheapest: string, grouped: bool,
  *     meal_plans: list<array{key: string, name: string, from: string, count: int}>,
  *     facts: array{meal: string, immediate: bool, free_until: string},
  *     chips: list<array{key: string, count: int}>,
@@ -100,9 +103,10 @@ final class RoomResultsBuilder
 
     /**
      * @param list<RateOffer> $rates
+     * @param int $nights the stay searched: the prices are for it and these guests
      * @return ResultsView
      */
-    public function build(array $rates, int $nights): array
+    public function build(array $rates, int $nights, int $adults = 2, int $children = 0): array
     {
         $rates = array_values(array_filter($rates, static fn (RateOffer $r): bool => $r->price > 0));
         $total = count($rates);
@@ -174,6 +178,12 @@ final class RoomResultsBuilder
             'room_count' => count($rooms),
             'room_form' => self::form(count($rooms)),
             'nights' => $nights,
+            'nights_form' => self::form($nights),
+            'adults' => $adults,
+            'adults_form' => self::form($adults),
+            'children' => $children,
+            'children_form' => self::form($children),
+            'meals_included' => $total > 0 && self::every($rates, static fn (RateOffer $r): bool => $r->mealRank !== RateOffer::MEAL_ROOM_ONLY),
             'cheapest' => $cheapest !== null ? $this->money->format($cheapest->price) : '',
             'grouped' => $grouped,
             'meal_plans' => $meals,
@@ -271,14 +281,15 @@ final class RoomResultsBuilder
         $shown = $this->shownRates($rates, $collapsed);
         $views = [];
         foreach ($rates as $i => $rate) {
-            $views[$i] = $this->rate($rate, $mealKeys, $rate === $cheapest, $nights, isset($shown[$i]));
+            $views[$i] = $this->rate($rate, $mealKeys, $rate === $cheapest, $i === 0, $nights, isset($shown[$i]));
         }
 
         $groups = [];
         foreach ($views as $i => $view) {
             $meal = $grouped ? $rates[$i]->mealPlan : '';
-            $groups[$meal] ??= ['meal' => $meal, 'meal_key' => $grouped ? $view['meal_key'] : '', 'count' => 0, 'shown' => false, 'rates' => []];
+            $groups[$meal] ??= ['meal' => $meal, 'meal_key' => $grouped ? $view['meal_key'] : '', 'count' => 0, 'form' => '', 'shown' => false, 'rates' => []];
             $groups[$meal]['count']++;
+            $groups[$meal]['form'] = self::form($groups[$meal]['count']);
             $groups[$meal]['shown'] = $groups[$meal]['shown'] || $view['shown'];
             $groups[$meal]['rates'][] = $view;
         }
@@ -356,7 +367,7 @@ final class RoomResultsBuilder
      * @param array<string, string> $mealKeys
      * @return RateView
      */
-    private function rate(RateOffer $rate, array $mealKeys, bool $cheapest, int $nights, bool $shown): array
+    private function rate(RateOffer $rate, array $mealKeys, bool $cheapest, bool $primary, int $nights, bool $shown): array
     {
         $perNight = $nights > 0 ? $this->money->formatDisplay($this->money->toDisplay($rate->price) / $nights) : '';
 
@@ -371,6 +382,7 @@ final class RoomResultsBuilder
             'discount' => $rate->discountLabel,
             'perks' => $rate->perks,
             'cheapest' => $cheapest,
+            'primary' => $primary,
             'free_until' => self::isFree($rate) ? ($this->formatDate)($rate->freeCancellationUntil) : '',
             'non_refundable' => $rate->nonRefundable,
             'on_request' => $rate->onRequest,

@@ -12,6 +12,9 @@
  *  - Photo height: the photos give way so the search bar ends on the first
  *    screen, whatever the theme's header takes (design-a.css carries a
  *    CSS-only estimate; phones keep their own layout).
+ *  - Room-first results (components/design_a_results.tpl): the meal strip
+ *    and the chips filter the rates, "see all" opens a room's other rates,
+ *    the sort orders the rooms.
  *  - Photo fit: each photo fills its tile, unless it is too small for it
  *    (filling would enlarge it more than 1.5×) or too tall (filling would
  *    crop away more than half of it); that one shows whole, at most 1.5×
@@ -300,6 +303,142 @@
         });
     }
 
+    /*
+     * Room-first results (components/design_a_results.tpl): the meal strip
+     * and the chips filter the rates, "see all" opens a room's other rates,
+     * the sort orders the rooms. Visibility is worked out again from that
+     * state on every change, so the controls combine.
+     */
+
+    function each(root, selector, fn) {
+        Array.prototype.forEach.call(root.querySelectorAll(selector), fn);
+    }
+
+    function pressed(section, selector, attribute) {
+        var keys = [];
+        each(section, selector, function (control) {
+            if (control.getAttribute('aria-pressed') === 'true') {
+                keys.push(control.getAttribute(attribute) || '');
+            }
+        });
+        return keys;
+    }
+
+    function filterRates(section) {
+        var meal = pressed(section, '[data-travel-meal]', 'data-travel-meal')[0] || '';
+        var chips = pressed(section, '[data-travel-chip]', 'data-travel-chip');
+        var filtering = meal !== '' || chips.length > 0;
+        var roomsShown = 0;
+
+        each(section, '[data-travel-room]', function (room) {
+            var open = room.hasAttribute('data-travel-open');
+            var collapsed = room.querySelector('[data-travel-compact]') !== null;
+            var shown = 0;
+            each(room, '[data-travel-rates] [data-travel-rate]', function (row) {
+                var show = filtering
+                    ? (meal === '' || row.getAttribute('data-meal') === meal) && chips.every(function (key) {
+                        return row.getAttribute('data-' + key) === '1';
+                    })
+                    : open || !row.hasAttribute('data-travel-more');
+                row.hidden = !show;
+                shown += show ? 1 : 0;
+            });
+            each(room, '[data-travel-group]', function (group) {
+                group.hidden = group.querySelector('[data-travel-rate]:not([hidden])') === null;
+            });
+            each(room, '[data-travel-rates]', function (list) {
+                list.hidden = !(filtering || open || !collapsed);
+            });
+            each(room, '[data-travel-compact]', function (compact) {
+                compact.hidden = filtering || open;
+            });
+            each(room, '[data-travel-see-all]', function (button) {
+                button.hidden = filtering || open;
+            });
+            room.hidden = filtering && shown === 0;
+            roomsShown += room.hidden ? 0 : 1;
+        });
+
+        each(section, '[data-travel-no-match]', function (empty) {
+            empty.hidden = roomsShown > 0;
+        });
+    }
+
+    function pickMeal(section, key) {
+        each(section, '[data-travel-meal]', function (button) {
+            button.setAttribute('aria-pressed', (button.getAttribute('data-travel-meal') || '') === key ? 'true' : 'false');
+        });
+    }
+
+    function seeAll(button) {
+        var room = button.closest('[data-travel-room]');
+        var section = button.closest('[data-travel-results]');
+        if (!room || !section) {
+            return;
+        }
+        room.setAttribute('data-travel-open', '');
+        button.setAttribute('aria-expanded', 'true');
+        filterRates(section);
+        // The button is gone: carry the focus to the room's first rate.
+        var first = room.querySelector('[data-travel-rates] [data-travel-rate] a');
+        if (first) {
+            first.focus();
+        }
+    }
+
+    /** Rooms by their cheapest rate: "low" first or "high" first. */
+    function sortRooms(section, order) {
+        var list = section.querySelector('[data-travel-room-list]');
+        if (!list) {
+            return;
+        }
+        var rooms = Array.prototype.slice.call(list.querySelectorAll('[data-travel-room]'));
+        var from = function (room) {
+            return parseFloat(room.getAttribute('data-from')) || 0;
+        };
+        rooms.map(function (room, index) {
+            return { room: room, index: index };
+        }).sort(function (a, b) {
+            var diff = from(a.room) - from(b.room);
+            return (order === 'high' ? -diff : diff) || a.index - b.index;
+        }).forEach(function (entry) {
+            list.appendChild(entry.room);
+        });
+    }
+
+    function resultsClick(target) {
+        var section = target.closest('[data-travel-results]');
+        if (!section) {
+            return false;
+        }
+        var meal = target.closest('[data-travel-meal]');
+        if (meal) {
+            pickMeal(section, meal.getAttribute('data-travel-meal') || '');
+            filterRates(section);
+            return true;
+        }
+        var chip = target.closest('[data-travel-chip]');
+        if (chip) {
+            chip.setAttribute('aria-pressed', chip.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+            filterRates(section);
+            return true;
+        }
+        if (target.closest('[data-travel-clear-filters]')) {
+            pickMeal(section, '');
+            each(section, '[data-travel-chip]', function (button) {
+                button.setAttribute('aria-pressed', 'false');
+            });
+            filterRates(section);
+            return true;
+        }
+        var all = target.closest('[data-travel-see-all]');
+        if (all) {
+            seeAll(all);
+            return true;
+        }
+        return false;
+    }
+
     function init() {
         Array.prototype.forEach.call(document.querySelectorAll('.travel-pdpa'), function (page) {
             if (page.getAttribute('data-travel-pdpa-ready') === '1') {
@@ -325,6 +464,9 @@
         if (!page) {
             return;
         }
+        if (resultsClick(target)) {
+            return;
+        }
         var tile = target.closest('[data-travel-gallery-index]');
         if (tile) {
             if (openPhoto(page, toInt(tile.getAttribute('data-travel-gallery-index')))) {
@@ -340,6 +482,14 @@
         }
         if (target.closest('[data-travel-goto-results]') && gotoResults(page)) {
             event.preventDefault();
+        }
+    });
+
+    document.addEventListener('change', function (event) {
+        var select = event.target instanceof Element ? event.target.closest('[data-travel-sort]') : null;
+        var section = select ? select.closest('[data-travel-results]') : null;
+        if (section) {
+            sortRooms(section, select.value);
         }
     });
 
@@ -365,6 +515,8 @@
         fitGallery: fitGallery,
         fitPhotos: fitPhotos,
         showsWhole: showsWhole,
+        filterRates: filterRates,
+        sortRooms: sortRooms,
     };
 
     if (document.readyState === 'loading') {

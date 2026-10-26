@@ -356,3 +356,98 @@ describe('photo fit', () => {
         expect(whole(third)).toBe(false);
     });
 });
+
+describe('room-first results', () => {
+    const row = (meal, price, flags = {}, more = false) => `
+        <div class="travel-pdpa-rrow" data-travel-rate data-meal="${meal}"
+             data-free="${flags.free ? 1 : 0}" data-immediate="${flags.onRequest ? 0 : 1}" data-special="${flags.special ? 1 : 0}"
+             ${more ? 'data-travel-more hidden' : ''}>
+            <span class="price">${price}</span><a href="#book-${price}">Rezervă</a>
+        </div>`;
+    let section;
+    const visible = () => Array.from(section.querySelectorAll('[data-travel-room]')).map((room) => {
+        const prices = Array.from(room.querySelectorAll('[data-travel-rates] [data-travel-rate]'))
+            .filter((r) => !r.hidden && !r.closest('[hidden]'))
+            .map((r) => r.querySelector('.price').textContent);
+        const compact = room.querySelector('[data-travel-compact]');
+        return `${room.hidden ? '-' : ''}${room.id}:${prices.join(',')}${compact && !compact.hidden ? '+compact' : ''}`;
+    });
+
+    beforeAll(() => {
+        page().insertAdjacentHTML('beforeend', `
+            <section data-travel-results id="results">
+                <button type="button" data-travel-meal="" aria-pressed="true">Toate mesele</button>
+                <button type="button" data-travel-meal="m0" aria-pressed="false">Mic dejun</button>
+                <button type="button" data-travel-meal="m1" aria-pressed="false">All Inclusive</button>
+                <button type="button" data-travel-chip="free" aria-pressed="false">Anulare gratuită</button>
+                <button type="button" data-travel-chip="special" aria-pressed="false">Oferte speciale</button>
+                <select data-travel-sort><option value="low" selected>low</option><option value="high">high</option></select>
+                <ul data-travel-room-list>
+                    <li id="deluxe" data-travel-room data-from="502">
+                        <div data-travel-rates>
+                            <div data-travel-group>${row('m1', 502, { free: true, special: true })}${row('m1', 665, { free: true })}</div>
+                            <div data-travel-group>${row('m0', 565)}</div>
+                        </div>
+                    </li>
+                    <li id="superior" data-travel-room data-from="610">
+                        <div data-travel-compact>${row('m0', 610)}</div>
+                        <div data-travel-rates hidden>
+                            <div data-travel-group>${row('m0', 610)}${row('m0', 700, {}, true)}</div>
+                            <div data-travel-group data-travel-more hidden>${row('m1', 810, { free: true }, true)}</div>
+                        </div>
+                        <button type="button" data-travel-see-all aria-expanded="false">Vezi toate cele 3 tarife</button>
+                    </li>
+                </ul>
+                <div data-travel-no-match hidden><button type="button" data-travel-clear-filters>Arată toate tarifele</button></div>
+            </section>`);
+        section = document.getElementById('results');
+    });
+
+    it('a meal plan shows its rates in every room, the collapsed ones too', () => {
+        click(section.querySelector('[data-travel-meal="m1"]'));
+        expect(visible()).toEqual(['deluxe:502,665', 'superior:810']);
+        expect(section.querySelector('[data-travel-meal="m1"]').getAttribute('aria-pressed')).toBe('true');
+        expect(section.querySelector('[data-travel-meal=""]').getAttribute('aria-pressed')).toBe('false');
+        expect(section.querySelector('[data-travel-see-all]').hidden).toBe(true);
+    });
+
+    it('chips narrow it further; nothing left says so, and one click shows everything again', () => {
+        click(section.querySelector('[data-travel-chip="special"]'));
+        expect(visible()).toEqual(['deluxe:502', '-superior:']);
+
+        click(section.querySelector('[data-travel-meal="m0"]'));
+        expect(visible()).toEqual(['-deluxe:', '-superior:']);
+        expect(section.querySelector('[data-travel-no-match]').hidden).toBe(false);
+
+        click(section.querySelector('[data-travel-clear-filters]'));
+        expect(visible()).toEqual(['deluxe:502,665,565', 'superior:+compact']);
+        expect(section.querySelector('[data-travel-no-match]').hidden).toBe(true);
+        expect(section.querySelector('[data-travel-chip="special"]').getAttribute('aria-pressed')).toBe('false');
+        expect(section.querySelector('[data-travel-see-all]').hidden).toBe(false);
+    });
+
+    it('"see all" opens the room\'s other rates and hands the focus to its first rate', () => {
+        const button = section.querySelector('[data-travel-see-all]');
+        click(button);
+        expect(visible()).toEqual(['deluxe:502,665,565', 'superior:610,700,810']);
+        expect(button.hidden).toBe(true);
+        expect(button.getAttribute('aria-expanded')).toBe('true');
+        expect(document.activeElement.getAttribute('href')).toBe('#book-610');
+
+        // An opened room stays open once a filter is cleared.
+        click(section.querySelector('[data-travel-chip="free"]'));
+        expect(visible()).toEqual(['deluxe:502,665', 'superior:810']);
+        click(section.querySelector('[data-travel-chip="free"]'));
+        expect(visible()).toEqual(['deluxe:502,665,565', 'superior:610,700,810']);
+    });
+
+    it('the sort orders the rooms by their cheapest rate', () => {
+        const select = section.querySelector('[data-travel-sort]');
+        select.value = 'high';
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        expect(visible().map((v) => v.split(':')[0])).toEqual(['superior', 'deluxe']);
+        select.value = 'low';
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        expect(visible().map((v) => v.split(':')[0])).toEqual(['deluxe', 'superior']);
+    });
+});
