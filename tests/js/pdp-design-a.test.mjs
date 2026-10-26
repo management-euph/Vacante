@@ -239,3 +239,35 @@ describe('compact search summary', () => {
         trigger.removeEventListener('click', opened);
     });
 });
+
+describe('photo height', () => {
+    const box = (el, top, bottom) => {
+        el.getBoundingClientRect = () => ({ top, bottom, left: 0, right: 0, x: 0, y: top, width: 0, height: bottom - top });
+    };
+    const height = () => page().style.getPropertyValue('--travel-pdpa-gallery-h');
+
+    it('gives way so the bar ends on the first screen, whatever the header takes', () => {
+        // A 244px theme header and the title row put the photos at 336px.
+        box(page().querySelector('.travel-pdpa-gallery'), 336, 816);
+        box(page().querySelector('.travel-pdp-results .travel-search-form-wrapper'), 832, 896);
+
+        window.innerHeight = 900;
+        window.TravelPdpDesignA.fitGallery(page());
+        expect(height()).toBe('476px'); // 900 - 336 - 16 gap - 64 bar - 8
+
+        window.innerHeight = 1200;
+        window.TravelPdpDesignA.fitGallery(page());
+        expect(height()).toBe('480px'); // never taller than the design
+
+        window.innerHeight = 657;
+        window.TravelPdpDesignA.fitGallery(page());
+        expect(height()).toBe('240px'); // never smaller than 240px
+    });
+
+    it('leaves phones to the stylesheet', () => {
+        window.matchMedia = () => ({ matches: true });
+        window.TravelPdpDesignA.fitGallery(page());
+        expect(height()).toBe('');
+        delete window.matchMedia;
+    });
+});

@@ -9,6 +9,9 @@
  *    calendar.
  *  - Compact search summary: after a search, once the bar has scrolled away,
  *    a fixed strip shows the dates and guests with "Modifică" and "Camere".
+ *  - Photo height: the photos give way so the search bar ends on the first
+ *    screen, whatever the theme's header takes (design-a.css carries a
+ *    CSS-only estimate; phones keep their own layout).
  *
  * Document-level listeners: the results arrive later (inline swap) and keep
  * working without re-initialising.
@@ -21,6 +24,9 @@
     }
 
     var SCROLL_GAP = 16;
+    var GALLERY_MAX = 480;
+    var GALLERY_MIN = 240;
+    var BAR_FALLBACK = 64;
 
     function toInt(value) {
         var n = parseInt(value, 10);
@@ -213,6 +219,30 @@
         document.addEventListener('travel:results-swapped', update);
     }
 
+    /** Sizes the photos so the bar ends on the first screen (desktop). */
+    function fitGallery(page) {
+        var gallery = page.querySelector('.travel-pdpa-gallery');
+        if (!gallery) {
+            return;
+        }
+        if (typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 767px)').matches) {
+            page.style.removeProperty('--travel-pdpa-gallery-h');
+            return;
+        }
+        var form = page.querySelector('.travel-pdp-results .travel-search-form-wrapper');
+        var row = form ? form.querySelector('.nvt-form-row') : null;
+        var box = gallery.getBoundingClientRect();
+        var top = box.top + window.pageYOffset;
+        var gap = form ? Math.max(0, form.getBoundingClientRect().top - box.bottom) : SCROLL_GAP;
+        var bar = row && row.offsetHeight > 0 ? row.offsetHeight : BAR_FALLBACK;
+        var room = Math.floor(window.innerHeight - top - gap - bar - 8);
+        page.style.setProperty('--travel-pdpa-gallery-h', Math.max(GALLERY_MIN, Math.min(GALLERY_MAX, room)) + 'px');
+    }
+
+    function fitGalleries() {
+        Array.prototype.forEach.call(document.querySelectorAll('.travel-pdpa'), fitGallery);
+    }
+
     function init() {
         Array.prototype.forEach.call(document.querySelectorAll('.travel-pdpa'), function (page) {
             if (page.getAttribute('data-travel-pdpa-ready') === '1') {
@@ -227,6 +257,7 @@
                 });
             }
             initCompact(page);
+            fitGallery(page);
         });
     }
 
@@ -254,9 +285,18 @@
         }
     });
 
+    var resizeTimer = null;
+    window.addEventListener('resize', function () {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(fitGalleries, 150);
+    });
+    // Late layout: the header's images and fonts, the engine's bar.
+    window.addEventListener('load', fitGalleries);
+
     window.TravelPdpDesignA = {
         init: init,
         formatSummary: formatSummary,
+        fitGallery: fitGallery,
     };
 
     if (document.readyState === 'loading') {

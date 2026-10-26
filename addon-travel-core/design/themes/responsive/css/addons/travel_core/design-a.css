@@ -10,8 +10,9 @@
 
 .travel-pdpa {
     /* The photos give way on shorter screens so the search bar stays on the
-       first screen: 480px from about 810px of window height, never under
-       320px (330px ≈ store header, title row, bar and gaps). */
+       first screen. pdp-design-a.js measures the theme's header and sets
+       this exactly; this estimate (330px ≈ a compact header, title row, bar
+       and gaps) covers the page until it runs. */
     --travel-pdpa-gallery-h: clamp(320px, calc(100vh - 330px), 480px);
     --travel-pdpa-navy: #003580;
     --travel-pdpa-yellow: #febb02;
@@ -555,13 +556,23 @@
     .travel-pdpa .travel-pdpa-head__title {
         font-size: 22px;
     }
+    /* Price, then wishlist / compare; "Alege datele" full width below. */
     .travel-pdpa-head__side {
         flex: 1 1 100%;
         justify-content: space-between;
     }
     .travel-pdpa-from {
+        order: 1;
         justify-items: start;
         text-align: left;
+    }
+    .travel-pdpa-head__actions {
+        order: 2;
+    }
+    .travel-pdpa .travel-pdpa-head__dates {
+        order: 3;
+        flex: 1 1 100%;
+        justify-content: center;
     }
 
     /* One photo, full width, with a "1 / N" counter. */
