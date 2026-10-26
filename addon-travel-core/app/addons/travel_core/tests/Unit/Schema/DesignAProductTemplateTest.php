@@ -102,6 +102,33 @@ final class DesignAProductTemplateTest extends TestCase
         self::assertLessThan($tabsInclude, $tabs, 'the product_tabs PRE hook (mount) renders before the tabs');
     }
 
+    /**
+     * Found on a real store: the theme lays out the stock wrapper's children
+     * side by side (image left, info right), so the title row sat next to
+     * the photos, and its image rules kept the large photo at its own
+     * proportions, centred with white bands.
+     */
+    public function testRowsStackAndPhotosFillTheirTilesWhateverTheTheme(): void
+    {
+        $src = (string) preg_replace('/\{\*.*?\*\}/s', '', self::template());
+        self::assertStringNotContainsString('ty-product-block__wrapper', $src, 'the theme lays that wrapper out in columns');
+        self::assertStringContainsString('<div class="travel-pdpa__wrapper">', $src);
+
+        $css = self::css();
+        self::assertStringContainsString(".travel-pdpa .travel-pdpa__wrapper {\n    display: block;", $css);
+        self::assertStringContainsString('.travel-pdpa .travel-pdpa__wrapper > * {', $css);
+        self::assertStringContainsString('.travel-pdpa .travel-pdpa-gallery__tile img {', $css);
+        self::assertStringContainsString('object-fit: cover !important;', $css);
+        self::assertStringContainsString('height: 100% !important;', $css);
+    }
+
+    public function testNoFeatureListUnderTheName(): void
+    {
+        // "TV, Air Conditioning, … 3 Stars, Resort": facilities live in the
+        // tabs and the stars sit next to the name.
+        self::assertStringContainsString('{$show_product_features_short_list = false}', self::template());
+    }
+
     public function testNoDateFreeContentAndNoCartQuantity(): void
     {
         $src = (string) preg_replace('/\{\*.*?\*\}/s', '', self::template());
@@ -204,26 +231,6 @@ final class DesignAProductTemplateTest extends TestCase
         }
         self::assertNotSame([], $m[1]);
         self::assertSame([], $unscoped, 'every Design A rule must start with .travel-pdpa');
-    }
-
-    public function testTrustLinesShipHiddenInsideTheFormWrapper(): void
-    {
-        $mount = (string) file_get_contents(
-            self::themeFile('responsive', 'templates/addons/travel_core/components/booking_form_mount.tpl'),
-        );
-
-        $form = strpos($mount, '<div class="travel-search-form-wrapper">');
-        $root = strpos($mount, 'id="travel-booking-root"');
-        $trust = strpos($mount, '<ul class="travel-pdp-trust" hidden>');
-        self::assertIsInt($form);
-        self::assertIsInt($root);
-        self::assertIsInt($trust, 'hidden by default: only the Design A stylesheet shows them');
-        self::assertLessThan($trust, $root, 'under the bar');
-
-        // Still inside the form wrapper: the inline swap replaces everything
-        // AFTER the wrapper, so the lines survive every search.
-        $afterTrust = substr($mount, $trust);
-        self::assertMatchesRegularExpression('~</ul>\s*</div>\s*</div>~', $afterTrust);
     }
 
     private static function css(): string

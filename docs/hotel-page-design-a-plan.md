@@ -119,8 +119,9 @@ an internal code.
   - Photo mosaic 60/40 opening the theme previewer through the hidden stock
     gallery; phone: one photo with "1 / N".
   - Bar and inline results under the photos, above the tabs (existing
-    mount hooks); two trust lines under the bar (shipped hidden in
-    `booking_form_mount.tpl`, shown only by Design A).
+    mount hooks). Nothing under the bar: the owner had the two facts that
+    sat there ("Confirmare imediată pentru camerele disponibile", "Prețul
+    total, cu masa inclusă, înainte să rezervi") removed on 25 Oct 2026.
   - Compact search summary after a search ("Rezumatul căutării").
   - Photo height `clamp(320px, 100vh - 330px, 480px)`.
   - Verified by compiling/rendering with Smarty 5.8 and the real CSS/JS:
@@ -147,6 +148,13 @@ an internal code.
   Check-out moves only the check-out; the check-out day shows no price.
   Shared calendar fixes: even day columns, full-width phone calendar.
   `TRAVEL_CACHE_VER` 9. Test: `DesignASearchBarTest`.
+- 25 Oct 2026 — **first look on a real CS-Cart store** (owner's screenshot):
+  the theme lays out the stock `ty-product-block__wrapper` children side by
+  side, so the title row sat next to the photos → Design A's wrapper is now
+  `travel-pdpa__wrapper` and stacks its rows; the theme's image rules kept
+  the large photo at its own proportions → every photo fills its tile
+  (`!important`, the tile is the frame); the header feature list under the
+  name is gone. Location line printed once (capture `travel_pdp_design`).
 - Next: phase 3 — room-first results (shared view model + component,
   R1–R3, best 4, payment line, on-request wording), then the title row's
   after-search state ("26–31 oct. · de la 502 €", "Vezi camerele") and the
