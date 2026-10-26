@@ -21,7 +21,7 @@ shared contract fails the suite).
 | Hotel header assembly | `ViewModels\HotelHeaderFactory` + `HotelHeaderViewModel` + shared component tpl | R2 / Arch #3 |
 | Location line / map URL | `Services\HotelLocationLine` / `HotelMapUrl` | earlier |
 | Cache contract + sphinx impl | `Contracts\CacheServiceInterface` (novoton extends it; sphinx implements it as an instance service) | Arch #2 |
-| Availability-check dates (eurosite's `AvailabilityPlan` date logic) | `Services\AvailabilityWindows` (near days + peak-season dates; eurosite calls it) | A1 |
+| Availability-check dates (eurosite's `AvailabilityPlan` date logic) | `Services\AvailabilityWindows` (near days + peak-season dates; eurosite's availability gate and novoton's weekly resort check call it) | A1 |
 | Hotel availability rules (new, all suppliers) | `Services\AvailabilityPolicy` (pure classifier) + `ValueObjects\AvailabilityThresholds` | A1 |
 | A supplier answer's offers, per hotel (new, all suppliers) | `Services\OfferTally` (eurosite and sphinx fold their offers into it for `recordCheck` / `recordOffersSeen`) | A1 |
 

@@ -343,6 +343,8 @@ class DatabaseHelper implements DatabaseHelperInterface
      * alphabet, and the rest were never checked — so they never got
      * has_room_price = 'Y' and never became products. Never-checked hotels
      * come first, then the oldest checks, so consecutive runs cover them all.
+     * The weekly resort check groups them by resort (ResortCheckQueue), so
+     * each row carries its city and when it was last checked.
      *
      * @param array<string, mixed> $conditions column => value (whitelisted columns only)
      * @param string $scopeWhere an already-quoted WHERE fragment (DestinationScope::syncWhere())
@@ -370,7 +372,8 @@ class DatabaseHelper implements DatabaseHelperInterface
             $params[] = $limit;
         }
 
-        $query = "SELECT hotel_id, hotel_name, country FROM ?:novoton_hotels {$whereClause}"
+        $query = 'SELECT hotel_id, hotel_name, city, country, product_id, created_at, last_price_check'
+            . " FROM ?:novoton_hotels {$whereClause}"
             . ' ORDER BY (last_price_check IS NULL) DESC, last_price_check ASC, hotel_name'
             . " {$limitClause}";
 

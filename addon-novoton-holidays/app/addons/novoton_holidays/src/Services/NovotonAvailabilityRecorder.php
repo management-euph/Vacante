@@ -138,6 +138,55 @@ final class NovotonAvailabilityRecorder
     }
 
     /**
+     * The weekly check's answer for one resort, or one hotel asked on its
+     * own (plan §4.3). A whole answer, every date answered, checked each of
+     * $hotels: one without an offer was checked too (recordCheck). Part of an
+     * answer counts only the offers it found (recordOffersSeen).
+     *
+     * @param list<array<string, mixed>> $hotels ?:novoton_hotels rows
+     * @param array<array-key, array{stay_date: string, next_date: string, immediate: bool, months: list<string>}> $offers OfferTally::offers()
+     */
+    public function checkAnswered(array $hotels, array $offers, bool $whole, string $now): void
+    {
+        if ($hotels === []) {
+            return;
+        }
+        $this->guard('room_price', null, function () use ($hotels, $offers, $whole, $now): null {
+            $identities = array_map(static function (array $row): array {
+                $identity = self::identity($row);
+
+                return [
+                    'hotel_id' => $identity['hotel_id'],
+                    'product_id' => $identity['product_id'],
+                    'destination_key' => $identity['destination_key'],
+                    'hotel_name' => $identity['hotel_name'],
+                ];
+            }, $hotels);
+            if ($whole) {
+                $this->records->recordCheck(self::PROVIDER, $identities, $offers, $now);
+            } else {
+                $this->records->recordOffersSeen(self::PROVIDER, $identities, $offers, $now);
+            }
+
+            return null;
+        });
+    }
+
+    /**
+     * Hotels whose prices start after today but that had no offer in their
+     * latest check: the first day of their prices, which the weekly check
+     * then asks about too. None when the records cannot be read.
+     *
+     * @param list<string> $hotelIds
+     *
+     * @return array<array-key, string> hotel_id => Y-m-d
+     */
+    public function awaitingFirstOffer(array $hotelIds, string $today): array
+    {
+        return $this->guard('first published week', [], fn (): array => $this->records->awaitingFirstOffer(self::PROVIDER, $hotelIds, $today));
+    }
+
+    /**
      * Fills in past seasons once (plan §4.4), so "no availability for N
      * months" can be judged from the first run: the latest date any stored
      * season priced (past seasons included: package rows are never pruned),

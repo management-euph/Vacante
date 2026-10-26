@@ -133,6 +133,28 @@ final class PriceCheckFlagsTest extends TestCase
         self::assertSame(['7', '8'], $split['unanswered']);
     }
 
+    /** The weekly check reads a resort answer: which hotels it offers, or that it is no answer at all. */
+    public function testAResortAnswerOffersTheHotelsWithAPrice(): void
+    {
+        $reply = new \SimpleXMLElement('<room_prices>'
+            . '<room_price><IdHotel>101</IdHotel><IdRoom>DBL</IdRoom><Price>420.50</Price></room_price>'
+            . '<room_price><IdHotel>101</IdHotel><IdRoom>TRPL</IdRoom><Price>500</Price></room_price>'
+            . '<room_price><IdHotel>102</IdHotel><IdRoom>DBL</IdRoom><Price>0</Price></room_price>'
+            . '<room_price><IdHotel>103</IdHotel><Rooms><Room><Price>99</Price></Room></Rooms></room_price>'
+            . '<room_price><IdHotel></IdHotel><Price>10</Price></room_price>'
+            . '</room_prices>');
+
+        self::assertSame(['101', '103'], PriceCheckFlags::resortOffers($reply), 'a price of 0 is not an offer a customer could book');
+        self::assertSame(['7'], PriceCheckFlags::resortOffers(new \SimpleXMLElement('<room_price><IdHotel>7</IdHotel><Price>80</Price></room_price>')), 'one row comes unwrapped');
+        self::assertSame([], PriceCheckFlags::resortOffers(false, "<?xml version=\"1.0\"?>\n"), 'the empty document: no prices');
+        self::assertSame([], PriceCheckFlags::resortOffers(new \SimpleXMLElement('<room_prices/>')));
+
+        self::assertNull(PriceCheckFlags::resortOffers(false, 'Error: no connection to dabatase.'));
+        self::assertNull(PriceCheckFlags::resortOffers(false));
+        self::assertNull(PriceCheckFlags::resortOffers(new \SimpleXMLElement('<error><err>Invalid username or password!</err></error>')));
+        self::assertNull(PriceCheckFlags::resortOffers(new \SimpleXMLElement('<room_prices><Error>Resort not found</Error></room_prices>')));
+    }
+
     public function testTheAdminChecksDefaultToTheNextSeventhOfJuly(): void
     {
         self::assertSame('2027-07-07', PriceCheckFlags::nextPeakCheckIn(new \DateTimeImmutable('2026-10-16')), 'October: next summer, not the July just gone');

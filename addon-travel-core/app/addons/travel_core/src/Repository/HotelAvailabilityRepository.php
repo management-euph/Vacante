@@ -351,6 +351,43 @@ final class HotelAvailabilityRepository
     }
 
     /**
+     * Hotels whose published prices start after $today but that had no offer
+     * in their latest check, or were never checked: the first day of their
+     * prices, so a supplier's check can ask about their own season too
+     * (docs/novoton-availability-gaps-plan.md §4.3). Keyed by hotel id; a
+     * numeric id comes back as an int key.
+     *
+     * @param list<string> $hotelIds
+     *
+     * @return array<array-key, string> hotel_id => Y-m-d
+     */
+    public function awaitingFirstOffer(string $provider, array $hotelIds, string $today): array
+    {
+        $hotelIds = array_values(array_unique(array_filter($hotelIds, static fn (string $id): bool => $id !== '')));
+        if ($hotelIds === []) {
+            return [];
+        }
+        self::ensureTables();
+        $out = [];
+        foreach (array_chunk($hotelIds, self::CHUNK) as $chunk) {
+            foreach (TypeCoerce::toRowList(db_get_array(
+                'SELECT hotel_id, contract_from FROM ?:travel_hotel_availability
+                 WHERE provider = ?s AND hotel_id IN (?a) AND contract_from > ?s AND offer_next_date IS NULL',
+                $provider,
+                $chunk,
+                $today,
+            )) as $row) {
+                $from = substr(TypeCoerce::toString($row['contract_from'] ?? ''), 0, 10);
+                if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $from) === 1) {
+                    $out[TypeCoerce::toString($row['hotel_id'] ?? '')] = $from;
+                }
+            }
+        }
+
+        return $out;
+    }
+
+    /**
      * provider, hotel_id, product_id, destination_key, hotel_name, quoted.
      *
      * @param array{hotel_id: string, product_id: int, destination_key: string, hotel_name: string} $hotel

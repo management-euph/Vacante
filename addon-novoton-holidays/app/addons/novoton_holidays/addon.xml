@@ -381,6 +381,38 @@
                         <type>header</type>
                         <variants/>
                     </item>
+
+                    <!-- Weekly availability check (room_price): what it asks and how much
+                         one run may spend (docs/novoton-availability-gaps-plan.md §4.3) -->
+                    <item id="availability_check_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="availability_check_near_days">
+                        <type>input</type>
+                        <default_value>14, 30</default_value>
+                        <variants/>
+                    </item>
+                    <item id="availability_check_season_dates">
+                        <type>input</type>
+                        <default_value>06-20, 07-15, 08-15, 09-05</default_value>
+                        <variants/>
+                    </item>
+                    <item id="availability_check_cycle_days">
+                        <type>input</type>
+                        <default_value>7</default_value>
+                        <variants/>
+                    </item>
+                    <item id="availability_check_max_calls">
+                        <type>input</type>
+                        <default_value>120</default_value>
+                        <variants/>
+                    </item>
+                    <item id="availability_check_max_minutes">
+                        <type>input</type>
+                        <default_value>20</default_value>
+                        <variants/>
+                    </item>
                 </items>
             </section>
         </sections>

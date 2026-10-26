@@ -109,9 +109,10 @@ class AddProductsCommand extends AbstractCronCommand
                 if ($total === 0) {
                     $this->output("  → No hotels are synced for {$country}. Run mode=hotel_list first, then mode=room_price.");
                 } elseif ($priced === 0) {
-                    $this->output("  → 0 of {$total} synced hotels have prices yet — mode=room_price has not run for {$country}.");
-                    $this->output('    Run mode=room_price FIRST (it sets has_room_price=Y), then re-run mode=add_hotels_as_products.');
-                    $this->output("    e.g. index.php?dispatch=novoton_cron.run&access_key=...&mode=room_price&country={$country}");
+                    $this->output("  → 0 of {$total} synced hotels have prices yet — mode=room_price has not checked {$country} yet.");
+                    $this->output('    It checks every sold resort once a week. To check this country now, run it with &resorts=all');
+                    $this->output('    (it stops at its call and time budgets: run it again to go on), then re-run mode=add_hotels_as_products.');
+                    $this->output("    e.g. index.php?dispatch=novoton_cron.run&access_key=...&mode=room_price&country={$country}&resorts=all");
                 } else {
                     $this->output("  → All {$priced} priced hotel(s) in {$country} are already linked to products (or excluded) — nothing new to add.");
                     $this->output('    There is no force re-add. To refresh prices/features, run mode=room_price then re-run this mode.');

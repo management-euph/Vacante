@@ -164,12 +164,12 @@ return [
         'ro' => 'Reconstruiește prețurile din calendar (fără apeluri API)',
     ],
     'novoton_holidays.dash_job_room_price' => [
-        'en' => 'Room price',
-        'ro' => 'Preț cameră',
+        'en' => 'Availability check',
+        'ro' => 'Verificare disponibilitate',
     ],
     'novoton_holidays.dash_job_room_price_desc' => [
-        'en' => 'Marks the hotels that have real-time prices',
-        'ro' => 'Marchează hotelurile care au prețuri în timp real',
+        'en' => 'Weekly: asks Novoton which hotels have offers on the check dates, a seventh of the resorts each night; marks the hotels with prices',
+        'ro' => 'Săptămânal: întreabă Novoton ce hoteluri au oferte la datele verificate, o șeptime din stațiuni pe noapte; marchează hotelurile cu prețuri',
     ],
     'novoton_holidays.dash_job_add_hotels_as_products' => [
         'en' => 'Add products',

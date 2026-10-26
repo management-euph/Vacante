@@ -9,17 +9,27 @@ use Tygh\Addons\NovotonHolidays\Helpers\PriceCheckFlags;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\DestinationScope;
+use Tygh\Addons\NovotonHolidays\Services\NovotonAvailabilityRecorder;
+use Tygh\Addons\NovotonHolidays\Services\ResortCheckRunner;
+use Tygh\Addons\NovotonHolidays\Services\ResortCheckSettings;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
+/**
+ * The weekly availability check, on room_price's existing nightly line
+ * (docs/novoton-availability-gaps-plan.md §4.3): each night a share of the
+ * sold resorts, asked with one resort-level room_price call per date, so
+ * every resort is checked once a week. It sets has_room_price, which
+ * add_hotels_as_products reads, and writes the availability records the
+ * weekly review classifies. ResortCheckRunner does the work.
+ *
+ * It used to ask every sold hotel on its own about one date 30 days ahead:
+ * up to 500 calls a night, and out of season a seaside hotel read "no
+ * prices" for months.
+ */
 class RoomPriceCheckCommand extends AbstractCronCommand
 {
-    /** Hotels per curl_multi batch (and per has_room_price DB update). */
-    public const int BATCH_SIZE = 25;
-
-    /** Simultaneous room_price requests; the API is shared, so modest. */
-    public const int DEFAULT_CONCURRENCY = 5;
-
-    public const int MAX_CONCURRENCY = 10;
+    /** Parameters of the per-hotel check this replaced; a run that passes them is told they are ignored. */
+    private const array RETIRED_PARAMS = ['check_in', 'limit', 'concurrency'];
 
     /**
      * @return list<string>
@@ -32,7 +42,7 @@ class RoomPriceCheckCommand extends AbstractCronCommand
 
     public static function getDescription(): string
     {
-        return 'Check which hotels have active room_price data';
+        return 'Weekly availability check: which hotels have offers on the check dates (sets has_room_price)';
     }
 
     /**
@@ -40,132 +50,41 @@ class RoomPriceCheckCommand extends AbstractCronCommand
      */
     public function execute(): array
     {
-        $dbHelper = Container::getInstance()->databaseHelper();
-        // Remember whether check_in was supplied so we can warn the operator: a
-        // defaulted date can land out of season and return 0 priced hotels, which
-        // is easily mistaken for "no hotel has prices".
-        $check_in_param = $this->getParam('check_in', '');
-        $check_in = is_string($check_in_param) ? $check_in_param : '';
-        $datesDefaulted = $check_in === '';
-        if ($datesDefaulted) {
-            $check_in = date('Y-m-d', (int) strtotime('+30 days'));
+        $settings = ResortCheckSettings::from(ConfigProvider::all(), $this->params);
+        $country = strtoupper(trim(TypeCoerce::toString($this->getParam('country', ''))));
+        foreach (self::RETIRED_PARAMS as $param) {
+            if (array_key_exists($param, $this->params)) {
+                $this->output("NOTE: &{$param} is no longer used: the check asks every resort on the dates in Settings -> Advanced.");
+            }
         }
-        $nights = TypeCoerce::toInt($this->getParam('nights', 7));
-        $limit = TypeCoerce::toInt($this->getParam('limit', 500));
-        $concurrency = max(1, min(self::MAX_CONCURRENCY, TypeCoerce::toInt($this->getParam('concurrency', self::DEFAULT_CONCURRENCY))));
-        $country = strtoupper(TypeCoerce::toString($this->getParam('country', '')));
-        $check_out = date('Y-m-d', (int) strtotime($check_in . ' + ' . $nights . ' days'));
-
-        $this->output('Checking hotels with active prices...');
-        $this->output("Check-in: {$check_in}, Check-out: {$check_out}, Nights: {$nights}, Limit: {$limit}");
-        $this->output("Least recently checked hotels first, {$concurrency} requests at a time (&concurrency=N, max " . self::MAX_CONCURRENCY . ').');
-        if ($datesDefaulted) {
-            $this->output('  NOTE: no &check_in supplied — using default (+30 days). Out-of-season');
-            $this->output('        dates can return 0 priced hotels. Pass &check_in=YYYY-MM-DD to');
-            $this->output('        test the dates customers actually search.');
-        }
-        if ($country !== '' && $country !== '0') {
+        $this->output('Options: &country=XX  &resorts=N|all (this run)  &max_calls=N  &max_time=MINUTES  &nights=N');
+        if ($country !== '') {
             $this->output("Country: {$country}");
         }
-        $this->output('');
 
-        $conditions = ($country !== '' && $country !== '0') ? ['country' => $country] : [];
-        // Only the destinations we sell (+ hotels with live products); the
-        // selected countries until a whitelist is saved. It used to check
-        // every hotel of every country: one API call each.
-        $hotels = $dbHelper->getHotelsForPriceCheck($conditions, $limit, DestinationScope::current()->syncWhere());
-
-        $withPricesIds = [];
-        $withoutPricesIds = [];
-        $withPricesCount = 0;
-        $withoutPricesCount = 0;
-        $invalidCount = 0;
-
-        // Accumulate priced hotels by country for the grouped summary printed at
-        // the end. Reuses the country already fetched above.
-        /** @var array<string, list<string>> $pricedByCountry */
-        $pricedByCountry = [];
-
-        // One API call per hotel is unavoidable (room_price is per hotel), but
-        // they no longer wait on each other: each batch of 25 is sent through
-        // curl_multi, $concurrency at a time. The old loop sent them one by one
-        // with a pause after each — ~1.5 s per hotel, 12+ minutes for 500.
-        foreach (array_chunk($hotels, self::BATCH_SIZE) as $batch) {
-            // Mirror the admin "Check Prices" call (novoton_prices.php): bypass the
-            // price cache so we always hit the live API, and do NOT pass
-            // 'children' => 0 (an int lands in the cache-key params as 0 instead of
-            // [], diverging from the admin's key and reading stale/empty entries).
-            $requests = [];
-            foreach ($batch as $hotel) {
-                $requests[TypeCoerce::toString($hotel['hotel_id'])] = [
-                    'hotel_id' => $hotel['hotel_id'],
-                    'check_in' => $check_in,
-                    'check_out' => $check_out,
-                    'adults' => 2,
-                    'nocache' => true,
-                ];
-            }
-
-            try {
-                $responses = $this->api->pricing()->getRoomPriceBatch($requests, $concurrency);
-            } catch (\Exception) {
-                // The whole batch failed (e.g. the API circuit breaker is open):
-                // treat every hotel in it as an invalid response, as before.
-                $responses = [];
-            }
-
-            foreach ($batch as $hotel) {
-                $hotelId = TypeCoerce::toString($hotel['hotel_id']);
-                $has_prices = self::hasPrices($responses[$hotelId]['data'] ?? false, $responses[$hotelId]['unparsed'] ?? '');
-
-                if ($has_prices === null) {
-                    // No answer: the hotel keeps its flag and is first in line
-                    // next run (PriceCheckFlags).
-                    $invalidCount++;
-                } elseif ($has_prices) {
-                    $withPricesIds[] = $hotelId;
-                    $hotelName = TypeCoerce::toString($hotel['hotel_name']);
-                    $hotelCountry = strtoupper(TypeCoerce::toString($hotel['country'] ?? ''));
-                    if ($hotelCountry === '') {
-                        $hotelCountry = 'UNKNOWN';
-                    }
-                    $this->output("NVT-{$hotelId} | {$hotelName} | {$hotelCountry} - has prices");
-                    $pricedByCountry[$hotelCountry][] = "NVT-{$hotelId} | {$hotelName}";
-                } else {
-                    $withoutPricesIds[] = $hotelId;
-                }
-            }
-
-            if ($withPricesIds !== [] || $withoutPricesIds !== []) {
-                $dbHelper->batchUpdateHasRoomPriceFlag($withPricesIds, $withoutPricesIds);
-            }
-            $withPricesCount += count($withPricesIds);
-            $withoutPricesCount += count($withoutPricesIds);
-            $withPricesIds = [];
-            $withoutPricesIds = [];
-
-            // A short pause between batches keeps the API rate polite.
-            usleep(ConfigProvider::API_DELAY_MS * 1000);
-        }
-
-        $this->output('');
-        $this->output("Hotels WITH prices: {$withPricesCount}");
-        $this->output("Hotels WITHOUT prices: {$withoutPricesCount}");
-        $this->output("No answer (flag left unchanged, checked again next run): {$invalidCount}");
-        $this->output('Total checked: ' . ($withPricesCount + $withoutPricesCount + $invalidCount));
-
-        // Grouped-by-country summary of the priced hotels (alphabetical).
-        foreach (self::formatCountryGroups($pricedByCountry) as $line) {
+        $runner = new ResortCheckRunner(
+            $this->api,
+            Container::getInstance()->databaseHelper(),
+            new NovotonAvailabilityRecorder(),
+            function (string $line): void {
+                $this->output($line);
+            },
+        );
+        $result = $runner->run($settings, new \DateTimeImmutable(), DestinationScope::current()->syncWhere(), $country);
+        foreach (self::formatCountryGroups($result['priced']) as $line) {
             $this->output($line);
         }
 
-        $stats = [
-            'with_prices' => $withPricesCount,
-            'without_prices' => $withoutPricesCount,
-            'invalid' => $invalidCount,
-            'by_country' => array_map(static fn (array $hotels): int => count($hotels), $pricedByCountry),
-        ];
+        $stats = $result['stats'];
         $this->logComplete('room_price', $stats);
+        $asked = $stats['checked'] + $stats['partial'] + $stats['unanswered'];
+        if ($asked > 0 && $stats['checked'] + $stats['partial'] === 0) {
+            return ['success' => false, 'error' => 'Novoton did not answer the availability check', 'stats' => $stats];
+        }
+        if ($stats['units'] === 0 && $stats['skipped_countries'] !== []) {
+            return ['success' => false, 'error' => 'Novoton listed no resorts for ' . implode(', ', $stats['skipped_countries']), 'stats' => $stats];
+        }
+
         return ['success' => true, 'stats' => $stats];
     }
 

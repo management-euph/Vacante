@@ -152,6 +152,43 @@ final class NovotonAvailabilityRecorderTest extends TestCase
         self::assertStringContainsString("('novoton', '200', 0, 'BULGARIA|Albena', '', '2024-02-02', NULL, NULL, NULL, '2026-10-23 03:30:00')", $this->sql[0]);
     }
 
+    /** The weekly check: a whole answer checked every hotel, part of one only counts its offers. */
+    public function testTheWeeklyCheckRecordsAWholeAnswerAsACheckAndPartOfOneAsOffersSeen(): void
+    {
+        $hotels = [
+            ['hotel_id' => '476', 'product_id' => '1203', 'hotel_name' => 'Sol Nessebar', 'city' => 'Sunny Beach', 'country' => 'BULGARIA', 'created_at' => '2023-05-01 10:00:00'],
+            ['hotel_id' => '477', 'product_id' => null, 'hotel_name' => 'Kuban', 'city' => 'Sunny Beach', 'country' => 'BULGARIA'],
+        ];
+        $offers = ['476' => ['stay_date' => '2027-07-15', 'next_date' => '2026-11-09', 'immediate' => false, 'months' => ['2026-11', '2027-07']]];
+        $recorder = new NovotonAvailabilityRecorder();
+
+        $recorder->checkAnswered($hotels, $offers, true, '2026-10-26 04:00:00');
+        $recorder->checkAnswered($hotels, $offers, false, '2026-10-26 04:00:00');
+        $recorder->checkAnswered([], $offers, true, '2026-10-26 04:00:00');
+
+        self::assertCount(2, $this->sql);
+        self::assertStringContainsString("('novoton', '476', 1203, 'BULGARIA|Sunny Beach', 'Sol Nessebar', '2026-10-26 04:00:00', '2026-11-09', '2026-10-26 04:00:00', '2027-07-15', NULL,", $this->sql[0]);
+        self::assertStringContainsString("('novoton', '477', 0, 'BULGARIA|Sunny Beach', 'Kuban', '2026-10-26 04:00:00', NULL, NULL, NULL, NULL, NULL)", $this->sql[0]);
+        self::assertStringNotContainsString('offer_checked_at', $this->sql[1]);
+        self::assertStringNotContainsString("'477'", $this->sql[1], 'no offer, nothing to record');
+    }
+
+    public function testHotelsWhosePricesStartLaterAreReadFromTheRecords(): void
+    {
+        $query = '';
+        DbStub::$getArray = static function (string $sql, mixed ...$params) use (&$query): array {
+            $query = db_quote($sql, ...$params);
+
+            return [['hotel_id' => '476', 'contract_from' => '2026-12-20'], ['hotel_id' => '477', 'contract_from' => null]];
+        };
+
+        $starts = (new NovotonAvailabilityRecorder())->awaitingFirstOffer(['476', '477', '476'], '2026-10-26');
+
+        self::assertSame([476 => '2026-12-20'], $starts);
+        self::assertStringContainsString("provider = 'novoton' AND hotel_id IN ('476', '477') AND contract_from > '2026-10-26' AND offer_next_date IS NULL", $query);
+        self::assertSame([], (new NovotonAvailabilityRecorder())->awaitingFirstOffer([], '2026-10-26'));
+    }
+
     public function testNovotonDeclaresWhatItCanTell(): void
     {
         $source = new NovotonAvailabilitySource();
