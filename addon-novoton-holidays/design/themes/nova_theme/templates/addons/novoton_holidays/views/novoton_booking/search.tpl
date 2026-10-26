@@ -45,6 +45,14 @@
 
     {if $novoton_results && $novoton_results|count > 0}
 
+        {* ===== DESIGN A — the room-first results of the Design A hotel page
+           (travel_core components/design_a_results.tpl, built by the
+           controller from these rows when the page asks: design=a, one
+           room). Otherwise the cards below. ===== *}
+        {if $travel_design_a_results}
+            {include file="addons/travel_core/components/design_a_results.tpl" results=$travel_design_a_results}
+        {else}
+
         {* ===== EARLY BOOKING BANNER ===== *}
         {if $active_early_booking || ($early_booking_range && $early_booking_range.max > 0)}
         <div class="novoton-early-banner">
@@ -608,6 +616,8 @@
            so the page-level duplicates only added noise under the results. *}
 
         {/if}
+
+        {/if}{* End of the Design A else *}
 
     {elseif $no_availability_message && $alternative_results && $alternative_results|count > 0}
         {* Show alternative dates results *}

@@ -145,6 +145,16 @@ page, re-runs same-origin scripts in the copied part, then fires
   standalone results page and drop `rooms_data`.
 - `nearby_availability` is read by the template but never produced.
 
+**Design A (26 Oct 2026)**: `src/Services/DesignARates.php` turns these rows
+into travel_core `Results\RateOffer`s for a one-room search when the page
+sends design=a (`controllers/frontend/novoton_booking/search.php`, step 6b;
+`search.tpl` includes `components/design_a_results.tpl` in place of the
+cards). Checked with the store's export of Admiral (hotel 476, 10–17 Jul
+2027): eight room types, one rate each, Ultra All Inclusive, Early Booking
+−30%, free cancellation until 30 Jun 2027 (`DesignARatesTest`). It still
+reads the rows the positional search parser builds; reading them through
+`RoomOfferRows` is the next Novoton step.
+
 **Tests pinning it**: `AvailabilityBadgeTest`, novoton `SmartyCompatTest`
 (no `style=` except display:none), `NovotonBookingSidebarDiscountTest`,
 `IntegrationPathsTest`, `MultiRoomSearchBatcherTest`, `RoomOfferRowsTest`,

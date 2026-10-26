@@ -273,6 +273,9 @@ export default function BookingEngine({ config }) {
         params.set('children', totalChildren);
         params.set('rooms', rooms.length);
         params.set('rooms_data', JSON.stringify(rooms));
+        // The Design A hotel page: the supplier answers with its room cards
+        // (travel_core Results\DesignA, components/design_a_results.tpl).
+        if (isDesignA && mode !== 'homepage') params.set('design', 'a');
 
         const allAges = [];
         rooms.forEach(room => {
@@ -304,7 +307,7 @@ export default function BookingEngine({ config }) {
         }
 
         return base + '?' + params.toString();
-    }, [checkIn, checkOut, rooms, mode, hotelId, productId, searchQuery, searchDispatch, provider, totalAdults, totalChildren]);
+    }, [checkIn, checkOut, rooms, mode, hotelId, productId, searchQuery, searchDispatch, provider, totalAdults, totalChildren, isDesignA]);
 
     const performAjaxSearch = useCallback((url) => {
         setIsSearching(true);

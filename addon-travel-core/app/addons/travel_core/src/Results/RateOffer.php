@@ -41,8 +41,9 @@ final class RateOffer
      * @param int $roomsLeft rooms of this type left; -1 = unknown
      * @param float $depositRatio share payable on booking when a deposit may be paid (DepositPlan); 0 = in full
      * @param string $balanceDue when the rest is due, with a deposit
-     * @param list<array{title: string, lines: list<string>}> $terms payment and cancellation terms, as shown in full
+     * @param list<array{title: string, lines: list<string>}> $terms payment and cancellation terms as prose, for a supplier that sends them as text
      * @param list<string> $facilities the room's facilities
+     * @param array<string, mixed> $timeline structured terms: TermsTimelineFactory's cancel_steps / payment_steps, shown as in the booking sidebar
      */
     public function __construct(
         public readonly string $roomKey,
@@ -64,6 +65,7 @@ final class RateOffer
         public readonly string $balanceDue = '',
         public readonly array $terms = [],
         public readonly array $facilities = [],
+        public readonly array $timeline = [],
     ) {
     }
 

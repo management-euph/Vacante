@@ -18,8 +18,10 @@ use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\HotelAvailabilitySearcher;
 use Tygh\Addons\NovotonHolidays\Services\AlternativeDateSearcher;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\NovotonHolidays\Services\DesignARates;
 use Tygh\Addons\NovotonHolidays\Services\NovotonAvailabilityRecorder;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Results\DesignA;
 
 try {
 
@@ -101,6 +103,13 @@ try {
             $searchParams,
             TypeCoerce::toStringMap($debugLog)
         );
+
+        // ── 6b. The Design A hotel page asked (design=a): its room-first
+        // results from the same rows (one room; several rooms keep the
+        // current selection until Design A's multi-room step). ──────────
+        if (DesignA::requested($_REQUEST) && $results !== [] && !$searchResult['is_multi_room']) {
+            $view->assign('travel_design_a_results', DesignARates::view($results, $novotonParams));
+        }
 
     } else {
         // ── Homepage search → redirect to product search ─────────────

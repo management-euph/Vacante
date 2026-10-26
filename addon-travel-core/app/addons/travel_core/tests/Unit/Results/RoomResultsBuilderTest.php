@@ -119,6 +119,25 @@ final class RoomResultsBuilderTest extends TestCase
         self::assertSame('room-0', $rooms[0]['key']);
         self::assertSame(['Cameră dublă', 'Deluxe · fără balcon'], [$rooms[0]['name'], $rooms[0]['detail']]);
         self::assertNotSame([], $rooms[0]['terms'], 'one set of terms for the room');
+        self::assertSame([], $rooms[0]['timeline']);
+    }
+
+    public function testTermsAreSaidOnceWhenEveryRateOfTheRoomHasTheSame(): void
+    {
+        $timeline = ['cancel_steps' => [['kind' => 'free', 'to_iso' => '2027-06-30']], 'payment_steps' => []];
+        $plain = ['roomKey' => 'R', 'roomName' => 'R', 'mealPlan' => 'BB', 'bookUrl' => 'b', 'timeline' => $timeline];
+        $rooms = self::builder()->build([
+            new RateOffer(...$plain + ['price' => 100.0]),
+            new RateOffer(...$plain + ['price' => 120.0]),
+        ], 7)['rooms'];
+        self::assertSame($timeline, $rooms[0]['timeline'], 'the room\'s');
+
+        $rooms = self::builder()->build([
+            new RateOffer(...$plain + ['price' => 100.0]),
+            new RateOffer(...['timeline' => []] + $plain + ['price' => 120.0]),
+        ], 7)['rooms'];
+        self::assertSame([], $rooms[0]['timeline'], 'they differ: each rate keeps its own');
+        self::assertSame($timeline, $rooms[0]['groups'][0]['rates'][0]['timeline']);
     }
 
     /**

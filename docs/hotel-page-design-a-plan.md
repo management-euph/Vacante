@@ -175,7 +175,36 @@ an internal code.
   enlarge it more than 1.5×) or too tall for it (filling would crop away
   more than half) shows whole, at most 1.5× its size, over a blurred copy of
   itself (`pdp-design-a.js`, `.travel-pdpa-gallery__tile--whole`).
-- Next: phase 3 — room-first results (shared view model + component,
-  R1–R3, best 4, payment line, on-request wording), then the title row's
-  after-search state ("26–31 oct. · de la 502 €", "Vezi camerele") and the
-  compact summary's price, which need the results' data.
+- 26 Oct 2026 — **phase 3 (room-first results) and the Novoton mapper
+  (phase 4, first supplier) done**, checked with the store's export of
+  Admiral (hotel 476, product 292, 10–17 Jul 2027: eight room types with one
+  rate each, all Ultra All Inclusive, Early Booking −30%, free cancellation
+  until 30 Jun 2027 — the board's one-meal-plan case):
+  - travel_core `Results\RateOffer` (what a supplier hands over per rate:
+    customer-facing text, primary-currency totals, ISO dates) and
+    `Results\RoomResultsBuilder` (the room cards by the board's rules: the
+    meal strip only with 2+ meal plans, one meal plan said once in the fact
+    line, chips only when they split the list, what a room's rates share
+    said once, the best 4 per room, above 12 rates the other rooms collapsed
+    to their cheapest; the room's cheapest rate has the filled button);
+    `Results\DesignA` (design=a, the store's builder).
+  - `components/design_a_results.tpl` with `_room`, `_rate`, `_payment`,
+    `_terms` (structured terms as the booking sidebar's timeline,
+    `booking_terms_timeline.tpl`) and `_icon`; CSS `design-a.css` #60
+    (desktop, ≤1100px, phones); `pdp-design-a.js` filters by meal plan and
+    chips, sorts the rooms, opens "see all"; 61 texts in en / ro with the
+    three Romanian plural forms (`RoomResultsBuilder::form()`).
+  - The engine sends design=a with the inline search (`TRAVEL_CACHE_VER`
+    10). Novoton's search builds the cards from the same rows for a
+    one-room search (`DesignARates`: the room's name without its code and
+    what sets it apart from the code's words, "DBL 2+0 DELUXE NO BALCONY" →
+    "Cameră Dublă · Deluxe · fără balcon"; Novoton's meal texts; the
+    sidebar's discount rules; quota 0 = on request; the booking link field
+    for field). Several rooms keep today's selection until phase 5.
+  - On the exported page with the store's CSS: the engine asks design=a, the
+    cards land under the bar, no overflow at 1440 or 390 px.
+- Next: Novoton rows through `RoomOfferRows`; the title row's after-search
+  state ("10–17 iul. · de la 1.485 €", "Vezi camerele") and the compact
+  summary's price (the section carries `data-cheapest`); then the Sphinx
+  (streamed rows) and Eurosite (whole-group offers) mappers — exports with
+  offers for each will help.

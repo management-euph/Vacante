@@ -35,14 +35,14 @@ use Tygh\Addons\TravelCore\Services\MoneyFormatter;
  *     meal: string, meal_key: string, name: string, amount: float, price: string,
  *     per_night: string, saving: string, discount: string, perks: list<string>,
  *     cheapest: bool, primary: bool, free_until: string, non_refundable: bool, on_request: bool,
- *     free: bool, special: bool, payment: Payment, terms: Terms, book_url: string,
+ *     free: bool, special: bool, payment: Payment, terms: Terms, timeline: array<string, mixed>, book_url: string,
  *     shown: bool
  * }
  * @phpstan-type GroupView array{meal: string, meal_key: string, count: int, form: string, shown: bool, rates: list<RateView>}
  * @phpstan-type RoomView array{
  *     key: string, name: string, detail: string, facilities: string, from: float,
  *     status: string, left: int, cancellation: string, free_until: string,
- *     payment: Payment|null, terms: Terms, groups: list<GroupView>, cheapest_rate: RateView,
+ *     payment: Payment|null, terms: Terms, timeline: array<string, mixed>, groups: list<GroupView>, cheapest_rate: RateView,
  *     rate_count: int, rate_form: string, hidden: int, range: string, collapsed: bool
  * }
  * @phpstan-type ResultsView array{
@@ -275,8 +275,8 @@ final class RoomResultsBuilder
 
         $payments = array_map(fn (RateOffer $r): array => $this->payment($r), $rates);
         $payment = count(array_unique(array_map('serialize', $payments))) === 1 ? $payments[0] : null;
-        $termsSets = array_map(static fn (RateOffer $r): string => serialize($r->terms), $rates);
-        $terms = count(array_unique($termsSets)) === 1 ? $first->terms : [];
+        $termsSets = array_map(static fn (RateOffer $r): string => serialize([$r->terms, $r->timeline]), $rates);
+        $sharedTerms = count(array_unique($termsSets)) === 1;
 
         $shown = $this->shownRates($rates, $collapsed);
         $views = [];
@@ -315,7 +315,8 @@ final class RoomResultsBuilder
             'cancellation' => $cancellation,
             'free_until' => $freeUntil,
             'payment' => $payment,
-            'terms' => $terms,
+            'terms' => $sharedTerms ? $first->terms : [],
+            'timeline' => $sharedTerms ? $first->timeline : [],
             'groups' => array_values($groups),
             'cheapest_rate' => $views[0],
             'rate_count' => $count,
@@ -390,6 +391,7 @@ final class RoomResultsBuilder
             'special' => $rate->isSpecial(),
             'payment' => $this->payment($rate),
             'terms' => $rate->terms,
+            'timeline' => $rate->timeline,
             'book_url' => $rate->bookUrl,
             'shown' => $shown,
         ];

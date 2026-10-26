@@ -49,8 +49,8 @@
         {if !$travel_pdpa_room.payment}
             <span class="travel-pdpa-rrow__cond">{include file="addons/travel_core/components/design_a_payment.tpl" payment=$travel_pdpa_rate.payment}</span>
         {/if}
-        {if !$travel_pdpa_room.terms && $travel_pdpa_rate.terms}
-            {include file="addons/travel_core/components/design_a_terms.tpl" terms=$travel_pdpa_rate.terms label="`$travel_pdpa_room.name`, `$travel_pdpa_rate_title`"}
+        {if !$travel_pdpa_room.terms && !$travel_pdpa_room.timeline && ($travel_pdpa_rate.terms || $travel_pdpa_rate.timeline)}
+            {include file="addons/travel_core/components/design_a_terms.tpl" timeline=$travel_pdpa_rate.timeline terms=$travel_pdpa_rate.terms label="`$travel_pdpa_room.name`, `$travel_pdpa_rate_title`"}
         {/if}
     </div>
     <p class="travel-pdpa-rrow__price">

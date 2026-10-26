@@ -47,7 +47,7 @@ final class DesignASearchBarTest extends TestCase
     {
         $controller = (string) file_get_contents(self::addonRoot() . '/controllers/frontend/travel_booking.php');
 
-        self::assertStringContainsString("if (RequestCoerce::string(\$_REQUEST, 'design') === 'a') {", $controller);
+        self::assertStringContainsString('if (DesignA::requested($_REQUEST)) {', $controller);
         self::assertStringContainsString('TravelProviderRegistry::indicativeNightlyCalendar($providerName, $hotelId)', $controller);
         self::assertStringContainsString("\$config['calendarPricesCurrency']", $controller);
         foreach (['add_date', 'see_prices', 'clear_dates', 'change_guests', 'lowest_prices', 'nightly_prices_note'] as $key) {
@@ -74,6 +74,20 @@ final class DesignASearchBarTest extends TestCase
         self::assertStringContainsString('onClick={clearDates}', $calendar);
         // The current calendar keeps its footer for every other page.
         self::assertStringContainsString('<div className="nvt-calendar-footer">', $calendar);
+    }
+
+    public function testTheInlineSearchAsksForTheRoomCards(): void
+    {
+        // A Design A page gets the room-first results from the supplier
+        // (Results\DesignA::requested, components/design_a_results.tpl).
+        $engine = self::src('BookingEngine.jsx');
+        self::assertStringContainsString("if (isDesignA && mode !== 'homepage') params.set('design', 'a');", $engine);
+        self::assertStringContainsString('searchDispatch, provider, totalAdults, totalChildren, isDesignA]);', $engine, 'buildSearchUrl depends on it');
+
+        $bundle = (string) file_get_contents(dirname(__DIR__, 6) . '/js/addons/travel_core/react19-bundle.js');
+        self::assertStringContainsString('set("design","a")', $bundle, 'rebuild: cd addon-travel-core/react-src && npm run build');
+        $init = (string) file_get_contents(self::addonRoot() . '/init.php');
+        self::assertMatchesRegularExpression("/define\\('TRAVEL_CACHE_VER', '(1\\d|[2-9]\\d|\\d{3,})'\\)/", $init, 'browsers fetch the new bundle');
     }
 
     public function testCommittedBundleCarriesTheDesignABar(): void

@@ -36,11 +36,11 @@
         {if $travel_pdpa_room.payment}
             <p class="travel-pdpa-hoist travel-pdpa-hoist--pay">{include file="addons/travel_core/components/design_a_icon.tpl" icon="card"}<span>{include file="addons/travel_core/components/design_a_payment.tpl" payment=$travel_pdpa_room.payment}<span class="travel-pdpa-pay">{__("travel_core.pdpa_r_every_rate")}</span></span></p>
         {/if}
-        {if $travel_pdpa_room.facilities || $travel_pdpa_room.terms}
+        {if $travel_pdpa_room.facilities || $travel_pdpa_room.terms || $travel_pdpa_room.timeline}
             <div class="travel-pdpa-rcard__facrow">
                 {if $travel_pdpa_room.facilities}<p class="travel-pdpa-rcard__fac">{$travel_pdpa_room.facilities|escape:html}</p>{/if}
-                {if $travel_pdpa_room.terms}
-                    {include file="addons/travel_core/components/design_a_terms.tpl" terms=$travel_pdpa_room.terms label=$travel_pdpa_room.name}
+                {if $travel_pdpa_room.terms || $travel_pdpa_room.timeline}
+                    {include file="addons/travel_core/components/design_a_terms.tpl" timeline=$travel_pdpa_room.timeline terms=$travel_pdpa_room.terms label=$travel_pdpa_room.name}
                 {/if}
             </div>
         {/if}
