@@ -271,3 +271,88 @@ describe('photo height', () => {
         delete window.matchMedia;
     });
 });
+
+describe('photo fit', () => {
+    const tiles = () => page().querySelectorAll('.travel-pdpa-gallery__tile');
+    const size = (tile, width, height) => {
+        Object.defineProperty(tile, 'clientWidth', { value: width, configurable: true });
+        Object.defineProperty(tile, 'clientHeight', { value: height, configurable: true });
+    };
+    const photo = (tile, width, height, complete = true) => {
+        const img = tile.querySelector('img:not(.travel-pdpa-gallery__backdrop)');
+        img.setAttribute('src', `/images/thumbnails/${width}/${height}/detailed/photo.jpg`);
+        Object.defineProperty(img, 'naturalWidth', { value: width, configurable: true });
+        Object.defineProperty(img, 'naturalHeight', { value: height, configurable: true });
+        Object.defineProperty(img, 'complete', { value: complete, configurable: true });
+        return img;
+    };
+    const whole = (tile) => tile.classList.contains('travel-pdpa-gallery__tile--whole');
+
+    it('fills the tile unless that enlarges the photo more than 1.5× or crops away more than half', () => {
+        const { showsWhole } = window.TravelPdpDesignA;
+        // The large tile on a wide screen, 870 × 480.
+        expect(showsWhole(870, 480, 1024, 683)).toBe(false); // the store's photos: shrunk to fit
+        expect(showsWhole(870, 480, 790, 527)).toBe(false); // enlarged 1.1×
+        expect(showsWhole(870, 480, 560, 373)).toBe(true); // enlarged 1.55×: soft
+        expect(showsWhole(870, 480, 400, 300)).toBe(true);
+        expect(showsWhole(870, 480, 600, 900)).toBe(true); // portrait: 37% would stay in view
+        expect(showsWhole(870, 480, 1000, 1000)).toBe(false); // square: 55% in view
+        expect(showsWhole(870, 480, 3000, 1000)).toBe(false); // panorama: 60% in view
+        // A small tile, 290 × 236.
+        expect(showsWhole(290, 236, 600, 400)).toBe(false);
+        expect(showsWhole(290, 236, 150, 100)).toBe(true);
+    });
+
+    it('shows a small photo whole, over a blurred copy of itself, once', () => {
+        const [big, small] = tiles();
+        size(big, 870, 480);
+        size(small, 290, 236);
+        photo(big, 1024, 683);
+        const img = photo(small, 150, 100);
+
+        window.TravelPdpDesignA.fitPhotos(page());
+        window.TravelPdpDesignA.fitPhotos(page());
+
+        expect(whole(big)).toBe(false);
+        expect(big.querySelector('.travel-pdpa-gallery__backdrop')).toBeNull();
+        expect(whole(small)).toBe(true);
+        // At most 1.5× its own size.
+        expect(small.style.getPropertyValue('--travel-pdpa-whole-w')).toBe('225px');
+        expect(small.style.getPropertyValue('--travel-pdpa-whole-h')).toBe('150px');
+        const backdrops = small.querySelectorAll('.travel-pdpa-gallery__backdrop');
+        expect(backdrops).toHaveLength(1);
+        expect(backdrops[0].getAttribute('src')).toBe(img.src);
+        expect(backdrops[0].getAttribute('alt')).toBe('');
+        expect(backdrops[0].getAttribute('aria-hidden')).toBe('true');
+        expect(backdrops[0].nextElementSibling).toBe(img); // under the photo
+    });
+
+    it('fills the tile again once it is small enough for the photo', () => {
+        const small = tiles()[1];
+        size(small, 200, 120);
+        window.TravelPdpDesignA.fitPhotos(page());
+        expect(whole(small)).toBe(false);
+    });
+
+    it('decides when the photo arrives, and leaves hidden tiles and placeholders alone', () => {
+        const third = tiles()[2];
+        size(third, 290, 236);
+        const img = photo(third, 500, 1000, false);
+        window.TravelPdpDesignA.fitPhotos(page());
+        expect(whole(third)).toBe(false); // not loaded yet
+
+        Object.defineProperty(img, 'complete', { value: true, configurable: true });
+        img.dispatchEvent(new Event('load'));
+        expect(whole(third)).toBe(true); // 500 × 1000 in 290 × 236: 41% in view
+
+        photo(third, 1, 1); // CS-Cart's spacer while a thumbnail is generated
+        third.classList.remove('travel-pdpa-gallery__tile--whole');
+        window.TravelPdpDesignA.fitPhotos(page());
+        expect(whole(third)).toBe(false);
+
+        photo(third, 150, 100);
+        size(third, 0, 0); // phones show the main photo only
+        window.TravelPdpDesignA.fitPhotos(page());
+        expect(whole(third)).toBe(false);
+    });
+});

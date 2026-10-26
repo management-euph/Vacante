@@ -16,7 +16,9 @@
          hook (as on every product template), the location line with
          "Vezi pe hartă", then wishlist/compare buttons, the indicative
          "from" price when known and "Alege datele"
-    #20. Photo mosaic: one large photo and up to four smaller ones
+    #20. Photo mosaic: one large photo and up to four smaller ones, each
+         filling its tile; one too small or too tall for its tile shows
+         whole over a blurred copy of itself (pdp-design-a.js)
     #25. Stock gallery, kept out of sight: the theme's image previewer is
          bound to its links, so a mosaic tile opens the previewer through
          them (pdp-design-a.js); without it a tile opens the photo itself
@@ -178,6 +180,15 @@
                                     {$travel_pdpa_width = 1200}
                                 {else}
                                     {$travel_pdpa_width = 600}
+                                {/if}
+                                {* CS-Cart never enlarges a photo into a thumbnail: one narrower
+                                   than the width asked for comes back centred on a canvas of
+                                   that width, in the thumbnail background colour (the white
+                                   bands beside a 1024px photo in the 1200px main tile). So ask
+                                   at most the photo's own width; the tile does the rest. *}
+                                {$travel_pdpa_photo_x = $travel_pdpa_photo.detailed.image_x|default:$travel_pdpa_photo.icon.image_x|default:0}
+                                {if $travel_pdpa_photo_x > 0 && $travel_pdpa_photo_x < $travel_pdpa_width}
+                                    {$travel_pdpa_width = $travel_pdpa_photo_x}
                                 {/if}
                                 <a href="{$travel_pdpa_photo.detailed.image_path|default:$travel_pdpa_photo.icon.image_path}"
                                    class="travel-pdpa-gallery__tile{if $smarty.foreach.travel_pdpa_photos.first} travel-pdpa-gallery__tile--main{/if}"

@@ -122,6 +122,39 @@ final class DesignAProductTemplateTest extends TestCase
         self::assertStringContainsString('height: 100% !important;', $css);
     }
 
+    /**
+     * Found on a real store: CS-Cart never enlarges a photo into a
+     * thumbnail. Asked for 1200px of a 1024px photo it centres the photo on a
+     * 1200px canvas in the thumbnail background colour, so the large tile
+     * showed white bands beside it. Each tile asks at most the photo's own
+     * width; a photo too small or too tall for its tile shows whole over a
+     * blurred copy of itself (pdp-design-a.js).
+     */
+    public function testPhotosAreNeverAskedWiderThanTheyAre(): void
+    {
+        $src = self::template();
+
+        self::assertStringContainsString(
+            '{$travel_pdpa_photo_x = $travel_pdpa_photo.detailed.image_x|default:$travel_pdpa_photo.icon.image_x|default:0}',
+            $src,
+        );
+        self::assertStringContainsString('{if $travel_pdpa_photo_x > 0 && $travel_pdpa_photo_x < $travel_pdpa_width}', $src);
+
+        $choose = strpos($src, '{$travel_pdpa_width = 600}');
+        $cap = strpos($src, '{$travel_pdpa_width = $travel_pdpa_photo_x}');
+        $use = strpos($src, 'image_width=$travel_pdpa_width');
+        self::assertIsInt($choose);
+        self::assertIsInt($cap);
+        self::assertIsInt($use);
+        self::assertLessThan($cap, $choose, 'the cap applies to the width chosen per tile');
+        self::assertLessThan($use, $cap, '… before common/image.tpl asks for the thumbnail');
+
+        $css = self::css();
+        self::assertStringContainsString('max-width: var(--travel-pdpa-whole-w, 100%) !important;', $css);
+        self::assertStringContainsString('object-fit: contain !important;', $css);
+        self::assertStringContainsString('.travel-pdpa .travel-pdpa-gallery__tile--whole .travel-pdpa-gallery__backdrop {', $css);
+    }
+
     public function testNoFeatureListUnderTheName(): void
     {
         // "TV, Air Conditioning, … 3 Stars, Resort": facilities live in the

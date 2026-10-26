@@ -165,6 +165,16 @@ an internal code.
   `cm-image-previewer` (Swiper previewer), as the mosaic expects. The
   Eurosite search for 2–8 Nov returned no offers (out of season), so the
   room cards still need an export with offers.
+- 26 Oct 2026 — **white bands beside the photos** (owner's screenshots of
+  two hotels): CS-Cart never enlarges a photo into a thumbnail; asked for
+  1200px of a 1024px photo (hotel 433's photos are all 1024 wide) it centres
+  the photo on a 1200px canvas in the thumbnail background colour (white),
+  and small tiles asked 600px of narrower photos got white edges. Each tile
+  now asks at most the photo's own width (`image_x`), so every thumbnail is
+  photo edge to edge. A photo too small for its tile (filling it would
+  enlarge it more than 1.5×) or too tall for it (filling would crop away
+  more than half) shows whole, at most 1.5× its size, over a blurred copy of
+  itself (`pdp-design-a.js`, `.travel-pdpa-gallery__tile--whole`).
 - Next: phase 3 — room-first results (shared view model + component,
   R1–R3, best 4, payment line, on-request wording), then the title row's
   after-search state ("26–31 oct. · de la 502 €", "Vezi camerele") and the

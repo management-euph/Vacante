@@ -12,6 +12,11 @@
  *  - Photo height: the photos give way so the search bar ends on the first
  *    screen, whatever the theme's header takes (design-a.css carries a
  *    CSS-only estimate; phones keep their own layout).
+ *  - Photo fit: each photo fills its tile, unless it is too small for it
+ *    (filling would enlarge it more than 1.5×) or too tall (filling would
+ *    crop away more than half of it); that one shows whole, at most 1.5×
+ *    its own size, over a blurred copy of itself (design-a.css,
+ *    .travel-pdpa-gallery__tile--whole).
  *
  * Document-level listeners: the results arrive later (inline swap) and keep
  * working without re-initialising.
@@ -27,6 +32,11 @@
     var GALLERY_MAX = 480;
     var GALLERY_MIN = 240;
     var BAR_FALLBACK = 64;
+    var MAX_ENLARGE = 1.5;
+    var MIN_SHOWN = 0.5;
+    // Below this the image is a placeholder (CS-Cart's spacer while a
+    // thumbnail is generated), not the photo.
+    var MIN_PHOTO = 10;
 
     function toInt(value) {
         var n = parseInt(value, 10);
@@ -239,8 +249,55 @@
         page.style.setProperty('--travel-pdpa-gallery-h', Math.max(GALLERY_MIN, Math.min(GALLERY_MAX, room)) + 'px');
     }
 
+    /**
+     * True when a photo should show whole in its tile: filling the tile
+     * (object-fit: cover) would enlarge it more than MAX_ENLARGE, or leave
+     * less than MIN_SHOWN of it in view.
+     */
+    function showsWhole(tileWidth, tileHeight, photoWidth, photoHeight) {
+        var scale = Math.max(tileWidth / photoWidth, tileHeight / photoHeight);
+        var shown = (tileWidth * tileHeight) / (photoWidth * photoHeight * scale * scale);
+        return scale > MAX_ENLARGE || shown < MIN_SHOWN;
+    }
+
+    function fitPhoto(tile) {
+        var photo = tile.querySelector('img:not(.travel-pdpa-gallery__backdrop)');
+        if (!photo || !photo.complete || photo.naturalWidth < MIN_PHOTO || photo.naturalHeight < MIN_PHOTO) {
+            return;
+        }
+        // A tile the layout hides (phones show the main photo only).
+        if (tile.clientWidth === 0 || tile.clientHeight === 0) {
+            return;
+        }
+        var whole = showsWhole(tile.clientWidth, tile.clientHeight, photo.naturalWidth, photo.naturalHeight);
+        if (whole) {
+            var backdrop = tile.querySelector('.travel-pdpa-gallery__backdrop');
+            if (!backdrop) {
+                backdrop = document.createElement('img');
+                backdrop.className = 'travel-pdpa-gallery__backdrop';
+                backdrop.alt = '';
+                backdrop.setAttribute('aria-hidden', 'true');
+                photo.parentNode.insertBefore(backdrop, photo);
+            }
+            var src = photo.currentSrc || photo.src;
+            if (backdrop.getAttribute('src') !== src) {
+                backdrop.setAttribute('src', src);
+            }
+            tile.style.setProperty('--travel-pdpa-whole-w', Math.round(photo.naturalWidth * MAX_ENLARGE) + 'px');
+            tile.style.setProperty('--travel-pdpa-whole-h', Math.round(photo.naturalHeight * MAX_ENLARGE) + 'px');
+        }
+        tile.classList.toggle('travel-pdpa-gallery__tile--whole', whole);
+    }
+
+    function fitPhotos(page) {
+        Array.prototype.forEach.call(page.querySelectorAll('.travel-pdpa-gallery__tile'), fitPhoto);
+    }
+
     function fitGalleries() {
-        Array.prototype.forEach.call(document.querySelectorAll('.travel-pdpa'), fitGallery);
+        Array.prototype.forEach.call(document.querySelectorAll('.travel-pdpa'), function (page) {
+            fitGallery(page);
+            fitPhotos(page);
+        });
     }
 
     function init() {
@@ -258,6 +315,7 @@
             }
             initCompact(page);
             fitGallery(page);
+            fitPhotos(page);
         });
     }
 
@@ -292,11 +350,21 @@
     });
     // Late layout: the header's images and fonts, the engine's bar.
     window.addEventListener('load', fitGalleries);
+    // Each photo as it arrives (load does not bubble: capture it).
+    document.addEventListener('load', function (event) {
+        var target = event.target instanceof Element ? event.target : null;
+        var tile = target && target.tagName === 'IMG' ? target.closest('.travel-pdpa-gallery__tile') : null;
+        if (tile && !target.classList.contains('travel-pdpa-gallery__backdrop')) {
+            fitPhoto(tile);
+        }
+    }, true);
 
     window.TravelPdpDesignA = {
         init: init,
         formatSummary: formatSummary,
         fitGallery: fitGallery,
+        fitPhotos: fitPhotos,
+        showsWhole: showsWhole,
     };
 
     if (document.readyState === 'loading') {

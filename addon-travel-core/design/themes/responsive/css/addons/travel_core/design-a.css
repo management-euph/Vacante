@@ -242,6 +242,33 @@
     object-fit: cover !important;
     transition: opacity 0.15s ease;
 }
+/* A photo too small for its tile (filling it would enlarge it more than
+   1.5×) or too tall for it (filling it would crop away more than half):
+   shown whole, centred, at most 1.5× its own size, over a blurred copy of
+   itself, so the tile still reads as one photo — no white bands, no blurry
+   blow-up. pdp-design-a.js decides from the photo's and the tile's real
+   sizes and sets the 1.5× limit (--travel-pdpa-whole-w / -h). */
+.travel-pdpa .travel-pdpa-gallery__tile .travel-pdpa-gallery__backdrop {
+    display: none;
+}
+.travel-pdpa .travel-pdpa-gallery__tile--whole img {
+    top: 50% !important;
+    left: 50% !important;
+    max-width: var(--travel-pdpa-whole-w, 100%) !important;
+    max-height: var(--travel-pdpa-whole-h, 100%) !important;
+    object-fit: contain !important;
+    transform: translate(-50%, -50%);
+}
+.travel-pdpa .travel-pdpa-gallery__tile--whole .travel-pdpa-gallery__backdrop {
+    display: block;
+    top: 0 !important;
+    left: 0 !important;
+    max-width: none !important;
+    max-height: none !important;
+    object-fit: cover !important;
+    filter: blur(20px) brightness(0.85);
+    transform: scale(1.2);
+}
 .travel-pdpa .travel-pdpa-gallery__tile:hover img {
     opacity: 0.92;
 }
