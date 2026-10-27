@@ -299,6 +299,13 @@
                         <default_value>Y</default_value>
                         <variants/>
                     </item>
+                    <!-- Off until the records have been checked on the live store
+                         (plan §14): the hotel page panels and their "notify me" form. -->
+                    <item id="availability_panels">
+                        <type>checkbox</type>
+                        <default_value>N</default_value>
+                        <variants/>
+                    </item>
                 </items>
             </section>
         </sections>

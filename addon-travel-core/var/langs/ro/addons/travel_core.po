@@ -758,6 +758,14 @@ msgctxt "SettingsTooltips::travel_core::availability_on_request"
 msgid "A hotel sold on request is still in business. Turn off to count only offers that can be booked at once."
 msgstr "Un hotel vândut la cerere este încă activ. Dezactivați pentru a număra doar ofertele care se pot rezerva imediat."
 
+msgctxt "SettingsOptions::travel_core::availability_panels"
+msgid "Show availability panels on hotel pages"
+msgstr "Afișează panourile de disponibilitate pe paginile hotelurilor"
+
+msgctxt "SettingsTooltips::travel_core::availability_panels"
+msgid "A hotel that cannot be booked now gets a panel above the search: why (prices not published yet, not offered at the moment, no offers for over a year, no longer available), similar hotels, and a \"notify me\" form that sends one email when booking opens. Turn it on once the Hotel availability page looks right for your hotels."
+msgstr "Un hotel care nu se poate rezerva acum primește un panou deasupra căutării: motivul (prețuri încă nepublicate, nu se oferă momentan, fără oferte de peste un an, nu mai este disponibil), hoteluri asemănătoare și un formular „Anunță-mă” care trimite un singur e-mail când se deschid rezervările. Activați-l după ce pagina Disponibilitate hoteluri arată corect pentru hotelurile dvs."
+
 msgctxt "SettingsOptions::travel_core::deposit_header"
 msgid "Deposit payments"
 msgstr "Plata cu avans"
@@ -2921,6 +2929,70 @@ msgstr "Au apărut prețurile pentru [hotel]"
 msgctxt "Languages::travel_core.notify_mail_body_prices"
 msgid "Hello,\n\nOn [date] you asked us to let you know when prices for [hotel] were published. They are now on our site:\n[link]\n\nThis is the only email about it: we have deleted your email address from this request."
 msgstr "Bună ziua,\n\nPe [date] ne-ați rugat să vă anunțăm când se publică prețurile pentru [hotel]. Acum sunt pe site-ul nostru:\n[link]\n\nAcesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail din această cerere."
+
+msgctxt "Languages::travel_core.availability_panel_between_seasons"
+msgid "Prices for the next season are not published yet."
+msgstr "Prețurile pentru sezonul următor nu sunt publicate încă."
+
+msgctxt "Languages::travel_core.availability_panel_last_season"
+msgid "Last season: [from] – [to]."
+msgstr "Sezonul trecut: [from] – [to]."
+
+msgctxt "Languages::travel_core.availability_panel_published_from"
+msgid "Prices are published for stays from [date]."
+msgstr "Prețurile sunt publicate pentru sejururi de la [date]."
+
+msgctxt "Languages::travel_core.availability_panel_not_offered"
+msgid "Online booking for this hotel is not available at the moment."
+msgstr "Rezervarea online pentru acest hotel nu este disponibilă momentan."
+
+msgctxt "Languages::travel_core.availability_panel_dormant"
+msgid "This hotel has had no offers for over a year."
+msgstr "Acest hotel nu a avut oferte de peste un an."
+
+msgctxt "Languages::travel_core.availability_panel_unavailable"
+msgid "No longer available for booking."
+msgstr "Nu mai este disponibil pentru rezervare."
+
+msgctxt "Languages::travel_core.availability_panel_similar"
+msgid "Similar hotels you can book now"
+msgstr "Hoteluri asemănătoare pe care le puteți rezerva acum"
+
+msgctxt "Languages::travel_core.notify_me_prices"
+msgid "Notify me when prices appear"
+msgstr "Anunță-mă când apar prețurile"
+
+msgctxt "Languages::travel_core.notify_me_booking"
+msgid "Notify me when it can be booked"
+msgstr "Anunță-mă când se poate rezerva"
+
+msgctxt "Languages::travel_core.notify_me_return"
+msgid "Notify me if it returns"
+msgstr "Anunță-mă dacă revine"
+
+msgctxt "Languages::travel_core.notify_email_placeholder"
+msgid "Your email address"
+msgstr "Adresa dvs. de e-mail"
+
+msgctxt "Languages::travel_core.notify_consent"
+msgid "I agree to receive one email when booking opens for this hotel. My email address is used only for this and is deleted once the email is sent, or after 12 months at the latest."
+msgstr "Sunt de acord să primesc un singur e-mail când se deschid rezervările pentru acest hotel. Adresa mea de e-mail este folosită doar în acest scop și este ștearsă după trimiterea e-mailului sau cel târziu după 12 luni."
+
+msgctxt "Languages::travel_core.notify_consent_privacy"
+msgid "See the Privacy Policy."
+msgstr "Vezi Politica de confidențialitate."
+
+msgctxt "Languages::travel_core.notify_request_saved"
+msgid "Thank you. We will email you once, when booking opens for this hotel."
+msgstr "Mulțumim. Vă vom trimite un singur e-mail, când se deschid rezervările pentru acest hotel."
+
+msgctxt "Languages::travel_core.notify_request_no_consent"
+msgid "Please tick the box to agree to the email."
+msgstr "Bifați căsuța pentru a fi de acord cu e-mailul."
+
+msgctxt "Languages::travel_core.notify_request_unavailable"
+msgid "This hotel takes no \"notify me\" requests at the moment."
+msgstr "Acest hotel nu primește cereri „Anunță-mă” momentan."
 
 msgctxt "Languages::travelcore_design_a"
 msgid "Travel Core · Design A"

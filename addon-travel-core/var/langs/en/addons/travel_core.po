@@ -758,6 +758,14 @@ msgctxt "SettingsTooltips::travel_core::availability_on_request"
 msgid "A hotel sold on request is still in business. Turn off to count only offers that can be booked at once."
 msgstr "A hotel sold on request is still in business. Turn off to count only offers that can be booked at once."
 
+msgctxt "SettingsOptions::travel_core::availability_panels"
+msgid "Show availability panels on hotel pages"
+msgstr "Show availability panels on hotel pages"
+
+msgctxt "SettingsTooltips::travel_core::availability_panels"
+msgid "A hotel that cannot be booked now gets a panel above the search: why (prices not published yet, not offered at the moment, no offers for over a year, no longer available), similar hotels, and a \"notify me\" form that sends one email when booking opens. Turn it on once the Hotel availability page looks right for your hotels."
+msgstr "A hotel that cannot be booked now gets a panel above the search: why (prices not published yet, not offered at the moment, no offers for over a year, no longer available), similar hotels, and a \"notify me\" form that sends one email when booking opens. Turn it on once the Hotel availability page looks right for your hotels."
+
 msgctxt "SettingsOptions::travel_core::deposit_header"
 msgid "Deposit payments"
 msgstr "Deposit payments"
@@ -2921,6 +2929,70 @@ msgstr "Prices for [hotel] are out"
 msgctxt "Languages::travel_core.notify_mail_body_prices"
 msgid "Hello,\n\nOn [date] you asked us to let you know when prices for [hotel] were published. They are now on our site:\n[link]\n\nThis is the only email about it: we have deleted your email address from this request."
 msgstr "Hello,\n\nOn [date] you asked us to let you know when prices for [hotel] were published. They are now on our site:\n[link]\n\nThis is the only email about it: we have deleted your email address from this request."
+
+msgctxt "Languages::travel_core.availability_panel_between_seasons"
+msgid "Prices for the next season are not published yet."
+msgstr "Prices for the next season are not published yet."
+
+msgctxt "Languages::travel_core.availability_panel_last_season"
+msgid "Last season: [from] – [to]."
+msgstr "Last season: [from] – [to]."
+
+msgctxt "Languages::travel_core.availability_panel_published_from"
+msgid "Prices are published for stays from [date]."
+msgstr "Prices are published for stays from [date]."
+
+msgctxt "Languages::travel_core.availability_panel_not_offered"
+msgid "Online booking for this hotel is not available at the moment."
+msgstr "Online booking for this hotel is not available at the moment."
+
+msgctxt "Languages::travel_core.availability_panel_dormant"
+msgid "This hotel has had no offers for over a year."
+msgstr "This hotel has had no offers for over a year."
+
+msgctxt "Languages::travel_core.availability_panel_unavailable"
+msgid "No longer available for booking."
+msgstr "No longer available for booking."
+
+msgctxt "Languages::travel_core.availability_panel_similar"
+msgid "Similar hotels you can book now"
+msgstr "Similar hotels you can book now"
+
+msgctxt "Languages::travel_core.notify_me_prices"
+msgid "Notify me when prices appear"
+msgstr "Notify me when prices appear"
+
+msgctxt "Languages::travel_core.notify_me_booking"
+msgid "Notify me when it can be booked"
+msgstr "Notify me when it can be booked"
+
+msgctxt "Languages::travel_core.notify_me_return"
+msgid "Notify me if it returns"
+msgstr "Notify me if it returns"
+
+msgctxt "Languages::travel_core.notify_email_placeholder"
+msgid "Your email address"
+msgstr "Your email address"
+
+msgctxt "Languages::travel_core.notify_consent"
+msgid "I agree to receive one email when booking opens for this hotel. My email address is used only for this and is deleted once the email is sent, or after 12 months at the latest."
+msgstr "I agree to receive one email when booking opens for this hotel. My email address is used only for this and is deleted once the email is sent, or after 12 months at the latest."
+
+msgctxt "Languages::travel_core.notify_consent_privacy"
+msgid "See the Privacy Policy."
+msgstr "See the Privacy Policy."
+
+msgctxt "Languages::travel_core.notify_request_saved"
+msgid "Thank you. We will email you once, when booking opens for this hotel."
+msgstr "Thank you. We will email you once, when booking opens for this hotel."
+
+msgctxt "Languages::travel_core.notify_request_no_consent"
+msgid "Please tick the box to agree to the email."
+msgstr "Please tick the box to agree to the email."
+
+msgctxt "Languages::travel_core.notify_request_unavailable"
+msgid "This hotel takes no \"notify me\" requests at the moment."
+msgstr "This hotel takes no \"notify me\" requests at the moment."
 
 msgctxt "Languages::travelcore_design_a"
 msgid "Travel Core · Design A"
