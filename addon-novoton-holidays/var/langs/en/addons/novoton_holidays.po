@@ -1748,6 +1748,50 @@ msgctxt "SettingsOptions::novoton_holidays::booking_limits_header"
 msgid "Booking Limits"
 msgstr "Booking Limits"
 
+msgctxt "SettingsOptions::novoton_holidays::availability_check_header"
+msgid "Weekly availability check (room_price)"
+msgstr "Weekly availability check (room_price)"
+
+msgctxt "SettingsOptions::novoton_holidays::availability_check_near_days"
+msgid "Near dates (days from today)"
+msgstr "Near dates (days from today)"
+
+msgctxt "SettingsTooltips::novoton_holidays::availability_check_near_days"
+msgid "Check-ins this many days from the check, separated by commas. Every stay is 7 nights for 2 adults. Default: 14, 30"
+msgstr "Check-ins this many days from the check, separated by commas. Every stay is 7 nights for 2 adults. Default: 14, 30"
+
+msgctxt "SettingsOptions::novoton_holidays::availability_check_season_dates"
+msgid "Season dates"
+msgstr "Season dates"
+
+msgctxt "SettingsTooltips::novoton_holidays::availability_check_season_dates"
+msgid "Peak-season check-ins: MM-DD means the next one of that date, YYYY-MM-DD that day only. Next summer is asked in winter too, so seaside hotels do not read as unavailable out of season. Default: 06-20, 07-15, 08-15, 09-05"
+msgstr "Peak-season check-ins: MM-DD means the next one of that date, YYYY-MM-DD that day only. Next summer is asked in winter too, so seaside hotels do not read as unavailable out of season. Default: 06-20, 07-15, 08-15, 09-05"
+
+msgctxt "SettingsOptions::novoton_holidays::availability_check_cycle_days"
+msgid "Check every resort once every (days)"
+msgstr "Check every resort once every (days)"
+
+msgctxt "SettingsTooltips::novoton_holidays::availability_check_cycle_days"
+msgid "Each nightly run checks this share of the sold resorts (7 = one seventh a night), least recently checked first. One resort costs one room_price call per date. Default: 7"
+msgstr "Each nightly run checks this share of the sold resorts (7 = one seventh a night), least recently checked first. One resort costs one room_price call per date. Default: 7"
+
+msgctxt "SettingsOptions::novoton_holidays::availability_check_max_calls"
+msgid "Most calls in one run"
+msgstr "Most calls in one run"
+
+msgctxt "SettingsTooltips::novoton_holidays::availability_check_max_calls"
+msgid "The run stops before going over this many calls to Novoton; the resorts it did not reach go first the next night. Lower it if Novoton asks for fewer calls. Default: 120"
+msgstr "The run stops before going over this many calls to Novoton; the resorts it did not reach go first the next night. Lower it if Novoton asks for fewer calls. Default: 120"
+
+msgctxt "SettingsOptions::novoton_holidays::availability_check_max_minutes"
+msgid "Time budget for one run (minutes)"
+msgstr "Time budget for one run (minutes)"
+
+msgctxt "SettingsTooltips::novoton_holidays::availability_check_max_minutes"
+msgid "The run stops before this, so a run started at 04:00 ends before Add products at 04:30. Default: 20"
+msgstr "The run stops before this, so a run started at 04:00 ends before Add products at 04:30. Default: 20"
+
 msgctxt "Languages::novoton_holidays.api_price"
 msgid "API Price"
 msgstr "API Price"
@@ -3469,12 +3513,12 @@ msgid "Rebuild the calendar prices (no API calls)"
 msgstr "Rebuild the calendar prices (no API calls)"
 
 msgctxt "Languages::novoton_holidays.dash_job_room_price"
-msgid "Room price"
-msgstr "Room price"
+msgid "Availability check"
+msgstr "Availability check"
 
 msgctxt "Languages::novoton_holidays.dash_job_room_price_desc"
-msgid "Marks the hotels that have real-time prices"
-msgstr "Marks the hotels that have real-time prices"
+msgid "Weekly: asks Novoton which hotels have offers on the check dates, a seventh of the resorts each night; marks the hotels with prices"
+msgstr "Weekly: asks Novoton which hotels have offers on the check dates, a seventh of the resorts each night; marks the hotels with prices"
 
 msgctxt "Languages::novoton_holidays.dash_job_add_hotels_as_products"
 msgid "Add products"

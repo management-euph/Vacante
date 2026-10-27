@@ -1,7 +1,9 @@
 {* Cross-provider "no availability" contact requests (read-only grid).
    Novoton rows mirror novoton_alternative_requests (deep API detail lives on
    the Novoton → Alternative requests page); sphinx rows are internal-only —
-   no provider API request exists for them. *}
+   no provider API request exists for them. "Notify me" rows (request_type
+   notify) wait for one email when booking opens; an admin can cancel one,
+   which removes its address. *}
 
 {capture name="sidebar"}
 <div class="sidebar-row">
@@ -16,6 +18,16 @@
                 <option value="">--</option>
                 <option value="novoton" {if $search.provider == "novoton"}selected{/if}>Novoton</option>
                 <option value="sphinx" {if $search.provider == "sphinx"}selected{/if}>Sphinx</option>
+                <option value="eurosite" {if $search.provider == "eurosite"}selected{/if}>Eurosite</option>
+            </select>
+        </div>
+
+        <div class="sidebar-field">
+            <label>{__("travel_core.request_type")}:</label>
+            <select name="request_type">
+                <option value="">--</option>
+                <option value="alternatives" {if $search.request_type == "alternatives"}selected{/if}>{__("travel_core.request_type_alternatives")}</option>
+                <option value="notify" {if $search.request_type == "notify"}selected{/if}>{__("travel_core.request_type_notify")}</option>
             </select>
         </div>
 
@@ -75,6 +87,12 @@
                 {$req.hotel_name|default:"-"|escape:html}
                 <div class="muted" style="font-size:11px;">{$req.hotel_id|escape:html}{if $req.provider_request_id} &middot; {__("travel_core.provider_ref")|default:"provider ref"} #{$req.provider_request_id}{/if}</div>
             </td>
+            {if $req.request_type == "notify"}
+            <td colspan="2">
+                <span class="label label-info">{__("travel_core.request_type_notify")}</span>
+                <div class="muted" style="font-size:11px;">{__("travel_core.notify_watch_`$req.watch_for`")}</div>
+            </td>
+            {else}
             <td>
                 {$req.check_in|default:"-"} &rarr; {$req.check_out|default:"-"}
                 {if $req.nights}<div class="muted" style="font-size:11px;">{$req.nights} {__("travel_core.nights")|default:"nights"}</div>{/if}
@@ -83,7 +101,9 @@
                 {$req.adults}A{if $req.children > 0} + {$req.children}C{/if} &middot; {$req.num_rooms} {__("travel_core.rooms_short")|default:"cam."}
                 {if $req.children_ages}<div class="muted" style="font-size:11px;">{$req.children_ages|escape:html}</div>{/if}
             </td>
+            {/if}
             <td>
+                {if $req.request_type == "notify" && !$req.contact_email}<span class="muted">{__("travel_core.notify_address_removed")}</span>{/if}
                 {$req.contact_email|escape:html}
                 {if $req.contact_phone}<div class="muted" style="font-size:11px;">{$req.contact_phone|escape:html}</div>{/if}
                 {if $req.notes}<div class="muted" style="font-size:11px;">{$req.notes|escape:html|truncate:80}</div>{/if}
@@ -100,8 +120,20 @@
             <td>{$req.created_at|default:"-"}</td>
             <td>
                 {* Manual transitions only for internal-only providers —
-                   novoton rows track the provider workflow automatically. *}
-                {if $req.provider == 'sphinx' && $req.status != 'notified' && $req.status != 'booked' && $req.status != 'cancelled'}
+                   novoton rows track the provider workflow automatically.
+                   A waiting "notify me" request can be cancelled. *}
+                {if $req.request_type == 'notify'}
+                    {if $req.status == 'pending'}
+                    <form action="{""|fn_url}" method="post" name="travel_alt_status_{$req.request_id}" style="margin:0;">
+                        <input type="hidden" name="dispatch" value="travel_alternatives.update_status" />
+                        <input type="hidden" name="request_id" value="{$req.request_id}" />
+                        <input type="hidden" name="new_status" value="cancelled" />
+                        <input type="submit" class="btn" value="{__("cancel")}" />
+                    </form>
+                    {else}
+                        <span class="muted">&mdash;</span>
+                    {/if}
+                {elseif $req.provider == 'sphinx' && $req.status != 'notified' && $req.status != 'booked' && $req.status != 'cancelled'}
                 <form action="{""|fn_url}" method="post" name="travel_alt_status_{$req.request_id}" style="margin:0; white-space:nowrap;">
                     <input type="hidden" name="dispatch" value="travel_alternatives.update_status" />
                     <input type="hidden" name="request_id" value="{$req.request_id}" />

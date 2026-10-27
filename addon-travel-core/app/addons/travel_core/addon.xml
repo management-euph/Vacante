@@ -299,6 +299,13 @@
                         <default_value>Y</default_value>
                         <variants/>
                     </item>
+                    <!-- Off until the records have been checked on the live store
+                         (plan §14): the hotel page panels and their "notify me" form. -->
+                    <item id="availability_panels">
+                        <type>checkbox</type>
+                        <default_value>N</default_value>
+                        <variants/>
+                    </item>
                 </items>
             </section>
         </sections>
@@ -419,7 +426,10 @@
              mirrors its provider-level requests here (provider_request_id
              links back); sphinx writes here ONLY — internal follow-up, no
              provider API call. Runs on upgrade too (idempotent CREATE) so
-             existing installs get the table on deploy. -->
+             existing installs get the table on deploy. It also keeps the
+             hotel page's "notify me" requests (request_type notify); the
+             runtime heal, AlternativeRequestRepository::ensureTable(), adds
+             their columns to an older table. -->
         <item>
             CREATE TABLE IF NOT EXISTS `?:travel_alternative_requests` (
                 `request_id`          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -439,13 +449,18 @@
                 `contact_email`       VARCHAR(255) DEFAULT NULL,
                 `contact_phone`       VARCHAR(50)  DEFAULT NULL,
                 `notes`               TEXT,
+                `request_type`        VARCHAR(20)  NOT NULL DEFAULT 'alternatives' COMMENT 'alternatives, or notify: one email when booking opens',
+                `watch_for`           VARCHAR(20)  NOT NULL DEFAULT '' COMMENT 'notify: prices, booking or return',
+                `lang_code`           CHAR(2)      NOT NULL DEFAULT '' COMMENT 'notify: the language of the email',
+                `consent_at`          DATETIME     DEFAULT NULL COMMENT 'notify: when the guest ticked the consent box',
+                `consent_version`     VARCHAR(20)  NOT NULL DEFAULT '' COMMENT 'notify: which consent text they agreed to',
                 `status`              ENUM('pending','pending_manual','alternatives_found','notified','booked','expired','cancelled') NOT NULL DEFAULT 'pending',
                 `created_at`          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 `updated_at`          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 KEY `idx_provider` (`provider`),
                 KEY `idx_status` (`status`),
                 KEY `idx_created` (`created_at`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         </item>
         <item for="upgrade">
             CREATE TABLE IF NOT EXISTS `?:travel_alternative_requests` (
@@ -466,13 +481,18 @@
                 `contact_email`       VARCHAR(255) DEFAULT NULL,
                 `contact_phone`       VARCHAR(50)  DEFAULT NULL,
                 `notes`               TEXT,
+                `request_type`        VARCHAR(20)  NOT NULL DEFAULT 'alternatives' COMMENT 'alternatives, or notify: one email when booking opens',
+                `watch_for`           VARCHAR(20)  NOT NULL DEFAULT '' COMMENT 'notify: prices, booking or return',
+                `lang_code`           CHAR(2)      NOT NULL DEFAULT '' COMMENT 'notify: the language of the email',
+                `consent_at`          DATETIME     DEFAULT NULL COMMENT 'notify: when the guest ticked the consent box',
+                `consent_version`     VARCHAR(20)  NOT NULL DEFAULT '' COMMENT 'notify: which consent text they agreed to',
                 `status`              ENUM('pending','pending_manual','alternatives_found','notified','booked','expired','cancelled') NOT NULL DEFAULT 'pending',
                 `created_at`          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 `updated_at`          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 KEY `idx_provider` (`provider`),
                 KEY `idx_status` (`status`),
                 KEY `idx_created` (`created_at`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         </item>
 
         <!-- Uninstall SQL fallback: guarantees teardown of travel_core's data

@@ -48,6 +48,44 @@ final class PriceCheckFlags
     }
 
     /**
+     * The hotels a resort-level room_price answer offers, or NULL when it is
+     * no answer: a reply that did not parse, a refusal, or an <Error> and no
+     * offer. An empty document is Novoton's "no prices": an answer with no
+     * hotel. A hotel counts once one of its rows has a price above zero, the
+     * offers a customer's search would show.
+     *
+     * @return list<string>|null
+     */
+    public static function resortOffers(mixed $response, string $unparsedBody = ''): ?array
+    {
+        if (!$response instanceof \SimpleXMLElement) {
+            return self::isEmptyAnswer($unparsedBody) ? [] : null;
+        }
+        if (Refusal::reason($response) !== null) {
+            return null;
+        }
+
+        $hotels = [];
+        foreach ($response->xpath('//*[IdHotel]') ?: [] as $row) {
+            $hotelId = trim((string) $row->IdHotel);
+            if ($hotelId === '' || !ctype_digit($hotelId) || isset($hotels[$hotelId])) {
+                continue;
+            }
+            foreach ($row->xpath('.//Price') ?: [] as $price) {
+                if ((float) trim((string) $price) > 0) {
+                    $hotels[$hotelId] = true;
+                    break;
+                }
+            }
+        }
+        if ($hotels === [] && ($response->xpath('//Error | //error') ?: []) !== []) {
+            return null;
+        }
+
+        return array_map('strval', array_keys($hotels));
+    }
+
+    /**
      * Whether a reply is an empty document: an XML declaration and/or
      * whitespace (a UTF-8 BOM allowed) and nothing else. A zero-byte body is
      * not one: that is what a failed transfer looks like.

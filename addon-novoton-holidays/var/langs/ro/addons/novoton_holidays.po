@@ -132,6 +132,50 @@ msgctxt "SettingsOptions::novoton_holidays::booking_limits_header"
 msgid "Booking Limits"
 msgstr "Limite Rezervări"
 
+msgctxt "SettingsOptions::novoton_holidays::availability_check_header"
+msgid "Weekly availability check (room_price)"
+msgstr "Verificare săptămânală a disponibilității (room_price)"
+
+msgctxt "SettingsOptions::novoton_holidays::availability_check_near_days"
+msgid "Near dates (days from today)"
+msgstr "Date apropiate (zile de azi)"
+
+msgctxt "SettingsTooltips::novoton_holidays::availability_check_near_days"
+msgid "Check-ins this many days from the check, separated by commas. Every stay is 7 nights for 2 adults. Default: 14, 30"
+msgstr "Check-in-uri la atâtea zile de la verificare, separate prin virgulă. Fiecare sejur are 7 nopți pentru 2 adulți. Implicit: 14, 30"
+
+msgctxt "SettingsOptions::novoton_holidays::availability_check_season_dates"
+msgid "Season dates"
+msgstr "Date de sezon"
+
+msgctxt "SettingsTooltips::novoton_holidays::availability_check_season_dates"
+msgid "Peak-season check-ins: MM-DD means the next one of that date, YYYY-MM-DD that day only. Next summer is asked in winter too, so seaside hotels do not read as unavailable out of season. Default: 06-20, 07-15, 08-15, 09-05"
+msgstr "Check-in-uri din sezonul de vârf: LL-ZZ înseamnă următoarea dată de acest fel, AAAA-LL-ZZ doar acea zi. Vara următoare este verificată și iarna, ca hotelurile de pe litoral să nu apară indisponibile în extrasezon. Implicit: 06-20, 07-15, 08-15, 09-05"
+
+msgctxt "SettingsOptions::novoton_holidays::availability_check_cycle_days"
+msgid "Check every resort once every (days)"
+msgstr "Verifică fiecare stațiune o dată la (zile)"
+
+msgctxt "SettingsTooltips::novoton_holidays::availability_check_cycle_days"
+msgid "Each nightly run checks this share of the sold resorts (7 = one seventh a night), least recently checked first. One resort costs one room_price call per date. Default: 7"
+msgstr "Fiecare rulare de noapte verifică această parte din stațiunile vândute (7 = o șeptime pe noapte), întâi cele verificate cel mai demult. O stațiune costă un apel room_price pe dată. Implicit: 7"
+
+msgctxt "SettingsOptions::novoton_holidays::availability_check_max_calls"
+msgid "Most calls in one run"
+msgstr "Numărul maxim de apeluri într-o rulare"
+
+msgctxt "SettingsTooltips::novoton_holidays::availability_check_max_calls"
+msgid "The run stops before going over this many calls to Novoton; the resorts it did not reach go first the next night. Lower it if Novoton asks for fewer calls. Default: 120"
+msgstr "Rularea se oprește înainte să depășească atâtea apeluri către Novoton; stațiunile neatinse sunt primele în noaptea următoare. Micșorați valoarea dacă Novoton cere mai puține apeluri. Implicit: 120"
+
+msgctxt "SettingsOptions::novoton_holidays::availability_check_max_minutes"
+msgid "Time budget for one run (minutes)"
+msgstr "Timp maxim pentru o rulare (minute)"
+
+msgctxt "SettingsTooltips::novoton_holidays::availability_check_max_minutes"
+msgid "The run stops before this, so a run started at 04:00 ends before Add products at 04:30. Default: 20"
+msgstr "Rularea se oprește înainte de acest timp, astfel încât o rulare pornită la 04:00 se termină înainte de Adăugare produse la 04:30. Implicit: 20"
+
 msgctxt "SettingsOptions::novoton_holidays::api_url"
 msgid "API URL"
 msgstr "URL API"
@@ -3469,12 +3513,12 @@ msgid "Rebuild the calendar prices (no API calls)"
 msgstr "Reconstruiește prețurile din calendar (fără apeluri API)"
 
 msgctxt "Languages::novoton_holidays.dash_job_room_price"
-msgid "Room price"
-msgstr "Preț cameră"
+msgid "Availability check"
+msgstr "Verificare disponibilitate"
 
 msgctxt "Languages::novoton_holidays.dash_job_room_price_desc"
-msgid "Marks the hotels that have real-time prices"
-msgstr "Marchează hotelurile care au prețuri în timp real"
+msgid "Weekly: asks Novoton which hotels have offers on the check dates, a seventh of the resorts each night; marks the hotels with prices"
+msgstr "Săptămânal: întreabă Novoton ce hoteluri au oferte la datele verificate, o șeptime din stațiuni pe noapte; marchează hotelurile cu prețuri"
 
 msgctxt "Languages::novoton_holidays.dash_job_add_hotels_as_products"
 msgid "Add products"

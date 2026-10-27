@@ -2038,6 +2038,138 @@ Dacă ați plătit deja, vă rugăm să ignorați acest email.',
         'en' => 'Not reviewed yet: the review runs with Travel Core\'s next daily cron.',
         'ro' => 'Nerevizuit încă: revizuirea rulează cu următorul cron zilnic Travel Core.',
     ],
+    // Hotel page "notify me" requests (docs/novoton-availability-gaps-plan.md §8):
+    // the Availability Requests grid, and the one email when booking opens.
+    'travel_core.request_type' => [
+        'en' => 'Type',
+        'ro' => 'Tip',
+    ],
+    'travel_core.request_type_alternatives' => [
+        'en' => 'Alternatives',
+        'ro' => 'Alternative',
+    ],
+    'travel_core.request_type_notify' => [
+        'en' => 'Notify me',
+        'ro' => 'Anunță-mă',
+    ],
+    'travel_core.notify_watch_prices' => [
+        'en' => 'When prices appear',
+        'ro' => 'Când apar prețurile',
+    ],
+    'travel_core.notify_watch_booking' => [
+        'en' => 'When it can be booked',
+        'ro' => 'Când se poate rezerva',
+    ],
+    'travel_core.notify_watch_return' => [
+        'en' => 'If it returns',
+        'ro' => 'Dacă revine',
+    ],
+    'travel_core.notify_address_removed' => [
+        'en' => 'Address removed',
+        'ro' => 'Adresă ștearsă',
+    ],
+    'travel_core.notify_mail_subject_booking' => [
+        'en' => '[hotel] can be booked again',
+        'ro' => '[hotel] se poate rezerva din nou',
+    ],
+    'travel_core.notify_mail_body_booking' => [
+        'en' => 'Hello,
+
+On [date] you asked us to let you know when [hotel] could be booked. It can now be booked on our site:
+[link]
+
+This is the only email about it: we have deleted your email address from this request.',
+        'ro' => 'Bună ziua,
+
+Pe [date] ne-ați rugat să vă anunțăm când se poate rezerva [hotel]. Acum se poate rezerva pe site-ul nostru:
+[link]
+
+Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail din această cerere.',
+    ],
+    'travel_core.notify_mail_subject_prices' => [
+        'en' => 'Prices for [hotel] are out',
+        'ro' => 'Au apărut prețurile pentru [hotel]',
+    ],
+    'travel_core.notify_mail_body_prices' => [
+        'en' => 'Hello,
+
+On [date] you asked us to let you know when prices for [hotel] were published. They are now on our site:
+[link]
+
+This is the only email about it: we have deleted your email address from this request.',
+        'ro' => 'Bună ziua,
+
+Pe [date] ne-ați rugat să vă anunțăm când se publică prețurile pentru [hotel]. Acum sunt pe site-ul nostru:
+[link]
+
+Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail din această cerere.',
+    ],
+    // The hotel page's availability panel (AvailabilityPanel, plan §7-8). [from] and
+    // [to] are months, [date] a day, as the page formats them.
+    'travel_core.availability_panel_between_seasons' => [
+        'en' => 'Prices for the next season are not published yet.',
+        'ro' => 'Prețurile pentru sezonul următor nu sunt publicate încă.',
+    ],
+    'travel_core.availability_panel_last_season' => [
+        'en' => 'Last season: [from] – [to].',
+        'ro' => 'Sezonul trecut: [from] – [to].',
+    ],
+    'travel_core.availability_panel_published_from' => [
+        'en' => 'Prices are published for stays from [date].',
+        'ro' => 'Prețurile sunt publicate pentru sejururi de la [date].',
+    ],
+    'travel_core.availability_panel_not_offered' => [
+        'en' => 'Online booking for this hotel is not available at the moment.',
+        'ro' => 'Rezervarea online pentru acest hotel nu este disponibilă momentan.',
+    ],
+    'travel_core.availability_panel_dormant' => [
+        'en' => 'This hotel has had no offers for over a year.',
+        'ro' => 'Acest hotel nu a avut oferte de peste un an.',
+    ],
+    'travel_core.availability_panel_unavailable' => [
+        'en' => 'No longer available for booking.',
+        'ro' => 'Nu mai este disponibil pentru rezervare.',
+    ],
+    'travel_core.availability_panel_similar' => [
+        'en' => 'Similar hotels you can book now',
+        'ro' => 'Hoteluri asemănătoare pe care le puteți rezerva acum',
+    ],
+    'travel_core.notify_me_prices' => [
+        'en' => 'Notify me when prices appear',
+        'ro' => 'Anunță-mă când apar prețurile',
+    ],
+    'travel_core.notify_me_booking' => [
+        'en' => 'Notify me when it can be booked',
+        'ro' => 'Anunță-mă când se poate rezerva',
+    ],
+    'travel_core.notify_me_return' => [
+        'en' => 'Notify me if it returns',
+        'ro' => 'Anunță-mă dacă revine',
+    ],
+    'travel_core.notify_email_placeholder' => [
+        'en' => 'Your email address',
+        'ro' => 'Adresa dvs. de e-mail',
+    ],
+    'travel_core.notify_consent' => [
+        'en' => 'I agree to receive one email when booking opens for this hotel. My email address is used only for this and is deleted once the email is sent, or after 12 months at the latest.',
+        'ro' => 'Sunt de acord să primesc un singur e-mail când se deschid rezervările pentru acest hotel. Adresa mea de e-mail este folosită doar în acest scop și este ștearsă după trimiterea e-mailului sau cel târziu după 12 luni.',
+    ],
+    'travel_core.notify_consent_privacy' => [
+        'en' => 'See the Privacy Policy.',
+        'ro' => 'Vezi Politica de confidențialitate.',
+    ],
+    'travel_core.notify_request_saved' => [
+        'en' => 'Thank you. We will email you once, when booking opens for this hotel.',
+        'ro' => 'Mulțumim. Vă vom trimite un singur e-mail, când se deschid rezervările pentru acest hotel.',
+    ],
+    'travel_core.notify_request_no_consent' => [
+        'en' => 'Please tick the box to agree to the email.',
+        'ro' => 'Bifați căsuța pentru a fi de acord cu e-mailul.',
+    ],
+    'travel_core.notify_request_unavailable' => [
+        'en' => 'This hotel takes no "notify me" requests at the moment.',
+        'ro' => 'Acest hotel nu primește cereri „Anunță-mă” momentan.',
+    ],
     // Hotel page Design A (blocks/product_templates/travelcore_design_a.tpl).
     // The BARE travelcore_design_a key labels its entry in the Appearance
     // "Product detailed page view" dropdown, like travelcore_template.

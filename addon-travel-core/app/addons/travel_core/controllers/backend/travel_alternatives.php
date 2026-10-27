@@ -6,8 +6,8 @@ declare(strict_types=1);
  *
  * Cross-provider grid of "no availability" contact requests stored in
  * travel_alternative_requests (novoton mirrors its provider records here;
- * sphinx records are internal-only). Read-only listing with provider/status
- * filters and pagination.
+ * sphinx records are internal-only), and of the hotel page's "notify me"
+ * requests. Listing with provider/status/type filters and pagination.
  *
  * @package TravelCore
  * @since 1.5.0
@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Repository\AlternativeRequestRepository;
+use Tygh\Addons\TravelCore\Repository\NotifyRequestRepository;
 use Tygh\Tygh;
 
 if (!defined('BOOTSTRAP')) {
@@ -36,6 +37,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $mode === 'update_status') {
 
     if ($request === null) {
         fn_set_notification('E', __('error'), __('travel_core.request_not_found'));
+    } elseif (($request['request_type'] ?? '') === NotifyRequestRepository::TYPE) {
+        // A "notify me" request can only be cancelled; that removes its address.
+        if ($newStatus === 'cancelled' && (new NotifyRequestRepository())->cancel($requestId)) {
+            fn_set_notification('N', __('notice'), __('travel_core.status_updated'));
+        } else {
+            fn_set_notification('E', __('error'), __('travel_core.invalid_status'));
+        }
     } elseif (($request['provider'] ?? '') !== 'sphinx') {
         fn_set_notification('E', __('error'), __('travel_core.status_managed_by_provider'));
     } elseif (!in_array($newStatus, AlternativeRequestRepository::MANUAL_STATUSES, true)) {

@@ -14,10 +14,90 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  * (provider_request_id links back to novoton_alternative_requests); sphinx
  * writes here ONLY — internal follow-up, no provider API call.
  *
+ * The same table keeps the hotel page's "notify me" requests
+ * (request_type 'notify', NotifyRequestRepository;
+ * docs/novoton-availability-gaps-plan.md §8): one email when booking opens,
+ * with the guest's consent.
+ *
  * @since 1.5.0
  */
 class AlternativeRequestRepository
 {
+    /** Same statement as addon.xml's install/upgrade items (AlternativeRequestsTableTest pins it). */
+    public const string CREATE_SQL = 'CREATE TABLE IF NOT EXISTS `?:travel_alternative_requests` (
+        `request_id`          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        `provider`            VARCHAR(50)  NOT NULL COMMENT \'novoton, sphinx\',
+        `provider_request_id` INT UNSIGNED DEFAULT NULL COMMENT \'Row id in the provider request table, when mirrored\',
+        `user_id`             INT UNSIGNED DEFAULT NULL COMMENT \'FK to ?:users\',
+        `hotel_id`            VARCHAR(100) NOT NULL,
+        `hotel_name`          VARCHAR(255) DEFAULT NULL,
+        `product_id`          INT UNSIGNED DEFAULT NULL COMMENT \'FK to ?:products\',
+        `check_in`            DATE         DEFAULT NULL,
+        `check_out`           DATE         DEFAULT NULL,
+        `nights`              INT UNSIGNED DEFAULT NULL,
+        `num_rooms`           TINYINT UNSIGNED NOT NULL DEFAULT 1,
+        `adults`              TINYINT UNSIGNED NOT NULL DEFAULT 2,
+        `children`            TINYINT UNSIGNED NOT NULL DEFAULT 0,
+        `children_ages`       VARCHAR(100) DEFAULT NULL,
+        `contact_email`       VARCHAR(255) DEFAULT NULL,
+        `contact_phone`       VARCHAR(50)  DEFAULT NULL,
+        `notes`               TEXT,
+        `request_type`        VARCHAR(20)  NOT NULL DEFAULT \'alternatives\' COMMENT \'alternatives, or notify: one email when booking opens\',
+        `watch_for`           VARCHAR(20)  NOT NULL DEFAULT \'\' COMMENT \'notify: prices, booking or return\',
+        `lang_code`           CHAR(2)      NOT NULL DEFAULT \'\' COMMENT \'notify: the language of the email\',
+        `consent_at`          DATETIME     DEFAULT NULL COMMENT \'notify: when the guest ticked the consent box\',
+        `consent_version`     VARCHAR(20)  NOT NULL DEFAULT \'\' COMMENT \'notify: which consent text they agreed to\',
+        `status`              ENUM(\'pending\',\'pending_manual\',\'alternatives_found\',\'notified\',\'booked\',\'expired\',\'cancelled\') NOT NULL DEFAULT \'pending\',
+        `created_at`          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        `updated_at`          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        KEY `idx_provider` (`provider`),
+        KEY `idx_status` (`status`),
+        KEY `idx_created` (`created_at`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4';
+
+    /**
+     * Columns added since the table was first created: what ensureTable()
+     * adds to a store's older table, each defined as in CREATE_SQL.
+     *
+     * @var array<string, string>
+     */
+    public const array ADDED_COLUMNS = [
+        'request_type' => 'VARCHAR(20) NOT NULL DEFAULT \'alternatives\' COMMENT \'alternatives, or notify: one email when booking opens\' AFTER `notes`',
+        'watch_for' => 'VARCHAR(20) NOT NULL DEFAULT \'\' COMMENT \'notify: prices, booking or return\' AFTER `request_type`',
+        'lang_code' => 'CHAR(2) NOT NULL DEFAULT \'\' COMMENT \'notify: the language of the email\' AFTER `watch_for`',
+        'consent_at' => 'DATETIME DEFAULT NULL COMMENT \'notify: when the guest ticked the consent box\' AFTER `lang_code`',
+        'consent_version' => 'VARCHAR(20) NOT NULL DEFAULT \'\' COMMENT \'notify: which consent text they agreed to\' AFTER `consent_at`',
+    ];
+
+    private static bool $ensured = false;
+
+    /**
+     * Creates the table, and the columns added since, when missing; once per
+     * request. Stores updated by pulling code get them from the runtime heal
+     * (fn_travel_core_ensure_schema), and every query that reads a later
+     * column calls this first, so a cron that runs before any admin page
+     * still works.
+     */
+    public static function ensureTable(): void
+    {
+        if (self::$ensured) {
+            return;
+        }
+        db_query(self::CREATE_SQL);
+        foreach (self::ADDED_COLUMNS as $column => $definition) {
+            if (TypeCoerce::toString(db_get_field('SHOW COLUMNS FROM ?:travel_alternative_requests LIKE ?s', $column)) === '') {
+                db_query('ALTER TABLE ?:travel_alternative_requests ADD COLUMN `' . $column . '` ' . $definition);
+            }
+        }
+        self::$ensured = true;
+    }
+
+    /** Lets a test run the heal again (it runs once per request). */
+    public static function resetEnsured(): void
+    {
+        self::$ensured = false;
+    }
+
     /**
      * Statuses an admin may set manually from the shared grid. Only
      * internal-only providers (sphinx) are managed here — novoton rows
@@ -88,18 +168,21 @@ class AlternativeRequestRepository
     /**
      * Expire stale open requests — same 30-day policy as novoton's provider
      * table. Optionally restricted to one provider (the shared cron passes
-     * 'sphinx'; novoton propagates its own expiry here itself).
+     * 'sphinx'; novoton propagates its own expiry here itself). Notify-me
+     * requests are not touched: they wait up to 12 months.
      *
      * @return int Rows expired
      */
     public function expireOlderThan(int $days = 30, string $provider = ''): int
     {
+        self::ensureTable();
         $providerCondition = $provider !== '' ? db_quote(' AND provider = ?s', $provider) : '';
 
+        // Notify-me requests wait up to 12 months (NotifyRequestRepository).
         return TypeCoerce::toInt(db_query(
             "UPDATE ?:travel_alternative_requests
              SET status = 'expired'
-             WHERE status IN ('pending', 'pending_manual')
+             WHERE status IN ('pending', 'pending_manual') AND request_type <> 'notify'
              AND created_at < DATE_SUB(NOW(), INTERVAL ?i DAY) ?p",
             $days,
             $providerCondition,
@@ -139,11 +222,13 @@ class AlternativeRequestRepository
      */
     public function getListing(array $params = []): array
     {
+        self::ensureTable();
         $default_params = [
             'page' => 1,
             'items_per_page' => 50,
             'provider' => '',
             'status' => '',
+            'request_type' => '',
             'q' => '',
         ];
 
@@ -152,6 +237,7 @@ class AlternativeRequestRepository
         $params['items_per_page'] = max(1, TypeCoerce::toInt($params['items_per_page']));
         $params['provider'] = trim(TypeCoerce::toString($params['provider']));
         $params['status'] = trim(TypeCoerce::toString($params['status']));
+        $params['request_type'] = trim(TypeCoerce::toString($params['request_type']));
         $params['q'] = trim(TypeCoerce::toString($params['q']));
 
         $condition = '';
@@ -160,6 +246,9 @@ class AlternativeRequestRepository
         }
         if ($params['status'] !== '') {
             $condition .= db_quote(' AND r.status = ?s', $params['status']);
+        }
+        if ($params['request_type'] !== '') {
+            $condition .= db_quote(' AND r.request_type = ?s', $params['request_type']);
         }
         if ($params['q'] !== '') {
             $condition .= db_quote(

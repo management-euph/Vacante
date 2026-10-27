@@ -116,6 +116,12 @@ final class TravelCoreConfig
         return AvailabilityMode::fromSetting(Registry::get('addons.travel_core.availability_mode_' . $provider));
     }
 
+    /** Whether hotel pages show the availability panels and their "notify me" form (off by default). */
+    public static function availabilityPanelsShown(): bool
+    {
+        return Registry::get('addons.travel_core.availability_panels') === 'Y';
+    }
+
     /** The admin's months and "on request counts", with the plan's other thresholds. */
     public static function getAvailabilityThresholds(): AvailabilityThresholds
     {

@@ -45,7 +45,7 @@ if ($mode === 'run') {
     if (empty($cron_mode) || !in_array($cron_mode, $supported_modes, true)) {
         header('Content-Type: text/plain');
         echo "Travel Core Cron - Available modes:\n";
-        echo "  exchange_rates              - Update BNR exchange rates; also the weekly hotel availability review\n";
+        echo "  exchange_rates              - Update BNR exchange rates; also the weekly hotel availability review and the \"notify me\" emails\n";
         echo "  expire_alternative_requests - Expire stale availability requests (&days=30) and purge old terminal rows (&purge_days=180)\n";
         echo "  balances                    - Deposit bookings: balance reminders (7 and 2 days before) and overdue alerts (daily)\n\n";
         echo "Usage: dispatch=travel_cron.run&access_key=KEY&cron_mode=exchange_rates\n";
@@ -94,6 +94,8 @@ if ($mode === 'run') {
 
         // The weekly hotel availability review rides on this daily line.
         echo \Tygh\Addons\TravelCore\Services\AvailabilityReview::runDaily() . "\n";
+        // And the hotel page's "notify me" emails, once booking opens.
+        echo \Tygh\Addons\TravelCore\Services\AvailabilityNotifyMail::runDaily() . "\n";
     }
 
     echo "\n[" . date('Y-m-d H:i:s') . "] Cron job completed.\n";

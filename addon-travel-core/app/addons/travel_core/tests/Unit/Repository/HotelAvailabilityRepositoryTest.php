@@ -203,4 +203,27 @@ final class HotelAvailabilityRepositoryTest extends TestCase
         self::assertStringContainsString('listed_missing_runs = 0', $query, 'a hotel a complete list missed is out');
         self::assertStringContainsString("listed_last_seen_at >= '2026-09-25 03:00:00'", $query, 'so is one no list had for 30 days: a group that really shrank is measured by its new size');
     }
+
+    /** A supplier's check asks about the first week of hotels whose prices start later and had no offer in their latest check. */
+    public function testHotelsAwaitingTheirFirstOfferComeWithTheirFirstPricedDate(): void
+    {
+        $queries = [];
+        DbStub::$getArray = static function (string $sql, mixed ...$params) use (&$queries): array {
+            $queries[] = db_quote($sql, ...$params);
+
+            return [
+                ['hotel_id' => '476', 'contract_from' => '2026-12-20'],
+                ['hotel_id' => 'RO1001', 'contract_from' => '2027-05-01 00:00:00'],
+                ['hotel_id' => '477', 'contract_from' => '0000-00'],
+            ];
+        };
+
+        $starts = (new HotelAvailabilityRepository())->awaitingFirstOffer('novoton', ['476', '', 'RO1001', '476', '477'], '2026-10-26');
+
+        self::assertSame([476 => '2026-12-20', 'RO1001' => '2027-05-01'], $starts, 'a numeric id comes back as an int key');
+        self::assertCount(1, $queries);
+        self::assertStringContainsString("provider = 'novoton' AND hotel_id IN ('476', 'RO1001', '477') AND contract_from > '2026-10-26' AND offer_next_date IS NULL", $queries[0]);
+        self::assertSame([], (new HotelAvailabilityRepository())->awaitingFirstOffer('novoton', [''], '2026-10-26'));
+        self::assertCount(1, $queries, 'nothing to ask, no query');
+    }
 }
