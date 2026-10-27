@@ -38,6 +38,8 @@ final class NotifyRequestForm
     /**
      * @param array<string, mixed> $input the form: product_id, email, consent, website (the honeypot)
      * @param array<array-key, mixed>|\ArrayAccess<mixed, mixed> $session the visit (CS-Cart's session object)
+     * @param \DateTimeImmutable $now the time of the request (the cooldown and the stored date)
+     * @param string $lang the visitor's language; its first two letters are stored
      *
      * @return 'saved'|'invalid_email'|'no_consent'|'too_soon'|'unavailable'|'failed'
      */

@@ -229,7 +229,6 @@ final class ResortCheckRunner
         $answer = ['answered' => 0, 'offers' => [], 'errors' => []];
         foreach ($dates as $date) {
             $this->beforeCall();
-            $reply = false;
             $error = '';
             try {
                 $reply = $this->api->pricing()->getRoomPriceByResort([
