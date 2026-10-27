@@ -2878,6 +2878,50 @@ msgctxt "Languages::travel_core.availability_card_not_reviewed"
 msgid "Not reviewed yet: the review runs with Travel Core's next daily cron."
 msgstr "Nerevizuit încă: revizuirea rulează cu următorul cron zilnic Travel Core."
 
+msgctxt "Languages::travel_core.request_type"
+msgid "Type"
+msgstr "Tip"
+
+msgctxt "Languages::travel_core.request_type_alternatives"
+msgid "Alternatives"
+msgstr "Alternative"
+
+msgctxt "Languages::travel_core.request_type_notify"
+msgid "Notify me"
+msgstr "Anunță-mă"
+
+msgctxt "Languages::travel_core.notify_watch_prices"
+msgid "When prices appear"
+msgstr "Când apar prețurile"
+
+msgctxt "Languages::travel_core.notify_watch_booking"
+msgid "When it can be booked"
+msgstr "Când se poate rezerva"
+
+msgctxt "Languages::travel_core.notify_watch_return"
+msgid "If it returns"
+msgstr "Dacă revine"
+
+msgctxt "Languages::travel_core.notify_address_removed"
+msgid "Address removed"
+msgstr "Adresă ștearsă"
+
+msgctxt "Languages::travel_core.notify_mail_subject_booking"
+msgid "[hotel] can be booked again"
+msgstr "[hotel] se poate rezerva din nou"
+
+msgctxt "Languages::travel_core.notify_mail_body_booking"
+msgid "Hello,\n\nOn [date] you asked us to let you know when [hotel] could be booked. It can now be booked on our site:\n[link]\n\nThis is the only email about it: we have deleted your email address from this request."
+msgstr "Bună ziua,\n\nPe [date] ne-ați rugat să vă anunțăm când se poate rezerva [hotel]. Acum se poate rezerva pe site-ul nostru:\n[link]\n\nAcesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail din această cerere."
+
+msgctxt "Languages::travel_core.notify_mail_subject_prices"
+msgid "Prices for [hotel] are out"
+msgstr "Au apărut prețurile pentru [hotel]"
+
+msgctxt "Languages::travel_core.notify_mail_body_prices"
+msgid "Hello,\n\nOn [date] you asked us to let you know when prices for [hotel] were published. They are now on our site:\n[link]\n\nThis is the only email about it: we have deleted your email address from this request."
+msgstr "Bună ziua,\n\nPe [date] ne-ați rugat să vă anunțăm când se publică prețurile pentru [hotel]. Acum sunt pe site-ul nostru:\n[link]\n\nAcesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail din această cerere."
+
 msgctxt "Languages::travelcore_design_a"
 msgid "Travel Core · Design A"
 msgstr "Travel Core · Design A"

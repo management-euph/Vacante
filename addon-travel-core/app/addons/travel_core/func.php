@@ -219,6 +219,10 @@ function fn_travel_core_ensure_schema(): void
     // upgraded by pulling code.
     require_once __DIR__ . '/src/Repository/HotelAvailabilityRepository.php';
     \Tygh\Addons\TravelCore\Repository\HotelAvailabilityRepository::ensureTables();
+    // The shared availability requests and the hotel page's "notify me"
+    // columns (audit data-perf-2: the table had no runtime heal).
+    require_once __DIR__ . '/src/Repository/AlternativeRequestRepository.php';
+    \Tygh\Addons\TravelCore\Repository\AlternativeRequestRepository::ensureTable();
 }
 
 /**

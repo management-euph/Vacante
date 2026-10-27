@@ -2878,6 +2878,50 @@ msgctxt "Languages::travel_core.availability_card_not_reviewed"
 msgid "Not reviewed yet: the review runs with Travel Core's next daily cron."
 msgstr "Not reviewed yet: the review runs with Travel Core's next daily cron."
 
+msgctxt "Languages::travel_core.request_type"
+msgid "Type"
+msgstr "Type"
+
+msgctxt "Languages::travel_core.request_type_alternatives"
+msgid "Alternatives"
+msgstr "Alternatives"
+
+msgctxt "Languages::travel_core.request_type_notify"
+msgid "Notify me"
+msgstr "Notify me"
+
+msgctxt "Languages::travel_core.notify_watch_prices"
+msgid "When prices appear"
+msgstr "When prices appear"
+
+msgctxt "Languages::travel_core.notify_watch_booking"
+msgid "When it can be booked"
+msgstr "When it can be booked"
+
+msgctxt "Languages::travel_core.notify_watch_return"
+msgid "If it returns"
+msgstr "If it returns"
+
+msgctxt "Languages::travel_core.notify_address_removed"
+msgid "Address removed"
+msgstr "Address removed"
+
+msgctxt "Languages::travel_core.notify_mail_subject_booking"
+msgid "[hotel] can be booked again"
+msgstr "[hotel] can be booked again"
+
+msgctxt "Languages::travel_core.notify_mail_body_booking"
+msgid "Hello,\n\nOn [date] you asked us to let you know when [hotel] could be booked. It can now be booked on our site:\n[link]\n\nThis is the only email about it: we have deleted your email address from this request."
+msgstr "Hello,\n\nOn [date] you asked us to let you know when [hotel] could be booked. It can now be booked on our site:\n[link]\n\nThis is the only email about it: we have deleted your email address from this request."
+
+msgctxt "Languages::travel_core.notify_mail_subject_prices"
+msgid "Prices for [hotel] are out"
+msgstr "Prices for [hotel] are out"
+
+msgctxt "Languages::travel_core.notify_mail_body_prices"
+msgid "Hello,\n\nOn [date] you asked us to let you know when prices for [hotel] were published. They are now on our site:\n[link]\n\nThis is the only email about it: we have deleted your email address from this request."
+msgstr "Hello,\n\nOn [date] you asked us to let you know when prices for [hotel] were published. They are now on our site:\n[link]\n\nThis is the only email about it: we have deleted your email address from this request."
+
 msgctxt "Languages::travelcore_design_a"
 msgid "Travel Core · Design A"
 msgstr "Travel Core · Design A"

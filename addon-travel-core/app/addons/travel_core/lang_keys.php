@@ -2038,6 +2038,72 @@ Dacă ați plătit deja, vă rugăm să ignorați acest email.',
         'en' => 'Not reviewed yet: the review runs with Travel Core\'s next daily cron.',
         'ro' => 'Nerevizuit încă: revizuirea rulează cu următorul cron zilnic Travel Core.',
     ],
+    // Hotel page "notify me" requests (docs/novoton-availability-gaps-plan.md §8):
+    // the Availability Requests grid, and the one email when booking opens.
+    'travel_core.request_type' => [
+        'en' => 'Type',
+        'ro' => 'Tip',
+    ],
+    'travel_core.request_type_alternatives' => [
+        'en' => 'Alternatives',
+        'ro' => 'Alternative',
+    ],
+    'travel_core.request_type_notify' => [
+        'en' => 'Notify me',
+        'ro' => 'Anunță-mă',
+    ],
+    'travel_core.notify_watch_prices' => [
+        'en' => 'When prices appear',
+        'ro' => 'Când apar prețurile',
+    ],
+    'travel_core.notify_watch_booking' => [
+        'en' => 'When it can be booked',
+        'ro' => 'Când se poate rezerva',
+    ],
+    'travel_core.notify_watch_return' => [
+        'en' => 'If it returns',
+        'ro' => 'Dacă revine',
+    ],
+    'travel_core.notify_address_removed' => [
+        'en' => 'Address removed',
+        'ro' => 'Adresă ștearsă',
+    ],
+    'travel_core.notify_mail_subject_booking' => [
+        'en' => '[hotel] can be booked again',
+        'ro' => '[hotel] se poate rezerva din nou',
+    ],
+    'travel_core.notify_mail_body_booking' => [
+        'en' => 'Hello,
+
+On [date] you asked us to let you know when [hotel] could be booked. It can now be booked on our site:
+[link]
+
+This is the only email about it: we have deleted your email address from this request.',
+        'ro' => 'Bună ziua,
+
+Pe [date] ne-ați rugat să vă anunțăm când se poate rezerva [hotel]. Acum se poate rezerva pe site-ul nostru:
+[link]
+
+Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail din această cerere.',
+    ],
+    'travel_core.notify_mail_subject_prices' => [
+        'en' => 'Prices for [hotel] are out',
+        'ro' => 'Au apărut prețurile pentru [hotel]',
+    ],
+    'travel_core.notify_mail_body_prices' => [
+        'en' => 'Hello,
+
+On [date] you asked us to let you know when prices for [hotel] were published. They are now on our site:
+[link]
+
+This is the only email about it: we have deleted your email address from this request.',
+        'ro' => 'Bună ziua,
+
+Pe [date] ne-ați rugat să vă anunțăm când se publică prețurile pentru [hotel]. Acum sunt pe site-ul nostru:
+[link]
+
+Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail din această cerere.',
+    ],
     // Hotel page Design A (blocks/product_templates/travelcore_design_a.tpl).
     // The BARE travelcore_design_a key labels its entry in the Appearance
     // "Product detailed page view" dropdown, like travelcore_template.
