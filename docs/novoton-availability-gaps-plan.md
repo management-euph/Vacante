@@ -705,7 +705,7 @@ cover:
 | 0b | Eurosite and Sphinx fixes that would corrupt the records or mislead the report — **done 2026-10-21** (§15.4) | Small fixes | S |
 | 1a | Travel Core: the contract with supplier capabilities (§15.3), the evidence and log tables (schema self-heal), the policy, the date windows (moved from Eurosite), settings (a mode per supplier; hide after N months, default 12; what counts as availability), the Hotel availability page with a supplier filter, CSV, weekly email; the weekly step in Travel Core's existing cron (§4.5). Novoton: the evidence source (passive capture, backfill), the Tools page card — **these done 2026-10-23 (§16)**; `room_price` reworked into the weekly resort check (§4.3) — **done 2026-10-26 (§16.5)** | No | L |
 | 1b | Eurosite and Sphinx: record what their existing checks and hotel-page searches already fetch, hotel-list completeness, bookings read back, dashboard cards; Sphinx stores `giata_id` (§15.3); Eurosite's `full` takes its steps' run locks (§4.5) — **done 2026-10-23 (§16.4)** | No | M |
-| 2 | Hotel-page panels; "notify me" and "prices are out" emails; similar hotels; date-picker window; language keys. All suppliers; Eurosite first needs a request flow | Yes | M |
+| 2 | Hotel-page panels; "notify me" and "prices are out" emails; similar hotels; date-picker window; language keys. All suppliers; Eurosite first needs a request flow. **Back end done 2026-10-27 (§16.6)**, behind a switch that is off; the panels on the page and the date-picker window wait for the Design A page work | Yes | M |
 | 3 | Automatic mode, per supplier: dormant / left the list → Hidden, and back to Active; brake; overrides; `gateHidden` for bookings. Novoton first (Feb–Mar 2027) | Yes | M |
 | 4 | Closed hotels: mark closed, redirect target, 301 controller, grace checks | Yes | S |
 | 5 | Purchasing list of not-offered hotels with their demand | Staff only | S |
@@ -1278,7 +1278,37 @@ What this changes for the records and the report:
   latest check".** Next summer is among the dates, so seaside hotels can
   become products in winter (§4.3).
 
-### 16.6 Next
+### 16.6 Phase 2, the back end (done 2026-10-27)
+
+Decided 2026-10-27: phase 2 starts with what does not touch the hotel page,
+because another branch is rebuilding that page (Design A,
+`docs/hotel-page-design-a-plan.md`: search bar, calendar, results). The
+panels go onto the page once that work has landed, so the two do not edit
+the same templates; the date-picker window (§7.1) goes with them, into the
+new calendar. Everything customer-facing is behind a new setting, off by
+default: Travel Core → Settings → "Show availability panels on hotel pages",
+to switch on once the Hotel availability page looks right on the live store
+(§14). PHPStan level 10, both CS Fixer configs, Rector and the four suites
+pass; the storage, the emails and the panel's queries were run on MariaDB
+10.11, the admin grid rendered with Smarty 5.
+
+| Piece | Where (travel_core) | Notes |
+|---|---|---|
+| "Notify me" requests | `Repository\NotifyRequestRepository`, in `travel_alternative_requests` | As §8 planned, beside the alternatives requests: `request_type` notify, what the guest waits for (`watch_for`: prices, booking, return), the email's language, when they consented and to which text (version `2026-10-17`). Kept only in Travel Core's table, for every supplier: Novoton's own table is for its alternatives workflow. One waiting request per address and hotel. The address is removed once the email went out, when an admin cancels the request, or after 12 months; the 30-day expiry of alternatives requests leaves them alone |
+| The table's heal | `AlternativeRequestRepository::ensureTable()`, called by `fn_travel_core_ensure_schema` and by every query that reads the new columns | Closes audit `data-perf-2`: the table had no runtime heal. Creates it, and adds the new columns to an older one; `AlternativeRequestsTableTest` pins addon.xml to it |
+| The one email | `Services\AvailabilityNotifyMail`, on Travel Core's daily line after the review | Once booking opened since the request: an offer seen (an immediate one, when on-request offers do not count), or, for a guest waiting for prices, prices published for a date from today on. In the guest's language, from language keys, linking to the hotel page. At most 200 a run; none while the product is disabled; a failed send is tried again the next day |
+| The panel's wording | `Services\AvailabilityPanel` | Per product, from the records: §7's states and texts, the "notify me" each offers, last season's months (the latest run of months with offers in the past 13; one month without offers stays inside a season), the first published date. No panel for a bookable hotel, one without records, a supplier set to Off, or while the setting is off |
+| Similar hotels | the same | Up to 3 of the same supplier and destination that can be booked now, with an Active product, at most a star apart (stars from each supplier's hotel data), the latest offers first; hotels without stars come after |
+| The form | `controllers/frontend/travel_availability.php` (`travel_availability.notify`), `Services\NotifyRequestForm` | Email and the consent box of §8; a honeypot field, a minute between requests and five per visit. What the guest waits for comes from the panel, never from the form |
+| Admin grid | Travel → Availability Requests | Shows them with what they wait for, filters by type (and Eurosite), and can cancel one |
+| Language keys | `lang_keys.php`, both `.po` | The panel, the buttons, the consent text of §8, the form's answers, the emails, the grid |
+
+Still to do in phase 2: the panel and its form on both hotel page templates,
+the date-picker window (§7.1), and optional listing labels.
+
+### 16.7 Next
 
 6. Calibration on the live store (§14) once the suppliers have recorded for a
-   few weeks, then phase 2 (the hotel page and listings, §8).
+   few weeks; then switch the panels on.
+7. Phase 2's page part once the Design A results work has landed: the panel
+   and form on both templates, the date-picker window.
