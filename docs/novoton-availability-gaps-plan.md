@@ -297,6 +297,13 @@ does in practice, and its settings, are in §16.5.
     6 dates ≈ 420 calls.
   - Use the per-hotel `room_price` only for hotels a resort answer can't cover,
     such as a missing or mismatched city.
+  - **Skip dates without published prices** (added 2026-10-28, §16.7): a date
+    none of the resort's hotels has a priceinfo price for can have no offer,
+    so it is not asked and counts as answered without one. A hotel whose
+    prices were never read, whose window ended before today, or whose latest
+    check found an offer outside it keeps its resort's every date asked.
+    Out of season this leaves out most of a seaside resort's dates. A setting,
+    on by default; `&skip_unpriced=0` asks every date for one run.
 - **Schedule: weekly per resort.**
   - Each night's run checks one seventh of the resorts on every date, least
     recently checked first, so every resort is checked once a week: about 60
@@ -1254,7 +1261,7 @@ and the weekly review then classified what it wrote.
 | Only answers count | the same; `Helpers\PriceCheckFlags::resortOffers()` | A reply that does not parse, a refusal or an `<Error>` is no answer; Novoton's empty document is its "no prices". A hotel counts as offered once one of its rows has a price above zero. Every date answered: `has_room_price` Y for the unit's hotels with an offer on any date, N for the others, and `recordCheck()`, so each hotel was checked, offer or not. Some dates answered: Y for those with an offer, the others keep their flag, `recordOffersSeen()`. None: nothing changes, and the unit comes first again the next night |
 | A hotel Novoton files under another resort | the same | A hotel in a resort's answer whose city in the store is another one: Y, and its offers recorded; its own resort's check decides the rest |
 | When a run stops | the same | At the time budget, estimated from the units done so far so that a run started at 04:00 ends before `add_hotels_as_products` at 04:30; at the call budget; or after two units in a row without one answer (Novoton not answering). Units not reached go first next time. The job reports a failure, which Travel Core's cron health shows, when no unit got an answer or no country's resort list came |
-| Settings | Settings → Advanced → "Weekly availability check (room_price)" | Near dates `14, 30`; season dates `06-20, 07-15, 08-15, 09-05`; each resort once every 7 days; at most 120 calls and 20 minutes a run. They reach installed stores through Travel Core's settings heal. A run's URL can set `resorts=N` or `resorts=all`, `max_calls`, `max_time` (minutes) and `nights` for that run; `check_in`, `limit` and `concurrency` are no longer used, and a run that passes them says so |
+| Settings | Settings → Advanced → "Weekly availability check (room_price)" | Near dates `14, 30`; season dates `06-20, 07-15, 08-15, 09-05`; each resort once every 7 days; at most 120 calls and 20 minutes a run; since §16.7, skip dates without published prices (on). They reach installed stores through Travel Core's settings heal. A run's URL can set `resorts=N` or `resorts=all`, `max_calls`, `max_time` (minutes), `nights` and `skip_unpriced` for that run; `check_in`, `limit` and `concurrency` are no longer used, and a run that passes them says so |
 | Dashboard | the `dash_job_room_price` texts | "Availability check": weekly, a seventh of the resorts a night. Mode, slot, run lock and run log unchanged. Add products, finding no priced hotel in a country, says how to check that country now (`&country=…&resorts=all`) |
 | Records read | Travel Core `HotelAvailabilityRepository::awaitingFirstOffer()` | The hotels whose published prices start after today and that had no offer in their latest check, with their first priced date |
 
@@ -1330,6 +1337,23 @@ schedule and the replies still to send; the code follows it. PHPStan level
 Open: a weekly refresh of Novoton's image lists (they suggest it; images
 are downloaded once today), and the five questions in the plan's "Replies
 to send".
+
+Later the same day, the limits became settings, so a supplier's new numbers
+change a setting, not code, and the weekly check stopped asking about dates
+nobody has prices for. The suites pass (Novoton 1079, Eurosite 339, Travel
+Core 925); the new query was run on MariaDB 10.11.
+
+| Add-on | Setting (default) | Where it acts |
+|---|---|---|
+| Novoton, Advanced | Requests to Novoton at the same time (5); per second (5) | `Api\RequestGate`, for the whole store |
+| Novoton, Weekly availability check | Skip dates without published prices (on) | `ResortCheckQueue::split()`: a date none of a unit's hotels has a published price for (Travel Core `HotelAvailabilityRepository::priceWindows()`, the calendar rebuild's window) is not asked and counts as answered without an offer (§4.3) |
+| Eurosite, "Scheduled runs: pace and limits" | Price searches per minute (10); other requests per minute (60) | `Api\RequestPacer`, scheduled runs only |
+| Eurosite, the same | Hotel details per night (100); product updates per night (200) | `product_info` and `update_products`; `&limit=N` still overrides one run |
+
+The filter costs nothing when every hotel has prices; out of season it
+leaves out most dates. In a MariaDB run, a resort with no published prices
+needed no call and a resort priced for next summer skipped its two
+November dates: 13 calls instead of 21.
 
 ### 16.8 Next
 
