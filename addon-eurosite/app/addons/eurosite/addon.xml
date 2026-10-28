@@ -250,6 +250,8 @@ Diferența de 70% cu 21 de zile înainte de check-in.</default_value>
                 `api_response`    MEDIUMTEXT   DEFAULT NULL,
                 `created_at`      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 `updated_at`      DATETIME     DEFAULT NULL,
+                `submitted_at`    DATETIME     DEFAULT NULL COMMENT 'When Eurosite took the booking (AddBookingRequest)',
+                `status_checked_at` DATETIME   DEFAULT NULL COMMENT 'Last scheduled getBookingRequest (BookingStatusSchedule)',
                 PRIMARY KEY (`booking_id`),
                 KEY `idx_order` (`order_id`),
                 KEY `idx_session` (`session_id`),

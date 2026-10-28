@@ -33,7 +33,7 @@ final class CronPlanProductJobsTest extends TestCase
         self::assertLessThan($at['cleanup'], $at['update_products']);
 
         $byMode = array_column($rows, null, 'mode');
-        self::assertSame('Daily 04:30', $byMode['availability']['schedule_human']);
+        self::assertSame('Daily 04:15', $byMode['availability']['schedule_human']);
         self::assertSame('Daily 05:30', $byMode['add_products']['schedule_human']);
         self::assertSame('Daily 06:00', $byMode['update_products']['schedule_human']);
         foreach (['availability', 'add_products', 'update_products'] as $mode) {
@@ -46,7 +46,7 @@ final class CronPlanProductJobsTest extends TestCase
     {
         $planned = (new CronPlanBuilder('http://shop', 'k'))->plannedModes('full', CronDispatcher::getAvailableModes());
 
-        self::assertSame(['full', 'product_info', 'availability', 'add_products', 'update_products', 'cleanup'], $planned);
+        self::assertSame(['full', 'product_info', 'availability', 'add_products', 'update_products', 'booking_status', 'cleanup'], $planned);
     }
 
     public function testTheirRowsCountImmediateHotelsAndProducts(): void

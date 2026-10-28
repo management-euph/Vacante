@@ -142,10 +142,14 @@ final class CronPlanBuilderTest extends TestCase
             'weekly friday'  => ['45 3 * * 5', 'Fri 03:45'],
             'daily'          => ['0 3 * * *', 'Daily 03:00'],
             'daily midnight' => ['0 0 * * *', 'Daily 00:00'],
+            'monthly'        => ['0 1 1 * *', 'Monthly 1st 01:00'],
+            'monthly later'  => ['45 3 22 * *', 'Monthly 22nd 03:45'],
+            'monthly 11th'   => ['0 2 11 * *', 'Monthly 11th 02:00'],
+            'every 15 min'   => ['*/15 * * * *', 'Every 15 min'],
             // Shapes this class never generates are handed back untouched
             // rather than mistranslated.
             'step hours'     => ['0 */4 * * *', '0 */4 * * *'],
-            'day of month'   => ['0 1 15 * *', '0 1 15 * *'],
+            'one month only' => ['0 1 15 3 *', '0 1 15 3 *'],
             'range of days'  => ['0 1 * * 1-5', '0 1 * * 1-5'],
             'not five fields' => ['0 1 * *', '0 1 * *'],
             'empty'          => ['', ''],
@@ -231,17 +235,21 @@ final class CronPlanBuilderTest extends TestCase
     {
         $threeDays = ['status' => 'completed', 'started_at' => self::at(3 * 86400)];
 
-        self::assertSame('ok', $this->rowFor('cities', $threeDays)['state'], 'weekly job, 3 days old');
-        self::assertSame('overdue', $this->rowFor('hotels', $threeDays)['state'], 'daily job, 3 days old');
+        self::assertSame('ok', $this->rowFor('hotels', $threeDays)['state'], 'weekly job, 3 days old');
+        self::assertSame('overdue', $this->rowFor('product_info', $threeDays)['state'], 'daily job, 3 days old');
 
         // The threshold is twice the interval, so a weekly job tips over at
         // 14 days: 14 exactly is still fine, 15 is not.
         $exactly = ['status' => 'completed', 'started_at' => self::at(14 * 86400)];
-        self::assertSame('ok', $this->rowFor('cities', $exactly)['state'], 'weekly job, exactly 2 intervals');
+        self::assertSame('ok', $this->rowFor('hotels', $exactly)['state'], 'weekly job, exactly 2 intervals');
 
         $past = ['status' => 'completed', 'started_at' => self::at(15 * 86400)];
-        self::assertSame('overdue', $this->rowFor('cities', $past)['state'], 'weekly job, past 2 intervals');
-        self::assertSame('15d ago', $this->rowFor('cities', $past)['state_label']);
+        self::assertSame('overdue', $this->rowFor('hotels', $past)['state'], 'weekly job, past 2 intervals');
+        self::assertSame('15d ago', $this->rowFor('hotels', $past)['state_label']);
+
+        // A monthly catalog: two months is its limit.
+        self::assertSame('ok', $this->rowFor('cities', $past)['state'], 'monthly job, 15 days old');
+        self::assertSame('overdue', $this->rowFor('cities', ['status' => 'completed', 'started_at' => self::at(63 * 86400)])['state']);
     }
 
     public function testAFailedRunOutranksItsAge(): void
@@ -301,7 +309,7 @@ final class CronPlanBuilderTest extends TestCase
         $text = $this->builder()->crontab('full', 'cli', self::MODES, '21 Sep 2026');
         $lines = explode("\n", $text);
 
-        self::assertSame('# Eurosite Touring — nightly full pipeline', $lines[0]);
+        self::assertSame('# Eurosite Touring — nightly full pipeline (each step only when due: catalogs monthly, hotels weekly)', $lines[0]);
         self::assertSame('# generated 21 Sep 2026', $lines[1]);
         self::assertCount(5, $lines, 'two comments plus full, product_info, cleanup');
 
@@ -352,7 +360,7 @@ final class CronPlanBuilderTest extends TestCase
         $text = $this->builder()->crontab('per', 'cli', self::MODES);
 
         self::assertStringNotContainsString('curl', $text);
-        self::assertStringContainsString('0 1 * * 0  php app/addons/eurosite/cron.php access_key=abc123 mode=countries', $text);
+        self::assertStringContainsString('0 1 1 * *  php app/addons/eurosite/cron.php access_key=abc123 mode=countries', $text);
         self::assertStringContainsString('# Eurosite Touring — per-catalog schedule', $text);
         self::assertStringNotContainsString('# generated', $text, 'no date was supplied');
     }

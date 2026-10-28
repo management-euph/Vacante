@@ -403,8 +403,8 @@ return [
         'ro' => 'Plan',
     ],
     'eurosite.cron_plan_full' => [
-        'en' => 'One nightly full sync',
-        'ro' => 'O sincronizare completă în fiecare noapte',
+        'en' => 'One nightly line: each step when due (catalogs monthly, hotels weekly)',
+        'ro' => 'O linie, noaptea: fiecare pas când îi vine rândul (cataloagele lunar, hotelurile săptămânal)',
     ],
     'eurosite.cron_plan_per' => [
         'en' => 'Per-catalog schedule',
