@@ -162,6 +162,41 @@ class ConfigProvider extends AbstractConfigProvider
     }
 
     /**
+     * Price searches a minute in a scheduled run (Api\RequestPacer): Eurosite
+     * set no limits (28 Oct 2026), so Sphinx's 10 a minute is the default.
+     */
+    public static function getScheduledSearchesPerMinute(): int
+    {
+        return self::positiveInt('scheduled_searches_per_minute', 10, 600);
+    }
+
+    /** Any other request a minute in a scheduled run (Api\RequestPacer); default one a second. */
+    public static function getScheduledRequestsPerMinute(): int
+    {
+        return self::positiveInt('scheduled_requests_per_minute', 60, 600);
+    }
+
+    /** getProductInfoRequest calls one product_info run makes at most (&limit=N overrides it). */
+    public static function getProductInfoPerRun(): int
+    {
+        return self::positiveInt('product_info_per_run', 100, 5000);
+    }
+
+    /** Products one update_products run refreshes at most (&limit=N overrides it). */
+    public static function getUpdateProductsPerRun(): int
+    {
+        return self::positiveInt('update_products_per_run', 200, 5000);
+    }
+
+    /** A setting from 1 to $max; empty or zero keeps the default. */
+    private static function positiveInt(string $key, int $default, int $max): int
+    {
+        $value = TypeCoerce::toInt(self::getSetting($key, $default));
+
+        return $value > 0 ? min($max, $value) : $default;
+    }
+
+    /**
      * All settings as a plain map, ready to hand to EurositeHttpClient.
      *
      * @return array<string, mixed>

@@ -207,6 +207,32 @@ Diferența de 70% cu 21 de zile înainte de check-in.</default_value>
                         <default_value>60</default_value>
                         <variants/>
                     </item>
+
+                    <!-- ── Scheduled runs: pace and limits (Eurosite's answers, 28 Oct 2026) ── -->
+                    <item id="pace_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="scheduled_searches_per_minute">
+                        <type>input</type>
+                        <default_value>10</default_value>
+                        <variants/>
+                    </item>
+                    <item id="scheduled_requests_per_minute">
+                        <type>input</type>
+                        <default_value>60</default_value>
+                        <variants/>
+                    </item>
+                    <item id="product_info_per_run">
+                        <type>input</type>
+                        <default_value>100</default_value>
+                        <variants/>
+                    </item>
+                    <item id="update_products_per_run">
+                        <type>input</type>
+                        <default_value>200</default_value>
+                        <variants/>
+                    </item>
                 </items>
             </section>
         </sections>

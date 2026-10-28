@@ -104,6 +104,42 @@ msgctxt "SettingsOptions::eurosite::circuit_breaker_timeout"
 msgid "Circuit breaker cooldown (s)"
 msgstr "Cooldown circuit breaker (s)"
 
+msgctxt "SettingsOptions::eurosite::pace_header"
+msgid "Scheduled runs: pace and limits"
+msgstr "Rulări programate: ritm și limite"
+
+msgctxt "SettingsOptions::eurosite::scheduled_searches_per_minute"
+msgid "Price searches per minute (scheduled runs)"
+msgstr "Căutări de prețuri pe minut (rulări programate)"
+
+msgctxt "SettingsTooltips::eurosite::scheduled_searches_per_minute"
+msgid "getHotelPriceRequest, the heavy request of the nightly availability check. Eurosite set no limits (28 Oct 2026), so we keep to Sphinx's: 10 a minute. Customers' searches and runs started from the dashboard are not held back. Default: 10"
+msgstr "getHotelPriceRequest, cererea grea a verificării nocturne a disponibilității. Eurosite nu a stabilit limite (28 oct. 2026), așa că păstrăm limitele Sphinx: 10 pe minut. Căutările clienților și rulările pornite din panou nu sunt încetinite. Implicit: 10"
+
+msgctxt "SettingsOptions::eurosite::scheduled_requests_per_minute"
+msgid "Other requests per minute (scheduled runs)"
+msgstr "Alte cereri pe minut (rulări programate)"
+
+msgctxt "SettingsTooltips::eurosite::scheduled_requests_per_minute"
+msgid "Every other request of a scheduled run: catalogs, hotel lists, details, booking status. One request at a time in any case. Default: 60 (one a second)"
+msgstr "Toate celelalte cereri ale unei rulări programate: cataloage, liste de hoteluri, detalii, starea rezervărilor. Oricum, o singură cerere odată. Implicit: 60 (una pe secundă)"
+
+msgctxt "SettingsOptions::eurosite::product_info_per_run"
+msgid "Hotel details per night (product_info)"
+msgstr "Detalii hoteluri pe noapte (product_info)"
+
+msgctxt "SettingsTooltips::eurosite::product_info_per_run"
+msgid "At most this many getProductInfoRequest calls in one product_info run, for hotels whose details are missing or older than 30 days. &limit=N on the cron line overrides it. Default: 100"
+msgstr "Cel mult atâtea apeluri getProductInfoRequest la o rulare product_info, pentru hotelurile fără detalii sau cu detalii mai vechi de 30 de zile. &limit=N pe linia de cron are prioritate. Implicit: 100"
+
+msgctxt "SettingsOptions::eurosite::update_products_per_run"
+msgid "Product updates per night (update_products)"
+msgstr "Actualizări de produse pe noapte (update_products)"
+
+msgctxt "SettingsTooltips::eurosite::update_products_per_run"
+msgid "At most this many products are refreshed by one update_products run; Eurosite is asked only about those whose details are older than 30 days. &limit=N on the cron line overrides it. Default: 200"
+msgstr "Cel mult atâtea produse sunt actualizate la o rulare update_products; Eurosite este întrebat doar despre cele cu detalii mai vechi de 30 de zile. &limit=N pe linia de cron are prioritate. Implicit: 200"
+
 msgctxt "SettingsOptions::eurosite::products_header"
 msgid "Hotels and products"
 msgstr "Hoteluri și produse"

@@ -65,6 +65,37 @@ final class RequestPacerTest extends TestCase
         self::assertSame([], $this->slept);
     }
 
+    /** The settings in Scheduled runs: pace and limits, a minute each. */
+    public function testThePaceComesFromTheSettings(): void
+    {
+        $pacer = RequestPacer::perMinute(
+            5,
+            30,
+            fn (): float => $this->now,
+            function (float $seconds): void {
+                $this->slept[] = $seconds;
+                $this->now += $seconds;
+            },
+        );
+        $pacer->wait('getHotelPriceRequest');
+        $pacer->wait('getOwnHotelsRequest');
+        $pacer->wait('getHotelPriceRequest');
+
+        self::assertEqualsWithDelta([2.0, 10.0], $this->slept, 0.001, 'two seconds between any two, twelve between two searches');
+    }
+
+    public function testAZeroInTheSettingsDoesNotStopTheRun(): void
+    {
+        $pacer = RequestPacer::perMinute(0, 0, fn (): float => $this->now, function (float $seconds): void {
+            $this->slept[] = $seconds;
+            $this->now += $seconds;
+        });
+        $pacer->wait('getHotelPriceRequest');
+        $pacer->wait('getHotelPriceRequest');
+
+        self::assertEqualsWithDelta([60.0], $this->slept, 0.001, 'read as one a minute, never a division by zero');
+    }
+
     /** A customer's search, or a dashboard run: nothing started the pacer. */
     public function testOnlyAScheduledRunIsPaced(): void
     {

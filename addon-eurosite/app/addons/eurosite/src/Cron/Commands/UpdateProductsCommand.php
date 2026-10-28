@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\Eurosite\Cron\Commands;
 
+use Tygh\Addons\Eurosite\Services\ConfigProvider;
 use Tygh\Addons\Eurosite\Services\Container;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
@@ -16,12 +17,11 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  * (name, category, a description they wrote) is left alone.
  *
  * Least recently refreshed first, so a capped run still reaches every
- * product in turn. `&city=CODE` · `&limit=N` (default 200).
+ * product in turn. `&city=CODE` · `&limit=N` (default the "Product updates
+ * per night" setting, 200).
  */
 final class UpdateProductsCommand extends AbstractSyncCommand
 {
-    private const DEFAULT_LIMIT = 200;
-
     private const FRESH_DAYS = 30;
 
     #[\Override]
@@ -41,7 +41,7 @@ final class UpdateProductsCommand extends AbstractSyncCommand
     {
         return $this->runLogged('update_products', function () use ($params): array {
             $only = strtoupper(trim(TypeCoerce::toString($params['city'] ?? '')));
-            $limit = max(1, TypeCoerce::toInt($params['limit'] ?? self::DEFAULT_LIMIT));
+            $limit = max(1, TypeCoerce::toInt($params['limit'] ?? ConfigProvider::getUpdateProductsPerRun()));
 
             $hotelRepo = Container::hotels();
             $cache = Container::productInfoCache();
