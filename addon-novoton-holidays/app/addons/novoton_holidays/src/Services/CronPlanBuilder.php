@@ -37,7 +37,7 @@ final class CronPlanBuilder
      */
     public const array STAGES = [
         'reference' => ['resort_list', 'list_facilities'],
-        'hotels' => ['hotel_list', 'hotel_info_batched', 'hotel_facilities_batched', 'geocode_addresses'],
+        'hotels' => ['hotel_list', 'hotel_info_batched', 'hotel_facilities_batched', 'refresh_images', 'geocode_addresses'],
         'prices' => ['sync_priceinfo_batched', 'compute_prices', 'recompute_calendar_prices', 'room_price'],
         'products' => ['add_hotels_as_products', 'reassign_features', 'backfill_images', 'offers_update'],
         'upkeep' => ['resinfo', 'cleanup'],
@@ -89,6 +89,8 @@ final class CronPlanBuilder
      * 15–30 minutes. The hotel-details and season-price passes run every
      * 5 minutes but start their full passes at 05:00 (FullPassSchedule).
      * Hotel facilities moved from 02:30 to 01:45 so a long pass ends before 03:00.
+     * Hotel photos (refresh_images, weekly per hotel as Novoton suggested)
+     * take a seventh of the hotels each night at 02:15 and stop before 03:00.
      *
      * @var array<string, array{cron: string, late_after_hours: int}>
      */
@@ -98,6 +100,7 @@ final class CronPlanBuilder
         'hotel_list' => ['cron' => '30 1 */3 * *', 'late_after_hours' => 168],
         'hotel_info_batched' => ['cron' => '*/5 * * * *', 'late_after_hours' => 2],
         'hotel_facilities_batched' => ['cron' => '45 1 * * 0', 'late_after_hours' => 2 * 168],
+        'refresh_images' => ['cron' => '15 2 * * *', 'late_after_hours' => 48],
         'geocode_addresses' => ['cron' => '45 * * * *', 'late_after_hours' => 6],
         'sync_priceinfo_batched' => ['cron' => '*/5 * * * *', 'late_after_hours' => 2],
         'compute_prices' => ['cron' => '*/5 * * * *', 'late_after_hours' => 2],

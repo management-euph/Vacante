@@ -19,6 +19,9 @@ namespace Tygh\Addons\NovotonHolidays\Install;
  *    or not, so a hotel Novoton does not answer for is asked once a day, not
  *    every five minutes.
  *
+ * novoton_hotel_images (and images_checked_at) remember which product image
+ * each Novoton photo became, for the weekly photo refresh (refresh_images).
+ *
  * Runs in the admin area once per deployed version of this file (init.php,
  * stamp-gated and guarded) and before every cron run (cron.php and the cron
  * URL), so a job never reads a column that is not there yet.
@@ -31,7 +34,25 @@ final class SchemaMigrator
     public const array HOTEL_COLUMNS = [
         'hotelinfo_due_at' => "ADD COLUMN `hotelinfo_due_at` datetime DEFAULT NULL COMMENT 'offers_update named a package hotelinfo does not list yet' AFTER `hotelinfo_synced_at`",
         'hotelinfo_tried_at' => "ADD COLUMN `hotelinfo_tried_at` datetime DEFAULT NULL COMMENT 'Last hotelinfo request, answered or not' AFTER `hotelinfo_due_at`",
+        'images_checked_at' => "ADD COLUMN `images_checked_at` datetime DEFAULT NULL COMMENT 'Last hotel_images refresh that got an answer' AFTER `hotelinfo_tried_at`",
     ];
+
+    /** Keep in sync with the novoton_hotel_images CREATE in addon.xml. */
+    public const string IMAGES_TABLE = "CREATE TABLE IF NOT EXISTS `?:novoton_hotel_images` (
+                `hotel_id` varchar(50) NOT NULL COMMENT 'IdHotel from API',
+                `path_key` char(40) NOT NULL COMMENT 'SHA-1 of path',
+                `path` varchar(500) NOT NULL DEFAULT '' COMMENT 'As hotel_images lists it',
+                `product_id` int(11) unsigned NOT NULL DEFAULT 0 COMMENT 'The product it was matched for',
+                `pair_id` int(11) unsigned NOT NULL DEFAULT 0 COMMENT 'The product image it is (images_links)',
+                `origin` varchar(8) NOT NULL DEFAULT 'added' COMMENT 'added: attached from Novoton, may be replaced; kept: on the product before, never removed',
+                `sha1` char(40) NOT NULL DEFAULT '' COMMENT 'SHA-1 of the downloaded file',
+                `dhash` char(16) NOT NULL DEFAULT '' COMMENT 'Difference hash: the same picture saved again',
+                `listed` char(1) NOT NULL DEFAULT 'Y' COMMENT 'In the latest hotel_images answer',
+                `first_seen_at` datetime DEFAULT NULL,
+                `last_seen_at` datetime DEFAULT NULL,
+                PRIMARY KEY (`hotel_id`, `path_key`),
+                KEY `idx_pair` (`pair_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Novoton hotel photos and the product images they became'";
 
     /** Keep in sync with the novoton_hotel_packages CREATE in addon.xml. */
     public const array PACKAGE_COLUMNS = [
@@ -49,14 +70,18 @@ final class SchemaMigrator
         }
         self::$done = true;
 
-        self::addMissingColumns($prefix, 'novoton_hotels', self::HOTEL_COLUMNS);
+        if (self::addMissingColumns($prefix, 'novoton_hotels', self::HOTEL_COLUMNS)) {
+            db_query(self::IMAGES_TABLE);
+        }
         self::addMissingColumns($prefix, 'novoton_hotel_packages', self::PACKAGE_COLUMNS);
     }
 
     /**
      * @param array<string, string> $columns column => ADD COLUMN definition
+     *
+     * @return bool whether the table is there (the add-on is installed)
      */
-    private static function addMissingColumns(string $prefix, string $table, array $columns): void
+    private static function addMissingColumns(string $prefix, string $table, array $columns): bool
     {
         $rows = db_get_array(
             'SELECT COLUMN_NAME AS n FROM INFORMATION_SCHEMA.COLUMNS
@@ -70,12 +95,14 @@ final class SchemaMigrator
             }
         }
         if ($have === []) {
-            return; // table absent: the add-on is not installed, its CREATE owns it
+            return false; // table absent: the add-on is not installed, its CREATE owns it
         }
         foreach ($columns as $column => $ddl) {
             if (!isset($have[$column])) {
                 db_query('ALTER TABLE ?:' . $table . ' ' . $ddl);
             }
         }
+
+        return true;
     }
 }

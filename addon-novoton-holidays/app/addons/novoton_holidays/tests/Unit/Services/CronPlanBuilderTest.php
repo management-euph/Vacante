@@ -57,7 +57,7 @@ final class CronPlanBuilderTest extends TestCase
         self::assertSame([1, 2, 3, 4, 5], array_column($stages, 'number'));
         self::assertSame([
             'resort_list', 'list_facilities',
-            'hotel_list', 'hotel_info_batched', 'hotel_facilities_batched', 'geocode_addresses',
+            'hotel_list', 'hotel_info_batched', 'hotel_facilities_batched', 'refresh_images', 'geocode_addresses',
             'sync_priceinfo_batched', 'compute_prices', 'recompute_calendar_prices', 'room_price',
             'add_hotels_as_products', 'reassign_features', 'backfill_images', 'offers_update',
             'resinfo', 'cleanup',
@@ -119,6 +119,7 @@ final class CronPlanBuilderTest extends TestCase
         self::assertSame('30 1 */3 * *', CronPlanBuilder::cron('hotel_list'));
         self::assertSame('0 1 * * 0', CronPlanBuilder::cron('resort_list'));
         self::assertSame('15 1 * * 0', CronPlanBuilder::cron('list_facilities'));
+        self::assertSame('15 2 * * *', CronPlanBuilder::cron('refresh_images'), 'a seventh of the hotels a night: each hotel\'s photos weekly, done before 03:00');
     }
 
     public function testEveryScheduledJobHasASlot(): void
@@ -207,7 +208,7 @@ final class CronPlanBuilderTest extends TestCase
         self::assertSame('0 1 * * 0  php /var/www/html/app/addons/novoton_holidays/cron.php access_key=' . self::KEY . ' mode=resort_list', $lines[3]);
 
         $commands = array_values(array_filter($lines, static fn (string $l): bool => !str_starts_with($l, '#')));
-        self::assertCount(16, $commands);
+        self::assertCount(17, $commands);
         foreach ($commands as $line) {
             self::assertMatchesRegularExpression('/^\S+ \S+ \S+ \S+ \S+  php \//', $line);
         }

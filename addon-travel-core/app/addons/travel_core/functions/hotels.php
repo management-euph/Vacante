@@ -542,6 +542,22 @@ function fn_travel_core_attach_images_from_urls(int $productId, array $urls, boo
  */
 function fn_travel_core_attach_product_image(int $productId, string $tempFile, string $prefix, bool $isMain = false): bool
 {
+    return fn_travel_core_attach_product_image_pair($productId, $tempFile, $prefix, $isMain) > 0;
+}
+
+/**
+ * As fn_travel_core_attach_product_image(), returning the new image pair's
+ * id (0 when nothing was attached), so a caller can remember which product
+ * image a supplier's photo became.
+ *
+ * @param int    $productId CS-Cart product ID
+ * @param string $tempFile  Path to already-downloaded temp file (will be unlinked)
+ * @param string $prefix    Filename prefix (e.g. 'novoton')
+ * @param bool   $isMain    True for main product image, false for additional
+ * @return int The new pair_id in ?:images_links, 0 on failure
+ */
+function fn_travel_core_attach_product_image_pair(int $productId, string $tempFile, string $prefix, bool $isMain = false): int
+{
     \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError = '';
 
     if ($productId <= 0) {
@@ -550,19 +566,19 @@ function fn_travel_core_attach_product_image(int $productId, string $tempFile, s
         if (file_exists($tempFile)) {
             unlink($tempFile);
         }
-        return false;
+        return 0;
     }
     if (!file_exists($tempFile)) {
         \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError = 'attach: temp file missing';
         fn_log_event('general', 'runtime', ['message' => \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError]);
-        return false;
+        return 0;
     }
     $tempSize = (int) filesize($tempFile);
     if ($tempSize < 1000) {
         \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError = "attach: file too small ({$tempSize} bytes)";
         fn_log_event('general', 'runtime', ['message' => \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError]);
         unlink($tempFile);
-        return false;
+        return 0;
     }
 
     try {
@@ -575,7 +591,7 @@ function fn_travel_core_attach_product_image(int $productId, string $tempFile, s
         \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError = 'attach: getimagesize failed (not a valid image)';
         fn_log_event('general', 'runtime', ['message' => \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError]);
         unlink($tempFile);
-        return false;
+        return 0;
     }
 
     $mimeToExt = [
@@ -614,16 +630,17 @@ function fn_travel_core_attach_product_image(int $productId, string $tempFile, s
     ];
 
     // $icons (arg 1) is empty — CS-Cart auto-generates the thumbnail from $detailed.
-    $pairIds = fn_update_image_pairs([], $detailed, $pairsData, $productId, 'product');
+    // It answers the new pairs' ids, keyed as $pairsData.
+    $pairIds = TypeCoerce::toList(fn_update_image_pairs([], $detailed, $pairsData, $productId, 'product'));
 
     // fn_update_image_pairs copies the source via Storage::put() and leaves it in place,
     // so the temp file is still present here — remove it unconditionally.
     unlink($tempFile);
 
-    if (empty($pairIds)) {
+    if ($pairIds === []) {
         \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError = "attach: fn_update_image_pairs returned no pair (object_id={$productId}, size={$tempSize}, mime={$imageInfo['mime']})";
         fn_log_event('general', 'runtime', ['message' => \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError]);
-        return false;
+        return 0;
     }
 
     \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachPath = 'curl/fn_update_image_pairs';
@@ -632,7 +649,7 @@ function fn_travel_core_attach_product_image(int $productId, string $tempFile, s
         ['product_id' => $productId, 'type' => $isMain ? 'M' : 'A', 'size' => $tempSize],
     );
 
-    return true;
+    return TypeCoerce::toInt($pairIds[0]);
 }
 
 /**

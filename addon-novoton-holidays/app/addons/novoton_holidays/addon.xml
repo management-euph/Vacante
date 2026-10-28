@@ -478,6 +478,7 @@
                 `hotelinfo_synced_at` datetime DEFAULT NULL COMMENT 'Last hotelinfo API sync',
                 `hotelinfo_due_at` datetime DEFAULT NULL COMMENT 'offers_update named a package hotelinfo does not list yet',
                 `hotelinfo_tried_at` datetime DEFAULT NULL COMMENT 'Last hotelinfo request, answered or not',
+                `images_checked_at` datetime DEFAULT NULL COMMENT 'Last hotel_images refresh that got an answer',
                 `hotel_list_synced_at` datetime DEFAULT NULL COMMENT 'Last hotel_list API sync',
                 `last_price_check` datetime DEFAULT NULL COMMENT 'Last room_price_check result',
                 `calendar_prices_raw` JSON COMMENT 'JSON: precomputed per-date raw EUR prices for calendar display',
@@ -492,6 +493,26 @@
                 KEY `idx_has_room_price` (`has_room_price`),
                 KEY `idx_hotelinfo_synced` (`hotelinfo_synced_at`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Hotels from Novoton API'
+        </item>
+
+        <!-- Hotel photos: which product image each Novoton photo became, so the
+             weekly refresh never adds one twice (Install\SchemaMigrator::IMAGES_TABLE) -->
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:novoton_hotel_images` (
+                `hotel_id` varchar(50) NOT NULL COMMENT 'IdHotel from API',
+                `path_key` char(40) NOT NULL COMMENT 'SHA-1 of path',
+                `path` varchar(500) NOT NULL DEFAULT '' COMMENT 'As hotel_images lists it',
+                `product_id` int(11) unsigned NOT NULL DEFAULT 0 COMMENT 'The product it was matched for',
+                `pair_id` int(11) unsigned NOT NULL DEFAULT 0 COMMENT 'The product image it is (images_links)',
+                `origin` varchar(8) NOT NULL DEFAULT 'added' COMMENT 'added: attached from Novoton, may be replaced; kept: on the product before, never removed',
+                `sha1` char(40) NOT NULL DEFAULT '' COMMENT 'SHA-1 of the downloaded file',
+                `dhash` char(16) NOT NULL DEFAULT '' COMMENT 'Difference hash: the same picture saved again',
+                `listed` char(1) NOT NULL DEFAULT 'Y' COMMENT 'In the latest hotel_images answer',
+                `first_seen_at` datetime DEFAULT NULL,
+                `last_seen_at` datetime DEFAULT NULL,
+                PRIMARY KEY (`hotel_id`, `path_key`),
+                KEY `idx_pair` (`pair_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Novoton hotel photos and the product images they became'
         </item>
 
         <!-- Hotel Packages - stores packages from hotelinfo API with priceinfo data -->
@@ -776,6 +797,7 @@
         <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_sync_log`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_bookings`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_hotel_packages`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_hotel_images`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_hotels`</item>
     </queries>
     

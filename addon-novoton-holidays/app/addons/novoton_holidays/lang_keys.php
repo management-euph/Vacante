@@ -131,6 +131,14 @@ return [
         'en' => 'Which facilities each hotel has, in batches',
         'ro' => 'Ce facilități are fiecare hotel, în loturi',
     ],
+    'novoton_holidays.dash_job_refresh_images' => [
+        'en' => 'Hotel photos',
+        'ro' => 'Fotografiile hotelurilor',
+    ],
+    'novoton_holidays.dash_job_refresh_images_desc' => [
+        'en' => 'Each hotel\'s photos about once a week; only new photos are downloaded, and none is added twice',
+        'ro' => 'Fotografiile fiecărui hotel, cam o dată pe săptămână; se descarcă doar fotografiile noi și niciuna nu se adaugă de două ori',
+    ],
     'novoton_holidays.dash_job_geocode_addresses' => [
         'en' => 'Geocode streets',
         'ro' => 'Geocodare străzi',

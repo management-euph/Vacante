@@ -114,6 +114,7 @@ function fn_novoton_holidays_uninstall(): bool
     db_query("DROP TABLE IF EXISTS ?:novoton_sync_log");
     db_query("DROP TABLE IF EXISTS ?:novoton_bookings");
     db_query("DROP TABLE IF EXISTS ?:novoton_hotel_packages");
+    db_query("DROP TABLE IF EXISTS ?:novoton_hotel_images");
     // Hotels table last (other tables may reference it)
     db_query("DROP TABLE IF EXISTS ?:novoton_hotels");
 

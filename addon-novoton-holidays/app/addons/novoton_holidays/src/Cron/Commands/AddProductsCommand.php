@@ -10,6 +10,7 @@ use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\DestinationScope;
+use Tygh\Addons\NovotonHolidays\Services\HotelImageSync;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\TravelGroupResolver;
@@ -75,7 +76,6 @@ class AddProductsCommand extends AbstractCronCommand
         $this->output('');
 
         $hotelRepo = Container::getInstance()->hotelRepository();
-        $image_base_url = \Tygh\Addons\NovotonHolidays\Constants::IMAGE_BASE_URL;
         $grand_total = 0;
         $grand_added = 0;
 
@@ -234,20 +234,15 @@ class AddProductsCommand extends AbstractCronCommand
                     );
                     $hotelRepo->linkToProduct($hotel_id, $product_id);
 
+                    // Its photos, remembered (HotelImageSync), so the weekly
+                    // refresh_images never adds one twice.
                     try {
-                        $images = $this->api->hotels()->getHotelImages($hotel_id);
-                        if (isset($images->url)) {
-                            $urls = [];
-                            foreach ($images->url as $url) {
-                                $urls[] = $image_base_url . str_replace(' ', '%20', (string) $url);
-                                if (count($urls) >= 10) {
-                                    break;
-                                }
-                            }
-                            if (!empty($urls)) {
-                                fn_travel_core_attach_images_from_urls($product_id, $urls, true);
-                            }
-                        }
+                        (new HotelImageSync())->sync(
+                            $hotel_id,
+                            $product_id,
+                            HotelImageSync::paths($this->api->hotels()->getHotelImages($hotel_id)),
+                            date('Y-m-d H:i:s'),
+                        );
                     } catch (\Exception $e) {
                         fn_log_event('general', 'runtime', ['message' => "Novoton: Failed to import images for hotel {$hotel_id}", 'error' => $e->getMessage()]);
                     }

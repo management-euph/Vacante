@@ -12,14 +12,14 @@ use Tygh\Addons\NovotonHolidays\Tests\Support\DbStub;
 
 /**
  * Behavioural coverage for the backfill_images recovery cron: the candidate
- * selection (linked products with zero images_links rows), the image-URL
- * construction that mirrors AddProductsCommand exactly (IMAGE_BASE_URL prefix,
- * space→%20 encoding, capped at MAX_IMAGES), the attach invocation, the
+ * selection (linked products with zero images_links rows), the photo paths
+ * handed to HotelImageSync as AddProductsCommand hands them (Novoton's order,
+ * at most 10; the URLs are HotelImageSyncTest's), the attach invocation, the
  * pacing between products, force=1 widening to every linked product, the
  * single-hotel path, the read-only status view, and the empty-backlog no-op.
  *
- * The live API (getHotelImages) and the travel_core attach pipeline are
- * injected as seams so the run is hermetic — the same approach
+ * The live API (getHotelImages) and the attach (HotelImageSync) are injected
+ * as seams so the run is hermetic — the same approach
  * GeocodeAddressesCommand takes with its Nominatim client.
  */
 #[CoversClass(BackfillImagesCommand::class)]
@@ -31,7 +31,7 @@ final class BackfillImagesCommandTest extends TestCase
     /** @var list<array{string, list<mixed>}> */
     private array $queries = [];
 
-    /** @var list<array{int, list<string>, bool}> */
+    /** @var list<array{string, int, list<string>}> hotel id, product id, photo paths */
     private array $attachCalls = [];
 
     private int $sleeps = 0;
@@ -79,10 +79,10 @@ final class BackfillImagesCommandTest extends TestCase
         $cmd->setSleeper(function (int $us): void {
             $this->sleeps += $us;
         });
-        $cmd->setAttacher(function (int $pid, array $urls, bool $main): int {
-            $this->attachCalls[] = [$pid, $urls, $main];
+        $cmd->setAttacher(function (string $hid, int $pid, array $paths): int {
+            $this->attachCalls[] = [$hid, $pid, $paths];
 
-            return count($urls);
+            return count($paths);
         });
 
         return $cmd;
@@ -114,7 +114,7 @@ final class BackfillImagesCommandTest extends TestCase
         self::assertStringContainsString('image', strtolower(BackfillImagesCommand::getDescription()));
     }
 
-    public function testSelectsImagelessProductsAndAttachesEncodedUrls(): void
+    public function testSelectsImagelessProductsAndAttachesNovotonsPhotos(): void
     {
         $selects = [];
         DbStub::$getArray = static function (string $query, ...$params) use (&$selects): array {
@@ -139,15 +139,8 @@ final class BackfillImagesCommandTest extends TestCase
         self::assertStringContainsString('product_id > 0', $selects[0]);
         self::assertStringContainsString('LIMIT ?i', $selects[0]);
 
-        // Attach called once, first-is-main true, URLs prefixed + space-encoded.
-        self::assertCount(1, $this->attachCalls);
-        [$pid, $urls, $main] = $this->attachCalls[0];
-        self::assertSame(6, $pid);
-        self::assertTrue($main);
-        self::assertSame([
-            Constants::IMAGE_BASE_URL . '/hotels/a%20b.jpg',
-            Constants::IMAGE_BASE_URL . '/hotels/c.jpg',
-        ], $urls);
+        // Attach called once, with the hotel, its product and Novoton's paths in order.
+        self::assertSame([['4402', 6, ['/hotels/a b.jpg', '/hotels/c.jpg']]], $this->attachCalls);
 
         self::assertTrue($result['success']);
         self::assertSame(1, $result['stats']['processed'] ?? null);
@@ -169,7 +162,7 @@ final class BackfillImagesCommandTest extends TestCase
         $cmd->execute();
 
         self::assertCount(1, $this->attachCalls);
-        self::assertCount(10, $this->attachCalls[0][1]);
+        self::assertCount(10, $this->attachCalls[0][2]);
     }
 
     public function testNoImageUrlsIsCountedAndSkipsAttach(): void

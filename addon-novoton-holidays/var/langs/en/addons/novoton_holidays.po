@@ -3512,6 +3512,14 @@ msgctxt "Languages::novoton_holidays.dash_job_hotel_facilities_batched_desc"
 msgid "Which facilities each hotel has, in batches"
 msgstr "Which facilities each hotel has, in batches"
 
+msgctxt "Languages::novoton_holidays.dash_job_refresh_images"
+msgid "Hotel photos"
+msgstr "Hotel photos"
+
+msgctxt "Languages::novoton_holidays.dash_job_refresh_images_desc"
+msgid "Each hotel's photos about once a week; only new photos are downloaded, and none is added twice"
+msgstr "Each hotel's photos about once a week; only new photos are downloaded, and none is added twice"
+
 msgctxt "Languages::novoton_holidays.dash_job_geocode_addresses"
 msgid "Geocode streets"
 msgstr "Geocode streets"

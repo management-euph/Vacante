@@ -15,9 +15,9 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Helpers;
 
 use Tygh\Addons\NovotonHolidays\Api\Contracts\HotelApiClientInterface;
-use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Services\HotelImageSync;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class ProductFactory implements ProductFactoryInterface
@@ -136,36 +136,15 @@ class ProductFactory implements ProductFactoryInterface
     }
 
     /**
-     * Attach images to product from API
+     * Attach images to product from API, remembered (HotelImageSync) so the
+     * weekly refresh_images never adds one twice.
      *
      * @return int Number of images attached
      */
     public function attachHotelImages(int $productId, string $hotelId, HotelApiClientInterface $api): int
     {
         try {
-            $imagesResponse = $api->getHotelImages($hotelId);
-
-            if (!isset($imagesResponse->url)) {
-                return 0;
-            }
-
-            $imgCount = 0;
-            $maxImages = ConfigProvider::MAX_IMAGES_PER_HOTEL;
-
-            foreach ($imagesResponse->url as $url) {
-                $imageUrl = Constants::IMAGE_BASE_URL . str_replace(' ', '%20', (string)$url);
-
-                if (function_exists('fn_novoton_holidays_add_product_image')) {
-                    fn_novoton_holidays_add_product_image($productId, $imageUrl, $imgCount === 0);
-                }
-
-                $imgCount++;
-                if ($imgCount >= $maxImages) {
-                    break;
-                }
-            }
-
-            return $imgCount;
+            return (new HotelImageSync())->sync($hotelId, $productId, HotelImageSync::paths($api->getHotelImages($hotelId)), date('Y-m-d H:i:s'))['added'];
         } catch (ApiException) {
             return 0;
         }

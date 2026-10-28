@@ -3512,6 +3512,14 @@ msgctxt "Languages::novoton_holidays.dash_job_hotel_facilities_batched_desc"
 msgid "Which facilities each hotel has, in batches"
 msgstr "Ce facilități are fiecare hotel, în loturi"
 
+msgctxt "Languages::novoton_holidays.dash_job_refresh_images"
+msgid "Hotel photos"
+msgstr "Fotografiile hotelurilor"
+
+msgctxt "Languages::novoton_holidays.dash_job_refresh_images_desc"
+msgid "Each hotel's photos about once a week; only new photos are downloaded, and none is added twice"
+msgstr "Fotografiile fiecărui hotel, cam o dată pe săptămână; se descarcă doar fotografiile noi și niciuna nu se adaugă de două ori"
+
 msgctxt "Languages::novoton_holidays.dash_job_geocode_addresses"
 msgid "Geocode streets"
 msgstr "Geocodare străzi"

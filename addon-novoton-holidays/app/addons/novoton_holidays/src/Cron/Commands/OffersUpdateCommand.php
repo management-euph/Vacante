@@ -11,6 +11,7 @@ use Tygh\Addons\NovotonHolidays\Helpers\OffersUpdateBaseline;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\DestinationScope;
+use Tygh\Addons\NovotonHolidays\Services\HotelImageSync;
 use Tygh\Addons\NovotonHolidays\Services\OfferChangeMarker;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
@@ -138,7 +139,6 @@ class OffersUpdateCommand extends AbstractCronCommand
         $marker = new OfferChangeMarker();
         $new_hotels = 0;
         $added_to_cart = 0;
-        $image_base_url = \Tygh\Addons\NovotonHolidays\Constants::IMAGE_BASE_URL;
 
         foreach ($offers as $offer) {
             $hotel_id = (string)($offer->IdHotel ?? '');
@@ -273,7 +273,7 @@ class OffersUpdateCommand extends AbstractCronCommand
                     \Tygh\Addons\NovotonHolidays\Helpers\ProductFactory::otherStorefrontLanguages(TypeCoerce::toString(CART_LANGUAGE)),
                 );
                 $hotelRepo->linkToProduct($hotel_id, $productId);
-                $this->attachImages($hotel_id, $productId, $image_base_url);
+                $this->attachImages($hotel_id, $productId);
                 $added_to_cart++;
                 $this->output("ADDED (ID: {$productId})");
             } else {
@@ -300,20 +300,17 @@ class OffersUpdateCommand extends AbstractCronCommand
         return $stats;
     }
 
-    private function attachImages(string $hotelId, int $productId, string $baseUrl): void
+    private function attachImages(string $hotelId, int $productId): void
     {
+        // Its photos, remembered (HotelImageSync), so the weekly
+        // refresh_images never adds one twice.
         try {
-            $images = $this->api->hotels()->getHotelImages($hotelId);
-            if ((bool) $images && isset($images->url)) {
-                $count = 0;
-                foreach ($images->url as $url) {
-                    $image_url = $baseUrl . str_replace(' ', '%20', (string)$url);
-                    fn_novoton_holidays_add_product_image($productId, $image_url, $count === 0);
-                    if (++$count >= 10) {
-                        break;
-                    }
-                }
-            }
+            (new HotelImageSync())->sync(
+                $hotelId,
+                $productId,
+                HotelImageSync::paths($this->api->hotels()->getHotelImages($hotelId)),
+                date('Y-m-d H:i:s'),
+            );
         } catch (\Exception $e) {
             fn_log_event('general', 'runtime', ['message' => "Novoton: Failed to import images for hotel {$hotelId}", 'error' => $e->getMessage()]);
         }
