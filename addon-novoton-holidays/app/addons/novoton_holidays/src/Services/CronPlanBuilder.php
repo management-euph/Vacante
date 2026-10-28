@@ -82,14 +82,22 @@ final class CronPlanBuilder
      * work through a backlog run every few minutes and resume where they
      * stopped.
      *
+     * Novoton's answers (28 Oct 2026) set them: bulk work between 01:00 and
+     * 06:00 but never 03:00–04:00, their busiest hour (the 03:30 calendar
+     * rebuild calls nobody); hotel_list every 3 days, resort_list and
+     * list_facilities weekly; offers_update every 12 hours; resinfo every
+     * 15–30 minutes. The hotel-details and season-price passes run every
+     * 5 minutes but start their full passes at 05:00 (FullPassSchedule).
+     * Hotel facilities moved from 02:30 to 01:45 so a long pass ends before 03:00.
+     *
      * @var array<string, array{cron: string, late_after_hours: int}>
      */
     private const array SCHEDULES = [
         'resort_list' => ['cron' => '0 1 * * 0', 'late_after_hours' => 2 * 168],
         'list_facilities' => ['cron' => '15 1 * * 0', 'late_after_hours' => 2 * 168],
-        'hotel_list' => ['cron' => '0 2 */3 * *', 'late_after_hours' => 168],
+        'hotel_list' => ['cron' => '30 1 */3 * *', 'late_after_hours' => 168],
         'hotel_info_batched' => ['cron' => '*/5 * * * *', 'late_after_hours' => 2],
-        'hotel_facilities_batched' => ['cron' => '30 2 * * 0', 'late_after_hours' => 2 * 168],
+        'hotel_facilities_batched' => ['cron' => '45 1 * * 0', 'late_after_hours' => 2 * 168],
         'geocode_addresses' => ['cron' => '45 * * * *', 'late_after_hours' => 6],
         'sync_priceinfo_batched' => ['cron' => '*/5 * * * *', 'late_after_hours' => 2],
         'compute_prices' => ['cron' => '*/5 * * * *', 'late_after_hours' => 2],
@@ -98,8 +106,8 @@ final class CronPlanBuilder
         'add_hotels_as_products' => ['cron' => '30 4 * * *', 'late_after_hours' => 48],
         'reassign_features' => ['cron' => '0 5 * * *', 'late_after_hours' => 48],
         'backfill_images' => ['cron' => '50 * * * *', 'late_after_hours' => 6],
-        'offers_update' => ['cron' => '0 */2 * * *', 'late_after_hours' => 6],
-        'resinfo' => ['cron' => '15 */2 * * *', 'late_after_hours' => 6],
+        'offers_update' => ['cron' => '0 5,17 * * *', 'late_after_hours' => 14],
+        'resinfo' => ['cron' => '*/15 * * * *', 'late_after_hours' => 2],
         'cleanup' => ['cron' => '0 6 * * *', 'late_after_hours' => 48],
     ];
 
@@ -295,6 +303,9 @@ final class CronPlanBuilder
             }
             if (ctype_digit($minute) && ctype_digit($hour)) {
                 return ['key' => 'novoton_holidays.dash_sched_daily', 'params' => ['[time]' => self::time($hour, $minute)]];
+            }
+            if (ctype_digit($minute) && preg_match('/^(\d+),(\d+)$/', $hour, $m) === 1) {
+                return ['key' => 'novoton_holidays.dash_sched_twice_daily', 'params' => ['[time]' => self::time($m[1], $minute), '[time2]' => self::time($m[2], $minute)]];
             }
         }
         if ($mon === '*' && $dom === '*' && ctype_digit($dow) && (int) $dow <= 6 && ctype_digit($minute) && ctype_digit($hour)) {

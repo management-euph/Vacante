@@ -39,11 +39,25 @@ final class EveryOfferIsReadTest extends TestCase
         self::assertSame(['11', '22', '33'], $ids);
     }
 
-    /** @return iterable<string, array{string}> */
+    /**
+     * The incremental hotelinfo run no longer reads offers_update: the job
+     * leaves its findings on the rows (ChangedHotelDetector reads those).
+     *
+     * @return iterable<string, array{string}>
+     */
     public static function readers(): iterable
     {
         yield 'offers_update' => ['src/Cron/Commands/OffersUpdateCommand.php'];
-        yield 'incremental hotelinfo' => ['src/Helpers/ChangedHotelDetector.php'];
+    }
+
+    /** The admin "Check offers" button counted [$response->Offer]: always one. */
+    public function testTheAdminCheckCountsEveryOffer(): void
+    {
+        $src = (string) file_get_contents(dirname(__DIR__, 4) . '/src/Services/AdminCronService.php');
+
+        self::assertStringNotContainsString('[$response->Offer]', $src);
+        self::assertStringContainsString('count($response->Offer)', $src);
+        self::assertSame(3, count((new \SimpleXMLElement(self::XML))->Offer));
     }
 
     #[\PHPUnit\Framework\Attributes\DataProvider('readers')]

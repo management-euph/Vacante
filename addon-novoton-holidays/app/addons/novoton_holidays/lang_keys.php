@@ -120,8 +120,8 @@ return [
         'ro' => 'Informații hotel',
     ],
     'novoton_holidays.dash_job_hotel_info_batched_desc' => [
-        'en' => 'Hotel details, in batches that resume; later runs re-sync changed hotels',
-        'ro' => 'Detaliile hotelurilor, în loturi care se reiau; rulările următoare resincronizează hotelurile modificate',
+        'en' => 'Hotel details: every hotel every 3 days in February–May and every 7 days otherwise, from 05:00; in between, the hotels offers_update names',
+        'ro' => 'Detaliile hotelurilor: toate hotelurile la 3 zile în februarie–mai și la 7 zile în rest, de la ora 05:00; între timp, hotelurile semnalate de offers_update',
     ],
     'novoton_holidays.dash_job_hotel_facilities_batched' => [
         'en' => 'Hotel facilities',
@@ -144,8 +144,8 @@ return [
         'ro' => 'Informații prețuri',
     ],
     'novoton_holidays.dash_job_sync_priceinfo_batched_desc' => [
-        'en' => 'Season prices, in batches; a full re-sync every 7 days',
-        'ro' => 'Prețurile de sezon, în loturi; resincronizare completă la 7 zile',
+        'en' => 'Season prices: new packages and the ones offers_update names; every package once a month, from 05:00',
+        'ro' => 'Prețurile de sezon: pachetele noi și cele semnalate de offers_update; toate pachetele o dată pe lună, de la ora 05:00',
     ],
     'novoton_holidays.dash_job_compute_prices' => [
         'en' => 'Compute prices',
@@ -208,16 +208,16 @@ return [
         'ro' => 'Actualizare oferte',
     ],
     'novoton_holidays.dash_job_offers_update_desc' => [
-        'en' => 'New and changed offers since the last run',
-        'ro' => 'Ofertele noi și modificate de la ultima rulare',
+        'en' => 'Changed offers in every country sold, twice a day: marks the packages and hotels to fetch again, adds new hotels',
+        'ro' => 'Ofertele modificate din fiecare țară vândută, de două ori pe zi: marchează pachetele și hotelurile de recitit, adaugă hotelurile noi',
     ],
     'novoton_holidays.dash_job_resinfo' => [
         'en' => 'Booking status',
         'ro' => 'Starea rezervărilor',
     ],
     'novoton_holidays.dash_job_resinfo_desc' => [
-        'en' => 'Checks on-request (ASK) bookings',
-        'ro' => 'Verifică rezervările la cerere (ASK)',
+        'en' => 'On-request (ASK) bookings, every 15 minutes, until confirmed (OK), cancelled (ST) or sent to alternatives (RQ)',
+        'ro' => 'Rezervările la cerere (ASK), la fiecare 15 minute, până la confirmare (OK), anulare (ST) sau alternative (RQ)',
     ],
     'novoton_holidays.dash_job_cleanup' => [
         'en' => 'Cleanup',
@@ -282,6 +282,10 @@ return [
     'novoton_holidays.dash_sched_daily' => [
         'en' => 'Daily [time]',
         'ro' => 'Zilnic [time]',
+    ],
+    'novoton_holidays.dash_sched_twice_daily' => [
+        'en' => 'Daily [time] and [time2]',
+        'ro' => 'Zilnic [time] și [time2]',
     ],
     'novoton_holidays.dash_sched_every_days' => [
         'en' => 'Every [n] days, [time]',

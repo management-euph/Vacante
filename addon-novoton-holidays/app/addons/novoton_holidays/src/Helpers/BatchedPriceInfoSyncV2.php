@@ -35,6 +35,7 @@ namespace Tygh\Addons\NovotonHolidays\Helpers;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\DestinationScope;
+use Tygh\Addons\NovotonHolidays\Services\FullPassSchedule;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
@@ -42,8 +43,14 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
     /** Full-sync interval in seconds (from ConfigProvider). */
     private readonly int $fullSyncInterval;
 
-    /** Stale threshold in hours for the incremental branch of determineSyncType(). */
-    private int $staleHours = 24;
+    /**
+     * Hours after which an incremental run also asks for a package again,
+     * only when a run asks for it (&stale_hours=N). By default it asks only
+     * for new packages and the ones offers_update named (price_changed_at):
+     * Novoton asked us (28 Oct 2026) to call priceinfo only for those, with a
+     * full pass once a month. Every package used to be asked for daily.
+     */
+    private ?int $staleHours = null;
 
     /**
      * Per-batch cache: "hotelId/packageId" → package_name.
@@ -125,34 +132,37 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
         // a full sync, so every cycle was full and a new one started at the
         // next cron tick after the last ended — each package's priceinfo was
         // downloaded many times a day instead of once.
-        $lastFullSync = db_get_field(
+        $lastFullSync = TypeCoerce::toString(db_get_field(
             "SELECT MAX(sync_date) FROM ?:novoton_sync_log
              WHERE sync_type = ?s AND status = 'completed'
              AND notes LIKE '%\"sync_type\":\"full\"%'",
             $this->getSyncName(),
-        );
+        ));
+        $lastFullAt = $lastFullSync === '' ? false : strtotime($lastFullSync);
+        $lastFullAt = $lastFullAt === false ? null : $lastFullAt;
 
-        if (empty($lastFullSync)) {
-            $this->logger->output('No previous full sync found. Starting full sync.');
+        // Monthly by default, from 05:00 (FullPassSchedule).
+        $days = max(1, intdiv($this->fullSyncInterval, 86400));
+        if (FullPassSchedule::due($lastFullAt, $days, $this->now())) {
+            $this->logger->output($lastFullAt === null
+                ? 'No previous full sync found. Starting full sync.'
+                : "Last full sync finished on {$lastFullSync}; one is due every {$days} days. Starting full sync.");
             return 'full';
         }
-
-        $timeSinceFull = time() - strtotime(TypeCoerce::toString($lastFullSync));
-
-        if ($timeSinceFull > $this->fullSyncInterval) {
-            $days = round($timeSinceFull / 86400);
-            $this->logger->output("Last full sync was {$days} days ago. Starting full sync.");
-            return 'full';
+        if ($lastFullAt === null) {
+            return 'none'; // the first pass waits for Novoton's busiest hour to end
         }
 
-        // Incremental branch: the stale packages an incremental run would ask
-        // about. Counting every stale row instead started a run each cron tick
-        // for packages it then skips (out of scope, dropped, recently refused).
+        // Incremental branch: the packages an incremental run would ask
+        // about. Counting every candidate row instead started a run each cron
+        // tick for packages it then skips (out of scope, dropped, recently refused).
         $this->incrementalItems = $this->selectItems('incremental');
-        $staleCount = count($this->incrementalItems);
+        $count = count($this->incrementalItems);
 
-        if ($staleCount > 0) {
-            $this->logger->output("Found {$staleCount} stale packages (older than {$this->staleHours}h).");
+        if ($count > 0) {
+            $this->logger->output($this->staleHours === null
+                ? "Found {$count} packages that are new or that offers_update named."
+                : "Found {$count} packages that are new, that offers_update named, or older than {$this->staleHours}h.");
             return 'incremental';
         }
 
@@ -203,18 +213,22 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
                  ORDER BY h.hotel_name, p.package_name',
             );
         } else {
+            // New packages, the ones offers_update named since they were
+            // last fetched, and, only when a run asks for it, older ones.
+            $stale = $this->staleHours === null
+                ? ''
+                : db_quote(' OR p.synced_at < DATE_SUB(NOW(), INTERVAL ?i HOUR)', $this->staleHours);
             $rows = db_get_array(
                 'SELECT ' . $columns . '
                  FROM ?:novoton_hotel_packages p
                  JOIN ?:novoton_hotels h ON p.hotel_id = h.hotel_id
                  WHERE ' . $scope . '
-                 AND (p.synced_at IS NULL OR p.synced_at < DATE_SUB(NOW(), INTERVAL ?i HOUR))
+                 AND (p.synced_at IS NULL OR p.price_changed_at > p.synced_at' . $stale . ')
                  ORDER BY p.synced_at ASC, h.hotel_name',
-                $this->staleHours,
             );
         }
 
-        $refused = $syncType === 'full' ? [] : $this->refusals->refusedWithin($this->fullSyncInterval, time());
+        $refused = $syncType === 'full' ? [] : $this->refusals->refusedWithin($this->fullSyncInterval, $this->now());
         $listedByHotel = [];
         $items = [];
         $dropped = 0;

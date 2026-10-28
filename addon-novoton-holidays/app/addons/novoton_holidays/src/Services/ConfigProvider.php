@@ -483,17 +483,29 @@ class ConfigProvider extends AbstractConfigProvider
         return max(0, TypeCoerce::toInt(self::settings()['cache_ttl_search'] ?? 300));
     }
 
-    /** Returns the hotel info full sync interval in seconds. */
-    public static function getSyncIntervalHotelInfo(): int
+    /**
+     * Days between full hotel-details passes outside February–May (Novoton,
+     * 28 Oct 2026: "every 3–7 days"; FullPassSchedule picks the month).
+     */
+    public static function getHotelInfoFullDays(): int
     {
-        $days = max(1, TypeCoerce::toInt(self::settings()['sync_interval_hotel_info_days'] ?? 7));
-        return $days * 86400;
+        return max(1, TypeCoerce::toInt(self::settings()['sync_interval_hotel_info_days'] ?? 7));
     }
 
-    /** Returns the price info full sync interval in seconds. */
+    /** Days between full hotel-details passes in February–May, while Novoton loads the new season. */
+    public static function getHotelInfoFullDaysPeak(): int
+    {
+        return max(1, TypeCoerce::toInt(self::settings()['sync_interval_hotel_info_peak_days'] ?? 3));
+    }
+
+    /**
+     * Returns the price info full sync interval in seconds: monthly by
+     * default, as Novoton asked (28 Oct 2026); offers_update names the
+     * packages to ask again in between.
+     */
     public static function getSyncIntervalPriceInfo(): int
     {
-        $days = max(1, TypeCoerce::toInt(self::settings()['sync_interval_price_info_days'] ?? 7));
+        $days = max(1, TypeCoerce::toInt(self::settings()['sync_interval_price_info_full_days'] ?? 30));
         return $days * 86400;
     }
 

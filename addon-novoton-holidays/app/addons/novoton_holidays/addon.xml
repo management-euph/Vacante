@@ -323,14 +323,19 @@
                         <type>header</type>
                         <variants/>
                     </item>
+                    <item id="sync_interval_hotel_info_peak_days">
+                        <type>input</type>
+                        <default_value>3</default_value>
+                        <variants/>
+                    </item>
                     <item id="sync_interval_hotel_info_days">
                         <type>input</type>
                         <default_value>7</default_value>
                         <variants/>
                     </item>
-                    <item id="sync_interval_price_info_days">
+                    <item id="sync_interval_price_info_full_days">
                         <type>input</type>
-                        <default_value>7</default_value>
+                        <default_value>30</default_value>
                         <variants/>
                     </item>
                     <item id="sync_interval_facilities_days">
@@ -456,6 +461,8 @@
                 `has_room_price` enum('Y','N') DEFAULT 'N' COMMENT 'Has room_price check results',
                 `packages_count` int(3) DEFAULT 0 COMMENT 'Number of packages for this hotel',
                 `hotelinfo_synced_at` datetime DEFAULT NULL COMMENT 'Last hotelinfo API sync',
+                `hotelinfo_due_at` datetime DEFAULT NULL COMMENT 'offers_update named a package hotelinfo does not list yet',
+                `hotelinfo_tried_at` datetime DEFAULT NULL COMMENT 'Last hotelinfo request, answered or not',
                 `hotel_list_synced_at` datetime DEFAULT NULL COMMENT 'Last hotel_list API sync',
                 `last_price_check` datetime DEFAULT NULL COMMENT 'Last room_price_check result',
                 `calendar_prices_raw` JSON COMMENT 'JSON: precomputed per-date raw EUR prices for calendar display',
@@ -486,6 +493,7 @@
                 `currency` varchar(3) NOT NULL DEFAULT 'EUR',
                 `needs_price_compute` enum('Y','N') DEFAULT 'N' COMMENT 'Flag: price metadata needs recomputation by compute_prices cron',
                 `synced_at` datetime DEFAULT NULL COMMENT 'Last priceinfo sync date',
+                `price_changed_at` datetime DEFAULT NULL COMMENT 'offers_update named this package: priceinfo again',
                 `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 PRIMARY KEY (`id`),

@@ -57,10 +57,11 @@ spl_autoload_register(function ($class) {
 });
 
 // ── Schema migrations ──
-// Column additions are handled ONLY by setup_db() during addon install/upgrade.
-// Runtime migrations in init.php are dangerous — if they crash, the entire
-// addon (hooks, modifiers, registration) is killed. Never run DB schema
-// changes in init.php.
+// setup_db() runs at install. Columns shipped later are added by
+// Install\SchemaMigrator: below, once per deployed version of that file, and
+// only inside fn_travel_core_self_heal_guard() — an unguarded crash here would
+// kill the whole addon (hooks, modifiers, registration). The cron URL runs it
+// too (controllers/frontend/novoton_cron.php); cron.php is the admin area.
 
 // Load service accessor functions (_nvt_api, _nvt_hotel_repo, etc.)
 // These are plain functions (not class methods), so the PSR-4 autoloader won't load them.
@@ -193,6 +194,22 @@ if (function_exists('fn_travel_core_heal_language_keys')) {
             \Tygh\Addons\NovotonHolidays\Install\LanguageSeeder::seedHash(),
         );
     });
+}
+
+// Schema self-heal: the columns Install\SchemaMigrator adds, once per
+// deployed version of it; every later request pays one storage_data read.
+// The class, not fn_novoton_holidays_ensure_schema(): that lives in func.php,
+// which some cores include after this file (see the language heal above).
+if (defined('AREA') && AREA === 'A' && function_exists('fn_travel_core_self_heal_due')) {
+    $__nvt_schema_fp = (string) @md5_file(__DIR__ . '/src/Install/SchemaMigrator.php');
+    if (fn_travel_core_self_heal_due('novoton_schema', $__nvt_schema_fp)) {
+        fn_travel_core_self_heal_guard('novoton_schema', static function (): void {
+            $prefix = \Tygh\Registry::get('config.table_prefix');
+            \Tygh\Addons\NovotonHolidays\Install\SchemaMigrator::ensure(is_scalar($prefix) ? (string) $prefix : 'cscart_');
+        });
+        fn_travel_core_self_heal_stamp('novoton_schema', $__nvt_schema_fp);
+    }
+    unset($__nvt_schema_fp);
 }
 
 // Alias self-heal: re-seed Novoton's ?:travel_api_alias rows once per

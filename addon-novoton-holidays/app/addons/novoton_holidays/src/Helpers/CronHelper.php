@@ -148,11 +148,11 @@ class CronHelper
         $logger->output('    &reset=1           - Reset/cancel in-progress sync');
         $logger->output('    &batch_size=50     - Packages per batch (default: 50)');
         $logger->output('    &max_time=300      - Max seconds per run (default: 300)');
-        $logger->output('    &stale_hours=24    - Re-sync packages older than N hours');
+        $logger->output('    &stale_hours=24    - Also re-sync packages older than N hours (by default only new ones and those offers_update named)');
         $logger->output('    &unlimited=1       - No time limit (for CLI PHP usage)');
         $logger->output('- hotel_list: Hotel list sync from API');
         $logger->output('- resinfo: Check ASK bookings status');
-        $logger->output('- offers_update: Check for new/updated offers (&country=BULGARIA)');
+        $logger->output('- offers_update: Check every sold country for changed offers (&country=BULGARIA checks one)');
         $logger->output('- add_hotels_as_products: Add hotels as products');
         $logger->output('- resort_list: Sync resort names from API (authoritative names for room_price)');
         $logger->output('- list_facilities: Sync facilities list from API');

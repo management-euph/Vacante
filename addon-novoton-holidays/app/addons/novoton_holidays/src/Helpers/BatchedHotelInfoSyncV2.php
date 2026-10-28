@@ -58,12 +58,18 @@ use Tygh\Addons\NovotonHolidays\Api\AdultOnlyDetector;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\DestinationScope;
+use Tygh\Addons\NovotonHolidays\Services\FullPassSchedule;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
 {
-    /** Full-sync interval in seconds (from ConfigProvider). */
-    private readonly int $fullSyncInterval;
+    /** Days between full passes in February–May, and in the other months (settings). */
+    private readonly int $peakDays;
+
+    private readonly int $otherDays;
+
+    /** @var list<string>|null the incremental selection determineSyncType() found, reused by getItemsToSync() */
+    private ?array $incrementalItems = null;
 
     /** Adults-only detector (hotel-name-based classification). */
     private readonly AdultOnlyDetector $adultOnlyDetector;
@@ -117,7 +123,8 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
         ?SyncLoggerInterface $logger = null,
     ) {
         parent::__construct($state, $logger);
-        $this->fullSyncInterval = ConfigProvider::getSyncIntervalHotelInfo();
+        $this->peakDays = ConfigProvider::getHotelInfoFullDaysPeak();
+        $this->otherDays = ConfigProvider::getHotelInfoFullDays();
         $this->adultOnlyDetector = new AdultOnlyDetector();
         $this->packageExtractor = new HotelPackageExtractor();
         $this->productCodePrefixes = ConfigProvider::getProductCodePrefixes();
@@ -159,42 +166,36 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
         }
 
         // Look only at completed *full* syncs (notes JSON contains sync_type: full).
-        $lastFullSync = db_get_field(
+        $lastFullSync = TypeCoerce::toString(db_get_field(
             "SELECT MAX(sync_date) FROM ?:novoton_sync_log
              WHERE sync_type = 'hotelinfo' AND status = 'completed'
              AND notes LIKE '%\"sync_type\":\"full\"%'",
-        );
+        ));
+        $lastFullAt = $lastFullSync === '' ? false : strtotime($lastFullSync);
+        $lastFullAt = $lastFullAt === false ? null : $lastFullAt;
 
-        if (empty($lastFullSync)) {
-            $this->logger->output('No previous full sync found. Starting full sync.');
+        // Every 3 days in February–May, 7 otherwise, from 05:00 (Novoton,
+        // 28 Oct 2026); never starting in their busiest hour.
+        $now = $this->now();
+        $days = FullPassSchedule::hotelInfoDays($now, $this->peakDays, $this->otherDays);
+        if (FullPassSchedule::due($lastFullAt, $days, $now)) {
+            $this->logger->output($lastFullAt === null
+                ? 'No previous full sync found. Starting full sync.'
+                : "Last full sync finished on {$lastFullSync}; one is due every {$days} days. Starting full sync.");
             return 'full';
         }
-
-        $timeSinceFull = time() - (int) strtotime(TypeCoerce::toString($lastFullSync));
-
-        if ($timeSinceFull > $this->fullSyncInterval) {
-            $days = round($timeSinceFull / 86400);
-            $this->logger->output("Last full sync was {$days} days ago. Starting full sync.");
-            return 'full';
+        if ($lastFullAt === null) {
+            // The first pass waits for Novoton's busiest hour to end, and the
+            // never-fetched hotels with it: they are every hotel there is.
+            return 'none';
         }
 
-        // Incremental: last completed sync of any kind.
-        $lastIncremental = db_get_field(
-            "SELECT MAX(sync_date) FROM ?:novoton_sync_log
-             WHERE sync_type = 'hotelinfo' AND status = 'completed'",
-        );
+        // Between full passes: the hotels never fetched, and the ones
+        // offers_update named with a package their details do not list.
+        $countries = TypeCoerce::toStringList($options['countries'] ?? ConfigProvider::getSelectedCountries());
+        $this->incrementalItems = $this->inScope($this->changedHotelDetector->detect($countries, $now));
 
-        if (empty($lastIncremental)) {
-            return 'full';
-        }
-
-        // More than 24 hours since the last completed sync → incremental.
-        $timeSinceLast = time() - (int) strtotime(TypeCoerce::toString($lastIncremental));
-        if ($timeSinceLast > 24 * 3600) {
-            return 'incremental';
-        }
-
-        return 'none';
+        return $this->incrementalItems !== [] ? 'incremental' : 'none';
     }
 
     /**
@@ -219,27 +220,36 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
             ));
         }
 
-        // Incremental: changed hotels from offers_update API, unioned
-        // with hotels that never had hotelinfo synced yet — kept only when
-        // the hotel is in ?:novoton_hotels AND in the scope.
-        //
-        // An ID offers_update reports before hotel_list has brought the
-        // hotel in is dropped too: processItem() only UPDATEs the hotel row,
-        // so its hotelinfo call changed nothing. The weekly hotel_list adds
-        // the hotel, and the next incremental run fetches it as never-synced,
-        // with its resort known.
-        $changed = $this->changedHotelDetector->detect($this->getApi(), $countries);
+        // Incremental: what determineSyncType() found (ChangedHotelDetector),
+        // or the same selection again when called on its own.
+        return $this->incrementalItems
+            ?? $this->inScope($this->changedHotelDetector->detect($countries, $this->now()));
+    }
+
+    /**
+     * The hotels kept from $changed: those in the destinations we sell.
+     *
+     * Every one is a row of ?:novoton_hotels (the detector reads them from
+     * there). A hotel offers_update names before hotel_list has brought it in
+     * has no row: OffersUpdateCommand adds it, and it is fetched here as
+     * never-fetched.
+     *
+     * @param list<string> $changed
+     * @return list<string>
+     */
+    private function inScope(array $changed): array
+    {
         if ($changed === []) {
             return [];
         }
         $inScope = TypeCoerce::toStringList(db_get_fields(
-            'SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id IN (?a) AND ' . $scope,
+            'SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id IN (?a) AND ' . DestinationScope::current()->syncWhere(),
             $changed,
         ));
         $kept = array_values(array_intersect($changed, $inScope));
         $skipped = count($changed) - count($kept);
         if ($skipped > 0) {
-            $this->logger->output("Skipping {$skipped} changed hotels outside the destinations we sell or not in hotel_list yet.");
+            $this->logger->output("Skipping {$skipped} hotels outside the destinations we sell.");
         }
 
         return $kept;
@@ -307,6 +317,14 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
 
         // 3. curl_multi parallel fetch of hotel info for the whole batch.
         $this->batchResults = $this->getApi()->hotels()->getHotelInfoBatch($hotelIds);
+
+        // 4. Asked, answered or not: one Novoton does not answer for is
+        //    asked again a day later, not on every run (ChangedHotelDetector).
+        db_query(
+            'UPDATE ?:novoton_hotels SET hotelinfo_tried_at = ?s WHERE hotel_id IN (?a)',
+            date('Y-m-d H:i:s'),
+            $hotelIds,
+        );
     }
 
     /**

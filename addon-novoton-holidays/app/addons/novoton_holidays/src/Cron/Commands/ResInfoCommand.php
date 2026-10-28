@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
-use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
+use Tygh\Addons\NovotonHolidays\Services\AskBookingPoller;
 use Tygh\Addons\NovotonHolidays\Services\Container;
-use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
-use Tygh\Addons\TravelCore\TravelConstants;
 
+/**
+ * Bookings still on request (ASK): asks Novoton about each, every 15
+ * minutes, until the answer is OK, ST or RQ (AskBookingPoller).
+ */
 class ResInfoCommand extends AbstractCronCommand
 {
     /**
@@ -34,68 +36,23 @@ class ResInfoCommand extends AbstractCronCommand
         $this->output('Checking ASK bookings status...');
         $this->output('');
 
-        $repo = Container::getInstance()->bookingRepository();
-        $ask_bookings = $repo->findByNovotonStatus(Constants::NOVOTON_STATUS_ON_REQUEST, [TravelConstants::STATUS_PENDING, TravelConstants::STATUS_ASK]);
+        $poller = new AskBookingPoller(
+            $this->api,
+            Container::getInstance()->bookingRepository(),
+            function (string $line): void {
+                $this->output($line);
+            },
+        );
+        $stats = $poller->poll();
 
-        $checked = count($ask_bookings);
-        $updated = 0;
+        $this->logComplete('resinfo', $stats);
 
-        if (empty($ask_bookings)) {
-            $this->output('No pending ASK bookings found.');
-        } else {
-            $this->output("Found {$checked} pending ASK bookings.");
-            $this->output('');
-
-            foreach ($ask_bookings as $booking) {
-                $bookingId = TypeCoerce::toString($booking['booking_id']);
-                $orderId = TypeCoerce::toString($booking['order_id']);
-                $this->output("Booking #{$bookingId} (Order #{$orderId})...");
-
-                $reservation_id = $booking['novoton_confirm_id'] ?: ($booking['novoton_res_num'] ?? '');
-
-                if (empty($reservation_id)) {
-                    $this->output('  No reservation ID - skipping');
-                    continue;
-                }
-
-                $response = $this->api->reservations()->getReservationInfo(TypeCoerce::toString($reservation_id));
-
-                if (!isset($response->Status)) {
-                    $this->output('  No response from API');
-                    continue;
-                }
-
-                $new_status = strtolower(Constants::normalizeApiStatus((string)$response->Status));
-
-                if ($new_status === TravelConstants::STATUS_CONFIRMED || $new_status === strtolower(Constants::NOVOTON_STATUS_CONFIRMED)) {
-                    $repo->update(TypeCoerce::toInt($booking['booking_id']), [
-                        'status' => TravelConstants::STATUS_CONFIRMED,
-                        'novoton_status' => Constants::NOVOTON_STATUS_CONFIRMED,
-                        'last_status_check' => date('Y-m-d H:i:s'),
-                        'updated_at' => date('Y-m-d H:i:s'),
-                    ]);
-                    $this->output('  -> Updated to CONFIRMED');
-                    $updated++;
-                } elseif ($new_status === TravelConstants::STATUS_CANCELLED || $new_status === strtolower(Constants::NOVOTON_STATUS_CANCELLED) || $new_status === 'rejected') {
-                    $repo->update(TypeCoerce::toInt($booking['booking_id']), [
-                        'status' => TravelConstants::STATUS_CANCELLED,
-                        'novoton_status' => Constants::NOVOTON_STATUS_CANCELLED,
-                        'last_status_check' => date('Y-m-d H:i:s'),
-                        'updated_at' => date('Y-m-d H:i:s'),
-                    ]);
-                    $this->output('  -> Updated to CANCELLED');
-                    $updated++;
-                } else {
-                    $repo->update(TypeCoerce::toInt($booking['booking_id']), [
-                        'last_status_check' => date('Y-m-d H:i:s'),
-                    ]);
-                    $this->output('  -> Status unchanged: ' . (string)$response->Status);
-                }
-            }
+        // A run where Novoton answered for no booking at all failed: it is
+        // shown as such on the dashboard.
+        if ($stats['errors'] > 0 && $stats['checked'] === 0) {
+            return ['success' => false, 'error' => 'Novoton did not answer resinfo', 'stats' => $stats];
         }
 
-        $stats = ['checked' => $checked, 'changed' => $updated];
-        $this->logComplete('resinfo', $stats);
         return ['success' => true, 'stats' => $stats];
     }
 }

@@ -279,14 +279,19 @@ class AdminCronService implements AdminCronServiceInterface
 
         $this->output("Checking offers since: {$last_check}");
 
-        $response = $this->api->destinations()->getOffersUpdate($last_check, $country);
+        // Novoton's DateTime is Y-m-dTH:i:s; the sync log stores a space.
+        $since = strtotime($last_check);
+        $response = $this->api->destinations()->getOffersUpdate(
+            $since === false ? $last_check : date('Y-m-d\TH:i:s', $since),
+            $country,
+        );
 
         if (!(bool) $response || !isset($response->Offer)) {
             return ['success' => true, 'message' => 'No new offers found'];
         }
 
-        $offers = [$response->Offer];
-        $count = count($offers);
+        // Every <Offer>: counting a one-element list of the node set gave 1.
+        $count = count($response->Offer);
 
         return ['success' => true, 'message' => "Found {$count} offers"];
     }
