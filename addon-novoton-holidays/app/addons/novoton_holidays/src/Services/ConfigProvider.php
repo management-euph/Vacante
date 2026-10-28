@@ -484,6 +484,21 @@ class ConfigProvider extends AbstractConfigProvider
     }
 
     /**
+     * Requests to Novoton at the same time, for the whole store (RequestGate):
+     * Novoton asked for at most 5 (28 Oct 2026).
+     */
+    public static function getApiMaxConcurrent(): int
+    {
+        return max(1, min(20, TypeCoerce::toInt(self::settings()['api_max_concurrent'] ?? 5) ?: 5));
+    }
+
+    /** Requests to Novoton per second, for the whole store (RequestGate): at most 5, as Novoton asked. */
+    public static function getApiMaxPerSecond(): int
+    {
+        return max(1, min(50, TypeCoerce::toInt(self::settings()['api_max_per_second'] ?? 5) ?: 5));
+    }
+
+    /**
      * Days between full hotel-details passes outside February–May (Novoton,
      * 28 Oct 2026: "every 3–7 days"; FullPassSchedule picks the month).
      */

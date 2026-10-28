@@ -132,6 +132,22 @@ msgctxt "SettingsTooltips::novoton_holidays::circuit_breaker_timeout"
 msgid "Seconds to wait before retrying after circuit opens (recommended: 60)"
 msgstr "Seconds to wait before retrying after circuit opens (recommended: 60)"
 
+msgctxt "SettingsOptions::novoton_holidays::api_max_concurrent"
+msgid "Requests to Novoton at the same time"
+msgstr "Requests to Novoton at the same time"
+
+msgctxt "SettingsTooltips::novoton_holidays::api_max_concurrent"
+msgid "For the whole store: every job and customers' searches together. Novoton asked for at most 5 at the same time (28 Oct 2026). Default: 5"
+msgstr "For the whole store: every job and customers' searches together. Novoton asked for at most 5 at the same time (28 Oct 2026). Default: 5"
+
+msgctxt "SettingsOptions::novoton_holidays::api_max_per_second"
+msgid "Requests to Novoton per second"
+msgstr "Requests to Novoton per second"
+
+msgctxt "SettingsTooltips::novoton_holidays::api_max_per_second"
+msgid "For the whole store: every job and customers' searches together. Novoton asked for at most 5 a second (28 Oct 2026). Default: 5"
+msgstr "For the whole store: every job and customers' searches together. Novoton asked for at most 5 a second (28 Oct 2026). Default: 5"
+
 msgctxt "Languages::novoton_holidays.exchange_rates"
 msgid "Exchange Rates"
 msgstr "Exchange Rates"
@@ -1799,6 +1815,14 @@ msgstr "Time budget for one run (minutes)"
 msgctxt "SettingsTooltips::novoton_holidays::availability_check_max_minutes"
 msgid "The run stops before this, so a run started at 04:00 ends before Add products at 04:30. Default: 20"
 msgstr "The run stops before this, so a run started at 04:00 ends before Add products at 04:30. Default: 20"
+
+msgctxt "SettingsOptions::novoton_holidays::availability_check_skip_unpriced"
+msgid "Skip dates without published prices"
+msgstr "Skip dates without published prices"
+
+msgctxt "SettingsTooltips::novoton_holidays::availability_check_skip_unpriced"
+msgid "A date none of a resort's hotels has published prices for (priceinfo) is not asked: no offer is possible there, so it counts as checked without one. A hotel whose prices were never read, or whose latest check found an offer outside them, keeps every date asked. Default: on"
+msgstr "A date none of a resort's hotels has published prices for (priceinfo) is not asked: no offer is possible there, so it counts as checked without one. A hotel whose prices were never read, or whose latest check found an offer outside them, keeps every date asked. Default: on"
 
 msgctxt "Languages::novoton_holidays.api_price"
 msgid "API Price"

@@ -138,6 +138,73 @@ final class ResortCheckQueue
         return $dates;
     }
 
+    /**
+     * A unit's dates in two: the ones to ask Novoton, and the ones its
+     * hotels' published prices (priceinfo) already answer: a stay none of
+     * them has a price for can have no offer, so asking would only cost a
+     * call. A date is left out only when every hotel's window is known and
+     * none touches the stay; one hotel without a known window keeps every
+     * date asked. A window is not known when:
+     *
+     *  - it is missing: the hotel's prices were never read;
+     *  - it ended before today: the calendar was not rebuilt since;
+     *  - the latest check found an offer on a future date outside it.
+     *
+     * @param list<array{kind: string, check_in: string, check_out: string}> $dates
+     * @param list<string> $hotelIds the unit's hotels
+     * @param array<array-key, array{from: ?string, to: ?string, next: ?string}> $windows hotel_id => its published price window (from and to null: no future price) and the earliest offer of its latest check
+     *
+     * @return array{ask: list<array{kind: string, check_in: string, check_out: string}>, skip: list<array{kind: string, check_in: string, check_out: string}>}
+     */
+    public static function split(array $dates, array $hotelIds, array $windows, string $today): array
+    {
+        $known = [];
+        foreach ($hotelIds as $hotelId) {
+            $window = $windows[$hotelId] ?? null;
+            if ($window === null || !self::trusted($window, $today)) {
+                return ['ask' => $dates, 'skip' => []];
+            }
+            $known[] = $window;
+        }
+
+        $split = ['ask' => [], 'skip' => []];
+        foreach ($dates as $date) {
+            $priced = $known === [];
+            foreach ($known as $window) {
+                $priced = $priced || self::touches($window, $date['check_in'], $date['check_out']);
+            }
+            $split[$priced ? 'ask' : 'skip'][] = $date;
+        }
+
+        return $split;
+    }
+
+    /**
+     * Whether a window can answer for its hotel today.
+     *
+     * @param array{from: ?string, to: ?string, next: ?string} $window
+     */
+    private static function trusted(array $window, string $today): bool
+    {
+        ['from' => $from, 'to' => $to, 'next' => $next] = $window;
+        if (($from === null) !== ($to === null) || ($to !== null && $to < $today)) {
+            return false;
+        }
+
+        return $next === null || $next < $today || ($from !== null && $from <= $next && $next <= $to);
+    }
+
+    /**
+     * Whether one night of the stay has a published price (check-out is not a night).
+     *
+     * @param array{from: ?string, to: ?string, next: ?string} $window
+     */
+    private static function touches(array $window, string $checkIn, string $checkOut): bool
+    {
+        return $window['from'] !== null && $window['to'] !== null
+            && $checkIn <= $window['to'] && $checkOut > $window['from'];
+    }
+
     private static function key(string $name): string
     {
         return mb_strtoupper(trim($name));

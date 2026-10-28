@@ -226,4 +226,31 @@ final class HotelAvailabilityRepositoryTest extends TestCase
         self::assertSame([], (new HotelAvailabilityRepository())->awaitingFirstOffer('novoton', [''], '2026-10-26'));
         self::assertCount(1, $queries, 'nothing to ask, no query');
     }
+
+    /** A supplier's check leaves out the stays none of a destination's hotels has a published price for. */
+    public function testPriceWindowsComeOnlyForHotelsWhosePricesWereRead(): void
+    {
+        $queries = [];
+        DbStub::$getArray = static function (string $sql, mixed ...$params) use (&$queries): array {
+            $queries[] = db_quote($sql, ...$params);
+
+            return [
+                ['hotel_id' => '476', 'contract_from' => '2027-05-01', 'contract_to' => '2027-10-15', 'offer_next_date' => null],
+                ['hotel_id' => 'RO1001', 'contract_from' => null, 'contract_to' => null, 'offer_next_date' => '2026-11-09 00:00:00'],
+                ['hotel_id' => '477', 'contract_from' => '0000-00-00', 'contract_to' => '', 'offer_next_date' => '0000-00-00'],
+            ];
+        };
+
+        $windows = (new HotelAvailabilityRepository())->priceWindows('novoton', ['476', '', 'RO1001', '476', '477']);
+
+        self::assertSame([
+            476 => ['from' => '2027-05-01', 'to' => '2027-10-15', 'next' => null],
+            'RO1001' => ['from' => null, 'to' => null, 'next' => '2026-11-09'],
+            477 => ['from' => null, 'to' => null, 'next' => null],
+        ], $windows, 'no future price is a window too; a numeric id comes back as an int key');
+        self::assertCount(1, $queries);
+        self::assertStringContainsString("provider = 'novoton' AND hotel_id IN ('476', 'RO1001', '477') AND contract_last_date IS NOT NULL", $queries[0], 'a hotel whose prices were never read has no window');
+        self::assertSame([], (new HotelAvailabilityRepository())->priceWindows('novoton', []));
+        self::assertCount(1, $queries, 'nothing to ask, no query');
+    }
 }

@@ -296,6 +296,16 @@
                         <default_value>60</default_value>
                         <variants/>
                     </item>
+                    <item id="api_max_concurrent">
+                        <type>input</type>
+                        <default_value>5</default_value>
+                        <variants/>
+                    </item>
+                    <item id="api_max_per_second">
+                        <type>input</type>
+                        <default_value>5</default_value>
+                        <variants/>
+                    </item>
 
                     <!-- Cache TTL Header -->
                     <item id="cache_ttl_header">
@@ -416,6 +426,11 @@
                     <item id="availability_check_max_minutes">
                         <type>input</type>
                         <default_value>20</default_value>
+                        <variants/>
+                    </item>
+                    <item id="availability_check_skip_unpriced">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
                         <variants/>
                     </item>
                 </items>

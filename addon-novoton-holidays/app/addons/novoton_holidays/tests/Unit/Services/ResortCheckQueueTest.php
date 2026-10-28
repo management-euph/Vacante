@@ -121,4 +121,108 @@ final class ResortCheckQueueTest extends TestCase
         self::assertSame(PHP_INT_MAX, ResortCheckSettings::from([], ['resorts' => 'all'])->units);
         self::assertSame([1, 60], [ResortCheckSettings::from(['availability_check_cycle_days' => '0'], ['max_time' => '-3'])->cycleDays, ResortCheckSettings::from([], ['max_time' => '-3'])->maxSeconds]);
     }
+
+    /** Off only when the store unticks it; a run's URL decides for that run. */
+    public function testDatesWithoutPublishedPricesAreLeftOutUnlessTurnedOff(): void
+    {
+        self::assertTrue(ResortCheckSettings::from([])->skipUnpriced, 'a store that has not saved the setting yet');
+        self::assertTrue(ResortCheckSettings::from(['availability_check_skip_unpriced' => 'Y'])->skipUnpriced);
+        self::assertFalse(ResortCheckSettings::from(['availability_check_skip_unpriced' => 'N'])->skipUnpriced);
+        self::assertFalse(ResortCheckSettings::from(['availability_check_skip_unpriced' => 'Y'], ['skip_unpriced' => '0'])->skipUnpriced);
+        self::assertTrue(ResortCheckSettings::from(['availability_check_skip_unpriced' => 'N'], ['skip_unpriced' => '1'])->skipUnpriced);
+
+        $xml = simplexml_load_file(dirname(__DIR__, 3) . '/addon.xml');
+        self::assertNotFalse($xml);
+        $items = $xml->xpath('//settings//item[@id="availability_check_skip_unpriced"]') ?: [];
+        self::assertCount(1, $items);
+        self::assertSame(['checkbox', 'Y'], [trim((string) $items[0]->type), trim((string) $items[0]->default_value)]);
+        foreach (['en', 'ro'] as $lang) {
+            $po = (string) file_get_contents(dirname(__DIR__, 6) . "/var/langs/{$lang}/addons/novoton_holidays.po");
+            foreach (['SettingsOptions', 'SettingsTooltips'] as $kind) {
+                self::assertStringContainsString("msgctxt \"{$kind}::novoton_holidays::availability_check_skip_unpriced\"", $po, "{$lang} {$kind}");
+            }
+        }
+    }
+
+    /** @return list<array{kind: string, check_in: string, check_out: string}> 14 days ahead, next summer, a first published week */
+    private static function checkDates(): array
+    {
+        return [
+            ['kind' => 'near', 'check_in' => '2026-11-09', 'check_out' => '2026-11-16'],
+            ['kind' => 'season', 'check_in' => '2027-07-15', 'check_out' => '2027-07-22'],
+            ['kind' => 'first_week', 'check_in' => '2027-05-01', 'check_out' => '2027-05-08'],
+        ];
+    }
+
+    /** @return array{from: ?string, to: ?string, next: ?string} */
+    private static function window(?string $from, ?string $to, ?string $next = null): array
+    {
+        return ['from' => $from, 'to' => $to, 'next' => $next];
+    }
+
+    /** @param array{ask: list<array{kind: string, check_in: string, check_out: string}>, skip: list<array{kind: string, check_in: string, check_out: string}>} $split */
+    private static function checkIns(array $split): array
+    {
+        return [array_column($split['ask'], 'check_in'), array_column($split['skip'], 'check_in')];
+    }
+
+    public function testADateNoHotelHasAPublishedPriceForIsNotAsked(): void
+    {
+        $split = ResortCheckQueue::split(self::checkDates(), ['476', '477'], [
+            476 => self::window('2027-05-01', '2027-10-15'),
+            477 => self::window('2027-06-01', '2027-09-30'),
+        ], '2026-10-26');
+
+        self::assertSame([['2027-07-15', '2027-05-01'], ['2026-11-09']], self::checkIns($split));
+    }
+
+    public function testAHotelWithNoFuturePriceAnswersEveryDate(): void
+    {
+        $split = ResortCheckQueue::split(self::checkDates(), ['476'], [476 => self::window(null, null)], '2026-10-26');
+
+        self::assertSame([[], ['2026-11-09', '2027-07-15', '2027-05-01']], self::checkIns($split));
+    }
+
+    /** A night inside the window is enough; check-out is not a night. */
+    public function testAStayIsAskedWhenOneOfItsNightsIsPriced(): void
+    {
+        $dates = [
+            ['kind' => 'near', 'check_in' => '2027-04-28', 'check_out' => '2027-05-05'],
+            ['kind' => 'near', 'check_in' => '2027-04-24', 'check_out' => '2027-05-01'],
+            ['kind' => 'near', 'check_in' => '2027-10-15', 'check_out' => '2027-10-22'],
+            ['kind' => 'near', 'check_in' => '2027-10-16', 'check_out' => '2027-10-23'],
+        ];
+
+        $split = ResortCheckQueue::split($dates, ['476'], [476 => self::window('2027-05-01', '2027-10-15')], '2026-10-26');
+
+        self::assertSame([['2027-04-28', '2027-10-15'], ['2027-04-24', '2027-10-16']], self::checkIns($split));
+    }
+
+    /** One hotel the prices cannot answer for keeps every date of its resort asked. */
+    public function testAWindowThatCannotAnswerKeepsEveryDateAsked(): void
+    {
+        $priced = self::window('2027-05-01', '2027-10-15');
+        $cases = [
+            'prices never read' => [],
+            'not rebuilt since its prices ended' => [477 => self::window('2026-09-01', '2026-10-15')],
+            'the latest check found an offer outside it' => [477 => self::window('2027-05-01', '2027-10-15', '2026-11-09')],
+            'an offer, but no future price' => [477 => self::window(null, null, '2026-11-09')],
+            'only one end' => [477 => self::window('2027-05-01', null)],
+        ];
+        foreach ($cases as $case => $windows) {
+            $split = ResortCheckQueue::split(self::checkDates(), ['476', '477'], [476 => $priced] + $windows, '2026-10-26');
+
+            self::assertSame([['2026-11-09', '2027-07-15', '2027-05-01'], []], self::checkIns($split), $case);
+        }
+    }
+
+    /** An offer inside the window agrees with it; one whose stay has begun says nothing about the prices ahead. */
+    public function testAnOfferThatAgreesWithTheWindowOrHasPassedKeepsItTrusted(): void
+    {
+        foreach (['2027-06-10', '2026-10-20'] as $next) {
+            $split = ResortCheckQueue::split(self::checkDates(), ['476'], [476 => self::window('2027-05-01', '2027-10-15', $next)], '2026-10-26');
+
+            self::assertSame([['2027-07-15', '2027-05-01'], ['2026-11-09']], self::checkIns($split), $next);
+        }
+    }
 }

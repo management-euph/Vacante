@@ -6,6 +6,8 @@ namespace Tygh\Addons\NovotonHolidays\Tests\Unit\Api;
 
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\NovotonHolidays\Api\RequestGate;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Registry;
 
 /**
  * Novoton asked us (28 Oct 2026) to stay within 5 requests at the same time
@@ -91,6 +93,44 @@ final class RequestGateTest extends TestCase
         $this->now += RequestGate::TICKET_TTL + 1;
 
         self::assertCount(5, $this->gate()->acquire(5));
+    }
+
+    /** Both numbers are settings (Advanced → API resilience): a store set to fewer sends fewer. */
+    public function testTheLimitsAreTheGatesOwn(): void
+    {
+        $gate = new RequestGate(
+            $this->path,
+            fn (): float => $this->now,
+            function (float $seconds): void {
+                $this->slept[] = $seconds;
+                $this->now += $seconds;
+            },
+            2,
+            3,
+        );
+
+        $first = $gate->acquire(5);
+        self::assertCount(2, $first, 'two at the same time');
+        $gate->release($first);
+        $second = $gate->acquire(5);
+        self::assertCount(1, $second, 'the third start in this second');
+        $gate->release($second);
+        $gate->acquire();
+
+        self::assertGreaterThanOrEqual(1.0, $this->now - 1_000.0, 'the fourth waits for the second to pass');
+    }
+
+    public function testTheSettingsReachTheSharedGate(): void
+    {
+        Registry::set('addons.novoton_holidays', ['api_max_concurrent' => '3', 'api_max_per_second' => '0']);
+        ConfigProvider::resetSettingsCache();
+        try {
+            self::assertSame(3, ConfigProvider::getApiMaxConcurrent());
+            self::assertSame(5, ConfigProvider::getApiMaxPerSecond(), 'an empty or zero value keeps Novoton\'s number');
+        } finally {
+            Registry::set('addons.novoton_holidays', []);
+            ConfigProvider::resetSettingsCache();
+        }
     }
 
     public function testWithoutItsFileTheGateStepsAside(): void

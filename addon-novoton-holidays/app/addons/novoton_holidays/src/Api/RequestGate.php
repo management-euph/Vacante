@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Api;
 
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * Keeps every Novoton request of the store within what Novoton asked for
- * (28 Oct 2026): at most 5 at the same time and 5 a second. The cron jobs
- * and customers' searches run in separate PHP processes, so the count lives
- * in one small file on the server, read and written under an exclusive lock.
+ * (28 Oct 2026): at most 5 at the same time and 5 a second, both settings
+ * (Advanced → API resilience). The cron jobs and customers' searches run in
+ * separate PHP processes, so the count lives in one small file on the
+ * server, read and written under an exclusive lock.
  *
  * A caller takes tickets before it sends, and gives them back when the
  * answers are in. It gets as many as are free, at least one, waiting while
@@ -24,6 +26,7 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  */
 final class RequestGate
 {
+    /** Novoton's numbers, the settings' defaults. */
     public const int MAX_CONCURRENT = 5;
 
     public const int MAX_PER_SECOND = 5;
@@ -44,6 +47,10 @@ final class RequestGate
 
     private int $issued = 0;
 
+    private readonly int $maxConcurrent;
+
+    private readonly int $maxPerSecond;
+
     /**
      * @param (\Closure(): float)|null $clock seconds
      * @param (\Closure(float): void)|null $sleep seconds
@@ -52,19 +59,29 @@ final class RequestGate
         private readonly string $path,
         ?\Closure $clock = null,
         ?\Closure $sleep = null,
+        int $maxConcurrent = self::MAX_CONCURRENT,
+        int $maxPerSecond = self::MAX_PER_SECOND,
     ) {
+        $this->maxConcurrent = max(1, $maxConcurrent);
+        $this->maxPerSecond = max(1, $maxPerSecond);
         $this->clock = $clock ?? static fn (): float => microtime(true);
         $this->sleep = $sleep ?? static function (float $seconds): void {
             usleep((int) round($seconds * 1_000_000));
         };
     }
 
-    /** The store's gate, its file in CS-Cart's cache directory. */
+    /** The store's gate, its file in CS-Cart's cache directory, its limits from the settings. */
     public static function shared(): self
     {
         $dir = defined('DIR_CACHE') && is_string(DIR_CACHE) ? DIR_CACHE : sys_get_temp_dir();
 
-        return new self(rtrim($dir, '/') . '/novoton_request_gate.json');
+        return new self(
+            rtrim($dir, '/') . '/novoton_request_gate.json',
+            null,
+            null,
+            ConfigProvider::getApiMaxConcurrent(),
+            ConfigProvider::getApiMaxPerSecond(),
+        );
     }
 
     /**
@@ -75,7 +92,7 @@ final class RequestGate
      */
     public function acquire(int $want = 1): array
     {
-        $want = max(1, min(self::MAX_CONCURRENT, $want));
+        $want = max(1, min($this->maxConcurrent, $want));
         while (true) {
             if ($this->broken) {
                 return [];
@@ -85,9 +102,9 @@ final class RequestGate
             $tickets = $this->locked(function (array $state) use ($want, $now, &$wait): array {
                 $active = array_filter($state['active'], static fn (float $until): bool => $until > $now);
                 $starts = array_values(array_filter($state['starts'], static fn (float $at): bool => $at > $now - 1.0));
-                $free = min(self::MAX_CONCURRENT - count($active), self::MAX_PER_SECOND - count($starts));
+                $free = min($this->maxConcurrent - count($active), $this->maxPerSecond - count($starts));
                 if ($free <= 0) {
-                    $wait = count($starts) >= self::MAX_PER_SECOND ? min($starts) + 1.0 - $now : self::POLL;
+                    $wait = count($starts) >= $this->maxPerSecond ? min($starts) + 1.0 - $now : self::POLL;
                     $state['active'] = $active;
                     $state['starts'] = $starts;
 
