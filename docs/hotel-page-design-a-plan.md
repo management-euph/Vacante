@@ -45,20 +45,40 @@ their current layout.
 4. **Real CS-Cart product tabs**, "Descriere" open by default.
 5. **Compact sticky bar after a search** — a region named "Rezumatul
    căutării": dates · guests · "Schimbă".
-6. **Room-first results** — one card per room type: an info column (room
-   facts, guests, one payment line) and its rate rows (meal plan, rate name,
-   cancellation, price, one primary button per row; "Cere rezervarea" for
-   on-request rates with "La cerere · răspuns în max. 48 h" and
-   "Nu plătești nimic până confirmă hotelul").
-   - R1: the meal-plan strip shows only with 2+ plans, tiles share the row
-     equally, 6+ scroll sideways.
-   - R2: one meal plan → no strip, no meal sub-headers, rows titled by rate,
-     one fact line ("Toate tarifele includ All Inclusive · Toate se confirmă
-     imediat").
-   - R3: a filter chip shows only when it splits the list; facts true for
-     every rate join the fact line.
-   - Many rates: the best 4 per room, then "Vezi toate cele N tarife ·
-     min–max"; other rooms start collapsed.
+6. **Room-first results** — the owner's board 13b (29 Oct 2026), which
+   replaced the first cards (rate rows per meal group, R1–R3, best 4):
+   one card per room type on three columns from 1101 px — the room | its
+   meal options and what they share | the "till" — two on a tablet (the
+   till under the options), one on a phone (the till pinned to the bottom
+   while the card's options are in view).
+   - The room: "Cel mai mic preț" on the cheapest room; the title names the
+     difference ("Cameră Dublă Deluxe, fără balcon") with the supplier's
+     room code under it in 12 px grey (IdRoom; none for a numeric code);
+     status pills (green "Confirmare imediată", red "Ultima cameră
+     disponibilă", amber "Doar N camere disponibile", grey "N camere
+     disponibile", blue "La cerere"); capacity in words ("Max. 3
+     persoane"); facilities, six then "Toate dotările (+N)".
+   - Options: one per meal plan and terms, a radio each (the cheapest
+     chosen; "Alege masa" only for screen readers); one meal plan = the
+     same block, a blue tick, a white row. The same meal on the same terms
+     from two packages shows once, its cheapest. What every option shares
+     is said once under them (the package with its Early Booking as one
+     unit, the cancellation, the payment, the terms link); what differs
+     stays on its option. Package names wrap at 1.45 line height.
+   - The till: the chosen meal, "Total · N nopți · N adulți", the struck
+     price with its "−12%" badge (an empty line of the same height without
+     one), the total in 28 px, per night, "Rezervă" (48 px) and one line
+     under it: "Nu plătești încă", or on request "Răspuns în max. 48 h" with
+     an ⓘ that opens, on click or tap, how a request works. The total fades
+     in when the meal changes (never on load), said by a live line. The
+     Early Booking line says until when and how much: "Early Booking până
+     la 31 oct. · economisești 115 €"; the percent only on the badge.
+   - The meal filter only with 2+ meal plans, each with its room types
+     "(7)" and lowest price, the active one solid navy; it shows the rooms
+     that have the meal and chooses it in them. Chips only when they split
+     the options. The first 4 room types, then "Vezi toate cele N tipuri de
+     cameră" and "Încă K: …, de la X €". The footnote names the discount the
+     struck price leaves out.
 7. **Multi-room** — a tab per room, "Mergi la Camera N", the final
    "Rezervă N camere · total"; a quota shortage note with alternatives.
 8. **Phone** — the same information model stacked (390px frames).
@@ -203,8 +223,44 @@ an internal code.
     for field). Several rooms keep today's selection until phase 5.
   - On the exported page with the store's CSS: the engine asks design=a, the
     cards land under the bar, no overflow at 1440 or 390 px.
+- 29 Oct 2026 — **board 13b in the store, for all three suppliers**:
+  - travel_core: `RoomResultsBuilder` rebuilt for 13b (options per meal plan
+    and terms, the dominance rule, shared vs per-option facts, rooms-left
+    tiers, first 4 room types + hint, stable keys); `RateOffer` gains the
+    room title / code / capacity, the package, the discount's last day,
+    free cancellation without a day, a terms URL and a payment text;
+    `Results\MealRank` ranks meal names (en / ro). Templates
+    `design_a_room` / `_option` / `_till` / `_package` / `_cancel` /
+    `_payment` / `_terms` / `_icon` (`_rate` gone); CSS #60 rewritten;
+    `pdp-design-a.js`: radios switch the till, filters choose the meal, the
+    ⓘ toggletip, terms fetched as JSON `{sections}` when first opened, live
+    results (`data-travel-live`) swapped in with the guest's choices kept.
+    43 new texts, 17 old ones gone.
+  - Novoton: the title from the code's tier and features, IdRoom, capacity
+    from the occupancy, the package, "Early Booking" with its EBToDate (now
+    read by `SearchService`), the hotel's room facilities.
+  - Eurosite: `Services\DesignARates` (one room at one meal plan per offer,
+    the cart line's price, PriceNoRedd struck with the offer's text, IM /
+    OR, stop sale left out, the admin's payment line); `offer_terms`
+    design=a.
+  - Sphinx: `Services\DesignARates` from the flat rows (marketing price
+    struck, labels, `is_free`, on request); the poll's slim rows carry the
+    new fields; cached / finished searches render the cards at once, a
+    running one a live container fed by `search_poll` design=a
+    (`{html, done, cursor}`); `offer_terms` design=a.
+  - The title row shows the hotel's product code: "COD: NVT476" between
+    the location and "Vezi pe hartă".
+  - Checked by rendering the real templates with Smarty 5 and the store's
+    CSS / JS in Chromium at 1440, 1000 and 390 px (three columns, two, one
+    with the sticky till) and driving them (radios, filters, chips, sort,
+    see-all, ⓘ, terms on demand); suites: travel_core 923, Novoton 1031,
+    Sphinx 627, Eurosite 319 PHPUnit tests, 304 vitest tests.
+  - **To check on the dev store**: a Sphinx search on a Design A page end to
+    end (the live cards, `$view->fetch` from the poll), Eurosite and Sphinx
+    terms on demand against the live APIs, the phone's sticky till under
+    the theme's own sticky elements.
 - Next: Novoton rows through `RoomOfferRows`; the title row's after-search
   state ("10–17 iul. · de la 1.485 €", "Vezi camerele") and the compact
-  summary's price (the section carries `data-cheapest`); then the Sphinx
-  (streamed rows) and Eurosite (whole-group offers) mappers — exports with
-  offers for each will help.
+  summary's price (the section carries `data-cheapest`); the room facts the
+  board shows beyond capacity (area, bed) once a source exists; phase 5
+  (several rooms).
