@@ -6,29 +6,33 @@ namespace Tygh\Addons\NovotonHolidays\Tests\Unit\Helpers;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use Tygh\Addons\NovotonHolidays\Api\Contracts\DestinationApiClientInterface;
-use Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface;
-use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Helpers\ChangedHotelDetector;
 use Tygh\Addons\NovotonHolidays\Helpers\SyncLoggerInterface;
 use Tygh\Addons\NovotonHolidays\Tests\Support\DbStub;
 
 /**
- * Characterization coverage for ChangedHotelDetector — the offers_update change
- * detection extracted from BatchedHotelInfoSyncV2. The API kit and logger are
- * mocked; DB access goes through DbStub. Tests pin the no-previous-sync
- * short-circuit, the union of changed + never-synced hotels, and that a
- * per-country API error is swallowed rather than aborting detection.
+ * Which hotels an incremental hotelinfo run asks about. It used to call
+ * offers_update itself, for every country, on every five-minute run that
+ * found nothing; now the offers_update job (every 12 hours, as Novoton asked
+ * on 28 Oct 2026) leaves its findings on the rows and this only reads them.
  */
 #[CoversClass(ChangedHotelDetector::class)]
-class ChangedHotelDetectorTest extends TestCase
+final class ChangedHotelDetectorTest extends TestCase
 {
-    private SyncLoggerInterface $logger;
+    private const int NOW = 1_793_000_000;
+
+    /** @var list<array{string, list<mixed>}> */
+    private array $queries = [];
 
     protected function setUp(): void
     {
         DbStub::reset();
-        $this->logger = $this->createMock(SyncLoggerInterface::class);
+        $this->queries = [];
+        DbStub::$getFields = function (string $query, mixed ...$params): array {
+            $this->queries[] = [$query, $params];
+
+            return ['H5', 'H9'];
+        };
     }
 
     protected function tearDown(): void
@@ -36,52 +40,34 @@ class ChangedHotelDetectorTest extends TestCase
         DbStub::reset();
     }
 
-    /** @param \SimpleXMLElement|\Throwable $offersResult */
-    private function api(mixed $offersResult): NovotonApiKitInterface
+    private function detector(): ChangedHotelDetector
     {
-        $destinations = $this->createMock(DestinationApiClientInterface::class);
-        if ($offersResult instanceof \Throwable) {
-            $destinations->method('getOffersUpdate')->willThrowException($offersResult);
-        } else {
-            $destinations->method('getOffersUpdate')->willReturn($offersResult);
-        }
-        $api = $this->createMock(NovotonApiKitInterface::class);
-        $api->method('destinations')->willReturn($destinations);
-        return $api;
+        return new ChangedHotelDetector($this->createStub(SyncLoggerInterface::class));
     }
 
-    public function testReturnsEmptyWhenNoPreviousSync(): void
+    public function testItReadsTheMarksWithoutCallingNovoton(): void
     {
-        DbStub::$getField = static fn () => '';   // no completed hotelinfo sync yet
+        self::assertSame(['H5', 'H9'], $this->detector()->detect(['GREECE'], self::NOW));
 
-        $api = $this->createMock(NovotonApiKitInterface::class);
-        $api->expects($this->never())->method('destinations');
-
-        $this->assertSame([], (new ChangedHotelDetector($this->logger))->detect($api, ['GR']));
+        self::assertCount(1, $this->queries);
+        [$sql, $params] = $this->queries[0];
+        self::assertStringContainsString('hotelinfo_synced_at IS NULL OR hotelinfo_due_at > hotelinfo_synced_at', $sql, 'never fetched, or named by offers_update since');
+        self::assertSame(['GREECE'], $params[0]);
     }
 
-    public function testUnionsChangedOffersWithNeverSynced(): void
+    /** A hotel Novoton did not answer for waits a day, unless offers_update names it again. */
+    public function testAHotelWithoutAnAnswerIsAskedAgainADayLater(): void
     {
-        DbStub::$getField = static fn (): string => '2026-01-01 00:00:00';
-        DbStub::$getFields = static fn (): array => ['H9'];  // never-synced
+        $this->detector()->detect(['GREECE'], self::NOW);
 
-        $xml = simplexml_load_string('<r><Offer><IdHotel>H5</IdHotel></Offer></r>');
-        self::assertInstanceOf(\SimpleXMLElement::class, $xml);
-
-        $result = (new ChangedHotelDetector($this->logger))->detect($this->api($xml), ['GR']);
-
-        $this->assertSame(['H5', 'H9'], $result);
+        [$sql, $params] = $this->queries[0];
+        self::assertStringContainsString('hotelinfo_tried_at IS NULL OR hotelinfo_tried_at < hotelinfo_due_at OR hotelinfo_tried_at < ?s', $sql);
+        self::assertSame(date('Y-m-d H:i:s', self::NOW - ChangedHotelDetector::RETRY_AFTER), $params[1]);
     }
 
-    public function testApiErrorForCountryIsSwallowed(): void
+    public function testNoCountriesNoQuery(): void
     {
-        DbStub::$getField = static fn (): string => '2026-01-01 00:00:00';
-        DbStub::$getFields = static fn (): array => [];  // nothing never-synced either
-
-        $result = (new ChangedHotelDetector($this->logger))
-            ->detect($this->api(new ApiException('upstream down')), ['GR']);
-
-        // Error was logged and skipped → no changed hotels, detection still returns cleanly.
-        $this->assertSame([], $result);
+        self::assertSame([], $this->detector()->detect([], self::NOW));
+        self::assertSame([], $this->queries);
     }
 }

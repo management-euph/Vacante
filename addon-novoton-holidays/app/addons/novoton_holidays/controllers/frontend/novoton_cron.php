@@ -44,6 +44,12 @@ if (function_exists('fn_novoton_holidays_seed_seo_defaults')) {
     fn_novoton_holidays_seed_seo_defaults();
 }
 
+// The columns a job may need (Install\SchemaMigrator); the admin-area heal
+// in init.php does not run for the cron URL. A failure is reported, not fatal.
+if (function_exists('fn_novoton_holidays_ensure_schema') && function_exists('fn_travel_core_self_heal_guard')) {
+    fn_travel_core_self_heal_guard('novoton_schema', 'fn_novoton_holidays_ensure_schema');
+}
+
 $mode = TypeCoerce::toString(preg_replace('/[^a-zA-Z0-9_]/', '', RequestCoerce::string($_REQUEST, 'mode', 'resinfo')));
 
 header('Content-Type: text/plain; charset=utf-8');

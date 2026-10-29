@@ -187,6 +187,21 @@ final class NovotonAvailabilityRecorder
     }
 
     /**
+     * The hotels' published price windows (priceinfo, by the nightly calendar
+     * rebuild), for the weekly check to leave out the dates none of a
+     * resort's hotels has a price for. None when the records cannot be read:
+     * every date is then asked.
+     *
+     * @param list<string> $hotelIds
+     *
+     * @return array<array-key, array{from: ?string, to: ?string, next: ?string}> hotel_id => window
+     */
+    public function priceWindows(array $hotelIds): array
+    {
+        return $this->guard('published prices', [], fn (): array => $this->records->priceWindows(self::PROVIDER, $hotelIds));
+    }
+
+    /**
      * Fills in past seasons once (plan §4.4), so "no availability for N
      * months" can be judged from the first run: the latest date any stored
      * season priced (past seasons included: package rows are never pruned),

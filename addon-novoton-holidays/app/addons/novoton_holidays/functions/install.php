@@ -114,6 +114,7 @@ function fn_novoton_holidays_uninstall(): bool
     db_query("DROP TABLE IF EXISTS ?:novoton_sync_log");
     db_query("DROP TABLE IF EXISTS ?:novoton_bookings");
     db_query("DROP TABLE IF EXISTS ?:novoton_hotel_packages");
+    db_query("DROP TABLE IF EXISTS ?:novoton_hotel_images");
     // Hotels table last (other tables may reference it)
     db_query("DROP TABLE IF EXISTS ?:novoton_hotels");
 
@@ -189,6 +190,9 @@ function fn_novoton_holidays_post_install(): bool
     // Setup database constraints and language variables
     fn_novoton_holidays_setup_db();
 
+    // Columns added after the CREATE TABLEs were written (Install\SchemaMigrator)
+    fn_novoton_holidays_ensure_schema();
+
     // Seed Novoton API aliases into shared travel_core feature mapping
     fn_novoton_holidays_seed_travel_aliases();
 
@@ -207,6 +211,17 @@ function fn_novoton_holidays_post_install(): bool
     }
 
     return true;
+}
+
+/**
+ * Add the columns shipped after install to existing tables (idempotent;
+ * body in Install\SchemaMigrator). Run at install, as an admin self-heal
+ * from init.php and before every cron run.
+ */
+function fn_novoton_holidays_ensure_schema(): void
+{
+    $prefix = \Tygh\Registry::get('config.table_prefix');
+    \Tygh\Addons\NovotonHolidays\Install\SchemaMigrator::ensure(is_scalar($prefix) ? (string) $prefix : 'cscart_');
 }
 
 /**

@@ -14,7 +14,7 @@ use Tygh\Addons\TravelCore\Services\AvailabilityWindows;
  *
  * Advanced settings, so Novoton's answer on how often it may be called
  * changes a setting, not code. A run's URL can set the budgets for that run
- * only (max_calls, max_time, resorts, nights).
+ * only (max_calls, max_time, resorts, nights, skip_unpriced).
  */
 final class ResortCheckSettings
 {
@@ -35,6 +35,7 @@ final class ResortCheckSettings
     /**
      * @param list<int> $nearDays
      * @param int $units how many units this run takes; 0 = its share of the cycle
+     * @param bool $skipUnpriced leave out the dates none of a unit's hotels has a published price for (ResortCheckQueue::split())
      */
     public function __construct(
         public readonly array $nearDays,
@@ -44,6 +45,7 @@ final class ResortCheckSettings
         public readonly int $maxCalls = self::DEFAULT_MAX_CALLS,
         public readonly int $maxSeconds = self::DEFAULT_MAX_MINUTES * 60,
         public readonly int $units = 0,
+        public readonly bool $skipUnpriced = true,
     ) {
     }
 
@@ -69,6 +71,9 @@ final class ResortCheckSettings
             maxCalls: max(1, min(5000, $param('max_calls', $setting('availability_check_max_calls', self::DEFAULT_MAX_CALLS)))),
             maxSeconds: 60 * max(1, min(240, $param('max_time', $setting('availability_check_max_minutes', self::DEFAULT_MAX_MINUTES)))),
             units: $resorts === 'all' ? PHP_INT_MAX : max(0, TypeCoerce::toInt($resorts)),
+            skipUnpriced: TypeCoerce::toString($params['skip_unpriced'] ?? '') !== ''
+                ? TypeCoerce::toBool($params['skip_unpriced'])
+                : TypeCoerce::toString($settings['availability_check_skip_unpriced'] ?? 'Y') !== 'N',
         );
     }
 

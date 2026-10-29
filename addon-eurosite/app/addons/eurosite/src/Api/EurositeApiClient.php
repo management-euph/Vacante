@@ -605,10 +605,12 @@ final class EurositeApiClient
     // ── Internals ────────────────────────────────────────────────────────────
 
     /**
-     * Build the envelope, POST it, and return the raw response text.
+     * Build the envelope, POST it, and return the raw response text. A
+     * scheduled run waits its turn first (RequestPacer).
      */
     private function send(string $requestType, string $detailsXml): string
     {
+        RequestPacer::active()?->wait($requestType);
         $xml = $this->builder->envelope(
             $requestType,
             $detailsXml,

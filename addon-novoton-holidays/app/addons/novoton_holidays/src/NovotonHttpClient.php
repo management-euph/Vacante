@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays;
 
+use Tygh\Addons\NovotonHolidays\Api\RequestGate;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Http\ResiliencePolicy;
@@ -34,6 +35,10 @@ class NovotonHttpClient implements HttpClientInterface
     private int $circuitBreakerThreshold;
     private int $circuitBreakerTimeout;
 
+    // Every request of the store, jobs and customers' searches alike, within
+    // what Novoton asked for: 5 at the same time, 5 a second (RequestGate).
+    private RequestGate $gate;
+
     // Debug properties
     public int $lastHttpCode = 0;
     public string $lastError = '';
@@ -42,8 +47,9 @@ class NovotonHttpClient implements HttpClientInterface
     /**
      * @param array<string, mixed> $settings
      */
-    public function __construct(array $settings, ?ResiliencePolicy $resilience = null)
+    public function __construct(array $settings, ?ResiliencePolicy $resilience = null, ?RequestGate $gate = null)
     {
+        $this->gate = $gate ?? RequestGate::shared();
         if (empty($settings['api_url'])) {
             throw new \InvalidArgumentException(
                 'Novoton API URL not configured — set api_url in addon settings',
@@ -181,7 +187,13 @@ class NovotonHttpClient implements HttpClientInterface
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
 
-            $response = curl_exec($ch);
+            // One ticket per attempt, given back before any retry wait.
+            $tickets = $this->gate->acquire();
+            try {
+                $response = curl_exec($ch);
+            } finally {
+                $this->gate->release($tickets);
+            }
             $lastHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $lastError = curl_error($ch);
 
@@ -233,6 +245,10 @@ class NovotonHttpClient implements HttpClientInterface
     /**
      * Send multiple requests in parallel using curl_multi
      *
+     * Each round sends as many requests as the gate has tickets free (at most
+     * $concurrency), so a batch shares Novoton's 5-at-once, 5-a-second
+     * allowance with every other job and with customers' searches.
+     *
      * @param array<string, mixed> $requests Keyed array: key => ['function' => ..., 'xml' => ..., 'lang' => ...]
      * @param int $concurrency Max simultaneous requests
      * @return array<string, mixed> key => raw response string or false
@@ -251,9 +267,15 @@ class NovotonHttpClient implements HttpClientInterface
         $results = [];
         $mh = curl_multi_init();
 
-        $chunks = array_chunk($requests, max(1, $concurrency), true);
+        $pending = $requests;
 
-        foreach ($chunks as $chunk) {
+        while ($pending !== []) {
+            $want = min(max(1, $concurrency), count($pending));
+            $tickets = $this->gate->acquire($want);
+            // No tickets means the gate is off (its file cannot be used).
+            $take = $tickets === [] ? $want : count($tickets);
+            $chunk = array_slice($pending, 0, $take, true);
+            $pending = array_slice($pending, $take, null, true);
             $handles = [];
 
             foreach ($chunk as $key => $req) {
@@ -286,10 +308,14 @@ class NovotonHttpClient implements HttpClientInterface
             }
 
             $running = null;
-            do {
-                curl_multi_exec($mh, $running);
-                curl_multi_select($mh);
-            } while ($running > 0);
+            try {
+                do {
+                    curl_multi_exec($mh, $running);
+                    curl_multi_select($mh);
+                } while ($running > 0);
+            } finally {
+                $this->gate->release($tickets);
+            }
 
             foreach ($handles as $key => $ch) {
                 $response = curl_multi_getcontent($ch);

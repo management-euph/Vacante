@@ -6,10 +6,13 @@ namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
+use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Helpers\OffersUpdateBaseline;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\DestinationScope;
+use Tygh\Addons\NovotonHolidays\Services\HotelImageSync;
+use Tygh\Addons\NovotonHolidays\Services\OfferChangeMarker;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class OffersUpdateCommand extends AbstractCronCommand
@@ -25,10 +28,16 @@ class OffersUpdateCommand extends AbstractCronCommand
 
     public static function getDescription(): string
     {
-        return 'Check offers_update API for new/changed hotels and add as products';
+        return 'Check offers_update for changed offers in every country sold: mark them for priceinfo and hotelinfo, add new hotels as products';
     }
 
     /**
+     * Novoton asked (28 Oct 2026) for offers_update every 12 hours, then
+     * priceinfo only for what it returned. Each country we sell is asked
+     * since its own baseline (OffersUpdateBaseline); &country= asks one.
+     * A country Novoton does not answer for keeps its baseline, so the next
+     * run asks for the same changes again.
+     *
      * @return array<string, mixed>
      */
     public function execute(): array
@@ -36,8 +45,56 @@ class OffersUpdateCommand extends AbstractCronCommand
         $this->output('Checking for new/updated offers (offers_update API)...');
         $this->output('');
 
-        $country = strtoupper(TypeCoerce::toString($this->getParam('country', Constants::DEFAULT_COUNTRY)));
+        $asked = strtoupper(trim(TypeCoerce::toString($this->getParam('country', ''))));
+        $countries = $asked !== ''
+            ? [$asked]
+            : array_values(array_unique(array_map('strtoupper', ConfigProvider::getSelectedCountries())));
+        if ($countries === []) {
+            $countries = [Constants::DEFAULT_COUNTRY];
+        }
 
+        $totals = ['new_hotels' => 0, 'added_to_cart' => 0, 'packages_marked' => 0, 'hotels_marked' => 0];
+        $failed = [];
+        foreach ($countries as $country) {
+            try {
+                $stats = $this->checkCountry($country);
+            } catch (ApiException $e) {
+                // No answer, or a refusal: this country's baseline stays put.
+                $this->output("{$country}: Novoton did not answer ({$e->getMessage()}). The next run asks again.");
+                $this->output('');
+                $failed[] = $country;
+                continue;
+            }
+            foreach ($stats as $key => $value) {
+                $totals[$key] += $value;
+            }
+        }
+
+        $this->output("New hotels synced: {$totals['new_hotels']}");
+        $this->output("Added to CS-Cart: {$totals['added_to_cart']}");
+        $this->output("Packages to ask priceinfo for again: {$totals['packages_marked']}");
+        $this->output("Hotels to ask hotelinfo for again (a package they do not list yet): {$totals['hotels_marked']}");
+
+        $this->sendReport('offers_update', [
+            'added' => $totals['added_to_cart'], 'updated' => $totals['new_hotels'], 'duration' => $this->getDuration() . 's',
+        ], implode(', ', $countries));
+
+        if ($failed !== []) {
+            return ['success' => false, 'error' => 'Novoton did not answer offers_update for ' . implode(', ', $failed), 'stats' => $totals];
+        }
+
+        return ['success' => true, 'stats' => $totals];
+    }
+
+    /**
+     * One country: ask, mark what changed, add new hotels as products.
+     *
+     * @return array{new_hotels: int, added_to_cart: int, packages_marked: int, hotels_marked: int}
+     *
+     * @throws ApiException when Novoton does not answer or refuses
+     */
+    private function checkCountry(string $country): array
+    {
         $syncRepo = Container::getInstance()->syncLogRepository();
         // A durable baseline per country (OffersUpdateBaseline): the
         // product_import log row it used to need was trimmed away by the
@@ -51,17 +108,21 @@ class OffersUpdateCommand extends AbstractCronCommand
 
         $this->output("Country: {$country}");
         $this->output("Changes since: {$since}");
-        $this->output('Checking offers added/modified after this time...');
         $this->output('');
 
-        // Throws when Novoton does not answer or refuses (a wrong password):
-        // the baseline then stays put.
-        $response = $this->api->destinations()->getOffersUpdate($since, $country);
+        // Novoton's DateTime is Y-m-dTH:i:s; the baseline is stored with a space.
+        $sinceTime = strtotime($since);
+        $response = $this->api->destinations()->getOffersUpdate(
+            $sinceTime === false ? $since : date('Y-m-d\TH:i:s', $sinceTime),
+            $country,
+        );
 
+        $stats = ['new_hotels' => 0, 'added_to_cart' => 0, 'packages_marked' => 0, 'hotels_marked' => 0];
         if (!isset($response->Offer)) {
             OffersUpdateBaseline::advance($country, $askedAt);
             $this->output('No new offers found.');
-            return ['success' => true, 'stats' => ['new_hotels' => 0, 'added_to_cart' => 0]];
+            $this->output('');
+            return $stats;
         }
 
         // $response->Offer is the node set of every <Offer>: iterate it.
@@ -75,18 +136,20 @@ class OffersUpdateCommand extends AbstractCronCommand
         $this->output('');
 
         $hotelRepo = Container::getInstance()->hotelRepository();
+        $marker = new OfferChangeMarker();
         $new_hotels = 0;
         $added_to_cart = 0;
-        $image_base_url = \Tygh\Addons\NovotonHolidays\Constants::IMAGE_BASE_URL;
 
         foreach ($offers as $offer) {
             $hotel_id = (string)($offer->IdHotel ?? '');
-            $hotel_name = (string)($offer->PackageName ?? $offer->Hotel ?? '');
+            // One <Offer> per package: PackageName names the package, Hotel the hotel.
+            $package_name = trim((string)($offer->PackageName ?? ''));
+            $hotel_name = (string)($offer->Hotel ?? $package_name);
             if (empty($hotel_id)) {
                 continue;
             }
 
-            $this->output("[{$hotel_id}] {$hotel_name} ... ", false);
+            $this->output("[{$hotel_id}] {$hotel_name} / {$package_name} ... ", false);
 
             $existingDto = $hotelRepo->findByIdAsDto($hotel_id);
             // Legacy array view for downstream `array_merge` + string-key access.
@@ -95,7 +158,17 @@ class OffersUpdateCommand extends AbstractCronCommand
             // keys (hotel_data_for_seo below, etc.) don't fight the shape.
             $existing = $existingDto !== null ? (array) $existingDto->toArray() : [];
 
-            if ($existingDto === null) {
+            if ($existingDto !== null) {
+                // priceinfo asks for the package again; hotelinfo for a hotel
+                // whose stored details do not list the package yet.
+                if ($marker->mark($hotel_id, $package_name, $askedAt) === OfferChangeMarker::PACKAGE) {
+                    $stats['packages_marked']++;
+                    $this->output('prices to refresh - ', false);
+                } else {
+                    $stats['hotels_marked']++;
+                    $this->output('details to refresh - ', false);
+                }
+            } else {
                 $this->output('NEW HOTEL - ', false);
                 $hotel_info = $this->api->hotels()->getHotelInfo($hotel_id);
                 if ((bool) $hotel_info) {
@@ -200,7 +273,7 @@ class OffersUpdateCommand extends AbstractCronCommand
                     \Tygh\Addons\NovotonHolidays\Helpers\ProductFactory::otherStorefrontLanguages(TypeCoerce::toString(CART_LANGUAGE)),
                 );
                 $hotelRepo->linkToProduct($hotel_id, $productId);
-                $this->attachImages($hotel_id, $productId, $image_base_url);
+                $this->attachImages($hotel_id, $productId);
                 $added_to_cart++;
                 $this->output("ADDED (ID: {$productId})");
             } else {
@@ -211,8 +284,6 @@ class OffersUpdateCommand extends AbstractCronCommand
         }
 
         $this->output('');
-        $this->output("New hotels synced: {$new_hotels}");
-        $this->output("Added to CS-Cart: {$added_to_cart}");
 
         $this->logToSyncTable('offers_update', $added_to_cart);
         OffersUpdateBaseline::advance($country, $askedAt);
@@ -223,28 +294,23 @@ class OffersUpdateCommand extends AbstractCronCommand
             'status' => 'completed',
         ]);
 
-        $stats = ['new_hotels' => $new_hotels, 'added_to_cart' => $added_to_cart];
-        $this->sendReport('offers_update', [
-            'added' => $added_to_cart, 'updated' => $new_hotels, 'duration' => $this->getDuration() . 's',
-        ], $country);
+        $stats['new_hotels'] = $new_hotels;
+        $stats['added_to_cart'] = $added_to_cart;
 
-        return ['success' => true, 'stats' => $stats];
+        return $stats;
     }
 
-    private function attachImages(string $hotelId, int $productId, string $baseUrl): void
+    private function attachImages(string $hotelId, int $productId): void
     {
+        // Its photos, remembered (HotelImageSync), so the weekly
+        // refresh_images never adds one twice.
         try {
-            $images = $this->api->hotels()->getHotelImages($hotelId);
-            if ((bool) $images && isset($images->url)) {
-                $count = 0;
-                foreach ($images->url as $url) {
-                    $image_url = $baseUrl . str_replace(' ', '%20', (string)$url);
-                    fn_novoton_holidays_add_product_image($productId, $image_url, $count === 0);
-                    if (++$count >= 10) {
-                        break;
-                    }
-                }
-            }
+            (new HotelImageSync())->sync(
+                $hotelId,
+                $productId,
+                HotelImageSync::paths($this->api->hotels()->getHotelImages($hotelId)),
+                date('Y-m-d H:i:s'),
+            );
         } catch (\Exception $e) {
             fn_log_event('general', 'runtime', ['message' => "Novoton: Failed to import images for hotel {$hotelId}", 'error' => $e->getMessage()]);
         }

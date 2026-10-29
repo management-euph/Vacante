@@ -189,6 +189,25 @@ final class NovotonAvailabilityRecorderTest extends TestCase
         self::assertSame([], (new NovotonAvailabilityRecorder())->awaitingFirstOffer([], '2026-10-26'));
     }
 
+    /** The weekly check's published prices; when the records cannot be read, it asks every date. */
+    public function testPublishedPriceWindowsAreReadFromTheRecords(): void
+    {
+        $query = '';
+        DbStub::$getArray = static function (string $sql, mixed ...$params) use (&$query): array {
+            $query = db_quote($sql, ...$params);
+
+            return [['hotel_id' => '476', 'contract_from' => '2027-05-01', 'contract_to' => '2027-10-15', 'offer_next_date' => null]];
+        };
+
+        self::assertSame([476 => ['from' => '2027-05-01', 'to' => '2027-10-15', 'next' => null]], (new NovotonAvailabilityRecorder())->priceWindows(['476', '477']));
+        self::assertStringContainsString("provider = 'novoton' AND hotel_id IN ('476', '477') AND contract_last_date IS NOT NULL", $query);
+
+        DbStub::$getArray = static function (): never {
+            throw new \RuntimeException('Table travel_hotel_availability is marked as crashed');
+        };
+        self::assertSame([], (new NovotonAvailabilityRecorder())->priceWindows(['476']));
+    }
+
     public function testNovotonDeclaresWhatItCanTell(): void
     {
         $source = new NovotonAvailabilitySource();

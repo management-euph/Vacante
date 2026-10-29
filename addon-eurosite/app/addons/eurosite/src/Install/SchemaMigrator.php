@@ -46,6 +46,8 @@ final class SchemaMigrator
         'guest_phone' => "ADD COLUMN `guest_phone` VARCHAR(100) NOT NULL DEFAULT '' AFTER `guest_email`",
         'cancellation_fees_json' => "ADD COLUMN `cancellation_fees_json` JSON DEFAULT NULL COMMENT 'getBookingFees snapshot' AFTER `status`",
         'updated_at' => 'ADD COLUMN `updated_at` DATETIME DEFAULT NULL AFTER `created_at`',
+        'submitted_at' => "ADD COLUMN `submitted_at` DATETIME DEFAULT NULL COMMENT 'When Eurosite took the booking (AddBookingRequest)' AFTER `updated_at`",
+        'status_checked_at' => "ADD COLUMN `status_checked_at` DATETIME DEFAULT NULL COMMENT 'Last scheduled getBookingRequest (BookingStatusSchedule)' AFTER `submitted_at`",
     ];
 
     /**

@@ -57,7 +57,7 @@ final class CronPlanBuilderTest extends TestCase
         self::assertSame([1, 2, 3, 4, 5], array_column($stages, 'number'));
         self::assertSame([
             'resort_list', 'list_facilities',
-            'hotel_list', 'hotel_info_batched', 'hotel_facilities_batched', 'geocode_addresses',
+            'hotel_list', 'hotel_info_batched', 'hotel_facilities_batched', 'refresh_images', 'geocode_addresses',
             'sync_priceinfo_batched', 'compute_prices', 'recompute_calendar_prices', 'room_price',
             'add_hotels_as_products', 'reassign_features', 'backfill_images', 'offers_update',
             'resinfo', 'cleanup',
@@ -96,6 +96,30 @@ final class CronPlanBuilderTest extends TestCase
             self::assertGreaterThan($last, $at, "{$mode} ({$dom}) runs before the job listed above it");
             $last = $at;
         }
+    }
+
+    /**
+     * Novoton's answers (28 Oct 2026): nothing that calls them starts in
+     * their busiest hour, 03:00–04:00; offers_update every 12 hours; resinfo
+     * every 15–30 minutes; hotel_list every 3 days; resort_list and
+     * list_facilities weekly.
+     */
+    public function testTheSchedulesFollowNovotonsAnswers(): void
+    {
+        $noNovotonCalls = ['recompute_calendar_prices', 'compute_prices', 'reassign_features', 'cleanup', 'geocode_addresses'];
+        foreach (array_merge(...array_values(CronPlanBuilder::STAGES)) as $mode) {
+            [, $hour] = explode(' ', CronPlanBuilder::cron($mode));
+            if (in_array('3', explode(',', $hour), true)) {
+                self::assertContains($mode, $noNovotonCalls, "{$mode} starts in Novoton's busiest hour");
+            }
+        }
+
+        self::assertSame('0 5,17 * * *', CronPlanBuilder::cron('offers_update'));
+        self::assertSame('*/15 * * * *', CronPlanBuilder::cron('resinfo'));
+        self::assertSame('30 1 */3 * *', CronPlanBuilder::cron('hotel_list'));
+        self::assertSame('0 1 * * 0', CronPlanBuilder::cron('resort_list'));
+        self::assertSame('15 1 * * 0', CronPlanBuilder::cron('list_facilities'));
+        self::assertSame('15 2 * * *', CronPlanBuilder::cron('refresh_images'), 'a seventh of the hotels a night: each hotel\'s photos weekly, done before 03:00');
     }
 
     public function testEveryScheduledJobHasASlot(): void
@@ -184,7 +208,7 @@ final class CronPlanBuilderTest extends TestCase
         self::assertSame('0 1 * * 0  php /var/www/html/app/addons/novoton_holidays/cron.php access_key=' . self::KEY . ' mode=resort_list', $lines[3]);
 
         $commands = array_values(array_filter($lines, static fn (string $l): bool => !str_starts_with($l, '#')));
-        self::assertCount(16, $commands);
+        self::assertCount(17, $commands);
         foreach ($commands as $line) {
             self::assertMatchesRegularExpression('/^\S+ \S+ \S+ \S+ \S+  php \//', $line);
         }
@@ -213,6 +237,7 @@ final class CronPlanBuilderTest extends TestCase
         yield 'hourly' => ['45 * * * *', 'novoton_holidays.dash_sched_hourly', ['[minute]' => '45']];
         yield 'every 2 hours' => ['15 */2 * * *', 'novoton_holidays.dash_sched_every_hours', ['[n]' => '2', '[minute]' => '15']];
         yield 'daily' => ['30 3 * * *', 'novoton_holidays.dash_sched_daily', ['[time]' => '03:30']];
+        yield 'twice a day' => ['0 5,17 * * *', 'novoton_holidays.dash_sched_twice_daily', ['[time]' => '05:00', '[time2]' => '17:00']];
         yield 'sunday' => ['15 1 * * 0', 'novoton_holidays.dash_sched_weekly_sun', ['[time]' => '01:15']];
         yield 'every 3 days' => ['0 2 */3 * *', 'novoton_holidays.dash_sched_every_days', ['[n]' => '3', '[time]' => '02:00']];
         yield 'anything else' => ['0 0 1 1 *', 'novoton_holidays.dash_sched_raw', ['[cron]' => '0 0 1 1 *']];

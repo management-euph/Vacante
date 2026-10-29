@@ -297,6 +297,13 @@ does in practice, and its settings, are in §16.5.
     6 dates ≈ 420 calls.
   - Use the per-hotel `room_price` only for hotels a resort answer can't cover,
     such as a missing or mismatched city.
+  - **Skip dates without published prices** (added 2026-10-28, §16.7): a date
+    none of the resort's hotels has a priceinfo price for can have no offer,
+    so it is not asked and counts as answered without one. A hotel whose
+    prices were never read, whose window ended before today, or whose latest
+    check found an offer outside it keeps its resort's every date asked.
+    Out of season this leaves out most of a seaside resort's dates. A setting,
+    on by default; `&skip_unpriced=0` asks every date for one run.
 - **Schedule: weekly per resort.**
   - Each night's run checks one seventh of the resorts on every date, least
     recently checked first, so every resort is checked once a week: about 60
@@ -353,11 +360,11 @@ job that changes is Novoton's `room_price`, on its existing line.
 
 | Job (existing line) | What it records for this plan | Extra API calls |
 |---|---|---|
-| Novoton `hotel_list` (`0 2 */3 * *`) | Seen in / missing from the list (§4.2) | None |
+| Novoton `hotel_list` (`30 1 */3 * *`) | Seen in / missing from the list (§4.2) | None |
 | Novoton `recompute_calendar_prices` (`30 3 * * *`) and `compute_prices` (every 5 minutes) | The published price window (§4.2); the backfill, once (§4.4) | None |
 | Novoton `room_price` (`0 4 * * *`), reworked (done, §16.5) | The weekly resort check and `has_room_price` (§4.3) | Fewer: about 60 calls a night instead of up to 500, at most 120 (a setting) |
 | Novoton `add_hotels_as_products` (`30 4 * * *`) | Nothing new; it reads `has_room_price` as today | None |
-| Eurosite `hotels` (`0 3 * * *`, or inside `full`) and `availability` (`30 4 * * *`) | Seen in the list; the per-city answers its gate already fetches (phase 1b, done §16.4) | None |
+| Eurosite `hotels` (`0 3 * * 0`, weekly since §16.7, or inside `full`) and `availability` (`15 4 * * *`) | Seen in the list; the per-city answers its gate already fetches (phase 1b, done §16.4) | None |
 | Sphinx `hotels` (daily; 02:00 on its settings tab, 03:00 on its dashboard, §14 item 14) | List completeness; the destination answers its gate searches already fetch (phase 1b, done §16.4). Only if needed: a season-date search for one seventh of the destinations with products each night (§15.3, point 9) | None, or that search |
 | Hotel-page searches (customers, no cron) | Offers seen (§4.2) | None |
 | Travel Core's daily cron (the `exchange_rates` line) | Every day: shows again the hotels the gate hid that have an offer (Automatic mode only). Once a week: bookings read back, the classification (§5), the report and the weekly email; in Automatic mode, hiding (§10) | None: stored records only |
@@ -387,9 +394,10 @@ Rules, so that the jobs never overlap:
    them in the contract). Travel Core's run log shows which are running, and a
    stalled run does not block it. It then tries again on its next daily run.
    The weekly part runs once 7 days have passed since its last complete run.
-6. **No more API traffic at 04:00 than today.** `offers_update` (every 2 hours,
-   so also at 04:00) and `resinfo` (04:15) are unchanged, and `room_price`
-   makes far fewer calls.
+6. **No more API traffic at 04:00 than today.** `room_price` makes far fewer
+   calls, and since Novoton's answers (§16.7) nothing that calls Novoton
+   starts between 03:00 and 04:00: `offers_update` runs at 05:00 and 17:00,
+   `resinfo` every 15 minutes for the few bookings still on request.
 7. **Visible on its own.** The step records its runs as `hotel_availability`,
    so Travel Core → Tools shows its health apart from the exchange rates, and
    one failing never stops the other. The Availability page shows when it last
@@ -1253,7 +1261,7 @@ and the weekly review then classified what it wrote.
 | Only answers count | the same; `Helpers\PriceCheckFlags::resortOffers()` | A reply that does not parse, a refusal or an `<Error>` is no answer; Novoton's empty document is its "no prices". A hotel counts as offered once one of its rows has a price above zero. Every date answered: `has_room_price` Y for the unit's hotels with an offer on any date, N for the others, and `recordCheck()`, so each hotel was checked, offer or not. Some dates answered: Y for those with an offer, the others keep their flag, `recordOffersSeen()`. None: nothing changes, and the unit comes first again the next night |
 | A hotel Novoton files under another resort | the same | A hotel in a resort's answer whose city in the store is another one: Y, and its offers recorded; its own resort's check decides the rest |
 | When a run stops | the same | At the time budget, estimated from the units done so far so that a run started at 04:00 ends before `add_hotels_as_products` at 04:30; at the call budget; or after two units in a row without one answer (Novoton not answering). Units not reached go first next time. The job reports a failure, which Travel Core's cron health shows, when no unit got an answer or no country's resort list came |
-| Settings | Settings → Advanced → "Weekly availability check (room_price)" | Near dates `14, 30`; season dates `06-20, 07-15, 08-15, 09-05`; each resort once every 7 days; at most 120 calls and 20 minutes a run. They reach installed stores through Travel Core's settings heal. A run's URL can set `resorts=N` or `resorts=all`, `max_calls`, `max_time` (minutes) and `nights` for that run; `check_in`, `limit` and `concurrency` are no longer used, and a run that passes them says so |
+| Settings | Settings → Advanced → "Weekly availability check (room_price)" | Near dates `14, 30`; season dates `06-20, 07-15, 08-15, 09-05`; each resort once every 7 days; at most 120 calls and 20 minutes a run; since §16.7, skip dates without published prices (on). They reach installed stores through Travel Core's settings heal. A run's URL can set `resorts=N` or `resorts=all`, `max_calls`, `max_time` (minutes), `nights` and `skip_unpriced` for that run; `check_in`, `limit` and `concurrency` are no longer used, and a run that passes them says so |
 | Dashboard | the `dash_job_room_price` texts | "Availability check": weekly, a seventh of the resorts a night. Mode, slot, run lock and run log unchanged. Add products, finding no priced hotel in a country, says how to check that country now (`&country=…&resorts=all`) |
 | Records read | Travel Core `HotelAvailabilityRepository::awaitingFirstOffer()` | The hotels whose published prices start after today and that had no offer in their latest check, with their first priced date |
 
@@ -1306,7 +1314,78 @@ pass; the storage, the emails and the panel's queries were run on MariaDB
 Still to do in phase 2: the panel and its form on both hotel page templates,
 the date-picker window (§7.1), and optional listing labels.
 
-### 16.7 Next
+### 16.7 The suppliers' answers, applied (2026-10-28)
+
+The three suppliers answered the Production Cron Plan's questions on
+28 Oct 2026. The plan (a Claude doc) now carries their answers, the new
+schedule and the replies still to send; the code follows it. PHPStan level
+10, both CS Fixer configs, Rector and the suites pass (Novoton 1065, Eurosite
+332, Travel Core 924); the new SQL was run on MariaDB 10.11.
+
+| Supplier | What they asked for | What changed |
+|---|---|---|
+| Novoton | At most 5 requests at once and 5 a second | `Api\RequestGate`: one file-locked gate for every request of the store, jobs and customers' searches |
+| Novoton | Bulk work 01:00–06:00, not 03:00–04:00 | No job that calls Novoton starts in that hour; `hotel_list` at 01:30, hotel facilities Sunday 01:45 |
+| Novoton | hotelinfo every 3 days in February–May, 7 otherwise | Two settings; `Services\FullPassSchedule` starts each full pass from 05:00 |
+| Novoton | offers_update every 12 hours; priceinfo only for what it returns, a full pass monthly | `offers_update` at 05:00 and 17:00 for every sold country, marking packages (`price_changed_at`) and hotels (`hotelinfo_due_at`); priceinfo asks only for new and marked packages, monthly in full; hotelinfo no longer calls offers_update itself (`Install\SchemaMigrator` adds the columns) |
+| Novoton | resinfo for ASK only, every 15–30 minutes, stop at OK/ST/RQ | Every 15 minutes (`Services\AskBookingPoller`); RQ now reaches the alternatives jobs; Travel Core's "Sync statuses" checks bookings instead of fetching hotel lists |
+| Eurosite | Catalogs monthly, hotel lists weekly | On the 1st and on Sundays; the nightly `full` runs each step only when due |
+| Eurosite | Booking status: 30 minutes after booking, every 30 minutes for 2 hours, again 8 hours later | New `booking_status` job (every 15 minutes, `BookingStatusSchedule`); a taken booking stays pending until Eurosite confirms it |
+| Eurosite | No set limits | Scheduled runs keep to Sphinx's: at most 10 price searches a minute, other requests at most once a second (`Api\RequestPacer`) |
+| Sphinx | 10 requests a minute for non-static data; calendar prices from the cache | Nothing yet: whether the limit covers searches and the cache, and which request shape the cache wants, are asked back |
+
+Open: the five questions in the plan's "Replies to send".
+
+Later the same day, the limits became settings, so a supplier's new numbers
+change a setting, not code, and the weekly check stopped asking about dates
+nobody has prices for. The suites pass (Novoton 1079, Eurosite 339, Travel
+Core 925); the new query was run on MariaDB 10.11.
+
+| Add-on | Setting (default) | Where it acts |
+|---|---|---|
+| Novoton, Advanced | Requests to Novoton at the same time (5); per second (5) | `Api\RequestGate`, for the whole store |
+| Novoton, Weekly availability check | Skip dates without published prices (on) | `ResortCheckQueue::split()`: a date none of a unit's hotels has a published price for (Travel Core `HotelAvailabilityRepository::priceWindows()`, the calendar rebuild's window) is not asked and counts as answered without an offer (§4.3) |
+| Eurosite, "Scheduled runs: pace and limits" | Price searches per minute (10); other requests per minute (60) | `Api\RequestPacer`, scheduled runs only |
+| Eurosite, the same | Hotel details per night (100); product updates per night (200) | `product_info` and `update_products`; `&limit=N` still overrides one run |
+
+The filter costs nothing when every hotel has prices; out of season it
+leaves out most dates. In a MariaDB run, a resort with no published prices
+needed no call and a resort priced for next summer skipped its two
+November dates: 13 calls instead of 21.
+
+**Hotel photos, refreshed weekly (29 Oct 2026).** Novoton suggested
+refreshing image lists about weekly; photos were downloaded once, when a
+product was made, at most 10. New job `refresh_images`, nightly at 02:15: a
+seventh of the hotels with a product, least recently checked first, so each
+hotel about once a week, done before 03:00. `Services\HotelImageSync`
+decides what changes, and product creation and `backfill_images` attach
+through it too:
+
+- No answer, or an empty list: nothing changes. All of Novoton's photos
+  count, without a limit.
+- A photo seen before (its path, in `novoton_hotel_images`) is not
+  downloaded again; one an admin deleted stays deleted.
+- A new photo is downloaded through the request gate and compared with the
+  product's images: the same file (SHA-1) or the same picture saved again
+  at another size or quality (a 64-bit difference hash, Travel Core
+  `Helpers\ImageFingerprint`) is already there. Re-saved copies differ by
+  at most 4 of 64 bits, different photos by 16 or more; the threshold is 6.
+- Only when new photos were added are the Novoton photos it no longer lists
+  removed; new ones go in first, so a product never has fewer.
+- The photos follow Novoton's order at every refresh, and Novoton's first
+  photo is the main one (chosen 29 Oct 2026).
+- Photos added by hand: a product image is Novoton's when a row points at
+  it (attached by the sync, or, on an older product's first refresh, the
+  same picture as a listed photo); every other image counts as added by
+  hand. The setting "Keep photos added by hand" (on) never removes, moves
+  or demotes them; off, they are treated like photos Novoton no longer
+  lists.
+
+The first pass downloads every listed photo of an older product once, to
+compare; after that a week without changes costs one `hotel_images` call
+per hotel and no download.
+
+### 16.8 Next
 
 6. Calibration on the live store (§14) once the suppliers have recorded for a
    few weeks; then switch the panels on.

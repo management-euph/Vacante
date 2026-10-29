@@ -301,25 +301,22 @@ curl "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_K
 
 ### Recommended Crontab
 
-```crontab
-# Hotel Info Batched - every 5 minutes (self-manages sync type)
-*/5 * * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=hotel_info_batched&batch_size=50&max_time=120" > /dev/null 2>&1
+The add-on's dashboard prints every line, in the order the jobs run, with the
+store's path and the cron key filled in: copy them from its scheduled-jobs
+table rather than from here. The schedule follows Novoton's answers of
+28 Oct 2026:
 
-# Price Info Batched - every 5 minutes (self-manages sync type)
-*/5 * * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=sync_priceinfo_batched&batch_size=30&max_time=120" > /dev/null 2>&1
-
-# Hotel list sync - daily at 2 AM
-0 2 * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=hotel_list" > /dev/null 2>&1
-
-# Booking status check - every 2 hours
-0 */2 * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=resinfo" > /dev/null 2>&1
-
-# Facilities sync - weekly on Sunday at 4 AM
-0 4 * * 0 curl -s "https://yoursite.com/index.php?dispatch=novoton_cron.run&access_key=YOUR_KEY&mode=list_facilities" > /dev/null 2>&1
-
-# Exchange rates - daily at 13:05 (after BNR publishes)
-5 13 * * * curl -s "https://yoursite.com/index.php?dispatch=novoton_exchange_rates.cron&cron_password=YOUR_KEY" > /dev/null 2>&1
-```
+- bulk work between 01:00 and 06:00, never 03:00–04:00 (their busiest hour);
+- every request within 5 at the same time and 5 a second, for the whole store
+  (`Api\RequestGate`);
+- `hotel_list` every 3 days, `resort_list` and `list_facilities` weekly;
+- `hotel_info_batched` and `sync_priceinfo_batched` every 5 minutes: their full
+  passes start at 05:00 (hotel details every 3 days in February–May and every
+  7 days otherwise, season prices once a month), and in between they fetch only
+  what `offers_update` named;
+- `offers_update` at 05:00 and 17:00, for every country sold;
+- `resinfo` every 15 minutes, for bookings on request (ASK) only, until the
+  answer is OK, ST or RQ.
 
 ### CLI PHP Usage (Unlimited Mode)
 

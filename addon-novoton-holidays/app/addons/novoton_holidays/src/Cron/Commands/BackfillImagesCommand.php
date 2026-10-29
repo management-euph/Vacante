@@ -6,6 +6,7 @@ namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
+use Tygh\Addons\NovotonHolidays\Services\HotelImageSync;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
@@ -22,21 +23,24 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  * candidate set the moment it has at least one image. Re-runs hourly until
  * the backlog drains, then it's a no-op.
  *
+ * Photos go through HotelImageSync, as at product creation: remembered, so
+ * the weekly refresh_images knows them, and never added twice.
+ *
  * Params:
  *   limit=N     products per run (default 100)
  *   status=1    print backlog counters, no processing
- *   force=1     re-attach ALL linked products (not just image-less ones)
+ *   force=1     check ALL linked products (not just image-less ones); a
+ *               photo a product already has is not added again
  *   hotel_id=X  backfill a single hotel's product
  */
 class BackfillImagesCommand extends AbstractCronCommand
 {
     private const int DEFAULT_LIMIT = 100;
-    private const int MAX_IMAGES = 10;
 
     /** Image source; defaults to the live API, injectable for tests. */
     private ?\Closure $imageFetcher = null;
 
-    /** Attach sink; defaults to the travel_core URL pipeline, injectable for tests. */
+    /** Attach sink; defaults to HotelImageSync, injectable for tests. */
     private ?\Closure $attacher = null;
 
     /** Pacing hook (microseconds); injectable for tests. */
@@ -62,7 +66,7 @@ class BackfillImagesCommand extends AbstractCronCommand
         $this->imageFetcher = $fetcher(...);
     }
 
-    /** @param callable(int, list<string>, bool): int $attacher */
+    /** @param callable(string, int, list<string>): int $attacher hotel id, product id, photo paths => images added */
     public function setAttacher(callable $attacher): void
     {
         $this->attacher = $attacher(...);
@@ -130,14 +134,14 @@ class BackfillImagesCommand extends AbstractCronCommand
             }
             $processed++;
 
-            $urls = $this->collectImageUrls($hid, $fetch);
-            if ($urls === []) {
+            $paths = $this->collectImagePaths($hid, $fetch);
+            if ($paths === []) {
                 $noUrls++;
                 $this->output("  {$hid} | {$name}: no image URLs from API");
                 continue;
             }
 
-            $attached = TypeCoerce::toInt($attach($pid, $urls, true));
+            $attached = TypeCoerce::toInt($attach($hid, $pid, $paths));
             $totalAttached += $attached;
             $this->output("  {$hid} | {$name} -> product #{$pid}: {$attached} image(s) attached");
         }
@@ -160,41 +164,31 @@ class BackfillImagesCommand extends AbstractCronCommand
     }
 
     /**
-     * Fetch a hotel's image URLs from the API — identical construction to
-     * AddProductsCommand / DiagnoseImageUrlsCommand.
+     * A hotel's photo paths from the API, as HotelImageSync reads them (all
+     * of them, in Novoton's order).
      *
      * @return list<string>
      */
-    private function collectImageUrls(string $hotelId, \Closure $fetch): array
+    private function collectImagePaths(string $hotelId, \Closure $fetch): array
     {
-        $urls = [];
         try {
-            $images = $fetch($hotelId);
-            if ($images instanceof \SimpleXMLElement && isset($images->url)) {
-                foreach ($images->url as $url) {
-                    $urls[] = Constants::IMAGE_BASE_URL . str_replace(' ', '%20', (string) $url);
-                    if (count($urls) >= self::MAX_IMAGES) {
-                        break;
-                    }
-                }
-            }
+            return HotelImageSync::paths($fetch($hotelId)) ?? [];
         } catch (\Throwable $e) {
             $this->output('  WARN: image fetch failed: ' . $e->getMessage());
-        }
 
-        return $urls;
+            return [];
+        }
     }
 
     /**
-     * Default attach sink: the proven travel_core URL pipeline. Kept as a
-     * named method (not an inline closure) so the list<string> contract is
-     * carried on a real signature that PHPStan can check.
+     * Default attach sink: HotelImageSync, as at product creation. A named
+     * method, so the list<string> contract is on a signature PHPStan checks.
      *
-     * @param list<string> $urls
+     * @param list<string> $paths
      */
-    private function attachImages(int $productId, array $urls, bool $firstIsMain): int
+    private function attachImages(string $hotelId, int $productId, array $paths): int
     {
-        return fn_travel_core_attach_images_from_urls($productId, $urls, $firstIsMain);
+        return (new HotelImageSync())->sync($hotelId, $productId, $paths, date('Y-m-d H:i:s'))['added'];
     }
 
     /**

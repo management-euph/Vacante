@@ -90,15 +90,15 @@ final class DestinationSyncScopeTest extends TestCase
     }
 
     /**
-     * Incremental hotelinfo keeps only known, in-scope hotels. An ID offers_update
-     * reports before hotel_list brought the hotel in is dropped too: processItem()
-     * only UPDATEs the hotel row, so that API call changed nothing.
+     * Incremental hotelinfo keeps only known, in-scope hotels. ChangedHotelDetector
+     * reads them from ?:novoton_hotels, so every one has a row: processItem()
+     * only UPDATEs it, and a call for a hotel without one would change nothing.
      */
     public function testIncrementalHotelInfoKeepsOnlyKnownInScopeHotels(): void
     {
         $src = (string) file_get_contents(self::root() . '/src/Helpers/BatchedHotelInfoSyncV2.php');
 
-        self::assertStringContainsString("'SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id IN (?a) AND ' . \$scope", $src);
+        self::assertStringContainsString("'SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id IN (?a) AND ' . DestinationScope::current()->syncWhere()", $src);
         self::assertStringContainsString('array_intersect($changed, $inScope)', $src);
         self::assertStringNotContainsString('array_diff($changed, $outside)', $src);
         self::assertStringContainsString("db_query('UPDATE ?:novoton_hotels SET ?u WHERE hotel_id = ?s'", $src);

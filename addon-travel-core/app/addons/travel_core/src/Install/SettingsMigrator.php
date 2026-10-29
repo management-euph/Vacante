@@ -77,6 +77,10 @@ final class SettingsMigrator
         'eurosite' => [
             'hotels_category_id' => ['Hotels root category ID', 'ID categorie rădăcină hoteluri'],
         ],
+        // Now the June–January interval; February–May has its own setting.
+        'novoton_holidays' => [
+            'sync_interval_hotel_info_days' => ['Hotel info full sync interval (days)', 'Interval sincronizare completă informații hotel (zile)'],
+        ],
     ];
 
     /**
@@ -104,6 +108,10 @@ final class SettingsMigrator
             'geocoding_enabled',
             'geocoding_contact_email',
             'geocoding_endpoint',
+            // Weekly by default. Novoton asked for a monthly full pass (28 Oct
+            // 2026), so it became sync_interval_price_info_full_days, default
+            // 30: a store keeping its old row would have kept the weekly pass.
+            'sync_interval_price_info_days',
         ],
         // `cron_access_key` was the only field under these two headers, and it
         // has moved to Travel Core. The header row survives its own <item>

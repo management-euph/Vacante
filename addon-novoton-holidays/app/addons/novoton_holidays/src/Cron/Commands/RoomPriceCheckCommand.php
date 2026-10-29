@@ -57,7 +57,7 @@ class RoomPriceCheckCommand extends AbstractCronCommand
                 $this->output("NOTE: &{$param} is no longer used: the check asks every resort on the dates in Settings -> Advanced.");
             }
         }
-        $this->output('Options: &country=XX  &resorts=N|all (this run)  &max_calls=N  &max_time=MINUTES  &nights=N');
+        $this->output('Options: &country=XX  &resorts=N|all (this run)  &max_calls=N  &max_time=MINUTES  &nights=N  &skip_unpriced=0|1');
         if ($country !== '') {
             $this->output("Country: {$country}");
         }

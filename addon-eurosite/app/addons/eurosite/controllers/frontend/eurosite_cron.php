@@ -66,6 +66,10 @@ if (function_exists('fn_eurosite_ensure_schema')) {
     fn_eurosite_ensure_schema();
 }
 
+// A scheduled run: one request at a time and spaced, as Eurosite expects
+// (Api\RequestPacer). A run started from the dashboard is not.
+\Tygh\Addons\Eurosite\Api\RequestPacer::start();
+
 // ── Parse mode + dispatch ──
 
 $mode = (string) preg_replace('/[^a-z0-9_]/', '', strtolower(RequestCoerce::string($_REQUEST, 'cron_mode', 'full')));

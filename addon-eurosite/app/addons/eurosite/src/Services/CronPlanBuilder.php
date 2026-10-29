@@ -32,10 +32,11 @@ final class CronPlanBuilder
     /**
      * Jobs that are not part of the full pipeline, in the order they belong
      * after it: details and pictures (04:00), then which hotels have an
-     * Immediate offer (04:30), then products for them (05:30), then the
-     * existing products brought up to date (06:00).
+     * Immediate offer (04:15), then products for them (05:30), then the
+     * existing products brought up to date (06:00). The booking-status check
+     * runs all day, every 15 minutes.
      */
-    public const STANDALONE = ['product_info', 'availability', 'add_products', 'update_products', 'cleanup'];
+    public const STANDALONE = ['product_info', 'availability', 'add_products', 'update_products', 'booking_status', 'cleanup'];
 
     /** One-off, read-only diagnostics: run by hand, never on the dashboard or in the crontab. */
     public const DIAGNOSTIC = ['probe_availability'];
@@ -45,24 +46,39 @@ final class CronPlanBuilder
      *
      * `every_hours` is not decoration: "overdue" means a catalog has not been
      * synced in twice its own interval, which is the only staleness test that
-     * means anything when jobs run weekly and daily side by side.
+     * means anything when jobs run monthly, weekly and daily side by side.
+     * `full` runs each of its steps only when that step's own interval has
+     * passed (stepDue()).
+     *
+     * Eurosite's answers (28 Oct 2026) set them: the static catalogs once a
+     * month, the hotel lists weekly, details kept 30 days, availability as
+     * often as needed, bulk work between 01:00 and 06:00, and a booking
+     * waiting for confirmation checked on their schedule
+     * (BookingStatusSchedule).
      *
      * @var array<string, array{cron: string, every_hours: int}>
      */
     private const SCHEDULES = [
         'full' => ['cron' => '0 1 * * *', 'every_hours' => 24],
-        'countries' => ['cron' => '0 1 * * 0', 'every_hours' => 168],
-        'own_cities' => ['cron' => '30 1 * * 0', 'every_hours' => 168],
-        'cities' => ['cron' => '0 2 * * 0', 'every_hours' => 168],
-        'hotels' => ['cron' => '0 3 * * *', 'every_hours' => 24],
-        'room_types' => ['cron' => '30 3 * * 0', 'every_hours' => 168],
-        'tags' => ['cron' => '45 3 * * 0', 'every_hours' => 168],
+        'countries' => ['cron' => '0 1 1 * *', 'every_hours' => self::MONTH_HOURS],
+        'own_cities' => ['cron' => '30 1 1 * *', 'every_hours' => self::MONTH_HOURS],
+        'cities' => ['cron' => '0 2 1 * *', 'every_hours' => self::MONTH_HOURS],
+        'hotels' => ['cron' => '0 3 * * 0', 'every_hours' => 168],
+        'room_types' => ['cron' => '30 3 1 * *', 'every_hours' => self::MONTH_HOURS],
+        'tags' => ['cron' => '45 3 1 * *', 'every_hours' => self::MONTH_HOURS],
         'product_info' => ['cron' => '0 4 * * *', 'every_hours' => 24],
-        'availability' => ['cron' => '30 4 * * *', 'every_hours' => 24],
+        'availability' => ['cron' => '15 4 * * *', 'every_hours' => 24],
         'add_products' => ['cron' => '30 5 * * *', 'every_hours' => 24],
         'update_products' => ['cron' => '0 6 * * *', 'every_hours' => 24],
+        'booking_status' => ['cron' => '*/15 * * * *', 'every_hours' => 1],
         'cleanup' => ['cron' => '0 5 * * 0', 'every_hours' => 168],
     ];
+
+    /** A monthly job's interval: the longest month. */
+    private const MONTH_HOURS = 31 * 24;
+
+    /** How early `full` may run a weekly step: its last run may have ended a little after 01:00. */
+    private const STEP_SLACK = 3 * 3600;
 
     private const FALLBACK = ['cron' => '0 4 * * *', 'every_hours' => 24];
 
@@ -104,6 +120,27 @@ final class CronPlanBuilder
     public static function hasSchedule(string $mode): bool
     {
         return isset(self::SCHEDULES[$mode]);
+    }
+
+    /**
+     * Whether `full` runs this step now: it never finished well, or its own
+     * interval has passed since. A monthly step runs once a calendar month
+     * (on the 1st with the nightly `full`), a weekly one once its 7 days are
+     * up, give or take STEP_SLACK.
+     *
+     * @param int|null $lastOkAt when the step last finished well (unix time)
+     */
+    public static function stepDue(string $mode, ?int $lastOkAt, int $now): bool
+    {
+        if ($lastOkAt === null || $lastOkAt <= 0) {
+            return true;
+        }
+        $hours = (self::SCHEDULES[$mode] ?? self::FALLBACK)['every_hours'];
+        if ($hours >= self::MONTH_HOURS) {
+            return date('Y-m', $lastOkAt) !== date('Y-m', $now);
+        }
+
+        return $now - $lastOkAt >= $hours * 3600 - self::STEP_SLACK;
     }
 
     public function url(string $mode): string
@@ -177,7 +214,7 @@ final class CronPlanBuilder
         $lines = [
             $perCatalog
                 ? '# Eurosite Touring — per-catalog schedule'
-                : '# Eurosite Touring — nightly full pipeline',
+                : '# Eurosite Touring — nightly full pipeline (each step only when due: catalogs monthly, hotels weekly)',
         ];
         if ($generatedOn !== '') {
             $lines[] = '# generated ' . $generatedOn;
@@ -242,7 +279,8 @@ final class CronPlanBuilder
     }
 
     /**
-     * "0 2 * * 0" -> "Sun 02:00"; "0 3 * * *" -> "Daily 03:00".
+     * "0 2 * * 0" -> "Sun 02:00"; "0 3 * * *" -> "Daily 03:00";
+     * "0 1 1 * *" -> "Monthly 1st 01:00"; "*\/15 * * * *" -> "Every 15 min".
      *
      * Only the shapes this class generates are translated; anything else is
      * handed back untouched rather than mistranslated.
@@ -255,6 +293,9 @@ final class CronPlanBuilder
         }
 
         [$minute, $hour, $dom, $mon, $dow] = $parts;
+        if ($hour === '*' && $dom === '*' && $mon === '*' && $dow === '*' && preg_match('/^\*\/(\d+)$/', $minute, $m) === 1) {
+            return 'Every ' . $m[1] . ' min';
+        }
         if (!ctype_digit($minute) || !ctype_digit($hour) || $mon !== '*') {
             return $cron;
         }
@@ -267,8 +308,24 @@ final class CronPlanBuilder
         if ($dom === '*' && $dow === '*') {
             return 'Daily ' . $time;
         }
+        if (ctype_digit($dom) && (int) $dom >= 1 && (int) $dom <= 31 && $dow === '*') {
+            return 'Monthly ' . self::ordinal((int) $dom) . ' ' . $time;
+        }
 
         return $cron;
+    }
+
+    /** 1 -> "1st", 2 -> "2nd", 11 -> "11th", 23 -> "23rd". */
+    private static function ordinal(int $n): string
+    {
+        $suffix = in_array($n % 100, [11, 12, 13], true) ? 'th' : match ($n % 10) {
+            1 => 'st',
+            2 => 'nd',
+            3 => 'rd',
+            default => 'th',
+        };
+
+        return $n . $suffix;
     }
 
     /**

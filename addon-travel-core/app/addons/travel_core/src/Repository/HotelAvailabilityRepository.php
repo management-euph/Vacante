@@ -388,6 +388,55 @@ final class HotelAvailabilityRepository
     }
 
     /**
+     * The published price windows of these hotels, so a supplier's check can
+     * leave out the stays none of them has a price for
+     * (docs/novoton-availability-gaps-plan.md §4.3): from and to are the
+     * first and last future priced date (both null: no future price), next
+     * the earliest future check-in with an offer in the latest check. Only
+     * hotels whose prices were read at least once (a latest priced date):
+     * for the others no window is known. Keyed by hotel id; a numeric id
+     * comes back as an int key.
+     *
+     * @param list<string> $hotelIds
+     *
+     * @return array<array-key, array{from: ?string, to: ?string, next: ?string}>
+     */
+    public function priceWindows(string $provider, array $hotelIds): array
+    {
+        $hotelIds = array_values(array_unique(array_filter($hotelIds, static fn (string $id): bool => $id !== '')));
+        if ($hotelIds === []) {
+            return [];
+        }
+        self::ensureTables();
+        $out = [];
+        foreach (array_chunk($hotelIds, self::CHUNK) as $chunk) {
+            foreach (TypeCoerce::toRowList(db_get_array(
+                'SELECT hotel_id, contract_from, contract_to, offer_next_date FROM ?:travel_hotel_availability
+                 WHERE provider = ?s AND hotel_id IN (?a) AND contract_last_date IS NOT NULL',
+                $provider,
+                $chunk,
+            )) as $row) {
+                $out[TypeCoerce::toString($row['hotel_id'] ?? '')] = [
+                    'from' => self::day($row['contract_from'] ?? null),
+                    'to' => self::day($row['contract_to'] ?? null),
+                    'next' => self::day($row['offer_next_date'] ?? null),
+                ];
+            }
+        }
+        unset($out['']);
+
+        return $out;
+    }
+
+    /** A stored date as Y-m-d; null for NULL, empty or a zero date. */
+    private static function day(mixed $value): ?string
+    {
+        $day = substr(TypeCoerce::toString($value), 0, 10);
+
+        return preg_match('/^[1-9]\d{3}-\d{2}-\d{2}$/', $day) === 1 ? $day : null;
+    }
+
+    /**
      * provider, hotel_id, product_id, destination_key, hotel_name, quoted.
      *
      * @param array{hotel_id: string, product_id: int, destination_key: string, hotel_name: string} $hotel

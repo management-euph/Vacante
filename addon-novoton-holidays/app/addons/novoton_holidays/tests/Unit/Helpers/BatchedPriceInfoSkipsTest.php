@@ -163,7 +163,7 @@ final class BatchedPriceInfoSkipsTest extends TestCase
         $type = (new \ReflectionMethod($sync, 'determineSyncType'))->invoke($sync, []);
 
         self::assertSame('none', $type, 'its only stale package was refused yesterday: no run every cron tick');
-        self::assertContains('Skipped 1 packages Novoton refused in the last 7 days; the next full sync asks again.', $this->output);
+        self::assertContains('Skipped 1 packages Novoton refused in the last 30 days; the next full sync asks again.', $this->output);
         self::assertSame([self::SPO], $this->itemsOf($this->sync($stored), 'full'));
     }
 

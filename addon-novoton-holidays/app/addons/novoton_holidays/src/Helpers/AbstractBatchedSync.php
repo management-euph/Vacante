@@ -285,6 +285,15 @@ abstract class AbstractBatchedSync implements SyncInterface
     }
 
     /**
+     * The time a run decides by (unix time): which pass is due, which items
+     * to retry. Overridable so a test can pin it.
+     */
+    protected function now(): int
+    {
+        return time();
+    }
+
+    /**
      * Whether the current process is running under the PHP CLI SAPI.
      *
      * Factored out as a protected method so unit tests can override it —

@@ -149,6 +149,27 @@ class EurositeBookingRepository
         ));
     }
 
+    /**
+     * Bookings Eurosite took and has not confirmed yet (pending), taken since
+     * $since: the ones BookingStatusSchedule still checks. Older ones are
+     * left to staff (Travel Core → Bookings, Sync statuses).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findAwaitingConfirmation(string $since, int $limit = 50): array
+    {
+        return self::asRowList(db_get_array(
+            "SELECT * FROM ?:eurosite_bookings
+             WHERE api_ref IS NOT NULL AND api_ref <> ''
+               AND status = 'pending'
+               AND submitted_at >= ?s
+             ORDER BY submitted_at ASC
+             LIMIT ?i",
+            $since,
+            $limit,
+        ));
+    }
+
     public function linkToUserBySession(string $sessionId, int $userId): int
     {
         $ids = db_get_fields(

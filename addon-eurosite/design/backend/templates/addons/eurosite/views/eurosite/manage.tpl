@@ -255,7 +255,7 @@
                 <span class="muted" style="font-size: 12px;">{__("eurosite.cron_plan", ["[default]" => "Plan"])}</span>
                 <label style="display: inline-flex; align-items: center; gap: 6px; margin: 0; cursor: pointer;">
                     <input type="radio" name="eurosite_cron_plan" value="full" checked style="margin: 0;" />
-                    {__("eurosite.cron_plan_full", ["[default]" => "One nightly full sync"])}
+                    {__("eurosite.cron_plan_full", ["[default]" => "One nightly line: each step when due (catalogs monthly, hotels weekly)"])}
                     <span class="muted">({__("eurosite.recommended", ["[default]" => "recommended"])})</span>
                 </label>
                 <label style="display: inline-flex; align-items: center; gap: 6px; margin: 0; cursor: pointer;">

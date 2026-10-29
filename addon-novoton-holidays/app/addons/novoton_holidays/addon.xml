@@ -296,6 +296,16 @@
                         <default_value>60</default_value>
                         <variants/>
                     </item>
+                    <item id="api_max_concurrent">
+                        <type>input</type>
+                        <default_value>5</default_value>
+                        <variants/>
+                    </item>
+                    <item id="api_max_per_second">
+                        <type>input</type>
+                        <default_value>5</default_value>
+                        <variants/>
+                    </item>
 
                     <!-- Cache TTL Header -->
                     <item id="cache_ttl_header">
@@ -323,14 +333,19 @@
                         <type>header</type>
                         <variants/>
                     </item>
+                    <item id="sync_interval_hotel_info_peak_days">
+                        <type>input</type>
+                        <default_value>3</default_value>
+                        <variants/>
+                    </item>
                     <item id="sync_interval_hotel_info_days">
                         <type>input</type>
                         <default_value>7</default_value>
                         <variants/>
                     </item>
-                    <item id="sync_interval_price_info_days">
+                    <item id="sync_interval_price_info_full_days">
                         <type>input</type>
-                        <default_value>7</default_value>
+                        <default_value>30</default_value>
                         <variants/>
                     </item>
                     <item id="sync_interval_facilities_days">
@@ -413,6 +428,22 @@
                         <default_value>20</default_value>
                         <variants/>
                     </item>
+                    <item id="availability_check_skip_unpriced">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                        <variants/>
+                    </item>
+
+                    <!-- Hotel photos (refresh_images): photos added by hand in the admin panel -->
+                    <item id="images_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="images_keep_manual">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                        <variants/>
+                    </item>
                 </items>
             </section>
         </sections>
@@ -456,6 +487,9 @@
                 `has_room_price` enum('Y','N') DEFAULT 'N' COMMENT 'Has room_price check results',
                 `packages_count` int(3) DEFAULT 0 COMMENT 'Number of packages for this hotel',
                 `hotelinfo_synced_at` datetime DEFAULT NULL COMMENT 'Last hotelinfo API sync',
+                `hotelinfo_due_at` datetime DEFAULT NULL COMMENT 'offers_update named a package hotelinfo does not list yet',
+                `hotelinfo_tried_at` datetime DEFAULT NULL COMMENT 'Last hotelinfo request, answered or not',
+                `images_checked_at` datetime DEFAULT NULL COMMENT 'Last hotel_images refresh that got an answer',
                 `hotel_list_synced_at` datetime DEFAULT NULL COMMENT 'Last hotel_list API sync',
                 `last_price_check` datetime DEFAULT NULL COMMENT 'Last room_price_check result',
                 `calendar_prices_raw` JSON COMMENT 'JSON: precomputed per-date raw EUR prices for calendar display',
@@ -472,6 +506,26 @@
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Hotels from Novoton API'
         </item>
 
+        <!-- Hotel photos: which product image each Novoton photo became, so the
+             weekly refresh never adds one twice (Install\SchemaMigrator::IMAGES_TABLE) -->
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:novoton_hotel_images` (
+                `hotel_id` varchar(50) NOT NULL COMMENT 'IdHotel from API',
+                `path_key` char(40) NOT NULL COMMENT 'SHA-1 of path',
+                `path` varchar(500) NOT NULL DEFAULT '' COMMENT 'As hotel_images lists it',
+                `product_id` int(11) unsigned NOT NULL DEFAULT 0 COMMENT 'The product it was matched for',
+                `pair_id` int(11) unsigned NOT NULL DEFAULT 0 COMMENT 'The product image it is (images_links)',
+                `origin` varchar(8) NOT NULL DEFAULT 'novoton' COMMENT 'novoton: a Novoton photo the refresh manages; manual: the same picture as an image added by hand',
+                `sha1` char(40) NOT NULL DEFAULT '' COMMENT 'SHA-1 of the downloaded file',
+                `dhash` char(16) NOT NULL DEFAULT '' COMMENT 'Difference hash: the same picture saved again',
+                `listed` char(1) NOT NULL DEFAULT 'Y' COMMENT 'In the latest hotel_images answer',
+                `first_seen_at` datetime DEFAULT NULL,
+                `last_seen_at` datetime DEFAULT NULL,
+                PRIMARY KEY (`hotel_id`, `path_key`),
+                KEY `idx_pair` (`pair_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Novoton hotel photos and the product images they became'
+        </item>
+
         <!-- Hotel Packages - stores packages from hotelinfo API with priceinfo data -->
         <item for="install">
             CREATE TABLE IF NOT EXISTS `?:novoton_hotel_packages` (
@@ -486,6 +540,7 @@
                 `currency` varchar(3) NOT NULL DEFAULT 'EUR',
                 `needs_price_compute` enum('Y','N') DEFAULT 'N' COMMENT 'Flag: price metadata needs recomputation by compute_prices cron',
                 `synced_at` datetime DEFAULT NULL COMMENT 'Last priceinfo sync date',
+                `price_changed_at` datetime DEFAULT NULL COMMENT 'offers_update named this package: priceinfo again',
                 `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 PRIMARY KEY (`id`),
@@ -753,6 +808,7 @@
         <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_sync_log`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_bookings`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_hotel_packages`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_hotel_images`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:novoton_hotels`</item>
     </queries>
     

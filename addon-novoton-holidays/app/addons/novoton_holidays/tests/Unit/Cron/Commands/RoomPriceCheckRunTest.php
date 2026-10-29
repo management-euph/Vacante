@@ -343,6 +343,115 @@ final class RoomPriceCheckRunTest extends TestCase
     }
 
     /**
+     * The published price windows the records hold (priceinfo, by the
+     * nightly calendar rebuild), and every query the run sends for them.
+     *
+     * @param array<string, array{0: ?string, 1: ?string, 2?: ?string}> $windows hotel_id => [from, to, latest offer]
+     * @param list<string> $queries
+     */
+    private static function publishedPrices(array $windows, array &$queries = []): void
+    {
+        DbStub::$getArray = static function (string $query, mixed ...$params) use ($windows, &$queries): array {
+            if (!str_contains($query, 'contract_last_date IS NOT NULL')) {
+                return [];
+            }
+            $queries[] = db_quote($query, ...$params);
+            $rows = [];
+            foreach ($windows as $hotelId => $window) {
+                $rows[] = ['hotel_id' => (string) $hotelId, 'contract_from' => $window[0], 'contract_to' => $window[1], 'offer_next_date' => $window[2] ?? null];
+            }
+
+            return $rows;
+        };
+    }
+
+    /**
+     * Out of season: Sunny Beach is priced for next summer only, Albena not at
+     * all. Neither has a price on 9 November, so nobody asks Novoton.
+     */
+    public function testDatesNoHotelHasPublishedPricesForAreNotAsked(): void
+    {
+        $queries = [];
+        self::publishedPrices(['1' => ['2027-05-01', '2027-10-15'], '2' => ['2027-05-20', '2027-09-30'], '3' => ['2027-05-01', '2027-10-15'], '4' => [null, null]], $queries);
+
+        $result = self::check($this->runner(self::bulgaria(), ['BULGARIA' => ['Sunny Beach', 'Albena']], static fn (): array => [self::offers('1', '2')]));
+
+        self::assertSame(['Sunny Beach 2027-07-15'], $this->calls);
+        self::assertSame([[['1', '2'], ['3']], [[], ['4']]], $this->flags, 'answered: every date asked answered, the others cannot have an offer');
+        self::assertCount(2, $this->sql);
+        self::assertStringContainsString("('novoton', '4', 0, 'BULGARIA|Albena', 'Hotel 4', '2026-10-26 04:00:00', NULL, NULL, NULL, NULL, NULL)", $this->sql[1], 'checked, no offer');
+
+        $stats = $result['stats'];
+        self::assertSame([2, 0, 0, 2, 3], [$stats['checked'], $stats['partial'], $stats['unanswered'], $stats['calls'], $stats['skipped_dates']]);
+        self::assertContains('[1/2] BULGARIA | Sunny Beach (3 hotels): 1 of 1 dates answered, 1 not asked (no published prices: 2026-11-09); 2 with an offer, 1 without', $this->log);
+        self::assertContains('[2/2] BULGARIA | Albena (1 hotel): none of its 2 dates asked (no published prices: 2026-11-09, 2027-07-15); 0 with an offer, 1 without', $this->log);
+        self::assertContains('Calls saved: 3 dates had no published prices, so were not asked.', $this->log);
+
+        self::assertCount(1, $queries, 'one read for the whole run');
+        self::assertStringContainsString("provider = 'novoton' AND hotel_id IN ('1', '2', '3', '4') AND contract_last_date IS NOT NULL", $queries[0]);
+    }
+
+    /** One hotel without a known window, here prices never read, keeps its resort's every date asked. */
+    public function testAResortWithAHotelWithoutAKnownWindowIsAskedEveryDate(): void
+    {
+        self::publishedPrices(['1' => ['2027-05-01', '2027-10-15'], '3' => ['2027-05-01', '2027-10-15'], '4' => [null, null]]);
+
+        self::check($this->runner(self::bulgaria(), ['BULGARIA' => ['Sunny Beach', 'Albena']], static fn (): array => [self::offers('1')]));
+
+        self::assertSame(['Sunny Beach 2026-11-09', 'Sunny Beach 2027-07-15'], $this->calls, 'hotel 2 has no window; Albena needs no call');
+    }
+
+    /** A resort with nothing to ask neither proves nor disproves that Novoton answers. */
+    public function testAResortWithNothingToAskDoesNotCountTowardsTheSilentStop(): void
+    {
+        $hotels = [self::hotel('1', 'Sunny Beach'), self::hotel('4', 'Albena', '2026-10-20 04:00:00'), self::hotel('5', 'Obzor', '2026-10-21 04:00:00')];
+        self::publishedPrices(['4' => [null, null]]);
+
+        $result = self::check($this->runner($hotels, ['BULGARIA' => ['Sunny Beach', 'Albena', 'Obzor']], static function (): never {
+            throw new \RuntimeException('Operation timed out');
+        }));
+
+        self::assertSame(['Sunny Beach 2026-11-09', 'Sunny Beach 2027-07-15', 'Obzor 2026-11-09', 'Obzor 2027-07-15'], $this->calls, 'Obzor is still asked');
+        self::assertSame([[], ['4']], $this->flags[0] ?? null, 'Albena, answered by its prices');
+        self::assertSame(['silent', 2, 1, 0], [$result['stats']['stopped'], $result['stats']['unanswered'], $result['stats']['checked'], $result['stats']['left']]);
+    }
+
+    /** A date left out never stands in for one that did not answer: that one may have held the offer. */
+    public function testADateLeftOutDoesNotCompleteAnAnswerWithADateMissing(): void
+    {
+        self::publishedPrices(['1' => ['2027-05-01', '2027-10-15'], '2' => ['2027-05-01', '2027-10-15']]);
+        $settings = new ResortCheckSettings([14], '07-15, 08-15', 7, 1, 100, 1200);
+
+        $result = self::check($this->runner([self::hotel('1', 'Sunny Beach'), self::hotel('2', 'Sunny Beach')], ['BULGARIA' => ['Sunny Beach']], static function (string $resort, string $checkIn): array {
+            if ($checkIn === '2027-08-15') {
+                throw new \RuntimeException('Circuit breaker open');
+            }
+
+            return [self::offers('1')];
+        }), $settings);
+
+        self::assertSame(['Sunny Beach 2027-07-15', 'Sunny Beach 2027-08-15'], $this->calls);
+        self::assertSame([[['1'], []]], $this->flags, 'hotel 2 keeps its flag');
+        self::assertStringNotContainsString('offer_checked_at', $this->sql[0], 'part of an answer counts only its offers');
+        self::assertSame([0, 1, 1], [$result['stats']['checked'], $result['stats']['partial'], $result['stats']['skipped_dates']]);
+    }
+
+    /** &skip_unpriced=0, or the setting unticked: every date is asked, and the windows are not read. */
+    public function testTheCheckCanAskEveryDate(): void
+    {
+        $queries = [];
+        self::publishedPrices(['1' => [null, null], '2' => [null, null], '3' => [null, null], '4' => [null, null]], $queries);
+        $settings = new ResortCheckSettings([14], '07-15', 7, 1, 100, 1200, 0, false);
+
+        $result = self::check($this->runner(self::bulgaria(), ['BULGARIA' => ['Sunny Beach', 'Albena']], static fn (): array => [self::offers()]), $settings);
+
+        self::assertCount(4, $this->calls);
+        self::assertSame(0, $result['stats']['skipped_dates']);
+        self::assertSame([], $queries);
+        self::assertContains('Every date is asked, published prices or not.', $this->log);
+    }
+
+    /**
      * The room_price command over a stubbed Novoton, as the dispatcher runs it.
      *
      * @param array<string, mixed> $params

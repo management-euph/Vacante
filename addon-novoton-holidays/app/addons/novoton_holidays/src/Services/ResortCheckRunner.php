@@ -32,6 +32,12 @@ use Tygh\Addons\TravelCore\Services\OfferTally;
  * The run also ends at its time budget (before add_hotels_as_products) and
  * at its call budget; the units it did not reach go first next time.
  *
+ * A date none of a unit's hotels has a published price for (priceinfo, by
+ * the nightly calendar rebuild) is not asked: it can have no offer, so it
+ * counts as answered without one (ResortCheckQueue::split(), the "Skip
+ * dates without published prices" setting). Out of season that is most of
+ * the dates of a seaside resort.
+ *
  * Novoton's room_price says nothing of on-request rooms (hotel_quota does,
  * for customers' searches), so these offers never count as immediate.
  */
@@ -84,7 +90,7 @@ final class ResortCheckRunner
      * One run. $scopeWhere picks the sold hotels (DestinationScope::syncWhere());
      * $country narrows the run to one country.
      *
-     * @return array{stats: array{units: int, planned: int, checked: int, partial: int, unanswered: int, left: int, calls: int, with_prices: int, without_prices: int, invalid: int, by_country: array<string, int>, skipped_countries: list<string>, stopped: string}, priced: array<string, list<string>>}
+     * @return array{stats: array{units: int, planned: int, checked: int, partial: int, unanswered: int, left: int, calls: int, skipped_dates: int, with_prices: int, without_prices: int, invalid: int, by_country: array<string, int>, skipped_countries: list<string>, stopped: string}, priced: array<string, list<string>>}
      */
     public function run(ResortCheckSettings $settings, \DateTimeImmutable $now, string $scopeWhere, string $country = ''): array
     {
@@ -92,7 +98,7 @@ final class ResortCheckRunner
         $this->calls = 0;
         $stamp = $now->format('Y-m-d H:i:s');
         $stats = [
-            'units' => 0, 'planned' => 0, 'checked' => 0, 'partial' => 0, 'unanswered' => 0, 'left' => 0, 'calls' => 0,
+            'units' => 0, 'planned' => 0, 'checked' => 0, 'partial' => 0, 'unanswered' => 0, 'left' => 0, 'calls' => 0, 'skipped_dates' => 0,
             'with_prices' => 0, 'without_prices' => 0, 'invalid' => 0, 'by_country' => [], 'skipped_countries' => [], 'stopped' => '',
         ];
         $priced = [];
@@ -136,7 +142,9 @@ final class ResortCheckRunner
         foreach ($planned as $unit) {
             array_push($unitHotelIds, ...$unit['hotel_ids']);
         }
-        $firstPublished = $this->recorder->awaitingFirstOffer($unitHotelIds, $now->format('Y-m-d'));
+        $today = $now->format('Y-m-d');
+        $firstPublished = $this->recorder->awaitingFirstOffer($unitHotelIds, $today);
+        $published = $settings->skipUnpriced ? $this->recorder->priceWindows($unitHotelIds) : [];
 
         $night = new OfferTally();
         $silent = 0;
@@ -158,22 +166,30 @@ final class ResortCheckRunner
                 }
             }
             $dates = ResortCheckQueue::dates($windows, $starts, $settings->nights);
-            if ($this->calls + count($dates) > $settings->maxCalls) {
+            $split = $settings->skipUnpriced
+                ? ResortCheckQueue::split($dates, $unit['hotel_ids'], $published, $today)
+                : ['ask' => $dates, 'skip' => []];
+            if ($this->calls + count($split['ask']) > $settings->maxCalls) {
                 $stats['stopped'] = 'calls';
                 $stats['left'] = count($planned) - $index;
                 break;
             }
 
-            $answer = $unit['kind'] === ResortCheckQueue::RESORT
-                ? $this->askResort($unit['resort'], $dates)
-                : $this->askHotel($unit['hotel_ids'][0], $dates);
-            $done++;
+            $answer = ['answered' => 0, 'offers' => [], 'errors' => []];
+            if ($split['ask'] !== []) {
+                $answer = $unit['kind'] === ResortCheckQueue::RESORT
+                    ? $this->askResort($unit['resort'], $split['ask'])
+                    : $this->askHotel($unit['hotel_ids'][0], $split['ask']);
+                $done++;
+            }
+            $stats['skipped_dates'] += count($split['skip']);
             foreach ($answer['offers'] as $hotelId => $stays) {
                 foreach ($stays as $stay) {
                     $night->add((string) $hotelId, $stay, false);
                 }
             }
-            $whole = $answer['answered'] === count($dates);
+            // A date left out is answered: no offer, since nothing is priced.
+            $whole = $answer['answered'] + count($split['skip']) === count($dates);
             $flags = $this->save($unit, $answer, $whole, $night, $hotels, $stamp);
             $stats[$whole ? 'checked' : ($answer['answered'] > 0 ? 'partial' : 'unanswered')]++;
             foreach ($unit['hotel_ids'] as $hotelId) {
@@ -186,9 +202,11 @@ final class ResortCheckRunner
                 $decided[$hotelId] = true;
             }
             $known += $flags['rows'];
-            $this->sayUnit($index + 1, count($planned), $unit, $answer, count($dates), $flags, $hotels);
+            $this->sayUnit($index + 1, count($planned), $unit, $answer, $split, $whole, $flags, $hotels);
 
-            $silent = $answer['answered'] === 0 ? $silent + 1 : 0;
+            if ($split['ask'] !== []) {
+                $silent = $answer['answered'] === 0 ? $silent + 1 : 0;
+            }
             if ($silent >= self::SILENT_UNITS_STOP) {
                 $stats['stopped'] = 'silent';
                 $stats['left'] = count($planned) - $index - 1;
@@ -317,7 +335,7 @@ final class ResortCheckRunner
     private function save(array $unit, array $answer, bool $whole, OfferTally $night, array $hotels, string $stamp): array
     {
         $flags = ['with' => [], 'without' => [], 'rows' => []];
-        if ($answer['answered'] === 0) {
+        if ($answer['answered'] === 0 && !$whole) {
             return $flags;
         }
         $offers = $night->offers();
@@ -453,24 +471,36 @@ final class ResortCheckRunner
             $settings->maxCalls,
             intdiv($settings->maxSeconds, 60),
         ));
+        $this->say($settings->skipUnpriced
+            ? 'Dates none of a unit\'s hotels has published prices for are not asked: no offer is possible there.'
+            : 'Every date is asked, published prices or not.');
         $this->say('');
     }
 
     /**
      * @param array{kind: string, country: string, resort: string, hotel_ids: list<string>, last_check: string} $unit
      * @param array{answered: int, offers: array<array-key, list<string>>, errors: list<string>} $answer
+     * @param array{ask: list<array{kind: string, check_in: string, check_out: string}>, skip: list<array{kind: string, check_in: string, check_out: string}>} $split
      * @param array{with: list<string>, without: list<string>, rows: array<string, array<string, mixed>>} $flags
      * @param array<string, array<string, mixed>> $hotels
      */
-    private function sayUnit(int $number, int $of, array $unit, array $answer, int $dates, array $flags, array $hotels): void
+    private function sayUnit(int $number, int $of, array $unit, array $answer, array $split, bool $whole, array $flags, array $hotels): void
     {
         $name = $unit['kind'] === ResortCheckQueue::RESORT
             ? $unit['country'] . ' | ' . $unit['resort'] . ' (' . self::plural(count($unit['hotel_ids']), 'hotel') . ')'
             : $unit['country'] . ' | NVT-' . $unit['hotel_ids'][0] . ' ' . TypeCoerce::toString($hotels[$unit['hotel_ids'][0]]['hotel_name'] ?? '') . ' (asked alone)';
-        $result = $answer['answered'] === 0
+        $result = $answer['answered'] === 0 && !$whole
             ? 'no answer, nothing changed'
             : sprintf('%d with an offer, %d without', count($flags['with']), count($flags['without']));
-        $this->say(sprintf('[%d/%d] %s: %d of %d dates answered; %s', $number, $of, $name, $answer['answered'], $dates, $result));
+        $dates = match (true) {
+            $split['skip'] === [] => sprintf('%d of %d dates answered', $answer['answered'], count($split['ask'])),
+            $split['ask'] === [] => sprintf('none of its %d dates asked', count($split['skip'])),
+            default => sprintf('%d of %d dates answered, %d not asked', $answer['answered'], count($split['ask']), count($split['skip'])),
+        };
+        if ($split['skip'] !== []) {
+            $dates .= ' (no published prices: ' . implode(', ', array_column($split['skip'], 'check_in')) . ')';
+        }
+        $this->say(sprintf('[%d/%d] %s: %s; %s', $number, $of, $name, $dates, $result));
         foreach ($answer['errors'] as $error) {
             $this->say('    no answer: ' . $error);
         }
@@ -480,7 +510,7 @@ final class ResortCheckRunner
     }
 
     /**
-     * @param array{units: int, planned: int, checked: int, partial: int, unanswered: int, left: int, calls: int, with_prices: int, without_prices: int, invalid: int, by_country: array<string, int>, skipped_countries: list<string>, stopped: string} $stats
+     * @param array{units: int, planned: int, checked: int, partial: int, unanswered: int, left: int, calls: int, skipped_dates: int, with_prices: int, without_prices: int, invalid: int, by_country: array<string, int>, skipped_countries: list<string>, stopped: string} $stats
      */
     private function saySummary(array $stats, float $seconds, ResortCheckSettings $settings): void
     {
@@ -494,6 +524,9 @@ final class ResortCheckRunner
             intdiv((int) $seconds, 60),
             (int) $seconds % 60,
         ));
+        if ($stats['skipped_dates'] > 0) {
+            $this->say("Calls saved: {$stats['skipped_dates']} dates had no published prices, so were not asked.");
+        }
         $this->say("Hotels WITH an offer: {$stats['with_prices']}");
         $this->say("Hotels WITHOUT an offer: {$stats['without_prices']}");
         $this->say("No answer (flag left unchanged, checked again first next run): {$stats['invalid']}");

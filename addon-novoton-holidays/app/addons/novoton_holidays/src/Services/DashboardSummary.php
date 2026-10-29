@@ -55,7 +55,7 @@ final class DashboardSummary
      *
      * - any job that failed or stalled;
      * - a RECOMMENDED job that never ran (the other jobs start "no runs yet"
-     *   on a new store, and listing all sixteen would bury the two that matter);
+     *   on a new store, and listing all seventeen would bury the two that matter);
      * - any job that is late for its own interval;
      * - hotels without season prices while the price job has run fine.
      *

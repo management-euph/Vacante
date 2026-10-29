@@ -6,6 +6,7 @@ namespace Tygh\Addons\Eurosite\Cron\Commands;
 
 use Tygh\Addons\Eurosite\Cron\CronDispatcher;
 use Tygh\Addons\Eurosite\Services\Container;
+use Tygh\Addons\Eurosite\Services\CronPlanBuilder;
 use Tygh\Addons\TravelCore\Cron\CronRunLog;
 use Tygh\Addons\TravelCore\Helpers\CronRunLock;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
@@ -22,6 +23,11 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  * Sphinx's full does: a scheduled `hotels` still running is never run a
  * second time at once (it is skipped here), and Travel Core sees which step
  * is running (docs/novoton-availability-gaps-plan.md §4.5, rule 3).
+ *
+ * A step runs only when it is due (CronPlanBuilder::stepDue): Eurosite asked
+ * (28 Oct 2026) for the static catalogs once a month and the hotel lists
+ * weekly, so the nightly `full` line runs them on the 1st and once a week.
+ * `force=1`, and a run started from the dashboard, run every step.
  */
 final class FullSyncCommand extends AbstractSyncCommand
 {
@@ -67,8 +73,18 @@ final class FullSyncCommand extends AbstractSyncCommand
         // A status, reset or debug request is no run: no locks, no run log.
         $isReadOnly = !empty($params['status']) || !empty($params['reset']) || !empty($params['debug']);
 
+        $force = !empty($params['force']);
+        $now = time();
         foreach ($this->sequence as $step => $class) {
             $this->output("=== {$step} ===");
+            if (!$isReadOnly && !$force) {
+                $last = CronRunLog::get('eurosite', $step);
+                $lastOkAt = !empty($last['ok']) ? ($last['finished'] ?? null) : null;
+                if (!CronPlanBuilder::stepDue($step, $lastOkAt, $now)) {
+                    $this->output("[INFO] {$step} is not due yet (last finished " . date('Y-m-d H:i', (int) $lastOkAt) . '), skipped.');
+                    continue;
+                }
+            }
             $command = new $class();
             if ($this->outputCallback !== null) {
                 $command->setOutputCallback($this->outputCallback);

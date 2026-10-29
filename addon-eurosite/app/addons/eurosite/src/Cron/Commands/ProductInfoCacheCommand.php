@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\Eurosite\Cron\Commands;
 
+use Tygh\Addons\Eurosite\Services\ConfigProvider;
 use Tygh\Addons\Eurosite\Services\Container;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
@@ -13,12 +14,10 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  *
  * Fetches only hotels whose cache entry is missing or stale (30 days;
  * `&full=1` refetches everything, `&limit=N` caps API calls per run,
- * default 100).
+ * default the "Hotel details per night" setting, 100).
  */
 final class ProductInfoCacheCommand extends AbstractSyncCommand
 {
-    private const DEFAULT_LIMIT = 100;
-
     private const FRESH_DAYS = 30;
 
     #[\Override]
@@ -37,7 +36,7 @@ final class ProductInfoCacheCommand extends AbstractSyncCommand
     public function execute(array $params = []): array
     {
         return $this->runLogged('product_info', function () use ($params): array {
-            $limit = max(1, TypeCoerce::toInt($params['limit'] ?? self::DEFAULT_LIMIT));
+            $limit = max(1, TypeCoerce::toInt($params['limit'] ?? ConfigProvider::getProductInfoPerRun()));
             $force = !empty($params['full']);
 
             $api = Container::getApi();

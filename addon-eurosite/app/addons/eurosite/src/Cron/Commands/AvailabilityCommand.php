@@ -36,9 +36,6 @@ use Tygh\Addons\TravelCore\Services\OfferTally;
  */
 final class AvailabilityCommand extends AbstractSyncCommand
 {
-    /** Between two price searches: they are heavy for the operator's server. */
-    private const PAUSE_US = 200_000;
-
     #[\Override]
     public static function getModes(): array
     {
@@ -88,7 +85,6 @@ final class AvailabilityCommand extends AbstractSyncCommand
             $partlyAnsweredCities = [];
             $sum = ['IM' => 0, 'OR' => 0, 'ST' => 0, 'NONE' => 0, 'not_synced' => 0];
             $now = date('Y-m-d H:i:s');
-            $first = true;
             // Each city's offers, for Travel Core's availability records.
             $checks = [];
 
@@ -98,10 +94,7 @@ final class AvailabilityCommand extends AbstractSyncCommand
                 $tally = new OfferTally();
                 $answered = 0;
                 foreach ($windows as $window) {
-                    if (!$first) {
-                        usleep(self::PAUSE_US);
-                    }
-                    $first = false;
+                    // A scheduled run spaces the searches (Api\RequestPacer).
                     $this->trySyncItem(function () use ($api, $group, $window, $tally, &$best, &$answered): void {
                         $offers = $api->searchHotels([
                             'country_code' => $group['country_code'],

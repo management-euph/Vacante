@@ -50,7 +50,7 @@ final class DashboardSummaryTest extends TestCase
         self::assertSame(0, $items[1]['hotels_with_season']);
     }
 
-    /** Only the recommended jobs are reported as never run: a new store has sixteen of those. */
+    /** Only the recommended jobs are reported as never run: a new store has seventeen of those. */
     public function testANonRecommendedJobThatNeverRanIsNotAProblem(): void
     {
         $modes = array_column(DashboardSummary::attention(self::today(), ['total' => 1147, 'with_packages' => 0]), 'mode');

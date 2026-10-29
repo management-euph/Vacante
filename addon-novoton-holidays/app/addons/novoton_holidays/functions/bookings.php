@@ -228,9 +228,14 @@ function fn_novoton_holidays_get_order_bookings($order_id): array
 }
 
 /**
- * Cron: Sync hotels from ResInfo API
- * 
- * @return array<string, mixed>
+ * The bookings still on request (ASK): asks Novoton about each with resinfo
+ * and stores the answer (Services\AskBookingPoller, also the resinfo job).
+ *
+ * Called by Travel Core's "Sync statuses" button (init.php) and the admin
+ * "resinfo" button. Despite its name it used to fetch the hotel list of
+ * every country, so neither button checked a single booking.
+ *
+ * @return array{success: bool, checked?: int, changed?: int, errors?: int, error?: string}
  */
 function fn_novoton_holidays_cron_resinfo(): array
 {
@@ -239,66 +244,7 @@ function fn_novoton_holidays_cron_resinfo(): array
         return ['success' => false, 'error' => 'API not available'];
     }
 
-    $countries = fn_novoton_holidays_parse_countries();
+    $stats = (new \Tygh\Addons\NovotonHolidays\Services\AskBookingPoller($api, _nvt_booking_repo()))->poll();
 
-    $result = [
-        'success' => true,
-        'synced' => 0,
-        'added' => 0,
-        'updated' => 0,
-        'errors' => 0,
-        'countries' => []
-    ];
-
-    foreach ($countries as $country) {
-        $country = trim($country);
-        if (empty($country)) continue;
-
-        try {
-            $hotels = $api->hotels()->getHotelList($country);
-
-            if (!empty($hotels)) {
-                $country_stats = ['synced' => 0, 'added' => 0, 'updated' => 0];
-
-                $hotelRepo = _nvt_hotel_repo();
-                foreach ($hotels as $hotel) {
-                    $hotel_id = (string)($hotel['HotelId'] ?? $hotel['hotelId'] ?? '');
-                    if (empty($hotel_id)) continue;
-
-                    $hotel_data = [
-                        'hotel_id' => $hotel_id,
-                        'hotel_name' => (string)($hotel['HotelName'] ?? $hotel['hotelName'] ?? ''),
-                        'country' => $country,
-                        'city' => (string)($hotel['City'] ?? $hotel['city'] ?? ''),
-                        'hotel_type' => (string)($hotel['HotelType'] ?? $hotel['hotelType'] ?? ''),
-                        'last_sync' => date('Y-m-d H:i:s')
-                    ];
-
-                    $hotelRepo->upsert($hotel_data);
-                    $country_stats['synced']++;
-                }
-
-                $result['synced'] += $country_stats['synced'];
-                $result['added'] += $country_stats['added'];
-                $result['updated'] += $country_stats['updated'];
-                $result['countries'][$country] = $country_stats;
-            }
-
-        } catch (\Exception $e) {
-            $result['errors']++;
-            $result['countries'][$country] = ['error' => $e->getMessage()];
-        }
-    }
-
-    // Log sync via repository (column names must match addon.xml schema)
-    $syncRepo = _nvt_sync_log_repo();
-    $syncRepo->create('resinfo', [
-        'total'   => $result['synced'],
-        'updated' => $result['updated'],
-        'failed'  => $result['errors'],
-        'status'  => 'completed',
-        'details' => $result['countries'],
-    ]);
-
-    return $result;
+    return ['success' => true] + $stats;
 }

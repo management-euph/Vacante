@@ -133,7 +133,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // away so they never leak into the admin page.
         ob_start();
         try {
-            $result = $dispatcher->dispatch($syncType, []);
+            // Someone asked for the whole pipeline: every step, due or not.
+            $result = $dispatcher->dispatch($syncType, $syncType === 'full' ? ['force' => '1'] : []);
         } finally {
             ob_end_clean();
         }

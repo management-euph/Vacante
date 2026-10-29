@@ -165,12 +165,16 @@ class BookingSubmissionService
             return false;
         }
 
+        // Taken is not confirmed: the answer has no status, and a booking on
+        // request (CP, "Confirmation pending") read as confirmed. It stays
+        // pending until getBookingRequest says C (the booking_status job,
+        // on Eurosite's schedule: first 30 minutes after this).
         $ok = !empty($result['ok']);
         $this->repo->update($bookingId, [
             'api_ref' => TypeCoerce::toString($result['api_ref']),
-            'status' => $ok ? TravelConstants::STATUS_CONFIRMED : TravelConstants::STATUS_FAILED,
+            'status' => $ok ? TravelConstants::STATUS_PENDING : TravelConstants::STATUS_FAILED,
             'api_response' => TypeCoerce::toString($result['raw']),
-        ]);
+        ] + ($ok ? ['submitted_at' => date('Y-m-d H:i:s')] : []));
 
         if ($ok) {
             try {

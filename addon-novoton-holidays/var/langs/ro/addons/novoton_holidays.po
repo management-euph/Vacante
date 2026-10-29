@@ -56,21 +56,29 @@ msgctxt "SettingsOptions::novoton_holidays::sync_intervals_header"
 msgid "Sync Intervals"
 msgstr "Intervale Sincronizare"
 
+msgctxt "SettingsOptions::novoton_holidays::sync_interval_hotel_info_peak_days"
+msgid "Hotel details: full pass every (days), February–May"
+msgstr "Detalii hoteluri: actualizare completă la fiecare (zile), februarie–mai"
+
+msgctxt "SettingsTooltips::novoton_holidays::sync_interval_hotel_info_peak_days"
+msgid "While Novoton loads the new season (February to May), every hotel's details are fetched again this often. Novoton asked for every 3 days in that period. Between passes, only the hotels offers_update names are fetched. A pass starts from 05:00. Default: 3"
+msgstr "Cât timp Novoton încarcă sezonul nou (februarie–mai), detaliile fiecărui hotel se citesc din nou la acest interval. Novoton a cerut la fiecare 3 zile în această perioadă. Între actualizări se citesc doar hotelurile semnalate de offers_update. O actualizare începe de la ora 05:00. Implicit: 3"
+
 msgctxt "SettingsOptions::novoton_holidays::sync_interval_hotel_info_days"
-msgid "Hotel info full sync interval (days)"
-msgstr "Interval sincronizare completă informații hotel (zile)"
+msgid "Hotel details: full pass every (days), June–January"
+msgstr "Detalii hoteluri: actualizare completă la fiecare (zile), iunie–ianuarie"
 
 msgctxt "SettingsTooltips::novoton_holidays::sync_interval_hotel_info_days"
-msgid "How often to perform a full re-sync of hotel info from the API. Between full syncs, only new/changed hotels are updated. Default: 7 (one week), so a new season's packages are picked up within a week even if the change feed misses one."
-msgstr "Cât de des se efectuează o re-sincronizare completă a informațiilor hoteliere de la API. Între sincronizări complete, doar hotelurile noi/modificate sunt actualizate. Implicit: 7 (o săptămână), ca pachetele unui sezon nou să fie preluate în cel mult o săptămână, chiar dacă lista de modificări omite unul."
+msgid "Outside February–May, every hotel's details are fetched again this often. Novoton asked for every 7 days. Between passes, only the hotels offers_update names are fetched. A pass starts from 05:00. Default: 7"
+msgstr "În afara perioadei februarie–mai, detaliile fiecărui hotel se citesc din nou la acest interval. Novoton a cerut la fiecare 7 zile. Între actualizări se citesc doar hotelurile semnalate de offers_update. O actualizare începe de la ora 05:00. Implicit: 7"
 
-msgctxt "SettingsOptions::novoton_holidays::sync_interval_price_info_days"
-msgid "Price info full sync interval (days)"
-msgstr "Interval sincronizare completă prețuri (zile)"
+msgctxt "SettingsOptions::novoton_holidays::sync_interval_price_info_full_days"
+msgid "Season prices: full pass every (days)"
+msgstr "Prețuri sezoniere: actualizare completă la fiecare (zile)"
 
-msgctxt "SettingsTooltips::novoton_holidays::sync_interval_price_info_days"
-msgid "How often to perform a full re-sync of season prices. Between full syncs, only stale packages are updated. Default: 7 (weekly)"
-msgstr "Cât de des se efectuează o re-sincronizare completă a prețurilor sezoniere. Între sincronizări complete, doar pachetele expirate sunt actualizate. Implicit: 7 (săptămânal)"
+msgctxt "SettingsTooltips::novoton_holidays::sync_interval_price_info_full_days"
+msgid "Every package's season prices are fetched again this often. Novoton asked for once a month: in between, offers_update (twice a day) names the packages whose prices changed, and only those are fetched. A pass starts from 05:00. Default: 30"
+msgstr "Prețurile sezoniere ale fiecărui pachet se citesc din nou la acest interval. Novoton a cerut o dată pe lună: între timp, offers_update (de două ori pe zi) semnalează pachetele cu prețuri modificate și doar acestea se citesc. O actualizare începe de la ora 05:00. Implicit: 30"
 
 msgctxt "SettingsOptions::novoton_holidays::sync_interval_facilities_days"
 msgid "Facilities sync interval (days)"
@@ -176,6 +184,26 @@ msgctxt "SettingsTooltips::novoton_holidays::availability_check_max_minutes"
 msgid "The run stops before this, so a run started at 04:00 ends before Add products at 04:30. Default: 20"
 msgstr "Rularea se oprește înainte de acest timp, astfel încât o rulare pornită la 04:00 se termină înainte de Adăugare produse la 04:30. Implicit: 20"
 
+msgctxt "SettingsOptions::novoton_holidays::availability_check_skip_unpriced"
+msgid "Skip dates without published prices"
+msgstr "Omite datele fără prețuri publicate"
+
+msgctxt "SettingsTooltips::novoton_holidays::availability_check_skip_unpriced"
+msgid "A date none of a resort's hotels has published prices for (priceinfo) is not asked: no offer is possible there, so it counts as checked without one. A hotel whose prices were never read, or whose latest check found an offer outside them, keeps every date asked. Default: on"
+msgstr "O dată pentru care niciun hotel al stațiunii nu are prețuri publicate (priceinfo) nu este verificată: acolo nu poate exista nicio ofertă, așa că se consideră verificată, fără ofertă. Un hotel ale cărui prețuri nu au fost citite niciodată, sau la care ultima verificare a găsit o ofertă în afara lor, păstrează toate datele verificate. Implicit: activat"
+
+msgctxt "SettingsOptions::novoton_holidays::images_header"
+msgid "Hotel photos (refresh_images)"
+msgstr "Fotografiile hotelurilor (refresh_images)"
+
+msgctxt "SettingsOptions::novoton_holidays::images_keep_manual"
+msgid "Keep photos added by hand"
+msgstr "Păstrează fotografiile adăugate manual"
+
+msgctxt "SettingsTooltips::novoton_holidays::images_keep_manual"
+msgid "Photos you add to a hotel product in the admin panel are never removed, moved or replaced as the main photo. Untick to let the refresh treat them like photos Novoton no longer lists: when Novoton sends new photos, they are removed. Products made before the refresh existed: their photos that match Novoton's count as Novoton's, the others as yours. Default: on"
+msgstr "Fotografiile pe care le adăugați la un produs-hotel din panoul de administrare nu sunt niciodată șterse, mutate sau înlocuite ca fotografie principală. Debifați pentru ca actualizarea să le trateze ca pe fotografiile pe care Novoton nu le mai listează: când Novoton trimite fotografii noi, acestea sunt șterse. Produsele create înainte de actualizare: fotografiile care se potrivesc cu cele Novoton sunt considerate Novoton, celelalte ale dumneavoastră. Implicit: activat"
+
 msgctxt "SettingsOptions::novoton_holidays::api_url"
 msgid "API URL"
 msgstr "URL API"
@@ -263,6 +291,22 @@ msgstr "Timeout circuit breaker (s)"
 msgctxt "SettingsTooltips::novoton_holidays::circuit_breaker_timeout"
 msgid "Seconds to wait before retrying after circuit opens (recommended: 60)"
 msgstr "Secunde de așteptare înainte de reîncercare după deschiderea circuitului (recomandat: 60)"
+
+msgctxt "SettingsOptions::novoton_holidays::api_max_concurrent"
+msgid "Requests to Novoton at the same time"
+msgstr "Cereri către Novoton în același timp"
+
+msgctxt "SettingsTooltips::novoton_holidays::api_max_concurrent"
+msgid "For the whole store: every job and customers' searches together. Novoton asked for at most 5 at the same time (28 Oct 2026). Default: 5"
+msgstr "Pentru tot magazinul: toate joburile și căutările clienților împreună. Novoton a cerut cel mult 5 în același timp (28 oct. 2026). Implicit: 5"
+
+msgctxt "SettingsOptions::novoton_holidays::api_max_per_second"
+msgid "Requests to Novoton per second"
+msgstr "Cereri către Novoton pe secundă"
+
+msgctxt "SettingsTooltips::novoton_holidays::api_max_per_second"
+msgid "For the whole store: every job and customers' searches together. Novoton asked for at most 5 a second (28 Oct 2026). Default: 5"
+msgstr "Pentru tot magazinul: toate joburile și căutările clienților împreună. Novoton a cerut cel mult 5 pe secundă (28 oct. 2026). Implicit: 5"
 
 msgctxt "Languages::novoton_holidays.exchange_rates"
 msgid "Exchange Rates"
@@ -3469,8 +3513,8 @@ msgid "Hotel info"
 msgstr "Informații hotel"
 
 msgctxt "Languages::novoton_holidays.dash_job_hotel_info_batched_desc"
-msgid "Hotel details, in batches that resume; later runs re-sync changed hotels"
-msgstr "Detaliile hotelurilor, în loturi care se reiau; rulările următoare resincronizează hotelurile modificate"
+msgid "Hotel details: every hotel every 3 days in February–May and every 7 days otherwise, from 05:00; in between, the hotels offers_update names"
+msgstr "Detaliile hotelurilor: toate hotelurile la 3 zile în februarie–mai și la 7 zile în rest, de la ora 05:00; între timp, hotelurile semnalate de offers_update"
 
 msgctxt "Languages::novoton_holidays.dash_job_hotel_facilities_batched"
 msgid "Hotel facilities"
@@ -3479,6 +3523,14 @@ msgstr "Facilitățile hotelurilor"
 msgctxt "Languages::novoton_holidays.dash_job_hotel_facilities_batched_desc"
 msgid "Which facilities each hotel has, in batches"
 msgstr "Ce facilități are fiecare hotel, în loturi"
+
+msgctxt "Languages::novoton_holidays.dash_job_refresh_images"
+msgid "Hotel photos"
+msgstr "Fotografiile hotelurilor"
+
+msgctxt "Languages::novoton_holidays.dash_job_refresh_images_desc"
+msgid "Each hotel's photos about once a week; only new photos are downloaded, and none is added twice"
+msgstr "Fotografiile fiecărui hotel, cam o dată pe săptămână; se descarcă doar fotografiile noi și niciuna nu se adaugă de două ori"
 
 msgctxt "Languages::novoton_holidays.dash_job_geocode_addresses"
 msgid "Geocode streets"
@@ -3493,8 +3545,8 @@ msgid "Price info"
 msgstr "Informații prețuri"
 
 msgctxt "Languages::novoton_holidays.dash_job_sync_priceinfo_batched_desc"
-msgid "Season prices, in batches; a full re-sync every 7 days"
-msgstr "Prețurile de sezon, în loturi; resincronizare completă la 7 zile"
+msgid "Season prices: new packages and the ones offers_update names; every package once a month, from 05:00"
+msgstr "Prețurile de sezon: pachetele noi și cele semnalate de offers_update; toate pachetele o dată pe lună, de la ora 05:00"
 
 msgctxt "Languages::novoton_holidays.dash_job_compute_prices"
 msgid "Compute prices"
@@ -3549,16 +3601,16 @@ msgid "Offers update"
 msgstr "Actualizare oferte"
 
 msgctxt "Languages::novoton_holidays.dash_job_offers_update_desc"
-msgid "New and changed offers since the last run"
-msgstr "Ofertele noi și modificate de la ultima rulare"
+msgid "Changed offers in every country sold, twice a day: marks the packages and hotels to fetch again, adds new hotels"
+msgstr "Ofertele modificate din fiecare țară vândută, de două ori pe zi: marchează pachetele și hotelurile de recitit, adaugă hotelurile noi"
 
 msgctxt "Languages::novoton_holidays.dash_job_resinfo"
 msgid "Booking status"
 msgstr "Starea rezervărilor"
 
 msgctxt "Languages::novoton_holidays.dash_job_resinfo_desc"
-msgid "Checks on-request (ASK) bookings"
-msgstr "Verifică rezervările la cerere (ASK)"
+msgid "On-request (ASK) bookings, every 15 minutes, until confirmed (OK), cancelled (ST) or sent to alternatives (RQ)"
+msgstr "Rezervările la cerere (ASK), la fiecare 15 minute, până la confirmare (OK), anulare (ST) sau alternative (RQ)"
 
 msgctxt "Languages::novoton_holidays.dash_job_cleanup"
 msgid "Cleanup"
@@ -3623,6 +3675,10 @@ msgstr "La fiecare [n] ore, la :[minute]"
 msgctxt "Languages::novoton_holidays.dash_sched_daily"
 msgid "Daily [time]"
 msgstr "Zilnic [time]"
+
+msgctxt "Languages::novoton_holidays.dash_sched_twice_daily"
+msgid "Daily [time] and [time2]"
+msgstr "Zilnic [time] și [time2]"
 
 msgctxt "Languages::novoton_holidays.dash_sched_every_days"
 msgid "Every [n] days, [time]"
