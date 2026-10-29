@@ -273,7 +273,8 @@ final class NovotonBookingSidebarBuilder
      *
      * Cancellation: <Penalty tillDate Type="Percent|Over Nights">value</Penalty>,
      * only the END of each window is known (the factory fills the starts);
-     * FREE = 0%; a row without a date is the no-show rule. Payment:
+     * FREE = 0%; a row without a date is the no-show rule. Any other Type is
+     * a sum of money, in the API currency (EUR, as the store's). Payment:
      * <Percent tillDate>n</Percent>, no date = on booking.
      *
      * @param list<array<string, mixed>> $cancellation TermsFormatter::parseCancellationTerms()
@@ -286,14 +287,16 @@ final class NovotonBookingSidebarBuilder
         foreach ($cancellation as $row) {
             $till = TypeCoerce::toString($row['till_date'] ?? '');
             $value = $row['value'] ?? 0;
-            $isNights = stripos(TypeCoerce::toString($row['type'] ?? ''), 'night') !== false;
+            $type = strtolower(trim(TypeCoerce::toString($row['type'] ?? '')));
+            $isNights = str_contains($type, 'night');
+            $isPercent = !$isNights && ($type === '' || str_contains($type, 'percent') || $type === '%');
             $n = $value === 'FREE' ? 0.0 : TypeCoerce::toFloat($value);
             $windows[] = [
                 'to' => $till !== '' ? $till : null,
-                'percent' => $isNights ? null : $n,
+                'percent' => $isPercent ? $n : null,
                 'nights' => $isNights ? (int) $n : null,
                 'no_show' => $till === '',
-            ];
+            ] + ($isPercent || $isNights ? [] : ['amount' => $n]);
         }
         $installments = [];
         foreach ($payment as $row) {

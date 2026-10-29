@@ -107,6 +107,51 @@ final class TermsTimelineFactoryTest extends TestCase
         self::assertFalse($t['steps'][3]['is_current']);
     }
 
+    /**
+     * Order #19 (Ardo Vel, 29 Oct 2026, check-in 2 Nov, €499): novoton's
+     * first window came out as "499% · €2,490.01" and the next as "100%".
+     * A penalty is at most the full price, and two windows that charge the
+     * same are one.
+     */
+    public function testAPenaltyAboveTheFullPriceIsTheFullPriceAndEqualWindowsMerge(): void
+    {
+        $t = self::factory('2026-10-29')->cancellation([
+            ['to' => '2026-10-30', 'percent' => 499],
+            ['to' => '2026-11-02', 'percent' => 100],
+        ], 499.0, 6);
+
+        self::assertCount(1, $t['steps']);
+        self::assertSame('full', $t['steps'][0]['kind']);
+        self::assertTrue($t['steps'][0]['is_current']);
+        self::assertSame('11/02/2026', $t['steps'][0]['to_label']);
+        self::assertSame('100%', $t['steps'][0]['percent_label']);
+        self::assertSame('499,00 €', $t['steps'][0]['amount_label']);
+        self::assertTrue($t['full_charge_now']);
+    }
+
+    public function testAnAmountWindowMergesWithTheSameChargeAsAPercent(): void
+    {
+        $t = self::factory('2026-10-29')->cancellation([
+            ['to' => '2026-10-30', 'amount' => 499.0],
+            ['to' => '2026-11-02', 'percent' => 100],
+        ], 499.0, 6);
+
+        self::assertCount(1, $t['steps']);
+        self::assertSame('100%', $t['steps'][0]['percent_label']);
+        self::assertSame('499,00 €', $t['steps'][0]['amount_label']);
+    }
+
+    public function testDifferentChargesStayApart(): void
+    {
+        $t = self::factory('2026-10-29')->cancellation([
+            ['to' => '2026-10-30', 'percent' => 50],
+            ['to' => '2026-11-02', 'percent' => 100],
+        ], 499.0, 6);
+
+        self::assertCount(2, $t['steps']);
+        self::assertSame(['50%', '100%'], array_column($t['steps'], 'percent_label'));
+    }
+
     public function testWindowsThatAlreadyEndedAreDropped(): void
     {
         $t = self::factory()->cancellation([
