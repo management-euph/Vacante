@@ -63,7 +63,9 @@ class RefreshImagesCommand extends AbstractCronCommand
     /**
      * For tests: the photo sync, its table and a clock (seconds).
      *
-     * @param (\Closure(): float)|null $clock
+     * @param HotelImageSync $sync the rules each hotel's photos go through
+     * @param HotelImageRepositoryInterface $photos the photos' table and the hotels' queue
+     * @param (\Closure(): float)|null $clock seconds, for the time budget
      */
     public function useServices(HotelImageSync $sync, HotelImageRepositoryInterface $photos, ?\Closure $clock = null): void
     {
