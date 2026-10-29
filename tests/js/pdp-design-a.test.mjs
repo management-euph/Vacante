@@ -583,6 +583,8 @@ describe('results that keep arriving (Sphinx polls)', () => {
                 <div data-travel-live-results></div>
             </div>`);
         const live = document.querySelector('[data-travel-live]');
+        const ended = vi.fn();
+        live.addEventListener('travel:live-done', (event) => ended(event.detail));
         document.dispatchEvent(new CustomEvent('travel:results-swapped'));
 
         await vi.waitFor(() => expect(live.querySelector('[data-travel-room]')).not.toBeNull());
@@ -598,6 +600,26 @@ describe('results that keep arriving (Sphinx polls)', () => {
         expect(live.querySelector('#l-dbl [data-travel-pick]:checked').value).toBe('1');
         expect(live.querySelector('[data-travel-live-status]').hidden).toBe(true);
         expect(fetch.mock.calls.map(([url]) => url)).toEqual(['/poll?design=a', '/poll?design=a&cursor=c1']);
+        expect(ended).toHaveBeenCalledTimes(1);
+        expect(ended.mock.calls[0][0].shown).toBe(true);
+        vi.unstubAllGlobals();
+    });
+
+    it('stops at the most polls and says when no room came, for the supplier to say so', async () => {
+        const fetch = vi.fn(async () => ({ ok: true, json: async () => ({ html: '', done: false, cursor: 'c', alternatives: [{ check_in: '2027-07-12' }] }) }));
+        vi.stubGlobal('fetch', fetch);
+        page().insertAdjacentHTML('beforeend', `
+            <div data-travel-live id="empty-live" data-travel-live-url="/poll" data-travel-live-interval="1" data-travel-live-max="3">
+                <div data-travel-live-results></div>
+            </div>`);
+        const live = document.getElementById('empty-live');
+        const ended = vi.fn();
+        live.addEventListener('travel:live-done', (event) => ended(event.detail));
+        window.TravelPdpDesignA.armLiveResults();
+
+        await vi.waitFor(() => expect(ended).toHaveBeenCalled());
+        expect(fetch).toHaveBeenCalledTimes(3);
+        expect(ended.mock.calls[0][0]).toEqual({ shown: false, data: { html: '', done: false, cursor: 'c', alternatives: [{ check_in: '2027-07-12' }] } });
         vi.unstubAllGlobals();
     });
 

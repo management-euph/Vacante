@@ -86,6 +86,16 @@
     line-height: 1.4;
     color: var(--travel-pdpa-muted);
 }
+/* The hotel's code: the location's own colour and font, a dot before it
+   when it follows the location. */
+.travel-pdpa .travel-pdpa-location__code {
+    white-space: nowrap;
+}
+.travel-pdpa .travel-pdpa-location__line + .travel-pdpa-location__code::before {
+    content: "·";
+    margin-right: 12px;
+    color: #9aa8b8;
+}
 .travel-pdpa .travel-pdpa-location__map {
     display: inline-flex;
     align-items: center;

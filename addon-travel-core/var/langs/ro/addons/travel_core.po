@@ -3293,3 +3293,7 @@ msgstr "Prețul tăiat este prețul fără reducere."
 msgctxt "Languages::travel_core.pdpa_r_footnote_struck_deal"
 msgid "The struck price is the price without the [deal] discount."
 msgstr "Prețul tăiat este prețul fără reducerea [deal]."
+
+msgctxt "Languages::travel_core.pdpa_r_room_only"
+msgid "Room only"
+msgstr "Fără masă"

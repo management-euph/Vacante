@@ -113,11 +113,16 @@
                         {* Location line + map link, from the same
                            server-built values as the current page's line
                            (HotelLocationLine / HotelMapUrl), which the hook
-                           above leaves out on this page. *}
-                        {if $travel_hotel_location_line || $travel_hotel_map_url}
+                           above leaves out on this page; between them the
+                           hotel's code, the product code ("COD: NVT476"),
+                           in the location's own colour and font. *}
+                        {if $travel_hotel_location_line || $product.product_code || $travel_hotel_map_url}
                             <p class="travel-pdpa-location">
                                 {if $travel_hotel_location_line}
                                     <span class="travel-pdpa-location__line">{$travel_hotel_location_line|escape:html}</span>
+                                {/if}
+                                {if $product.product_code}
+                                    <span class="travel-pdpa-location__code">{__("travel_core.pdpa_code", ["[code]" => $product.product_code|escape:html])}</span>
                                 {/if}
                                 {if $travel_hotel_map_url}
                                     <a href="{$travel_hotel_map_url|escape:html}" target="_blank" rel="noopener" class="travel-pdpa-location__map travel-hotel-map-link">{__("travel_core.pdpa_show_map")}</a>

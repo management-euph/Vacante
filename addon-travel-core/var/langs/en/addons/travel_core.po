@@ -3293,3 +3293,7 @@ msgstr "The struck price is the price without the discount."
 msgctxt "Languages::travel_core.pdpa_r_footnote_struck_deal"
 msgid "The struck price is the price without the [deal] discount."
 msgstr "The struck price is the price without the [deal] discount."
+
+msgctxt "Languages::travel_core.pdpa_r_room_only"
+msgid "Room only"
+msgstr "Room only"

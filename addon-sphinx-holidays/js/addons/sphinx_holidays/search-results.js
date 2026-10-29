@@ -55,6 +55,46 @@ window.SphinxSearch.onReady = function (fn) {
 (function () {
     var armedSearchId = null;
 
+    function formatAltDate(iso) {
+        var p = (iso || '').split('-');
+        return p.length === 3 ? p[2] + '.' + p[1] : iso;
+    }
+
+    // "Try nearby dates": the dates the last poll found, in the no-results block.
+    function renderAlternatives(noResults, alternatives) {
+        var box = document.getElementById('sphinx-alt-dates');
+        if (!box || !noResults || !alternatives || !alternatives.length) return;
+        var heading = noResults.getAttribute('data-alt-heading') || 'Try nearby dates:';
+        var fromLabel = noResults.getAttribute('data-alt-from') || 'from';
+        var html = '<strong>' + heading + '</strong><div class="travel-alt-date-list">';
+        for (var i = 0; i < alternatives.length; i++) {
+            var alt = alternatives[i];
+            if (!alt || !alt.check_in || !alt.check_out) continue;
+            var link = new URL(window.location.href);
+            link.searchParams.set('check_in', alt.check_in);
+            link.searchParams.set('check_out', alt.check_out);
+            var label = formatAltDate(alt.check_in) + ' – ' + formatAltDate(alt.check_out);
+            if (alt.price > 0) {
+                label += ' · ' + fromLabel + ' ' + Number(alt.price).toFixed(0) + ' ' + (alt.currency === 'EUR' ? '€' : (alt.currency || ''));
+            }
+            html += '<a class="ty-btn travel-alt-date-chip" href="' + link.toString() + '">' + label + '</a>';
+        }
+        html += '</div>';
+        box.innerHTML = html;
+        box.style.display = '';
+    }
+
+    // A Design A page's live room cards (travel_core pdp-design-a.js) ended
+    // with no room: the same no-results block and nearby dates as the list.
+    document.addEventListener('travel:live-done', function (event) {
+        var detail = event.detail || {};
+        if (detail.shown) return;
+        var noResults = document.getElementById('sphinx-no-results');
+        if (!noResults) return;
+        noResults.style.display = '';
+        renderAlternatives(noResults, (detail.data && detail.data.alternatives) || []);
+    });
+
     function armPoll() {
     var container = document.getElementById('sphinx-results-container');
     if (!container) return;
@@ -230,39 +270,11 @@ window.SphinxSearch.onReady = function (fn) {
         if (skeleton) skeleton.style.display = 'none';
     }
 
-    function formatAltDate(iso) {
-        var p = (iso || '').split('-');
-        return p.length === 3 ? p[2] + '.' + p[1] : iso;
-    }
-
-    function renderAlternatives() {
-        var box = document.getElementById('sphinx-alt-dates');
-        if (!box || !noResults || !lastAlternatives.length) return;
-        var heading = noResults.getAttribute('data-alt-heading') || 'Try nearby dates:';
-        var fromLabel = noResults.getAttribute('data-alt-from') || 'from';
-        var html = '<strong>' + heading + '</strong><div class="travel-alt-date-list">';
-        for (var i = 0; i < lastAlternatives.length; i++) {
-            var alt = lastAlternatives[i];
-            if (!alt || !alt.check_in || !alt.check_out) continue;
-            var link = new URL(window.location.href);
-            link.searchParams.set('check_in', alt.check_in);
-            link.searchParams.set('check_out', alt.check_out);
-            var label = formatAltDate(alt.check_in) + ' – ' + formatAltDate(alt.check_out);
-            if (alt.price > 0) {
-                label += ' · ' + fromLabel + ' ' + Number(alt.price).toFixed(0) + ' ' + (alt.currency === 'EUR' ? '€' : (alt.currency || ''));
-            }
-            html += '<a class="ty-btn travel-alt-date-chip" href="' + link.toString() + '">' + label + '</a>';
-        }
-        html += '</div>';
-        box.innerHTML = html;
-        box.style.display = '';
-    }
-
     function finish() {
         if (skeleton) skeleton.style.display = 'none';
         if (accumulated === 0 && noResults) {
             noResults.style.display = '';
-            renderAlternatives();
+            renderAlternatives(noResults, lastAlternatives);
         }
     }
 

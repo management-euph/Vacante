@@ -2461,4 +2461,8 @@ Dacă ați plătit deja, vă rugăm să ignorați acest email.',
         'en' => 'The struck price is the price without the [deal] discount.',
         'ro' => 'Prețul tăiat este prețul fără reducerea [deal].',
     ],
+    'travel_core.pdpa_r_room_only' => [
+        'en' => 'Room only',
+        'ro' => 'Fără masă',
+    ],
 ];

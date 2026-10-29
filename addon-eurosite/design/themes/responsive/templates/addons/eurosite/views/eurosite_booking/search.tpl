@@ -11,6 +11,10 @@
  * One hotel only: the product page's booking engine fetches this page with
  * the hotel's code and product (hotel_id, product_id) and shows its results
  * inline; there is no destination search.
+ *
+ * A Design A hotel page (design=a, one room) gets the room cards instead of
+ * the offer list: travel_core components/design_a_results.tpl, from
+ * Services\DesignARates.
  *}
 
 {include file="addons/travel_core/components/travel_i18n.tpl"}
@@ -29,6 +33,9 @@
         </div>
     {/if}
 
+    {if $travel_design_a_results}
+        {include file="addons/travel_core/components/design_a_results.tpl" results=$travel_design_a_results}
+    {else}
     {foreach from=$eurosite_results item=hotel}
         <div class="eurosite-hotel-group">
             <div class="eurosite-hotel-header">
@@ -105,6 +112,7 @@
             {/foreach}
         </div>
     {/foreach}
+    {/if}{* End of the Design A else *}
 
     {* Modal shell — inside the results root so the inline AJAX swap carries it *}
     <div id="info-modal" class="eurosite-info-modal" style="display: none;">

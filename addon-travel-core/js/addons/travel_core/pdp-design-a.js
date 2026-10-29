@@ -647,7 +647,9 @@
      * the most polls); each answer — JSON {html, done, cursor} — brings the
      * whole results component for what has arrived so far. It replaces the
      * last one with what the guest chose kept: filters, sort, "see all",
-     * each room's option (by the builder's stable keys), the focus.
+     * each room's option (by the builder's stable keys), the focus. At the
+     * end the container fires travel:live-done ({data: the last answer,
+     * shown: whether a room came}): the supplier's script says when none did.
      */
 
     function stateOf(holder) {
@@ -742,11 +744,16 @@
         var status = live.querySelector('[data-travel-live-status]');
         var polls = 0;
         var cursor = '';
+        var last = null;
         var stop = function () {
             live.setAttribute('data-travel-live-done', '');
             if (status) {
                 status.hidden = true;
             }
+            live.dispatchEvent(new CustomEvent('travel:live-done', {
+                bubbles: true,
+                detail: { data: last, shown: !!(holder && holder.querySelector('[data-travel-room]')) },
+            }));
         };
         var poll = function () {
             // A new search replaced this one: let it go.
@@ -766,6 +773,7 @@
                     if (!document.body.contains(live)) {
                         return;
                     }
+                    last = data;
                     cursor = data && data.cursor ? String(data.cursor) : cursor;
                     if (holder && data && typeof data.html === 'string' && data.html !== '') {
                         var state = stateOf(holder);
