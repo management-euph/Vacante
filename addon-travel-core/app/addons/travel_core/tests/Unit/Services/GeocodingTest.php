@@ -146,7 +146,74 @@ final class GeocodingTest extends TestCase
         self::assertStringStartsWith('https://nominatim.example.org/reverse?format=jsonv2', $urls[0]);
         self::assertStringContainsString('lat=41.2818000', $urls[0]);
         self::assertStringContainsString('lon=19.4416000', $urls[0]);
-        self::assertStringContainsString('accept-language=ro', $urls[0]);
+        self::assertStringContainsString('zoom=18', $urls[0]);
+        // Romanian first, then English: "Kiten", not "Китен".
+        self::assertStringContainsString('accept-language=ro,en', $urls[0]);
+    }
+
+    public function testCyrillicNamesComeBackInLatinLetters(): void
+    {
+        $out = ReverseGeocodeResult::fromNominatimAddress([
+            'road' => 'Нептун', 'house_number' => '26', 'town' => 'Китен', 'state' => 'Regiunea Burgas',
+        ]);
+
+        self::assertSame('Neptun 26', $out->street);
+        self::assertSame('Kiten', $out->city);
+        self::assertSame('Regiunea Burgas', $out->region);
+    }
+
+    public function testRunnerAsksAtStreetLevelWhenTheBuildingHasNoRoad(): void
+    {
+        $urls = [];
+        $answers = [
+            '{"address":{"leisure":"Sunny Beach","town":"Kiten","state":"Regiunea Burgas"}}',
+            '{"address":{"road":"Нептун","town":"Kiten","state":"Regiunea Burgas"}}',
+        ];
+        $client = new NominatimClient(
+            static function (string $url, string $ua) use (&$urls, $answers): array {
+                $urls[] = $url;
+
+                return [200, $answers[count($urls) - 1] ?? '{}'];
+            },
+            'https://nominatim.example.test',
+        );
+        $sleeps = [];
+        $runner = new GeocodeBacklogRunner($client, static function (int $s) use (&$sleeps): void {
+            $sleeps[] = $s;
+        });
+
+        $persisted = [];
+        $runner->run(
+            [['id' => 'A', 'lat' => 42.2316, 'lng' => 27.7796, 'label' => 'A']],
+            static function (string $id, ?ReverseGeocodeResult $r) use (&$persisted): void {
+                $persisted[$id] = $r;
+            },
+        );
+
+        self::assertCount(2, $urls);
+        self::assertStringContainsString('zoom=18', $urls[0]);
+        self::assertStringContainsString('zoom=17', $urls[1]);
+        self::assertSame([1], $sleeps, 'the retry keeps the one-request-per-second pace');
+        self::assertSame('Neptun', $persisted['A']?->street);
+        self::assertSame('Kiten', $persisted['A']?->city);
+    }
+
+    public function testRunnerDoesNotRetryWhenTheBuildingNamesAStreet(): void
+    {
+        $calls = 0;
+        $client = new NominatimClient(
+            static function (string $url, string $ua) use (&$calls): array {
+                $calls++;
+
+                return [200, self::ADALYA_BODY];
+            },
+            'https://nominatim.example.test',
+        );
+        (new GeocodeBacklogRunner($client, static function (int $s): void {
+        }))->run([['id' => 'A', 'lat' => 1.0, 'lng' => 2.0, 'label' => 'A']], static function (): void {
+        });
+
+        self::assertSame(1, $calls);
     }
 
     public function testNon200IsAStopSignal(): void

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Services\Geocoding;
 
+use Tygh\Addons\TravelCore\Helpers\LatinScript;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
@@ -30,6 +31,22 @@ final class ReverseGeocodeResult
         return $this->street === '' && $this->city === '' && $this->region === '';
     }
 
+    /** This result, with the street of a street-level lookup when it had none. */
+    public function withStreetFrom(self $other): self
+    {
+        if ($this->street !== '' || $other->street === '') {
+            return $this;
+        }
+
+        return new self(
+            street: $other->street,
+            city: $this->city !== '' ? $this->city : $other->city,
+            region: $this->region !== '' ? $this->region : $other->region,
+            postcode: $this->postcode !== '' ? $this->postcode : $other->postcode,
+            countryCode: $this->countryCode !== '' ? $this->countryCode : $other->countryCode,
+        );
+    }
+
     /**
      * Build from Nominatim's `address` object.
      *
@@ -41,6 +58,9 @@ final class ReverseGeocodeResult
      * Mediterranean macro-region. Taking `region` first would store a
      * grouping no Sphinx region node matches; `province` is the level that
      * lines up with the destination tree.
+     *
+     * Street, city and region are in Latin letters: a name OSM has only in
+     * Cyrillic or Greek is transliterated (LatinScript).
      *
      * @param array<array-key, mixed> $address
      */
@@ -83,7 +103,7 @@ final class ReverseGeocodeResult
         foreach ($keys as $key) {
             $value = self::str($address[$key] ?? null);
             if ($value !== '') {
-                return mb_substr($value, 0, 255);
+                return mb_substr(LatinScript::toLatin($value), 0, 255);
             }
         }
 
