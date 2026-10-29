@@ -357,97 +357,268 @@ describe('photo fit', () => {
     });
 });
 
-describe('room-first results', () => {
-    const row = (meal, price, flags = {}, more = false) => `
-        <div class="travel-pdpa-rrow" data-travel-rate data-meal="${meal}"
-             data-free="${flags.free ? 1 : 0}" data-immediate="${flags.onRequest ? 0 : 1}" data-special="${flags.special ? 1 : 0}"
-             ${more ? 'data-travel-more hidden' : ''}>
-            <span class="price">${price}</span><a href="#book-${price}">Rezervă</a>
+describe('room-first results (board 13b)', () => {
+    // One option of a room: meal key, total, flags; its till and (optionally) its own terms.
+    const option = (index, meal, amount, flags = {}) => `
+        <label class="travel-pdpa-opt" data-travel-option data-index="${index}" data-key="k${meal}${amount}" data-meal="${meal}"
+               data-free="${flags.free ? 1 : 0}" data-immediate="${flags.onRequest ? 0 : 1}" data-special="${flags.special ? 1 : 0}" data-amount="${amount}">
+            <input type="radio" name="opt-${flags.room}" value="${index}" data-travel-pick${flags.chosen ? ' checked' : ''}>
+            <span>${meal} ${amount}</span>
+        </label>`;
+    const till = (index, meal, amount, chosen) => `
+        <div class="travel-pdpa-till" data-travel-for="${index}" data-travel-say="${meal}, total ${amount} €"${chosen ? '' : ' hidden'}>
+            <b class="total">${amount} €</b><a href="#book-${meal}-${amount}">Rezervă</a>
         </div>`;
+    // A room: [meal, amount, flags] options, the cheapest chosen.
+    const room = (key, name, options, more = false) => {
+        const amounts = options.map(([, amount]) => amount);
+        const cheapest = amounts.indexOf(Math.min(...amounts));
+        return `
+        <li class="travel-pdpa-rcard" id="${key}" data-travel-room data-room-key="${key}" data-from="${amounts[cheapest]}"
+            data-from-text="${amounts[cheapest]} €" data-name="${name}" ${more ? 'hidden' : ''}>
+            <ul data-travel-amen tabindex="-1"><li>Wi-Fi</li><li data-travel-amen-more hidden>Seif</li></ul>
+            <button type="button" data-travel-amen-all aria-expanded="false">Toate dotările (+1)</button>
+            <fieldset>${options.map(([meal, amount, flags], i) => option(i, meal, amount, { ...flags, room: key, chosen: i === cheapest })).join('')}</fieldset>
+            <details data-travel-for="0"${cheapest === 0 ? '' : ' hidden'}><summary>Condiții</summary></details>
+            <div class="travel-pdpa-rcard__till">${options.map(([meal, amount], i) => till(i, meal, amount, i === cheapest)).join('')}</div>
+            <p data-travel-announce></p>
+        </li>`;
+    };
+    const RESULTS = (id) => `
+        <section data-travel-results id="${id}">
+            <button type="button" data-travel-meal="" aria-pressed="true">Toate mesele</button>
+            <button type="button" data-travel-meal="bb" aria-pressed="false">Mic dejun</button>
+            <button type="button" data-travel-meal="ai" aria-pressed="false">All Inclusive</button>
+            <button type="button" data-travel-chip="free" aria-pressed="false">Anulare gratuită</button>
+            <button type="button" data-travel-chip="special" aria-pressed="false">Oferte speciale</button>
+            <select data-travel-sort><option value="low" selected>low</option><option value="high">high</option></select>
+            <ul data-travel-room-list id="${id}-list">
+                ${room(`${id}-dbl`, 'Cameră Dublă', [['bb', 615, { free: true }], ['ai', 845, { free: true, special: true }]])}
+                ${room(`${id}-deluxe`, 'Cameră Dublă', [['bb', 675], ['ai', 905, { special: true }]])}
+                ${room(`${id}-sea`, 'Cameră Dublă', [['ai', 735, { free: true }]])}
+                ${room(`${id}-superior`, 'Cameră Dublă', [['ai', 1295, { onRequest: true }]])}
+                ${room(`${id}-junior`, 'Suită Junior', [['bb', 1305], ['ai', 1505]], true)}
+                ${room(`${id}-family`, 'Cameră de familie', [['ai', 1390]], true)}
+            </ul>
+            <div data-travel-rall>
+                <button type="button" data-travel-see-all aria-expanded="false" aria-controls="${id}-list">Vezi toate cele 6 tipuri de cameră</button>
+                <p data-travel-hint data-template="Încă [n]: [names], de la [price]">Încă 2: Suită Junior, Cameră de familie, de la 1305 €</p>
+            </div>
+            <div data-travel-no-match hidden><button type="button" data-travel-clear-filters>Arată toate</button></div>
+        </section>`;
     let section;
-    const visible = () => Array.from(section.querySelectorAll('[data-travel-room]')).map((room) => {
-        const prices = Array.from(room.querySelectorAll('[data-travel-rates] [data-travel-rate]'))
-            .filter((r) => !r.hidden && !r.closest('[hidden]'))
-            .map((r) => r.querySelector('.price').textContent);
-        const compact = room.querySelector('[data-travel-compact]');
-        return `${room.hidden ? '-' : ''}${room.id}:${prices.join(',')}${compact && !compact.hidden ? '+compact' : ''}`;
-    });
+    const shown = () => Array.from(section.querySelectorAll('[data-travel-room]')).filter((r) => !r.hidden).map((r) => r.id.replace(/^\w+-/, ''));
+    const total = (id) => {
+        const r = document.getElementById(id);
+        return r.querySelector('.travel-pdpa-till:not([hidden]) .total').textContent;
+    };
 
     beforeAll(() => {
-        page().insertAdjacentHTML('beforeend', `
-            <section data-travel-results id="results">
-                <button type="button" data-travel-meal="" aria-pressed="true">Toate mesele</button>
-                <button type="button" data-travel-meal="m0" aria-pressed="false">Mic dejun</button>
-                <button type="button" data-travel-meal="m1" aria-pressed="false">All Inclusive</button>
-                <button type="button" data-travel-chip="free" aria-pressed="false">Anulare gratuită</button>
-                <button type="button" data-travel-chip="special" aria-pressed="false">Oferte speciale</button>
-                <select data-travel-sort><option value="low" selected>low</option><option value="high">high</option></select>
-                <ul data-travel-room-list>
-                    <li id="deluxe" data-travel-room data-from="502">
-                        <div data-travel-rates>
-                            <div data-travel-group>${row('m1', 502, { free: true, special: true })}${row('m1', 665, { free: true })}</div>
-                            <div data-travel-group>${row('m0', 565)}</div>
-                        </div>
-                    </li>
-                    <li id="superior" data-travel-room data-from="610">
-                        <div data-travel-compact>${row('m0', 610)}</div>
-                        <div data-travel-rates hidden>
-                            <div data-travel-group>${row('m0', 610)}${row('m0', 700, {}, true)}</div>
-                            <div data-travel-group data-travel-more hidden>${row('m1', 810, { free: true }, true)}</div>
-                        </div>
-                        <button type="button" data-travel-see-all aria-expanded="false">Vezi toate cele 3 tarife</button>
-                    </li>
-                </ul>
-                <div data-travel-no-match hidden><button type="button" data-travel-clear-filters>Arată toate tarifele</button></div>
-            </section>`);
-        section = document.getElementById('results');
+        page().insertAdjacentHTML('beforeend', RESULTS('r'));
+        section = document.getElementById('r');
     });
 
-    it('a meal plan shows its rates in every room, the collapsed ones too', () => {
-        click(section.querySelector('[data-travel-meal="m1"]'));
-        expect(visible()).toEqual(['deluxe:502,665', 'superior:810']);
-        expect(section.querySelector('[data-travel-meal="m1"]').getAttribute('aria-pressed')).toBe('true');
+    it('a radio switches the room\'s till and terms; the total fades in only after a change, and is said', () => {
+        const dbl = document.getElementById('r-dbl');
+        expect(total('r-dbl')).toBe('615 €');
+        expect(dbl.hasAttribute('data-travel-picked')).toBe(false);
+
+        const radio = dbl.querySelectorAll('[data-travel-pick]')[1];
+        radio.checked = true;
+        radio.dispatchEvent(new Event('change', { bubbles: true }));
+        expect(total('r-dbl')).toBe('845 €');
+        expect(dbl.querySelector('.travel-pdpa-till:not([hidden]) a').getAttribute('href')).toBe('#book-ai-845');
+        expect(dbl.querySelector('details[data-travel-for="0"]').hidden).toBe(true);
+        expect(dbl.hasAttribute('data-travel-picked')).toBe(true);
+        expect(dbl.querySelector('[data-travel-announce]').textContent).toBe('ai, total 845 €');
+    });
+
+    it('a meal shows the rooms that have it and chooses it in them; clearing chooses the cheapest again', () => {
+        click(section.querySelector('[data-travel-meal="bb"]'));
+        expect(shown()).toEqual(['dbl', 'deluxe', 'junior']);
+        expect(total('r-dbl')).toBe('615 €');
+        expect(total('r-junior')).toBe('1305 €');
+        expect(section.querySelector('[data-travel-rall]').hidden).toBe(true);
+        expect(section.querySelector('[data-travel-meal="bb"]').getAttribute('aria-pressed')).toBe('true');
         expect(section.querySelector('[data-travel-meal=""]').getAttribute('aria-pressed')).toBe('false');
-        expect(section.querySelector('[data-travel-see-all]').hidden).toBe(true);
+
+        click(section.querySelector('[data-travel-meal="ai"]'));
+        expect(shown()).toEqual(['dbl', 'deluxe', 'sea', 'superior', 'junior', 'family']);
+        expect(total('r-deluxe')).toBe('905 €');
+        expect(total('r-junior')).toBe('1505 €');
+
+        click(section.querySelector('[data-travel-meal=""]'));
+        expect(shown()).toEqual(['dbl', 'deluxe', 'sea', 'superior']);
+        expect(total('r-deluxe')).toBe('675 €');
+        expect(section.querySelector('[data-travel-rall]').hidden).toBe(false);
     });
 
     it('chips narrow it further; nothing left says so, and one click shows everything again', () => {
         click(section.querySelector('[data-travel-chip="special"]'));
-        expect(visible()).toEqual(['deluxe:502', '-superior:']);
+        expect(shown()).toEqual(['dbl', 'deluxe']);
+        expect(total('r-dbl')).toBe('845 €');
 
-        click(section.querySelector('[data-travel-meal="m0"]'));
-        expect(visible()).toEqual(['-deluxe:', '-superior:']);
+        click(section.querySelector('[data-travel-meal="bb"]'));
+        expect(shown()).toEqual([]);
         expect(section.querySelector('[data-travel-no-match]').hidden).toBe(false);
 
         click(section.querySelector('[data-travel-clear-filters]'));
-        expect(visible()).toEqual(['deluxe:502,665,565', 'superior:+compact']);
+        expect(shown()).toEqual(['dbl', 'deluxe', 'sea', 'superior']);
+        expect(total('r-dbl')).toBe('615 €');
         expect(section.querySelector('[data-travel-no-match]').hidden).toBe(true);
         expect(section.querySelector('[data-travel-chip="special"]').getAttribute('aria-pressed')).toBe('false');
-        expect(section.querySelector('[data-travel-see-all]').hidden).toBe(false);
     });
 
-    it('"see all" opens the room\'s other rates and hands the focus to its first rate', () => {
-        const button = section.querySelector('[data-travel-see-all]');
-        click(button);
-        expect(visible()).toEqual(['deluxe:502,665,565', 'superior:610,700,810']);
-        expect(button.hidden).toBe(true);
-        expect(button.getAttribute('aria-expanded')).toBe('true');
-        expect(document.activeElement.getAttribute('href')).toBe('#book-610');
-
-        // An opened room stays open once a filter is cleared.
-        click(section.querySelector('[data-travel-chip="free"]'));
-        expect(visible()).toEqual(['deluxe:502,665', 'superior:810']);
-        click(section.querySelector('[data-travel-chip="free"]'));
-        expect(visible()).toEqual(['deluxe:502,665,565', 'superior:610,700,810']);
-    });
-
-    it('the sort orders the rooms by their cheapest rate', () => {
+    it('the sort orders the rooms by their cheapest option; the first four show and the hint names the others', () => {
         const select = section.querySelector('[data-travel-sort]');
         select.value = 'high';
         select.dispatchEvent(new Event('change', { bubbles: true }));
-        expect(visible().map((v) => v.split(':')[0])).toEqual(['superior', 'deluxe']);
+        expect(shown()).toEqual(['family', 'junior', 'superior', 'sea']);
+        expect(section.querySelector('[data-travel-hint]').textContent).toBe('Încă 2: Cameră Dublă, de la 615 €');
+
         select.value = 'low';
         select.dispatchEvent(new Event('change', { bubbles: true }));
-        expect(visible().map((v) => v.split(':')[0])).toEqual(['deluxe', 'superior']);
+        expect(shown()).toEqual(['dbl', 'deluxe', 'sea', 'superior']);
+        expect(section.querySelector('[data-travel-hint]').textContent).toBe('Încă 2: Suită Junior, Cameră de familie, de la 1305 €');
     });
+
+    it('"see all" shows the other rooms and hands the focus to the first one\'s chosen option', () => {
+        const button = section.querySelector('[data-travel-see-all]');
+        click(button);
+        expect(shown()).toEqual(['dbl', 'deluxe', 'sea', 'superior', 'junior', 'family']);
+        expect(button.getAttribute('aria-expanded')).toBe('true');
+        expect(section.querySelector('[data-travel-rall]').hidden).toBe(true);
+        expect(document.activeElement).toBe(document.getElementById('r-junior').querySelector('[data-travel-pick]:checked'));
+    });
+
+    it('"Toate dotările" shows the room\'s other facilities', () => {
+        const dbl = document.getElementById('r-dbl');
+        click(dbl.querySelector('[data-travel-amen-all]'));
+        expect(dbl.querySelector('[data-travel-amen-more]').hidden).toBe(false);
+        expect(dbl.querySelector('[data-travel-amen-all]').hidden).toBe(true);
+        expect(document.activeElement).toBe(dbl.querySelector('[data-travel-amen]'));
+    });
+});
+
+describe('a room on request: the ⓘ', () => {
+    let tip;
+    let pop;
+
+    beforeAll(() => {
+        page().insertAdjacentHTML('beforeend', `
+            <div class="travel-pdpa-cta">
+                <p>Răspuns în max. 48 h<button type="button" data-travel-tip aria-expanded="false" aria-controls="tip-1">i</button></p>
+                <div id="tip-1" role="dialog" data-travel-tip-pop hidden>
+                    <p>Cum funcționează cererea</p>
+                    <button type="button" data-travel-tip-close>×</button>
+                </div>
+            </div>`);
+        tip = document.querySelector('[data-travel-tip]');
+        pop = document.getElementById('tip-1');
+    });
+
+    it('opens on click (not hover) and closes on the ×, on Esc and on a click elsewhere', () => {
+        click(tip);
+        expect([tip.getAttribute('aria-expanded'), pop.hidden]).toEqual(['true', false]);
+        click(pop.querySelector('p'));
+        expect(pop.hidden).toBe(false);
+
+        click(pop.querySelector('[data-travel-tip-close]'));
+        expect([tip.getAttribute('aria-expanded'), pop.hidden]).toEqual(['false', true]);
+        expect(document.activeElement).toBe(tip);
+
+        click(tip);
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        expect(pop.hidden).toBe(true);
+        expect(document.activeElement).toBe(tip);
+
+        click(tip);
+        click(document.body);
+        expect(pop.hidden).toBe(true);
+    });
+});
+
+describe('terms loaded when opened (a supplier without them in the search)', () => {
+    const terms = (url) => `
+        <details data-travel-terms-url="${url}">
+            <summary>Condiții de plată și anulare</summary>
+            <div data-travel-terms-body data-error="Nu am putut încărca condițiile."><p data-travel-terms-wait>Se încarcă…</p></div>
+        </details>`;
+
+    it('loads once, as text, and says so when it can\'t', async () => {
+        const fetch = vi.fn(async (url) => (url === '/ok'
+            ? { ok: true, json: async () => ({ sections: [{ title: 'Anulare', lines: ['Gratuit până la 3 nov. 2026', '<b>100%</b> după'] }] }) }
+            : { ok: false, status: 500 }));
+        vi.stubGlobal('fetch', fetch);
+        page().insertAdjacentHTML('beforeend', terms('/ok') + terms('/down'));
+        const [ok, down] = document.querySelectorAll('[data-travel-terms-url]');
+
+        ok.open = true;
+        ok.dispatchEvent(new Event('toggle'));
+        await vi.waitFor(() => expect(ok.querySelector('.travel-pdpa-terms__title')).not.toBeNull());
+        expect(ok.querySelector('.travel-pdpa-terms__title').textContent).toBe('Anulare');
+        expect(Array.from(ok.querySelectorAll('li')).map((li) => li.textContent)).toEqual(['Gratuit până la 3 nov. 2026', '<b>100%</b> după']);
+        expect(ok.querySelector('b')).toBeNull();
+        ok.dispatchEvent(new Event('toggle'));
+        expect(fetch.mock.calls.filter(([url]) => url === '/ok')).toHaveLength(1);
+
+        down.open = true;
+        down.dispatchEvent(new Event('toggle'));
+        await vi.waitFor(() => expect(down.querySelector('[data-travel-terms-wait]').textContent).toBe('Nu am putut încărca condițiile.'));
+        vi.unstubAllGlobals();
+    });
+});
+
+describe('results that keep arriving (Sphinx polls)', () => {
+    it('replaces the list with each answer, keeping the filters and each room\'s option, until done', async () => {
+        const answers = [
+            { html: RESULTS_HTML(['dbl']), done: false, cursor: 'c1' },
+            { html: RESULTS_HTML(['dbl', 'sea']), done: true, cursor: '' },
+        ];
+        const fetch = vi.fn(async () => ({ ok: true, json: async () => answers.shift() }));
+        vi.stubGlobal('fetch', fetch);
+        page().insertAdjacentHTML('beforeend', `
+            <div data-travel-live data-travel-live-url="/poll?design=a" data-travel-live-interval="1" data-travel-live-max="5">
+                <p data-travel-live-status>Căutăm…</p>
+                <div data-travel-live-results></div>
+            </div>`);
+        const live = document.querySelector('[data-travel-live]');
+        document.dispatchEvent(new CustomEvent('travel:results-swapped'));
+
+        await vi.waitFor(() => expect(live.querySelector('[data-travel-room]')).not.toBeNull());
+        // The guest picks All Inclusive in the first room and filters on it.
+        const radio = live.querySelectorAll('#l-dbl [data-travel-pick]')[1];
+        radio.checked = true;
+        radio.dispatchEvent(new Event('change', { bubbles: true }));
+        click(live.querySelector('[data-travel-meal="ai"]'));
+
+        await vi.waitFor(() => expect(live.hasAttribute('data-travel-live-done')).toBe(true));
+        expect(live.querySelectorAll('[data-travel-room]')).toHaveLength(2);
+        expect(live.querySelector('[data-travel-meal="ai"]').getAttribute('aria-pressed')).toBe('true');
+        expect(live.querySelector('#l-dbl [data-travel-pick]:checked').value).toBe('1');
+        expect(live.querySelector('[data-travel-live-status]').hidden).toBe(true);
+        expect(fetch.mock.calls.map(([url]) => url)).toEqual(['/poll?design=a', '/poll?design=a&cursor=c1']);
+        vi.unstubAllGlobals();
+    });
+
+    function RESULTS_HTML(rooms) {
+        const options = {
+            dbl: [['bb', 615], ['ai', 845]],
+            sea: [['ai', 735]],
+        };
+        return `<section data-travel-results>
+            <button type="button" data-travel-meal="" aria-pressed="true">Toate</button>
+            <button type="button" data-travel-meal="ai" aria-pressed="false">AI</button>
+            <ul data-travel-room-list>${rooms.map((key) => `
+                <li id="l-${key}" data-travel-room data-room-key="${key}" data-from="${options[key][0][1]}">
+                    ${options[key].map(([meal, amount], i) => `
+                        <label data-travel-option data-index="${i}" data-key="${meal}" data-meal="${meal}" data-amount="${amount}">
+                            <input type="radio" name="l-${key}" value="${i}" data-travel-pick${i === 0 ? ' checked' : ''}>
+                        </label>`).join('')}
+                    ${options[key].map(([meal, amount], i) => `<div class="travel-pdpa-till" data-travel-for="${i}"${i === 0 ? '' : ' hidden'}>${amount}</div>`).join('')}
+                </li>`).join('')}
+            </ul>
+            <div data-travel-no-match hidden></div>
+        </section>`;
+    }
 });

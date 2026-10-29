@@ -1,18 +1,18 @@
 {*
-    Design A hotel page: the room-first results under the search bar
-    (docs/hotel-page-design-a-plan.md, phase 3; Design A board frames 3, 10
-    and 12). A supplier's search renders it in place of its own results
-    when the hotel page asks (design=a); the inline search swaps it in under
-    the bar.
+    Design A hotel page: the room-first results under the search bar, by the
+    owner's board 13b (docs/hotel-page-design-a-plan.md). A supplier's search
+    renders it in place of its own results when the hotel page asks
+    (design=a); the inline search swaps it in under the bar.
 
     Params: results — Results\RoomResultsBuilder::build(), every amount and
-    date already formatted. The rules live there: the meal strip only with
-    two or more meal plans (R1), one meal plan said once in the fact line
-    (R2), a chip only when it splits the list, shared facts not repeated
-    (R3), the best four rates per room, the long list collapsed.
+    date already formatted. The rules live there: one option per meal plan
+    and terms, what a room's options share said once, the meal filter only
+    with two or more meal plans, a chip only when it splits the options, the
+    first four room types before "see all".
 
-    pdp-design-a.js: meal strip and chips filter the rates, the sort orders
-    the rooms, "see all" opens a room's other rates.
+    pdp-design-a.js: the meal filter and the chips show the rooms that have
+    it and choose it in them, a room's radios switch its till, the sort
+    orders the rooms, "see all" shows the others.
 *}
 {$travel_pdpa_results = $results}
 {if $travel_pdpa_results && $travel_pdpa_results.rooms}
@@ -30,40 +30,34 @@
     <section class="travel-pdpa-results" id="travel-pdpa-rooms" aria-labelledby="travel-pdpa-rooms-title" data-travel-results data-cheapest="{$travel_pdpa_results.cheapest|escape:html}">
         <div class="travel-pdpa-rhead">
             <h2 class="travel-pdpa-rhead__title" id="travel-pdpa-rooms-title">{__("travel_core.pdpa_r_title")}</h2>
-            <p class="travel-pdpa-rhead__count" role="status">{__("travel_core.pdpa_r_count", ["[rates]" => $travel_pdpa_rates_text, "[rooms]" => $travel_pdpa_rooms_text])}</p>
+            <p class="travel-pdpa-rhead__count" role="status">
+                {if $travel_pdpa_results.single_meal}
+                    {__("travel_core.pdpa_r_count_meal_`$travel_pdpa_results.room_form`", ["[rooms]" => $travel_pdpa_rooms_text, "[meal]" => $travel_pdpa_results.single_meal|escape:html])}
+                {else}
+                    {__("travel_core.pdpa_r_count", ["[rates]" => $travel_pdpa_rates_text, "[rooms]" => $travel_pdpa_rooms_text])}
+                {/if}
+            </p>
         </div>
 
-        {* R1: the lowest price of each meal plan, also the meal filter *}
-        {if $travel_pdpa_results.meal_plans|count > 1}
+        {* Two or more meal plans: each with how many room types have it and its lowest price, also the filter *}
+        {if $travel_pdpa_results.meal_plans}
             <div class="travel-pdpa-meals" role="group" aria-label="{__("travel_core.pdpa_r_meals_label")}">
-                <button type="button" class="travel-pdpa-meal" aria-pressed="true" data-travel-meal="">
+                <button type="button" class="travel-pdpa-meal" aria-pressed="true" data-travel-meal=""
+                        aria-label="{__("travel_core.pdpa_r_meal_aria", ["[meal]" => __("travel_core.pdpa_r_all_meals"), "[rooms]" => $travel_pdpa_rooms_text, "[price]" => $travel_pdpa_results.cheapest|escape:html])}">
                     {include file="addons/travel_core/components/design_a_icon.tpl" icon="meal"}
-                    <span class="travel-pdpa-meal__n">{__("travel_core.pdpa_r_all_meals")}</span>
-                    <span class="travel-pdpa-meal__p travel-pdpa-meal__p--n">{$travel_pdpa_rates_text}</span>
+                    <span class="travel-pdpa-meal__n">{__("travel_core.pdpa_r_all_meals")} <span class="travel-pdpa-meal__c">({$travel_pdpa_results.room_count})</span></span>
+                    <span class="travel-pdpa-meal__p">{__("travel_core.pdpa_from")} <b>{$travel_pdpa_results.cheapest|escape:html}</b></span>
                 </button>
                 {foreach $travel_pdpa_results.meal_plans as $travel_pdpa_plan}
-                    <button type="button" class="travel-pdpa-meal" aria-pressed="false" data-travel-meal="{$travel_pdpa_plan.key}">
+                    {$travel_pdpa_plan_rooms = __("travel_core.pdpa_r_room_types_`$travel_pdpa_plan.form`", ["[n]" => $travel_pdpa_plan.count])}
+                    <button type="button" class="travel-pdpa-meal" aria-pressed="false" data-travel-meal="{$travel_pdpa_plan.key}"
+                            aria-label="{__("travel_core.pdpa_r_meal_aria", ["[meal]" => $travel_pdpa_plan.name|escape:html, "[rooms]" => $travel_pdpa_plan_rooms, "[price]" => $travel_pdpa_plan.from|escape:html])}">
                         {include file="addons/travel_core/components/design_a_icon.tpl" icon="meal"}
-                        <span class="travel-pdpa-meal__n">{$travel_pdpa_plan.name|escape:html}</span>
+                        <span class="travel-pdpa-meal__n">{$travel_pdpa_plan.name|escape:html} <span class="travel-pdpa-meal__c">({$travel_pdpa_plan.count})</span></span>
                         <span class="travel-pdpa-meal__p">{__("travel_core.pdpa_from")} <b>{$travel_pdpa_plan.from|escape:html}</b></span>
                     </button>
                 {/foreach}
             </div>
-        {/if}
-
-        {* R2 / R3: what every rate shares, said once *}
-        {if $travel_pdpa_results.facts.meal || $travel_pdpa_results.facts.immediate || $travel_pdpa_results.facts.free_until}
-            <p class="travel-pdpa-rfacts">
-                {if $travel_pdpa_results.facts.meal}
-                    <span class="travel-pdpa-rfacts__item">{include file="addons/travel_core/components/design_a_icon.tpl" icon="meal"}{__("travel_core.pdpa_r_fact_meal", ["[meal]" => $travel_pdpa_results.facts.meal|escape:html])}</span>
-                {/if}
-                {if $travel_pdpa_results.facts.immediate}
-                    <span class="travel-pdpa-rfacts__item">{include file="addons/travel_core/components/design_a_icon.tpl" icon="check"}{__("travel_core.pdpa_r_fact_immediate")}</span>
-                {/if}
-                {if $travel_pdpa_results.facts.free_until}
-                    <span class="travel-pdpa-rfacts__item">{include file="addons/travel_core/components/design_a_icon.tpl" icon="check"}{__("travel_core.pdpa_r_fact_free", ["[date]" => $travel_pdpa_results.facts.free_until|escape:html])}</span>
-                {/if}
-            </p>
         {/if}
 
         {if $travel_pdpa_results.chips || $travel_pdpa_results.room_count > 1}
@@ -88,13 +82,20 @@
             </div>
         {/if}
 
-        <p class="travel-pdpa-note travel-pdpa-rnote">{include file="addons/travel_core/components/design_a_icon.tpl" icon="info"}<span>{__("travel_core.pdpa_r_not_yet")}</span></p>
-
-        <ul class="travel-pdpa-rlist" data-travel-room-list>
+        <ul class="travel-pdpa-rlist" id="travel-pdpa-room-list" data-travel-room-list>
             {foreach $travel_pdpa_results.rooms as $travel_pdpa_room}
                 {include file="addons/travel_core/components/design_a_room.tpl"}
             {/foreach}
         </ul>
+
+        {if $travel_pdpa_results.more}
+            <div class="travel-pdpa-rall" data-travel-rall>
+                <button type="button" class="travel-pdpa-btn travel-pdpa-btn--sec travel-pdpa-rall__btn" data-travel-see-all aria-expanded="false" aria-controls="travel-pdpa-room-list">
+                    {__("travel_core.pdpa_r_see_all_rooms", ["[rooms]" => $travel_pdpa_rooms_text])}{include file="addons/travel_core/components/design_a_icon.tpl" icon="chev"}
+                </button>
+                <p class="travel-pdpa-rall__hint" data-travel-hint data-template="{__("travel_core.pdpa_r_more_rooms")|escape:html}">{__("travel_core.pdpa_r_more_rooms", ["[n]" => $travel_pdpa_results.more.count, "[names]" => $travel_pdpa_results.more.names|escape:html, "[price]" => $travel_pdpa_results.more.from|escape:html])}</p>
+            </div>
+        {/if}
 
         <div class="travel-pdpa-rempty" data-travel-no-match hidden>
             <p>{__("travel_core.pdpa_r_no_match")}</p>
@@ -106,6 +107,11 @@
                 {__("travel_core.pdpa_r_footnote_meals", ["[nights]" => $travel_pdpa_nights, "[guests]" => $travel_pdpa_guests|escape:html])}
             {else}
                 {__("travel_core.pdpa_r_footnote", ["[nights]" => $travel_pdpa_nights, "[guests]" => $travel_pdpa_guests|escape:html])}
+            {/if}
+            {if $travel_pdpa_results.struck_deal}
+                {__("travel_core.pdpa_r_footnote_struck_deal", ["[deal]" => $travel_pdpa_results.struck_deal|escape:html])}
+            {elseif $travel_pdpa_results.struck}
+                {__("travel_core.pdpa_r_footnote_struck")}
             {/if}
         </p>
     </section>

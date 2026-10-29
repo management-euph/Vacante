@@ -208,6 +208,9 @@ class SearchService implements SearchServiceInterface
             $packageNames = $xml->xpath('//PackageName');
             $remarks = $xml->xpath('//remark');
             $earlyBookings = $xml->xpath('//early_booking');
+            // EBToDate: the last day the Early Booking can be booked; sent
+            // with every offer (empty without one), like early_booking.
+            $earlyBookingUntil = $xml->xpath('//EBToDate') ?: [];
             $extras = $xml->xpath('//extras');
             $moreInfos = $xml->xpath('//MoreInfo');
             $importants = $xml->xpath('//Important');
@@ -253,6 +256,7 @@ class SearchService implements SearchServiceInterface
                     'important' => self::xpathValue($importants, $i),
                     'more_info' => fn_novoton_holidays_more_info_label(self::xpathValue($moreInfos, $i)),
                     'early_booking_discount' => (float) self::xpathValue($earlyBookings, $i, '0'),
+                    'early_booking_until' => self::xpathValue($earlyBookingUntil, $i),
                     'extras' => self::xpathValue($extras, $i),
                     'terms_of_payment' => isset($termsPayment[$i]) ? (string) $termsPayment[$i]->asXML() : (isset($termsPayment[0]) ? (string) $termsPayment[0]->asXML() : ''),
                     'terms_of_cancellation' => isset($termsCancellation[$i]) ? (string) $termsCancellation[$i]->asXML() : (isset($termsCancellation[0]) ? (string) $termsCancellation[0]->asXML() : ''),
@@ -311,6 +315,7 @@ class SearchService implements SearchServiceInterface
                 'important' => isset($xml->Important) ? (string)$xml->Important : '',
                 'more_info' => fn_novoton_holidays_more_info_label(isset($xml->MoreInfo) ? (string)$xml->MoreInfo : ''),
                 'early_booking_discount' => isset($xml->early_booking) ? (float) (string) $xml->early_booking : 0,
+                'early_booking_until' => isset($xml->EBToDate) ? trim((string) $xml->EBToDate) : '',
                 'extras' => isset($xml->extras) ? (string)$xml->extras : '',
                 'terms_of_payment' => isset($xml->TermsOfPayment) ? (string) $xml->TermsOfPayment->asXML() : '',
                 'terms_of_cancellation' => isset($xml->TermsOfCancellation) ? (string) $xml->TermsOfCancellation->asXML() : '',

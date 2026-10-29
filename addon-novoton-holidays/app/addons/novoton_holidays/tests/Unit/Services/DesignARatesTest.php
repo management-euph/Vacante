@@ -5,18 +5,21 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Tests\Unit\Services;
 
 use PHPUnit\Framework\TestCase;
+use Tygh\Addons\NovotonHolidays\Api\Contracts\PricingApiClientInterface;
 use Tygh\Addons\NovotonHolidays\Services\DesignARates;
+use Tygh\Addons\NovotonHolidays\Services\SearchService;
 use Tygh\Addons\TravelCore\Results\RateOffer;
 use Tygh\Addons\TravelCore\Results\RoomResultsBuilder;
 use Tygh\Addons\TravelCore\Services\MoneyFormatter;
 use Tygh\Addons\TravelCore\ViewModels\TermsTimelineFactory;
 
 /**
- * Novoton's search rows → the Design A room cards' rates, checked against
- * the store's own export: Admiral, Golden Sands (hotel 476), 10–17 Jul
- * 2027, two adults — eight room types, all Ultra All Inclusive, all
- * Early Booking −30%, free cancellation until 30 Jun 2027, 20% by 30 Nov
- * 2026 and the rest by 26 Jun 2027.
+ * Novoton's search rows → the Design A room cards' rates (board 13b),
+ * checked against the store's own export: Admiral, Golden Sands (hotel 476),
+ * 10–17 Jul 2027, two adults — eight room types, all Ultra All Inclusive,
+ * all Early Booking −30%, free cancellation until 30 Jun 2027, 20% by 30 Nov
+ * 2026 and the rest by 26 Jun 2027; and against a recorded room_price
+ * answer for the Early Booking's last day (EBToDate).
  */
 final class DesignARatesTest extends TestCase
 {
@@ -44,17 +47,17 @@ final class DesignARatesTest extends TestCase
         'novoton_holidays.important' => 'Important',
     ];
 
-    private static function mapper(bool $deposit = true, string $lang = 'ro'): DesignARates
+    private static function mapper(bool $deposit = true, string $lang = 'ro', string $today = self::TODAY): DesignARates
     {
         $money = new MoneyFormatter(['symbol' => '€', 'after' => 'Y', 'decimals' => 0, 'decimals_separator' => ',', 'thousands_separator' => '.']);
 
         return new DesignARates(
-            new TermsTimelineFactory($money, self::TODAY, '%d.%m.%Y'),
+            new TermsTimelineFactory($money, $today, '%d.%m.%Y'),
             static fn (float $amount): float => $amount,
             static fn (string $key, array $replace): string => strtr(self::TEXTS[$key] ?? $key, $replace),
             static fn (string $url): string => '/index.php?dispatch=' . $url,
             $lang,
-            self::TODAY,
+            $today,
             $deposit,
         );
     }
@@ -116,6 +119,21 @@ final class DesignARatesTest extends TestCase
         self::assertSame('Vedere la mare', DesignARates::roomDetail('DBL 2+1 SEA VIEW', 'ro'));
         self::assertSame('Premium · cu balcon', DesignARates::roomDetail('DBL 2+2 PREMIUM BALCONY', 'ro'));
         self::assertSame('', DesignARates::roomDetail('DBL 2+1', 'ro'));
+
+        // The card's title: the type, its tier, then its view or balcony (board 13b).
+        self::assertSame('Cameră Dublă Deluxe, fără balcon', DesignARates::roomTitle('Cameră Dublă', 'DBL 2+0 DELUXE NO BALCONY', 'ro'));
+        self::assertSame('Cameră Dublă Superior Deluxe, spre mare', DesignARates::roomTitle('Cameră Dublă', 'DBL 2+1 SUPERIOR DELUXE SEA SIDE', 'ro'));
+        self::assertSame('Cameră Dublă, vedere la mare', DesignARates::roomTitle('Cameră Dublă', 'DBL 2+1 SEA VIEW', 'ro'));
+        self::assertSame('Cameră Dublă Premium, cu balcon', DesignARates::roomTitle('Cameră Dublă', 'DBL 2+2 PREMIUM BALCONY', 'ro'));
+        self::assertSame('Double Room Deluxe, sea side', DesignARates::roomTitle('Double Room', 'DBL 2+1 DELUXE SEA SIDE', 'en'));
+        self::assertSame('Cameră Dublă', DesignARates::roomTitle('Cameră Dublă', 'DBL 2+1', 'ro'));
+        self::assertSame('Cameră Dublă Deluxe', DesignARates::roomTitle('Cameră Dublă Deluxe', 'DBL 2+1 DELUXE', 'ro'), 'a tier the name already says is not said twice');
+
+        // How many it sleeps, in words on the card ("Max. 3 persoane"), never "2+1".
+        self::assertSame(3, DesignARates::capacity('DBL 2+1 DELUXE SEA SIDE'));
+        self::assertSame(5, DesignARates::capacity('FAM 2+3 DELUXE'));
+        self::assertSame(2, DesignARates::capacity('DBL 2%2B0 DELUXE NO BALCONY'));
+        self::assertSame(0, DesignARates::capacity('STUDIO SEA VIEW'));
     }
 
     public function testMealPlansAreRankedLightestFirst(): void
@@ -134,19 +152,25 @@ final class DesignARatesTest extends TestCase
         $first = $rates[0];
         self::assertSame('DBL 2+0 DELUXE NO BALCONY', $first->roomKey);
         self::assertSame('Cameră Dublă', $first->roomName);
-        self::assertSame('Deluxe · fără balcon', $first->roomDetail);
+        self::assertSame('Cameră Dublă Deluxe, fără balcon', $first->roomTitle);
+        self::assertSame('DBL 2+0 DELUXE NO BALCONY', $first->roomCode, 'IdRoom under the title (the owner\'s call)');
+        self::assertSame(2, $first->capacity);
+        self::assertSame('ADMIRAL ***** +BEACH 2027', $first->packageName);
         self::assertSame('Ultra All Inclusive', $first->mealPlan);
         self::assertSame(RateOffer::MEAL_ULTRA_ALL_INCLUSIVE, $first->mealRank);
         self::assertSame(1485.0, $first->price);
         self::assertSame(2121.43, $first->standardPrice, 'the struck price: 1485 / (1 − 30%)');
-        self::assertSame('Early Booking −30%', $first->discountLabel);
+        self::assertSame('Early Booking', $first->discountLabel, 'the percent goes on the struck price');
+        self::assertSame('', $first->discountUntil, 'no EBToDate in these rows');
         self::assertSame(['Beach included'], $first->perks);
         self::assertSame('2027-06-30', $first->freeCancellationUntil, 'the last free day, still ahead');
         self::assertFalse($first->nonRefundable);
         self::assertFalse($first->onRequest);
         self::assertSame(4, $first->roomsLeft);
         self::assertSame(0.0, $first->depositRatio, 'nothing is due today (20% by 30 Nov): paid in full on booking');
-        self::assertSame('', $first->rateName, 'the package name is the supplier\'s, not shown');
+        self::assertSame('', $first->rateName);
+        self::assertSame([], $first->facilities);
+        self::assertSame(['Aer condiționat', 'Seif'], self::mapper()->rates(self::admiral(), self::PARAMS, ['Aer condiționat', 'Seif'])[0]->facilities);
         self::assertNotSame([], $first->timeline['cancel_steps'] ?? []);
         self::assertCount(2, $first->timeline['payment_steps'] ?? []);
     }
@@ -226,11 +250,49 @@ final class DesignARatesTest extends TestCase
         $view = (new RoomResultsBuilder($money, static fn (string $iso): string => date('d.m.Y', (int) strtotime($iso))))
             ->build(self::mapper()->rates(self::admiral(), self::PARAMS), 7);
 
-        self::assertSame(['meal' => 'Ultra All Inclusive', 'immediate' => true, 'free_until' => '30.06.2027'], $view['facts']);
+        self::assertSame('Ultra All Inclusive', $view['single_meal'], '"8 tipuri de cameră, toate cu Ultra All Inclusive"');
+        self::assertSame([], $view['meal_plans']);
         self::assertSame([], $view['chips']);
         self::assertSame(8, $view['room_count']);
-        self::assertSame('Deluxe · fără balcon', $view['rooms'][0]['detail']);
-        self::assertSame('Early Booking −30%', $view['rooms'][0]['groups'][0]['rates'][0]['discount']);
-        self::assertNotSame([], $view['rooms'][0]['timeline'], 'one terms timeline for the room');
+        self::assertSame(['count' => 4, 'names' => 'Suită Junior, Apartament 1 Dormitor, Cameră Familială', 'from' => '2.355 €'], $view['more']);
+
+        $room = $view['rooms'][0];
+        self::assertSame(['Cameră Dublă Deluxe, fără balcon', 'DBL 2+0 DELUXE NO BALCONY', 2, 4], [$room['title'], $room['code'], $room['capacity'], $room['left']]);
+        self::assertTrue($room['single']);
+        $option = $room['options'][0];
+        self::assertSame('ADMIRAL ***** +BEACH 2027', $option['package'], 'one option: its package stays on it');
+        self::assertSame(['name' => 'Early Booking', 'until' => '', 'saving' => '636 €'], $option['deal']);
+        self::assertSame(['1.485 €', '2.121 €', '−30%'], [$option['price'], $option['was'], $option['off']]);
+        self::assertSame(['kind' => 'free', 'until' => '30.06.2027'], $room['cancel']);
+        self::assertCount(1, $room['terms']);
+        self::assertNotSame([], $room['terms'][0]['timeline'], 'the terms timeline, as in the booking sidebar');
+        self::assertSame([true, 'Early Booking'], [$view['struck'], $view['struck_deal']]);
+    }
+
+    /**
+     * The recorded room_price answer for Admiral (fixture): three offers of
+     * one room; the second is the Early Booking −25%, bookable until 30 Sep
+     * 2026 (EBToDate, empty on the others). Read by the search parser, then
+     * the mapper: the discount's last day while it is still ahead.
+     */
+    public function testTheEarlyBookingsLastDayComesFromEbToDate(): void
+    {
+        require_once dirname(__DIR__, 3) . '/functions/formatting.php';
+        $pricing = $this->createStub(PricingApiClientInterface::class);
+        $pricing->method('applyCommission')->willReturnArgument(0);
+        $xml = (string) file_get_contents(dirname(__DIR__, 2) . '/Fixtures/room_price_476.xml');
+        $rows = (new SearchService($pricing))->parseRoomPriceResponse($xml, 7, '2026-10-10', '2026-10-17');
+
+        self::assertSame(['', '2026-09-30', ''], array_column($rows, 'early_booking_until'));
+        self::assertSame([0.0, 25.0, 0.0], array_column($rows, 'early_booking_discount'));
+
+        $params = ['check_in' => '2026-10-10', 'check_out' => '2026-10-17', 'nights' => 7] + self::PARAMS;
+        $rates = self::mapper(true, 'ro', '2026-09-01')->rates($rows, $params);
+        self::assertSame(['Early Booking', '2026-09-30'], [$rates[1]->discountLabel, $rates[1]->discountUntil]);
+        self::assertSame('ADMIRAL ***** +BEACH [STAY 18.09 - 31.10]', $rates[1]->packageName);
+        self::assertSame(['', ''], [$rates[0]->discountLabel, $rates[0]->discountUntil]);
+
+        $later = self::mapper(true, 'ro', '2026-10-01')->rates($rows, $params);
+        self::assertSame(['Early Booking', ''], [$later[1]->discountLabel, $later[1]->discountUntil], 'a last day already gone is not shown');
     }
 }

@@ -7,78 +7,81 @@ namespace Tygh\Addons\TravelCore\Results;
 use Tygh\Addons\TravelCore\Services\MoneyFormatter;
 
 /**
- * Rates → the room-first results of the Design A hotel page: one card per
- * room type with its rates under it, by the mockup's rules (Design A board,
- * frames 3, 10 and 12; docs/hotel-page-design-a-plan.md):
+ * Rates → the room-first results of the Design A hotel page, by the owner's
+ * board 13b (docs/hotel-page-design-a-plan.md): one card per room type, on
+ * three columns — the room | its options and what they share | the "till",
+ * the chosen option's total with the room's only button.
  *
- *  - R1: the meal strip (each meal plan with its lowest price, also a
- *    filter) only when the hotel has two or more meal plans; each room then
- *    groups its rates by meal plan.
- *  - R2: one meal plan: no strip and no meal sub-headers, rows titled by
- *    their rate, "every rate includes <meal plan>" said once in the fact line.
- *  - R3: a filter chip only when it splits the list (free cancellation,
- *    instant confirmation, special offers); what holds for every rate joins
- *    the fact line instead and is not repeated on the rooms.
- *  - A room says once what all its rates share (cancellation, payment,
- *    terms); otherwise each rate says its own. Its cheapest rate gets the
- *    filled button (`primary`), the others the outline one.
- *  - Many rates: a room shows its best BEST (the cheapest of each meal plan
- *    first), then "see all N rates · min – max"; above COLLAPSE_OVER rates
- *    in all, the rooms after the first show only their cheapest rate.
+ *  - One option per meal plan and terms: the same meal on the same terms
+ *    (cancellation, payment, confirmation, inclusions) from two packages is
+ *    one choice for the guest, its cheapest. A room's options come lightest
+ *    meal first; the cheapest one is chosen when the card opens.
+ *  - What all of a room's options share is said once, under them: the
+ *    package with its discount (one unit), the cancellation, the payment,
+ *    the terms. What differs stays on its option. A room with one option
+ *    keeps its package on the option, like any other.
+ *  - The meal filter only with two or more meal plans, each with how many
+ *    room types have it and its lowest price; a chip only when it splits the
+ *    options (free cancellation, instant confirmation, special offers).
+ *  - The first ROOMS_SHOWN room types, then "see all" naming the others with
+ *    their lowest price; "Cel mai mic preț" marks the cheapest room.
+ *  - The discount's percent once, on the badge by the struck price; the
+ *    discount's own line says until when and how much it saves.
  *
- * Rooms come cheapest first, a room's rates cheapest first. Amounts and
- * dates are formatted here, so the template only lays them out.
+ * Rooms come cheapest first. Amounts and dates are formatted here, so the
+ * template only lays them out. Keys (rooms, options, meal plans) are stable
+ * for the same rates, so a list rendered again as more rates arrive (Sphinx
+ * polls) keeps what the guest chose.
  *
- * @phpstan-type Payment array{on_request: bool, deposit_percent: int, balance_due: string}
+ * @phpstan-type Payment array{on_request: bool, deposit_percent: int, balance_due: string, text: string}
  * @phpstan-type Terms list<array{title: string, lines: list<string>}>
- * @phpstan-type RateView array{
- *     meal: string, meal_key: string, name: string, amount: float, price: string,
- *     per_night: string, saving: string, discount: string, perks: list<string>,
- *     cheapest: bool, primary: bool, free_until: string, non_refundable: bool, on_request: bool,
- *     free: bool, special: bool, payment: Payment, terms: Terms, timeline: array<string, mixed>, book_url: string,
- *     shown: bool
+ * @phpstan-type Deal array{name: string, until: string, saving: string}
+ * @phpstan-type Cancel array{kind: string, until: string}
+ * @phpstan-type TermsView array{for: int, terms: Terms, timeline: array<string, mixed>, url: string}
+ * @phpstan-type OptionView array{
+ *     index: int, key: string, meal: string, meal_key: string, name: string, package: string,
+ *     deal: Deal|null, perks: list<string>, cancel: Cancel|null, payment: Payment|null,
+ *     amount: float, price: string, was: string, off: string, per_night: string,
+ *     on_request: bool, free: bool, special: bool, book_url: string, chosen: bool
  * }
- * @phpstan-type GroupView array{meal: string, meal_key: string, count: int, form: string, shown: bool, rates: list<RateView>}
  * @phpstan-type RoomView array{
- *     key: string, name: string, detail: string, facilities: string, from: float,
- *     status: string, left: int, cancellation: string, free_until: string,
- *     payment: Payment|null, terms: Terms, timeline: array<string, mixed>, groups: list<GroupView>, cheapest_rate: RateView,
- *     rate_count: int, rate_form: string, hidden: int, range: string, collapsed: bool
+ *     key: string, name: string, title: string, code: string, capacity: int, capacity_form: string,
+ *     facilities: list<string>, from: float, from_text: string, cheapest: bool,
+ *     on_request: bool, immediate: bool, left: int, left_form: string,
+ *     single: bool, options: list<OptionView>, chosen: int,
+ *     package: string, deal: Deal|null, cancel: Cancel|null, payment: Payment|null,
+ *     terms: list<TermsView>, meals: string, more: bool
  * }
  * @phpstan-type ResultsView array{
  *     rate_count: int, rate_form: string, room_count: int, room_form: string,
  *     nights: int, nights_form: string, adults: int, adults_form: string,
  *     children: int, children_form: string, meals_included: bool,
- *     cheapest: string, grouped: bool,
- *     meal_plans: list<array{key: string, name: string, from: string, count: int}>,
- *     facts: array{meal: string, immediate: bool, free_until: string},
+ *     cheapest: string, single_meal: string,
+ *     meal_plans: list<array{key: string, name: string, from: string, count: int, form: string}>,
  *     chips: list<array{key: string, count: int}>,
- *     rooms: list<RoomView>
+ *     struck: bool, struck_deal: string,
+ *     rooms: list<RoomView>,
+ *     more: array{count: int, names: string, from: string}|null
  * }
  */
 final class RoomResultsBuilder
 {
-    /** Rates a room shows before "see all". */
-    public const BEST = 4;
-    /** Above this many rates in all, the rooms after the first start collapsed. */
-    public const COLLAPSE_OVER = 12;
-    /** This many rooms left or fewer: the room says so. */
-    public const FEW_LEFT = 3;
+    /** Room types shown before "see all". */
+    public const ROOMS_SHOWN = 4;
+    /** Room names the "see all" hint lists before "…". */
+    public const HINT_NAMES = 3;
 
-    // What a room says about confirmation ('' = nothing: the fact line said
-    // it for every rate, or its rates differ and each says its own).
-    public const STATUS_IMMEDIATE = 'immediate';
-    public const STATUS_ON_REQUEST = 'on_request';
-
-    // What a room says about cancellation.
+    // What is known about cancelling, per option or for all of a room's.
     public const CANCEL_FREE = 'free';
+    public const CANCEL_FREE_OPEN = 'free_open';
     public const CANCEL_NON_REFUNDABLE = 'non_refundable';
-    public const CANCEL_DIFFERS = 'differs';
-    public const CANCEL_SAID = 'said';
 
     public const CHIP_FREE = 'free';
     public const CHIP_IMMEDIATE = 'immediate';
     public const CHIP_SPECIAL = 'special';
+
+    /** A TermsView's `for` when it holds for every option of the room. */
+    public const TERMS_ALL = -1;
 
     /** @param \Closure(string): string $formatDate an ISO date in the store's format */
     public function __construct(
@@ -109,68 +112,59 @@ final class RoomResultsBuilder
     public function build(array $rates, int $nights, int $adults = 2, int $children = 0): array
     {
         $rates = array_values(array_filter($rates, static fn (RateOffer $r): bool => $r->price > 0));
-        $total = count($rates);
-
-        $meals = $this->mealPlans($rates);
-        $mealKeys = [];
-        foreach ($meals as $meal) {
-            $mealKeys[$meal['name']] = $meal['key'];
-        }
-        $grouped = count($meals) > 1;
-
-        $freeDays = array_values(array_unique(array_map(
-            static fn (RateOffer $r): string => $r->nonRefundable ? '' : $r->freeCancellationUntil,
-            $rates,
-        )));
-        $facts = [
-            'meal' => count($meals) === 1 ? $meals[0]['name'] : '',
-            'immediate' => $total > 0 && self::every($rates, static fn (RateOffer $r): bool => !$r->onRequest),
-            'free_until' => count($freeDays) === 1 && $freeDays[0] !== '' ? ($this->formatDate)($freeDays[0]) : '',
-        ];
-
-        $chips = [];
-        foreach ([
-            self::CHIP_FREE => static fn (RateOffer $r): bool => self::isFree($r),
-            self::CHIP_IMMEDIATE => static fn (RateOffer $r): bool => !$r->onRequest,
-            self::CHIP_SPECIAL => static fn (RateOffer $r): bool => $r->isSpecial(),
-        ] as $key => $test) {
-            $count = count(array_filter($rates, $test));
-            if ($count > 0 && $count < $total) {
-                $chips[] = ['key' => $key, 'count' => $count];
-            }
-        }
-
-        $cheapest = null;
-        foreach ($rates as $rate) {
-            if ($cheapest === null || $rate->price < $cheapest->price) {
-                $cheapest = $rate;
-            }
-        }
 
         $byRoom = [];
         foreach ($rates as $rate) {
             $byRoom[$rate->roomKey][] = $rate;
         }
-        foreach ($byRoom as $key => $roomRates) {
-            usort($roomRates, static fn (RateOffer $a, RateOffer $b): int => $a->price <=> $b->price);
-            $byRoom[$key] = $roomRates;
+        $roomOptions = [];
+        foreach ($byRoom as $roomRates) {
+            $roomOptions[] = $this->options($roomRates);
         }
-        $roomLists = array_values($byRoom);
-        usort($roomLists, static fn (array $a, array $b): int => $a[0]->price <=> $b[0]->price);
+        usort($roomOptions, static fn (array $a, array $b): int => self::cheapestOf($a)->price <=> self::cheapestOf($b)->price);
+        $all = $roomOptions === [] ? [] : array_merge(...$roomOptions);
+        $total = count($all);
+
+        $meals = $this->mealPlans($roomOptions);
+        $mealKeys = array_column($meals, 'key', 'name');
+
+        $chips = [];
+        foreach ([
+            self::CHIP_FREE => static fn (RateOffer $r): bool => $r->isFree(),
+            self::CHIP_IMMEDIATE => static fn (RateOffer $r): bool => !$r->onRequest,
+            self::CHIP_SPECIAL => static fn (RateOffer $r): bool => $r->isSpecial(),
+        ] as $key => $test) {
+            $count = count(array_filter($all, $test));
+            if ($count > 0 && $count < $total) {
+                $chips[] = ['key' => $key, 'count' => $count];
+            }
+        }
+
+        $struckLabels = [];
+        foreach ($all as $rate) {
+            if ($rate->standardPrice > $rate->price) {
+                $struckLabels[$rate->discountLabel] = true;
+            }
+        }
+        $struckDeal = count($struckLabels) === 1 ? (string) array_key_first($struckLabels) : '';
 
         $rooms = [];
-        foreach ($roomLists as $index => $roomRates) {
-            $rooms[] = $this->room(
-                $index,
-                $roomRates,
-                $facts,
-                $grouped,
-                $mealKeys,
-                $cheapest,
-                $nights,
-                $index > 0 && $total > self::COLLAPSE_OVER,
-            );
+        $used = [];
+        foreach ($roomOptions as $index => $options) {
+            $rooms[] = $this->room($index, $options, $mealKeys, $nights, $used);
         }
+
+        $more = null;
+        $hidden = array_slice($rooms, self::ROOMS_SHOWN);
+        if ($hidden !== []) {
+            $names = array_values(array_unique(array_column($hidden, 'name')));
+            $more = [
+                'count' => count($hidden),
+                'names' => implode(', ', array_slice($names, 0, self::HINT_NAMES)) . (count($names) > self::HINT_NAMES ? '…' : ''),
+                'from' => $hidden[0]['from_text'],
+            ];
+        }
+        $cheapest = $roomOptions === [] ? null : self::cheapestOf($roomOptions[0]);
 
         return [
             'rate_count' => $total,
@@ -183,40 +177,95 @@ final class RoomResultsBuilder
             'adults_form' => self::form($adults),
             'children' => $children,
             'children_form' => self::form($children),
-            'meals_included' => $total > 0 && self::every($rates, static fn (RateOffer $r): bool => $r->mealRank !== RateOffer::MEAL_ROOM_ONLY),
+            'meals_included' => $total > 0 && self::every($all, static fn (RateOffer $r): bool => $r->mealRank !== RateOffer::MEAL_ROOM_ONLY),
             'cheapest' => $cheapest !== null ? $this->money->format($cheapest->price) : '',
-            'grouped' => $grouped,
-            'meal_plans' => $meals,
-            'facts' => $facts,
+            'single_meal' => count($meals) === 1 ? $meals[0]['name'] : '',
+            'meal_plans' => count($meals) > 1 ? $meals : [],
             'chips' => $chips,
+            'struck' => $struckLabels !== [],
+            'struck_deal' => $struckDeal,
             'rooms' => $rooms,
+            'more' => $more,
         ];
     }
 
     /**
-     * The hotel's meal plans, lightest first, each with its lowest price.
+     * A room's options: one per meal plan and terms, the cheapest of the
+     * rates that offer the same (two packages, one choice for the guest);
+     * lightest meal first, then cheapest.
      *
-     * @param list<RateOffer> $rates
-     * @return list<array{key: string, name: string, from: string, count: int}>
+     * @param list<RateOffer> $rates one room's
+     * @return non-empty-list<RateOffer>
      */
-    private function mealPlans(array $rates): array
+    private function options(array $rates): array
+    {
+        usort($rates, static fn (RateOffer $a, RateOffer $b): int => $a->price <=> $b->price);
+        $options = [];
+        foreach ($rates as $rate) {
+            $options[$this->signature($rate)] ??= $rate;
+        }
+        $options = array_values($options);
+        usort($options, static fn (RateOffer $a, RateOffer $b): int => [$a->mealRank, $a->mealPlan, $a->price] <=> [$b->mealRank, $b->mealPlan, $b->price]);
+        assert($options !== []);
+
+        return $options;
+    }
+
+    /** What makes two rates of a room different choices for the guest. */
+    private function signature(RateOffer $rate): string
+    {
+        $perks = $rate->perks;
+        sort($perks);
+
+        return serialize([$rate->mealPlan, $this->cancel($rate), $this->payment($rate), $perks, $rate->terms]);
+    }
+
+    /** @param non-empty-list<RateOffer> $options */
+    private static function cheapestOf(array $options): RateOffer
+    {
+        $cheapest = $options[0];
+        foreach ($options as $option) {
+            if ($option->price < $cheapest->price) {
+                $cheapest = $option;
+            }
+        }
+
+        return $cheapest;
+    }
+
+    /**
+     * The hotel's meal plans, lightest first, each with its lowest price and
+     * how many room types have it.
+     *
+     * @param list<non-empty-list<RateOffer>> $roomOptions
+     * @return list<array{key: string, name: string, from: string, count: int, form: string}>
+     */
+    private function mealPlans(array $roomOptions): array
     {
         $plans = [];
-        foreach ($rates as $order => $rate) {
-            $plan = $plans[$rate->mealPlan] ?? ['rank' => $rate->mealRank, 'order' => $order, 'min' => $rate->price, 'count' => 0];
-            $plan['min'] = min($plan['min'], $rate->price);
-            $plan['count']++;
-            $plans[$rate->mealPlan] = $plan;
+        $order = 0;
+        foreach ($roomOptions as $options) {
+            $seen = [];
+            foreach ($options as $rate) {
+                $plan = $plans[$rate->mealPlan] ?? ['rank' => $rate->mealRank, 'order' => $order++, 'min' => $rate->price, 'count' => 0];
+                $plan['min'] = min($plan['min'], $rate->price);
+                if (!isset($seen[$rate->mealPlan])) {
+                    $seen[$rate->mealPlan] = true;
+                    $plan['count']++;
+                }
+                $plans[$rate->mealPlan] = $plan;
+            }
         }
         uasort($plans, static fn (array $a, array $b): int => [$a['rank'], $a['order']] <=> [$b['rank'], $b['order']]);
 
         $list = [];
         foreach ($plans as $name => $plan) {
             $list[] = [
-                'key' => 'm' . count($list),
+                'key' => 'm' . substr(md5((string) $name), 0, 8),
                 'name' => (string) $name,
                 'from' => $this->money->format($plan['min']),
                 'count' => $plan['count'],
+                'form' => self::form($plan['count']),
             ];
         }
 
@@ -224,177 +273,168 @@ final class RoomResultsBuilder
     }
 
     /**
-     * @param list<RateOffer> $rates one room's, cheapest first
-     * @param array{meal: string, immediate: bool, free_until: string} $facts
+     * @param non-empty-list<RateOffer> $options
      * @param array<string, string> $mealKeys
+     * @param array<string, true> $used keys handed out so far
      * @return RoomView
      */
-    private function room(
-        int $index,
-        array $rates,
-        array $facts,
-        bool $grouped,
-        array $mealKeys,
-        ?RateOffer $cheapest,
-        int $nights,
-        bool $collapsed,
-    ): array {
-        $first = $rates[0];
-        $count = count($rates);
+    private function room(int $index, array $options, array $mealKeys, int $nights, array &$used): array
+    {
+        $first = $options[0];
+        $count = count($options);
+        $cheapest = self::cheapestOf($options);
+        $chosen = (int) array_search($cheapest, $options, true);
+        $key = self::unique('room-' . substr(md5($first->roomKey), 0, 10), $used);
 
-        $status = '';
-        if (self::every($rates, static fn (RateOffer $r): bool => $r->onRequest)) {
-            $status = self::STATUS_ON_REQUEST;
-        } elseif (!$facts['immediate'] && self::every($rates, static fn (RateOffer $r): bool => !$r->onRequest)) {
-            $status = self::STATUS_IMMEDIATE;
+        // The package and its discount travel as one unit; shared only by
+        // several options (a single option keeps its own, with the saving).
+        $deals = array_map(static fn (RateOffer $r): string => serialize([$r->packageName, $r->discountLabel, $r->discountUntil]), $options);
+        $sharedPackage = $count > 1 && count(array_unique($deals)) === 1;
+        $cancels = array_map(fn (RateOffer $r): ?array => $this->cancel($r), $options);
+        $sharedCancel = count(array_unique(array_map('serialize', $cancels))) === 1;
+        $payments = array_map(fn (RateOffer $r): array => $this->payment($r), $options);
+        $sharedPayment = count(array_unique(array_map('serialize', $payments))) === 1;
+
+        $views = [];
+        $optionKeys = [];
+        foreach ($options as $i => $rate) {
+            $views[] = $this->option(
+                $i,
+                $rate,
+                $mealKeys,
+                $nights,
+                $i === $chosen,
+                !$sharedPackage,
+                $sharedCancel ? null : $cancels[$i],
+                $sharedPayment ? null : $payments[$i],
+                self::unique(substr(md5($this->signature($rate)), 0, 8), $optionKeys),
+            );
         }
 
         $left = 0;
-        foreach ($rates as $rate) {
+        foreach ($options as $rate) {
             if ($rate->roomsLeft > 0 && ($left === 0 || $rate->roomsLeft < $left)) {
                 $left = $rate->roomsLeft;
             }
         }
-
-        $freeDays = array_values(array_unique(array_map(
-            static fn (RateOffer $r): string => $r->nonRefundable ? '' : $r->freeCancellationUntil,
-            $rates,
-        )));
-        $cancellation = self::CANCEL_DIFFERS;
-        $freeUntil = '';
-        if ($facts['free_until'] !== '') {
-            $cancellation = self::CANCEL_SAID;
-        } elseif (count($freeDays) === 1 && $freeDays[0] !== '') {
-            $cancellation = self::CANCEL_FREE;
-            $freeUntil = ($this->formatDate)($freeDays[0]);
-        } elseif (self::every($rates, static fn (RateOffer $r): bool => $r->nonRefundable)) {
-            $cancellation = self::CANCEL_NON_REFUNDABLE;
-        } elseif (count($freeDays) === 1) {
-            $cancellation = '';
-        }
-
-        $payments = array_map(fn (RateOffer $r): array => $this->payment($r), $rates);
-        $payment = count(array_unique(array_map('serialize', $payments))) === 1 ? $payments[0] : null;
-        $termsSets = array_map(static fn (RateOffer $r): string => serialize([$r->terms, $r->timeline]), $rates);
-        $sharedTerms = count(array_unique($termsSets)) === 1;
-
-        $shown = $this->shownRates($rates, $collapsed);
-        $views = [];
-        foreach ($rates as $i => $rate) {
-            $views[$i] = $this->rate($rate, $mealKeys, $rate === $cheapest, $i === 0, $nights, isset($shown[$i]));
-        }
-
-        $groups = [];
-        foreach ($views as $i => $view) {
-            $meal = $grouped ? $rates[$i]->mealPlan : '';
-            $groups[$meal] ??= ['meal' => $meal, 'meal_key' => $grouped ? $view['meal_key'] : '', 'count' => 0, 'form' => '', 'shown' => false, 'rates' => []];
-            $groups[$meal]['count']++;
-            $groups[$meal]['form'] = self::form($groups[$meal]['count']);
-            $groups[$meal]['shown'] = $groups[$meal]['shown'] || $view['shown'];
-            $groups[$meal]['rates'][] = $view;
-        }
-
+        $onRequest = self::every($options, static fn (RateOffer $r): bool => $r->onRequest);
+        $capacity = max(array_map(static fn (RateOffer $r): int => $r->capacity, $options));
         $facilities = [];
-        foreach ($rates as $rate) {
+        foreach ($options as $rate) {
             if ($rate->facilities !== []) {
                 $facilities = $rate->facilities;
                 break;
             }
         }
-        $hidden = $count - count($shown);
-        $last = $rates[$count - 1];
+        $roomMeals = [];
+        foreach ($options as $rate) {
+            if (isset($mealKeys[$rate->mealPlan])) {
+                $roomMeals[$mealKeys[$rate->mealPlan]] = true;
+            }
+        }
 
         return [
-            'key' => 'room-' . $index,
+            'key' => $key,
             'name' => $first->roomName,
-            'detail' => $first->roomDetail,
-            'facilities' => implode(' · ', $facilities),
-            'from' => $first->price,
-            'status' => $status,
-            'left' => $left <= self::FEW_LEFT ? $left : 0,
-            'cancellation' => $cancellation,
-            'free_until' => $freeUntil,
-            'payment' => $payment,
-            'terms' => $sharedTerms ? $first->terms : [],
-            'timeline' => $sharedTerms ? $first->timeline : [],
-            'groups' => array_values($groups),
-            'cheapest_rate' => $views[0],
-            'rate_count' => $count,
-            'rate_form' => self::form($count),
-            'hidden' => $hidden,
-            'range' => $hidden > 0
-                ? $this->money->format($first->price) . ' – ' . $this->money->format($last->price)
-                : '',
-            'collapsed' => $collapsed && $hidden > 0,
+            'title' => $first->roomTitle !== '' ? $first->roomTitle : $first->roomName,
+            'code' => $first->roomCode,
+            'capacity' => $capacity,
+            'capacity_form' => self::form($capacity),
+            'facilities' => $facilities,
+            'from' => $cheapest->price,
+            'from_text' => $this->money->format($cheapest->price),
+            'cheapest' => $index === 0,
+            'on_request' => $onRequest,
+            'immediate' => self::every($options, static fn (RateOffer $r): bool => !$r->onRequest),
+            'left' => $onRequest ? 0 : $left,
+            'left_form' => self::form($left),
+            'single' => $count === 1,
+            'options' => $views,
+            'chosen' => $chosen,
+            'package' => $sharedPackage ? $first->packageName : '',
+            'deal' => $sharedPackage ? $this->deal($first, false) : null,
+            'cancel' => $sharedCancel ? $cancels[0] : null,
+            'payment' => $sharedPayment ? $payments[0] : null,
+            'terms' => $this->terms($options),
+            'meals' => implode(' ', array_keys($roomMeals)),
+            'more' => $index >= self::ROOMS_SHOWN,
         ];
-    }
-
-    /**
-     * The rates a room shows before "see all", by index: all of them up to
-     * BEST; else the cheapest of each meal plan, then the next cheapest, up
-     * to BEST; a collapsed room, its cheapest only.
-     *
-     * @param list<RateOffer> $rates cheapest first
-     * @return array<int, true>
-     */
-    private function shownRates(array $rates, bool $collapsed): array
-    {
-        if ($collapsed) {
-            return [0 => true];
-        }
-        if (count($rates) <= self::BEST) {
-            return array_fill_keys(array_keys($rates), true);
-        }
-        $shown = [];
-        $meals = [];
-        foreach ($rates as $i => $rate) {
-            if (!isset($meals[$rate->mealPlan]) && count($shown) < self::BEST) {
-                $meals[$rate->mealPlan] = true;
-                $shown[$i] = true;
-            }
-        }
-        foreach ($rates as $i => $rate) {
-            if (count($shown) >= self::BEST) {
-                break;
-            }
-            $shown[$i] = true;
-        }
-        ksort($shown);
-
-        return $shown;
     }
 
     /**
      * @param array<string, string> $mealKeys
-     * @return RateView
+     * @param Cancel|null $cancel the option's own, when the room's options differ
+     * @param Payment|null $payment the option's own, when the room's options differ
+     * @return OptionView
      */
-    private function rate(RateOffer $rate, array $mealKeys, bool $cheapest, bool $primary, int $nights, bool $shown): array
-    {
-        $perNight = $nights > 0 ? $this->money->formatDisplay($this->money->toDisplay($rate->price) / $nights) : '';
+    private function option(
+        int $index,
+        RateOffer $rate,
+        array $mealKeys,
+        int $nights,
+        bool $chosen,
+        bool $ownPackage,
+        ?array $cancel,
+        ?array $payment,
+        string $key,
+    ): array {
+        $struck = $rate->standardPrice > $rate->price;
+        $percent = $struck ? (int) round(($rate->standardPrice - $rate->price) / $rate->standardPrice * 100) : 0;
 
         return [
+            'index' => $index,
+            'key' => $key,
             'meal' => $rate->mealPlan,
             'meal_key' => $mealKeys[$rate->mealPlan] ?? '',
             'name' => $rate->rateName,
+            'package' => $ownPackage ? $rate->packageName : '',
+            'deal' => $ownPackage ? $this->deal($rate, true) : null,
+            'perks' => $rate->perks,
+            'cancel' => $cancel,
+            'payment' => $payment,
             'amount' => $rate->price,
             'price' => $this->money->format($rate->price),
-            'per_night' => $perNight,
-            'saving' => $rate->standardPrice > $rate->price ? $this->money->format($rate->standardPrice - $rate->price) : '',
-            'discount' => $rate->discountLabel,
-            'perks' => $rate->perks,
-            'cheapest' => $cheapest,
-            'primary' => $primary,
-            'free_until' => self::isFree($rate) ? ($this->formatDate)($rate->freeCancellationUntil) : '',
-            'non_refundable' => $rate->nonRefundable,
+            'was' => $struck ? $this->money->format($rate->standardPrice) : '',
+            'off' => $percent > 0 ? '−' . $percent . '%' : '',
+            'per_night' => $nights > 0 ? $this->money->formatDisplay($this->money->toDisplay($rate->price) / $nights) : '',
             'on_request' => $rate->onRequest,
-            'free' => self::isFree($rate),
+            'free' => $rate->isFree(),
             'special' => $rate->isSpecial(),
-            'payment' => $this->payment($rate),
-            'terms' => $rate->terms,
-            'timeline' => $rate->timeline,
             'book_url' => $rate->bookUrl,
-            'shown' => $shown,
+            'chosen' => $chosen,
         ];
+    }
+
+    /**
+     * The discount's line: its name, until when, and (for one option) how
+     * much it saves; null without a named discount.
+     *
+     * @return Deal|null
+     */
+    private function deal(RateOffer $rate, bool $withSaving): ?array
+    {
+        if ($rate->discountLabel === '') {
+            return null;
+        }
+
+        return [
+            'name' => $rate->discountLabel,
+            'until' => $rate->discountUntil !== '' ? ($this->formatDate)($rate->discountUntil) : '',
+            'saving' => $withSaving && $rate->standardPrice > $rate->price ? $this->money->format($rate->standardPrice - $rate->price) : '',
+        ];
+    }
+
+    /** @return Cancel|null null = nothing known before the terms */
+    private function cancel(RateOffer $rate): ?array
+    {
+        if ($rate->nonRefundable) {
+            return ['kind' => self::CANCEL_NON_REFUNDABLE, 'until' => ''];
+        }
+        if ($rate->freeCancellationUntil !== '') {
+            return ['kind' => self::CANCEL_FREE, 'until' => ($this->formatDate)($rate->freeCancellationUntil)];
+        }
+
+        return $rate->freeCancellation ? ['kind' => self::CANCEL_FREE_OPEN, 'until' => ''] : null;
     }
 
     /** @return Payment */
@@ -406,12 +446,47 @@ final class RoomResultsBuilder
             'on_request' => $rate->onRequest,
             'deposit_percent' => $deposit ? (int) round($rate->depositRatio * 100) : 0,
             'balance_due' => $deposit ? ($this->formatDate)($rate->balanceDue) : '',
+            'text' => $rate->onRequest ? '' : $rate->paymentText,
         ];
     }
 
-    private static function isFree(RateOffer $rate): bool
+    /**
+     * The room's terms link: one set when every option has the same, else
+     * the chosen option's (each option's set, `for` its index).
+     *
+     * @param non-empty-list<RateOffer> $options
+     * @return list<TermsView>
+     */
+    private function terms(array $options): array
     {
-        return !$rate->nonRefundable && $rate->freeCancellationUntil !== '';
+        $sets = [];
+        foreach ($options as $i => $rate) {
+            $sets[$i] = ['for' => $i, 'terms' => $rate->terms, 'timeline' => $rate->timeline, 'url' => $rate->termsUrl];
+        }
+        $same = count(array_unique(array_map(
+            static fn (array $set): string => serialize([$set['terms'], $set['timeline'], $set['url']]),
+            $sets,
+        ))) === 1;
+        if ($same) {
+            $sets = [['for' => self::TERMS_ALL] + $sets[0]];
+        }
+
+        return array_values(array_filter(
+            $sets,
+            static fn (array $set): bool => $set['terms'] !== [] || $set['timeline'] !== [] || $set['url'] !== '',
+        ));
+    }
+
+    /** @param array<string, true> $used */
+    private static function unique(string $key, array &$used): string
+    {
+        $candidate = $key;
+        for ($n = 2; isset($used[$candidate]); $n++) {
+            $candidate = $key . '-' . $n;
+        }
+        $used[$candidate] = true;
+
+        return $candidate;
     }
 
     /**

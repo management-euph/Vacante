@@ -252,7 +252,8 @@ final class DesignAProductTemplateTest extends TestCase
         $unscoped = [];
         foreach ($m[1] as $head) {
             $head = trim($head);
-            if ($head === '' || str_starts_with($head, '@')) {
+            // At-rules, and the stops of an @keyframes (from / to / 40%), select no element.
+            if ($head === '' || str_starts_with($head, '@') || preg_match('/^(from|to|\d+(\.\d+)?%)(\s*,\s*(from|to|\d+(\.\d+)?%))*$/', $head) === 1) {
                 continue;
             }
             foreach (explode(',', $head) as $selector) {
