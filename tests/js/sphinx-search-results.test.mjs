@@ -105,3 +105,27 @@ describe('renderTerms', () => {
         expect(html).toContain('Nu există condiții specifice');
     });
 });
+
+describe('a Design A page whose live room cards end empty', () => {
+    it('shows the no-results block with the nearby dates the last poll found', () => {
+        document.body.insertAdjacentHTML('beforeend', `
+            <div data-travel-live id="live"></div>
+            <div id="sphinx-no-results" style="display: none;" data-alt-heading="Încearcă alte date:" data-alt-from="de la">
+                <div id="sphinx-alt-dates" style="display: none;"></div>
+            </div>`);
+        const live = document.getElementById('live');
+        const noResults = document.getElementById('sphinx-no-results');
+
+        live.dispatchEvent(new CustomEvent('travel:live-done', { bubbles: true, detail: { shown: true, data: {} } }));
+        expect(noResults.style.display).toBe('none');
+
+        live.dispatchEvent(new CustomEvent('travel:live-done', {
+            bubbles: true,
+            detail: { shown: false, data: { alternatives: [{ check_in: '2027-07-12', check_out: '2027-07-19', price: 980, currency: 'EUR' }] } },
+        }));
+        expect(noResults.style.display).toBe('');
+        const chip = document.querySelector('#sphinx-alt-dates .travel-alt-date-chip');
+        expect(chip.textContent).toBe('12.07 – 19.07 · de la 980 €');
+        expect(new URL(chip.href).searchParams.get('check_in')).toBe('2027-07-12');
+    });
+});

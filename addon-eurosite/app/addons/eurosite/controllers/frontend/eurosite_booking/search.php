@@ -16,12 +16,14 @@ use Tygh\Addons\Eurosite\Exception\EurositeApiException;
 use Tygh\Addons\Eurosite\Services\BookingCartProduct;
 use Tygh\Addons\Eurosite\Services\ConfigProvider;
 use Tygh\Addons\Eurosite\Services\Container;
+use Tygh\Addons\Eurosite\Services\DesignARates;
 use Tygh\Addons\Eurosite\Services\EurositeAvailabilityRecorder;
 use Tygh\Addons\Eurosite\Services\OfferContextStore;
 use Tygh\Addons\Eurosite\Services\RoomOccupancy;
 use Tygh\Addons\TravelCore\Helpers\LocationLine;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Results\DesignA;
 use Tygh\Addons\TravelCore\Services\ProviderRoomLimit;
 use Tygh\Tygh;
 
@@ -109,6 +111,10 @@ $bookingEngineHtml = function_exists('fn_travel_core_render_booking_engine')
 $results = [];
 $searchError = '';
 $searched = false;
+// The Design A hotel page's room cards (design=a, one room): this hotel's
+// offers with their snapshot keys.
+$designOffers = [];
+$designAResults = [];
 
 if ($country !== '' && $city !== '' && $checkIn !== '' && $checkOut !== '') {
     $searched = true;
@@ -173,6 +179,7 @@ if ($country !== '' && $city !== '' && $checkIn !== '' && $checkOut !== '') {
                 if (strtoupper($pc) !== $onlyHotel) {
                     continue;
                 }
+                $designOffers[] = ['offer' => $offer, 'key' => $offerKeys[$i] ?? ''];
                 if (!isset($results[$pc])) {
                     $hotelRow = $hotelRepo->findByProductCode($pc);
                     $tourop = $hotelRow !== null ? TypeCoerce::toString($hotelRow['tourop_code'] ?? '') : '';
@@ -229,6 +236,17 @@ if ($country !== '' && $city !== '' && $checkIn !== '' && $checkOut !== '') {
                 ];
             }
             $results = array_values($results);
+
+            // ── The Design A hotel page asked (design=a): its room cards
+            // from the same offers (one room; several rooms keep the list
+            // below until Design A's multi-room step). None bookable (all
+            // stop sale): the list, which says so. ──
+            if (DesignA::requested($_REQUEST) && $roomCount === 1) {
+                $designA = DesignARates::view($designOffers, $cartProductId, $checkIn, $checkOut, $adults, $childrenAges);
+                if (($designA['rooms'] ?? []) !== []) {
+                    $designAResults = $designA;
+                }
+            }
         }
     }
 }
@@ -237,5 +255,6 @@ $view->assign('booking_engine_html', $bookingEngineHtml);
 $view->assign('eurosite_results', $results);
 $view->assign('eurosite_searched', $searched);
 $view->assign('eurosite_search_error', $searchError);
+$view->assign('travel_design_a_results', $designAResults);
 // The Book link names the product page, so an expired offer returns there.
 $view->assign('eurosite_return_product_id', $cartProductId);

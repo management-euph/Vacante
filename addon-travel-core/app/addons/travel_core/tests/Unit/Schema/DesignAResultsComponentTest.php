@@ -8,15 +8,16 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Pins the Design A room-first results component
- * (templates/addons/travel_core/components/design_a_*.tpl,
- * docs/hotel-page-design-a-plan.md phase 3), which every supplier's search
+ * (templates/addons/travel_core/components/design_a_*.tpl, the owner's board
+ * 13b; docs/hotel-page-design-a-plan.md), which every supplier's search
  * renders for a Design A hotel page:
  *
  *  - both themes carry the same files (production runs nova_theme);
  *  - every text it prints is seeded in English and Romanian, the plural
  *    forms RoomResultsBuilder::form() picks included;
  *  - it prints the view model's plain text escaped, never raw;
- *  - the hooks pdp-design-a.js drives (filters, sort, "see all") are there.
+ *  - the hooks pdp-design-a.js drives (filters, radios and tills, sort,
+ *    "see all", the ⓘ, terms on demand) are there.
  */
 final class DesignAResultsComponentTest extends TestCase
 {
@@ -25,7 +26,10 @@ final class DesignAResultsComponentTest extends TestCase
     private const FILES = [
         'design_a_results.tpl',
         'design_a_room.tpl',
-        'design_a_rate.tpl',
+        'design_a_option.tpl',
+        'design_a_till.tpl',
+        'design_a_package.tpl',
+        'design_a_cancel.tpl',
         'design_a_payment.tpl',
         'design_a_terms.tpl',
         'design_a_icon.tpl',
@@ -38,7 +42,10 @@ final class DesignAResultsComponentTest extends TestCase
         'travel_core.pdpa_r_adults_' => ['one', 'few', 'many'],
         'travel_core.pdpa_r_children_' => ['one', 'few', 'many'],
         'travel_core.pdpa_r_nights_' => ['one', 'few', 'many'],
-        'travel_core.pdpa_r_chip_' => ['free', 'immediate', 'special'],
+        'travel_core.pdpa_r_count_meal_' => ['one', 'few', 'many'],
+        'travel_core.pdpa_r_capacity_' => ['one', 'few', 'many'],
+        'travel_core.pdpa_r_rooms_left_' => ['one', 'few', 'many'],
+        'travel_core.pdpa_r_chip_' => ['free', 'immediate'],
     ];
 
     private static function addonRoot(): string
@@ -116,9 +123,10 @@ final class DesignAResultsComponentTest extends TestCase
 
         self::assertStringNotContainsString('nofilter', $src, 'the view model is plain text');
         // Every name, price or date printed straight from the view model is escaped.
-        preg_match_all('/\{\$travel_pdpa_(?:room|rate|plan|group|results|section|line|perk|chip)\.[a-z_.]+(\|[^}]*)?\}/', $src, $m, PREG_SET_ORDER);
+        preg_match_all('/\{\$(?:(?:travel_pdpa_(?:room|option|plan|results|section|chip)|set|deal|cancel|payment)\.[a-z_.]+|travel_pdpa_(?:line|perk|facility)|package|label)(\|[^}]*)?\}/', $src, $m, PREG_SET_ORDER);
+        self::assertGreaterThan(30, count($m));
         foreach ($m as $output) {
-            $isNumberOrKey = preg_match('/\.(key|count|left|rate_count|room_count|from|meal_key)$/', explode('|', trim($output[0], '{}'))[0]) === 1;
+            $isNumberOrKey = preg_match('/\.(key|count|left|rate_count|room_count|from|meal_key|meals|index|amount|for|deposit_percent|capacity)$/', explode('|', trim($output[0], '{}'))[0]) === 1;
             if (!$isNumberOrKey) {
                 self::assertStringContainsString('|escape:html', $output[0], 'unescaped output: ' . $output[0]);
             }
@@ -128,29 +136,56 @@ final class DesignAResultsComponentTest extends TestCase
     public function testTheHooksThePageScriptDrivesAreThere(): void
     {
         $src = self::all();
-        foreach ([
+        $hooks = [
             'data-travel-results', 'data-travel-meal', 'data-travel-chip', 'data-travel-sort', 'data-travel-room-list',
-            'data-travel-room', 'data-travel-rates', 'data-travel-group', 'data-travel-rate', 'data-travel-more',
-            'data-travel-compact', 'data-travel-see-all', 'data-travel-no-match', 'data-travel-clear-filters',
-            'data-meal=', 'data-free=', 'data-immediate=', 'data-special=', 'data-from=',
-        ] as $hook) {
+            'data-travel-room', 'data-room-key=', 'data-travel-option', 'data-travel-pick', 'data-travel-for',
+            'data-travel-say', 'data-travel-announce', 'data-travel-rall', 'data-travel-see-all', 'data-travel-hint',
+            'data-travel-no-match', 'data-travel-clear-filters', 'data-travel-tip', 'data-travel-tip-pop', 'data-travel-tip-close',
+            'data-travel-amen-all', 'data-travel-amen-more', 'data-travel-terms-url', 'data-travel-terms-body', 'data-travel-terms-wait',
+            'data-meal=', 'data-amount=', 'data-from=', 'data-from-text=', 'data-name=', 'data-key=', 'data-index=',
+        ];
+        $js = (string) file_get_contents(self::addonRoot() . '/js/addons/travel_core/pdp-design-a.js');
+        foreach ($hooks as $hook) {
+            self::assertStringContainsString($hook, $src, $hook);
+            self::assertStringContainsString(rtrim($hook, '='), $js, 'pdp-design-a.js drives ' . $hook);
+        }
+        // The chips read an option's data-<chip key> (free / immediate).
+        foreach (['data-free=', 'data-immediate='] as $hook) {
             self::assertStringContainsString($hook, $src, $hook);
         }
-        $js = (string) file_get_contents(self::addonRoot() . '/js/addons/travel_core/pdp-design-a.js');
-        foreach (['filterRates', 'sortRooms', 'data-travel-see-all', 'data-travel-open'] as $piece) {
+        self::assertStringNotContainsString('data-special', $src, 'no special-offers chip (the owner, 29 Oct 2026)');
+        self::assertStringContainsString("getAttribute('data-' + key)", $js);
+        foreach (['filterRooms', 'showRooms', 'sortRooms', 'choose', 'data-travel-open', 'data-travel-picked', 'data-travel-live'] as $piece) {
             self::assertStringContainsString($piece, $js, $piece);
         }
+
+        // The live container's "searching" line is hidden at the end although
+        // a supplier's class makes it a flex row (Sphinx .travel-loading-message).
+        $css = (string) file_get_contents(self::addonRoot() . '/design/themes/responsive/css/addons/travel_core/design-a.css');
+        self::assertMatchesRegularExpression('/\.travel-pdpa \[data-travel-live\] \[hidden\] \{\s*display: none !important;/', $css);
     }
 
     public function testRulesFromTheBoardAreKept(): void
     {
         $results = self::source('responsive', 'design_a_results.tpl');
-        self::assertStringContainsString('{if $travel_pdpa_results.meal_plans|count > 1}', $results, 'R1: the strip only with 2+ meal plans');
-        self::assertStringContainsString('$travel_pdpa_results.facts.meal', $results, 'R2: one meal plan said once');
-        self::assertStringContainsString('{foreach $travel_pdpa_results.chips as $travel_pdpa_chip}', $results, 'R3: only the chips the builder kept');
+        self::assertStringContainsString('{if $travel_pdpa_results.meal_plans}', $results, 'the meal filter only with 2+ meal plans (the builder sends none for one)');
+        self::assertStringContainsString('travel_core.pdpa_r_count_meal_', $results, 'one meal plan: said in the count line');
+        self::assertStringContainsString('{foreach $travel_pdpa_results.chips as $travel_pdpa_chip}', $results, 'only the chips the builder kept');
+        self::assertStringContainsString('travel_core.pdpa_r_footnote_struck_deal', $results, 'the footnote says what the struck price leaves out');
 
-        $rate = self::source('responsive', 'design_a_rate.tpl');
-        self::assertStringContainsString('travel_core.pdpa_r_request', $rate, 'on request: "Cere rezervarea"');
-        self::assertStringContainsString('{if !$travel_pdpa_rate.primary} travel-pdpa-btn--sec{/if}', $rate, 'one filled button per room');
+        $room = self::source('responsive', 'design_a_room.tpl');
+        self::assertStringContainsString('<legend class="travel-pdpa-sr">', $room, 'no visible "Alege masa": screen readers only');
+        self::assertStringContainsString('{if $travel_pdpa_room.single}', $room, 'one meal plan: the same block, without a radio');
+
+        $till = self::source('responsive', 'design_a_till.tpl');
+        self::assertStringContainsString('travel_core.pdpa_r_request', $till, 'on request: "Cere rezervarea"');
+        self::assertStringContainsString('travel_core.pdpa_r_no_pay_yet', $till, '"Nu plătești încă" under the button');
+        self::assertStringContainsString('role="dialog"', $till, 'the ⓘ opens a toggletip, not a hover tooltip');
+        self::assertSame(1, substr_count($till, 'class="travel-pdpa-btn'), 'one button per till: the room\'s only one');
+        self::assertStringNotContainsString('travel-pdpa-btn--sec', $till);
+
+        $option = self::source('responsive', 'design_a_option.tpl');
+        self::assertStringContainsString('type="radio"', $option);
+        self::assertStringContainsString('{if $travel_pdpa_option.chosen} checked{/if}', $option, 'the cheapest option chosen when the card opens');
     }
 }

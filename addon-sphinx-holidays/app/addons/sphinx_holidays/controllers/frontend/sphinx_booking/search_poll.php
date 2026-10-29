@@ -12,6 +12,11 @@ declare(strict_types=1);
  * Request: GET sphinx_booking.search_poll?search_id=X&cursor=Y&nights=N
  * Response: JSON {status: pending|completed, results: [...], next_cursor: string|null}
  *
+ * design=a (the Design A hotel page's live room cards, pdp-design-a.js):
+ * JSON {status, done, html, cursor, alternatives} — html is the whole
+ * travel_core results component for every offer so far, rendered again when
+ * new offers came ('' when none did); done once the stream ends.
+ *
  * @package SphinxHolidays
  * @since   1.3.0
  */
@@ -27,9 +32,11 @@ use Tygh\Addons\SphinxHolidays\Helpers\SearchOfferNormalizer;
 use Tygh\Addons\SphinxHolidays\Services\AlternativeDateProber;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\SphinxHolidays\Services\DesignARates;
 use Tygh\Addons\SphinxHolidays\Services\SphinxAvailabilityRecorder;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Results\DesignA;
 use Tygh\Tygh;
 
 header('Content-Type: application/json; charset=utf-8');
@@ -40,7 +47,7 @@ try {
     $finalize = RequestCoerce::bool($_REQUEST, 'finalize');
 
     if ($searchId === '') {
-        echo json_encode(['status' => 'error', 'error' => 'Missing search_id']);
+        echo json_encode(['status' => 'error', 'done' => true, 'error' => 'Missing search_id']);
         exit;
     }
 
@@ -52,7 +59,7 @@ try {
     $pollResponse = $api->getHotelResults('', $cursor !== '' ? $cursor : $searchId);
 
     if ($pollResponse === null) {
-        echo json_encode(['status' => 'error', 'error' => 'API returned null']);
+        echo json_encode(['status' => 'error', 'done' => true, 'error' => 'API returned null']);
         exit;
     }
 
@@ -73,6 +80,13 @@ try {
     }
     $searchMeta = TypeCoerce::toStringMap($session['sphinx_search_' . $searchId] ?? null);
     $filterHotelId = TypeCoerce::toString($searchMeta['filter_hotel_id'] ?? '');
+    // Design A's room cards: the search they are built for (search.php).
+    // Without it (an expired search) nothing more will come: stop the page.
+    $designASearch = DesignA::requested($_REQUEST) ? TypeCoerce::toStringMap($searchMeta['design_a'] ?? null) : [];
+    if (DesignA::requested($_REQUEST) && $designASearch === []) {
+        echo json_encode(['status' => 'error', 'done' => true, 'html' => '']);
+        exit;
+    }
     // The whole destination's offers, for Travel Core's availability records.
     (new SphinxAvailabilityRecorder())->searchFound($results, TypeCoerce::toString($searchMeta['check_in'] ?? ''), date('Y-m-d H:i:s'));
     if ($filterHotelId === '') {
@@ -166,6 +180,10 @@ try {
             $result['original_price'] = $result['price'];
             $result['price'] = $cartService->applyCommission(TypeCoerce::toFloat($result['price']));
         }
+        // The price before the discount, on the same scale (the struck price).
+        if (TypeCoerce::toFloat($result['marketing_price'] ?? 0) > 0) {
+            $result['marketing_price'] = $cartService->applyCommission(TypeCoerce::toFloat($result['marketing_price']));
+        }
         if (!empty($result['offers'])) {
             $offers = TypeCoerce::toRowList($result['offers']);
             foreach ($offers as &$offer) {
@@ -186,6 +204,8 @@ try {
         'hotel_name', 'hotel_image', 'star_rating', 'destination',
         'room_name', 'room_type', 'room_lines', 'board_name', 'board_type',
         'price', 'original_price', 'currency', 'confirmation',
+        // The Design A room cards' (DesignARates): see SearchOfferNormalizer.
+        'room_code', 'marketing_price', 'deal_label', 'free_cancellation',
     ];
     $slimResults = [];
     foreach ($results as $result) {
@@ -303,6 +323,29 @@ try {
         }
     }
 
+    if ($designASearch !== []) {
+        // Every offer so far as the room cards, rendered again only when new
+        // offers came; the page swaps them in keeping what the guest chose.
+        $html = '';
+        if ($slimResults !== [] || $terminal) {
+            $cards = DesignARates::view($accumulated, $designASearch);
+            if ($cards !== []) {
+                /** @var \Smarty $view */
+                $view = Tygh::$app['view'];
+                $view->assign('results', $cards);
+                $html = $view->fetch('addons/travel_core/components/design_a_results.tpl');
+            }
+        }
+        echo json_encode([
+            'status' => $status,
+            'done' => $terminal,
+            'html' => $html,
+            'cursor' => $nextCursor,
+            'alternatives' => $alternatives,
+        ]);
+        exit;
+    }
+
     echo json_encode([
         'status' => $status,
         'results' => $slimResults,
@@ -315,6 +358,6 @@ try {
         'message' => 'Sphinx search_poll error: ' . $e->getMessage(),
         'file' => $e->getFile() . ':' . $e->getLine(),
     ]);
-    echo json_encode(['status' => 'error', 'error' => 'Internal error']);
+    echo json_encode(['status' => 'error', 'done' => true, 'error' => 'Internal error']);
     exit;
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\ViewModels\NovotonBookingSidebarBuilder;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Results\DesignA;
@@ -23,12 +24,18 @@ use Tygh\Addons\TravelCore\ViewModels\TermsTimelineFactory;
  * guests searched. What the card shows comes from the same fields and rules
  * as the current results (search.tpl) and the booking sidebar:
  *
- *  - the room's name from its type (RoomType: "Cameră Dublă"), and what
- *    tells it from the hotel's others from the rest of its code
- *    ("DBL 2+0 DELUXE NO BALCONY" → "Deluxe · fără balcon"): no code shows;
- *  - the meal plan by Novoton's own texts, ranked lightest first;
+ *  - the room's type (RoomType: "Cameră Dublă") and its title, the type
+ *    with what tells it from the hotel's others, read from the rest of its
+ *    code ("DBL 2+0 DELUXE NO BALCONY" → "Cameră Dublă Deluxe, fără
+ *    balcon"); the code itself small under the title (IdRoom, the owner's
+ *    call) and how many it sleeps from its occupancy ("2+1" → 3);
+ *  - the meal plan by Novoton's own texts, ranked lightest first, and the
+ *    package as Novoton names it;
  *  - the price charged (an extras promotion's, else the row's), the "was"
- *    price and its label by NovotonBookingSidebarBuilder::discount();
+ *    price by NovotonBookingSidebarBuilder::discount(); the discount's name
+ *    without its percent (the card puts the percent on the struck price)
+ *    and, for Early Booking, its last day (EBToDate);
+ *  - the hotel's room facilities (hotelinfo), the same for every room;
  *  - the terms as the shared timeline (TermsTimelineFactory): the last free
  *    cancellation day while ahead, full charge from today = non-refundable,
  *    the deposit DepositPlan allows;
@@ -133,7 +140,7 @@ final class DesignARates
     public static function view(array $rows, array $params): array
     {
         return DesignA::builder()->build(
-            self::forStore()->rates($rows, $params),
+            self::forStore()->rates($rows, $params, self::facilities(TypeCoerce::toString($params['hotel_id'] ?? ''))),
             max(1, TypeCoerce::toInt($params['nights'] ?? 1)),
             max(1, TypeCoerce::toInt($params['adults'] ?? 2)),
             max(0, TypeCoerce::toInt($params['children_count'] ?? 0)),
@@ -141,15 +148,36 @@ final class DesignARates
     }
 
     /**
+     * The hotel's room facilities (hotelinfo, saved with the hotel), in the
+     * shopper's language: Novoton has none per room.
+     *
+     * @return list<string>
+     */
+    public static function facilities(string $hotelId): array
+    {
+        $lang = defined('CART_LANGUAGE') ? strtolower(TypeCoerce::toString(CART_LANGUAGE)) : 'ro';
+        $names = [];
+        foreach (fn_novoton_holidays_get_hotel_facilities_by_type($hotelId, Constants::FEATURE_TYPE_ROOM_FACILITY, $lang) as $facility) {
+            $name = trim(TypeCoerce::toString($facility['facility_name'] ?? ''));
+            if ($name !== '') {
+                $names[] = $name;
+            }
+        }
+
+        return array_values(array_unique($names));
+    }
+
+    /**
      * @param list<array<string, mixed>> $rows novoton_results of a one-room search
      * @param array<string, mixed> $params novoton_params of that search
+     * @param list<string> $facilities the hotel's room facilities
      * @return list<RateOffer>
      */
-    public function rates(array $rows, array $params): array
+    public function rates(array $rows, array $params, array $facilities = []): array
     {
         $rates = [];
         foreach ($rows as $row) {
-            $rate = $this->rate($row, $params);
+            $rate = $this->rate($row, $params, $facilities);
             if ($rate !== null) {
                 $rates[] = $rate;
             }
@@ -187,6 +215,53 @@ final class DesignARates
      */
     public static function roomDetail(string $roomId, string $lang): string
     {
+        $detail = implode(' · ', array_column(self::detailParts($roomId, $lang), 0));
+
+        return $detail === '' ? '' : mb_strtoupper(mb_substr($detail, 0, 1)) . mb_substr($detail, 1);
+    }
+
+    /**
+     * The card's title: the room's type, its tier, then its view or
+     * balcony — "Cameră Dublă" + "DBL 2+0 DELUXE NO BALCONY" → "Cameră
+     * Dublă Deluxe, fără balcon"; "DBL 2+1 SEA VIEW" → "Cameră Dublă,
+     * vedere la mare".
+     */
+    public static function roomTitle(string $name, string $roomId, string $lang): string
+    {
+        $tiers = [];
+        $features = [];
+        foreach (self::detailParts($roomId, $lang) as [$text, $tier]) {
+            if (!$tier) {
+                $features[] = $text;
+            } elseif (mb_stripos($name, $text) === false) {
+                $tiers[] = $text;
+            }
+        }
+        $title = trim($name . ' ' . implode(' ', $tiers));
+
+        return $features === [] ? $title : $title . ', ' . implode(', ', $features);
+    }
+
+    /** How many the room sleeps, from its occupancy ("DBL 2+1 DELUXE" → 3); 0 = not in the code. */
+    public static function capacity(string $roomId): int
+    {
+        if (preg_match('/(?:^|\s)(\d+)\+(\d+)(?:\s|$)/', RoomType::normalizeRoomCode($roomId), $m) !== 1) {
+            return 0;
+        }
+
+        return (int) $m[1] + (int) $m[2];
+    }
+
+    /**
+     * The words after the room's type and occupancy, as the card says them:
+     * each with whether it names the room's tier ("Superior Deluxe",
+     * "Premium", any word the map doesn't know) or a feature (a view, a
+     * balcony, the building: lower case).
+     *
+     * @return list<array{0: string, 1: bool}>
+     */
+    private static function detailParts(string $roomId, string $lang): array
+    {
         [, $rest] = self::split(RoomType::normalizeRoomCode($roomId));
         $index = $lang === 'en' ? 1 : 0;
         $parts = [];
@@ -207,18 +282,22 @@ final class DesignARates
                 continue;
             }
             if ($unknown !== []) {
-                $parts[] = self::words($unknown);
+                $parts[] = [self::words($unknown), true];
                 $unknown = [];
             }
-            $parts[] = $found[0];
+            // The map writes tiers capitalised ("Superior Deluxe", "Economy"), features in lower case.
+            $parts[] = [$found[0], mb_strtolower($found[0]) !== $found[0]];
             $i += $found[1];
         }
         if ($unknown !== []) {
-            $parts[] = self::words($unknown);
+            $parts[] = [self::words($unknown), true];
         }
-        $detail = implode(' · ', array_values(array_unique($parts)));
+        $unique = [];
+        foreach ($parts as $part) {
+            $unique[$part[0]] ??= $part;
+        }
 
-        return $detail === '' ? '' : mb_strtoupper(mb_substr($detail, 0, 1)) . mb_substr($detail, 1);
+        return array_values($unique);
     }
 
     /** @return array{0: string, 1: int} the meal plan's lang var ('' = none known) and rank */
@@ -238,8 +317,9 @@ final class DesignARates
     /**
      * @param array<string, mixed> $row
      * @param array<string, mixed> $params
+     * @param list<string> $facilities
      */
-    private function rate(array $row, array $params): ?RateOffer
+    private function rate(array $row, array $params, array $facilities): ?RateOffer
     {
         $roomId = TypeCoerce::toString($row['room_id'] ?? '');
         $total = TypeCoerce::toFloat($row['total_price'] ?? 0);
@@ -269,11 +349,17 @@ final class DesignARates
             ($this->translate)('novoton_holidays.book_x_pay_y', []),
             ($this->translate)('novoton_holidays.early_booking', []),
         );
+        // The discount's name; its percent goes on the struck price.
         $discountLabel = '';
+        $discountUntil = '';
         if ($discount['old'] > 0) {
-            $discountLabel = $extras !== '' && $total > $charged + 0.005
-                ? $discount['label']
-                : sprintf('%s −%s%%', ($this->translate)('novoton_holidays.early_booking', []), rtrim(rtrim(number_format($earlyBooking, 1, '.', ''), '0'), '.'));
+            if ($extras !== '' && $total > $charged + 0.005) {
+                $discountLabel = $discount['label'];
+            } else {
+                $discountLabel = ($this->translate)('novoton_holidays.early_booking', []);
+                $until = TypeCoerce::toString($row['early_booking_until'] ?? '');
+                $discountUntil = preg_match('/^\d{4}-\d{2}-\d{2}$/', $until) === 1 && $until >= $this->today ? $until : '';
+            }
         }
 
         $price = ($this->toPrimary)($charged);
@@ -305,13 +391,15 @@ final class DesignARates
             $terms[] = ['title' => ($this->translate)('novoton_holidays.important', []), 'lines' => [$important]];
         }
 
+        $roomName = self::roomName($label, $roomId, $this->lang);
+
         return new RateOffer(
             roomKey: $roomId,
-            roomName: self::roomName($label, $roomId, $this->lang),
+            roomName: $roomName,
             mealPlan: $meal,
             price: $price,
             bookUrl: $this->bookUrl($row, $params, $label !== '' ? $label : $roomId, $meal),
-            roomDetail: self::roomDetail($roomId, $this->lang),
+            roomTitle: self::roomTitle($roomName, $roomId, $this->lang),
             mealRank: $mealRank,
             standardPrice: $discount['old'] > 0 ? ($this->toPrimary)($discount['old']) : 0.0,
             discountLabel: $discountLabel,
@@ -323,9 +411,14 @@ final class DesignARates
             depositRatio: $plan !== null ? $plan->ratio : 0.0,
             balanceDue: $plan !== null ? $plan->balanceDue : '',
             terms: $terms,
+            facilities: $facilities,
             timeline: $cancellation['steps'] !== [] || $paymentSteps !== []
                 ? ['cancel_steps' => $cancellation['steps'], 'payment_steps' => $paymentSteps]
                 : [],
+            roomCode: trim(RoomType::normalizeRoomCode($roomId)),
+            capacity: self::capacity($roomId),
+            packageName: self::plain(TypeCoerce::toString($row['package_name'] ?? '')),
+            discountUntil: $discountUntil,
         );
     }
 

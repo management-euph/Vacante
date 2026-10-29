@@ -181,6 +181,19 @@ final class DesignAProductTemplateTest extends TestCase
         self::assertStringContainsString('{$travel_hotel_location_line|escape:html}', $src);
         self::assertStringContainsString('href="{$travel_hotel_map_url|escape:html}" target="_blank" rel="noopener"', $src);
         self::assertStringContainsString('travel_core.pdpa_show_map', $src);
+
+        // The hotel's code (the product code) between the location and the map link.
+        $line = strpos($src, 'travel-pdpa-location__line');
+        $code = strpos($src, '{__("travel_core.pdpa_code", ["[code]" => $product.product_code|escape:html])}');
+        $map = strpos($src, 'travel-pdpa-location__map');
+        self::assertIsInt($line);
+        self::assertIsInt($code);
+        self::assertIsInt($map);
+        self::assertLessThan($code, $line);
+        self::assertLessThan($map, $code);
+        $langKeys = require dirname(__DIR__, 3) . '/lang_keys.php';
+        self::assertIsArray($langKeys);
+        self::assertSame(['en' => 'CODE: [code]', 'ro' => 'COD: [code]'], $langKeys['travel_core.pdpa_code'] ?? null);
     }
 
     public function testTheCurrentPagesLocationLineIsNotPrintedTwice(): void
@@ -252,7 +265,8 @@ final class DesignAProductTemplateTest extends TestCase
         $unscoped = [];
         foreach ($m[1] as $head) {
             $head = trim($head);
-            if ($head === '' || str_starts_with($head, '@')) {
+            // At-rules, and the stops of an @keyframes (from / to / 40%), select no element.
+            if ($head === '' || str_starts_with($head, '@') || preg_match('/^(from|to|\d+(\.\d+)?%)(\s*,\s*(from|to|\d+(\.\d+)?%))*$/', $head) === 1) {
                 continue;
             }
             foreach (explode(',', $head) as $selector) {

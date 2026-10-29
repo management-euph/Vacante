@@ -55,14 +55,13 @@ class SearchOfferNormalizer
         // room_name lives inside the first room of the offer's `rooms` array;
         // booking_form/circuit templates read room_name|room_type|name there.
         $roomName = TypeCoerce::toString($offer['room_name'] ?? $offer['room_type'] ?? '');
-        if ($roomName === '') {
-            $rooms = TypeCoerce::toRowList($offer['rooms'] ?? null);
-            if ($rooms !== []) {
-                $firstRoom = $rooms[0];
-                $roomName = TypeCoerce::toString(
-                    $firstRoom['room_name'] ?? $firstRoom['room_type'] ?? $firstRoom['name'] ?? '',
-                );
-            }
+        $rooms = TypeCoerce::toRowList($offer['rooms'] ?? null);
+        $firstRoomCode = $rooms !== [] ? TypeCoerce::toString($rooms[0]['code'] ?? '') : '';
+        if ($roomName === '' && $rooms !== []) {
+            $firstRoom = $rooms[0];
+            $roomName = TypeCoerce::toString(
+                $firstRoom['room_name'] ?? $firstRoom['room_type'] ?? $firstRoom['name'] ?? '',
+            );
         }
 
         $flat = $offer;
@@ -80,6 +79,26 @@ class SearchOfferNormalizer
         );
         $flat['price'] = $price;
         $flat['currency'] = $currency;
+        // The Design A room cards (Services\DesignARates) read these too, so
+        // the poll's slim rows and the cache carry them: the room's code (two
+        // rooms of one name stay apart), the price before the discount, the
+        // labels naming it, and whether cancelling is free today. Taken from
+        // the nested offer only: a flat row keeps its own (its marketing
+        // price may already carry the commission).
+        if (!array_key_exists('room_code', $offer) && $firstRoomCode !== '') {
+            $flat['room_code'] = $firstRoomCode;
+        }
+        if (!array_key_exists('marketing_price', $offer) && isset($pricing['marketing_price'])) {
+            $flat['marketing_price'] = TypeCoerce::toFloat($pricing['marketing_price']);
+        }
+        $labels = self::labels($offer);
+        if (!array_key_exists('deal_label', $offer) && $labels !== '') {
+            $flat['deal_label'] = $labels;
+        }
+        $fees = TypeCoerce::toStringMap($offer['cancellation_fees'] ?? null);
+        if (!array_key_exists('free_cancellation', $offer) && array_key_exists('is_free', $fees)) {
+            $flat['free_cancellation'] = TypeCoerce::toBool($fees['is_free']);
+        }
         // Only offers that carry rooms get lines: an already-flat payload
         // (cached, re-flattened) passes through unchanged.
         if (TypeCoerce::toRowList($offer['rooms'] ?? null) !== []) {
@@ -87,6 +106,25 @@ class SearchOfferNormalizer
         }
 
         return $flat;
+    }
+
+    /**
+     * The offer's labels ("Early Booking"), as one text: the name of its
+     * discount on the card.
+     *
+     * @param array<string, mixed> $offer
+     */
+    private static function labels(array $offer): string
+    {
+        $names = [];
+        foreach (TypeCoerce::toRowList($offer['labels'] ?? null) as $label) {
+            $name = trim(TypeCoerce::toString($label['name'] ?? ''));
+            if ($name !== '' && !in_array($name, $names, true)) {
+                $names[] = $name;
+            }
+        }
+
+        return implode(' · ', $names);
     }
 
     /**

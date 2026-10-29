@@ -31,9 +31,11 @@ use Tygh\Addons\SphinxHolidays\Helpers\SearchOfferNormalizer;
 use Tygh\Addons\SphinxHolidays\Services\CacheService;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\SphinxHolidays\Services\DesignARates;
 use Tygh\Addons\SphinxHolidays\Services\SphinxAvailabilityRecorder;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Results\DesignA;
 use Tygh\Tygh;
 
 try {
@@ -186,6 +188,8 @@ try {
     $view->assign('sphinx_search_id', '');
     $view->assign('sphinx_search_status', 'idle');
     $view->assign('sphinx_from_price', null);
+    $view->assign('travel_design_a_results', []);
+    $view->assign('sphinx_design_a_live', []);
 
     if (empty($check_in)) {
         fn_set_notification(
@@ -216,6 +220,12 @@ try {
         'occupancy' => $occupancy,
         'currency' => ConfigProvider::getDefaultCurrency(),
     ];
+
+    // The Design A hotel page asked (design=a) for one room: the room cards
+    // (DesignARates) in place of the offer list — at once from the cache or
+    // a finished search, else as the poll brings the offers. Several rooms
+    // keep the list until Design A's multi-room step.
+    $designA = DesignA::requested($_REQUEST) && count($occupancy) === 1;
 
     // ── Search strategy ───────────────────────────────────────────────────
     // Product-page search (hotel_id present): query the API by the hotel's
@@ -284,6 +294,9 @@ try {
             $view->assign('sphinx_search_results', $cachedResults);
             $view->assign('sphinx_search_id', TypeCoerce::toString($cachedMap['search_id'] ?? ''));
             $view->assign('sphinx_search_status', 'completed');
+            if ($designA) {
+                $view->assign('travel_design_a_results', DesignARates::view($cachedResults, $templateParams));
+            }
             SearchMetrics::record(SearchMetrics::EVENT_CACHE_HIT, [
                 'hotel_id' => $hotel_id,
                 'offers' => count($cachedResults),
@@ -404,6 +417,10 @@ try {
                 $result['original_price'] = $result['price'];
                 $result['price'] = $cartService->applyCommission(TypeCoerce::toFloat($result['price']));
             }
+            // The price before the discount, on the same scale (the struck price).
+            if (TypeCoerce::toFloat($result['marketing_price'] ?? 0) > 0) {
+                $result['marketing_price'] = $cartService->applyCommission(TypeCoerce::toFloat($result['marketing_price']));
+            }
         }
         unset($result);
 
@@ -423,6 +440,9 @@ try {
         $view->assign('sphinx_search_results', $initialResults);
         $view->assign('sphinx_search_id', $searchIdStr);
         $view->assign('sphinx_search_status', 'completed');
+        if ($designA) {
+            $view->assign('travel_design_a_results', DesignARates::view($initialResults, $templateParams));
+        }
         SearchMetrics::record(SearchMetrics::EVENT_SYNC_COMPLETE, [
             'hotel_id' => $hotel_id,
             'offers' => count($initialResults),
@@ -458,6 +478,9 @@ try {
         // time first-offer/complete. docs/adr/0001-availability-early-render-and-metrics.md
         'started_at_ms' => $requestStartedMs,
         'poll_index' => 0,
+        // Design A: the search the room cards are built for (their links),
+        // read back by search_poll when the page polls with design=a.
+        'design_a' => $designA ? $templateParams : null,
     ];
 
     SearchMetrics::record(SearchMetrics::EVENT_SEARCH_START, [
@@ -468,6 +491,16 @@ try {
 
     $view->assign('sphinx_search_id', $searchIdStr);
     $view->assign('sphinx_search_status', 'pending');
+    if ($designA) {
+        $view->assign('sphinx_design_a_live', [
+            'url' => fn_url('sphinx_booking.search_poll?' . http_build_query([
+                'search_id' => $searchIdStr,
+                DesignA::PARAM => DesignA::VALUE,
+            ])),
+            'interval' => 250,
+            'max_polls' => ConfigProvider::getSearchMaxPolls(),
+        ]);
+    }
 } catch (\Throwable $e) {
     fn_log_event('general', 'runtime', [
         'message' => 'Sphinx Search Error: ' . $e->getMessage(),

@@ -6,6 +6,11 @@
  * sphinx_booking.search_poll for incremental results. Cached searches
  * render inline immediately.
  *
+ * A Design A hotel page (design=a, one room) gets the room cards instead
+ * (travel_core components/design_a_results.tpl, Services\DesignARates): at
+ * once from the cache or a finished search; for a running one, a live
+ * container the page's script fills from each poll (search_poll, design=a).
+ *
  * @package SphinxHolidays
  * @since 1.0.0
  *}
@@ -25,6 +30,29 @@
         {$booking_engine_html nofilter}
     </div>
 
+    {if $travel_design_a_results}
+    {include file="addons/travel_core/components/design_a_results.tpl" results=$travel_design_a_results}
+    {elseif $sphinx_design_a_live}
+    {* The search is still running: pdp-design-a.js polls the url and swaps
+       in the room cards each answer brings, keeping what the guest chose;
+       with none at the end, search-results.js shows the no-results block. *}
+    <div class="travel-pdpa-live" data-travel-live
+         data-travel-live-url="{$sphinx_design_a_live.url|escape:html}"
+         data-travel-live-interval="{$sphinx_design_a_live.interval}"
+         data-travel-live-max="{$sphinx_design_a_live.max_polls}">
+        <p class="travel-loading-message travel-pdpa-live__status" data-travel-live-status role="status">
+            <span class="travel-spinner sphinx-spinner" aria-hidden="true"></span>
+            <span>{__("sphinx_holidays.searching_please_wait")|default:"Searching for live offers…"}</span>
+            {if $sphinx_from_price}
+                <span class="travel-from-price sphinx-from-price">
+                    {__("sphinx_holidays.from")|default:"from"}
+                    <strong>{$sphinx_from_price.price|number_format:2:",":"."} {$sphinx_from_price.currency|default:'EUR'|escape:html}</strong>
+                </span>
+            {/if}
+        </p>
+        <div class="travel-pdpa-live__results" data-travel-live-results></div>
+    </div>
+    {else}
     {* Loading skeleton — shown while JS polls for results. Styled by
        travel_core's search-results.css; display:none is JS-toggled state. *}
     <div class="sphinx-loading-skeleton" style="display: none;">
@@ -148,6 +176,7 @@
             </div>
         {/foreach}
     </div>
+    {/if}{* End of the Design A else *}
 
     {* No-results state — always in the DOM so the async poller (which runs when
        status='pending') can reveal it once polling completes with 0 offers.

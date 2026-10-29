@@ -10,6 +10,10 @@ declare(strict_types=1);
  * this re-verifies the offer and returns friendly terms lines + a free-until
  * date. Mirrors ajax_recalculate_price.php's verify → unwrap chain.
  *
+ * design=a — the Design A room card's terms link (pdp-design-a.js): the same
+ * answer as {sections: [{title, lines}]} (DesignARates::termsSections);
+ * [] when nothing can be said, so the card says it couldn't load them.
+ *
  * @package SphinxHolidays
  * @since   1.4.0
  */
@@ -19,16 +23,39 @@ use Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability;
 use Tygh\Addons\SphinxHolidays\Helpers\TermsDebug;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\SphinxHolidays\Services\DesignARates;
 use Tygh\Addons\SphinxHolidays\Services\TermsFormatter;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Results\DesignA;
 
 header('Content-Type: application/json; charset=utf-8');
+
+// The answer as JSON: as built below, or for a Design A card as sections of
+// lines. Some of these texts are seeded by the .po files only: CS-Cart
+// returns "_key" for one not seeded, which never reaches the guest.
+$designA = DesignA::requested($_REQUEST);
+$label = static function (string $key, string $fallback): string {
+    $text = TypeCoerce::toString(__($key));
+
+    return ($text === '' || str_starts_with($text, '_')) ? $fallback : $text;
+};
+$respond = static function (array $answer) use ($designA, $label): void {
+    echo json_encode($designA ? ['sections' => DesignARates::termsSections($answer, [
+        'payment' => $label('sphinx_holidays.payment_terms', 'Termeni de plată'),
+        'cancellation' => $label('sphinx_holidays.cancellation_policy', 'Politica de anulare'),
+        'free' => $label('sphinx_holidays.free_cancellation', 'Anulare gratuită'),
+        'free_until' => $label('sphinx_holidays.free_cancellation_until', 'Anulare gratuită înainte de'),
+        'none' => $label('sphinx_holidays.no_terms_info', 'Nu există condiții specifice pentru această ofertă.'),
+        'outage' => $label('sphinx_holidays.terms_outage', 'Condițiile nu pot fi afișate momentan. Vă rugăm încercați din nou în câteva minute.'),
+        'unavailable' => $label('sphinx_holidays.terms_unavailable', 'Condițiile nu sunt disponibile. Vă rugăm căutați din nou.'),
+    ])] : $answer);
+};
 
 try {
     $offer_id = RequestCoerce::string($_REQUEST, 'offer_id');
     if ($offer_id === '') {
-        echo json_encode(['status' => 'error', 'message' => 'Missing offer_id']);
+        $respond(['status' => 'error', 'message' => 'Missing offer_id']);
         exit;
     }
 
@@ -94,7 +121,7 @@ try {
         );
 
         if ($outage && $snapshotFees !== [] && array_key_exists('is_free', $snapshotFees)) {
-            echo json_encode([
+            $respond([
                 'status' => 'partial',
                 'debug' => $rejectDebug,
                 'is_free' => TypeCoerce::toBool($snapshotFees['is_free']),
@@ -110,7 +137,7 @@ try {
             exit;
         }
 
-        echo json_encode([
+        $respond([
             'status' => $outage ? 'outage' : 'unavailable',
             'debug' => $rejectDebug,
         ]);
@@ -164,7 +191,7 @@ try {
         $cancellationRules[$i]['percent'] = $scheduleTotal > 0.0 ? round($row['amount'] / $scheduleTotal * 100, 1) : null;
     }
 
-    echo json_encode([
+    $respond([
         'status' => 'ok',
         // The verify offer's own payment_terms / cancellation_fees objects,
         // untouched by TermsFormatter — so an empty panel can be attributed to
@@ -189,7 +216,7 @@ try {
 
 } catch (\Throwable $e) {
     fn_log_event('general', 'runtime', ['message' => 'Sphinx offer_terms error: ' . $e->getMessage()]);
-    echo json_encode(['status' => 'error', 'message' => 'Terms temporarily unavailable.']);
+    $respond(['status' => 'error', 'message' => 'Terms temporarily unavailable.']);
 }
 
 exit;

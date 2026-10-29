@@ -63,6 +63,22 @@ page, re-runs same-origin scripts in the copied part, then fires
 - `window.EurositeI18n` is read but never defined (Romanian fallbacks show).
 - `data-extra-params` (country/city) is unused for Eurosite on the product page.
 
+**Design A, board 13b (29 Oct 2026)**: `src/Services/DesignARates.php`
+turns this hotel's offers into travel_core `Results\RateOffer`s for a
+one-room search when the page sends design=a (`search.php` collects the
+offers with their snapshot keys; `search.tpl` shows
+`components/design_a_results.tpl` in place of the list; none bookable →
+the list, which says stop sale). One offer = one room (`rooms[0]`, its
+numeric `code` not shown) at one meal plan (`meals[].name`, ranked by
+`MealRank`; none = "Fără masă"); the price on the cart line's scale
+(currency coefficient, as `add_to_cart`), `oldPrice()` struck with the
+offer's `OfferDescription`; IM / OR; ST left out; the admin's payment terms
+(first line) as the card's payment line; "Rezervă" = today's booking link.
+Terms load when opened: `offer_terms` with design=a answers
+`{sections: [{title, lines}]}` (`DesignARates::termsSections`: the fees as
+the booking sidebar words them, or "confirmed at booking"; the payment
+terms). Tests: eurosite `DesignARatesTest`, `DesignAResultsWiringTest`.
+
 **Tests pinning it**: `StopSaleTest`, `SearchLocationAndRoomLimitTest`,
 `BookingCartProductTest`, `RoomOccupancyTest`, `EurositeApiClientTest`,
 `AvailabilityPlanTest`, `BookingSidebarBuilderTest`; travel_core
@@ -155,6 +171,19 @@ cards). Checked with the store's export of Admiral (hotel 476, 10–17 Jul
 reads the rows the positional search parser builds; reading them through
 `RoomOfferRows` is the next Novoton step.
 
+**Board 13b (29 Oct 2026)**: the card's title from the code's tier and
+features ("DBL 2+0 DELUXE NO BALCONY" → "Cameră Dublă Deluxe, fără
+balcon", `roomTitle()`), the code itself under it, capacity from the
+occupancy (`capacity()`: 2+1 → 3), the package (`package_name`), "Early
+Booking" without its percent and its last day: `SearchService` now reads
+`EBToDate` into `early_booking_until` (sent with every offer, empty without
+an Early Booking, like `early_booking`; the recorded answer
+`tests/Fixtures/room_price_476.xml` pins it). The hotel's room facilities
+(`fn_novoton_holidays_get_hotel_facilities_by_type`, hotel-level) go on
+every room. Each meal plan comes from its own package; the cancellation and
+payment were the same across meal plans in the API check, so the card says
+them once.
+
 **Tests pinning it**: `AvailabilityBadgeTest`, novoton `SmartyCompatTest`
 (no `style=` except display:none), `NovotonBookingSidebarDiscountTest`,
 `IntegrationPathsTest`, `MultiRoomSearchBatcherTest`, `RoomOfferRowsTest`,
@@ -235,6 +264,31 @@ reads the rows the positional search parser builds; reading them through
   doesn't exist, so it always says "EUR".
 - The engine's calendar footer says "1-night stay" while Sphinx calendar
   prices are for 7 nights.
+
+**Design A, board 13b (29 Oct 2026)**: `src/Services/DesignARates.php`
+maps the flat rows (commission applied) for a one-room search on a Design A
+page: room = `room_name` (+ `room_code`, numeric, not shown), meal =
+`board_name` ranked by `MealRank` (all capitals in title case, none = "Fără
+masă"), price in the store's primary currency as the booking form and cart
+convert it, `marketing_price` struck (now commissioned like the price, in
+`search.php` and `search_poll.php`), the offer's `labels` naming the
+discount, `cancellation_fees.is_free` = "Anulare gratuită" without a day,
+`confirmation` on_request; the booking link as today's card.
+`SearchOfferNormalizer` adds `room_code`, `marketing_price`, `deal_label`
+and `free_cancellation` (from the nested offer only, so flat rows pass
+through), and the poll's slim whitelist keeps them — cached results make
+the cards too. A cache hit or a finished search renders the cards at once;
+a running search renders a live container (`data-travel-live`), and the
+search meta remembers the search (`design_a`): `search_poll` with design=a
+answers `{status, done, html, cursor, alternatives}` — html is the whole
+component for every offer so far, rendered again when new offers came;
+`pdp-design-a.js` swaps it in keeping the filters, sort, "see all" and each
+room's option. No room at the end: `travel:live-done`, and
+`search-results.js` shows the no-results block with nearby dates. Terms:
+`offer_terms` design=a answers `{sections}` (verify's lines, the search's
+`is_free` during a verify outage, outage / unavailable messages). Tests:
+sphinx `DesignARatesTest`, `DesignAResultsWiringTest`; JS
+`sphinx-search-results.test.mjs`, `pdp-design-a.test.mjs`.
 
 **Tests pinning it**: `SearchLayoutBadgeTest`, `SearchTermsModalTest`,
 `VerifySkipWiringTest`, `VerifyOutageTest`, `HotelOnlySearchTest`,

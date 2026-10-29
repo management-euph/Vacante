@@ -2185,6 +2185,10 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Show on map',
         'ro' => 'Vezi pe hartă',
     ],
+    'travel_core.pdpa_code' => [
+        'en' => 'CODE: [code]',
+        'ro' => 'COD: [code]',
+    ],
     'travel_core.pdpa_from' => [
         'en' => 'from',
         'ro' => 'de la',
@@ -2297,10 +2301,6 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Instant confirmation',
         'ro' => 'Confirmare imediată',
     ],
-    'travel_core.pdpa_r_chip_special' => [
-        'en' => 'Special offers',
-        'ro' => 'Oferte speciale',
-    ],
     'travel_core.pdpa_r_sort' => [
         'en' => 'Sort',
         'ro' => 'Sortează',
@@ -2312,26 +2312,6 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
     'travel_core.pdpa_r_sort_high' => [
         'en' => 'Highest price',
         'ro' => 'Cel mai mare preț',
-    ],
-    'travel_core.pdpa_r_not_yet' => [
-        'en' => 'You don\'t pay yet. We check the price and availability at the next step.',
-        'ro' => 'Nu plătești încă. Verificăm prețul și disponibilitatea în pasul următor.',
-    ],
-    'travel_core.pdpa_r_fact_meal' => [
-        'en' => 'Every rate includes [meal]',
-        'ro' => 'Toate tarifele includ [meal]',
-    ],
-    'travel_core.pdpa_r_fact_immediate' => [
-        'en' => 'All confirmed instantly',
-        'ro' => 'Toate se confirmă imediat',
-    ],
-    'travel_core.pdpa_r_fact_free' => [
-        'en' => 'Free cancellation until [date] inclusive',
-        'ro' => 'Anulare gratuită până la [date] inclusiv',
-    ],
-    'travel_core.pdpa_r_for' => [
-        'en' => 'For [guests]',
-        'ro' => 'Pentru [guests]',
     ],
     'travel_core.pdpa_r_adults_one' => [
         'en' => '[n] adult',
@@ -2369,49 +2349,21 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => '[n] nights',
         'ro' => '[n] de nopți',
     ],
-    'travel_core.pdpa_r_and' => [
-        'en' => 'and',
-        'ro' => 'și',
-    ],
     'travel_core.pdpa_r_immediate' => [
         'en' => 'Instant confirmation',
         'ro' => 'Confirmare imediată',
-    ],
-    'travel_core.pdpa_r_on_request' => [
-        'en' => 'On request · reply within 48 h',
-        'ro' => 'La cerere · răspuns în max. 48 h',
     ],
     'travel_core.pdpa_r_on_request_tag' => [
         'en' => 'On request',
         'ro' => 'La cerere',
     ],
-    'travel_core.pdpa_r_on_request_note' => [
-        'en' => 'The hotel replies within 48 h. You pay nothing until the hotel confirms. If it does not, we email you similar alternatives: hotels in the same area, of the same category.',
-        'ro' => 'Hotelul răspunde în max. 48 h. Nu plătești nimic până confirmă hotelul. Dacă nu confirmă, îți trimitem pe email alternative similare: hoteluri din aceeași zonă, de aceeași categorie.',
-    ],
     'travel_core.pdpa_r_last_room' => [
-        'en' => 'Last room of this type',
-        'ro' => 'Ultima cameră de acest tip',
+        'en' => 'Last room available',
+        'ro' => 'Ultima cameră disponibilă',
     ],
     'travel_core.pdpa_r_few_left' => [
-        'en' => 'Only [n] rooms of this type left',
-        'ro' => 'Mai sunt doar [n] camere de acest tip',
-    ],
-    'travel_core.pdpa_r_cancel_free' => [
-        'en' => 'Every rate: free cancellation until [date] inclusive',
-        'ro' => 'Pentru toate tarifele: anulare gratuită până la [date] inclusiv',
-    ],
-    'travel_core.pdpa_r_cancel_non_refundable' => [
-        'en' => 'Every rate: non-refundable',
-        'ro' => 'Pentru toate tarifele: nerambursabil',
-    ],
-    'travel_core.pdpa_r_cancel_differs' => [
-        'en' => 'Cancellation terms differ by rate',
-        'ro' => 'Condițiile de anulare diferă de la un tarif la altul',
-    ],
-    'travel_core.pdpa_r_cancel_differs_sub' => [
-        'en' => 'Shown with each rate',
-        'ro' => 'Le vezi la fiecare tarif',
+        'en' => 'Only [n] rooms available',
+        'ro' => 'Doar [n] camere disponibile',
     ],
     'travel_core.pdpa_r_pay_full' => [
         'en' => 'Full payment when you book',
@@ -2422,12 +2374,8 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'ro' => 'Avans [percent]% acum, restul până la [date]',
     ],
     'travel_core.pdpa_r_pay_on_request' => [
-        'en' => 'You pay only once the hotel confirms',
-        'ro' => 'Plătești doar după confirmarea hotelului',
-    ],
-    'travel_core.pdpa_r_every_rate' => [
-        'en' => 'Every rate',
-        'ro' => 'Pentru toate tarifele',
+        'en' => 'You pay nothing until the hotel confirms',
+        'ro' => 'Nu plătești nimic până confirmă hotelul',
     ],
     'travel_core.pdpa_r_terms' => [
         'en' => 'Payment and cancellation terms',
@@ -2436,10 +2384,6 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
     'travel_core.pdpa_r_cheapest' => [
         'en' => 'Lowest price',
         'ro' => 'Cel mai mic preț',
-    ],
-    'travel_core.pdpa_r_standard_rate' => [
-        'en' => 'Standard rate',
-        'ro' => 'Tarif standard',
     ],
     'travel_core.pdpa_r_non_refundable' => [
         'en' => 'Non-refundable',
@@ -2453,10 +2397,6 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => '≈ [price] / night',
         'ro' => '≈ [price] / noapte',
     ],
-    'travel_core.pdpa_r_saving' => [
-        'en' => '−[amount] vs the standard rate',
-        'ro' => '−[amount] față de tariful standard',
-    ],
     'travel_core.pdpa_r_book' => [
         'en' => 'Book',
         'ro' => 'Rezervă',
@@ -2464,14 +2404,6 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
     'travel_core.pdpa_r_request' => [
         'en' => 'Request booking',
         'ro' => 'Cere rezervarea',
-    ],
-    'travel_core.pdpa_r_see_all_room' => [
-        'en' => 'See all [rates] for this room · [range]',
-        'ro' => 'Vezi toate cele [rates] pentru această cameră · [range]',
-    ],
-    'travel_core.pdpa_r_see_all' => [
-        'en' => 'See all [rates] · [range]',
-        'ro' => 'Vezi toate cele [rates] · [range]',
     ],
     'travel_core.pdpa_r_no_match' => [
         'en' => 'No rate matches these filters.',
@@ -2488,5 +2420,177 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
     'travel_core.pdpa_r_footnote_meals' => [
         'en' => 'Prices are reconfirmed when you book. Total prices for [nights] and [guests], meals included.',
         'ro' => 'Prețurile se reconfirmă la rezervare. Prețuri totale pentru [nights] și [guests], cu masa inclusă.',
+    ],
+    'travel_core.pdpa_r_count_meal_one' => [
+        'en' => '[rooms], with [meal]',
+        'ro' => '[rooms], cu [meal]',
+    ],
+    'travel_core.pdpa_r_count_meal_few' => [
+        'en' => '[rooms], all with [meal]',
+        'ro' => '[rooms], toate cu [meal]',
+    ],
+    'travel_core.pdpa_r_count_meal_many' => [
+        'en' => '[rooms], all with [meal]',
+        'ro' => '[rooms], toate cu [meal]',
+    ],
+    'travel_core.pdpa_r_meal_aria' => [
+        'en' => '[meal]: [rooms], from [price]',
+        'ro' => '[meal]: [rooms], de la [price]',
+    ],
+    'travel_core.pdpa_r_room_code' => [
+        'en' => 'Room code',
+        'ro' => 'Codul camerei',
+    ],
+    'travel_core.pdpa_r_capacity_one' => [
+        'en' => 'Max. [n] person',
+        'ro' => 'Max. [n] persoană',
+    ],
+    'travel_core.pdpa_r_capacity_few' => [
+        'en' => 'Max. [n] people',
+        'ro' => 'Max. [n] persoane',
+    ],
+    'travel_core.pdpa_r_capacity_many' => [
+        'en' => 'Max. [n] people',
+        'ro' => 'Max. [n] de persoane',
+    ],
+    'travel_core.pdpa_r_rooms_left_one' => [
+        'en' => '[n] room available',
+        'ro' => '[n] cameră disponibilă',
+    ],
+    'travel_core.pdpa_r_rooms_left_few' => [
+        'en' => '[n] rooms available',
+        'ro' => '[n] camere disponibile',
+    ],
+    'travel_core.pdpa_r_rooms_left_many' => [
+        'en' => '[n] rooms available',
+        'ro' => '[n] de camere disponibile',
+    ],
+    'travel_core.pdpa_r_amenities' => [
+        'en' => 'Room facilities',
+        'ro' => 'Dotări în cameră',
+    ],
+    'travel_core.pdpa_r_all_amenities' => [
+        'en' => 'All facilities (+[n])',
+        'ro' => 'Toate dotările (+[n])',
+    ],
+    'travel_core.pdpa_r_only_meal' => [
+        'en' => 'The only meal option',
+        'ro' => 'Singura opțiune de masă',
+    ],
+    'travel_core.pdpa_r_choose_meal' => [
+        'en' => 'Choose the meal plan',
+        'ro' => 'Alege masa',
+    ],
+    'travel_core.pdpa_r_package' => [
+        'en' => 'Package: [name]',
+        'ro' => 'Pachet: [name]',
+    ],
+    'travel_core.pdpa_r_deal_included' => [
+        'en' => '[deal], included in the price',
+        'ro' => '[deal], inclus în preț',
+    ],
+    'travel_core.pdpa_r_deal_until_included' => [
+        'en' => '[deal] until [date], included in the price',
+        'ro' => '[deal] până la [date], inclus în preț',
+    ],
+    'travel_core.pdpa_r_deal_saving' => [
+        'en' => '[deal] · you save [amount]',
+        'ro' => '[deal] · economisești [amount]',
+    ],
+    'travel_core.pdpa_r_deal_until_saving' => [
+        'en' => '[deal] until [date] · you save [amount]',
+        'ro' => '[deal] până la [date] · economisești [amount]',
+    ],
+    'travel_core.pdpa_r_deal_until' => [
+        'en' => '[deal] until [date]',
+        'ro' => '[deal] până la [date]',
+    ],
+    'travel_core.pdpa_r_free' => [
+        'en' => 'Free cancellation',
+        'ro' => 'Anulare gratuită',
+    ],
+    'travel_core.pdpa_r_terms_loading' => [
+        'en' => 'Loading the terms…',
+        'ro' => 'Se încarcă condițiile…',
+    ],
+    'travel_core.pdpa_r_terms_error' => [
+        'en' => 'We couldn\'t load the terms. You\'ll see them in full before you pay.',
+        'ro' => 'Nu am putut încărca condițiile. Le vezi complet înainte de plată.',
+    ],
+    'travel_core.pdpa_r_total' => [
+        'en' => 'Total · [nights] · [guests]',
+        'ro' => 'Total · [nights] · [guests]',
+    ],
+    'travel_core.pdpa_r_total_short' => [
+        'en' => 'total',
+        'ro' => 'total',
+    ],
+    'travel_core.pdpa_r_was' => [
+        'en' => 'Price without the discount',
+        'ro' => 'Preț fără reducere',
+    ],
+    'travel_core.pdpa_r_off' => [
+        'en' => 'discount',
+        'ro' => 'reducere',
+    ],
+    'travel_core.pdpa_r_no_pay_yet' => [
+        'en' => 'You don\'t pay yet',
+        'ro' => 'Nu plătești încă',
+    ],
+    'travel_core.pdpa_r_reply_48h' => [
+        'en' => 'Reply within 48 h',
+        'ro' => 'Răspuns în max. 48 h',
+    ],
+    'travel_core.pdpa_r_how_request' => [
+        'en' => 'How a request works',
+        'ro' => 'Cum funcționează cererea',
+    ],
+    'travel_core.pdpa_r_request_step1_lead' => [
+        'en' => 'You send the request.',
+        'ro' => 'Trimiți cererea.',
+    ],
+    'travel_core.pdpa_r_request_step1' => [
+        'en' => 'The hotel confirms availability within 48 h.',
+        'ro' => 'Hotelul confirmă disponibilitatea în max. 48 h.',
+    ],
+    'travel_core.pdpa_r_request_step2_lead' => [
+        'en' => 'You pay nothing',
+        'ro' => 'Nu plătești nimic',
+    ],
+    'travel_core.pdpa_r_request_step2' => [
+        'en' => 'until the hotel confirms.',
+        'ro' => 'până confirmă hotelul.',
+    ],
+    'travel_core.pdpa_r_request_step3_lead' => [
+        'en' => 'If the hotel doesn\'t confirm,',
+        'ro' => 'Dacă hotelul nu confirmă,',
+    ],
+    'travel_core.pdpa_r_request_step3' => [
+        'en' => 'we email you similar alternatives: hotels in the same area, of the same category.',
+        'ro' => 'îți trimitem pe email alternative similare: hoteluri din aceeași zonă, de aceeași categorie.',
+    ],
+    'travel_core.pdpa_r_close' => [
+        'en' => 'Close',
+        'ro' => 'Închide',
+    ],
+    'travel_core.pdpa_r_see_all_rooms' => [
+        'en' => 'See all [rooms]',
+        'ro' => 'Vezi toate cele [rooms]',
+    ],
+    'travel_core.pdpa_r_more_rooms' => [
+        'en' => '[n] more: [names], from [price]',
+        'ro' => 'Încă [n]: [names], de la [price]',
+    ],
+    'travel_core.pdpa_r_footnote_struck' => [
+        'en' => 'The struck price is the price without the discount.',
+        'ro' => 'Prețul tăiat este prețul fără reducere.',
+    ],
+    'travel_core.pdpa_r_footnote_struck_deal' => [
+        'en' => 'The struck price is the price without the [deal] discount.',
+        'ro' => 'Prețul tăiat este prețul fără reducerea [deal].',
+    ],
+    'travel_core.pdpa_r_room_only' => [
+        'en' => 'Room only',
+        'ro' => 'Fără masă',
     ],
 ];
