@@ -146,6 +146,11 @@ terms). Tests: eurosite `DesignARatesTest`, `DesignAResultsWiringTest`.
   dates, guests, price, standard_price, package, extras, early_booking,
   is_on_request, rooms_available (no product id). `add_to_cart` re-prices
   everything (`RoomsQuote` / `BookedOffer`), never trusting posted prices.
+  It looks for the offer as the booking form's re-price does
+  (`BookedOffer::find`): the room on its board, then every room and board,
+  since Novoton answers some packages' rooms only without a board (Holiday
+  Park, 270). Unpriced, the guest goes back to the same booking form
+  (`BookingFormLink`).
 
 **"From" prices before dates**
 - Calendar prices (`CalendarPriceBuilder` → `novoton_hotels.calendar_prices_raw`):

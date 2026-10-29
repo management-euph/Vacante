@@ -55,8 +55,8 @@ final class AddToCartPricesEveryRoomTest extends TestCase
         $branch = substr($src, $failure, 2500);
         self::assertStringContainsString('novoton_holidays.price_verification_failed', $branch);
         self::assertStringContainsString('return [CONTROLLER_STATUS_REDIRECT, $return_url];', $branch);
-        // A multi-room customer goes back to a multi-room form
-        self::assertStringContainsString("\$return_params['rooms_data'] = json_encode(\$booked_rooms);", $branch);
+        // Back to the same offer's form, room and rooms included (BookingFormLinkTest)
+        self::assertStringContainsString('$return_url = \Tygh\Addons\NovotonHolidays\Services\BookingFormLink::back($bookingData, $product_id, $children_ages, $booked_rooms, $customer_visible_price);', $branch);
     }
 
     /**

@@ -204,24 +204,8 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
             '[default]' => 'Price verification failed. The booking cannot proceed. Please go back and try refreshing the price, or contact support.'
         ]));
 
-        // Build return URL to booking form with all parameters
-        $return_params = [
-            'hotel_id' => $bdHotelId,
-            'product_id' => $product_id,
-            'check_in' => $check_in,
-            'check_out' => $check_out,
-            'nights' => TypeCoerce::toString($bookingData['nights'] ?? ''),
-            'adults' => TypeCoerce::toInt($bookingData['adults'] ?? 2),
-            'children' => TypeCoerce::toInt($bookingData['children'] ?? 0),
-            'children_ages' => $children_ages,
-            'rooms' => TypeCoerce::toInt($bookingData['num_rooms'] ?? 1)
-        ];
-        if ($booked_rooms !== null && count($booked_rooms) > 1) {
-            // Back to the multi-room form, with the rooms (no prices) it posted
-            $return_params['rooms_data'] = json_encode($booked_rooms);
-            $return_params['rooms'] = count($booked_rooms);
-        }
-        $return_url = 'novoton_booking.booking_form?' . http_build_query($return_params);
+        // Back to the booking form of the same offer, room and all
+        $return_url = \Tygh\Addons\NovotonHolidays\Services\BookingFormLink::back($bookingData, $product_id, $children_ages, $booked_rooms, $customer_visible_price);
 
         return [CONTROLLER_STATUS_REDIRECT, $return_url];
     }

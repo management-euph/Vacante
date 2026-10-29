@@ -178,6 +178,23 @@ final class BookingFormInitialRecalcTest extends TestCase
         self::assertStringContainsString('ConfigProvider::isDebugMode()', $src);
     }
 
+    /**
+     * The re-price and add_to_cart look for the booked offer the same way
+     * (BookedOffer::find): add_to_cart is never refused an offer the form
+     * priced, and the form shows that offer's own terms.
+     */
+    public function testRecalcAsksForTheOfferAsAddToCartDoes(): void
+    {
+        $src = (string) file_get_contents(dirname(__DIR__, 3) . '/controllers/frontend/novoton_booking/ajax_recalculate_price.php');
+        $quote = (string) file_get_contents(dirname(__DIR__, 3) . '/src/Services/RoomsQuote.php');
+
+        self::assertStringContainsString('BookedOffer::find(', $src);
+        self::assertStringContainsString('BookedOffer::find(', $quote);
+        self::assertStringNotContainsString('BookedOffer::pick(', $src);
+        self::assertStringContainsString('RoomOfferRows::terms($response, $quoted)', $src);
+        self::assertStringNotContainsString("xpath('//TermsOfPayment')", $src, 'the first terms of the answer can be another room\'s');
+    }
+
     public function testRoomSubstitutionIsLoggedUnconditionally(): void
     {
         $path = dirname(__DIR__, 3) . '/controllers/frontend/novoton_booking/ajax_recalculate_price.php';
