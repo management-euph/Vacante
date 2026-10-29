@@ -22,7 +22,7 @@ use Tygh\Addons\TravelCore\Services\MoneyFormatter;
  *    keeps its package on the option, like any other.
  *  - The meal filter only with two or more meal plans, each with how many
  *    room types have it and its lowest price; a chip only when it splits the
- *    options (free cancellation, instant confirmation, special offers).
+ *    options (free cancellation, instant confirmation).
  *  - The first ROOMS_SHOWN room types, then "see all" naming the others with
  *    their lowest price; "Cel mai mic preț" marks the cheapest room.
  *  - The discount's percent once, on the badge by the struck price; the
@@ -42,7 +42,7 @@ use Tygh\Addons\TravelCore\Services\MoneyFormatter;
  *     index: int, key: string, meal: string, meal_key: string, name: string, package: string,
  *     deal: Deal|null, perks: list<string>, cancel: Cancel|null, payment: Payment|null,
  *     amount: float, price: string, was: string, off: string, per_night: string,
- *     on_request: bool, free: bool, special: bool, book_url: string, chosen: bool
+ *     on_request: bool, free: bool, book_url: string, chosen: bool
  * }
  * @phpstan-type RoomView array{
  *     key: string, name: string, title: string, code: string, capacity: int, capacity_form: string,
@@ -78,7 +78,6 @@ final class RoomResultsBuilder
 
     public const CHIP_FREE = 'free';
     public const CHIP_IMMEDIATE = 'immediate';
-    public const CHIP_SPECIAL = 'special';
 
     /** A TermsView's `for` when it holds for every option of the room. */
     public const TERMS_ALL = -1;
@@ -132,7 +131,6 @@ final class RoomResultsBuilder
         foreach ([
             self::CHIP_FREE => static fn (RateOffer $r): bool => $r->isFree(),
             self::CHIP_IMMEDIATE => static fn (RateOffer $r): bool => !$r->onRequest,
-            self::CHIP_SPECIAL => static fn (RateOffer $r): bool => $r->isSpecial(),
         ] as $key => $test) {
             $count = count(array_filter($all, $test));
             if ($count > 0 && $count < $total) {
@@ -399,7 +397,6 @@ final class RoomResultsBuilder
             'per_night' => $nights > 0 ? $this->money->formatDisplay($this->money->toDisplay($rate->price) / $nights) : '',
             'on_request' => $rate->onRequest,
             'free' => $rate->isFree(),
-            'special' => $rate->isSpecial(),
             'book_url' => $rate->bookUrl,
             'chosen' => $chosen,
         ];

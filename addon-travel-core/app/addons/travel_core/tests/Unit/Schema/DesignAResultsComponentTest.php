@@ -45,7 +45,7 @@ final class DesignAResultsComponentTest extends TestCase
         'travel_core.pdpa_r_count_meal_' => ['one', 'few', 'many'],
         'travel_core.pdpa_r_capacity_' => ['one', 'few', 'many'],
         'travel_core.pdpa_r_rooms_left_' => ['one', 'few', 'many'],
-        'travel_core.pdpa_r_chip_' => ['free', 'immediate', 'special'],
+        'travel_core.pdpa_r_chip_' => ['free', 'immediate'],
     ];
 
     private static function addonRoot(): string
@@ -149,10 +149,11 @@ final class DesignAResultsComponentTest extends TestCase
             self::assertStringContainsString($hook, $src, $hook);
             self::assertStringContainsString(rtrim($hook, '='), $js, 'pdp-design-a.js drives ' . $hook);
         }
-        // The chips read an option's data-<chip key> (free / immediate / special).
-        foreach (['data-free=', 'data-immediate=', 'data-special='] as $hook) {
+        // The chips read an option's data-<chip key> (free / immediate).
+        foreach (['data-free=', 'data-immediate='] as $hook) {
             self::assertStringContainsString($hook, $src, $hook);
         }
+        self::assertStringNotContainsString('data-special', $src, 'no special-offers chip (the owner, 29 Oct 2026)');
         self::assertStringContainsString("getAttribute('data-' + key)", $js);
         foreach (['filterRooms', 'showRooms', 'sortRooms', 'choose', 'data-travel-open', 'data-travel-picked', 'data-travel-live'] as $piece) {
             self::assertStringContainsString($piece, $js, $piece);

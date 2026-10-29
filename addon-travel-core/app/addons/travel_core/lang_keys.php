@@ -2169,10 +2169,6 @@ Dacă ați plătit deja, vă rugăm să ignorați acest email.',
         'en' => 'Instant confirmation',
         'ro' => 'Confirmare imediată',
     ],
-    'travel_core.pdpa_r_chip_special' => [
-        'en' => 'Special offers',
-        'ro' => 'Oferte speciale',
-    ],
     'travel_core.pdpa_r_sort' => [
         'en' => 'Sort',
         'ro' => 'Sortează',

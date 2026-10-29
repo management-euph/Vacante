@@ -409,7 +409,7 @@
             '[names]': names.slice(0, HINT_NAMES).join(', ') + (names.length > HINT_NAMES ? '…' : ''),
             '[price]': cheapest ? cheapest.text : '',
         };
-        hint.textContent = (hint.getAttribute('data-template') || '').replace(/\[n\]|\[names\]|\[price\]/g, function (key) {
+        hint.textContent = (hint.getAttribute('data-template') || '').replace(/\[n]|\[names]|\[price]/g, function (key) {
             return parts[key];
         });
     }

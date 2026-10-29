@@ -81,7 +81,7 @@ final class RoomResultsBuilderTest extends TestCase
         self::assertSame([8, 'few', 8, 'few'], [$view['rate_count'], $view['rate_form'], $view['room_count'], $view['room_form']]);
         self::assertSame('Ultra All Inclusive', $view['single_meal'], '"8 tipuri de cameră, toate cu Ultra All Inclusive"');
         self::assertSame([], $view['meal_plans'], 'no meal filter with one meal plan');
-        self::assertSame([], $view['chips'], 'every option is free, instant and special: no chip splits them');
+        self::assertSame([], $view['chips'], 'every option is free and instant: no chip splits them');
         self::assertSame('1.485 €', $view['cheapest']);
         self::assertTrue($view['meals_included']);
         self::assertSame([true, 'Early Booking'], [$view['struck'], $view['struck_deal']], 'the footnote names the discount the struck price leaves out');
@@ -196,9 +196,9 @@ final class RoomResultsBuilderTest extends TestCase
             'lightest meal first, each with its lowest price and how many room types have it',
         );
         self::assertSame(
-            [['key' => 'immediate', 'count' => 6], ['key' => 'special', 'count' => 4]],
+            [['key' => 'immediate', 'count' => 6]],
             $view['chips'],
-            'every option is free to cancel: no chip for that',
+            'every option is free to cancel: no chip for that; no special-offers chip (the owner, 29 Oct 2026)',
         );
 
         [$first, , , $last] = $view['rooms'];
@@ -219,7 +219,6 @@ final class RoomResultsBuilderTest extends TestCase
         $uai = $first['options'][1];
         self::assertSame(['name' => 'Early Booking', 'until' => '31.10.2026', 'saving' => '115 €'], $uai['deal']);
         self::assertSame(['960 €', '−12%', '141 €'], [$uai['was'], $uai['off'], $uai['per_night']]);
-        self::assertSame([false, true], [$first['options'][0]['special'], $uai['special']]);
 
         // The same cancellation and payment for both: said once, under them.
         self::assertSame(['kind' => 'free', 'until' => '03.11.2026'], $first['cancel']);

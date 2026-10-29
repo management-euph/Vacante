@@ -361,7 +361,7 @@ describe('room-first results (board 13b)', () => {
     // One option of a room: meal key, total, flags; its till and (optionally) its own terms.
     const option = (index, meal, amount, flags = {}) => `
         <label class="travel-pdpa-opt" data-travel-option data-index="${index}" data-key="k${meal}${amount}" data-meal="${meal}"
-               data-free="${flags.free ? 1 : 0}" data-immediate="${flags.onRequest ? 0 : 1}" data-special="${flags.special ? 1 : 0}" data-amount="${amount}">
+               data-free="${flags.free ? 1 : 0}" data-immediate="${flags.onRequest ? 0 : 1}" data-amount="${amount}">
             <input type="radio" name="opt-${flags.room}" value="${index}" data-travel-pick${flags.chosen ? ' checked' : ''}>
             <span>${meal} ${amount}</span>
         </label>`;
@@ -390,11 +390,11 @@ describe('room-first results (board 13b)', () => {
             <button type="button" data-travel-meal="bb" aria-pressed="false">Mic dejun</button>
             <button type="button" data-travel-meal="ai" aria-pressed="false">All Inclusive</button>
             <button type="button" data-travel-chip="free" aria-pressed="false">Anulare gratuită</button>
-            <button type="button" data-travel-chip="special" aria-pressed="false">Oferte speciale</button>
+            <button type="button" data-travel-chip="immediate" aria-pressed="false">Confirmare imediată</button>
             <select data-travel-sort><option value="low" selected>low</option><option value="high">high</option></select>
             <ul data-travel-room-list id="${id}-list">
-                ${room(`${id}-dbl`, 'Cameră Dublă', [['bb', 615, { free: true }], ['ai', 845, { free: true, special: true }]])}
-                ${room(`${id}-deluxe`, 'Cameră Dublă', [['bb', 675], ['ai', 905, { special: true }]])}
+                ${room(`${id}-dbl`, 'Cameră Dublă', [['bb', 615], ['ai', 845, { free: true }]])}
+                ${room(`${id}-deluxe`, 'Cameră Dublă', [['bb', 675], ['ai', 905]])}
                 ${room(`${id}-sea`, 'Cameră Dublă', [['ai', 735, { free: true }]])}
                 ${room(`${id}-superior`, 'Cameră Dublă', [['ai', 1295, { onRequest: true }]])}
                 ${room(`${id}-junior`, 'Suită Junior', [['bb', 1305], ['ai', 1505]], true)}
@@ -454,8 +454,8 @@ describe('room-first results (board 13b)', () => {
     });
 
     it('chips narrow it further; nothing left says so, and one click shows everything again', () => {
-        click(section.querySelector('[data-travel-chip="special"]'));
-        expect(shown()).toEqual(['dbl', 'deluxe']);
+        click(section.querySelector('[data-travel-chip="free"]'));
+        expect(shown()).toEqual(['dbl', 'sea']);
         expect(total('r-dbl')).toBe('845 €');
 
         click(section.querySelector('[data-travel-meal="bb"]'));
@@ -466,7 +466,7 @@ describe('room-first results (board 13b)', () => {
         expect(shown()).toEqual(['dbl', 'deluxe', 'sea', 'superior']);
         expect(total('r-dbl')).toBe('615 €');
         expect(section.querySelector('[data-travel-no-match]').hidden).toBe(true);
-        expect(section.querySelector('[data-travel-chip="special"]').getAttribute('aria-pressed')).toBe('false');
+        expect(section.querySelector('[data-travel-chip="free"]').getAttribute('aria-pressed')).toBe('false');
     });
 
     it('the sort orders the rooms by their cheapest option; the first four show and the hint names the others', () => {

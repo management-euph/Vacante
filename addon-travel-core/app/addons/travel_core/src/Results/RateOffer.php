@@ -86,12 +86,6 @@ final class RateOffer
     ) {
     }
 
-    /** A rate cheaper than the hotel's standard one for the same stay. */
-    public function isSpecial(): bool
-    {
-        return $this->discountLabel !== '' || $this->standardPrice > $this->price;
-    }
-
     /** Free to cancel today: until a known day, or (Sphinx) until a day the terms will say. */
     public function isFree(): bool
     {

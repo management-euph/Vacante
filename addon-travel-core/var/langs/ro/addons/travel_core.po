@@ -3002,10 +3002,6 @@ msgctxt "Languages::travel_core.pdpa_r_chip_immediate"
 msgid "Instant confirmation"
 msgstr "Confirmare imediată"
 
-msgctxt "Languages::travel_core.pdpa_r_chip_special"
-msgid "Special offers"
-msgstr "Oferte speciale"
-
 msgctxt "Languages::travel_core.pdpa_r_sort"
 msgid "Sort"
 msgstr "Sortează"

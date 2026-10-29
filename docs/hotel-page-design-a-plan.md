@@ -76,7 +76,8 @@ their current layout.
    - The meal filter only with 2+ meal plans, each with its room types
      "(7)" and lowest price, the active one solid navy; it shows the rooms
      that have the meal and chooses it in them. Chips only when they split
-     the options. The first 4 room types, then "Vezi toate cele N tipuri de
+     the options: free cancellation, instant confirmation (no "Oferte
+     speciale": the owner dropped it, 29 Oct 2026). The first 4 room types, then "Vezi toate cele N tipuri de
      cameră" and "Încă K: …, de la X €". The footnote names the discount the
      struck price leaves out.
 7. **Multi-room** — a tab per room, "Mergi la Camera N", the final
@@ -259,6 +260,9 @@ an internal code.
     end (the live cards, `$view->fetch` from the poll), Eurosite and Sphinx
     terms on demand against the live APIs, the phone's sticky till under
     the theme's own sticky elements.
+- 29 Oct 2026 — the owner dropped the "Oferte speciale" chip (the struck
+  price and its badge already say it); Qodana's three "redundant character
+  escape" warnings in `pdp-design-a.js` fixed.
 - Next: Novoton rows through `RoomOfferRows`; the title row's after-search
   state ("10–17 iul. · de la 1.485 €", "Vezi camerele") and the compact
   summary's price (the section carries `data-cheapest`); the room facts the

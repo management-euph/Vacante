@@ -16,7 +16,6 @@
     data-meal="{$travel_pdpa_option.meal_key}"
     data-free="{if $travel_pdpa_option.free}1{else}0{/if}"
     data-immediate="{if $travel_pdpa_option.on_request}0{else}1{/if}"
-    data-special="{if $travel_pdpa_option.special}1{else}0{/if}"
     data-amount="{$travel_pdpa_option.amount}">
     {if $travel_pdpa_room.single}
         <span class="travel-pdpa-opt__mark">{include file="addons/travel_core/components/design_a_icon.tpl" icon="check" size=20}</span>
