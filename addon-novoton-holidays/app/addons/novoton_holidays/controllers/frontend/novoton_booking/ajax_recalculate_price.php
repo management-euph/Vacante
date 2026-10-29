@@ -151,103 +151,52 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
     }
 
     try {
-        $new_price = 0;
-        $price_found = false;
-        $matched_room = '';
-        $matched_board = '';
         $room_id_decoded = $room_id;  // Keep as-is from form (already has + not %2b)
 
         // The offer the customer clicked: same room + board AND package — the
         // cheapest row of any package re-priced a clicked 795 "+BEACH" card to
-        // another package's 600 (see BookedOffer). No such offer: no price.
-        $pickOffer = static fn (\SimpleXMLElement $xml): ?array => \Tygh\Addons\NovotonHolidays\Services\BookedOffer::pick(
-            $xml,
-            $room_id_decoded,
-            $board_id,
+        // another package's 600 (see BookedOffer). Asked for as add_to_cart
+        // asks (BookedOffer::find): the room on its board, then every room
+        // and board of the hotel when Novoton answers that with nothing (it
+        // does for some packages' boards, and for IDs it rejects). The
+        // answers are fresh and cached for add_to_cart, so the cart charges
+        // the price this shows. No such offer: no price.
+        $pricing = $api->pricing();
+        $found = \Tygh\Addons\NovotonHolidays\Services\BookedOffer::find(
+            static function (array $request) use ($api, $pricing, $debug_log): \SimpleXMLElement|false {
+                $debug_log('API params', $request);
+                $answer = $pricing->getRoomPrice($request);
+                $debug_log('API Last Request', $api->getLastRequest());
+                $debug_log('API Last Response (first 2000 chars)', substr($api->getLastResponse(), 0, 2000));
+
+                return $answer;
+            },
+            [
+                'hotel_id' => $hotel_id,
+                'room_id' => $room_id,
+                'board_id' => $board_id,
+                'check_in' => $check_in,
+                'check_out' => $check_out,
+                'adults' => $adults,
+                'children' => $children_ages,
+                'nocache' => true,
+            ],
             $package_name,
             ['source' => 'ajax_recalculate_price', 'hotel_id' => $hotel_id, 'check_in' => $check_in],
         );
-
-        // =====================================================================
-        // PRIMARY: Send actual room_id/board_id (same approach as add_to_cart)
-        // This is the proven path that works for the booking flow
-        // =====================================================================
-        $params = [
-            'hotel_id' => $hotel_id,
-            'room_id' => $room_id,
-            'board_id' => $board_id,
-            'check_in' => $check_in,
-            'check_out' => $check_out,
-            'adults' => $adults,
-            'children' => $children_ages,
-            'nocache' => true
-        ];
-
-        $debug_log('API params (with actual room/board IDs)', $params);
-
-        $pricing = $api->pricing();
-        $response = $pricing->getRoomPrice($params);
-
-        $debug_log('API Last Request', $api->getLastRequest());
-        $rawResponse = $api->getLastResponse();
-        $debug_log('API Last Response (first 2000 chars)', substr($rawResponse, 0, 2000));
-
-        // No offer of this room/board(/package) is "no price" — never the
-        // answer's first <Price>, which can be another room or package.
-        if ($response instanceof \SimpleXMLElement) {
-            $minMatch = $pickOffer($response);
-            if ($minMatch !== null) {
-                $new_price     = $minMatch['price'];
-                $price_found   = true;
-                $matched_room  = $minMatch['room'];
-                $matched_board = $minMatch['board'];
-                $debug_log('Found price of the booked offer from specific room/board query', $minMatch);
-            }
-        }
-
-        // =====================================================================
-        // FALLBACK: If specific room/board returned no price, try getting all
-        // combinations and match (handles APIs that reject IDs with spaces)
-        // =====================================================================
-        if (!$price_found) {
-            $debug_log('Specific room/board query returned no price, trying all combinations');
-
-            $params['room_id'] = '';
-            $params['board_id'] = '';
-            $response = $pricing->getRoomPrice($params);
-
-            $debug_log('Fallback API Last Response (first 2000 chars)', substr($api->getLastResponse(), 0, 2000));
-
-            if (!($response instanceof \SimpleXMLElement)) {
-                $debug_log('ERROR: No response from API');
-                $sendJson([
-                    'success' => false,
-                    'message' => 'Price not available'
-                ]);
-            }
-
-            // Same pick as the primary query. RoomOfferRows reads every layout
-            // the API answers with (flat rows under <room_price>, one element
-            // per offer, <hotel><rooms><board> nesting), and only the booked
-            // room + board (+ package) may set the price: the old "first
-            // available price" fallbacks quoted whatever room came first.
-            $fallbackMatch = $pickOffer($response);
-            if ($fallbackMatch !== null) {
-                $new_price     = $fallbackMatch['price'];
-                $price_found   = true;
-                $matched_room  = $fallbackMatch['room'];
-                $matched_board = $fallbackMatch['board'];
-                $debug_log('Found price of the booked offer from all-combinations query', $fallbackMatch);
-            }
-        }
-
-        if (!$price_found) {
+        if ($found === null) {
             $debug_log('ERROR: Price not found for combination');
             $sendJson([
                 'success' => false,
                 'message' => 'Price not found for this room/board combination'
             ]);
         }
+        $response = $found['answer'];
+        $quoted = $found['offer'];
+        $new_price = $quoted['price'];
+        $matched_room = $quoted['room'];
+        $matched_board = $quoted['board'];
+        $debug_log('Found price of the booked offer', $quoted);
 
         // Apply commission so displayed price matches customer-facing price
         $raw_price = TypeCoerce::toFloat($new_price);
@@ -331,32 +280,31 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
         $free_cancellation_until = '';
         $cancellation_parsed = [];
         $payment_parsed = [];
-        if ($response instanceof \SimpleXMLElement) {
-            $termsPayment = $response->xpath('//TermsOfPayment');
-            if (!empty($termsPayment[0])) {
-                $payment_lines = \Tygh\Addons\TravelCore\ViewModels\BookingSidebarFactory::termLines(
-                    fn_novoton_holidays_format_payment_terms((string) $termsPayment[0]->asXML()),
-                );
-                $payment_parsed = \Tygh\Addons\NovotonHolidays\Services\TermsFormatter::parsePaymentTerms((string) $termsPayment[0]->asXML());
-            }
-            $termsCancellation = $response->xpath('//TermsOfCancellation');
-            if (!empty($termsCancellation[0])) {
-                $cancellation_lines = \Tygh\Addons\TravelCore\ViewModels\BookingSidebarFactory::termLines(
-                    fn_novoton_holidays_format_cancellation_terms(
-                        (string) $termsCancellation[0]->asXML(),
-                        $check_in,
-                    ),
-                );
-                // The one line a guest looks for first — the search card
-                // already shows it in green, so the booking form must too.
-                $free_cancellation_until = \Tygh\Addons\TravelCore\Services\DateHelper::formatStoreDate(
-                    fn_novoton_holidays_get_free_cancellation_date((string) $termsCancellation[0]->asXML()),
-                );
-                $cancellation_parsed = \Tygh\Addons\NovotonHolidays\Services\TermsFormatter::parseCancellationTerms(
-                    (string) $termsCancellation[0]->asXML(),
+        // The quoted offer's own terms, as add_to_cart books them: the first
+        // <TermsOfPayment> of an answer of every room is another room's.
+        $offer_terms = \Tygh\Addons\NovotonHolidays\Services\RoomOfferRows::terms($response, $quoted);
+        if ($offer_terms['terms_of_payment'] !== '') {
+            $payment_lines = \Tygh\Addons\TravelCore\ViewModels\BookingSidebarFactory::termLines(
+                fn_novoton_holidays_format_payment_terms($offer_terms['terms_of_payment']),
+            );
+            $payment_parsed = \Tygh\Addons\NovotonHolidays\Services\TermsFormatter::parsePaymentTerms($offer_terms['terms_of_payment']);
+        }
+        if ($offer_terms['terms_of_cancellation'] !== '') {
+            $cancellation_lines = \Tygh\Addons\TravelCore\ViewModels\BookingSidebarFactory::termLines(
+                fn_novoton_holidays_format_cancellation_terms(
+                    $offer_terms['terms_of_cancellation'],
                     $check_in,
-                );
-            }
+                ),
+            );
+            // The one line a guest looks for first — the search card
+            // already shows it in green, so the booking form must too.
+            $free_cancellation_until = \Tygh\Addons\TravelCore\Services\DateHelper::formatStoreDate(
+                fn_novoton_holidays_get_free_cancellation_date($offer_terms['terms_of_cancellation']),
+            );
+            $cancellation_parsed = \Tygh\Addons\NovotonHolidays\Services\TermsFormatter::parseCancellationTerms(
+                $offer_terms['terms_of_cancellation'],
+                $check_in,
+            );
         }
 
         // ── The shared cancellation & payment timeline ──
@@ -398,15 +346,13 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
         // out and the page keeps what it rendered — unless the price moved,
         // when a "was" figure from the search would no longer match it.
         $offer_payload = [];
-        $offer = $response instanceof \SimpleXMLElement
-            ? \Tygh\Addons\NovotonHolidays\Services\QuoteOfferReader::fromXml(
-                $response,
-                TypeCoerce::toString($matched_room ?: $room_id_decoded),
-                TypeCoerce::toString($matched_board ?: $board_id),
-                $raw_price,
-                TypeCoerce::toString($package_name),
-            )
-            : null;
+        $offer = \Tygh\Addons\NovotonHolidays\Services\QuoteOfferReader::fromXml(
+            $response,
+            TypeCoerce::toString($matched_room ?: $room_id_decoded),
+            TypeCoerce::toString($matched_board ?: $board_id),
+            $raw_price,
+            TypeCoerce::toString($package_name),
+        );
         if ($offer !== null) {
             $discount = \Tygh\Addons\NovotonHolidays\ViewModels\NovotonBookingSidebarBuilder::discount(
                 $new_price,

@@ -15,7 +15,11 @@ use Tygh\Addons\NovotonHolidays\Api\Contracts\PricingApiClientInterface;
  * A room that cannot be priced makes the whole quote null: a booking is
  * never charged for fewer rooms than it books.
  *
- * Identical rooms share one room_price call.
+ * A room's offer is looked for as the booking form's re-price looks for
+ * it (BookedOffer::find): the room on its board, then every room and board
+ * of the hotel when Novoton answers that with nothing.
+ *
+ * Identical questions share one room_price call.
  *
  * @phpstan-import-type BookedRoom from BookedRooms
  * @phpstan-import-type OfferRow from RoomOfferRows
@@ -58,13 +62,17 @@ final class RoomsQuote
                 'adults' => $room['adults'],
                 'children' => $room['childrenAges'],
             ];
-            $key = serialize($params);
-            $answer = $answers[$key] ??= $this->pricing->getRoomPrice($params);
-
-            $offer = $answer instanceof \SimpleXMLElement
-                ? BookedOffer::pick($answer, rawurldecode($room['room_id']), $room['board_id'], $room['package_name'], $logContext + ['room' => $index + 1])
-                : null;
-            if (!$answer instanceof \SimpleXMLElement || $offer === null) {
+            // The booking form's re-price asks the same questions
+            // (BookedOffer::find), so the cart gets the price the form showed.
+            $found = BookedOffer::find(
+                function (array $request) use (&$answers): \SimpleXMLElement|false {
+                    return $answers[serialize($request)] ??= $this->pricing->getRoomPrice($request);
+                },
+                $params,
+                $room['package_name'],
+                $logContext + ['room' => $index + 1],
+            );
+            if ($found === null) {
                 fn_log_event('general', 'runtime', [
                     'message' => 'Novoton: a room of the booking has no price — the booking is not priced',
                     'room' => $index + 1,
@@ -77,7 +85,8 @@ final class RoomsQuote
 
                 return null;
             }
-            $first ??= ['answer' => $answer, 'offer' => $offer];
+            $first ??= $found;
+            $offer = $found['offer'];
 
             $raw = $offer['price'];
             $price = $this->pricing->applyCommission($raw);
