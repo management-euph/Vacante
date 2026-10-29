@@ -1334,9 +1334,7 @@ schedule and the replies still to send; the code follows it. PHPStan level
 | Eurosite | No set limits | Scheduled runs keep to Sphinx's: at most 10 price searches a minute, other requests at most once a second (`Api\RequestPacer`) |
 | Sphinx | 10 requests a minute for non-static data; calendar prices from the cache | Nothing yet: whether the limit covers searches and the cache, and which request shape the cache wants, are asked back |
 
-Open: a weekly refresh of Novoton's image lists (they suggest it; images
-are downloaded once today), and the five questions in the plan's "Replies
-to send".
+Open: the five questions in the plan's "Replies to send".
 
 Later the same day, the limits became settings, so a supplier's new numbers
 change a setting, not code, and the weekly check stopped asking about dates
@@ -1354,6 +1352,38 @@ The filter costs nothing when every hotel has prices; out of season it
 leaves out most dates. In a MariaDB run, a resort with no published prices
 needed no call and a resort priced for next summer skipped its two
 November dates: 13 calls instead of 21.
+
+**Hotel photos, refreshed weekly (29 Oct 2026).** Novoton suggested
+refreshing image lists about weekly; photos were downloaded once, when a
+product was made, at most 10. New job `refresh_images`, nightly at 02:15: a
+seventh of the hotels with a product, least recently checked first, so each
+hotel about once a week, done before 03:00. `Services\HotelImageSync`
+decides what changes, and product creation and `backfill_images` attach
+through it too:
+
+- No answer, or an empty list: nothing changes. All of Novoton's photos
+  count, without a limit.
+- A photo seen before (its path, in `novoton_hotel_images`) is not
+  downloaded again; one an admin deleted stays deleted.
+- A new photo is downloaded through the request gate and compared with the
+  product's images: the same file (SHA-1) or the same picture saved again
+  at another size or quality (a 64-bit difference hash, Travel Core
+  `Helpers\ImageFingerprint`) is already there. Re-saved copies differ by
+  at most 4 of 64 bits, different photos by 16 or more; the threshold is 6.
+- Only when new photos were added are the Novoton photos it no longer lists
+  removed; new ones go in first, so a product never has fewer.
+- The photos follow Novoton's order at every refresh, and Novoton's first
+  photo is the main one (chosen 29 Oct 2026).
+- Photos added by hand: a product image is Novoton's when a row points at
+  it (attached by the sync, or, on an older product's first refresh, the
+  same picture as a listed photo); every other image counts as added by
+  hand. The setting "Keep photos added by hand" (on) never removes, moves
+  or demotes them; off, they are treated like photos Novoton no longer
+  lists.
+
+The first pass downloads every listed photo of an older product once, to
+compare; after that a week without changes costs one `hotel_images` call
+per hotel and no download.
 
 ### 16.8 Next
 

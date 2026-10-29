@@ -9,15 +9,15 @@ use Tygh\Addons\TravelCore\Contracts\ProductImageStoreInterface;
 /** A product's images in memory, in their order. */
 final class FakeProductImages implements ProductImageStoreInterface
 {
-    /** @var array<int, array{bytes: string, main: bool, readable: bool}> */
+    /** @var array<int, array{bytes: string, main: bool, position: int, readable: bool}> */
     public array $pairs = [];
 
     private int $next = 100;
 
-    public function has(string $bytes, bool $main = false, bool $readable = true): int
+    public function has(string $bytes, bool $main = false, bool $readable = true, ?int $position = null): int
     {
         $id = ++$this->next;
-        $this->pairs[$id] = ['bytes' => $bytes, 'main' => $main, 'readable' => $readable];
+        $this->pairs[$id] = ['bytes' => $bytes, 'main' => $main, 'position' => $position ?? count($this->pairs), 'readable' => $readable];
 
         return $id;
     }
@@ -44,6 +44,16 @@ final class FakeProductImages implements ProductImageStoreInterface
         return 0;
     }
 
+    /**
+     * The bytes in gallery order: the main image, then by position and pair id.
+     *
+     * @return list<string>
+     */
+    public function gallery(): array
+    {
+        return array_map(fn (array $image): string => $this->pairs[$image['pair_id']]['bytes'], $this->images(0));
+    }
+
     public function adminRemoves(int $pairId): void
     {
         unset($this->pairs[$pairId]);
@@ -53,9 +63,9 @@ final class FakeProductImages implements ProductImageStoreInterface
     {
         $out = [];
         foreach ($this->pairs as $id => $pair) {
-            $out[] = ['pair_id' => $id, 'main' => $pair['main'], 'file' => $pair['readable'] ? 'pair-' . $id : ''];
+            $out[] = ['pair_id' => $id, 'main' => $pair['main'], 'position' => $pair['position'], 'file' => $pair['readable'] ? 'pair-' . $id : ''];
         }
-        usort($out, static fn (array $a, array $b): int => [$b['main'], $a['pair_id']] <=> [$a['main'], $b['pair_id']]);
+        usort($out, static fn (array $a, array $b): int => [$b['main'], $a['position'], $a['pair_id']] <=> [$a['main'], $b['position'], $b['pair_id']]);
 
         return $out;
     }
@@ -84,6 +94,13 @@ final class FakeProductImages implements ProductImageStoreInterface
 
     public function makeMain(int $productId, int $pairId): void
     {
-        $this->pairs[$pairId]['main'] = true;
+        foreach (array_keys($this->pairs) as $id) {
+            $this->pairs[$id]['main'] = $id === $pairId;
+        }
+    }
+
+    public function setPosition(int $productId, int $pairId, int $position): void
+    {
+        $this->pairs[$pairId]['position'] = $position;
     }
 }

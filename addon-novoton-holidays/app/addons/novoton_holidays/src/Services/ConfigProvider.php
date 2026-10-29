@@ -40,8 +40,6 @@ class ConfigProvider extends AbstractConfigProvider
     public const int MIN_EXECUTION_TIME = 60;
     public const int MAX_EXECUTION_TIME = 3600;
 
-    public const int MAX_IMAGES_PER_HOTEL = 10;
-
     // Stale threshold for incremental sync (hours)
     public const int STALE_HOURS = 24;
 
@@ -496,6 +494,16 @@ class ConfigProvider extends AbstractConfigProvider
     public static function getApiMaxPerSecond(): int
     {
         return max(1, min(50, TypeCoerce::toInt(self::settings()['api_max_per_second'] ?? 5) ?: 5));
+    }
+
+    /**
+     * Hotel photos (refresh_images): photos added by hand in the admin panel
+     * are never removed, moved or replaced as the main photo. On unless the
+     * store unticked it.
+     */
+    public static function keepManualImages(): bool
+    {
+        return TypeCoerce::toString(self::settings()['images_keep_manual'] ?? 'Y') !== 'N';
     }
 
     /**

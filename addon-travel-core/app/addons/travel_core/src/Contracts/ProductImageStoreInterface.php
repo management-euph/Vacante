@@ -12,9 +12,9 @@ namespace Tygh\Addons\TravelCore\Contracts;
 interface ProductImageStoreInterface
 {
     /**
-     * The product's images, the main one first.
+     * The product's images, the main one first, then in gallery order.
      *
-     * @return list<array{pair_id: int, main: bool, file: string}> file: its full path, '' when it cannot be read here
+     * @return list<array{pair_id: int, main: bool, position: int, file: string}> file: its full path, '' when it cannot be read here
      */
     public function images(int $productId): array;
 
@@ -27,6 +27,9 @@ interface ProductImageStoreInterface
     /** Removes one of the product's images; false when it is not the product's. */
     public function remove(int $productId, int $pairId): bool;
 
-    /** Makes one of the product's images its main image. */
+    /** Makes one of the product's images its main image; the main image before becomes an additional one. */
     public function makeMain(int $productId, int $pairId): void;
+
+    /** Moves one of the product's images to a place in the gallery. */
+    public function setPosition(int $productId, int $pairId, int $position): void;
 }

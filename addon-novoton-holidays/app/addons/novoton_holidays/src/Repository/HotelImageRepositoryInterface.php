@@ -9,7 +9,6 @@ namespace Tygh\Addons\NovotonHolidays\Repository;
  * (?:novoton_hotel_images), and which hotels' photos are due a refresh.
  *
  * @phpstan-type PhotoRow array{path_key: string, path: string, product_id: int, pair_id: int, origin: string, sha1: string, dhash: string, listed: bool}
- * @phpstan-type PhotoSave array{path_key: string, path: string, product_id: int, pair_id: int, origin: string, sha1: string, dhash: string}
  */
 interface HotelImageRepositoryInterface
 {
@@ -21,9 +20,10 @@ interface HotelImageRepositoryInterface
     public function forHotel(string $hotelId): array;
 
     /**
-     * Records photos (path_key is unique per hotel): first seen now when new.
+     * Records photos as listed now (path_key is unique per hotel): first seen
+     * now when new.
      *
-     * @param list<PhotoSave> $rows
+     * @param list<PhotoRow> $rows
      */
     public function save(string $hotelId, array $rows, string $now): void;
 

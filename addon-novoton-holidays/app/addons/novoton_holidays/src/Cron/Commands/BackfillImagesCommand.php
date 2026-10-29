@@ -164,8 +164,8 @@ class BackfillImagesCommand extends AbstractCronCommand
     }
 
     /**
-     * A hotel's photo paths from the API, as HotelImageSync reads them (the
-     * first 10, in Novoton's order).
+     * A hotel's photo paths from the API, as HotelImageSync reads them (all
+     * of them, in Novoton's order).
      *
      * @return list<string>
      */

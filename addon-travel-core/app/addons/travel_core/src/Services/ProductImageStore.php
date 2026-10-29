@@ -46,7 +46,12 @@ final class ProductImageStore implements ProductImageStoreInterface
                 }
                 $detailed = is_array($pair['detailed'] ?? null) ? $pair['detailed'] : [];
                 $file = TypeCoerce::toString($detailed['absolute_path'] ?? '');
-                $images[] = ['pair_id' => $pairId, 'main' => $type === 'M', 'file' => $file !== '' && is_file($file) ? $file : ''];
+                $images[] = [
+                    'pair_id' => $pairId,
+                    'main' => $type === 'M',
+                    'position' => TypeCoerce::toInt($pair['position'] ?? 0),
+                    'file' => $file !== '' && is_file($file) ? $file : '',
+                ];
             }
         }
 
@@ -92,8 +97,24 @@ final class ProductImageStore implements ProductImageStoreInterface
     #[\Override]
     public function makeMain(int $productId, int $pairId): void
     {
+        if (!$this->owns($productId, $pairId)) {
+            return;
+        }
         db_query(
-            "UPDATE ?:images_links SET type = 'M' WHERE pair_id = ?i AND object_id = ?i AND object_type = 'product'",
+            "UPDATE ?:images_links SET type = IF(pair_id = ?i, 'M', 'A')
+             WHERE object_id = ?i AND object_type = 'product' AND (type = 'M' OR pair_id = ?i)",
+            $pairId,
+            $productId,
+            $pairId,
+        );
+    }
+
+    #[\Override]
+    public function setPosition(int $productId, int $pairId, int $position): void
+    {
+        db_query(
+            "UPDATE ?:images_links SET position = ?i WHERE pair_id = ?i AND object_id = ?i AND object_type = 'product'",
+            $position,
             $pairId,
             $productId,
         );

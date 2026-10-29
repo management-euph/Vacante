@@ -13,8 +13,10 @@ use Tygh\Addons\NovotonHolidays\Tests\Support\PhotoTable;
 /**
  * Novoton suggested refreshing hotel photos weekly (28 Oct 2026). The
  * refresh must never add a photo the product already has, and never leave
- * the product with less: nothing new, nothing changes; only photos it added
- * itself are replaced, and only by new ones that arrived.
+ * the product with less: nothing new, nothing added or removed; Novoton's
+ * photos are replaced only by new ones that arrived. They follow Novoton's
+ * order, its first photo the main one. Photos added by hand are kept where
+ * they are while "Keep photos added by hand" is on (the default).
  */
 #[RequiresPhpExtension('gd')]
 final class HotelImageSyncTest extends TestCase
@@ -75,25 +77,21 @@ final class HotelImageSyncTest extends TestCase
         }
     }
 
-    private function sync(): HotelImageSync
-    {
-        return new HotelImageSync($this->table, $this->product, function (string $url): ?string {
-            $this->downloads[] = $url;
-
-            return $this->server[$url] ?? null;
-        });
-    }
-
     /**
      * @param list<string>|null $listed
      *
-     * @return array{outcome: string, listed: int, known: int, added: int, same: int, failed: int, removed: int}
+     * @return array{outcome: string, listed: int, known: int, added: int, same: int, failed: int, removed: int, moved: int}
      */
-    private function refresh(?array $listed): array
+    private function refresh(?array $listed, bool $keepByHand = true): array
     {
         $this->downloads = [];
+        $sync = new HotelImageSync($this->table, $this->product, function (string $url): ?string {
+            $this->downloads[] = $url;
 
-        return $this->sync()->sync('476', self::PRODUCT, $listed, self::NOW);
+            return $this->server[$url] ?? null;
+        }, $keepByHand);
+
+        return $sync->sync('476', self::PRODUCT, $listed, self::NOW);
     }
 
     /** @return array<string, string> path => origin of what the table knows */
@@ -119,17 +117,21 @@ final class HotelImageSyncTest extends TestCase
         self::assertSame([], $this->table->forHotel('476'));
     }
 
-    /** A new product: Novoton's photos in its order, the first one the main image. */
-    public function testANewProductGetsNovotonsPhotosTheFirstAsMain(): void
+    /** A new product: all of Novoton's photos, however many, in its order, the first the main photo. */
+    public function testANewProductGetsAllOfNovotonsPhotosInItsOrder(): void
     {
-        $this->serve('/h/1.jpg=1', '/h/2.jpg=2', '/h/3.jpg=3');
+        $paths = [];
+        foreach (range(1, 14) as $n) {
+            $this->serve("/h/{$n}.jpg={$n}");
+            $paths[] = "/h/{$n}.jpg";
+        }
 
-        $result = $this->refresh(['/h/1.jpg', '/h/2.jpg', '/h/3.jpg']);
+        $result = $this->refresh($paths);
 
-        self::assertSame(['outcome' => 'updated', 'listed' => 3, 'known' => 0, 'added' => 3, 'same' => 0, 'failed' => 0, 'removed' => 0], $result);
-        self::assertSame([self::photo(1), self::photo(2), self::photo(3)], array_column($this->product->pairs, 'bytes'));
+        self::assertSame(['outcome' => 'updated', 'listed' => 14, 'known' => 0, 'added' => 14, 'same' => 0, 'failed' => 0, 'removed' => 0, 'moved' => 0], $result);
+        self::assertSame(array_map(self::photo(...), range(1, 14)), $this->product->gallery(), 'no limit of 10');
         self::assertSame($this->product->pairOf(self::photo(1)), $this->product->main());
-        self::assertSame(['/h/1.jpg' => 'added', '/h/2.jpg' => 'added', '/h/3.jpg' => 'added'], $this->origins());
+        self::assertSame(['novoton'], array_values(array_unique($this->origins())));
     }
 
     /** The weekly case: the same list, one API call and not one download. */
@@ -140,15 +142,32 @@ final class HotelImageSyncTest extends TestCase
 
         $result = $this->refresh(['/h/1.jpg', '/h/2.jpg']);
 
-        self::assertSame(['unchanged', 2, 0], [$result['outcome'], $result['known'], $result['added']]);
+        self::assertSame(['unchanged', 2, 0, 0], [$result['outcome'], $result['known'], $result['added'], $result['moved']]);
         self::assertSame([], $this->downloads);
         self::assertCount(2, $this->product->pairs);
     }
 
+    /** The hotel re-sorts its photos and puts a new cover first: the product follows. */
+    public function testThePhotosFollowNovotonsOrderAndItsFirstIsTheMainPhoto(): void
+    {
+        $this->serve('/h/1.jpg=1', '/h/2.jpg=2', '/h/3.jpg=3', '/h/new-cover.jpg=8');
+        $this->refresh(['/h/1.jpg', '/h/2.jpg', '/h/3.jpg']);
+
+        $result = $this->refresh(['/h/3.jpg', '/h/1.jpg', '/h/2.jpg']);
+        self::assertSame(['updated', 0, 0], [$result['outcome'], $result['added'], $result['removed']]);
+        self::assertSame([], $this->downloads, 'a new order is no reason to download');
+        self::assertSame([self::photo(3), self::photo(1), self::photo(2)], $this->product->gallery());
+        self::assertSame($this->product->pairOf(self::photo(3)), $this->product->main());
+
+        $this->refresh(['/h/new-cover.jpg', '/h/3.jpg', '/h/1.jpg', '/h/2.jpg']);
+        self::assertSame([self::photo(8), self::photo(3), self::photo(1), self::photo(2)], $this->product->gallery());
+        self::assertSame($this->product->pairOf(self::photo(8)), $this->product->main());
+    }
+
     /**
      * A product made before the refresh existed: its images are compared by
-     * content. The same file, or the same picture saved again, is not added;
-     * a new photo is.
+     * content. The same file, or the same picture saved again, is not added
+     * and counts as Novoton's; a new photo is added.
      */
     public function testAPhotoTheProductAlreadyHasIsNeverAddedTwice(): void
     {
@@ -162,7 +181,7 @@ final class HotelImageSyncTest extends TestCase
 
         self::assertSame([1, 2, 0], [$result['added'], $result['same'], $result['failed']]);
         self::assertCount(3, $this->product->pairs);
-        self::assertSame(['/h/1.jpg' => 'kept', '/h/2-new-name.jpg' => 'kept', '/h/3.jpg' => 'added'], $this->origins());
+        self::assertSame(['/h/1.jpg' => 'novoton', '/h/2-new-name.jpg' => 'novoton', '/h/3.jpg' => 'novoton'], $this->origins());
     }
 
     public function testTheSamePictureListedTwiceIsAddedOnce(): void
@@ -176,7 +195,7 @@ final class HotelImageSyncTest extends TestCase
         self::assertCount(1, $this->product->pairs);
     }
 
-    /** Novoton drops a photo but sends nothing new: the product keeps it. */
+    /** Novoton drops a photo but sends nothing new: the product keeps it, after the listed ones. */
     public function testWithoutNewPhotosNothingIsRemoved(): void
     {
         $this->serve('/h/1.jpg=1', '/h/2.jpg=2', '/h/3.jpg=3');
@@ -184,12 +203,12 @@ final class HotelImageSyncTest extends TestCase
 
         $result = $this->refresh(['/h/1.jpg', '/h/3.jpg']);
 
-        self::assertSame(['unchanged', 0], [$result['outcome'], $result['removed']]);
-        self::assertCount(3, $this->product->pairs);
+        self::assertSame([0, 0], [$result['added'], $result['removed']]);
+        self::assertSame([self::photo(1), self::photo(3), self::photo(2)], $this->product->gallery());
         self::assertFalse($this->table->forHotel('476')[sha1('/h/2.jpg')]['listed']);
     }
 
-    /** New photos came: the ones this refresh added and Novoton no longer lists make way. */
+    /** New photos came: the ones Novoton no longer lists make way. */
     public function testNewPhotosReplaceTheOnesNovotonDropped(): void
     {
         $this->serve('/h/1.jpg=1', '/h/2.jpg=2', '/h/3.jpg=3', '/h/4.jpg=4');
@@ -198,13 +217,16 @@ final class HotelImageSyncTest extends TestCase
         $result = $this->refresh(['/h/1.jpg', '/h/3.jpg', '/h/4.jpg']);
 
         self::assertSame(['updated', 1, 1], [$result['outcome'], $result['added'], $result['removed']]);
-        self::assertSame([self::photo(1), self::photo(3), self::photo(4)], array_column($this->product->pairs, 'bytes'));
-        self::assertSame(['/h/1.jpg' => 'added', '/h/3.jpg' => 'added', '/h/4.jpg' => 'added'], $this->origins(), 'a dropped photo listed again later is new again');
+        self::assertSame([self::photo(1), self::photo(3), self::photo(4)], $this->product->gallery());
+        self::assertSame(['/h/1.jpg' => 'novoton', '/h/3.jpg' => 'novoton', '/h/4.jpg' => 'novoton'], $this->origins(), 'a dropped photo listed again later is new again');
         self::assertSame([(string) HotelImageSync::url('/h/4.jpg')], $this->downloads, 'only the new photo was downloaded');
     }
 
-    /** Images on the product before (made before the refresh, or uploaded by hand) are never removed. */
-    public function testImagesTheProductHadBeforeAreNeverRemoved(): void
+    /**
+     * A product made before the refresh: its photos that are Novoton's are
+     * replaced like any Novoton photo; one added by hand stays where it is.
+     */
+    public function testAPhotoAddedByHandStaysWhereItIs(): void
     {
         $this->product->has(self::photo(1), main: true);
         $this->product->has(self::photo(9)); // uploaded by hand: Novoton never listed it
@@ -213,8 +235,60 @@ final class HotelImageSyncTest extends TestCase
 
         $result = $this->refresh(['/h/5.jpg']);
 
+        self::assertSame([1, 1], [$result['added'], $result['removed']]);
+        self::assertSame([self::photo(5), self::photo(9)], $this->product->gallery());
+        self::assertSame($this->product->pairOf(self::photo(5)), $this->product->main());
+    }
+
+    /** "Keep photos added by hand" off: they are treated like photos Novoton no longer lists. */
+    public function testWithTheSettingOffPhotosAddedByHandGoWhenNewPhotosCome(): void
+    {
+        $this->serve('/h/1.jpg=1', '/h/2.jpg=2', '/h/3.jpg=3');
+        $this->refresh(['/h/1.jpg', '/h/2.jpg']);
+        $this->product->has(self::photo(9), position: 0); // uploaded by hand, put first
+
+        $result = $this->refresh(['/h/1.jpg', '/h/2.jpg'], keepByHand: false);
+        self::assertSame([0, 0], [$result['added'], $result['removed']], 'nothing new: nothing removed');
+        self::assertSame([self::photo(1), self::photo(2), self::photo(9)], $this->product->gallery(), 'moved after Novoton\'s photos');
+
+        $result = $this->refresh(['/h/1.jpg', '/h/2.jpg', '/h/3.jpg'], keepByHand: false);
+        self::assertSame([1, 1], [$result['added'], $result['removed']]);
+        self::assertSame([self::photo(1), self::photo(2), self::photo(3)], $this->product->gallery());
+    }
+
+    /** A main photo chosen by hand stays the main photo while the setting is on. */
+    public function testAMainPhotoAddedByHandStaysMain(): void
+    {
+        $this->serve('/h/1.jpg=1', '/h/2.jpg=2');
+        $this->refresh(['/h/1.jpg', '/h/2.jpg']);
+        $mine = $this->product->has(self::photo(9));
+        $this->product->makeMain(self::PRODUCT, $mine);
+
+        $this->refresh(['/h/2.jpg', '/h/1.jpg']);
+        self::assertSame($mine, $this->product->main());
+        self::assertSame([self::photo(9), self::photo(2), self::photo(1)], $this->product->gallery(), 'Novoton\'s photos still follow its order');
+
+        $this->refresh(['/h/2.jpg', '/h/1.jpg'], keepByHand: false);
+        self::assertSame($this->product->pairOf(self::photo(2)), $this->product->main());
+    }
+
+    /**
+     * Novoton lists the same picture as a photo added by hand: not added
+     * twice, and the photo stays the admin's when Novoton drops it.
+     */
+    public function testNovotonsCopyOfAPhotoAddedByHandStaysTheAdmins(): void
+    {
+        $this->serve('/h/1.jpg=1', '/h/5.jpg=5', '/h/6.jpg=6');
+        $this->refresh(['/h/1.jpg']);
+        $this->product->has(self::photo(5));
+
+        $result = $this->refresh(['/h/1.jpg', '/h/5.jpg']);
+        self::assertSame([0, 1], [$result['added'], $result['same']]);
+        self::assertSame('manual', $this->origins()['/h/5.jpg']);
+
+        $result = $this->refresh(['/h/1.jpg', '/h/6.jpg']);
         self::assertSame([1, 0], [$result['added'], $result['removed']]);
-        self::assertSame([self::photo(1), self::photo(9), self::photo(5)], array_column($this->product->pairs, 'bytes'));
+        self::assertContains(self::photo(5), $this->product->gallery());
     }
 
     /** An image an admin deleted is not brought back while Novoton still lists it. */
@@ -228,7 +302,7 @@ final class HotelImageSyncTest extends TestCase
 
         self::assertSame(['unchanged', 0], [$result['outcome'], $result['added']]);
         self::assertSame([], $this->downloads);
-        self::assertSame([self::photo(1)], array_column($this->product->pairs, 'bytes'));
+        self::assertSame([self::photo(1)], $this->product->gallery());
     }
 
     public function testARemovedMainImageIsReplacedByTheFirstListedPhoto(): void
@@ -238,7 +312,7 @@ final class HotelImageSyncTest extends TestCase
 
         $this->refresh(['/h/3.jpg', '/h/2.jpg']);
 
-        self::assertSame([self::photo(2), self::photo(3)], array_column($this->product->pairs, 'bytes'));
+        self::assertSame([self::photo(3), self::photo(2)], $this->product->gallery());
         self::assertSame($this->product->pairOf(self::photo(3)), $this->product->main());
     }
 
@@ -251,7 +325,7 @@ final class HotelImageSyncTest extends TestCase
         $result = $this->refresh(['/h/2-renamed.jpg', '/h/7.jpg']);
 
         self::assertSame([1, 1, 1], [$result['added'], $result['same'], $result['removed']]);
-        self::assertSame([self::photo(2), self::photo(7)], array_column($this->product->pairs, 'bytes'));
+        self::assertSame([self::photo(2), self::photo(7)], $this->product->gallery());
     }
 
     /** A photo that does not come is tried again next time, and replaces nothing meanwhile. */
@@ -262,7 +336,7 @@ final class HotelImageSyncTest extends TestCase
         $this->server[(string) HotelImageSync::url('/h/3.jpg')] = '<html>Service Unavailable</html>';
 
         $result = $this->refresh(['/h/1.jpg', '/h/3.jpg']);
-        self::assertSame(['unchanged', 0, 1, 0], [$result['outcome'], $result['added'], $result['failed'], $result['removed']]);
+        self::assertSame([0, 1, 0], [$result['added'], $result['failed'], $result['removed']]);
         self::assertCount(2, $this->product->pairs);
 
         $this->serve('/h/3.jpg=3');
@@ -283,7 +357,7 @@ final class HotelImageSyncTest extends TestCase
         self::assertCount(1, $this->product->pairs);
     }
 
-    public function testTheAnswerIsReadAsNovotonsFirstTenPhotos(): void
+    public function testTheAnswerIsReadAsAllOfNovotonsPhotosInOrder(): void
     {
         $urls = '';
         foreach (range(1, 12) as $n) {
@@ -291,7 +365,7 @@ final class HotelImageSyncTest extends TestCase
         }
         $paths = HotelImageSync::paths(new \SimpleXMLElement("<hotel_images><url>/h/1.jpg</url><url></url>{$urls}</hotel_images>"));
 
-        self::assertSame(['/h/1.jpg', '/h/2.jpg', '/h/3.jpg', '/h/4.jpg', '/h/5.jpg', '/h/6.jpg', '/h/7.jpg', '/h/8.jpg', '/h/9.jpg', '/h/10.jpg'], $paths, 'blanks and repeats dropped, at most 10');
+        self::assertSame(array_map(static fn (int $n): string => "/h/{$n}.jpg", range(1, 12)), $paths, 'blanks and repeats dropped, no limit');
         self::assertSame([], HotelImageSync::paths(new \SimpleXMLElement('<hotel_images/>')));
         self::assertNull(HotelImageSync::paths(new \SimpleXMLElement('<error><err>Hotel not found</err></error>')));
         self::assertNull(HotelImageSync::paths(false));

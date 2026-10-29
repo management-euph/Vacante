@@ -1824,6 +1824,18 @@ msgctxt "SettingsTooltips::novoton_holidays::availability_check_skip_unpriced"
 msgid "A date none of a resort's hotels has published prices for (priceinfo) is not asked: no offer is possible there, so it counts as checked without one. A hotel whose prices were never read, or whose latest check found an offer outside them, keeps every date asked. Default: on"
 msgstr "A date none of a resort's hotels has published prices for (priceinfo) is not asked: no offer is possible there, so it counts as checked without one. A hotel whose prices were never read, or whose latest check found an offer outside them, keeps every date asked. Default: on"
 
+msgctxt "SettingsOptions::novoton_holidays::images_header"
+msgid "Hotel photos (refresh_images)"
+msgstr "Hotel photos (refresh_images)"
+
+msgctxt "SettingsOptions::novoton_holidays::images_keep_manual"
+msgid "Keep photos added by hand"
+msgstr "Keep photos added by hand"
+
+msgctxt "SettingsTooltips::novoton_holidays::images_keep_manual"
+msgid "Photos you add to a hotel product in the admin panel are never removed, moved or replaced as the main photo. Untick to let the refresh treat them like photos Novoton no longer lists: when Novoton sends new photos, they are removed. Products made before the refresh existed: their photos that match Novoton's count as Novoton's, the others as yours. Default: on"
+msgstr "Photos you add to a hotel product in the admin panel are never removed, moved or replaced as the main photo. Untick to let the refresh treat them like photos Novoton no longer lists: when Novoton sends new photos, they are removed. Products made before the refresh existed: their photos that match Novoton's count as Novoton's, the others as yours. Default: on"
+
 msgctxt "Languages::novoton_holidays.api_price"
 msgid "API Price"
 msgstr "API Price"

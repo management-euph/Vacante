@@ -18,8 +18,9 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  *
  * Each night at 02:15 it takes a seventh of the hotels with a product, least
  * recently checked first: one hotel_images call each, and a download only
- * for a photo not seen before. HotelImageSync decides what changes; when
- * nothing is new, nothing does.
+ * for a photo not seen before. HotelImageSync decides what changes: new
+ * photos are added, in Novoton's order, and replace the ones Novoton
+ * dropped; when nothing is new, nothing is added or removed.
  *
  * No hotel is started after MAX_MINUTES, so the run ends before 03:00,
  * Novoton's busiest hour. A hotel Novoton does not answer for goes first
@@ -104,7 +105,7 @@ class RefreshImagesCommand extends AbstractCronCommand
 
         $stats = [
             'hotels' => 0, 'updated' => 0, 'unchanged' => 0, 'refused' => 0, 'no_answer' => 0, 'empty' => 0, 'unreadable' => 0,
-            'added' => 0, 'same' => 0, 'removed' => 0, 'failed' => 0, 'left' => 0, 'stopped' => '',
+            'added' => 0, 'same' => 0, 'removed' => 0, 'moved' => 0, 'failed' => 0, 'left' => 0, 'stopped' => '',
         ];
         $silent = 0;
         foreach ($hotels as $index => $hotel) {
@@ -144,7 +145,7 @@ class RefreshImagesCommand extends AbstractCronCommand
             }
 
             $result = $sync->sync($hotel['hotel_id'], $hotel['product_id'], HotelImageSync::paths($reply), $now);
-            foreach (['added', 'same', 'removed', 'failed'] as $key) {
+            foreach (['added', 'same', 'removed', 'moved', 'failed'] as $key) {
                 $stats[$key] += $result[$key];
             }
             $stats[match ($result['outcome']) {
@@ -189,7 +190,7 @@ class RefreshImagesCommand extends AbstractCronCommand
     /**
      * One hotel's line in the log.
      *
-     * @param array{outcome: string, listed: int, known: int, added: int, same: int, failed: int, removed: int} $result
+     * @param array{outcome: string, listed: int, known: int, added: int, same: int, failed: int, removed: int, moved: int} $result
      */
     public static function describe(array $result): string
     {
@@ -200,11 +201,12 @@ class RefreshImagesCommand extends AbstractCronCommand
             HotelImageSync::NO_ANSWER => 'no answer; photos kept as they are.',
             HotelImageSync::UNREADABLE => 'an image of the product cannot be read here, so no photo was added.',
             HotelImageSync::UPDATED => sprintf(
-                '%d listed: %d added, %d replaced, %d already there%s.',
+                '%d listed: %d added, %d removed, %d already there%s%s.',
                 $result['listed'],
                 $result['added'],
                 $result['removed'],
                 $result['known'] + $result['same'],
+                $result['moved'] > 0 ? "; put in Novoton's order" : '',
                 $failed,
             ),
             default => sprintf('%d listed, nothing new%s.', $result['listed'], $failed),

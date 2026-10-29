@@ -192,6 +192,18 @@ msgctxt "SettingsTooltips::novoton_holidays::availability_check_skip_unpriced"
 msgid "A date none of a resort's hotels has published prices for (priceinfo) is not asked: no offer is possible there, so it counts as checked without one. A hotel whose prices were never read, or whose latest check found an offer outside them, keeps every date asked. Default: on"
 msgstr "O dată pentru care niciun hotel al stațiunii nu are prețuri publicate (priceinfo) nu este verificată: acolo nu poate exista nicio ofertă, așa că se consideră verificată, fără ofertă. Un hotel ale cărui prețuri nu au fost citite niciodată, sau la care ultima verificare a găsit o ofertă în afara lor, păstrează toate datele verificate. Implicit: activat"
 
+msgctxt "SettingsOptions::novoton_holidays::images_header"
+msgid "Hotel photos (refresh_images)"
+msgstr "Fotografiile hotelurilor (refresh_images)"
+
+msgctxt "SettingsOptions::novoton_holidays::images_keep_manual"
+msgid "Keep photos added by hand"
+msgstr "Păstrează fotografiile adăugate manual"
+
+msgctxt "SettingsTooltips::novoton_holidays::images_keep_manual"
+msgid "Photos you add to a hotel product in the admin panel are never removed, moved or replaced as the main photo. Untick to let the refresh treat them like photos Novoton no longer lists: when Novoton sends new photos, they are removed. Products made before the refresh existed: their photos that match Novoton's count as Novoton's, the others as yours. Default: on"
+msgstr "Fotografiile pe care le adăugați la un produs-hotel din panoul de administrare nu sunt niciodată șterse, mutate sau înlocuite ca fotografie principală. Debifați pentru ca actualizarea să le trateze ca pe fotografiile pe care Novoton nu le mai listează: când Novoton trimite fotografii noi, acestea sunt șterse. Produsele create înainte de actualizare: fotografiile care se potrivesc cu cele Novoton sunt considerate Novoton, celelalte ale dumneavoastră. Implicit: activat"
+
 msgctxt "SettingsOptions::novoton_holidays::api_url"
 msgid "API URL"
 msgstr "URL API"

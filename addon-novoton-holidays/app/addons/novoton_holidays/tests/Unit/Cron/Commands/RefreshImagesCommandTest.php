@@ -93,7 +93,7 @@ final class RefreshImagesCommandTest extends TestCase
                 }
 
                 return null;
-            }),
+            }, true),
             $this->table,
             fn (): float => $this->clock,
         );
@@ -128,7 +128,7 @@ final class RefreshImagesCommandTest extends TestCase
 
         self::assertSame([1, 2, 1], [$result['stats']['updated'], $result['stats']['added'], $result['stats']['failed']]);
         self::assertCount(2, $this->product->pairs);
-        self::assertContains('  NVT-101 Hotel 1: 3 listed: 2 added, 0 replaced, 0 already there; 1 did not download, tried again next time.', $this->lines);
+        self::assertContains('  NVT-101 Hotel 1: 3 listed: 2 added, 0 removed, 0 already there; 1 did not download, tried again next time.', $this->lines);
 
         $this->lines = [];
         $this->runJob(static fn (): \SimpleXMLElement => new \SimpleXMLElement('<hotel_images><url>/p/1.jpg</url><url>/p/2.jpg</url></hotel_images>'), ['hotel_id' => '101']);
@@ -174,10 +174,11 @@ final class RefreshImagesCommandTest extends TestCase
 
     public function testEachOutcomeReadsAsWords(): void
     {
-        $base = ['listed' => 10, 'known' => 8, 'added' => 0, 'same' => 0, 'failed' => 0, 'removed' => 0];
+        $base = ['listed' => 10, 'known' => 8, 'added' => 0, 'same' => 0, 'failed' => 0, 'removed' => 0, 'moved' => 0];
 
         self::assertSame('10 listed, nothing new.', RefreshImagesCommand::describe(['outcome' => 'unchanged'] + $base));
-        self::assertSame('10 listed: 2 added, 1 replaced, 9 already there.', RefreshImagesCommand::describe(['outcome' => 'updated', 'added' => 2, 'removed' => 1, 'same' => 1] + $base));
+        self::assertSame('10 listed: 2 added, 1 removed, 9 already there.', RefreshImagesCommand::describe(['outcome' => 'updated', 'added' => 2, 'removed' => 1, 'same' => 1] + $base));
+        self::assertSame("10 listed: 0 added, 0 removed, 8 already there; put in Novoton's order.", RefreshImagesCommand::describe(['outcome' => 'updated', 'moved' => 3] + $base));
         self::assertSame('an image of the product cannot be read here, so no photo was added.', RefreshImagesCommand::describe(['outcome' => 'unreadable'] + $base));
     }
 }

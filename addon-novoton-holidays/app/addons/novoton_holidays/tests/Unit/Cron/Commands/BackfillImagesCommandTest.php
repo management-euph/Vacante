@@ -13,8 +13,8 @@ use Tygh\Addons\NovotonHolidays\Tests\Support\DbStub;
 /**
  * Behavioural coverage for the backfill_images recovery cron: the candidate
  * selection (linked products with zero images_links rows), the photo paths
- * handed to HotelImageSync as AddProductsCommand hands them (Novoton's order,
- * at most 10; the URLs are HotelImageSyncTest's), the attach invocation, the
+ * handed to HotelImageSync as AddProductsCommand hands them (all of them, in
+ * Novoton's order; the URLs are HotelImageSyncTest's), the attach invocation, the
  * pacing between products, force=1 widening to every linked product, the
  * single-hotel path, the read-only status view, and the empty-backlog no-op.
  *
@@ -147,7 +147,8 @@ final class BackfillImagesCommandTest extends TestCase
         self::assertSame(2, $result['stats']['attached'] ?? null);
     }
 
-    public function testCapsImagesAtTen(): void
+    /** No limit: every photo Novoton lists is handed over. */
+    public function testHandsOverEveryPhoto(): void
     {
         $manyUrls = '';
         for ($i = 0; $i < 15; $i++) {
@@ -162,7 +163,7 @@ final class BackfillImagesCommandTest extends TestCase
         $cmd->execute();
 
         self::assertCount(1, $this->attachCalls);
-        self::assertCount(10, $this->attachCalls[0][2]);
+        self::assertCount(15, $this->attachCalls[0][2]);
     }
 
     public function testNoImageUrlsIsCountedAndSkipsAttach(): void

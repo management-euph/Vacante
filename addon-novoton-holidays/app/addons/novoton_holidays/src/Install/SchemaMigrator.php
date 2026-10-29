@@ -44,7 +44,7 @@ final class SchemaMigrator
                 `path` varchar(500) NOT NULL DEFAULT '' COMMENT 'As hotel_images lists it',
                 `product_id` int(11) unsigned NOT NULL DEFAULT 0 COMMENT 'The product it was matched for',
                 `pair_id` int(11) unsigned NOT NULL DEFAULT 0 COMMENT 'The product image it is (images_links)',
-                `origin` varchar(8) NOT NULL DEFAULT 'added' COMMENT 'added: attached from Novoton, may be replaced; kept: on the product before, never removed',
+                `origin` varchar(8) NOT NULL DEFAULT 'novoton' COMMENT 'novoton: a Novoton photo the refresh manages; manual: the same picture as an image added by hand',
                 `sha1` char(40) NOT NULL DEFAULT '' COMMENT 'SHA-1 of the downloaded file',
                 `dhash` char(16) NOT NULL DEFAULT '' COMMENT 'Difference hash: the same picture saved again',
                 `listed` char(1) NOT NULL DEFAULT 'Y' COMMENT 'In the latest hotel_images answer',
