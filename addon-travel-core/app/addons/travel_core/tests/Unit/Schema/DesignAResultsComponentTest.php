@@ -157,6 +157,11 @@ final class DesignAResultsComponentTest extends TestCase
         foreach (['filterRooms', 'showRooms', 'sortRooms', 'choose', 'data-travel-open', 'data-travel-picked', 'data-travel-live'] as $piece) {
             self::assertStringContainsString($piece, $js, $piece);
         }
+
+        // The live container's "searching" line is hidden at the end although
+        // a supplier's class makes it a flex row (Sphinx .travel-loading-message).
+        $css = (string) file_get_contents(self::addonRoot() . '/design/themes/responsive/css/addons/travel_core/design-a.css');
+        self::assertMatchesRegularExpression('/\.travel-pdpa \[data-travel-live\] \[hidden\] \{\s*display: none !important;/', $css);
     }
 
     public function testRulesFromTheBoardAreKept(): void

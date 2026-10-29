@@ -589,6 +589,10 @@
 
 /* ── #60 Room-first results (components/design_a_results.tpl) ────────── */
 
+/* What the page hides stays hidden, in the results and in a supplier's
+   live container (data-travel-live), whatever display a supplier's own
+   classes give it: Sphinx's "searching" line is a flex row. */
+
 /* The owner's board 13b: one card per room type on three columns from
    1101 px — the room | its options, then what they all share | the till
    (the chosen option's total and the room's only button); two columns on
@@ -610,7 +614,8 @@
 .travel-pdpa .travel-pdpa-results *::after {
     box-sizing: border-box;
 }
-.travel-pdpa .travel-pdpa-results [hidden] {
+.travel-pdpa .travel-pdpa-results [hidden],
+.travel-pdpa [data-travel-live] [hidden] {
     display: none !important;
 }
 .travel-pdpa .travel-pdpa-ico {
