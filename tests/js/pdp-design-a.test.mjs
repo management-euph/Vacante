@@ -239,3 +239,215 @@ describe('compact search summary', () => {
         trigger.removeEventListener('click', opened);
     });
 });
+
+describe('photo height', () => {
+    const box = (el, top, bottom) => {
+        el.getBoundingClientRect = () => ({ top, bottom, left: 0, right: 0, x: 0, y: top, width: 0, height: bottom - top });
+    };
+    const height = () => page().style.getPropertyValue('--travel-pdpa-gallery-h');
+
+    it('gives way so the bar ends on the first screen, whatever the header takes', () => {
+        // A 244px theme header and the title row put the photos at 336px.
+        box(page().querySelector('.travel-pdpa-gallery'), 336, 816);
+        box(page().querySelector('.travel-pdp-results .travel-search-form-wrapper'), 832, 896);
+
+        window.innerHeight = 900;
+        window.TravelPdpDesignA.fitGallery(page());
+        expect(height()).toBe('476px'); // 900 - 336 - 16 gap - 64 bar - 8
+
+        window.innerHeight = 1200;
+        window.TravelPdpDesignA.fitGallery(page());
+        expect(height()).toBe('480px'); // never taller than the design
+
+        window.innerHeight = 657;
+        window.TravelPdpDesignA.fitGallery(page());
+        expect(height()).toBe('240px'); // never smaller than 240px
+    });
+
+    it('leaves phones to the stylesheet', () => {
+        window.matchMedia = () => ({ matches: true });
+        window.TravelPdpDesignA.fitGallery(page());
+        expect(height()).toBe('');
+        delete window.matchMedia;
+    });
+});
+
+describe('photo fit', () => {
+    const tiles = () => page().querySelectorAll('.travel-pdpa-gallery__tile');
+    const size = (tile, width, height) => {
+        Object.defineProperty(tile, 'clientWidth', { value: width, configurable: true });
+        Object.defineProperty(tile, 'clientHeight', { value: height, configurable: true });
+    };
+    const photo = (tile, width, height, complete = true) => {
+        const img = tile.querySelector('img:not(.travel-pdpa-gallery__backdrop)');
+        img.setAttribute('src', `/images/thumbnails/${width}/${height}/detailed/photo.jpg`);
+        Object.defineProperty(img, 'naturalWidth', { value: width, configurable: true });
+        Object.defineProperty(img, 'naturalHeight', { value: height, configurable: true });
+        Object.defineProperty(img, 'complete', { value: complete, configurable: true });
+        return img;
+    };
+    const whole = (tile) => tile.classList.contains('travel-pdpa-gallery__tile--whole');
+
+    it('fills the tile unless that enlarges the photo more than 1.5× or crops away more than half', () => {
+        const { showsWhole } = window.TravelPdpDesignA;
+        // The large tile on a wide screen, 870 × 480.
+        expect(showsWhole(870, 480, 1024, 683)).toBe(false); // the store's photos: shrunk to fit
+        expect(showsWhole(870, 480, 790, 527)).toBe(false); // enlarged 1.1×
+        expect(showsWhole(870, 480, 560, 373)).toBe(true); // enlarged 1.55×: soft
+        expect(showsWhole(870, 480, 400, 300)).toBe(true);
+        expect(showsWhole(870, 480, 600, 900)).toBe(true); // portrait: 37% would stay in view
+        expect(showsWhole(870, 480, 1000, 1000)).toBe(false); // square: 55% in view
+        expect(showsWhole(870, 480, 3000, 1000)).toBe(false); // panorama: 60% in view
+        // A small tile, 290 × 236.
+        expect(showsWhole(290, 236, 600, 400)).toBe(false);
+        expect(showsWhole(290, 236, 150, 100)).toBe(true);
+    });
+
+    it('shows a small photo whole, over a blurred copy of itself, once', () => {
+        const [big, small] = tiles();
+        size(big, 870, 480);
+        size(small, 290, 236);
+        photo(big, 1024, 683);
+        const img = photo(small, 150, 100);
+
+        window.TravelPdpDesignA.fitPhotos(page());
+        window.TravelPdpDesignA.fitPhotos(page());
+
+        expect(whole(big)).toBe(false);
+        expect(big.querySelector('.travel-pdpa-gallery__backdrop')).toBeNull();
+        expect(whole(small)).toBe(true);
+        // At most 1.5× its own size.
+        expect(small.style.getPropertyValue('--travel-pdpa-whole-w')).toBe('225px');
+        expect(small.style.getPropertyValue('--travel-pdpa-whole-h')).toBe('150px');
+        const backdrops = small.querySelectorAll('.travel-pdpa-gallery__backdrop');
+        expect(backdrops).toHaveLength(1);
+        expect(backdrops[0].getAttribute('src')).toBe(img.src);
+        expect(backdrops[0].getAttribute('alt')).toBe('');
+        expect(backdrops[0].getAttribute('aria-hidden')).toBe('true');
+        expect(backdrops[0].nextElementSibling).toBe(img); // under the photo
+    });
+
+    it('fills the tile again once it is small enough for the photo', () => {
+        const small = tiles()[1];
+        size(small, 200, 120);
+        window.TravelPdpDesignA.fitPhotos(page());
+        expect(whole(small)).toBe(false);
+    });
+
+    it('decides when the photo arrives, and leaves hidden tiles and placeholders alone', () => {
+        const third = tiles()[2];
+        size(third, 290, 236);
+        const img = photo(third, 500, 1000, false);
+        window.TravelPdpDesignA.fitPhotos(page());
+        expect(whole(third)).toBe(false); // not loaded yet
+
+        Object.defineProperty(img, 'complete', { value: true, configurable: true });
+        img.dispatchEvent(new Event('load'));
+        expect(whole(third)).toBe(true); // 500 × 1000 in 290 × 236: 41% in view
+
+        photo(third, 1, 1); // CS-Cart's spacer while a thumbnail is generated
+        third.classList.remove('travel-pdpa-gallery__tile--whole');
+        window.TravelPdpDesignA.fitPhotos(page());
+        expect(whole(third)).toBe(false);
+
+        photo(third, 150, 100);
+        size(third, 0, 0); // phones show the main photo only
+        window.TravelPdpDesignA.fitPhotos(page());
+        expect(whole(third)).toBe(false);
+    });
+});
+
+describe('room-first results', () => {
+    const row = (meal, price, flags = {}, more = false) => `
+        <div class="travel-pdpa-rrow" data-travel-rate data-meal="${meal}"
+             data-free="${flags.free ? 1 : 0}" data-immediate="${flags.onRequest ? 0 : 1}" data-special="${flags.special ? 1 : 0}"
+             ${more ? 'data-travel-more hidden' : ''}>
+            <span class="price">${price}</span><a href="#book-${price}">Rezervă</a>
+        </div>`;
+    let section;
+    const visible = () => Array.from(section.querySelectorAll('[data-travel-room]')).map((room) => {
+        const prices = Array.from(room.querySelectorAll('[data-travel-rates] [data-travel-rate]'))
+            .filter((r) => !r.hidden && !r.closest('[hidden]'))
+            .map((r) => r.querySelector('.price').textContent);
+        const compact = room.querySelector('[data-travel-compact]');
+        return `${room.hidden ? '-' : ''}${room.id}:${prices.join(',')}${compact && !compact.hidden ? '+compact' : ''}`;
+    });
+
+    beforeAll(() => {
+        page().insertAdjacentHTML('beforeend', `
+            <section data-travel-results id="results">
+                <button type="button" data-travel-meal="" aria-pressed="true">Toate mesele</button>
+                <button type="button" data-travel-meal="m0" aria-pressed="false">Mic dejun</button>
+                <button type="button" data-travel-meal="m1" aria-pressed="false">All Inclusive</button>
+                <button type="button" data-travel-chip="free" aria-pressed="false">Anulare gratuită</button>
+                <button type="button" data-travel-chip="special" aria-pressed="false">Oferte speciale</button>
+                <select data-travel-sort><option value="low" selected>low</option><option value="high">high</option></select>
+                <ul data-travel-room-list>
+                    <li id="deluxe" data-travel-room data-from="502">
+                        <div data-travel-rates>
+                            <div data-travel-group>${row('m1', 502, { free: true, special: true })}${row('m1', 665, { free: true })}</div>
+                            <div data-travel-group>${row('m0', 565)}</div>
+                        </div>
+                    </li>
+                    <li id="superior" data-travel-room data-from="610">
+                        <div data-travel-compact>${row('m0', 610)}</div>
+                        <div data-travel-rates hidden>
+                            <div data-travel-group>${row('m0', 610)}${row('m0', 700, {}, true)}</div>
+                            <div data-travel-group data-travel-more hidden>${row('m1', 810, { free: true }, true)}</div>
+                        </div>
+                        <button type="button" data-travel-see-all aria-expanded="false">Vezi toate cele 3 tarife</button>
+                    </li>
+                </ul>
+                <div data-travel-no-match hidden><button type="button" data-travel-clear-filters>Arată toate tarifele</button></div>
+            </section>`);
+        section = document.getElementById('results');
+    });
+
+    it('a meal plan shows its rates in every room, the collapsed ones too', () => {
+        click(section.querySelector('[data-travel-meal="m1"]'));
+        expect(visible()).toEqual(['deluxe:502,665', 'superior:810']);
+        expect(section.querySelector('[data-travel-meal="m1"]').getAttribute('aria-pressed')).toBe('true');
+        expect(section.querySelector('[data-travel-meal=""]').getAttribute('aria-pressed')).toBe('false');
+        expect(section.querySelector('[data-travel-see-all]').hidden).toBe(true);
+    });
+
+    it('chips narrow it further; nothing left says so, and one click shows everything again', () => {
+        click(section.querySelector('[data-travel-chip="special"]'));
+        expect(visible()).toEqual(['deluxe:502', '-superior:']);
+
+        click(section.querySelector('[data-travel-meal="m0"]'));
+        expect(visible()).toEqual(['-deluxe:', '-superior:']);
+        expect(section.querySelector('[data-travel-no-match]').hidden).toBe(false);
+
+        click(section.querySelector('[data-travel-clear-filters]'));
+        expect(visible()).toEqual(['deluxe:502,665,565', 'superior:+compact']);
+        expect(section.querySelector('[data-travel-no-match]').hidden).toBe(true);
+        expect(section.querySelector('[data-travel-chip="special"]').getAttribute('aria-pressed')).toBe('false');
+        expect(section.querySelector('[data-travel-see-all]').hidden).toBe(false);
+    });
+
+    it('"see all" opens the room\'s other rates and hands the focus to its first rate', () => {
+        const button = section.querySelector('[data-travel-see-all]');
+        click(button);
+        expect(visible()).toEqual(['deluxe:502,665,565', 'superior:610,700,810']);
+        expect(button.hidden).toBe(true);
+        expect(button.getAttribute('aria-expanded')).toBe('true');
+        expect(document.activeElement.getAttribute('href')).toBe('#book-610');
+
+        // An opened room stays open once a filter is cleared.
+        click(section.querySelector('[data-travel-chip="free"]'));
+        expect(visible()).toEqual(['deluxe:502,665', 'superior:810']);
+        click(section.querySelector('[data-travel-chip="free"]'));
+        expect(visible()).toEqual(['deluxe:502,665,565', 'superior:610,700,810']);
+    });
+
+    it('the sort orders the rooms by their cheapest rate', () => {
+        const select = section.querySelector('[data-travel-sort]');
+        select.value = 'high';
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        expect(visible().map((v) => v.split(':')[0])).toEqual(['superior', 'deluxe']);
+        select.value = 'low';
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        expect(visible().map((v) => v.split(':')[0])).toEqual(['deluxe', 'superior']);
+    });
+});

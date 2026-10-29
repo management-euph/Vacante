@@ -20,6 +20,7 @@ declare(strict_types=1);
 
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Results\DesignA;
 use Tygh\Addons\TravelCore\Services\ProviderRoomLimit;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
 
@@ -171,8 +172,8 @@ if ($mode === 'booking_config') {
             // Design A hotel page (the engine asks with design=a): its bar,
             // and per-night prices for two adults in the calendar, from the
             // owning supplier's stored data, in the shopper's currency.
-            if (RequestCoerce::string($_REQUEST, 'design') === 'a') {
-                $config['design'] = 'a';
+            if (DesignA::requested($_REQUEST)) {
+                $config['design'] = DesignA::VALUE;
                 $money = \Tygh\Addons\TravelCore\Services\MoneyFormatter::forStore(true);
                 $calendar = [];
                 foreach (TravelProviderRegistry::indicativeNightlyCalendar($providerName, $hotelId) as $day => $nightly) {
