@@ -3082,6 +3082,14 @@ msgctxt "Languages::travel_core.nightly_prices_note"
 msgid "Indicative prices per night, for 2 adults."
 msgstr "Prețuri orientative pe noapte, pentru 2 adulți."
 
+msgctxt "Languages::travel_core.price_window_note"
+msgid "Prices are published for stays from %s to %s."
+msgstr "Prețurile sunt publicate pentru sejururi între %s și %s."
+
+msgctxt "Languages::travel_core.outside_price_window"
+msgid "no prices published yet"
+msgstr "prețuri nepublicate încă"
+
 msgctxt "Languages::travel_core.pdpa_r_title"
 msgid "Rooms and prices"
 msgstr "Camere și prețuri"

@@ -2254,6 +2254,16 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Indicative prices per night, for 2 adults.',
         'ro' => 'Prețuri orientative pe noapte, pentru 2 adulți.',
     ],
+    // The calendar's published-price window (CalendarPriceWindow, plan §7.1);
+    // the two %s are the first and last date, as the calendar writes them.
+    'travel_core.price_window_note' => [
+        'en' => 'Prices are published for stays from %s to %s.',
+        'ro' => 'Prețurile sunt publicate pentru sejururi între %s și %s.',
+    ],
+    'travel_core.outside_price_window' => [
+        'en' => 'no prices published yet',
+        'ro' => 'prețuri nepublicate încă',
+    ],
     // Design A room-first results (components/design_a_results.tpl,
     // Results\RoomResultsBuilder). [rates] / [rooms] / [guests] / [nights]
     // take the *_one / *_few / *_many form RoomResultsBuilder::form() picks.

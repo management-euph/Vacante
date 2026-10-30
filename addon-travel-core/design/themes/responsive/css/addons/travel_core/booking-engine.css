@@ -419,6 +419,20 @@ button.nvt-field-input:active {
     color: var(--nvt-text-disabled, #999);
 }
 
+/* Outside the stay dates with published prices (the hotel's priceWindow):
+   muted and lightly hatched, still selectable — a search may find offers.
+   The note under the months says which dates have prices. */
+.nvt-calendar-day--outside-window {
+    color: var(--nvt-text-light, #6b6b6b);
+    background-image: repeating-linear-gradient(135deg, transparent 0 4px, rgba(0, 0, 0, 0.07) 4px 5px);
+}
+.nvt-calendar-window-note {
+    margin-top: 12px;
+    font-size: 13px;
+    text-align: center;
+    color: var(--nvt-text, #1a1a1a);
+}
+
 /* Day number inside price-enabled cells */
 .nvt-calendar-day-num {
     line-height: 1.2;
@@ -1015,6 +1029,14 @@ button.nvt-field-input:active {
     /* Price footer inside scroll area */
     .nvt-calendar-price-footer {
         padding: 12px 16px;
+    }
+
+    /* The published window's note: a fixed line under the scrolling months */
+    .nvt-calendar-window-note {
+        flex-shrink: 0;
+        margin-top: 0;
+        padding: 8px 16px;
+        border-top: 1px solid var(--nvt-border, #e0e0e0);
     }
 
     /* Selection summary footer */

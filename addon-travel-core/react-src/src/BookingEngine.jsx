@@ -91,6 +91,8 @@ export default function BookingEngine({ config }) {
         calendarPrices: configCalendarPrices = null,
         calendarPricesCurrency: configCalendarPricesCurrency = '',
         design = '',
+        // The stay dates with published prices ({from, to}), when known.
+        priceWindow = null,
     } = config;
     const isDesignA = design === 'a';
 
@@ -643,6 +645,7 @@ export default function BookingEngine({ config }) {
                                         onChangeGuests={() => { setShowCalendar(false); setShowGuests(true); }}
                                         prices={calendarPrices.prices}
                                         pricesCurrency={calendarPrices.currency}
+                                        priceWindow={priceWindow}
                                         triggerRefs={[dateTriggerRef, checkOutTriggerRef]}
                                     />
                                 )}
@@ -686,6 +689,7 @@ export default function BookingEngine({ config }) {
                             onClose={() => setShowCalendar(false)}
                             prices={calendarPrices.prices}
                             pricesCurrency={calendarPrices.currency}
+                            priceWindow={priceWindow}
                             triggerRef={dateTriggerRef}
                         />
                     )}

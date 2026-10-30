@@ -15,6 +15,11 @@
  * nights, a footer with the price legend, "Schimbă oaspeții", "Șterge
  * datele" and the search button; `selecting` says which date the next click
  * sets (the field that opened it); the check-out day shows no price.
+ *
+ * `priceWindow` ({from, to}, booking_config's priceWindow): the stay dates
+ * the supplier has published prices for. With no check-in chosen the
+ * calendar opens on the first of them instead of this month, and the days
+ * outside them are marked (still selectable: a search may find offers).
  */
 
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
@@ -62,6 +67,18 @@ function toDateKey(year, month, day) {
     return `${year}-${m}-${d}`;
 }
 
+/** "YYYY-MM-DD" → that day at noon, as the day cells are built; null otherwise. */
+function parseDay(value) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || ''));
+    return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12, 0, 0) : null;
+}
+
+/** "1 May 2027" / "1 mai 2027": the ends of the published window in its note. */
+function formatDayMonthYear(date, monthNames, locale) {
+    const text = `${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+    return locale === 'ro' ? text.toLowerCase() : text;
+}
+
 /**
  * Format a price for compact calendar display.
  * 5000 → "5k", 12500 → "13k", 350 → "350", 99 → "99"
@@ -102,6 +119,7 @@ function useIsMobile(breakpoint = 768) {
 export default function Calendar({
     checkIn, checkOut, onSelect, onClose, prices, pricesCurrency, triggerRef,
     variant = '', selecting = 'checkIn', onSearch, onChangeGuests, triggerRefs,
+    priceWindow = null,
 }) {
     const isVariantA = variant === 'a';
     const locale = getLocale();
@@ -119,8 +137,21 @@ export default function Calendar({
         return d;
     }, []);
 
-    // Start calendar from check-in month, or current month
+    // The stay dates with published prices, when the server knows them.
+    const published = useMemo(() => {
+        const from = priceWindow ? parseDay(priceWindow.from) : null;
+        const to = priceWindow ? parseDay(priceWindow.to) : null;
+        return from && to && from <= to
+            ? { from, to, fromKey: priceWindow.from, toKey: priceWindow.to }
+            : null;
+    }, [priceWindow]);
+
+    // Start calendar from check-in month; else, when prices are published
+    // only from a later month, that month; else the current month.
+    const opensOnPublished = !checkIn && !!published
+        && (published.from.getFullYear() * 12 + published.from.getMonth()) > (today.getFullYear() * 12 + today.getMonth());
     const startMonth = checkIn ? new Date(checkIn.getFullYear(), checkIn.getMonth(), 1)
+                               : opensOnPublished ? new Date(published.from.getFullYear(), published.from.getMonth(), 1)
                                : new Date(today.getFullYear(), today.getMonth(), 1);
 
     const [viewDate, setViewDate] = useState(startMonth);
@@ -130,6 +161,7 @@ export default function Calendar({
     // with a check-in already chosen, a click after it moves only the check-out.
     const [phase, setPhase] = useState(() => (selecting === 'checkOut' && checkIn ? 'checkOut' : 'checkIn'));
     const popupRef = useRef(null);
+    const scrollRef = useRef(null);
 
     // Only a change of the field that opened the calendar moves the phase
     // from outside (deps on purpose: not on every date pick).
@@ -139,6 +171,17 @@ export default function Calendar({
 
     // WCAG 2.1: trap focus within the calendar dialog
     useFocusTrap(popupRef);
+
+    // Mobile lists the months from this one: scroll the first published one
+    // to the top (once, when the list appears; deps on purpose).
+    useEffect(() => {
+        const container = scrollRef.current;
+        if (!isMobile || !opensOnPublished || !container) return;
+        const target = container.querySelector(`[data-month="${startMonth.getFullYear()}-${startMonth.getMonth()}"]`);
+        if (target) {
+            container.scrollTop += target.getBoundingClientRect().top - container.getBoundingClientRect().top;
+        }
+    }, [isMobile]);
 
     // Close on outside click or Escape key
     // Use 'click' (not 'mousedown') so the toggle button's onClick fires first
@@ -256,7 +299,7 @@ export default function Calendar({
         const cells = buildCalendarGrid(year, month);
 
         return (
-            <div className="nvt-calendar-month" key={`${year}-${month}`}>
+            <div className="nvt-calendar-month" key={`${year}-${month}`} data-month={`${year}-${month}`}>
                 {/* Month title — visible on mobile only (desktop uses nvt-calendar-nav-row) */}
                 {isMobile && (
                     <div className="nvt-calendar-header">
@@ -283,6 +326,8 @@ export default function Calendar({
                         const dateKey = toDateKey(year, month, day);
                         const dayPrice = hasPrices ? prices[dateKey] : undefined;
                         const hasNoPrice = hasPrices && !isPast && dayPrice === undefined;
+                        const outsideWindow = !!published && !isPast
+                            && (dateKey < published.fromKey || dateKey > published.toKey);
 
                         // Determine price tier: lowest, medium, higher, highest
                         let priceTier = '';
@@ -302,6 +347,7 @@ export default function Calendar({
                         if (inRange) className += ' nvt-calendar-day--in-range';
                         if (hasNoPrice) className += ' nvt-calendar-day--no-price';
                         if (priceTier) className += ` nvt-calendar-day--price-${priceTier}`;
+                        if (outsideWindow) className += ' nvt-calendar-day--outside-window';
 
                         // Build accessible label for screen readers
                         const ariaLabel = (() => {
@@ -315,6 +361,8 @@ export default function Calendar({
 
                             if (hasPrices && dayPrice !== undefined) {
                                 parts.push(`${dayPrice} ${pricesCurrency || ''} ${t('perNight', 'per night')}`.trim());
+                            } else if (outsideWindow) {
+                                parts.push(t('outsidePriceWindow', 'no prices published yet'));
                             } else if (hasPrices) {
                                 parts.push(t('priceUnavailable', 'price unavailable'));
                             }
@@ -323,7 +371,7 @@ export default function Calendar({
 
                         const tooltip = hasPrices && dayPrice !== undefined && !isPast
                             ? `${dayPrice} ${pricesCurrency || ''}`.trim()
-                            : undefined;
+                            : (outsideWindow ? t('outsidePriceWindow', 'no prices published yet') : undefined);
                         // Design A: the departure day is not a night of the stay.
                         const showPrice = hasPrices && !isPast && !(isVariantA && isSelectedCheckOut);
 
@@ -363,6 +411,13 @@ export default function Calendar({
         }
         return t('selectCheckIn', 'Select check-in date');
     })();
+
+    // "Prices are published for stays from 1 May 2027 to 30 September 2027."
+    const windowNote = published
+        ? t('priceWindowNote', 'Prices are published for stays from %s to %s.')
+            .replace('%s', formatDayMonthYear(published.from, monthNames, locale))
+            .replace('%s', formatDayMonthYear(published.to, monthNames, locale))
+        : '';
 
     // Price footer text — "Approximate prices in EUR for a 1-night stay"
     const priceFooterText = hasPrices && pricesCurrency
@@ -459,7 +514,7 @@ export default function Calendar({
 
             {/* Mobile: scrollable months container */}
             {isMobile ? (
-                <div className="nvt-calendar-scroll-container">
+                <div className="nvt-calendar-scroll-container" ref={scrollRef}>
                     <div className="nvt-calendar-months">
                         {mobileMonths.map(({ year, month }) => renderMonth(year, month))}
                     </div>
@@ -470,6 +525,10 @@ export default function Calendar({
                     {renderMonth(month1Year, month1Month)}
                     {renderMonth(month2Year, month2Month)}
                 </div>
+            )}
+
+            {windowNote && (
+                <div className="nvt-calendar-window-note">{windowNote}</div>
             )}
 
             {isVariantA ? (
