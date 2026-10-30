@@ -184,21 +184,20 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
     // ---- Private XML builders ----
 
     /**
-     * Build <Guests> XML elements from a guest array.
-     * @param array<string, mixed> $guests
+     * Build <Guests> XML elements from the guest list.
+     * @param list<array<string, mixed>> $guests
      */
     private function buildGuestsXml(array $guests, int $startId = 1, int $defaultAge = 0): string
     {
         $xml = '';
         $id = $startId;
         foreach ($guests as $guest) {
-            $guestRow = TypeCoerce::toStringMap($guest);
             $xml .= '
     <Guests>
-        <IdGuest>' . TypeCoerce::toString($guestRow['id'] ?? $id) . '</IdGuest>
-        <Name>' . htmlspecialchars(TypeCoerce::toString($guestRow['name'] ?? '')) . '</Name>
-        <BirthDay>' . htmlspecialchars(TypeCoerce::toString($guestRow['birthday'] ?? '')) . '</BirthDay>
-        <Age>' . TypeCoerce::toInt($guestRow['age'] ?? $defaultAge) . '</Age>
+        <IdGuest>' . TypeCoerce::toString($guest['id'] ?? $id) . '</IdGuest>
+        <Name>' . htmlspecialchars(TypeCoerce::toString($guest['name'] ?? '')) . '</Name>
+        <BirthDay>' . htmlspecialchars(TypeCoerce::toString($guest['birthday'] ?? '')) . '</BirthDay>
+        <Age>' . TypeCoerce::toInt($guest['age'] ?? $defaultAge) . '</Age>
     </Guests>';
             $id++;
         }
@@ -206,19 +205,18 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
     }
 
     /**
-     * Build <room_acc> XML elements from a guest array.
-     * @param array<string, mixed> $guests
+     * Build <room_acc> XML elements from the guest list.
+     * @param list<array<string, mixed>> $guests
      */
     private function buildRoomAccXml(array $guests, int $startId = 1): string
     {
         $xml = '';
         $id = $startId;
         foreach ($guests as $guest) {
-            $guestRow = TypeCoerce::toStringMap($guest);
             $xml .= '
             <room_acc>
-                <IdGuest>' . TypeCoerce::toString($guestRow['id'] ?? $id) . '</IdGuest>
-                <Name>' . htmlspecialchars(TypeCoerce::toString($guestRow['name'] ?? '')) . '</Name>
+                <IdGuest>' . TypeCoerce::toString($guest['id'] ?? $id) . '</IdGuest>
+                <Name>' . htmlspecialchars(TypeCoerce::toString($guest['name'] ?? '')) . '</Name>
             </room_acc>';
             $id++;
         }
@@ -239,7 +237,7 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
             $comment = 'test reservation, do not proceed';
         }
 
-        $guestsXml = $this->buildGuestsXml(TypeCoerce::toStringMap($bookingData['guests'] ?? []));
+        $guestsXml = $this->buildGuestsXml(TypeCoerce::toRowList($bookingData['guests'] ?? []));
 
         // Check if this is multi-room booking
         $rooms = TypeCoerce::toRowList($bookingData['rooms'] ?? []);
@@ -248,13 +246,11 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
         if (!empty($rooms) && count($rooms) > 1) {
             $guestIdCounter = 1;
             foreach ($rooms as $roomIdx => $roomData) {
-                $roomGuestsRaw = $roomData['guests'] ?? [];
-                $roomGuests = TypeCoerce::toStringMap($roomGuestsRaw);
+                $roomGuests = TypeCoerce::toRowList($roomData['guests'] ?? []);
                 $roomAccXml = $this->buildRoomAccXml($roomGuests, $guestIdCounter);
                 $guestIdCounter += count($roomGuests);
 
-                $roomGuestRows = TypeCoerce::toRowList($roomGuestsRaw);
-                $firstGuest = $roomGuestRows[0] ?? [];
+                $firstGuest = $roomGuests[0] ?? [];
 
                 $hotelAccXml .= '
     <hotel_acc>
@@ -272,7 +268,7 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
     </hotel_acc>';
             }
         } else {
-            $roomAccXml = $this->buildRoomAccXml(TypeCoerce::toStringMap($bookingData['guests'] ?? []));
+            $roomAccXml = $this->buildRoomAccXml(TypeCoerce::toRowList($bookingData['guests'] ?? []));
 
             $hotelAccXml = '
     <hotel_acc>
@@ -311,11 +307,11 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
      */
     private function buildHotelRequestXml(array $requestData): string
     {
-        $guestsXml = $this->buildGuestsXml(TypeCoerce::toStringMap($requestData['guests'] ?? []), 1, 30);
+        $guestsXml = $this->buildGuestsXml(TypeCoerce::toRowList($requestData['guests'] ?? []), 1, 30);
 
         $roomAccXml = '';
         if (!empty($requestData['room_guests'])) {
-            $roomAccXml = $this->buildRoomAccXml(TypeCoerce::toStringMap($requestData['room_guests']));
+            $roomAccXml = $this->buildRoomAccXml(TypeCoerce::toRowList($requestData['room_guests']));
         }
 
         return $this->xmlHeader() . '

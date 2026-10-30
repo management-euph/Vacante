@@ -107,6 +107,54 @@ final class ReservationApiClientTest extends TestCase
         self::assertSame('19', (string) $rq->OrderNum);
     }
 
+    public function testEveryGuestIsSent(): void
+    {
+        $rq = simplexml_load_string($this->client()->generateReservationXml(self::BOOKING));
+
+        self::assertNotFalse($rq);
+        self::assertSame(['1' => 'Ana Pop', '2' => 'Ion Pop'], self::guests($rq->Guests));
+        self::assertSame('30', (string) $rq->Guests[0]->Age);
+        self::assertSame(['1' => 'Ana Pop', '2' => 'Ion Pop'], self::guests($rq->hotel_acc->room_acc), 'the room lists who sleeps in it');
+    }
+
+    public function testEachRoomListsItsOwnGuestsNumberedAcrossTheBooking(): void
+    {
+        $adult = static fn (string $name): array => ['name' => $name, 'birthday' => '', 'age' => 30, 'type' => 'adult'];
+        $child = ['name' => 'Dan Pop', 'birthday' => '2019-05-01', 'age' => 7, 'type' => 'child'];
+        $booking = ['guests' => [$adult('Ana Pop'), $adult('Ion Pop'), $adult('Eva Ilie'), $adult('Radu Ilie'), $child], 'rooms' => [
+            ['room_id' => 'DBL 2+0', 'board_id' => 'BB', 'guests' => [$adult('Ana Pop'), $adult('Ion Pop')]],
+            ['room_id' => 'FAM 2+2', 'board_id' => 'HB', 'guests' => [$adult('Eva Ilie'), $adult('Radu Ilie'), $child]],
+        ]] + self::BOOKING;
+
+        $rq = simplexml_load_string($this->client()->generateReservationXml($booking));
+
+        self::assertNotFalse($rq);
+        self::assertSame(['1' => 'Ana Pop', '2' => 'Ion Pop', '3' => 'Eva Ilie', '4' => 'Radu Ilie', '5' => 'Dan Pop'], self::guests($rq->Guests));
+        self::assertSame('7', (string) $rq->Guests[4]->Age);
+        self::assertCount(2, $rq->hotel_acc);
+        self::assertSame(['1' => 'Ana Pop', '2' => 'Ion Pop'], self::guests($rq->hotel_acc[0]->room_acc));
+        self::assertSame(['3' => 'Eva Ilie', '4' => 'Radu Ilie', '5' => 'Dan Pop'], self::guests($rq->hotel_acc[1]->room_acc));
+        self::assertSame('Eva Ilie', (string) $rq->hotel_acc[1]->Holder);
+    }
+
+    public function testAnAlternativesRequestSendsItsGuestsToo(): void
+    {
+        $xml = $this->client()->generateHotelRequestXml([
+            'hotel_id' => '4658',
+            'check_in' => '2026-10-31',
+            'check_out' => '2026-11-02',
+            'room_id' => 'DBL 2+0',
+            'guests' => [['id' => 1, 'name' => 'Guest 1', 'birthday' => '', 'age' => 30], ['id' => 2, 'name' => 'Guest 2', 'birthday' => '', 'age' => 30]],
+            'room_guests' => [['id' => 1, 'name' => 'Guest 1'], ['id' => 2, 'name' => 'Guest 2']],
+        ]);
+        $rq = simplexml_load_string($xml);
+
+        self::assertNotFalse($rq);
+        self::assertSame(['1' => 'Guest 1', '2' => 'Guest 2'], self::guests($rq->Guests));
+        self::assertSame(['1' => 'Guest 1', '2' => 'Guest 2'], self::guests($rq->hotel_acc->room_acc));
+        self::assertStringContainsString('<usr>*****</usr><psw>*****</psw>', $xml);
+    }
+
     public function testATestBookingSaysSoToNovoton(): void
     {
         Registry::set('addons.novoton_holidays', ['test_booking' => 'Y']);
@@ -117,5 +165,20 @@ final class ReservationApiClientTest extends TestCase
         self::assertNotFalse($rq);
         self::assertSame('test reservation, do not proceed', (string) $rq->hotel_acc->Remark);
         self::assertSame('test reservation, do not proceed', (string) $rq->hotel_acc->Comment);
+    }
+
+    /**
+     * IdGuest => Name of each <Guests> or <room_acc> element.
+     *
+     * @return array<string, string>
+     */
+    private static function guests(?\SimpleXMLElement $elements): array
+    {
+        $guests = [];
+        foreach ($elements ?? [] as $guest) {
+            $guests[(string) $guest->IdGuest] = (string) $guest->Name;
+        }
+
+        return $guests;
     }
 }
