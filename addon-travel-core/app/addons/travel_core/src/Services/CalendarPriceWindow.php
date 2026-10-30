@@ -19,19 +19,19 @@ use Tygh\Addons\TravelCore\Repository\HotelAvailabilityRepository;
  */
 final class CalendarPriceWindow
 {
-    /** @var \Closure(string, list<string>): array<array-key, array{from: ?string, to: ?string, next: ?string}> */
-    private readonly \Closure $windows;
+    /** @var \Closure(string, string): (array{from: ?string, to: ?string, next: ?string}|null) */
+    private readonly \Closure $window;
 
     /** @var \Closure(string): AvailabilityMode */
     private readonly \Closure $mode;
 
     /**
-     * @param (\Closure(string, list<string>): array<array-key, array{from: ?string, to: ?string, next: ?string}>)|null $windows the records' price windows
+     * @param (\Closure(string, string): (array{from: ?string, to: ?string, next: ?string}|null))|null $window (supplier, hotel id) => its price window in the records, null when none is known
      * @param (\Closure(string): AvailabilityMode)|null $mode a supplier's availability mode
      */
-    public function __construct(?\Closure $windows = null, ?\Closure $mode = null)
+    public function __construct(?\Closure $window = null, ?\Closure $mode = null)
     {
-        $this->windows = $windows ?? static fn (string $provider, array $hotelIds): array => (new HotelAvailabilityRepository())->priceWindows($provider, $hotelIds);
+        $this->window = $window ?? static fn (string $provider, string $hotelId): ?array => (new HotelAvailabilityRepository())->priceWindows($provider, [$hotelId])[$hotelId] ?? null;
         $this->mode = $mode ?? static fn (string $provider): AvailabilityMode => TravelCoreConfig::getAvailabilityMode($provider);
     }
 
@@ -51,7 +51,7 @@ final class CalendarPriceWindow
             if (($this->mode)($provider) === AvailabilityMode::Off) {
                 return null;
             }
-            $window = ($this->windows)($provider, [$hotelId])[$hotelId] ?? null;
+            $window = ($this->window)($provider, $hotelId);
         } catch (\Throwable) {
             return null;
         }

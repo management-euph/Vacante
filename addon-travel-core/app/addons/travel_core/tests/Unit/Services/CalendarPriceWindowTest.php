@@ -32,7 +32,7 @@ final class CalendarPriceWindowTest extends TestCase
     private static function window(array $windows, AvailabilityMode $mode = AvailabilityMode::Report): CalendarPriceWindow
     {
         return new CalendarPriceWindow(
-            static fn (string $provider, array $hotelIds): array => $provider === 'novoton' ? array_intersect_key($windows, array_flip($hotelIds)) : [],
+            static fn (string $provider, string $hotelId): ?array => $provider === 'novoton' ? $windows[$hotelId] ?? null : null,
             static fn (): AvailabilityMode => $mode,
         );
     }
