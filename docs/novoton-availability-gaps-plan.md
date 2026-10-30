@@ -714,7 +714,7 @@ cover:
 | 1a | Travel Core: the contract with supplier capabilities (§15.3), the evidence and log tables (schema self-heal), the policy, the date windows (moved from Eurosite), settings (a mode per supplier; hide after N months, default 12; what counts as availability), the Hotel availability page with a supplier filter, CSV, weekly email; the weekly step in Travel Core's existing cron (§4.5). Novoton: the evidence source (passive capture, backfill), the Tools page card — **these done 2026-10-23 (§16)**; `room_price` reworked into the weekly resort check (§4.3) — **done 2026-10-26 (§16.5)** | No | L |
 | 1b | Eurosite and Sphinx: record what their existing checks and hotel-page searches already fetch, hotel-list completeness, bookings read back, dashboard cards; Sphinx stores `giata_id` (§15.3); Eurosite's `full` takes its steps' run locks (§4.5) — **done 2026-10-23 (§16.4)** | No | M |
 | 2 | Hotel-page panels; "notify me" and "prices are out" emails; similar hotels; date-picker window; language keys. All suppliers; Eurosite first needs a request flow. **Back end done 2026-10-27 (§16.6); the panels on both hotel page templates and the date-picker window done 2026-10-30 (§16.8)**, behind a switch that is off; listing labels moved to phase 6 | Yes | M |
-| 3 | Automatic mode, per supplier: dormant / left the list → Hidden, and back to Active; brake; overrides; `gateHidden` for bookings. Novoton first (Feb–Mar 2027) | Yes | M |
+| 3 | Automatic mode, per supplier: dormant / left the list → Hidden, and back to Active; brake; overrides; `gateHidden` for bookings. Novoton first (Feb–Mar 2027). **Built for Novoton 2026-10-30 (§16.9)**: offered in its settings, switched on by the admin after the Feb–Mar 2027 review | Yes | M |
 | 4 | Closed hotels: mark closed, redirect target, 301 controller, grace checks | Yes | S |
 | 5 | Purchasing list of not-offered hotels with their demand | Staff only | S |
 | 6 | Eurosite and Sphinx switch to Automatic once their records cover a season (about autumn 2027), and their old gates are removed; listing labels and sorting | Yes | M |
@@ -1419,8 +1419,43 @@ phase 6, with the listing sorting already planned there: placing them needs
 the store's category list templates, which `docker/fullstore/export-theme.sh`
 does not pack yet (it packs the product page's).
 
-### 16.9 Next
+### 16.9 Phase 3, Automatic mode for Novoton (built 2026-10-30)
+
+Built ahead of the review so it is ready when the 2027 prices are loaded;
+nothing changes until the admin picks **Automatic** for Novoton (Travel Core
+→ Settings → Hotel availability; Report only stays the default). Eurosite
+and Sphinx still offer Off / Report only: their own gates run until phase 6.
+PHPStan level 10, both CS Fixer configs, Rector and the suites pass (Travel
+Core 1010, Novoton 1131, Eurosite 348, Sphinx 627); the gate, the page's
+queries, the decisions and Novoton's scope were run on MariaDB 10.11, and the
+page rendered with Smarty 5.
+
+| Piece | Where | Notes |
+|---|---|---|
+| The gate | Travel Core `Services\AvailabilityGate` | Hides (A → H) a product whose records are all dormant, left the list or closed, or that an admin keeps hidden; shows (H → A) what it hid once one record no longer hides. Guarded as Eurosite's: only from Active, only what it hid (`gate_hidden`), and a product an admin changed by hand is released (new column `gate_released`, healed on installed stores) until the hotel has availability again. Nothing disabled or deleted; every product change in `travel_hotel_state_log` (who, why) |
+| The brake | the same | A run that would hide more than max(10, 5% of the supplier's visible products) hides none. The page then says why and offers "Hide these N hotels now" (asks first; runs once without the brake). Decided while building: without it, a first Automatic run with a long list would be held every week |
+| When it runs | `Services\AvailabilityReview` | After the weekly review classifies: in Automatic mode it hides and shows; in Report only it counts what it would hide. On the other days the daily run classifies only the hotels it hid and shows those whose offers are back, so a hotel comes back the next morning (§7.3); it never hides between reviews |
+| Who it acts for | `AvailabilityCapabilities::$sharedGate`, `AvailabilityMode::offered()` | Automatic is offered only for a supplier whose hotels the shared gate hides and shows: Novoton. A stored "automatic" for another supplier reads as Report only |
+| Overrides | `Services\AvailabilityOverride`, the Hotel availability page | Per hotel: the rules decide, keep visible, keep hidden, closed, with a note; who and when kept, logged, applied to that product at once in Automatic mode |
+| The page | `views/travel_hotel_availability/manage.tpl`, `Repository\HotelAvailabilityListing` | The product's status per hotel, "hidden by the rules", "left as you set it", "would be hidden" (in Automatic: at the next review); a Product filter for each; the counts on each supplier's tile; the same in the CSV |
+| The weekly email | `Services\AvailabilityReportMail` | What the gate hid, showed, let go and held back (Automatic), or would hide (Report only); a week where only the gate acted still sends one |
+| Booking from a link | Novoton `HotelCartProduct` | A gate-hidden product can still be booked when a search finds an offer (§7.3); one an admin hid cannot |
+| Still checked | Novoton `DestinationScope::liveProductSql()` | The per-hotel syncs and the weekly resort check keep a gate-hidden hotel like an active one (even outside the whitelist), so its offers can bring it back; removing a destination from the whitelist disables its gate-hidden products too |
+
+Left for later, when there is real data to look at: page views, notify-me
+and suggested-action columns, bulk actions, a "has bookings" filter, an
+attention line on the CS-Cart dashboard, and taking hotels that left the
+list out of the per-hotel syncs (§7.4). To check on the store once
+Automatic runs: that CS-Cart 4.21.2 leaves Hidden products out of the
+sitemap (§9).
+
+### 16.10 Next
 
 6. Calibration on the live store (§14) once the suppliers have recorded for a
    few weeks; then set the privacy policy page and switch the panels on.
-7. Phase 3 (Automatic mode for Novoton) before the Feb–Mar 2027 review.
+7. Feb–Mar 2027, when the 2027 early-booking prices are loaded: review the
+   "Would be hidden" list for Novoton on the Hotel availability page, set
+   decisions where needed (keep visible, closed), then switch Novoton to
+   Automatic.
+8. Phase 4 (closed hotels: the 301 after 6 months) and phase 5 (the
+   purchasing list) need no season of data and can come before or after.
