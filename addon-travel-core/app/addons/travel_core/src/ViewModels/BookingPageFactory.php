@@ -61,8 +61,10 @@ final class BookingPageFactory
 
     /**
      * $booking is the ?:travel_bookings row as enriched for the page
-     * (provider_display, provider_page, provider_actions, hotel_product_url,
-     * guests_decoded, total_label: its total, formatted); $card the admin booking card of its
+     * (provider_display, provider_page, provider_actions, hotel_product:
+     * {name, code, url} the hotel as the order page shows it, hotel_product_url
+     * its storefront page, guests_decoded, total_label: its total, formatted);
+     * $card the admin booking card of its
      * order line and $order its order, formatted ({id, total, placed,
      * placed_ts}) — both [] when no order holds it.
      *
@@ -275,6 +277,10 @@ final class BookingPageFactory
      * from guests_json, the supplier's room names from the provider's page
      * details).
      *
+     * The hotel reads as on the order page: its product's name and code,
+     * linked to the product in the admin (else the supplier's name for it);
+     * its storefront page apart.
+     *
      * @param array<string, mixed> $booking
      * @param array<string, mixed> $card
      * @param array<string, mixed> $details
@@ -283,10 +289,16 @@ final class BookingPageFactory
     private function stay(array $booking, array $card, array $details): array
     {
         $hotel = TypeCoerce::toStringMap($card['hotel'] ?? null);
-        $name = trim(TypeCoerce::toString($hotel['name'] ?? ''));
+        $product = TypeCoerce::toStringMap($booking['hotel_product'] ?? null);
+        $names = array_values(array_filter(array_map(
+            static fn (mixed $name): string => trim(TypeCoerce::toString($name)),
+            [$product['name'] ?? '', $hotel['name'] ?? '', $booking['hotel_name'] ?? ''],
+        ), static fn (string $name): bool => $name !== ''));
         $stay = [
-            'hotel' => $name !== '' ? $name : trim(TypeCoerce::toString($booking['hotel_name'] ?? '')),
-            'hotel_url' => TypeCoerce::toString($booking['hotel_product_url'] ?? ''),
+            'hotel' => $names[0] ?? '',
+            'hotel_url' => TypeCoerce::toString($product['url'] ?? ''),
+            'hotel_code' => TypeCoerce::toString($product['code'] ?? ''),
+            'storefront_url' => TypeCoerce::toString($booking['hotel_product_url'] ?? ''),
             'location' => TypeCoerce::toString($hotel['location'] ?? $booking['destination'] ?? ''),
             'package' => TypeCoerce::toString($card['package'] ?? ''),
         ];

@@ -124,6 +124,7 @@ function _travel_bookings_enrich(array $booking, bool $page = false): array
     if ($hotelId !== '' && $productProvider !== null) {
         $productId = $productProvider->productIdForHotelId($hotelId);
         if ($productId !== null) {
+            $booking['hotel_product_id'] = $productId;
             // Area 'C' → customer storefront URL (the admin grid links out).
             $booking['hotel_product_url'] = TypeCoerce::toString(
                 fn_url('products.view?product_id=' . $productId, 'C')
@@ -161,21 +162,23 @@ function _travel_bookings_enrich(array $booking, bool $page = false): array
 
 /**
  * The booking's order, as its page shows it: the booking card of the order
- * line that holds it — the very card of the order page, admin version — and
- * the order's total and time. [[], []] when no order holds it (yet).
+ * line that holds it — the very card of the order page, admin version —,
+ * the order's total and time, and the line's product as the order page
+ * names it ({id, name, code, deleted}). [[], [], []] when no order holds
+ * it (yet).
  *
  * @param array<string, mixed> $booking
- * @return array{0: array<string, mixed>, 1: array<string, mixed>}
+ * @return array{0: array<string, mixed>, 1: array<string, mixed>, 2: array<string, mixed>}
  */
 function _travel_bookings_order_view(array $booking): array
 {
     $orderId = TypeCoerce::toInt($booking['order_id'] ?? 0);
     if ($orderId <= 0 || !function_exists('fn_get_order_info')) {
-        return [[], []];
+        return [[], [], []];
     }
     $order = TypeCoerce::toStringMap(fn_get_order_info($orderId));
     if ($order === []) {
-        return [[], []];
+        return [[], [], []];
     }
     $placed = TypeCoerce::toInt($order['timestamp'] ?? 0);
     $money = MoneyFormatter::forCurrency(defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : 'EUR');
@@ -205,11 +208,47 @@ function _travel_bookings_order_view(array $booking): array
                 && TypeCoerce::toString($facts['provider_booking_id'] ?? '') === $providerBookingId;
         }
         if ($mine) {
-            return [fn_travel_core_order_booking_card($line, $order, 'admin'), $orderView];
+            return [fn_travel_core_order_booking_card($line, $order, 'admin'), $orderView, [
+                'id' => TypeCoerce::toInt($line['product_id'] ?? 0),
+                'name' => TypeCoerce::toString($line['product'] ?? ''),
+                'code' => TypeCoerce::toString($line['product_code'] ?? ''),
+                'deleted' => !empty($line['deleted_product']),
+            ]];
         }
     }
 
-    return [[], $orderView];
+    return [[], $orderView, []];
+}
+
+/**
+ * The hotel as the order page shows it: the order line's product, its name
+ * and code, its link opening the product for editing (none once deleted);
+ * a booking no order holds yet takes the hotel's product, as its provider
+ * resolves it. The name is plain text (the order page prints it as stored,
+ * entities and all), escaped by the template.
+ *
+ * @param array<string, mixed> $booking
+ * @param array<string, mixed> $line
+ * @return array{name: string, code: string, url: string}
+ */
+function _travel_bookings_hotel_product(array $booking, array $line): array
+{
+    $productId = TypeCoerce::toInt($line['id'] ?? 0);
+    if ($productId <= 0) {
+        $productId = TypeCoerce::toInt($booking['hotel_product_id'] ?? 0);
+    }
+    $name = TypeCoerce::toString($line['name'] ?? '');
+    if ($name === '' && $productId > 0 && function_exists('fn_get_product_name')) {
+        $name = TypeCoerce::toString(fn_get_product_name($productId));
+    }
+
+    return [
+        'name' => trim(strip_tags(html_entity_decode($name, ENT_QUOTES | ENT_HTML5, 'UTF-8'))),
+        'code' => TypeCoerce::toString($line['code'] ?? ''),
+        'url' => $productId > 0 && empty($line['deleted'])
+            ? TypeCoerce::toString(fn_url('products.update?product_id=' . $productId))
+            : '',
+    ];
 }
 
 // ── POST modes ──
@@ -455,7 +494,8 @@ if ($mode === 'manage') {
     $currency = strtoupper(TypeCoerce::toString($booking['currency'] ?? ''));
     $booking['total_label'] = $total > 0 ? MoneyFormatter::forCurrency($currency !== '' ? $currency : 'EUR')->formatDisplay($total) : '';
 
-    [$card, $orderView] = _travel_bookings_order_view($booking);
+    [$card, $orderView, $line] = _travel_bookings_order_view($booking);
+    $booking['hotel_product'] = _travel_bookings_hotel_product($booking, $line);
 
     $providerName = TypeCoerce::toString($booking['provider'] ?? '');
     $providerInfo = $providerName !== '' ? TravelProviderRegistry::get($providerName) : null;

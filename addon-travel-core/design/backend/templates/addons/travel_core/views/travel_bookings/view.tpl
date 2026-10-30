@@ -98,10 +98,12 @@
                 <h4 class="travel-bv__card-title">{__("travel_core.obc_stay")}</h4>
                 <div class="travel-bv__hotel">
                     <div>
-                        <strong>{if $page.stay.hotel_url}<a href="{$page.stay.hotel_url|escape:html}" target="_blank" rel="noopener">{$page.stay.hotel|escape:html}</a>{else}{$page.stay.hotel|escape:html}{/if}</strong>
+                        {* As on the order page: the product's name, opening it for editing, and its code. *}
+                        <strong>{if $page.stay.hotel_url}<a href="{$page.stay.hotel_url|escape:html}">{$page.stay.hotel|escape:html}</a>{else}{$page.stay.hotel|escape:html}{/if}</strong>
+                        {if $page.stay.hotel_code}<div class="travel-obc__muted">{__("sku")}:{$page.stay.hotel_code|escape:html}</div>{/if}
                         {if $page.stay.location}<div class="travel-obc__muted">{$page.stay.location|escape:html}</div>{/if}
                     </div>
-                    {if $page.stay.hotel_url}<a class="travel-bv__out" href="{$page.stay.hotel_url|escape:html}" target="_blank" rel="noopener">{__("travel_core.bv_view_storefront")} &#8599;</a>{/if}
+                    {if $page.stay.storefront_url}<a class="travel-bv__out" href="{$page.stay.storefront_url|escape:html}" target="_blank" rel="noopener">{__("travel_core.bv_view_storefront")} &#8599;</a>{/if}
                 </div>
                 {if $page.stay.package}
                     <div class="travel-bv__line"><span class="travel-obc__muted">{__("travel_core.package")}:</span> {$page.stay.package|escape:html}</div>

@@ -54,6 +54,11 @@ final class BookingPageFactoryTest extends TestCase
             'linked_at' => '2026-10-29 22:14:25',
             'total_label' => '€499.00',
             'hotel_product_url' => 'https://shop.test/ardo-vel',
+            'hotel_product' => [
+                'name' => 'Ardo Vel Apartments subtitle',
+                'code' => 'NVT4658',
+                'url' => 'https://shop.test/admin.php?dispatch=products.update&product_id=296',
+            ],
             'provider_display' => [
                 'provider_ref' => '',
                 'novoton_status' => '',
@@ -157,8 +162,10 @@ final class BookingPageFactoryTest extends TestCase
         self::assertSame('€499.00', $page['facts']['total']);
         self::assertSame('$527.00', $page['facts']['order_total']);
 
-        self::assertSame('ARDO VEL', $page['stay']['hotel']);
-        self::assertSame('https://shop.test/ardo-vel', $page['stay']['hotel_url']);
+        self::assertSame('Ardo Vel Apartments subtitle', $page['stay']['hotel'], 'the hotel as the order page names it');
+        self::assertSame('https://shop.test/admin.php?dispatch=products.update&product_id=296', $page['stay']['hotel_url']);
+        self::assertSame('NVT4658', $page['stay']['hotel_code']);
+        self::assertSame('https://shop.test/ardo-vel', $page['stay']['storefront_url']);
         self::assertSame('Q-Direct booking prices ArdoVel', $page['stay']['package']);
         self::assertSame('Doble room (DOUBLE)', $page['stay']['rooms'][0]['supplier_room']);
         self::assertSame(
@@ -303,5 +310,19 @@ final class BookingPageFactoryTest extends TestCase
 
         self::assertSame(0, $today['banner']['days_left']);
         self::assertSame(-1, $begun['banner']['days_left']);
+    }
+
+    public function testWithoutItsProductTheHotelKeepsTheSuppliersNameUnlinked(): void
+    {
+        $booking = self::booking();
+        $booking['hotel_product'] = ['name' => '', 'code' => '', 'url' => ''];
+
+        $withCard = self::factory()->build($booking, self::card(), self::order(), 'Novoton');
+        $withoutCard = self::factory()->build(['hotel_name' => 'ARDO VEL'] + $booking, [], [], 'Novoton');
+
+        self::assertSame('ARDO VEL', $withCard['stay']['hotel']);
+        self::assertSame('ARDO VEL', $withoutCard['stay']['hotel']);
+        self::assertSame('', $withCard['stay']['hotel_url']);
+        self::assertSame('', $withCard['stay']['hotel_code']);
     }
 }

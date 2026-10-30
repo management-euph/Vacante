@@ -86,15 +86,34 @@ final class TravelBookingsAdminTest extends TestCase
         }
     }
 
-    public function testHotelNameLinksToTheStorefrontProductPageInANewWindow(): void
+    public function testTheListLinksTheHotelToTheStorefrontTheBookingPageToItsAdminProduct(): void
     {
-        foreach (['manage.tpl' => '$booking.hotel_product_url', 'view.tpl' => '$page.stay.hotel_url'] as $name => $url) {
-            self::assertStringContainsString(
-                '<a href="{' . $url . '|escape:html}" target="_blank" rel="noopener">',
-                self::backendTpl($name),
-                "{$name}: the hotel name must link to the storefront product page in a new window",
-            );
-        }
+        self::assertStringContainsString(
+            '<a href="{$booking.hotel_product_url|escape:html}" target="_blank" rel="noopener">',
+            self::backendTpl('manage.tpl'),
+            'manage.tpl: the hotel name links to the storefront product page in a new window',
+        );
+        $view = self::backendTpl('view.tpl');
+        self::assertStringContainsString(
+            '<a href="{$page.stay.hotel_url|escape:html}">{$page.stay.hotel|escape:html}</a>',
+            $view,
+            'view.tpl: the hotel name opens its product in the admin, as on the order page',
+        );
+        self::assertStringContainsString(
+            '<a class="travel-bv__out" href="{$page.stay.storefront_url|escape:html}" target="_blank" rel="noopener">',
+            $view,
+            'view.tpl: the storefront page stays one click away, in a new window',
+        );
+    }
+
+    public function testTheBookingPageOpensTheHotelsProductForEditing(): void
+    {
+        $controller = (string) file_get_contents(
+            dirname(__DIR__, 3) . '/controllers/backend/travel_bookings.php',
+        );
+
+        self::assertStringContainsString("fn_url('products.update?product_id=' . \$productId)", $controller);
+        self::assertStringContainsString("\$line['product_code']", $controller, 'the code, as the order page shows it');
     }
 
     public function testControllerResolvesTheProductThroughTheProviderRegistry(): void
