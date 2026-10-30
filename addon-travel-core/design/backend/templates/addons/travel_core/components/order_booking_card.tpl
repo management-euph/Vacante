@@ -124,10 +124,14 @@
                 <div class="travel-obc__room-body">
                     <div>
                         <strong>{if $tobc_room.name}{$tobc_room.name|escape:html}{else}{__("travel_core.room")}{/if}</strong>
-                        {if $tobc_room.code}<span class="travel-obc__muted">{$tobc_room.code|escape:html}</span>{/if}
+                        {if $tobc_room.code && !$tobc_room.supplier_room}<span class="travel-obc__muted">{$tobc_room.code|escape:html}</span>{/if}
                         {if $tobc_room.board} &middot; {$tobc_room.board|escape:html}{/if}
                         {if $tobc_room.adults} &middot; {__("travel_core.n_adults", [$tobc_room.adults])}{/if}{if $tobc_room.children}, {__("travel_core.n_children", [$tobc_room.children])}{if $tobc_room.children_ages} ({$tobc_room.children_ages|escape:html}){/if}{/if}
                     </div>
+                    {* The room as the supplier names it (admin only): novoton's IdRoom (Type). *}
+                    {if $tobc_room.supplier_room}
+                        <div class="travel-obc__supplier-room"><span class="travel-obc__muted">{__("travel_core.obc_supplier_room", ["[provider]" => $tobc.provider.name])}</span> <code>{$tobc_room.supplier_room|escape:html}</code></div>
+                    {/if}
                     {if $tobc_room.guests}
                         <div class="travel-obc__guests">
                             {foreach from=$tobc_room.guests item="tobc_guest" name="tobc_guests"}

@@ -117,6 +117,19 @@ final class OrderBookingCardFactoryTest extends TestCase
         self::assertSame([], $card['alert']);
     }
 
+    public function testTheAdminSeesEachRoomAsTheSupplierNamesIt(): void
+    {
+        $facts = self::facts(['supplier_rooms' => ['QUAT 2+2 FRENCH BALCONY (QUATRIPLE)', 'TRP 2+1 (TRP)']]);
+        $admin = self::factory()->build(self::item(), 'admin', self::booking(), $facts, self::meta());
+        $customer = self::factory()->build(self::item(), 'customer', self::booking(), $facts, self::meta());
+
+        self::assertSame(
+            ['QUAT 2+2 FRENCH BALCONY (QUATRIPLE)', 'TRP 2+1 (TRP)'],
+            array_column($admin['room_cards'], 'supplier_room'),
+        );
+        self::assertSame(['', ''], array_column($customer['room_cards'], 'supplier_room'), 'never on the customer\'s card');
+    }
+
     public function testABookingLinkedBeforeTheLinkTimeWasRecordedShowsNone(): void
     {
         // Stores that predate travel_bookings.linked_at keep NULL for the

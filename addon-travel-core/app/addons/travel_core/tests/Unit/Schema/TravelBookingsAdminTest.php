@@ -51,7 +51,9 @@ final class TravelBookingsAdminTest extends TestCase
 
         self::assertStringContainsString('{__("travel_core.hotel_name")}', self::backendTpl('manage.tpl'));
         self::assertStringContainsString('{__("travel_core.hotel")}', self::backendTpl('manage.tpl'));
-        self::assertStringContainsString('{__("travel_core.hotel_name")}', self::backendTpl('view.tpl'));
+        // The booking page names the hotel in its Stay card, under the
+        // card's own seeded heading.
+        self::assertStringContainsString('{__("travel_core.obc_stay")}', self::backendTpl('view.tpl'));
     }
 
     public function testViewLabelsUseSeededTravelCoreKeysNotBareOnes(): void
@@ -65,8 +67,10 @@ final class TravelBookingsAdminTest extends TestCase
             'bare created_at is not a lang var — renders "_created_at"; use travel_core.created');
         self::assertStringNotContainsString('{__("back")}', $view,
             'bare back depends on the kit shipping the core var — renders "_back"; use travel_core.back');
-        self::assertStringContainsString('{__("travel_core.created")}', $view);
-        self::assertStringContainsString('{__("travel_core.back")}', $view);
+        self::assertStringContainsString('{__("travel_core.bv_created", ["[date]" => $page.created])}', $view);
+        // No Back buttons of its own: the arrow beside the page title goes
+        // back, and the Travel menu is above it.
+        self::assertStringNotContainsString('{__("travel_core.back")}', $view);
     }
 
     public function testHotelNameLangKeyIsDeclaredForSeeding(): void
@@ -84,12 +88,10 @@ final class TravelBookingsAdminTest extends TestCase
 
     public function testHotelNameLinksToTheStorefrontProductPageInANewWindow(): void
     {
-        foreach (['manage.tpl', 'view.tpl'] as $name) {
-            $tpl = self::backendTpl($name);
-
+        foreach (['manage.tpl' => '$booking.hotel_product_url', 'view.tpl' => '$page.stay.hotel_url'] as $name => $url) {
             self::assertStringContainsString(
-                '<a href="{$booking.hotel_product_url|escape:html}" target="_blank" rel="noopener">',
-                $tpl,
+                '<a href="{' . $url . '|escape:html}" target="_blank" rel="noopener">',
+                self::backendTpl($name),
                 "{$name}: the hotel name must link to the storefront product page in a new window",
             );
         }

@@ -8,6 +8,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\NovotonHolidays\Services\OrderCardFacts;
+use Tygh\Addons\NovotonHolidays\Services\SupplierRoomLabels;
 
 /**
  * What the order booking card learns from a novoton booking row and line:
@@ -112,5 +113,26 @@ final class OrderCardFactsTest extends TestCase
     public function testOnlyNovotonLinesAreClaimed(): void
     {
         self::assertSame([], (new OrderCardFacts())->facts(['sphinx_booking' => true]));
+    }
+
+    public function testEachRoomCarriesItsNovotonNameForTheAdminCard(): void
+    {
+        $facts = (new OrderCardFacts(null, new SupplierRoomLabels(
+            static fn (string $hotelId): array => $hotelId === '4402' ? ['QUAT 2+2 FRENCH BALCONY' => 'QUATRIPLE', 'TRP 2+1' => 'TRP'] : [],
+        )))->facts([
+            'novoton_booking' => true,
+            'hotel_id' => '4402',
+            'room_id' => 'QUAT 2+2 FRENCH BALCONY',
+            'rooms_data' => [['room_id' => 'QUAT 2+2 FRENCH BALCONY'], ['room_id' => 'TRP 2%2B1']],
+        ]);
+
+        self::assertSame(['QUAT 2+2 FRENCH BALCONY (QUATRIPLE)', 'TRP 2+1 (TRP)'], $facts['supplier_rooms']);
+    }
+
+    public function testALineWithoutARoomCodeHasNoSupplierRooms(): void
+    {
+        $facts = (new OrderCardFacts(null, new SupplierRoomLabels(static fn (): array => [])))->facts(['novoton_booking' => true]);
+
+        self::assertArrayNotHasKey('supplier_rooms', $facts);
     }
 }

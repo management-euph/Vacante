@@ -3409,3 +3409,135 @@ msgstr "The struck price is the price without the [deal] discount."
 msgctxt "Languages::travel_core.pdpa_r_room_only"
 msgid "Room only"
 msgstr "Room only"
+
+msgctxt "Languages::travel_core.obc_supplier_room"
+msgid "[provider] room"
+msgstr "[provider] room"
+
+msgctxt "Languages::travel_core.bv_check_status"
+msgid "Check status"
+msgstr "Check status"
+
+msgctxt "Languages::travel_core.bv_open_order"
+msgid "Open order #[id]"
+msgstr "Open order #[id]"
+
+msgctxt "Languages::travel_core.bv_order"
+msgid "Order"
+msgstr "Order"
+
+msgctxt "Languages::travel_core.bv_created"
+msgid "Created [date]"
+msgstr "Created [date]"
+
+msgctxt "Languages::travel_core.bv_awaiting_title"
+msgid "[provider] hasn't confirmed this booking yet"
+msgstr "[provider] hasn't confirmed this booking yet"
+
+msgctxt "Languages::travel_core.bv_awaiting_no_ref"
+msgid "No supplier reference has come back since it was sent on [date]."
+msgstr "No supplier reference has come back since it was sent on [date]."
+
+msgctxt "Languages::travel_core.bv_awaiting_ref"
+msgid "The supplier has it, but has not confirmed it yet."
+msgstr "The supplier has it, but has not confirmed it yet."
+
+msgctxt "Languages::travel_core.bv_check_in_days"
+msgid "Check-in is in [n] day.|Check-in is in [n] days."
+msgstr "Check-in is in [n] day.|Check-in is in [n] days."
+
+msgctxt "Languages::travel_core.bv_check_in_today"
+msgid "Check-in is today."
+msgstr "Check-in is today."
+
+msgctxt "Languages::travel_core.bv_awaiting_hint"
+msgid "Use Check status to ask [provider] again."
+msgstr "Use Check status to ask [provider] again."
+
+msgctxt "Languages::travel_core.bv_booking_total"
+msgid "Booking total"
+msgstr "Booking total"
+
+msgctxt "Languages::travel_core.bv_order_total"
+msgid "Order total"
+msgstr "Order total"
+
+msgctxt "Languages::travel_core.bv_view_storefront"
+msgid "View on storefront"
+msgstr "View on storefront"
+
+msgctxt "Languages::travel_core.bv_guest"
+msgid "Guest"
+msgstr "Guest"
+
+msgctxt "Languages::travel_core.bv_type"
+msgid "Type"
+msgstr "Type"
+
+msgctxt "Languages::travel_core.bv_age"
+msgid "Age"
+msgstr "Age"
+
+msgctxt "Languages::travel_core.bv_adult"
+msgid "Adult"
+msgstr "Adult"
+
+msgctxt "Languages::travel_core.bv_child"
+msgid "Child"
+msgstr "Child"
+
+msgctxt "Languages::travel_core.bv_terms"
+msgid "Cancellation & payment"
+msgstr "Cancellation & payment"
+
+msgctxt "Languages::travel_core.bv_supplier"
+msgid "Supplier"
+msgstr "Supplier"
+
+msgctxt "Languages::travel_core.bv_status"
+msgid "Status"
+msgstr "Status"
+
+msgctxt "Languages::travel_core.bv_reference"
+msgid "Reference"
+msgstr "Reference"
+
+msgctxt "Languages::travel_core.bv_not_received"
+msgid "Not received yet"
+msgstr "Not received yet"
+
+msgctxt "Languages::travel_core.bv_ids_hint"
+msgid "[provider]'s own booking numbers show here once it confirms the booking."
+msgstr "[provider]'s own booking numbers show here once it confirms the booking."
+
+msgctxt "Languages::travel_core.bv_placed"
+msgid "Placed"
+msgstr "Placed"
+
+msgctxt "Languages::travel_core.bv_history"
+msgid "History"
+msgstr "History"
+
+msgctxt "Languages::travel_core.bv_history_order"
+msgid "Order #[id] placed"
+msgstr "Order #[id] placed"
+
+msgctxt "Languages::travel_core.bv_history_linked"
+msgid "Linked to order #[id]"
+msgstr "Linked to order #[id]"
+
+msgctxt "Languages::travel_core.bv_history_created"
+msgid "Booking created (added to a cart)"
+msgstr "Booking created (added to a cart)"
+
+msgctxt "Languages::travel_core.bv_history_updated"
+msgid "Last updated"
+msgstr "Last updated"
+
+msgctxt "Languages::travel_core.bv_technical"
+msgid "Technical details"
+msgstr "Technical details"
+
+msgctxt "Languages::travel_core.bv_technical_hint"
+msgid "Every field the provider keeps for this booking, for troubleshooting."
+msgstr "Every field the provider keeps for this booking, for troubleshooting."

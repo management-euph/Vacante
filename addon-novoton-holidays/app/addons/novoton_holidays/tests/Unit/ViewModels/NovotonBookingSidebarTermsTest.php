@@ -48,6 +48,17 @@ final class NovotonBookingSidebarTermsTest extends TestCase
         ], $installments);
     }
 
+    public function testAPenaltyTypeThatIsNeitherPercentNorNightsIsAnAmount(): void
+    {
+        [$windows] = NovotonBookingSidebarBuilder::terms([
+            ['value' => 499.0, 'type' => 'Amount', 'till_date' => '2026-10-30', 'is_penalty' => true],
+            ['value' => 100.0, 'type' => 'Percent', 'till_date' => '2026-11-02', 'is_penalty' => true],
+        ], []);
+
+        self::assertSame(['to' => '2026-10-30', 'percent' => null, 'nights' => null, 'no_show' => false, 'amount' => 499.0], $windows[0]);
+        self::assertSame(100.0, $windows[1]['percent']);
+    }
+
     /**
      * The cart booking card reads the quote's XML the cart line keeps, with
      * the formatted lines as the prose fallback.

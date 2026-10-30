@@ -25,6 +25,10 @@ use Tygh\Addons\TravelCore\Repository\OrderLinkCandidateRepository;
 use Tygh\Addons\TravelCore\Repository\TravelBookingRepository;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
+use Tygh\Addons\TravelCore\Services\DateHelper;
+use Tygh\Addons\TravelCore\Services\MoneyFormatter;
+use Tygh\Addons\TravelCore\Services\TravelCoreConfig;
+use Tygh\Addons\TravelCore\ViewModels\BookingPageFactory;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -146,6 +150,59 @@ function _travel_bookings_enrich(array $booking): array
     return $booking;
 }
 
+/**
+ * The booking's order, as its page shows it: the booking card of the order
+ * line that holds it — the very card of the order page, admin version — and
+ * the order's total and time. [[], []] when no order holds it (yet).
+ *
+ * @param array<string, mixed> $booking
+ * @return array{0: array<string, mixed>, 1: array<string, mixed>}
+ */
+function _travel_bookings_order_view(array $booking): array
+{
+    $orderId = TypeCoerce::toInt($booking['order_id'] ?? 0);
+    if ($orderId <= 0 || !function_exists('fn_get_order_info')) {
+        return [[], []];
+    }
+    $order = TypeCoerce::toStringMap(fn_get_order_info($orderId));
+    if ($order === []) {
+        return [[], []];
+    }
+    $placed = TypeCoerce::toInt($order['timestamp'] ?? 0);
+    $money = MoneyFormatter::forCurrency(defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : 'EUR');
+    $orderView = [
+        'id' => $orderId,
+        'total' => $money->formatDisplay(TypeCoerce::toFloat($order['total'] ?? 0)),
+        'placed' => $placed > 0 ? DateHelper::formatWith($placed, TravelCoreConfig::getDateFormat() . ' %H:%M') : '',
+        'placed_ts' => $placed,
+    ];
+
+    $bookingId = TypeCoerce::toInt($booking['booking_id'] ?? 0);
+    $provider = TypeCoerce::toString($booking['provider'] ?? '');
+    $providerBookingId = TypeCoerce::toString($booking['provider_booking_id'] ?? '');
+    foreach (TypeCoerce::toRowList($order['products'] ?? null) as $line) {
+        $extra = TypeCoerce::toStringMap($line['extra'] ?? null);
+        if (empty($extra['travel_booking']) || !empty($extra['parent'])) {
+            continue;
+        }
+        // The unified id when the line carries it; else the provider's own.
+        $surrogate = TypeCoerce::toInt($extra['travel_surrogate_id'] ?? 0);
+        if ($surrogate > 0) {
+            $mine = $surrogate === $bookingId;
+        } else {
+            $facts = TravelProviderRegistry::orderCardFacts($extra);
+            $mine = $providerBookingId !== ''
+                && TypeCoerce::toString($facts['provider'] ?? '') === $provider
+                && TypeCoerce::toString($facts['provider_booking_id'] ?? '') === $providerBookingId;
+        }
+        if ($mine) {
+            return [fn_travel_core_order_booking_card($line, $order, 'admin'), $orderView];
+        }
+    }
+
+    return [[], $orderView];
+}
+
 // ── POST modes ──
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -215,7 +272,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         }
-        return [CONTROLLER_STATUS_REDIRECT, 'travel_bookings.manage'];
+        // Back to the booking it was asked from (its page is the only caller).
+        return [CONTROLLER_STATUS_REDIRECT, $booking_id > 0 ? 'travel_bookings.view?booking_id=' . $booking_id : 'travel_bookings.manage'];
     }
 
     // Provider-specific actions delegated via BookingAdminProviderInterface::handleAction()
@@ -380,89 +438,27 @@ if ($mode === 'manage') {
         }
     }
 
-    // Pre-format check-in/check-out dates in PHP. The view template must NOT use
-    // the Smarty |date_format modifier inside its {capture name="mainbox"} block:
-    // under Smarty 5 / PHP 8.3 it throws, leaving the capture unclosed and
-    // surfacing as the masked "Not matching {capture}{/capture}" crash.
-    // fn_date_format is the blessed safe path.
-    $ci = TypeCoerce::toString($booking['check_in'] ?? '');
-    $co = TypeCoerce::toString($booking['check_out'] ?? '');
-    $ci_ts = $ci !== '' ? strtotime($ci) : false;
-    $co_ts = $co !== '' ? strtotime($co) : false;
-    $booking['check_in_short']  = $ci_ts !== false ? fn_date_format($ci_ts, '%d.%m.%Y') : '';
-    $booking['check_out_short'] = $co_ts !== false ? fn_date_format($co_ts, '%d.%m.%Y') : '';
+    // Its total in its own currency ("€499.00"). Everything the page shows is
+    // prepared here and in BookingPageFactory: modifiers and PHP calls inside
+    // the template's {capture name="mainbox"} throw under Smarty 5 and surface
+    // as the masked "Not matching {capture}{/capture}".
+    $total = TypeCoerce::toFloat($booking['total_price'] ?? 0);
+    $currency = strtoupper(TypeCoerce::toString($booking['currency'] ?? ''));
+    $booking['total_label'] = $total > 0 ? MoneyFormatter::forCurrency($currency !== '' ? $currency : 'EUR')->formatDisplay($total) : '';
 
-    // Build provider-display rows in PHP so the template needs no PHP-function
-    // calls (is_array/json_encode). Under Smarty 5 a PHP function call inside the
-    // {capture name="mainbox"} block fails and surfaces as the masked
-    // "Not matching {capture}{/capture}" crash. We pre-flatten each value here:
-    //   - arrays → pretty-printed JSON, flagged is_pre so the template wraps in <pre>
-    //   - scalars → plain string
-    $providerDisplay = is_array($booking['provider_display'] ?? null) ? $booking['provider_display'] : [];
-    $providerDisplayRows = [];
-    foreach ($providerDisplay as $field => $value) {
-        // Skip internal fields used for rendering elsewhere
-        if ($field === 'status_label' || $field === 'provider_ref') {
-            continue;
-        }
-        $isArr = is_array($value);
-        $providerDisplayRows[] = [
-            'label'   => ucfirst(str_replace('_', ' ', (string) $field)),
-            'is_pre'  => $isArr,
-            'display' => $isArr
-                ? (string) json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
-                : TypeCoerce::toString($value),
-        ];
-    }
-    $booking['provider_display_rows'] = $providerDisplayRows;
+    [$card, $orderView] = _travel_bookings_order_view($booking);
 
-    // Pre-format the total price in PHP so the template carries no non-builtin
-    // Smarty modifiers inside its {capture} block.
-    $booking['total_price_formatted'] = number_format(
-        TypeCoerce::toFloat($booking['total_price'] ?? 0),
-        2
-    );
-
-    // Get order info if linked
-    $orderId = TypeCoerce::toInt($booking['order_id'] ?? 0);
-    if ($orderId > 0) {
-        $order = fn_get_order_info($orderId);
-        /** @var \Smarty $view */
-        $view = Tygh::$app['view'];
-        $view->assign('order', $order);
-    }
-
-    // Pre-format dates — Smarty |date_format throws inside {capture} under Smarty 5 / PHP 8.3
-    $ci_ts = !empty($booking['check_in'])  ? strtotime(TypeCoerce::toString($booking['check_in']))  : false;
-    $co_ts = !empty($booking['check_out']) ? strtotime(TypeCoerce::toString($booking['check_out'])) : false;
-    $booking['check_in_short']  = $ci_ts !== false ? fn_date_format($ci_ts, '%d.%m.%Y') : '';
-    $booking['check_out_short'] = $co_ts !== false ? fn_date_format($co_ts, '%d.%m.%Y') : '';
-
-    // Pre-format total price — |number_format modifier also throws inside {capture}
-    $booking['total_price_formatted'] = number_format(TypeCoerce::toFloat($booking['total_price'] ?? 0), 2);
-
-    // Pre-flatten provider_display into simple rows — avoids is_array()/json_encode in template
-    $providerDisplay = is_array($booking['provider_display'] ?? null) ? $booking['provider_display'] : [];
-    $providerDisplayRows = [];
-    foreach ($providerDisplay as $field => $value) {
-        if ($field === 'status_label' || $field === 'provider_ref') {
-            continue;
-        }
-        $isArr = is_array($value);
-        $providerDisplayRows[] = [
-            'label'   => ucfirst(str_replace('_', ' ', (string) $field)),
-            'is_pre'  => $isArr,
-            'display' => $isArr
-                ? (string) json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
-                : TypeCoerce::toString($value),
-        ];
-    }
-    $booking['provider_display_rows'] = $providerDisplayRows;
+    $providerName = TypeCoerce::toString($booking['provider'] ?? '');
+    $providerInfo = $providerName !== '' ? TravelProviderRegistry::get($providerName) : null;
+    $page = (new BookingPageFactory(
+        MoneyFormatter::forCurrency(defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : 'EUR'),
+        date('Y-m-d'),
+        TravelCoreConfig::getDateFormat(),
+    ))->build($booking, $card, $orderView, $providerInfo !== null ? TypeCoerce::toString($providerInfo['label']) : '');
 
     // Get provider-specific tabs
     $providerTabs = [];
-    $providerName = TypeCoerce::toString($booking['provider'] ?? '');
-    if (!empty($providerName)) {
+    if ($providerName !== '') {
         $adminProvider = TravelProviderRegistry::getBookingAdminProvider($providerName);
         if ($adminProvider !== null) {
             $providerTabs = $adminProvider->getProviderTabs($booking);
@@ -472,5 +468,6 @@ if ($mode === 'manage') {
     /** @var \Smarty $view */
     $view = Tygh::$app['view'];
     $view->assign('booking', $booking);
+    $view->assign('page', $page);
     $view->assign('provider_tabs', $providerTabs);
 }

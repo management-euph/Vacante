@@ -286,7 +286,9 @@ class TravelProviderRegistry
      * the provider's booking row knows. The resolver gets the line's extra
      * and returns [] for lines it does not own, else
      * {provider_booking_id, reference, our_reference, error, not_sent, note,
-     * kind, transport, meals, departure, services} (every key optional).
+     * kind, transport, meals, departure, services, supplier_rooms} (every key
+     * optional; supplier_rooms: each room as the supplier names it, in room
+     * order, shown to the admin only).
      *
      * @param callable(array<string, mixed>): array<string, mixed> $resolver
      */

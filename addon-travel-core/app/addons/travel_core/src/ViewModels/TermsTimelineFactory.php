@@ -96,6 +96,8 @@ final class TermsTimelineFactory
             }
         }
 
+        $rows = self::mergeEqualNeighbours($rows, $total, $nights);
+
         $steps = [];
         $firstPenaltyFrom = null;
         foreach ($rows as $r) {
@@ -138,6 +140,55 @@ final class TermsTimelineFactory
         }
 
         return ['steps' => $steps, 'free_until' => $freeUntil, 'full_charge_now' => $fullNow];
+    }
+
+    /**
+     * Two windows in a row that charge the same are one window: novoton sends
+     * "100% until 30 Oct" and "100% until 2 Nov", which read as two prices
+     * for the same thing.
+     *
+     * @param list<array{from: ?string, to: ?string, percent: ?float, amount: ?float, nights: ?int, no_show: bool}> $rows
+     * @return list<array{from: ?string, to: ?string, percent: ?float, amount: ?float, nights: ?int, no_show: bool}>
+     */
+    private static function mergeEqualNeighbours(array $rows, float $total, int $nights): array
+    {
+        $out = [];
+        foreach ($rows as $r) {
+            $last = count($out) - 1;
+            if ($last >= 0 && !$r['no_show'] && !$out[$last]['no_show']
+                && self::charge($r, $total, $nights) === self::charge($out[$last], $total, $nights)
+                && $out[$last]['to'] !== null && $r['from'] === self::addDays($out[$last]['to'], 1)) {
+                $out[$last]['to'] = $r['to'];
+                continue;
+            }
+            $out[] = $r;
+        }
+
+        return $out;
+    }
+
+    /**
+     * What a window charges, in cents of the total when it is known (a
+     * percent, an amount and a number of nights can then be compared),
+     * else as given.
+     *
+     * @param array{percent: ?float, amount: ?float, nights: ?int} $r
+     */
+    private static function charge(array $r, float $total, int $nights): string
+    {
+        $amount = $r['amount'];
+        if ($total > 0) {
+            if ($r['percent'] !== null) {
+                $amount = $total * min(100.0, max(0.0, $r['percent'])) / 100;
+            } elseif ($amount === null && $r['nights'] !== null && $nights > 0) {
+                $amount = $total / $nights * min($r['nights'], $nights);
+            }
+            if ($amount !== null) {
+                return (string) (int) round(min($total, max(0.0, $amount)) * 100);
+            }
+        }
+
+        return json_encode([$r['percent'], $amount, $r['nights']], JSON_PRESERVE_ZERO_FRACTION) ?: '';
     }
 
     /**
@@ -223,8 +274,12 @@ final class TermsTimelineFactory
      */
     private function step(array $r, string $kind, bool $isCurrent, float $total, int $nights): array
     {
+        // A penalty is at most the whole price: a supplier figure above 100%
+        // (an amount sent as a percent) is the full price, not 499% of it.
         $percent = self::optFloat($r['percent'] ?? null);
+        $percent = $percent !== null ? min(100.0, $percent) : null;
         $amount = self::optFloat($r['amount'] ?? null);
+        $amount = $amount !== null && $total > 0 ? min($total, $amount) : $amount;
         $n = self::optInt($r['nights'] ?? null);
         if ($amount === null && $kind !== self::KIND_FREE && $total > 0) {
             if ($percent !== null) {
