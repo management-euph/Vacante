@@ -20,90 +20,32 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
     #[\Override]
     public function createReservation(array $bookingData): \SimpleXMLElement
     {
-        $isTestMode = ConfigProvider::isTestBooking();
-
-        $remark = $bookingData['remark'] ?? '';
-        $comment = $bookingData['comment'] ?? '';
-
-        if ($isTestMode) {
-            $remark = 'test reservation, do not proceed';
-            $comment = 'test reservation, do not proceed';
-        }
-
-        $guestsXml = $this->buildGuestsXml(TypeCoerce::toStringMap($bookingData['guests'] ?? []));
-
-        // Check if this is multi-room booking
-        $rooms = TypeCoerce::toRowList($bookingData['rooms'] ?? []);
-        $hotelAccXml = '';
-
-        if (!empty($rooms) && count($rooms) > 1) {
-            $guestIdCounter = 1;
-            foreach ($rooms as $roomIdx => $roomData) {
-                $roomGuestsRaw = $roomData['guests'] ?? [];
-                $roomGuests = TypeCoerce::toStringMap($roomGuestsRaw);
-                $roomAccXml = $this->buildRoomAccXml($roomGuests, $guestIdCounter);
-                $guestIdCounter += count($roomGuests);
-
-                $roomGuestRows = TypeCoerce::toRowList($roomGuestsRaw);
-                $firstGuest = $roomGuestRows[0] ?? [];
-
-                $hotelAccXml .= '
-    <hotel_acc>
-        <ConfNum></ConfNum>
-        <CheckIn>' . htmlspecialchars(TypeCoerce::toString($bookingData['check_in'] ?? '')) . '</CheckIn>
-        <CheckOut>' . htmlspecialchars(TypeCoerce::toString($bookingData['check_out'] ?? '')) . '</CheckOut>
-        <IdRoom>' . htmlspecialchars(TypeCoerce::toString($roomData['room_id'] ?? '')) . '</IdRoom>
-        <IdBoard>' . htmlspecialchars(TypeCoerce::toString($roomData['board_id'] ?? '')) . '</IdBoard>
-        <IdExtBoard></IdExtBoard>
-        <IdStar>' . htmlspecialchars(TypeCoerce::toString($bookingData['star_rating'] ?? '')) . '</IdStar>
-        <Holder>' . htmlspecialchars(TypeCoerce::toString($firstGuest['name'] ?? $bookingData['holder'] ?? '')) . '</Holder>
-        <ISO_National>' . htmlspecialchars(TypeCoerce::toString($bookingData['iso_national'] ?? Constants::DEFAULT_ISO_NATIONAL)) . '</ISO_National>
-        <Remark>' . htmlspecialchars(TypeCoerce::toString($remark)) . '</Remark>
-        <Comment>' . htmlspecialchars(TypeCoerce::toString($comment) . ' [Room ' . ($roomIdx + 1) . ']') . '</Comment>' . $roomAccXml . '
-    </hotel_acc>';
-            }
-        } else {
-            $roomAccXml = $this->buildRoomAccXml(TypeCoerce::toStringMap($bookingData['guests'] ?? []));
-
-            $hotelAccXml = '
-    <hotel_acc>
-        <ConfNum></ConfNum>
-        <CheckIn>' . htmlspecialchars(TypeCoerce::toString($bookingData['check_in'] ?? '')) . '</CheckIn>
-        <CheckOut>' . htmlspecialchars(TypeCoerce::toString($bookingData['check_out'] ?? '')) . '</CheckOut>
-        <IdRoom>' . htmlspecialchars(TypeCoerce::toString($bookingData['room_id'] ?? '')) . '</IdRoom>
-        <IdBoard>' . htmlspecialchars(TypeCoerce::toString($bookingData['board_id'] ?? '')) . '</IdBoard>
-        <IdExtBoard></IdExtBoard>
-        <IdStar>' . htmlspecialchars(TypeCoerce::toString($bookingData['star_rating'] ?? '')) . '</IdStar>
-        <Holder>' . htmlspecialchars(TypeCoerce::toString($bookingData['holder'] ?? '')) . '</Holder>
-        <ISO_National>' . htmlspecialchars(TypeCoerce::toString($bookingData['iso_national'] ?? Constants::DEFAULT_ISO_NATIONAL)) . '</ISO_National>
-        <Remark>' . htmlspecialchars(TypeCoerce::toString($remark)) . '</Remark>
-        <Comment>' . htmlspecialchars(TypeCoerce::toString($comment)) . '</Comment>' . $roomAccXml . '
-    </hotel_acc>';
-        }
-
-        $discountType = $bookingData['discount_type'] ?? '';
-
-        $xml = $this->xmlHeader() . '
-<hotel_res_RQ>
-    ' . $this->xmlCredentials() . '
-    <IdHotel>' . htmlspecialchars(TypeCoerce::toString($bookingData['hotel_id'] ?? '')) . '</IdHotel>
-    <CreatedBy>' . htmlspecialchars(Constants::DEFAULT_CREATED_BY) . '</CreatedBy>
-    <PackageName>' . htmlspecialchars(TypeCoerce::toString($bookingData['package_name'] ?? '')) . '</PackageName>
-    <CheckIn>' . htmlspecialchars(TypeCoerce::toString($bookingData['check_in'] ?? '')) . '</CheckIn>
-    <CheckOut>' . htmlspecialchars(TypeCoerce::toString($bookingData['check_out'] ?? '')) . '</CheckOut>
-    <DiscountType>' . htmlspecialchars(TypeCoerce::toString($discountType)) . '</DiscountType>' . $guestsXml . $hotelAccXml . '
-    <OrderNum>' . htmlspecialchars(TypeCoerce::toString($bookingData['order_num'] ?? '')) . '</OrderNum>
-</hotel_res_RQ>';
+        $xml = $this->buildReservationXml($bookingData);
 
         $this->lastRequest = $xml;
 
-        DebugLogger::log('Novoton hotel_res_RQ Request (Test Mode: ' . ($isTestMode ? 'YES' : 'NO') . ')', ['xml' => $this->maskCredentials($xml)]);
+        DebugLogger::log('Novoton hotel_res_RQ Request (Test Mode: ' . (ConfigProvider::isTestBooking() ? 'YES' : 'NO') . ')', ['xml' => $this->maskCredentials($xml)]);
 
         $response = $this->callApi(Constants::API_FUNCTION_RESERVATION, $xml, TypeCoerce::toString($bookingData['lang'] ?? 'UK'));
 
         DebugLogger::log('Novoton hotel_res_RQ Response', ['response' => $response]);
 
         return $this->xmlParser->parse($response);
+    }
+
+    /**
+     * The hotel_res_RQ that createReservation() sends for $bookingData,
+     * credentials masked, without sending it: a booking's admin page shows
+     * the request of its stored api_request.
+     *
+     * Pure builder, as generateHotelRequestXml(): no HTTP call, no debug
+     * state touched.
+     * @param array<string, mixed> $bookingData
+     */
+    #[\Override]
+    public function generateReservationXml(array $bookingData): string
+    {
+        return $this->maskCredentials($this->buildReservationXml($bookingData));
     }
 
     /**
@@ -281,6 +223,86 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
             $id++;
         }
         return $xml;
+    }
+
+    /**
+     * Build the full hotel_res_RQ XML (shared by createReservation and generateReservationXml).
+     * @param array<string, mixed> $bookingData
+     */
+    private function buildReservationXml(array $bookingData): string
+    {
+        $remark = $bookingData['remark'] ?? '';
+        $comment = $bookingData['comment'] ?? '';
+
+        if (ConfigProvider::isTestBooking()) {
+            $remark = 'test reservation, do not proceed';
+            $comment = 'test reservation, do not proceed';
+        }
+
+        $guestsXml = $this->buildGuestsXml(TypeCoerce::toStringMap($bookingData['guests'] ?? []));
+
+        // Check if this is multi-room booking
+        $rooms = TypeCoerce::toRowList($bookingData['rooms'] ?? []);
+        $hotelAccXml = '';
+
+        if (!empty($rooms) && count($rooms) > 1) {
+            $guestIdCounter = 1;
+            foreach ($rooms as $roomIdx => $roomData) {
+                $roomGuestsRaw = $roomData['guests'] ?? [];
+                $roomGuests = TypeCoerce::toStringMap($roomGuestsRaw);
+                $roomAccXml = $this->buildRoomAccXml($roomGuests, $guestIdCounter);
+                $guestIdCounter += count($roomGuests);
+
+                $roomGuestRows = TypeCoerce::toRowList($roomGuestsRaw);
+                $firstGuest = $roomGuestRows[0] ?? [];
+
+                $hotelAccXml .= '
+    <hotel_acc>
+        <ConfNum></ConfNum>
+        <CheckIn>' . htmlspecialchars(TypeCoerce::toString($bookingData['check_in'] ?? '')) . '</CheckIn>
+        <CheckOut>' . htmlspecialchars(TypeCoerce::toString($bookingData['check_out'] ?? '')) . '</CheckOut>
+        <IdRoom>' . htmlspecialchars(TypeCoerce::toString($roomData['room_id'] ?? '')) . '</IdRoom>
+        <IdBoard>' . htmlspecialchars(TypeCoerce::toString($roomData['board_id'] ?? '')) . '</IdBoard>
+        <IdExtBoard></IdExtBoard>
+        <IdStar>' . htmlspecialchars(TypeCoerce::toString($bookingData['star_rating'] ?? '')) . '</IdStar>
+        <Holder>' . htmlspecialchars(TypeCoerce::toString($firstGuest['name'] ?? $bookingData['holder'] ?? '')) . '</Holder>
+        <ISO_National>' . htmlspecialchars(TypeCoerce::toString($bookingData['iso_national'] ?? Constants::DEFAULT_ISO_NATIONAL)) . '</ISO_National>
+        <Remark>' . htmlspecialchars(TypeCoerce::toString($remark)) . '</Remark>
+        <Comment>' . htmlspecialchars(TypeCoerce::toString($comment) . ' [Room ' . ($roomIdx + 1) . ']') . '</Comment>' . $roomAccXml . '
+    </hotel_acc>';
+            }
+        } else {
+            $roomAccXml = $this->buildRoomAccXml(TypeCoerce::toStringMap($bookingData['guests'] ?? []));
+
+            $hotelAccXml = '
+    <hotel_acc>
+        <ConfNum></ConfNum>
+        <CheckIn>' . htmlspecialchars(TypeCoerce::toString($bookingData['check_in'] ?? '')) . '</CheckIn>
+        <CheckOut>' . htmlspecialchars(TypeCoerce::toString($bookingData['check_out'] ?? '')) . '</CheckOut>
+        <IdRoom>' . htmlspecialchars(TypeCoerce::toString($bookingData['room_id'] ?? '')) . '</IdRoom>
+        <IdBoard>' . htmlspecialchars(TypeCoerce::toString($bookingData['board_id'] ?? '')) . '</IdBoard>
+        <IdExtBoard></IdExtBoard>
+        <IdStar>' . htmlspecialchars(TypeCoerce::toString($bookingData['star_rating'] ?? '')) . '</IdStar>
+        <Holder>' . htmlspecialchars(TypeCoerce::toString($bookingData['holder'] ?? '')) . '</Holder>
+        <ISO_National>' . htmlspecialchars(TypeCoerce::toString($bookingData['iso_national'] ?? Constants::DEFAULT_ISO_NATIONAL)) . '</ISO_National>
+        <Remark>' . htmlspecialchars(TypeCoerce::toString($remark)) . '</Remark>
+        <Comment>' . htmlspecialchars(TypeCoerce::toString($comment)) . '</Comment>' . $roomAccXml . '
+    </hotel_acc>';
+        }
+
+        $discountType = $bookingData['discount_type'] ?? '';
+
+        return $this->xmlHeader() . '
+<hotel_res_RQ>
+    ' . $this->xmlCredentials() . '
+    <IdHotel>' . htmlspecialchars(TypeCoerce::toString($bookingData['hotel_id'] ?? '')) . '</IdHotel>
+    <CreatedBy>' . htmlspecialchars(Constants::DEFAULT_CREATED_BY) . '</CreatedBy>
+    <PackageName>' . htmlspecialchars(TypeCoerce::toString($bookingData['package_name'] ?? '')) . '</PackageName>
+    <CheckIn>' . htmlspecialchars(TypeCoerce::toString($bookingData['check_in'] ?? '')) . '</CheckIn>
+    <CheckOut>' . htmlspecialchars(TypeCoerce::toString($bookingData['check_out'] ?? '')) . '</CheckOut>
+    <DiscountType>' . htmlspecialchars(TypeCoerce::toString($discountType)) . '</DiscountType>' . $guestsXml . $hotelAccXml . '
+    <OrderNum>' . htmlspecialchars(TypeCoerce::toString($bookingData['order_num'] ?? '')) . '</OrderNum>
+</hotel_res_RQ>';
     }
 
     /**

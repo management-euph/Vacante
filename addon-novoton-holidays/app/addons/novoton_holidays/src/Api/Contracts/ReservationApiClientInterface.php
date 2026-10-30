@@ -21,6 +21,16 @@ interface ReservationApiClientInterface
      */
     public function createReservation(array $bookingData): \SimpleXMLElement;
 
+    /**
+     * Generate the hotel_res_RQ XML that createReservation() sends for
+     * $bookingData, credentials masked, **without sending** it — for a
+     * booking's admin page.
+     *
+     * This is a pure XML builder: no HTTP call, no debug state mutation.
+     * @param array<string, mixed> $bookingData
+     */
+    public function generateReservationXml(array $bookingData): string;
+
     /** 15. resinfo — Reservations info. */
     public function getReservationInfo(string $idNum = '', string $confirmAgency = '', string $lang = 'UK'): \SimpleXMLElement;
 
