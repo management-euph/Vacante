@@ -23,6 +23,9 @@ final class SupplierRoomLabels
     /** @var \Closure(string): array<string, string> hotel id => [IdRoom => Type] */
     private readonly \Closure $types;
 
+    /** @var array<string, array<string, string>> each hotel's rooms, read once */
+    private array $read = [];
+
     /**
      * @param (\Closure(string): array<string, string>)|null $types IdRoom => Type of a hotel (default: the stored hotelinfo)
      */
@@ -41,13 +44,26 @@ final class SupplierRoomLabels
         if (array_filter($codes, static fn (string $code): bool => $code !== '') === []) {
             return [];
         }
-        $types = $hotelId !== '' ? ($this->types)($hotelId) : [];
+        $types = $this->types($hotelId);
 
-        return array_map(static function (string $code) use ($types): string {
-            $type = $types[$code] ?? '';
+        return array_map(static fn (string $code): string => self::label($code, $types[$code] ?? ''), $codes);
+    }
 
-            return $type !== '' && strcasecmp($type, $code) !== 0 ? "{$code} ({$type})" : $code;
-        }, $codes);
+    /**
+     * Every room the hotel's stored hotelinfo lists, named as labels() names
+     * a booked one: the admin holds a booking's room code against them.
+     *
+     * @return list<string>
+     */
+    public function hotelRooms(string $hotelId): array
+    {
+        $rooms = [];
+        foreach ($this->types($hotelId) as $code => $type) {
+            // An all-digit IdRoom ("101") is an int key by now.
+            $rooms[] = self::label((string) $code, $type);
+        }
+
+        return $rooms;
     }
 
     /**
@@ -101,6 +117,24 @@ final class SupplierRoomLabels
         }
 
         return $types;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function types(string $hotelId): array
+    {
+        if ($hotelId === '') {
+            return [];
+        }
+
+        return $this->read[$hotelId] ??= ($this->types)($hotelId);
+    }
+
+    /** "QUAT 2+2 FRENCH BALCONY (QUATRIPLE)"; a Type that only repeats the code is left out. */
+    private static function label(string $code, string $type): string
+    {
+        return $type !== '' && strcasecmp($type, $code) !== 0 ? "{$code} ({$type})" : $code;
     }
 
     /**

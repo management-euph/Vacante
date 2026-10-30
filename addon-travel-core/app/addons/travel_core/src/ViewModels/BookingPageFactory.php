@@ -26,7 +26,9 @@ use Tygh\Addons\TravelCore\TravelConstants;
  *  - key facts at a glance: dates, nights, guests, the totals;
  *  - the supplier's side (status, reference, price, and the provider's own
  *    fields that hold a value), the order, and the booking's history;
- *  - every raw provider field, folded away, for troubleshooting.
+ *  - every raw provider field, folded away, for troubleshooting, with the
+ *    booking's exchange with the supplier (BookingPageDetailsProviderInterface:
+ *    what was sent, what came back).
  *
  * A booking no order holds yet (still in a cart) has no card: its stay comes
  * from its ?:travel_bookings row, without terms.
@@ -41,7 +43,7 @@ final class BookingPageFactory
     public const BANNER_NOT_SENT = 'not_sent';
 
     /** Provider display fields the page already shows in their own place. */
-    private const array SHOWN_ELSEWHERE = ['status_label', 'provider_ref', 'supplier_rooms'];
+    private const array SHOWN_ELSEWHERE = ['status_label', 'provider_ref'];
 
     /** Statuses after which the supplier has nothing left to answer. */
     private const array SETTLED = [
@@ -59,8 +61,8 @@ final class BookingPageFactory
 
     /**
      * $booking is the ?:travel_bookings row as enriched for the page
-     * (provider_display, provider_actions, hotel_product_url, guests_decoded,
-     * total_label: its total, formatted); $card the admin booking card of its
+     * (provider_display, provider_page, provider_actions, hotel_product_url,
+     * guests_decoded, total_label: its total, formatted); $card the admin booking card of its
      * order line and $order its order, formatted ({id, total, placed,
      * placed_ts}) — both [] when no order holds it.
      *
@@ -74,6 +76,7 @@ final class BookingPageFactory
         $id = TypeCoerce::toInt($booking['booking_id'] ?? 0);
         $provider = TypeCoerce::toString($booking['provider'] ?? '');
         $display = TypeCoerce::toStringMap($booking['provider_display'] ?? null);
+        $details = TypeCoerce::toStringMap($booking['provider_page'] ?? null);
         $hasCard = $card !== [];
         $status = $hasCard
             ? self::statusOf($card)
@@ -92,7 +95,7 @@ final class BookingPageFactory
             'banner' => $banner,
             'actions' => $this->actions($id, $provider, $orderId, $booking, $banner),
             'facts' => $this->facts($booking, $card, $order),
-            'stay' => $this->stay($booking, $card, $display),
+            'stay' => $this->stay($booking, $card, $details),
             'terms' => $hasCard && !empty($card['has_terms'])
                 ? ['cancel' => TypeCoerce::toStringMap($card['cancel'] ?? null), 'lists' => TypeCoerce::toStringMap($card['terms'] ?? null)]
                 : [],
@@ -108,7 +111,7 @@ final class BookingPageFactory
                 'placed' => TypeCoerce::toString($order['placed'] ?? ''),
             ] : [],
             'history' => $this->history($booking, $order, $orderId),
-            'technical' => self::technical($display),
+            'technical' => self::technical($display, $details),
         ];
     }
 
@@ -269,14 +272,15 @@ final class BookingPageFactory
     /**
      * The hotel, the package and every room with its guests — the card's
      * rooms when there is one, else the row's own (one block; its guests
-     * from guests_json, the supplier's room names from the provider).
+     * from guests_json, the supplier's room names from the provider's page
+     * details).
      *
      * @param array<string, mixed> $booking
      * @param array<string, mixed> $card
-     * @param array<string, mixed> $display
+     * @param array<string, mixed> $details
      * @return array<string, mixed>
      */
-    private function stay(array $booking, array $card, array $display): array
+    private function stay(array $booking, array $card, array $details): array
     {
         $hotel = TypeCoerce::toStringMap($card['hotel'] ?? null);
         $name = trim(TypeCoerce::toString($hotel['name'] ?? ''));
@@ -306,7 +310,7 @@ final class BookingPageFactory
             'adults' => TypeCoerce::toInt($booking['adults'] ?? 0),
             'children' => TypeCoerce::toInt($booking['children'] ?? 0),
             'children_ages' => TypeCoerce::toString($booking['children_ages'] ?? ''),
-            'supplier_room' => implode(', ', array_filter(TypeCoerce::toStringList($display['supplier_rooms'] ?? null))),
+            'supplier_room' => implode(', ', array_filter(TypeCoerce::toStringList($details['supplier_rooms'] ?? null))),
             'guests' => self::guests(TypeCoerce::toRowList($booking['guests_decoded'] ?? null)),
         ]]];
     }
@@ -404,13 +408,15 @@ final class BookingPageFactory
     }
 
     /**
-     * Every raw provider field, empty ones too, for troubleshooting; a list
-     * or record as pretty JSON.
+     * Every raw provider field, empty ones too, for troubleshooting (a list
+     * or record as pretty JSON), then the provider's own rows: the booking's
+     * exchange with the supplier.
      *
      * @param array<string, mixed> $display
+     * @param array<string, mixed> $details
      * @return list<array{label: string, value: string, is_pre: bool}>
      */
-    private static function technical(array $display): array
+    private static function technical(array $display, array $details): array
     {
         $rows = [];
         foreach ($display as $field => $value) {
@@ -424,6 +430,13 @@ final class BookingPageFactory
                     ? (string) json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
                     : TypeCoerce::toString($value),
                 'is_pre' => $isArray,
+            ];
+        }
+        foreach (TypeCoerce::toRowList($details['technical'] ?? null) as $row) {
+            $rows[] = [
+                'label' => TypeCoerce::toString($row['label'] ?? ''),
+                'value' => TypeCoerce::toString($row['value'] ?? ''),
+                'is_pre' => !empty($row['is_pre']),
             ];
         }
 

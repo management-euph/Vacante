@@ -234,7 +234,7 @@ final class BookingPageFactoryTest extends TestCase
     public function testABookingStillInACartReadsFromItsOwnRow(): void
     {
         $booking = self::booking(['order_id' => 0, 'linked_at' => null]);
-        $booking['provider_display']['supplier_rooms'] = ['Doble room (DOUBLE)'];
+        $booking['provider_page']['supplier_rooms'] = ['Doble room (DOUBLE)'];
 
         $page = self::factory()->build($booking, [], [], 'Novoton');
 
@@ -264,7 +264,7 @@ final class BookingPageFactoryTest extends TestCase
             'novoton_status' => 'ASK',
             'novoton_invoice_id' => '311921',
             'novoton_confirm_id' => '',
-            'supplier_rooms' => ['Doble room (DOUBLE)'],
+            'room_codes' => ['Doble room'],
         ];
 
         $page = self::factory()->build($booking, self::card(), self::order(), 'Novoton');
@@ -274,10 +274,26 @@ final class BookingPageFactoryTest extends TestCase
             $page['supplier']['fields'],
         );
         self::assertSame(
-            ['Novoton status', 'Novoton invoice id', 'Novoton confirm id', 'Supplier rooms'],
+            ['Novoton status', 'Novoton invoice id', 'Novoton confirm id', 'Room codes'],
             array_column($page['technical'], 'label'),
         );
         self::assertSame([false, false, false, true], array_column($page['technical'], 'is_pre'));
+    }
+
+    public function testTheTechnicalDetailsEndWithTheBookingsExchangeWithTheSupplier(): void
+    {
+        $booking = self::booking();
+        $booking['provider_display'] = ['novoton_status' => 'ASK'];
+        $booking['provider_page'] = ['technical' => [
+            ['label' => 'Notes', 'value' => 'API submission disabled - test mode', 'is_pre' => false],
+            ['label' => 'Reservation request (hotel_res_RQ)', 'value' => '<hotel_res_RQ><IdHotel>4658</IdHotel></hotel_res_RQ>', 'is_pre' => true],
+        ]];
+
+        $page = self::factory()->build($booking, self::card(), self::order(), 'Novoton');
+
+        self::assertSame(['Novoton status', 'Notes', 'Reservation request (hotel_res_RQ)'], array_column($page['technical'], 'label'));
+        self::assertSame([false, false, true], array_column($page['technical'], 'is_pre'));
+        self::assertSame('<hotel_res_RQ><IdHotel>4658</IdHotel></hotel_res_RQ>', $page['technical'][2]['value']);
     }
 
     public function testTheCountdownStopsOnceTheStayHasBegun(): void

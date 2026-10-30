@@ -7,6 +7,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 use Tygh\Addons\TravelCore\Contracts\BookingAdminProviderInterface;
+use Tygh\Addons\TravelCore\Contracts\BookingPageDetailsProviderInterface;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
@@ -18,16 +19,22 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  * @package NovotonHolidays
  * @since   2.8.0
  */
-class BookingAdminProvider implements BookingAdminProviderInterface
+class BookingAdminProvider implements BookingAdminProviderInterface, BookingPageDetailsProviderInterface
 {
     private BookingRepositoryInterface $bookingRepo;
 
     private SupplierRoomLabels $roomLabels;
 
-    public function __construct(?BookingRepositoryInterface $bookingRepo = null, ?SupplierRoomLabels $roomLabels = null)
-    {
+    private ReservationExchange $exchange;
+
+    public function __construct(
+        ?BookingRepositoryInterface $bookingRepo = null,
+        ?SupplierRoomLabels $roomLabels = null,
+        ?ReservationExchange $exchange = null,
+    ) {
         $this->bookingRepo = $bookingRepo ?? new BookingRepository();
         $this->roomLabels = $roomLabels ?? new SupplierRoomLabels();
+        $this->exchange = $exchange ?? new ReservationExchange(null, $this->roomLabels);
     }
 
     /** @return array<string, mixed> */
@@ -75,17 +82,35 @@ class BookingAdminProvider implements BookingAdminProviderInterface
             $display['api_price'] = $booking['api_price'];
         }
 
-        // Each room as Novoton names it, IdRoom (Type), for a booking page
-        // whose booking no order holds yet (the order card carries its own).
+        return $display;
+    }
+
+    /**
+     * The booking's own page, never the list: each room as Novoton names
+     * it, IdRoom (Type), for a booking no order holds yet (the order card
+     * carries its own), and the booking's exchange with Novoton under the
+     * technical details (ReservationExchange): the request, the answer,
+     * the notes, the hotel's rooms.
+     *
+     * @return array{supplier_rooms?: list<string>, technical?: list<array{label: string, value: string, is_pre: bool}>}
+     */
+    public function getPageDetails(string $providerBookingId): array
+    {
+        $booking = $this->bookingRepo->findById((int) $providerBookingId);
+        if (empty($booking)) {
+            return [];
+        }
+
+        $details = ['technical' => $this->exchange->rows($booking)];
         $rooms = $this->roomLabels->labels(
             TypeCoerce::toString($booking['hotel_id'] ?? ''),
             SupplierRoomLabels::roomIds($booking['rooms_data'] ?? null, TypeCoerce::toString($booking['room_id'] ?? '')),
         );
         if ($rooms !== []) {
-            $display['supplier_rooms'] = $rooms;
+            $details['supplier_rooms'] = $rooms;
         }
 
-        return $display;
+        return $details;
     }
 
     /** @return array{changed: bool, old_status: string, new_status: string, error: string|null} */

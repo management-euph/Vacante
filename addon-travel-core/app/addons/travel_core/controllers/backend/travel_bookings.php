@@ -20,6 +20,7 @@ declare(strict_types=1);
 
 use Tygh\Tygh;
 use Tygh\Addons\TravelCore\TravelConstants;
+use Tygh\Addons\TravelCore\Contracts\BookingPageDetailsProviderInterface;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
 use Tygh\Addons\TravelCore\Repository\OrderLinkCandidateRepository;
 use Tygh\Addons\TravelCore\Repository\TravelBookingRepository;
@@ -100,12 +101,14 @@ function _travel_bookings_autolink_if_needed(array $bookings): bool
 /**
  * Enrich a booking row with provider-specific display data and actions.
  *
- * Uses the BookingAdminProviderInterface registered for the booking's provider.
+ * Uses the BookingAdminProviderInterface registered for the booking's provider;
+ * for the booking's own page ($page), also what only that page shows
+ * (BookingPageDetailsProviderInterface, provider_page).
  *
  * @param array<string, mixed> $booking
  * @return array<string, mixed>
  */
-function _travel_bookings_enrich(array $booking): array
+function _travel_bookings_enrich(array $booking, bool $page = false): array
 {
     $providerName = TypeCoerce::toString($booking['provider'] ?? '');
     if (empty($providerName)) {
@@ -146,6 +149,12 @@ function _travel_bookings_enrich(array $booking): array
 
     // Get link to provider's own detailed view
     $booking['provider_view_url'] = $adminProvider->getProviderViewUrl($providerBookingId);
+
+    // What only the booking's page shows (its exchange with the supplier, the
+    // supplier's room names): never asked for every row of the list.
+    if ($page && $adminProvider instanceof BookingPageDetailsProviderInterface) {
+        $booking['provider_page'] = $adminProvider->getPageDetails($providerBookingId);
+    }
 
     return $booking;
 }
@@ -426,8 +435,8 @@ if ($mode === 'manage') {
         return [CONTROLLER_STATUS_NO_PAGE];
     }
 
-    // Enrich with provider-specific data
-    $booking = _travel_bookings_enrich($booking);
+    // Enrich with provider-specific data, this page's own included
+    $booking = _travel_bookings_enrich($booking, true);
 
     // Decode guests JSON for display
     $guestsJson = TypeCoerce::toString($booking['guests_json'] ?? '');

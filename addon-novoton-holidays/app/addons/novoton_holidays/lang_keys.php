@@ -1220,4 +1220,30 @@ return [
         'en' => 'Cancellation conditions',
         'ro' => 'Condiții de anulare',
     ],
+    // Booking page (travel_bookings.view), technical details: the
+    // booking's exchange with Novoton (ReservationExchange).
+    'novoton_holidays.bv_notes' => [
+        'en' => 'Notes',
+        'ro' => 'Note',
+    ],
+    'novoton_holidays.bv_hotel_rooms' => [
+        'en' => 'Hotel rooms (hotelinfo)',
+        'ro' => 'Camerele hotelului (hotelinfo)',
+    ],
+    'novoton_holidays.bv_request' => [
+        'en' => 'Reservation request (hotel_res_RQ)',
+        'ro' => 'Cererea de rezervare (hotel_res_RQ)',
+    ],
+    'novoton_holidays.bv_answer' => [
+        'en' => 'Novoton\'s answer (api_response)',
+        'ro' => 'Răspunsul Novoton (api_response)',
+    ],
+    'novoton_holidays.bv_request_data' => [
+        'en' => 'Booking data of the request (api_request)',
+        'ro' => 'Datele rezervării din cerere (api_request)',
+    ],
+    'novoton_holidays.bv_request_unavailable' => [
+        'en' => 'The request could not be built: [error]',
+        'ro' => 'Cererea nu a putut fi construită: [error]',
+    ],
 ];

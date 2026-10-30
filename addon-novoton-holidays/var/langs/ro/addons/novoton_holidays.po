@@ -4579,3 +4579,27 @@ msgstr "Condiții de plată"
 msgctxt "Languages::novoton_holidays.cancellation_conditions"
 msgid "Cancellation conditions"
 msgstr "Condiții de anulare"
+
+msgctxt "Languages::novoton_holidays.bv_notes"
+msgid "Notes"
+msgstr "Note"
+
+msgctxt "Languages::novoton_holidays.bv_hotel_rooms"
+msgid "Hotel rooms (hotelinfo)"
+msgstr "Camerele hotelului (hotelinfo)"
+
+msgctxt "Languages::novoton_holidays.bv_request"
+msgid "Reservation request (hotel_res_RQ)"
+msgstr "Cererea de rezervare (hotel_res_RQ)"
+
+msgctxt "Languages::novoton_holidays.bv_answer"
+msgid "Novoton's answer (api_response)"
+msgstr "Răspunsul Novoton (api_response)"
+
+msgctxt "Languages::novoton_holidays.bv_request_data"
+msgid "Booking data of the request (api_request)"
+msgstr "Datele rezervării din cerere (api_request)"
+
+msgctxt "Languages::novoton_holidays.bv_request_unavailable"
+msgid "The request could not be built: [error]"
+msgstr "Cererea nu a putut fi construită: [error]"
