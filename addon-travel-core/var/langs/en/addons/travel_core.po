@@ -2755,8 +2755,116 @@ msgid "Hotel availability"
 msgstr "Hotel availability"
 
 msgctxt "Languages::travel_core.availability_page_intro"
-msgid "Report only: each supplier hotel's state from the weekly review. Nothing here hides or changes a product."
-msgstr "Report only: each supplier hotel's state from the weekly review. Nothing here hides or changes a product."
+msgid "Each supplier hotel's state from the weekly review, and its product. In Report only nothing here hides or changes a product; in Automatic mode the rules hide and show products, and your decision on a hotel wins."
+msgstr "Each supplier hotel's state from the weekly review, and its product. In Report only nothing here hides or changes a product; in Automatic mode the rules hide and show products, and your decision on a hotel wins."
+
+msgctxt "Languages::travel_core.availability_gate_filter"
+msgid "Product"
+msgstr "Product"
+
+msgctxt "Languages::travel_core.availability_gate_would_hide"
+msgid "Would be hidden"
+msgstr "Would be hidden"
+
+msgctxt "Languages::travel_core.availability_gate_hidden"
+msgid "Hidden by the rules"
+msgstr "Hidden by the rules"
+
+msgctxt "Languages::travel_core.availability_gate_released"
+msgid "Left as you set it"
+msgstr "Left as you set it"
+
+msgctxt "Languages::travel_core.availability_gate_override"
+msgid "With your decision"
+msgstr "With your decision"
+
+msgctxt "Languages::travel_core.availability_gate_next_review"
+msgid "Hidden at the next review"
+msgstr "Hidden at the next review"
+
+msgctxt "Languages::travel_core.availability_product"
+msgid "Product"
+msgstr "Product"
+
+msgctxt "Languages::travel_core.availability_tile_hidden"
+msgid "Hidden by the rules: [n]"
+msgstr "Hidden by the rules: [n]"
+
+msgctxt "Languages::travel_core.availability_tile_would_hide"
+msgid "Would be hidden in Automatic mode: [n]"
+msgstr "Would be hidden in Automatic mode: [n]"
+
+msgctxt "Languages::travel_core.availability_tile_released"
+msgid "Left as you set them: [n]"
+msgstr "Left as you set them: [n]"
+
+msgctxt "Languages::travel_core.availability_tile_override"
+msgid "Your decisions: [n]"
+msgstr "Your decisions: [n]"
+
+msgctxt "Languages::travel_core.availability_braked"
+msgid "The last review would have hidden [n] hotels at once, more than one run may hide (over [min], or [percent]% of the visible hotels), so it hid none."
+msgstr "The last review would have hidden [n] hotels at once, more than one run may hide (over [min], or [percent]% of the visible hotels), so it hid none."
+
+msgctxt "Languages::travel_core.availability_braked_check"
+msgid "Check the list"
+msgstr "Check the list"
+
+msgctxt "Languages::travel_core.availability_hide_now"
+msgid "Hide these [n] hotels now"
+msgstr "Hide these [n] hotels now"
+
+msgctxt "Languages::travel_core.availability_gate_applied"
+msgid "[hidden] hotels hidden, [shown] shown again."
+msgstr "[hidden] hotels hidden, [shown] shown again."
+
+msgctxt "Languages::travel_core.availability_gate_not_automatic"
+msgid "This supplier is not in Automatic mode: nothing was hidden."
+msgstr "This supplier is not in Automatic mode: nothing was hidden."
+
+msgctxt "Languages::travel_core.availability_override_label"
+msgid "Your decision for [hotel]"
+msgstr "Your decision for [hotel]"
+
+msgctxt "Languages::travel_core.availability_override_none"
+msgid "The rules decide"
+msgstr "The rules decide"
+
+msgctxt "Languages::travel_core.availability_override_keep_visible"
+msgid "Keep visible"
+msgstr "Keep visible"
+
+msgctxt "Languages::travel_core.availability_override_keep_hidden"
+msgid "Keep hidden"
+msgstr "Keep hidden"
+
+msgctxt "Languages::travel_core.availability_override_closed"
+msgid "Closed"
+msgstr "Closed"
+
+msgctxt "Languages::travel_core.availability_override_note"
+msgid "Note (optional)"
+msgstr "Note (optional)"
+
+msgctxt "Languages::travel_core.availability_override_saved"
+msgid "Your decision for [hotel] is saved."
+msgstr "Your decision for [hotel] is saved."
+
+msgctxt "Languages::travel_core.availability_override_hidden"
+msgid "The product is hidden now."
+msgstr "The product is hidden now."
+
+msgctxt "Languages::travel_core.availability_override_shown"
+msgid "The product is visible again."
+msgstr "The product is visible again."
+
+msgctxt "Languages::travel_core.availability_override_report"
+msgid "It applies once this supplier is in Automatic mode."
+msgstr "It applies once this supplier is in Automatic mode."
+
+msgctxt "Languages::travel_core.availability_override_failed"
+msgid "The decision could not be saved: the hotel was not found."
+msgstr "The decision could not be saved: the hotel was not found."
 
 msgctxt "Languages::travel_core.availability_state"
 msgid "State"

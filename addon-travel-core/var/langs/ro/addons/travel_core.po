@@ -2755,8 +2755,116 @@ msgid "Hotel availability"
 msgstr "Disponibilitate hoteluri"
 
 msgctxt "Languages::travel_core.availability_page_intro"
-msgid "Report only: each supplier hotel's state from the weekly review. Nothing here hides or changes a product."
-msgstr "Doar raport: starea fiecărui hotel al furnizorilor, din revizuirea săptămânală. Nimic de aici nu ascunde și nu modifică produse."
+msgid "Each supplier hotel's state from the weekly review, and its product. In Report only nothing here hides or changes a product; in Automatic mode the rules hide and show products, and your decision on a hotel wins."
+msgstr "Starea fiecărui hotel al furnizorilor, din revizuirea săptămânală, și produsul lui. În modul Doar raport nimic de aici nu ascunde și nu modifică produse; în modul Automat regulile ascund și afișează produse, iar decizia dvs. pentru un hotel are prioritate."
+
+msgctxt "Languages::travel_core.availability_gate_filter"
+msgid "Product"
+msgstr "Produs"
+
+msgctxt "Languages::travel_core.availability_gate_would_hide"
+msgid "Would be hidden"
+msgstr "S-ar ascunde"
+
+msgctxt "Languages::travel_core.availability_gate_hidden"
+msgid "Hidden by the rules"
+msgstr "Ascuns de reguli"
+
+msgctxt "Languages::travel_core.availability_gate_released"
+msgid "Left as you set it"
+msgstr "Lăsat cum l-ați setat"
+
+msgctxt "Languages::travel_core.availability_gate_override"
+msgid "With your decision"
+msgstr "Cu decizia dvs."
+
+msgctxt "Languages::travel_core.availability_gate_next_review"
+msgid "Hidden at the next review"
+msgstr "Se ascunde la următoarea verificare"
+
+msgctxt "Languages::travel_core.availability_product"
+msgid "Product"
+msgstr "Produs"
+
+msgctxt "Languages::travel_core.availability_tile_hidden"
+msgid "Hidden by the rules: [n]"
+msgstr "Ascunse de reguli: [n]"
+
+msgctxt "Languages::travel_core.availability_tile_would_hide"
+msgid "Would be hidden in Automatic mode: [n]"
+msgstr "S-ar ascunde în modul Automat: [n]"
+
+msgctxt "Languages::travel_core.availability_tile_released"
+msgid "Left as you set them: [n]"
+msgstr "Lăsate cum le-ați setat: [n]"
+
+msgctxt "Languages::travel_core.availability_tile_override"
+msgid "Your decisions: [n]"
+msgstr "Deciziile dvs.: [n]"
+
+msgctxt "Languages::travel_core.availability_braked"
+msgid "The last review would have hidden [n] hotels at once, more than one run may hide (over [min], or [percent]% of the visible hotels), so it hid none."
+msgstr "Ultima verificare ar fi ascuns [n] hoteluri deodată, mai multe decât poate ascunde o rulare (peste [min] sau [percent]% din hotelurile vizibile), așa că nu a ascuns niciunul."
+
+msgctxt "Languages::travel_core.availability_braked_check"
+msgid "Check the list"
+msgstr "Verificați lista"
+
+msgctxt "Languages::travel_core.availability_hide_now"
+msgid "Hide these [n] hotels now"
+msgstr "Ascunde acum aceste [n] hoteluri"
+
+msgctxt "Languages::travel_core.availability_gate_applied"
+msgid "[hidden] hotels hidden, [shown] shown again."
+msgstr "[hidden] hoteluri ascunse, [shown] reafișate."
+
+msgctxt "Languages::travel_core.availability_gate_not_automatic"
+msgid "This supplier is not in Automatic mode: nothing was hidden."
+msgstr "Acest furnizor nu este în modul Automat: nu s-a ascuns nimic."
+
+msgctxt "Languages::travel_core.availability_override_label"
+msgid "Your decision for [hotel]"
+msgstr "Decizia dvs. pentru [hotel]"
+
+msgctxt "Languages::travel_core.availability_override_none"
+msgid "The rules decide"
+msgstr "Decid regulile"
+
+msgctxt "Languages::travel_core.availability_override_keep_visible"
+msgid "Keep visible"
+msgstr "Păstrează vizibil"
+
+msgctxt "Languages::travel_core.availability_override_keep_hidden"
+msgid "Keep hidden"
+msgstr "Păstrează ascuns"
+
+msgctxt "Languages::travel_core.availability_override_closed"
+msgid "Closed"
+msgstr "Închis"
+
+msgctxt "Languages::travel_core.availability_override_note"
+msgid "Note (optional)"
+msgstr "Notă (opțional)"
+
+msgctxt "Languages::travel_core.availability_override_saved"
+msgid "Your decision for [hotel] is saved."
+msgstr "Decizia dvs. pentru [hotel] a fost salvată."
+
+msgctxt "Languages::travel_core.availability_override_hidden"
+msgid "The product is hidden now."
+msgstr "Produsul este ascuns acum."
+
+msgctxt "Languages::travel_core.availability_override_shown"
+msgid "The product is visible again."
+msgstr "Produsul este din nou vizibil."
+
+msgctxt "Languages::travel_core.availability_override_report"
+msgid "It applies once this supplier is in Automatic mode."
+msgstr "Se aplică după ce acest furnizor trece în modul Automat."
+
+msgctxt "Languages::travel_core.availability_override_failed"
+msgid "The decision could not be saved: the hotel was not found."
+msgstr "Decizia nu a putut fi salvată: hotelul nu a fost găsit."
 
 msgctxt "Languages::travel_core.availability_state"
 msgid "State"

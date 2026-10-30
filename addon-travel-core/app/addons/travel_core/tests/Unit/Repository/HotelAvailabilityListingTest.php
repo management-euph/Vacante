@@ -93,8 +93,29 @@ final class HotelAvailabilityListingTest extends TestCase
 
         self::assertSame(120, $search['total_items'], 'pagination reads the total from $search');
         self::assertSame('7', $rows[0]['hotel_id']);
-        self::assertStringContainsString('SELECT COUNT(*) FROM ?:travel_hotel_availability a WHERE 1 ', $this->sql[0]);
+        self::assertStringContainsString('SELECT COUNT(*) FROM ?:travel_hotel_availability a LEFT JOIN ?:products p ON p.product_id = a.product_id WHERE 1 ', $this->sql[0]);
         self::assertStringContainsString('ORDER BY a.offer_seen_at IS NOT NULL, a.offer_seen_at, a.hotel_name LIMIT 100, 50', $this->sql[1]);
+        // Each row says its product's status and whether the gate would hide it.
+        self::assertStringContainsString("SELECT a.*, COALESCE(p.status, '') AS product_status, (a.product_id > 0 AND p.status = 'A' AND a.gate_hidden = 'N' AND a.gate_released = 'N' AND (a.override IN ('keep_hidden', 'closed') OR (a.override <> 'keep_visible' AND a.state IN ('dormant', 'left_feed', 'closed')))) AS would_hide", $this->sql[1]);
+    }
+
+    public function testTheProductFilterFollowsTheGate(): void
+    {
+        $filters = ['provider' => '', 'state' => '', 'no_offer_months' => 0, 'q' => ''];
+        $now = new \DateTimeImmutable('2027-02-15');
+
+        self::assertSame('', HotelAvailabilityListing::normalize(['gate' => 'everything'])['gate'], 'an unknown filter is dropped');
+        self::assertSame(" AND a.gate_hidden = 'Y'", HotelAvailabilityListing::condition(['gate' => 'hidden'] + $filters, $now));
+        self::assertSame(" AND a.gate_released = 'Y'", HotelAvailabilityListing::condition(['gate' => 'released'] + $filters, $now));
+        self::assertSame(" AND a.override <> ''", HotelAvailabilityListing::condition(['gate' => 'override'] + $filters, $now));
+        self::assertStringStartsWith(" AND (a.product_id > 0 AND p.status = 'A'", HotelAvailabilityListing::condition(['gate' => 'would_hide'] + $filters, $now));
+    }
+
+    public function testGateCountsPerSupplier(): void
+    {
+        DbStub::$getArray = static fn (): array => [['provider' => 'novoton', 'would_hide' => '4', 'hidden' => '2', 'released' => '1', 'override' => '3']];
+
+        self::assertSame(['novoton' => ['would_hide' => 4, 'hidden' => 2, 'released' => 1, 'override' => 3]], (new HotelAvailabilityListing())->gateCounts());
     }
 
     public function testCountsHaveEveryStateForEverySupplier(): void

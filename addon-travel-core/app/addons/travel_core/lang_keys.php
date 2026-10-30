@@ -1899,8 +1899,116 @@ Dacă ați plătit deja, vă rugăm să ignorați acest email.',
         'ro' => 'Disponibilitate hoteluri',
     ],
     'travel_core.availability_page_intro' => [
-        'en' => 'Report only: each supplier hotel\'s state from the weekly review. Nothing here hides or changes a product.',
-        'ro' => 'Doar raport: starea fiecărui hotel al furnizorilor, din revizuirea săptămânală. Nimic de aici nu ascunde și nu modifică produse.',
+        'en' => 'Each supplier hotel\'s state from the weekly review, and its product. In Report only nothing here hides or changes a product; in Automatic mode the rules hide and show products, and your decision on a hotel wins.',
+        'ro' => 'Starea fiecărui hotel al furnizorilor, din revizuirea săptămânală, și produsul lui. În modul Doar raport nimic de aici nu ascunde și nu modifică produse; în modul Automat regulile ascund și afișează produse, iar decizia dvs. pentru un hotel are prioritate.',
+    ],
+    'travel_core.availability_gate_filter' => [
+        'en' => 'Product',
+        'ro' => 'Produs',
+    ],
+    'travel_core.availability_gate_would_hide' => [
+        'en' => 'Would be hidden',
+        'ro' => 'S-ar ascunde',
+    ],
+    'travel_core.availability_gate_hidden' => [
+        'en' => 'Hidden by the rules',
+        'ro' => 'Ascuns de reguli',
+    ],
+    'travel_core.availability_gate_released' => [
+        'en' => 'Left as you set it',
+        'ro' => 'Lăsat cum l-ați setat',
+    ],
+    'travel_core.availability_gate_override' => [
+        'en' => 'With your decision',
+        'ro' => 'Cu decizia dvs.',
+    ],
+    'travel_core.availability_gate_next_review' => [
+        'en' => 'Hidden at the next review',
+        'ro' => 'Se ascunde la următoarea verificare',
+    ],
+    'travel_core.availability_product' => [
+        'en' => 'Product',
+        'ro' => 'Produs',
+    ],
+    'travel_core.availability_tile_hidden' => [
+        'en' => 'Hidden by the rules: [n]',
+        'ro' => 'Ascunse de reguli: [n]',
+    ],
+    'travel_core.availability_tile_would_hide' => [
+        'en' => 'Would be hidden in Automatic mode: [n]',
+        'ro' => 'S-ar ascunde în modul Automat: [n]',
+    ],
+    'travel_core.availability_tile_released' => [
+        'en' => 'Left as you set them: [n]',
+        'ro' => 'Lăsate cum le-ați setat: [n]',
+    ],
+    'travel_core.availability_tile_override' => [
+        'en' => 'Your decisions: [n]',
+        'ro' => 'Deciziile dvs.: [n]',
+    ],
+    'travel_core.availability_braked' => [
+        'en' => 'The last review would have hidden [n] hotels at once, more than one run may hide (over [min], or [percent]% of the visible hotels), so it hid none.',
+        'ro' => 'Ultima verificare ar fi ascuns [n] hoteluri deodată, mai multe decât poate ascunde o rulare (peste [min] sau [percent]% din hotelurile vizibile), așa că nu a ascuns niciunul.',
+    ],
+    'travel_core.availability_braked_check' => [
+        'en' => 'Check the list',
+        'ro' => 'Verificați lista',
+    ],
+    'travel_core.availability_hide_now' => [
+        'en' => 'Hide these [n] hotels now',
+        'ro' => 'Ascunde acum aceste [n] hoteluri',
+    ],
+    'travel_core.availability_gate_applied' => [
+        'en' => '[hidden] hotels hidden, [shown] shown again.',
+        'ro' => '[hidden] hoteluri ascunse, [shown] reafișate.',
+    ],
+    'travel_core.availability_gate_not_automatic' => [
+        'en' => 'This supplier is not in Automatic mode: nothing was hidden.',
+        'ro' => 'Acest furnizor nu este în modul Automat: nu s-a ascuns nimic.',
+    ],
+    'travel_core.availability_override_label' => [
+        'en' => 'Your decision for [hotel]',
+        'ro' => 'Decizia dvs. pentru [hotel]',
+    ],
+    'travel_core.availability_override_none' => [
+        'en' => 'The rules decide',
+        'ro' => 'Decid regulile',
+    ],
+    'travel_core.availability_override_keep_visible' => [
+        'en' => 'Keep visible',
+        'ro' => 'Păstrează vizibil',
+    ],
+    'travel_core.availability_override_keep_hidden' => [
+        'en' => 'Keep hidden',
+        'ro' => 'Păstrează ascuns',
+    ],
+    'travel_core.availability_override_closed' => [
+        'en' => 'Closed',
+        'ro' => 'Închis',
+    ],
+    'travel_core.availability_override_note' => [
+        'en' => 'Note (optional)',
+        'ro' => 'Notă (opțional)',
+    ],
+    'travel_core.availability_override_saved' => [
+        'en' => 'Your decision for [hotel] is saved.',
+        'ro' => 'Decizia dvs. pentru [hotel] a fost salvată.',
+    ],
+    'travel_core.availability_override_hidden' => [
+        'en' => 'The product is hidden now.',
+        'ro' => 'Produsul este ascuns acum.',
+    ],
+    'travel_core.availability_override_shown' => [
+        'en' => 'The product is visible again.',
+        'ro' => 'Produsul este din nou vizibil.',
+    ],
+    'travel_core.availability_override_report' => [
+        'en' => 'It applies once this supplier is in Automatic mode.',
+        'ro' => 'Se aplică după ce acest furnizor trece în modul Automat.',
+    ],
+    'travel_core.availability_override_failed' => [
+        'en' => 'The decision could not be saved: the hotel was not found.',
+        'ro' => 'Decizia nu a putut fi salvată: hotelul nu a fost găsit.',
     ],
     'travel_core.availability_state' => [
         'en' => 'State',

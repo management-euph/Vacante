@@ -61,6 +61,23 @@ final class HotelAvailabilityAdminTest extends TestCase
         self::assertStringContainsString('$availability_export_url|fn_url', $tpl);
     }
 
+    /** Decisions and the brake's confirmation change products: POST only, with the security hash, back to the same view. */
+    public function testDecisionsAndTheBrakesConfirmationArePosted(): void
+    {
+        $controller = self::file('controllers/backend/travel_hotel_availability.php');
+        self::assertStringContainsString("\$_SERVER['REQUEST_METHOD'] === 'POST' && \$mode === 'override'", $controller);
+        self::assertStringContainsString("\$_SERVER['REQUEST_METHOD'] === 'POST' && \$mode === 'apply_gate'", $controller);
+        self::assertStringContainsString("preg_replace('/[^A-Za-z0-9_=&%.+-]/', '', RequestCoerce::string(\$_REQUEST, 'return_query'))", $controller, 'never an outside address');
+        self::assertStringNotContainsString('redirect_url', $controller);
+
+        $tpl = self::template('travel_hotel_availability/manage.tpl');
+        self::assertStringContainsString('<input type="hidden" name="dispatch" value="travel_hotel_availability.override" />', $tpl);
+        self::assertStringContainsString('"travel_hotel_availability.apply_gate"|fn_url', $tpl);
+        self::assertStringContainsString('class="btn btn-primary cm-confirm"', $tpl, 'the held hiding asks before it runs');
+        self::assertSame(3, substr_count($tpl, 'name="security_hash" value="{$security_hash}"'), 'review, decision, confirmation');
+        self::assertStringContainsString('{foreach from=$availability_gate_filters item=gate}', $tpl);
+    }
+
     public function testThePageIsInTheMenusAndAllowed(): void
     {
         self::assertStringContainsString("'travel_hotel_availability.manage'", self::file('schemas/menu/actions.post.php'));

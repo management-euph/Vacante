@@ -1350,3 +1350,34 @@ a.travel-fm-chip:hover {
 .travel-bv__technical > summary { color: #222; font-weight: 700; cursor: pointer; }
 .travel-bv__technical[open] > summary { margin-bottom: 4px; }
 .travel-bv__pre { max-height: 200px; margin: 0; overflow: auto; font-size: 11px; white-space: pre-wrap; }
+
+/* Hotel availability: the gate's line on a supplier's tile, the brake's
+   warning and the per-hotel decision form (views/travel_hotel_availability). */
+.travel-avail-gate a {
+    white-space: nowrap;
+}
+.travel-avail-brake {
+    margin-top: 8px;
+}
+.travel-avail-brake p {
+    margin: 0 0 6px;
+}
+.travel-avail-brake form {
+    margin: 0;
+}
+.travel-avail-override {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+    margin: 6px 0 0;
+}
+.travel-avail-override select {
+    width: auto;
+    max-width: 150px;
+    margin: 0;
+}
+.travel-avail-override input[type="text"] {
+    width: 110px;
+    margin: 0;
+}
