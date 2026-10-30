@@ -723,8 +723,8 @@ msgid "Novoton: availability rules"
 msgstr "Novoton: availability rules"
 
 msgctxt "SettingsTooltips::travel_core::availability_mode_novoton"
-msgid "Off: this supplier's hotels are not classified. Report only: the rules classify its hotels and list what they would hide or show, without changing any product."
-msgstr "Off: this supplier's hotels are not classified. Report only: the rules classify its hotels and list what they would hide or show, without changing any product."
+msgid "Off: this supplier's hotels are not classified. Report only: the rules classify its hotels and list what they would hide or show, without changing any product. Automatic: hotels with no availability for the months set below, gone from the supplier's list or marked closed are hidden (the page stays, and can still be booked from a link) and shown again when offers return; a run that would hide many at once (over 10, or 5% of the hotels) waits for you to confirm. Switch to it once the \"would hide\" list on the Hotel availability page looks right."
+msgstr "Off: this supplier's hotels are not classified. Report only: the rules classify its hotels and list what they would hide or show, without changing any product. Automatic: hotels with no availability for the months set below, gone from the supplier's list or marked closed are hidden (the page stays, and can still be booked from a link) and shown again when offers return; a run that would hide many at once (over 10, or 5% of the hotels) waits for you to confirm. Switch to it once the \"would hide\" list on the Hotel availability page looks right."
 
 msgctxt "SettingsOptions::travel_core::availability_mode_eurosite"
 msgid "Eurosite: availability rules"
@@ -2610,6 +2610,10 @@ msgctxt "Languages::travel_core.availability_mode_report"
 msgid "Report only"
 msgstr "Report only"
 
+msgctxt "Languages::travel_core.availability_mode_automatic"
+msgid "Automatic"
+msgstr "Automatic"
+
 msgctxt "Languages::travel_core.availability_state_bookable"
 msgid "Bookable"
 msgstr "Bookable"
@@ -2705,6 +2709,30 @@ msgstr "The weekly hotel availability review is done. Report only: no product wa
 msgctxt "Languages::travel_core.availability_mail_first"
 msgid "[n] hotels classified for the first time."
 msgstr "[n] hotels classified for the first time."
+
+msgctxt "Languages::travel_core.availability_mail_hidden"
+msgid "Hidden by the availability rules: [n]"
+msgstr "Hidden by the availability rules: [n]"
+
+msgctxt "Languages::travel_core.availability_mail_shown"
+msgid "Shown again, their offers are back: [n]"
+msgstr "Shown again, their offers are back: [n]"
+
+msgctxt "Languages::travel_core.availability_mail_released"
+msgid "Changed by hand after the rules hid them, now left as you set them: [n]"
+msgstr "Changed by hand after the rules hid them, now left as you set them: [n]"
+
+msgctxt "Languages::travel_core.availability_mail_braked"
+msgid "Not hidden: [n] hotels would have been hidden at once, more than one run may hide. Check them on the Hotel availability page and confirm there."
+msgstr "Not hidden: [n] hotels would have been hidden at once, more than one run may hide. Check them on the Hotel availability page and confirm there."
+
+msgctxt "Languages::travel_core.availability_mail_would_hide"
+msgid "Would be hidden in Automatic mode: [n]"
+msgstr "Would be hidden in Automatic mode: [n]"
+
+msgctxt "Languages::travel_core.availability_mail_subject_gate"
+msgid "Hotel availability: [n] hotels hidden, shown or held back"
+msgstr "Hotel availability: [n] hotels hidden, shown or held back"
 
 msgctxt "Languages::travel_core.availability_mail_changes"
 msgid "Changes"

@@ -28,7 +28,11 @@ use Tygh\Addons\TravelCore\ValueObjects\AvailabilityThresholds;
  * day, while a supplier job that writes records is running, so it never
  * judges a destination half way through its update.
  *
- * Report only: no product is hidden or shown here (that is phase 3).
+ * Then each supplier's products go through AvailabilityGate: in Automatic
+ * mode it hides and shows them, in Report only it counts what it would hide.
+ * On the other days the daily run looks only at the hotels the gate hid, so
+ * one whose offers returned is shown again the next morning, not a week
+ * later (plan §7.3).
  */
 final class AvailabilityReview
 {
@@ -49,6 +53,10 @@ final class AvailabilityReview
     /** The Hotel availability page, where the weekly email points. */
     public const string PAGE = 'travel_hotel_availability.manage';
 
+    public function __construct(private readonly AvailabilityGate $gate = new AvailabilityGate())
+    {
+    }
+
     /**
      * From Travel Core's daily cron: the review when it is due and no
      * recording job runs, else why not, as one line for the cron output.
@@ -61,7 +69,8 @@ final class AvailabilityReview
 
         return match ($outcome['status']) {
             'none' => 'Hotel availability review: no supplier records availability yet.',
-            'not_due' => 'Hotel availability review: not due yet (weekly).',
+            'not_due' => 'Hotel availability review: not due yet (weekly).'
+                . ($outcome['shown'] > 0 ? " {$outcome['shown']} hidden hotels shown again: their offers are back." : ''),
             'busy' => 'Hotel availability review waits for ' . implode(', ', $outcome['busy']) . '; it tries again on the next run.',
             'failed' => 'Hotel availability review failed: ' . $outcome['error'],
             default => "Hotel availability review: {$outcome['hotels']} hotels classified, {$outcome['changed']} state changes.",
@@ -70,23 +79,30 @@ final class AvailabilityReview
 
     /**
      * The review, if it should run now: due (or $force, the page's "Review
-     * now") and no recording job running. Never throws.
+     * now") and no recording job running. When it is not due, the daily
+     * step: the hotels the gate hid whose offers are back are shown again.
+     * Never throws.
      *
-     * @return array{status: 'none'|'not_due'|'busy'|'failed'|'done', busy: list<string>, hotels: int, changed: int, error: string}
+     * @return array{status: 'none'|'not_due'|'busy'|'failed'|'done', busy: list<string>, hotels: int, changed: int, shown: int, error: string}
      */
     public static function run(bool $force = false, ?\DateTimeImmutable $now = null): array
     {
-        $outcome = ['status' => 'done', 'busy' => [], 'hotels' => 0, 'changed' => 0, 'error' => ''];
+        $outcome = ['status' => 'done', 'busy' => [], 'hotels' => 0, 'changed' => 0, 'shown' => 0, 'error' => ''];
         try {
             $now ??= new \DateTimeImmutable();
             $sources = TravelProviderRegistry::getAvailabilitySources();
             if ($sources === []) {
                 return ['status' => 'none'] + $outcome;
             }
-            if (!$force && !self::isDue(CronRunLog::get('travel_core', self::JOB), $now->getTimestamp())) {
-                return ['status' => 'not_due'] + $outcome;
-            }
+            $due = $force || self::isDue(CronRunLog::get('travel_core', self::JOB), $now->getTimestamp());
             $busy = self::busyJobs($sources, TravelProviderRegistry::getCronProviders(), $now->getTimestamp());
+            if (!$due) {
+                $automatic = self::automatic($sources);
+
+                return ['status' => 'not_due', 'shown' => $busy === [] && $automatic !== []
+                    ? (new self())->showReturned($automatic, TravelCoreConfig::getAvailabilityThresholds(), $now)
+                    : 0] + $outcome;
+            }
             if ($busy !== []) {
                 return ['status' => 'busy', 'busy' => $busy] + $outcome;
             }
@@ -119,6 +135,48 @@ final class AvailabilityReview
         } catch (\Throwable $e) {
             return ['status' => 'failed', 'error' => $e->getMessage()] + $outcome;
         }
+    }
+
+    /**
+     * The suppliers whose products the gate changes: Automatic mode, and
+     * hotels Travel Core's gate acts for (a supplier with a gate of its own
+     * stays Report only whatever its setting says).
+     *
+     * @param array<string, HotelAvailabilitySourceInterface> $sources
+     *
+     * @return list<string>
+     */
+    public static function automatic(array $sources): array
+    {
+        $names = [];
+        foreach ($sources as $name => $source) {
+            if (TravelCoreConfig::getAvailabilityMode($name) === AvailabilityMode::Automatic && $source->capabilities()->sharedGate) {
+                $names[] = $name;
+            }
+        }
+
+        return $names;
+    }
+
+    /**
+     * The daily step for suppliers in Automatic mode: the hotels the gate hid
+     * are classified again from today's records, and those that no longer
+     * hide are shown (and a product an admin changed by hand released).
+     * Nothing is hidden here: that waits for the weekly review and its brake.
+     *
+     * @param list<string> $providers
+     *
+     * @return int products shown again
+     */
+    public function showReturned(array $providers, AvailabilityThresholds $limits, \DateTimeImmutable $now): int
+    {
+        $shown = 0;
+        foreach ($providers as $name) {
+            $this->reviewProvider($name, $limits, $now, true);
+            $shown += $this->gate->apply($name, $now->format('Y-m-d H:i:s'), true, hide: false)['shown'];
+        }
+
+        return $shown;
     }
 
     /**
@@ -272,11 +330,13 @@ final class AvailabilityReview
     }
 
     /**
-     * Reviews one supplier: its last booked stays, then every record.
+     * Reviews one supplier: its last booked stays, then every record (or,
+     * $hiddenOnly, only the hotels the gate hid; the destinations' peers
+     * still come from every record).
      *
      * @return array{counts: array<string, int>, changed: int, first: int, changes: list<array{hotel_id: string, hotel_name: string, product_id: int, from: string, to: string, reason: string}>}
      */
-    public function reviewProvider(string $provider, AvailabilityThresholds $limits, \DateTimeImmutable $now): array
+    public function reviewProvider(string $provider, AvailabilityThresholds $limits, \DateTimeImmutable $now, bool $hiddenOnly = false): array
     {
         HotelAvailabilityRepository::ensureTables();
         $stamp = $now->format('Y-m-d H:i:s');
@@ -292,6 +352,9 @@ final class AvailabilityReview
         $changed = 0;
         $first = 0;
         foreach ($rows as $row) {
+            if ($hiddenOnly && TypeCoerce::toString($row['gate_hidden'] ?? '') !== 'Y') {
+                continue;
+            }
             $record = HotelAvailabilityRecord::fromRow($row);
             $verdict = AvailabilityPolicy::classify($record, $peers[$record->destinationKey] ?? new DestinationPeers(), $limits, $now);
             $state = $verdict->state->value;
@@ -368,22 +431,29 @@ final class AvailabilityReview
     }
 
     /**
-     * Every supplier whose mode is not Off.
+     * Every supplier whose mode is not Off, then the gate: in Automatic mode
+     * (for a supplier the shared gate acts for) it hides and shows products,
+     * otherwise it counts what it would hide.
      *
      * @param array<string, HotelAvailabilitySourceInterface> $sources
      * @param array<string, AvailabilityMode> $modes
      *
-     * @return array{at: string, providers: array<string, array{mode: string, counts: array<string, int>, changed: int, first: int, changes: list<array{hotel_id: string, hotel_name: string, product_id: int, from: string, to: string, reason: string}>}>}
+     * @return array{at: string, providers: array<string, array{mode: string, counts: array<string, int>, changed: int, first: int, changes: list<array{hotel_id: string, hotel_name: string, product_id: int, from: string, to: string, reason: string}>, gate: array{hidden: int, shown: int, released: int, would_hide: int, braked: int}}>}
      */
     public function review(array $sources, array $modes, AvailabilityThresholds $limits, \DateTimeImmutable $now): array
     {
         $summary = ['at' => $now->format('Y-m-d H:i:s'), 'providers' => []];
-        foreach (array_keys($sources) as $name) {
+        foreach ($sources as $name => $source) {
             $mode = $modes[$name] ?? AvailabilityMode::Report;
             if ($mode === AvailabilityMode::Off) {
                 continue;
             }
-            $summary['providers'][$name] = ['mode' => $mode->value] + $this->reviewProvider($name, $limits, $now);
+            if ($mode === AvailabilityMode::Automatic && !$source->capabilities()->sharedGate) {
+                $mode = AvailabilityMode::Report;
+            }
+            $summary['providers'][$name] = ['mode' => $mode->value]
+                + $this->reviewProvider($name, $limits, $now)
+                + ['gate' => $this->gate->apply($name, $summary['at'], $mode === AvailabilityMode::Automatic)];
         }
 
         return $summary;

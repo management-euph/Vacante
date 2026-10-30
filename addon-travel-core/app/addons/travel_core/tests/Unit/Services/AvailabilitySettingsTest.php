@@ -42,9 +42,11 @@ final class AvailabilitySettingsTest extends TestCase
         self::assertSame(AvailabilityMode::Report, AvailabilityMode::fromSetting(null));
     }
 
-    public function testAutomaticIsNotOfferedBeforeTheGateExists(): void
+    /** Automatic only for a supplier Travel Core's gate acts for (Novoton); the others keep their own gates for now. */
+    public function testAutomaticIsOfferedOnlyWhereTheSharedGateActs(): void
     {
         self::assertSame([AvailabilityMode::Off, AvailabilityMode::Report], AvailabilityMode::offered());
+        self::assertSame([AvailabilityMode::Off, AvailabilityMode::Report, AvailabilityMode::Automatic], AvailabilityMode::offered(true));
     }
 
     public function testTheAdminsMonthsAndOnRequestChoiceReachTheRules(): void
@@ -84,7 +86,7 @@ final class AvailabilitySettingsTest extends TestCase
 
         /** @var array<string, array<string, string>> $keys */
         $keys = require dirname(__DIR__, 3) . '/lang_keys.php';
-        foreach (AvailabilityMode::offered() as $mode) {
+        foreach (AvailabilityMode::offered(true) as $mode) {
             self::assertNotSame('', $keys['travel_core.availability_mode_' . $mode->value]['ro'] ?? '', $mode->value);
         }
     }

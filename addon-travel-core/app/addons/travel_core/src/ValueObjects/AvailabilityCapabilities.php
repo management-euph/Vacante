@@ -24,6 +24,9 @@ final readonly class AvailabilityCapabilities
      * @param bool $liveCheckSlow the live check is an async search (Sphinx: polled for up to a minute)
      * @param bool $pastPrices past seasons' prices are stored, so records can be backfilled on the first run
      * @param bool $bookings confirmed bookings can be read back (the last booked stay)
+     * @param bool $sharedGate its hotels are hidden and shown by Travel Core's gate (AvailabilityGate), so
+     *                         Automatic mode is offered for it; a supplier with a gate of its own keeps
+     *                         Off / Report only until that gate is retired (plan §15.3, point 8)
      */
     public function __construct(
         public HotelListCoverage $hotelList,
@@ -32,6 +35,7 @@ final readonly class AvailabilityCapabilities
         public bool $liveCheckSlow,
         public bool $pastPrices,
         public bool $bookings,
+        public bool $sharedGate = false,
     ) {
     }
 }

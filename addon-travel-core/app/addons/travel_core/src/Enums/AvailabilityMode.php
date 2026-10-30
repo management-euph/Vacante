@@ -17,7 +17,7 @@ enum AvailabilityMode: string
     /** They are classified and reported; no product is changed (the default). */
     case Report = 'report';
 
-    /** The rules hide and show products too (phase 3; not offered until then). */
+    /** The rules hide and show products too (AvailabilityGate), for a supplier that hands its hiding to it. */
     case Automatic = 'automatic';
 
     /** A stored setting; anything unknown or unset is the default, Report. */
@@ -27,13 +27,14 @@ enum AvailabilityMode: string
     }
 
     /**
-     * The modes the settings page offers. Automatic joins when the gate that
-     * acts on it ships, so nobody can pick a mode that does nothing yet.
+     * The modes the settings page offers a supplier. Automatic only for one
+     * whose hotels Travel Core's gate hides and shows (its capabilities'
+     * sharedGate), so nobody can pick a mode that does nothing.
      *
      * @return list<self>
      */
-    public static function offered(): array
+    public static function offered(bool $sharedGate = false): array
     {
-        return [self::Off, self::Report];
+        return $sharedGate ? [self::Off, self::Report, self::Automatic] : [self::Off, self::Report];
     }
 }

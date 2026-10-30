@@ -47,6 +47,7 @@ final class HotelAvailabilityRepository
         `state_reason`          VARCHAR(32)       NOT NULL DEFAULT \'\',
         `season_published`      CHAR(1)           NOT NULL DEFAULT \'N\' COMMENT \'Between seasons, next season already priced or offered\',
         `gate_hidden`           CHAR(1)           NOT NULL DEFAULT \'N\' COMMENT \'This gate set the product to Hidden\',
+        `gate_released`         CHAR(1)           NOT NULL DEFAULT \'N\' COMMENT \'An admin changed a gate-hidden product by hand: left alone until availability returns\',
         `override`              VARCHAR(16)       NOT NULL DEFAULT \'\' COMMENT \'Admin decision: keep_visible, keep_hidden, closed\',
         `override_note`         VARCHAR(255)      NOT NULL DEFAULT \'\',
         `override_by`           INT UNSIGNED      NOT NULL DEFAULT 0,
@@ -84,6 +85,7 @@ final class HotelAvailabilityRepository
      */
     public const array ADDED_COLUMNS = [
         'hotel_name' => "VARCHAR(255) NOT NULL DEFAULT '' COMMENT 'As the supplier lists it, for the report' AFTER `destination_key`",
+        'gate_released' => "CHAR(1) NOT NULL DEFAULT 'N' COMMENT 'An admin changed a gate-hidden product by hand: left alone until availability returns' AFTER `gate_hidden`",
     ];
 
     private static bool $ensured = false;

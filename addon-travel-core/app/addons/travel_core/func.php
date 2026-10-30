@@ -328,10 +328,12 @@ function fn_settings_variants_addons_travel_core_feature_id_beach_access(): arra
  *
  * @return array<string, string>
  */
-function fn_travel_core_availability_mode_variants(): array
+function fn_travel_core_availability_mode_variants(string $provider = ''): array
 {
+    // Automatic only for a supplier whose hotels Travel Core's gate hides and shows.
+    $source = \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::getAvailabilitySources()[$provider] ?? null;
     $variants = [];
-    foreach (\Tygh\Addons\TravelCore\Enums\AvailabilityMode::offered() as $mode) {
+    foreach (\Tygh\Addons\TravelCore\Enums\AvailabilityMode::offered($source?->capabilities()->sharedGate ?? false) as $mode) {
         $variants[$mode->value] = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toString(__('travel_core.availability_mode_' . $mode->value));
     }
 
@@ -340,17 +342,17 @@ function fn_travel_core_availability_mode_variants(): array
 /** @return array<string, string> */
 function fn_settings_variants_addons_travel_core_availability_mode_novoton(): array
 {
-    return fn_travel_core_availability_mode_variants();
+    return fn_travel_core_availability_mode_variants('novoton');
 }
 /** @return array<string, string> */
 function fn_settings_variants_addons_travel_core_availability_mode_eurosite(): array
 {
-    return fn_travel_core_availability_mode_variants();
+    return fn_travel_core_availability_mode_variants('eurosite');
 }
 /** @return array<string, string> */
 function fn_settings_variants_addons_travel_core_availability_mode_sphinx(): array
 {
-    return fn_travel_core_availability_mode_variants();
+    return fn_travel_core_availability_mode_variants('sphinx');
 }
 
 /**

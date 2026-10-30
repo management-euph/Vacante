@@ -34,6 +34,8 @@ final class NovotonAvailabilitySource implements HotelAvailabilitySourceInterfac
             liveCheckSlow: false,
             pastPrices: true,
             bookings: true,
+            // Novoton has no gate of its own: Travel Core's hides and shows its hotels.
+            sharedGate: true,
         );
     }
 

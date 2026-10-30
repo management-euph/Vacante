@@ -1754,6 +1754,10 @@ Dacă ați plătit deja, vă rugăm să ignorați acest email.',
         'en' => 'Report only',
         'ro' => 'Doar raport',
     ],
+    'travel_core.availability_mode_automatic' => [
+        'en' => 'Automatic',
+        'ro' => 'Automat',
+    ],
     'travel_core.availability_state_bookable' => [
         'en' => 'Bookable',
         'ro' => 'Rezervabil',
@@ -1849,6 +1853,30 @@ Dacă ați plătit deja, vă rugăm să ignorați acest email.',
     'travel_core.availability_mail_first' => [
         'en' => '[n] hotels classified for the first time.',
         'ro' => '[n] hoteluri clasificate pentru prima dată.',
+    ],
+    'travel_core.availability_mail_hidden' => [
+        'en' => 'Hidden by the availability rules: [n]',
+        'ro' => 'Ascunse de regulile de disponibilitate: [n]',
+    ],
+    'travel_core.availability_mail_shown' => [
+        'en' => 'Shown again, their offers are back: [n]',
+        'ro' => 'Reafișate, ofertele lor au revenit: [n]',
+    ],
+    'travel_core.availability_mail_released' => [
+        'en' => 'Changed by hand after the rules hid them, now left as you set them: [n]',
+        'ro' => 'Modificate manual după ce regulile le-au ascuns, lăsate cum le-ați setat: [n]',
+    ],
+    'travel_core.availability_mail_braked' => [
+        'en' => 'Not hidden: [n] hotels would have been hidden at once, more than one run may hide. Check them on the Hotel availability page and confirm there.',
+        'ro' => 'Neascunse: [n] hoteluri ar fi fost ascunse deodată, mai multe decât poate ascunde o rulare. Verificați-le în pagina Disponibilitate hoteluri și confirmați de acolo.',
+    ],
+    'travel_core.availability_mail_would_hide' => [
+        'en' => 'Would be hidden in Automatic mode: [n]',
+        'ro' => 'S-ar ascunde în modul Automat: [n]',
+    ],
+    'travel_core.availability_mail_subject_gate' => [
+        'en' => 'Hotel availability: [n] hotels hidden, shown or held back',
+        'ro' => 'Disponibilitate hoteluri: [n] hoteluri ascunse, reafișate sau reținute',
     ],
     'travel_core.availability_mail_changes' => [
         'en' => 'Changes',
