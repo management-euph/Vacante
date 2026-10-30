@@ -1818,3 +1818,253 @@ body.travel-conditions-open {
     font-size: 12px;
     color: #64748b;
 }
+
+/* ── Availability panel (components/availability_panel.tpl) ───────────── */
+/* Above the search on both hotel page templates, for a hotel that cannot be
+   booked now (docs/novoton-availability-gaps-plan.md §7–8): why, last
+   season, "notify me" and similar hotels. Design A's colours: design-a.css. */
+.travel-avail {
+    margin: 0 0 16px;
+    padding: 16px 20px;
+    border: 1px solid var(--nvt-field-border, #e0e7ef);
+    border-left: 4px solid var(--nvt-primary, #003580);
+    border-radius: var(--nvt-radius-sm, 6px);
+    background: var(--nvt-surface-info, #f5f9fc);
+    color: var(--nvt-text, #333);
+}
+.travel-avail--left_feed,
+.travel-avail--closed {
+    border-left-color: var(--nvt-text-light, #777);
+}
+.travel-avail__head {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+.travel-avail__icon {
+    flex: none;
+    display: inline-flex;
+    color: var(--nvt-primary, #003580);
+}
+.travel-avail--left_feed .travel-avail__icon,
+.travel-avail--closed .travel-avail__icon {
+    color: var(--nvt-text-light, #777);
+}
+.travel-avail__text {
+    min-width: 0;
+}
+.travel-avail__title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+.travel-avail__season {
+    margin: 4px 0 0;
+    font-size: 14px;
+    color: var(--nvt-text-light, #666);
+}
+
+/* "Notify me": a native <details>, its summary styled as the button */
+.travel-avail-notify {
+    margin: 14px 0 0 34px;
+}
+.travel-avail-notify__toggle {
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
+    min-height: 44px;
+    padding: 8px 16px;
+    border: 1px solid var(--nvt-primary, #003580);
+    border-radius: var(--nvt-radius-sm, 6px);
+    background: var(--nvt-bg, #fff);
+    color: var(--nvt-primary, #003580);
+    font-weight: 600;
+    list-style: none;
+    cursor: pointer;
+}
+.travel-avail-notify__toggle::-webkit-details-marker {
+    display: none;
+}
+.travel-avail-notify__toggle::marker {
+    content: '';
+}
+.travel-avail-notify__toggle:hover {
+    background: var(--nvt-primary-tint, rgba(0, 53, 128, 0.08));
+}
+.travel-avail-notify__toggle:focus-visible,
+.travel-avail-notify__submit:focus-visible,
+.travel-avail-similar__link:focus-visible {
+    outline: 2px solid var(--nvt-primary, #003580);
+    outline-offset: 2px;
+}
+.travel-avail-notify__form {
+    max-width: 560px;
+    margin-top: 12px;
+}
+.travel-avail-notify__label {
+    display: block;
+    margin: 0 0 4px;
+    font-size: 13px;
+    font-weight: 600;
+}
+.travel-avail-notify__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.travel-avail-notify__email {
+    flex: 1 1 240px;
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 44px;
+    margin: 0;
+    padding: 8px 12px;
+    border: 1px solid var(--nvt-field-border, #c9d3df);
+    border-radius: var(--nvt-radius-sm, 6px);
+    background: var(--nvt-bg, #fff);
+    font-size: 15px;
+}
+.travel-avail-notify__submit {
+    flex: none;
+    box-sizing: border-box;
+    min-height: 44px;
+    padding: 8px 18px;
+    border: 0;
+    border-radius: var(--nvt-radius-sm, 6px);
+    background: var(--nvt-search-btn-bg, #006ce4);
+    color: var(--nvt-search-btn-text, #fff);
+    font-weight: 600;
+    cursor: pointer;
+}
+.travel-avail-notify__submit:hover {
+    background: var(--nvt-search-btn-hover, #0057b8);
+}
+.travel-avail-notify__consent {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 10px 0 0;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.45;
+    color: var(--nvt-text-light, #666);
+    cursor: pointer;
+}
+.travel-avail-notify__consent input {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    margin: 2px 0 0;
+}
+/* The honeypot: out of sight, out of the tab order (tabindex in the markup) */
+.travel-avail-notify__trap {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+/* Similar hotels: up to three cards, one row on a wide screen */
+.travel-avail-similar {
+    margin: 16px 0 0;
+    padding: 14px 0 0;
+    border-top: 1px solid var(--nvt-field-border, #e0e7ef);
+}
+.travel-avail-similar__title {
+    margin: 0 0 10px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    text-transform: none;
+    letter-spacing: normal;
+}
+.travel-avail-similar__list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.travel-avail-similar__item {
+    margin: 0;
+    padding: 0;
+}
+.travel-avail-similar__link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 8px;
+    border: 1px solid var(--nvt-field-border, #e0e7ef);
+    border-radius: var(--nvt-radius-sm, 6px);
+    background: var(--nvt-bg, #fff);
+    color: var(--nvt-text, #333);
+    text-decoration: none;
+}
+.travel-avail-similar__link:hover {
+    border-color: var(--nvt-primary, #003580);
+    color: var(--nvt-text, #333);
+    text-decoration: none;
+}
+.travel-avail-similar__photo {
+    flex: none;
+    width: 72px;
+    height: 54px;
+    overflow: hidden;
+    border-radius: 4px;
+    background: var(--nvt-bg-light, #eef2f7);
+}
+.travel-avail-similar__photo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+}
+.travel-avail-similar__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+.travel-avail-similar__name {
+    font-weight: 600;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+}
+.travel-avail-similar__stars {
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: var(--nvt-stars, #f5a623);
+}
+.travel-avail-similar__price {
+    font-size: 13px;
+    color: var(--nvt-text-light, #666);
+}
+.travel-avail-similar__price strong {
+    color: var(--nvt-text, #333);
+}
+
+@media (max-width: 767px) {
+    .travel-avail {
+        padding: 14px 14px 14px 12px;
+    }
+    .travel-avail-notify {
+        margin-left: 0;
+    }
+    .travel-avail-notify__toggle {
+        display: flex;
+        justify-content: center;
+        text-align: center;
+    }
+    .travel-avail-notify__submit {
+        flex: 1 1 100%;
+    }
+    .travel-avail-similar__list {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

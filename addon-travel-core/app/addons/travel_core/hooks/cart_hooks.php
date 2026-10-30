@@ -14,6 +14,8 @@ declare(strict_types=1);
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
+use Tygh\Addons\TravelCore\Services\AvailabilityPanel;
+use Tygh\Addons\TravelCore\Services\AvailabilityPanelView;
 use Tygh\Addons\TravelCore\Services\BookingDisplayService;
 use Tygh\Addons\TravelCore\Services\RequestExtraGuard;
 use Tygh\Addons\TravelCore\Services\TravelCoreConfig;
@@ -316,6 +318,14 @@ function _travel_core_prepare_hotel_seo_data(int $productId): void
             'travel_pdp_from_price',
             $nightly !== null ? \Tygh\Addons\TravelCore\Services\MoneyFormatter::forStore(true)->format($nightly) : '',
         );
+        // The availability panel above the search, on both hotel page
+        // templates (components/availability_panel.tpl): why a hotel cannot
+        // be booked now, "notify me" and similar hotels. Null for a bookable
+        // hotel and while the panels are switched off.
+        $view->assign('travel_availability_panel', (new AvailabilityPanelView(
+            new AvailabilityPanel(),
+            defined('CART_LANGUAGE') ? TypeCoerce::toString(CART_LANGUAGE) : 'en',
+        ))->forProduct($productId, new \DateTimeImmutable()));
     }
 }
 

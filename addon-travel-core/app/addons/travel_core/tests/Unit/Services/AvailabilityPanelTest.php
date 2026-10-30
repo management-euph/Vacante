@@ -101,18 +101,18 @@ final class AvailabilityPanelTest extends TestCase
     public function testSimilarHotelsAreBookableNearbyAndAtMostAStarApart(): void
     {
         $bookable = [
-            ['product_id' => '20', 'hotel_name' => 'Two Stars', 'product_code' => 'NVT20'],
-            ['product_id' => '21', 'hotel_name' => 'Four Stars', 'product_code' => 'NVT21'],
-            ['product_id' => '22', 'hotel_name' => 'Unrated', 'product_code' => 'NVT22'],
-            ['product_id' => '23', 'hotel_name' => 'Five Stars', 'product_code' => 'NVT23'],
-            ['product_id' => '24', 'hotel_name' => 'Three Stars', 'product_code' => 'NVT24'],
+            ['product_id' => '20', 'hotel_id' => '520', 'hotel_name' => 'Two Stars', 'product_code' => 'NVT20'],
+            ['product_id' => '21', 'hotel_id' => '521', 'hotel_name' => 'Four Stars', 'product_code' => 'NVT21'],
+            ['product_id' => '22', 'hotel_id' => '522', 'hotel_name' => 'Unrated', 'product_code' => 'NVT22'],
+            ['product_id' => '23', 'hotel_id' => '523', 'hotel_name' => 'Five Stars', 'product_code' => 'NVT23'],
+            ['product_id' => '24', 'hotel_id' => '524', 'hotel_name' => 'Three Stars', 'product_code' => 'NVT24'],
         ];
         $panel = self::panel(['state' => 'not_offered'], $bookable, [15 => 4, 20 => 2, 21 => 4, 23 => 5, 24 => 3])->forProduct(15, self::today());
 
         self::assertSame([
-            ['product_id' => 21, 'hotel_name' => 'Four Stars', 'stars' => 4],
-            ['product_id' => 23, 'hotel_name' => 'Five Stars', 'stars' => 5],
-            ['product_id' => 24, 'hotel_name' => 'Three Stars', 'stars' => 3],
+            ['product_id' => 21, 'hotel_id' => '521', 'hotel_name' => 'Four Stars', 'stars' => 4],
+            ['product_id' => 23, 'hotel_id' => '523', 'hotel_name' => 'Five Stars', 'stars' => 5],
+            ['product_id' => 24, 'hotel_id' => '524', 'hotel_name' => 'Three Stars', 'stars' => 3],
         ], $panel['similar'] ?? null, 'two stars is too far; an unrated hotel comes only after those');
     }
 

@@ -285,6 +285,7 @@ function init() {
                     calendarPrices:      serverConfig.calendarPrices || null,
                     calendarPricesCurrency: serverConfig.calendarPricesCurrency || '',
                     design:              serverConfig.design || '',
+                    priceWindow:         serverConfig.priceWindow || null,
                 };
                 dbg('Rendering with config:', config);
                 renderMount(el, config);

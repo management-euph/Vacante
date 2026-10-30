@@ -339,6 +339,31 @@
 .travel-pdpa .travel-pdp-results {
     margin: 0 0 24px;
 }
+/* The availability panel between the photos and the bar
+   (components/availability_panel.tpl; its layout in booking-pages.css), in
+   this page's navy rather than the store's primary colour. */
+.travel-pdpa .travel-avail {
+    border-left-color: var(--travel-pdpa-navy);
+    border-radius: var(--travel-pdpa-radius);
+}
+.travel-pdpa .travel-avail--left_feed,
+.travel-pdpa .travel-avail--closed {
+    border-left-color: var(--travel-pdpa-muted);
+}
+.travel-pdpa .travel-avail__icon,
+.travel-pdpa .travel-avail-notify__toggle {
+    color: var(--travel-pdpa-navy);
+}
+.travel-pdpa .travel-avail-notify__toggle {
+    border-color: var(--travel-pdpa-navy);
+}
+.travel-pdpa .travel-avail--left_feed .travel-avail__icon,
+.travel-pdpa .travel-avail--closed .travel-avail__icon {
+    color: var(--travel-pdpa-muted);
+}
+.travel-pdpa .travel-avail-notify__submit {
+    background: var(--travel-pdpa-blue);
+}
 /* The engine's "Availability" heading stays for screen readers only: the
    bar sits right under the photos and speaks for itself. */
 .travel-pdpa .nvt-availability-header {

@@ -10,9 +10,14 @@
  *   $travel_booking_product_id  - product ID (hotel products only, and only
  *                                 when travel_core's show_booking_form is on)
  *   $travel_booking_scripts     - array of React JS bundle URLs
+ *   $travel_availability_panel  - the availability panel above the search
+ *                                 (components/availability_panel.tpl), or null
  *}
 
 <!-- [travel_core] booking_form_mount.tpl LOADED pid={$travel_booking_product_id|default:'EMPTY'} -->
+
+{* Before the swap shell, so the inline search never replaces it *}
+{include file="addons/travel_core/components/availability_panel.tpl"}
 
 {if $travel_booking_product_id}
 <!-- [travel_core] BOOKING FORM RENDERING for product_id={$travel_booking_product_id} -->

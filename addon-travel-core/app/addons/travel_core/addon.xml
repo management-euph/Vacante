@@ -306,6 +306,12 @@
                         <default_value>N</default_value>
                         <variants/>
                     </item>
+                    <!-- The "notify me" consent text links here (plan §8). -->
+                    <item id="availability_privacy_url">
+                        <type>input</type>
+                        <default_value></default_value>
+                        <variants/>
+                    </item>
                 </items>
             </section>
         </sections>

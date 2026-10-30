@@ -66,6 +66,22 @@ class DateHelper
     }
 
     /**
+     * A month's name as running text uses it: "June", or "iunie" for a
+     * Romanian visitor (Romanian does not capitalise months). '' for a month
+     * outside 1–12.
+     */
+    public static function monthName(int $month, string $lang): string
+    {
+        if ($month < 1 || $month > 12) {
+            return '';
+        }
+
+        return str_starts_with(strtolower($lang), 'ro')
+            ? self::$roMonths[$month]
+            : date('F', (int) mktime(0, 0, 0, $month, 1, 2000));
+    }
+
+    /**
      * Format date range in Romanian.
      */
     public static function formatRangeRomanian(string $checkIn, string $checkOut): string

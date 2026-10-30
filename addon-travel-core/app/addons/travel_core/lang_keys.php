@@ -2114,6 +2114,10 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Last season: [from] – [to].',
         'ro' => 'Sezonul trecut: [from] – [to].',
     ],
+    'travel_core.availability_panel_last_season_month' => [
+        'en' => 'Last season: [month].',
+        'ro' => 'Sezonul trecut: [month].',
+    ],
     'travel_core.availability_panel_published_from' => [
         'en' => 'Prices are published for stays from [date].',
         'ro' => 'Prețurile sunt publicate pentru sejururi de la [date].',
@@ -2169,6 +2173,10 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
     'travel_core.notify_request_unavailable' => [
         'en' => 'This hotel takes no "notify me" requests at the moment.',
         'ro' => 'Acest hotel nu primește cereri „Anunță-mă” momentan.',
+    ],
+    'travel_core.notify_submit' => [
+        'en' => 'Notify me',
+        'ro' => 'Anunță-mă',
     ],
     // Hotel page Design A (blocks/product_templates/travelcore_design_a.tpl).
     // The BARE travelcore_design_a key labels its entry in the Appearance
@@ -2245,6 +2253,16 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
     'travel_core.nightly_prices_note' => [
         'en' => 'Indicative prices per night, for 2 adults.',
         'ro' => 'Prețuri orientative pe noapte, pentru 2 adulți.',
+    ],
+    // The calendar's published-price window (CalendarPriceWindow, plan §7.1);
+    // the two %s are the first and last date, as the calendar writes them.
+    'travel_core.price_window_note' => [
+        'en' => 'Prices are published for stays from %s to %s.',
+        'ro' => 'Prețurile sunt publicate pentru sejururi între %s și %s.',
+    ],
+    'travel_core.outside_price_window' => [
+        'en' => 'no prices published yet',
+        'ro' => 'prețuri nepublicate încă',
     ],
     // Design A room-first results (components/design_a_results.tpl,
     // Results\RoomResultsBuilder). [rates] / [rooms] / [guests] / [nights]
