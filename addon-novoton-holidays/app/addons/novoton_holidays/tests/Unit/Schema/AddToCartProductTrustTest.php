@@ -9,9 +9,10 @@ use PHPUnit\Framework\TestCase;
 /**
  * Novoton add-to-cart fell back to the product_id the browser sent when the
  * hotel's NVT product was not found — and then saved that product onto a new
- * hotel row. Now the product is the hotel's own active Novoton product
- * (HotelCartProduct → travel_core ProviderCartProduct); the form's
- * product_id only counts when it is one of the hotel's own.
+ * hotel row. Now the product is the hotel's own Novoton product, active or
+ * hidden by Travel Core's availability gate (HotelCartProduct → travel_core
+ * ProviderCartProduct); the form's product_id only counts when it is one of
+ * the hotel's own.
  */
 final class AddToCartProductTrustTest extends TestCase
 {
@@ -40,7 +41,8 @@ final class AddToCartProductTrustTest extends TestCase
         self::assertStringContainsString('ConfigProvider::getProductCodePrefixes()', $resolver);
         self::assertStringContainsString('in_array($requestedProductId, $owned, true)', $resolver);
         self::assertStringContainsString('return ProviderCartProduct::resolve(', $resolver);
-        // No availability gate on Novoton: only an active product can be bought.
-        self::assertStringNotContainsString('gateHidden', $resolver);
+        // Hidden by the availability gate (Automatic mode): still bookable from a
+        // direct link; hidden by an admin: not.
+        self::assertStringContainsString('(new HotelAvailabilityRepository())->isGateHidden(NovotonAvailabilitySource::PROVIDER, $productId),', $resolver);
     }
 }

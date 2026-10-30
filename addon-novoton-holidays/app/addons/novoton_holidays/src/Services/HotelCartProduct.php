@@ -5,15 +5,17 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Repository\HotelAvailabilityRepository;
 use Tygh\Addons\TravelCore\Services\ProviderCartProduct;
 
 /**
  * The CS-Cart product a Novoton booking goes on: the hotel's own product —
  * ?:novoton_hotels.product_id, or the product whose code is a configured
- * Novoton prefix + the hotel id (NVT123) — and active (Novoton has no
- * availability gate). Never simply the product_id the browser sent: that is
- * accepted only when it is one of the hotel's own products
- * (ProviderCartProduct).
+ * Novoton prefix + the hotel id (NVT123) — and active, or hidden by Travel
+ * Core's availability gate in Automatic mode (a hotel without availability
+ * for months stays bookable from a direct link when a search finds an
+ * offer). Never simply the product_id the browser sent: that is accepted
+ * only when it is one of the hotel's own products (ProviderCartProduct).
  */
 final class HotelCartProduct
 {
@@ -27,6 +29,7 @@ final class HotelCartProduct
             max(0, $requestedProductId),
             $productId,
             ProviderCartProduct::productStatus(...),
+            (new HotelAvailabilityRepository())->isGateHidden(NovotonAvailabilitySource::PROVIDER, $productId),
         );
     }
 

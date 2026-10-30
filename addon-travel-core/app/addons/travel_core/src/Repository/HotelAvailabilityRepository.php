@@ -115,6 +115,34 @@ final class HotelAvailabilityRepository
         }
     }
 
+    /**
+     * SQL: the products a supplier's availability gate hid (AvailabilityGate:
+     * Hidden by the gate, not by an admin), for the supplier's own queries
+     * that treat them as live: synced, checked, disabled with their
+     * destination. Already quoted.
+     */
+    public static function gateHiddenProductsSql(string $provider): string
+    {
+        self::ensureTables();
+
+        return db_quote("SELECT product_id FROM ?:travel_hotel_availability WHERE provider = ?s AND gate_hidden = 'Y'", $provider);
+    }
+
+    /** The gate hid this product: it stays bookable from a direct link (ProviderCartProduct). */
+    public function isGateHidden(string $provider, int $productId): bool
+    {
+        if ($productId <= 0) {
+            return false;
+        }
+        self::ensureTables();
+
+        return TypeCoerce::toInt(db_get_field(
+            "SELECT COUNT(*) FROM ?:travel_hotel_availability WHERE provider = ?s AND product_id = ?i AND gate_hidden = 'Y'",
+            $provider,
+            $productId,
+        )) > 0;
+    }
+
     /** Lets a test run the heal again (it runs once per request). */
     public static function resetEnsured(): void
     {

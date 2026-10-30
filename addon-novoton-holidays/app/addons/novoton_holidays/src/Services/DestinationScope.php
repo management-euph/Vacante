@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Repository\DestinationWhitelistRepository;
+use Tygh\Addons\TravelCore\Repository\HotelAvailabilityRepository;
 
 /**
  * What we sell from Novoton: the destination whitelist, read once per request.
@@ -180,10 +181,10 @@ final class DestinationScope
      *
      * Not configured: the selected countries, as the syncs always did (and
      * room_price now too — it checked every hotel of every country).
-     * Configured: the whitelisted hotels, OR any hotel still linked to an
-     * active product — a live product keeps its prices and facilities fresh
-     * until someone disables it, whatever the whitelist now says. Hidden
-     * resorts are never synced for the whitelist's sake.
+     * Configured: the whitelisted hotels, OR any hotel still linked to a
+     * live product (liveProductSql()) — it keeps its prices and facilities
+     * fresh until someone disables it, whatever the whitelist now says.
+     * Hidden resorts are never synced for the whitelist's sake.
      *
      * @param string $alias the hotels table alias ('h'), or '' when unaliased
      */
@@ -216,7 +217,21 @@ final class DestinationScope
         }
 
         return '(' . $inScope . ' OR ' . $col('product_id')
-            . " IN (SELECT product_id FROM ?:products WHERE status = 'A'))";
+            . ' IN (SELECT product_id FROM ?:products WHERE ' . self::liveProductSql() . '))';
+    }
+
+    /**
+     * SQL on ?:products (columns unaliased, or with $alias): a live product
+     * — Active, or Hidden by Travel Core's availability gate, which shows it
+     * again once its hotel has offers, so its prices and the weekly check
+     * must go on. One an admin hid or disabled is not live.
+     */
+    public static function liveProductSql(string $alias = ''): string
+    {
+        $col = static fn (string $name): string => ($alias === '' ? '' : $alias . '.') . $name;
+
+        return "({$col('status')} = 'A' OR ({$col('status')} = 'H' AND {$col('product_id')} IN ("
+            . HotelAvailabilityRepository::gateHiddenProductsSql(NovotonAvailabilitySource::PROVIDER) . ')))';
     }
 
     /** One hotel (offers_update): may it become a product? */
