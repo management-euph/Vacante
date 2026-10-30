@@ -61,7 +61,7 @@ final class AvailabilityPanel
      * The panel for a product, or null when it gets none. Never throws: a
      * page shows without the panel rather than not at all.
      *
-     * @return array{provider: string, hotel_id: string, hotel_name: string, state: string, message: string, notify: string, last_season: array{from: string, to: string}|null, published_from: string, similar: list<array{product_id: int, hotel_name: string, stars: int|null}>}|null
+     * @return array{provider: string, hotel_id: string, hotel_name: string, state: string, message: string, notify: string, last_season: array{from: string, to: string}|null, published_from: string, similar: list<array{product_id: int, hotel_id: string, hotel_name: string, stars: int|null}>}|null
      */
     public function forProduct(int $productId, \DateTimeImmutable $today): ?array
     {
@@ -80,7 +80,7 @@ final class AvailabilityPanel
     /**
      * The panel, whatever the switch says (the admin's preview and the tests).
      *
-     * @return array{provider: string, hotel_id: string, hotel_name: string, state: string, message: string, notify: string, last_season: array{from: string, to: string}|null, published_from: string, similar: list<array{product_id: int, hotel_name: string, stars: int|null}>}|null
+     * @return array{provider: string, hotel_id: string, hotel_name: string, state: string, message: string, notify: string, last_season: array{from: string, to: string}|null, published_from: string, similar: list<array{product_id: int, hotel_id: string, hotel_name: string, stars: int|null}>}|null
      */
     public function build(int $productId, \DateTimeImmutable $today): ?array
     {
@@ -173,7 +173,7 @@ final class AvailabilityPanel
      * booked now, with an active product, at most a star apart when both
      * star ratings are known; the latest offers first.
      *
-     * @return list<array{product_id: int, hotel_name: string, stars: int|null}>
+     * @return list<array{product_id: int, hotel_id: string, hotel_name: string, stars: int|null}>
      */
     private function similar(string $provider, string $destinationKey, int $productId): array
     {
@@ -181,7 +181,7 @@ final class AvailabilityPanel
             return [];
         }
         $candidates = TypeCoerce::toRowList(db_get_array(
-            "SELECT a.product_id, a.hotel_name, p.product_code
+            "SELECT a.product_id, a.hotel_id, a.hotel_name, p.product_code
              FROM ?:travel_hotel_availability a
              INNER JOIN ?:products p ON p.product_id = a.product_id AND p.status = 'A'
              WHERE a.provider = ?s AND a.destination_key = ?s AND a.state = 'bookable' AND a.product_id > 0 AND a.product_id <> ?i
@@ -202,7 +202,12 @@ final class AvailabilityPanel
         foreach ($candidates as $row) {
             $id = TypeCoerce::toInt($row['product_id'] ?? 0);
             $theirs = ($this->stars)($id, TypeCoerce::toString($row['product_code'] ?? ''));
-            $hotel = ['product_id' => $id, 'hotel_name' => TypeCoerce::toString($row['hotel_name'] ?? ''), 'stars' => $theirs];
+            $hotel = [
+                'product_id' => $id,
+                'hotel_id' => TypeCoerce::toString($row['hotel_id'] ?? ''),
+                'hotel_name' => TypeCoerce::toString($row['hotel_name'] ?? ''),
+                'stars' => $theirs,
+            ];
             if ($stars === null || $theirs === null) {
                 $unrated[] = $hotel;
             } elseif (abs($theirs - $stars) <= 1) {

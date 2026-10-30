@@ -713,7 +713,7 @@ cover:
 | 0b | Eurosite and Sphinx fixes that would corrupt the records or mislead the report — **done 2026-10-21** (§15.4) | Small fixes | S |
 | 1a | Travel Core: the contract with supplier capabilities (§15.3), the evidence and log tables (schema self-heal), the policy, the date windows (moved from Eurosite), settings (a mode per supplier; hide after N months, default 12; what counts as availability), the Hotel availability page with a supplier filter, CSV, weekly email; the weekly step in Travel Core's existing cron (§4.5). Novoton: the evidence source (passive capture, backfill), the Tools page card — **these done 2026-10-23 (§16)**; `room_price` reworked into the weekly resort check (§4.3) — **done 2026-10-26 (§16.5)** | No | L |
 | 1b | Eurosite and Sphinx: record what their existing checks and hotel-page searches already fetch, hotel-list completeness, bookings read back, dashboard cards; Sphinx stores `giata_id` (§15.3); Eurosite's `full` takes its steps' run locks (§4.5) — **done 2026-10-23 (§16.4)** | No | M |
-| 2 | Hotel-page panels; "notify me" and "prices are out" emails; similar hotels; date-picker window; language keys. All suppliers; Eurosite first needs a request flow. **Back end done 2026-10-27 (§16.6)**, behind a switch that is off; the panels on the page and the date-picker window wait for the Design A page work | Yes | M |
+| 2 | Hotel-page panels; "notify me" and "prices are out" emails; similar hotels; date-picker window; language keys. All suppliers; Eurosite first needs a request flow. **Back end done 2026-10-27 (§16.6); the panels on both hotel page templates and the date-picker window done 2026-10-30 (§16.8)**, behind a switch that is off; listing labels moved to phase 6 | Yes | M |
 | 3 | Automatic mode, per supplier: dormant / left the list → Hidden, and back to Active; brake; overrides; `gateHidden` for bookings. Novoton first (Feb–Mar 2027) | Yes | M |
 | 4 | Closed hotels: mark closed, redirect target, 301 controller, grace checks | Yes | S |
 | 5 | Purchasing list of not-offered hotels with their demand | Staff only | S |
@@ -1311,8 +1311,8 @@ pass; the storage, the emails and the panel's queries were run on MariaDB
 | Admin grid | Travel → Availability Requests | Shows them with what they wait for, filters by type (and Eurosite), and can cancel one |
 | Language keys | `lang_keys.php`, both `.po` | The panel, the buttons, the consent text of §8, the form's answers, the emails, the grid |
 
-Still to do in phase 2: the panel and its form on both hotel page templates,
-the date-picker window (§7.1), and optional listing labels.
+The page part followed once the Design A page had landed (§16.8); the
+listing labels moved to phase 6.
 
 ### 16.7 The suppliers' answers, applied (2026-10-28)
 
@@ -1385,9 +1385,42 @@ The first pass downloads every listed photo of an older product once, to
 compare; after that a week without changes costs one `hotel_images` call
 per hotel and no download.
 
-### 16.8 Next
+### 16.8 Phase 2, the hotel page (done 2026-10-30)
+
+With the Design A page on `main` (its page, calendar and room-first results,
+`docs/hotel-page-design-a-plan.md`), the panel went onto both hotel page
+templates and the date-picker window into the shared calendar. Still behind
+"Show availability panels on hotel pages" (off): nothing changes for
+customers until the admin switches it on. The suites pass (Travel Core 981,
+Novoton 1119, Eurosite 348, Sphinx 627; 304 vitest tests), with PHPStan level
+10, both CS Fixer configs and Rector; the panel was rendered with Smarty 5
+and the add-on's CSS, and both calendars driven in Chromium with the rebuilt
+bundle, at 1280 and 390 px. To check on the dev store: the panel under the
+theme's own styles, and the form's notice after sending.
+
+| Piece | Where (travel_core) | Notes |
+|---|---|---|
+| Where the panel sits | `components/availability_panel.tpl`, included first by `components/booking_form_mount.tpl` | Above the search on every template that renders the booking form mount: the current hotel page, and Design A between the photos and the yellow bar. Outside the shell the inline search swaps results into, so a search never replaces it |
+| What it shows | `Services\AvailabilityPanelView` (from `AvailabilityPanel`, assigned by the `dispatch_before_display` hook) | §7's sentence for the state; last season's months in the visitor's language ("Sezonul trecut: iunie – septembrie", one month named once); from when prices are published, in the store's date format; up to three similar hotels as cards: the store's product name, photo, stars and the indicative "from" price per night, all from stored data |
+| "Notify me" | A native `<details>` under the sentence; the form posts to `travel_availability.notify` | Email, the unticked consent box with §8's text, the security hash, a honeypot. No script needed; the controller answers with a notice on the page. No form for a hotel that takes no request (no longer available, prices published from a later date) |
+| Privacy link | New setting "Privacy policy page" (`availability_privacy_url`) | The consent text links to it; only an https:// or store-relative address. **Set it before switching the panels on**: without it the consent text has no link |
+| The date-picker window | `Services\CalendarPriceWindow`, sent by `booking_config` as `priceWindow` | The records' first and last stay date with a published price (`contract_from` / `contract_to`), from today on; only while the panels are on and the supplier is not set to Off. Today only Novoton records windows; for the others nothing changes |
+| In the calendar | `react-src` `Calendar.jsx` (both the current bar and Design A's), bundle rebuilt, `TRAVEL_CACHE_VER` 11 | With no check-in chosen it opens on the first published date's month instead of this one (phones scroll to it). Days outside the window are muted and lightly hatched, say "no prices published yet" on hover and to screen readers, and stay selectable: a search may still find offers. A note under the months gives the window ("Prices are published for stays from 1 May 2027 to 30 September 2027") |
+| Styles | `booking-pages.css` (`.travel-avail-*`), Design A's navy in `design-a.css`, the calendar's in `booking-engine.css`; both themes | No inline styles |
+| Tests | `AvailabilityPanelViewTest`, `AvailabilityPanelTemplateTest`, `CalendarPriceWindowTest`, `CalendarPriceWindowWiringTest` | |
+
+Design A's `pdp-design-a.js` sizes the photos so the bar ends on the first
+screen. It measures the gap between the photos and the bar, so with a panel
+the photos give way (down to 240 px) to keep the panel and the bar on the
+first screen where the screen is tall enough.
+
+**Listing labels** ("2027 prices soon", "Bookable until Sep 2027") moved to
+phase 6, with the listing sorting already planned there: placing them needs
+the store's category list templates, which `docker/fullstore/export-theme.sh`
+does not pack yet (it packs the product page's).
+
+### 16.9 Next
 
 6. Calibration on the live store (§14) once the suppliers have recorded for a
-   few weeks; then switch the panels on.
-7. Phase 2's page part once the Design A results work has landed: the panel
-   and form on both templates, the date-picker window.
+   few weeks; then set the privacy policy page and switch the panels on.
+7. Phase 3 (Automatic mode for Novoton) before the Feb–Mar 2027 review.

@@ -766,6 +766,14 @@ msgctxt "SettingsTooltips::travel_core::availability_panels"
 msgid "A hotel that cannot be booked now gets a panel above the search: why (prices not published yet, not offered at the moment, no offers for over a year, no longer available), similar hotels, and a \"notify me\" form that sends one email when booking opens. Turn it on once the Hotel availability page looks right for your hotels."
 msgstr "A hotel that cannot be booked now gets a panel above the search: why (prices not published yet, not offered at the moment, no offers for over a year, no longer available), similar hotels, and a \"notify me\" form that sends one email when booking opens. Turn it on once the Hotel availability page looks right for your hotels."
 
+msgctxt "SettingsOptions::travel_core::availability_privacy_url"
+msgid "Privacy policy page"
+msgstr "Privacy policy page"
+
+msgctxt "SettingsTooltips::travel_core::availability_privacy_url"
+msgid "The address of your privacy policy page (https://… or /…). The \"notify me\" consent text links to it; without one the text shows no link. Set it before you switch the panels on."
+msgstr "The address of your privacy policy page (https://… or /…). The \"notify me\" consent text links to it; without one the text shows no link. Set it before you switch the panels on."
+
 msgctxt "SettingsOptions::travel_core::deposit_header"
 msgid "Deposit payments"
 msgstr "Deposit payments"
@@ -2938,6 +2946,10 @@ msgctxt "Languages::travel_core.availability_panel_last_season"
 msgid "Last season: [from] – [to]."
 msgstr "Last season: [from] – [to]."
 
+msgctxt "Languages::travel_core.availability_panel_last_season_month"
+msgid "Last season: [month]."
+msgstr "Last season: [month]."
+
 msgctxt "Languages::travel_core.availability_panel_published_from"
 msgid "Prices are published for stays from [date]."
 msgstr "Prices are published for stays from [date]."
@@ -2993,6 +3005,10 @@ msgstr "Please tick the box to agree to the email."
 msgctxt "Languages::travel_core.notify_request_unavailable"
 msgid "This hotel takes no \"notify me\" requests at the moment."
 msgstr "This hotel takes no \"notify me\" requests at the moment."
+
+msgctxt "Languages::travel_core.notify_submit"
+msgid "Notify me"
+msgstr "Notify me"
 
 msgctxt "Languages::travelcore_design_a"
 msgid "Travel Core · Design A"
@@ -3065,6 +3081,14 @@ msgstr "Lowest prices"
 msgctxt "Languages::travel_core.nightly_prices_note"
 msgid "Indicative prices per night, for 2 adults."
 msgstr "Indicative prices per night, for 2 adults."
+
+msgctxt "Languages::travel_core.price_window_note"
+msgid "Prices are published for stays from %s to %s."
+msgstr "Prices are published for stays from %s to %s."
+
+msgctxt "Languages::travel_core.outside_price_window"
+msgid "no prices published yet"
+msgstr "no prices published yet"
 
 msgctxt "Languages::travel_core.pdpa_r_title"
 msgid "Rooms and prices"

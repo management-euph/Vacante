@@ -21,6 +21,7 @@ declare(strict_types=1);
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Results\DesignA;
+use Tygh\Addons\TravelCore\Services\CalendarPriceWindow;
 use Tygh\Addons\TravelCore\Services\ProviderRoomLimit;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
 
@@ -140,6 +141,8 @@ if ($mode === 'booking_config') {
                 // Design A bar and calendar (travelcore_design_a.tpl)
                 'guests', 'add_date', 'see_prices', 'clear_dates',
                 'change_guests', 'lowest_prices', 'nightly_prices_note',
+                // The calendar's published-price window (priceWindow below)
+                'price_window_note', 'outside_price_window',
             ];
             $translations = [];
             foreach ($translationKeys as $key) {
@@ -168,6 +171,14 @@ if ($mode === 'booking_config') {
                 'colors' => $colors,
                 'translations' => $translations,
             ];
+
+            // The stay dates with published prices (availability plan §7.1):
+            // the calendar opens on the first and marks the dates outside
+            // them. Only while the availability panels are switched on.
+            $priceWindow = (new CalendarPriceWindow())->forHotel($providerName, $hotelId, new \DateTimeImmutable());
+            if ($priceWindow !== null) {
+                $config['priceWindow'] = $priceWindow;
+            }
 
             // Design A hotel page (the engine asks with design=a): its bar,
             // and per-night prices for two adults in the calendar, from the
