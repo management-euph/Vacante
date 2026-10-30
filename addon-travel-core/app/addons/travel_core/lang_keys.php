@@ -2593,4 +2593,138 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Room only',
         'ro' => 'Fără masă',
     ],
+    // The booking page (travel_bookings.view, BookingPageFactory) and a room
+    // as the supplier names it on the admin order card.
+    'travel_core.obc_supplier_room' => [
+        'en' => '[provider] room',
+        'ro' => 'Cameră [provider]',
+    ],
+    'travel_core.bv_check_status' => [
+        'en' => 'Check status',
+        'ro' => 'Verifică statusul',
+    ],
+    'travel_core.bv_open_order' => [
+        'en' => 'Open order #[id]',
+        'ro' => 'Deschide comanda #[id]',
+    ],
+    'travel_core.bv_order' => [
+        'en' => 'Order',
+        'ro' => 'Comandă',
+    ],
+    'travel_core.bv_created' => [
+        'en' => 'Created [date]',
+        'ro' => 'Creată [date]',
+    ],
+    'travel_core.bv_awaiting_title' => [
+        'en' => '[provider] hasn\'t confirmed this booking yet',
+        'ro' => '[provider] nu a confirmat încă această rezervare',
+    ],
+    'travel_core.bv_awaiting_no_ref' => [
+        'en' => 'No supplier reference has come back since it was sent on [date].',
+        'ro' => 'Nu a venit nicio referință de la furnizor de când a fost trimisă, pe [date].',
+    ],
+    'travel_core.bv_awaiting_ref' => [
+        'en' => 'The supplier has it, but has not confirmed it yet.',
+        'ro' => 'Furnizorul o are, dar nu a confirmat-o încă.',
+    ],
+    'travel_core.bv_check_in_days' => [
+        'en' => 'Check-in is in [n] day.|Check-in is in [n] days.',
+        'ro' => 'Check-in-ul este peste [n] zi.|Check-in-ul este peste [n] zile.|Check-in-ul este peste [n] de zile.',
+    ],
+    'travel_core.bv_check_in_today' => [
+        'en' => 'Check-in is today.',
+        'ro' => 'Check-in-ul este azi.',
+    ],
+    'travel_core.bv_awaiting_hint' => [
+        'en' => 'Use Check status to ask [provider] again.',
+        'ro' => 'Folosește Verifică statusul pentru a întreba din nou [provider].',
+    ],
+    'travel_core.bv_booking_total' => [
+        'en' => 'Booking total',
+        'ro' => 'Total rezervare',
+    ],
+    'travel_core.bv_order_total' => [
+        'en' => 'Order total',
+        'ro' => 'Total comandă',
+    ],
+    'travel_core.bv_view_storefront' => [
+        'en' => 'View on storefront',
+        'ro' => 'Vezi pe site',
+    ],
+    'travel_core.bv_guest' => [
+        'en' => 'Guest',
+        'ro' => 'Oaspete',
+    ],
+    'travel_core.bv_type' => [
+        'en' => 'Type',
+        'ro' => 'Tip',
+    ],
+    'travel_core.bv_age' => [
+        'en' => 'Age',
+        'ro' => 'Vârstă',
+    ],
+    'travel_core.bv_adult' => [
+        'en' => 'Adult',
+        'ro' => 'Adult',
+    ],
+    'travel_core.bv_child' => [
+        'en' => 'Child',
+        'ro' => 'Copil',
+    ],
+    'travel_core.bv_terms' => [
+        'en' => 'Cancellation & payment',
+        'ro' => 'Anulare și plată',
+    ],
+    'travel_core.bv_supplier' => [
+        'en' => 'Supplier',
+        'ro' => 'Furnizor',
+    ],
+    'travel_core.bv_status' => [
+        'en' => 'Status',
+        'ro' => 'Status',
+    ],
+    'travel_core.bv_reference' => [
+        'en' => 'Reference',
+        'ro' => 'Referință',
+    ],
+    'travel_core.bv_not_received' => [
+        'en' => 'Not received yet',
+        'ro' => 'Nu a fost primită încă',
+    ],
+    'travel_core.bv_ids_hint' => [
+        'en' => '[provider]\'s own booking numbers show here once it confirms the booking.',
+        'ro' => 'Numerele de rezervare [provider] apar aici după ce confirmă rezervarea.',
+    ],
+    'travel_core.bv_placed' => [
+        'en' => 'Placed',
+        'ro' => 'Plasată',
+    ],
+    'travel_core.bv_history' => [
+        'en' => 'History',
+        'ro' => 'Istoric',
+    ],
+    'travel_core.bv_history_order' => [
+        'en' => 'Order #[id] placed',
+        'ro' => 'Comanda #[id] a fost plasată',
+    ],
+    'travel_core.bv_history_linked' => [
+        'en' => 'Linked to order #[id]',
+        'ro' => 'Asociată comenzii #[id]',
+    ],
+    'travel_core.bv_history_created' => [
+        'en' => 'Booking created (added to a cart)',
+        'ro' => 'Rezervare creată (adăugată în coș)',
+    ],
+    'travel_core.bv_history_updated' => [
+        'en' => 'Last updated',
+        'ro' => 'Ultima actualizare',
+    ],
+    'travel_core.bv_technical' => [
+        'en' => 'Technical details',
+        'ro' => 'Detalii tehnice',
+    ],
+    'travel_core.bv_technical_hint' => [
+        'en' => 'Every field the provider keeps for this booking, for troubleshooting.',
+        'ro' => 'Toate câmpurile pe care furnizorul le păstrează pentru această rezervare, pentru depanare.',
+    ],
 ];

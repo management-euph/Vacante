@@ -29,8 +29,9 @@ use Tygh\Addons\TravelCore\TravelConstants;
  *  - every room as its own block with its board, occupancy and guests;
  *  - the balance of a deposit order: open / paid / overdue, its pay link;
  *  - for the ADMIN only: the provider, the supplier reference, the supplier's
- *    note and price, when it was booked / updated, and an alert with the
- *    supplier's answer when the booking failed or was never sent.
+ *    note and price, each room as the supplier names it, when it was booked /
+ *    updated, and an alert with the supplier's answer when the booking
+ *    failed or was never sent.
  *
  * The customer card is built without any of the admin-only data — it never
  * reaches the template — and a booking the supplier has not confirmed reads
@@ -148,7 +149,13 @@ final class OrderBookingCardFactory
 
             return ['guests' => $guests] + $room;
         }, $card['room_list']);
-        $card['room_cards'] = $this->roomCards($card);
+        // Admin only: each room as the supplier names it (novoton: IdRoom and
+        // Type, "QUAT 2+2 FRENCH BALCONY (QUATRIPLE)"), in room order.
+        $supplierRooms = $admin ? TypeCoerce::toStringList($facts['supplier_rooms'] ?? null) : [];
+        $card['room_cards'] = [];
+        foreach ($this->roomCards($card) as $i => $room) {
+            $card['room_cards'][] = ['supplier_room' => trim($supplierRooms[$i] ?? '')] + $room;
+        }
         $card['balance'] = $this->balance($card['deposit'], $extra, $balances, TypeCoerce::toString($item['item_id'] ?? ''), $status['code'], $admin);
 
         // Admin only — never handed to the customer's template.

@@ -7,6 +7,7 @@ namespace Tygh\Addons\NovotonHolidays\Tests\Unit\Services;
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Services\BookingAdminProvider;
+use Tygh\Addons\NovotonHolidays\Services\SupplierRoomLabels;
 
 /**
  * Guards two travel_bookings admin-grid fixes (devx report):
@@ -74,5 +75,36 @@ final class BookingAdminProviderTest extends TestCase
         ])->getDisplayData('1');
 
         self::assertSame('', $display['provider_ref']);
+    }
+
+    public function testARefusedBookingOffersToRequestAlternatives(): void
+    {
+        $actions = $this->providerReturning([])->getAvailableActions([
+            'provider_booking_id' => '12',
+            'provider_display' => ['novoton_status' => 'ST'],
+        ]);
+
+        self::assertCount(1, $actions);
+        self::assertSame('request_alternatives', $actions[0]['name']);
+        self::assertSame('POST', $actions[0]['method']);
+        self::assertSame('travel_bookings.provider_action', $actions[0]['url']);
+        self::assertSame('12', $actions[0]['booking_id']);
+        self::assertSame(['provider_action' => 'request_alternatives'], $actions[0]['extra_params']);
+    }
+
+    public function testDisplayDataNamesEachRoomAsNovotonDoes(): void
+    {
+        $repo = $this->createMock(BookingRepositoryInterface::class);
+        $repo->method('findById')->willReturn([
+            'status' => 'pending',
+            'hotel_id' => '4402',
+            'room_id' => 'QUAT 2+2 FRENCH BALCONY',
+            'rooms_data' => '[{"room_id":"QUAT 2+2 FRENCH BALCONY"}]',
+        ]);
+        $provider = new BookingAdminProvider($repo, new SupplierRoomLabels(
+            static fn (): array => ['QUAT 2+2 FRENCH BALCONY' => 'QUATRIPLE'],
+        ));
+
+        self::assertSame(['QUAT 2+2 FRENCH BALCONY (QUATRIPLE)'], $provider->getDisplayData('1')['supplier_rooms']);
     }
 }

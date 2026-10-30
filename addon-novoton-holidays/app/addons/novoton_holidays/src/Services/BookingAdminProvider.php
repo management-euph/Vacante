@@ -22,9 +22,12 @@ class BookingAdminProvider implements BookingAdminProviderInterface
 {
     private BookingRepositoryInterface $bookingRepo;
 
-    public function __construct(?BookingRepositoryInterface $bookingRepo = null)
+    private SupplierRoomLabels $roomLabels;
+
+    public function __construct(?BookingRepositoryInterface $bookingRepo = null, ?SupplierRoomLabels $roomLabels = null)
     {
         $this->bookingRepo = $bookingRepo ?? new BookingRepository();
+        $this->roomLabels = $roomLabels ?? new SupplierRoomLabels();
     }
 
     /** @return array<string, mixed> */
@@ -70,6 +73,16 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         // Price info
         if (!empty($booking['api_price'])) {
             $display['api_price'] = $booking['api_price'];
+        }
+
+        // Each room as Novoton names it, IdRoom (Type), for a booking page
+        // whose booking no order holds yet (the order card carries its own).
+        $rooms = $this->roomLabels->labels(
+            TypeCoerce::toString($booking['hotel_id'] ?? ''),
+            SupplierRoomLabels::roomIds($booking['rooms_data'] ?? null, TypeCoerce::toString($booking['room_id'] ?? '')),
+        );
+        if ($rooms !== []) {
+            $display['supplier_rooms'] = $rooms;
         }
 
         return $display;
@@ -129,16 +142,21 @@ class BookingAdminProvider implements BookingAdminProviderInterface
             ];
         }
 
-        // Alternatives action for ST/RQ bookings
+        // Stopped / refused (ST) or answered with alternatives (RQ): ask for
+        // alternatives (handleRequestAlternatives files the request the
+        // alternatives cron works through). It used to link to
+        // travel_bookings.view with this NOVOTON id — the unified page of
+        // another booking — and a tab that page never had.
         if (in_array($novotonStatus, ['ST', 'RQ'], true)) {
             $actions[] = [
-                'name' => 'alternatives',
-                'label' => 'Alternatives',
-                'url' => 'travel_bookings.view&booking_id=' . $providerBookingId . '&tab=alternatives',
-                'method' => 'GET',
+                'name' => 'request_alternatives',
+                'label' => 'Request alternatives',
+                'url' => 'travel_bookings.provider_action',
+                'method' => 'POST',
                 'css_class' => 'btn-primary',
                 'icon' => 'icon-list',
-                'booking_id' => null,
+                'booking_id' => $providerBookingId,
+                'extra_params' => ['provider_action' => 'request_alternatives'],
             ];
         }
 

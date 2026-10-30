@@ -3409,3 +3409,135 @@ msgstr "Prețul tăiat este prețul fără reducerea [deal]."
 msgctxt "Languages::travel_core.pdpa_r_room_only"
 msgid "Room only"
 msgstr "Fără masă"
+
+msgctxt "Languages::travel_core.obc_supplier_room"
+msgid "[provider] room"
+msgstr "Cameră [provider]"
+
+msgctxt "Languages::travel_core.bv_check_status"
+msgid "Check status"
+msgstr "Verifică statusul"
+
+msgctxt "Languages::travel_core.bv_open_order"
+msgid "Open order #[id]"
+msgstr "Deschide comanda #[id]"
+
+msgctxt "Languages::travel_core.bv_order"
+msgid "Order"
+msgstr "Comandă"
+
+msgctxt "Languages::travel_core.bv_created"
+msgid "Created [date]"
+msgstr "Creată [date]"
+
+msgctxt "Languages::travel_core.bv_awaiting_title"
+msgid "[provider] hasn't confirmed this booking yet"
+msgstr "[provider] nu a confirmat încă această rezervare"
+
+msgctxt "Languages::travel_core.bv_awaiting_no_ref"
+msgid "No supplier reference has come back since it was sent on [date]."
+msgstr "Nu a venit nicio referință de la furnizor de când a fost trimisă, pe [date]."
+
+msgctxt "Languages::travel_core.bv_awaiting_ref"
+msgid "The supplier has it, but has not confirmed it yet."
+msgstr "Furnizorul o are, dar nu a confirmat-o încă."
+
+msgctxt "Languages::travel_core.bv_check_in_days"
+msgid "Check-in is in [n] day.|Check-in is in [n] days."
+msgstr "Check-in-ul este peste [n] zi.|Check-in-ul este peste [n] zile.|Check-in-ul este peste [n] de zile."
+
+msgctxt "Languages::travel_core.bv_check_in_today"
+msgid "Check-in is today."
+msgstr "Check-in-ul este azi."
+
+msgctxt "Languages::travel_core.bv_awaiting_hint"
+msgid "Use Check status to ask [provider] again."
+msgstr "Folosește Verifică statusul pentru a întreba din nou [provider]."
+
+msgctxt "Languages::travel_core.bv_booking_total"
+msgid "Booking total"
+msgstr "Total rezervare"
+
+msgctxt "Languages::travel_core.bv_order_total"
+msgid "Order total"
+msgstr "Total comandă"
+
+msgctxt "Languages::travel_core.bv_view_storefront"
+msgid "View on storefront"
+msgstr "Vezi pe site"
+
+msgctxt "Languages::travel_core.bv_guest"
+msgid "Guest"
+msgstr "Oaspete"
+
+msgctxt "Languages::travel_core.bv_type"
+msgid "Type"
+msgstr "Tip"
+
+msgctxt "Languages::travel_core.bv_age"
+msgid "Age"
+msgstr "Vârstă"
+
+msgctxt "Languages::travel_core.bv_adult"
+msgid "Adult"
+msgstr "Adult"
+
+msgctxt "Languages::travel_core.bv_child"
+msgid "Child"
+msgstr "Copil"
+
+msgctxt "Languages::travel_core.bv_terms"
+msgid "Cancellation & payment"
+msgstr "Anulare și plată"
+
+msgctxt "Languages::travel_core.bv_supplier"
+msgid "Supplier"
+msgstr "Furnizor"
+
+msgctxt "Languages::travel_core.bv_status"
+msgid "Status"
+msgstr "Status"
+
+msgctxt "Languages::travel_core.bv_reference"
+msgid "Reference"
+msgstr "Referință"
+
+msgctxt "Languages::travel_core.bv_not_received"
+msgid "Not received yet"
+msgstr "Nu a fost primită încă"
+
+msgctxt "Languages::travel_core.bv_ids_hint"
+msgid "[provider]'s own booking numbers show here once it confirms the booking."
+msgstr "Numerele de rezervare [provider] apar aici după ce confirmă rezervarea."
+
+msgctxt "Languages::travel_core.bv_placed"
+msgid "Placed"
+msgstr "Plasată"
+
+msgctxt "Languages::travel_core.bv_history"
+msgid "History"
+msgstr "Istoric"
+
+msgctxt "Languages::travel_core.bv_history_order"
+msgid "Order #[id] placed"
+msgstr "Comanda #[id] a fost plasată"
+
+msgctxt "Languages::travel_core.bv_history_linked"
+msgid "Linked to order #[id]"
+msgstr "Asociată comenzii #[id]"
+
+msgctxt "Languages::travel_core.bv_history_created"
+msgid "Booking created (added to a cart)"
+msgstr "Rezervare creată (adăugată în coș)"
+
+msgctxt "Languages::travel_core.bv_history_updated"
+msgid "Last updated"
+msgstr "Ultima actualizare"
+
+msgctxt "Languages::travel_core.bv_technical"
+msgid "Technical details"
+msgstr "Detalii tehnice"
+
+msgctxt "Languages::travel_core.bv_technical_hint"
+msgid "Every field the provider keeps for this booking, for troubleshooting."
+msgstr "Toate câmpurile pe care furnizorul le păstrează pentru această rezervare, pentru depanare."

@@ -16,7 +16,9 @@ use Tygh\Addons\TravelCore\TravelConstants;
  *    the resinfo ResNum — "NT …", as the bookings grid shows it;
  *  - why a booking failed: the submission writes the API error to `notes`;
  *  - the offer's own remarks ("remark", "important") the line carries;
- *  - the package the hotel was sold in ("ADMIRAL ***** +BEACH").
+ *  - the package the hotel was sold in ("ADMIRAL ***** +BEACH");
+ *  - each room as Novoton names it, IdRoom and Type
+ *    ("QUAT 2+2 FRENCH BALCONY (QUATRIPLE)"), for the admin card.
  */
 final class OrderCardFacts
 {
@@ -25,8 +27,10 @@ final class OrderCardFacts
     /** Markup inside a sentence. */
     private const string INLINE_TAGS = 'b|i|u|em|strong|span|a|font|small|sup|sub';
 
-    public function __construct(private readonly ?BookingRepository $repo = null)
-    {
+    public function __construct(
+        private readonly ?BookingRepository $repo = null,
+        private readonly ?SupplierRoomLabels $rooms = null,
+    ) {
     }
 
     /**
@@ -40,8 +44,17 @@ final class OrderCardFacts
         }
         $id = TypeCoerce::toInt($extra['novoton_booking_id'] ?? 0);
         $row = $id > 0 ? ($this->repo ?? new BookingRepository())->findById($id) : null;
+        $facts = self::fromRow($extra, $id, $row);
 
-        return self::fromRow($extra, $id, $row);
+        $rooms = ($this->rooms ?? new SupplierRoomLabels())->labels(
+            TypeCoerce::toString($extra['hotel_id'] ?? ''),
+            SupplierRoomLabels::roomIds($extra['rooms_data'] ?? null, TypeCoerce::toString($extra['room_id'] ?? '')),
+        );
+        if ($rooms !== []) {
+            $facts['supplier_rooms'] = $rooms;
+        }
+
+        return $facts;
     }
 
     /**
