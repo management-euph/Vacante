@@ -122,6 +122,18 @@ final class TravelCoreConfig
         return Registry::get('addons.travel_core.availability_panels') === 'Y';
     }
 
+    /**
+     * The store's privacy policy page, linked from the "notify me" consent
+     * text; '' when the admin has not set one, or it is not a web address
+     * (a store-relative "/pages/privacy" is one).
+     */
+    public static function availabilityPrivacyUrl(): string
+    {
+        $url = trim(TypeCoerce::toString(Registry::get('addons.travel_core.availability_privacy_url')));
+
+        return preg_match('~^(https?://[^\s"<>]+|/[^/\s"<>][^\s"<>]*)$~i', $url) === 1 ? $url : '';
+    }
+
     /** The admin's months and "on request counts", with the plan's other thresholds. */
     public static function getAvailabilityThresholds(): AvailabilityThresholds
     {

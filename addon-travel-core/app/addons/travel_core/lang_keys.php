@@ -2114,6 +2114,10 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Last season: [from] – [to].',
         'ro' => 'Sezonul trecut: [from] – [to].',
     ],
+    'travel_core.availability_panel_last_season_month' => [
+        'en' => 'Last season: [month].',
+        'ro' => 'Sezonul trecut: [month].',
+    ],
     'travel_core.availability_panel_published_from' => [
         'en' => 'Prices are published for stays from [date].',
         'ro' => 'Prețurile sunt publicate pentru sejururi de la [date].',
@@ -2169,6 +2173,10 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
     'travel_core.notify_request_unavailable' => [
         'en' => 'This hotel takes no "notify me" requests at the moment.',
         'ro' => 'Acest hotel nu primește cereri „Anunță-mă” momentan.',
+    ],
+    'travel_core.notify_submit' => [
+        'en' => 'Notify me',
+        'ro' => 'Anunță-mă',
     ],
     // Hotel page Design A (blocks/product_templates/travelcore_design_a.tpl).
     // The BARE travelcore_design_a key labels its entry in the Appearance
