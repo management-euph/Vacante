@@ -2758,4 +2758,9 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Cancel',
         'ro' => 'Anulează',
     ],
+    // Guest form shortcut for families (booking_guest_hint.tpl).
+    'travel_core.same_surname' => [
+        'en' => 'Same last name as Adult 1 for every guest',
+        'ro' => 'Același nume de familie ca Adult 1 pentru toți oaspeții',
+    ],
 ];

@@ -3577,3 +3577,7 @@ msgstr "Back to booking details"
 msgctxt "Languages::travel_core.edit_cancel"
 msgid "Cancel"
 msgstr "Cancel"
+
+msgctxt "Languages::travel_core.same_surname"
+msgid "Same last name as Adult 1 for every guest"
+msgstr "Same last name as Adult 1 for every guest"

@@ -3577,3 +3577,7 @@ msgstr "Înapoi la detalii rezervare"
 msgctxt "Languages::travel_core.edit_cancel"
 msgid "Cancel"
 msgstr "Anulează"
+
+msgctxt "Languages::travel_core.same_surname"
+msgid "Same last name as Adult 1 for every guest"
+msgstr "Același nume de familie ca Adult 1 pentru toți oaspeții"

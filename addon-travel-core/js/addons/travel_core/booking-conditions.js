@@ -2,7 +2,8 @@
  * "What are my booking conditions?" modal — shared by every provider's
  * booking form (components/booking_conditions_modal.tpl), plus the other
  * small behaviours of the shared booking page: the facility "+N more"
- * toggle and the mobile bottom bar's submit proxy.
+ * toggle, the mobile bottom bar's submit proxy, the "same last name as
+ * Adult 1" shortcut and the guest form kept in view beside a tall summary.
  *
  * Open/close only. The CONTENT is either server-rendered (sphinx, whose terms
  * arrive with the verified offer) or appended per room by the provider's own
@@ -224,10 +225,105 @@
         }
     });
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function () { armFeatureLists(document); });
-    } else {
+    // ── "Same last name as Adult 1" (booking_guest_hint.tpl) ─────────────
+    // A family's guests take the first guest's last name, kept in step
+    // while the box stays ticked; typing another guest's own last name
+    // unticks it. Shown only where the form has two guests or more.
+    var SURNAME = 'input[autocomplete="family-name"]';
+    var copyingSurname = false;
+
+    function surnames(form) {
+        return Array.prototype.slice.call(form.querySelectorAll(SURNAME));
+    }
+
+    function sameSurnameBox(form) {
+        return form.querySelector('[data-travel-same-surname] input[type="checkbox"]');
+    }
+
+    function copySurname(form) {
+        var inputs = surnames(form);
+        copyingSurname = true;
+        for (var i = 1; i < inputs.length; i++) {
+            if (inputs[i].value !== inputs[0].value) {
+                inputs[i].value = inputs[0].value;
+                // The validation script clears a "required" message on these.
+                inputs[i].dispatchEvent(new Event('input', { bubbles: true }));
+                inputs[i].dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        }
+        copyingSurname = false;
+    }
+
+    function armSameSurname(root) {
+        var boxes = (root || document).querySelectorAll('[data-travel-same-surname]');
+        for (var i = 0; i < boxes.length; i++) {
+            var form = boxes[i].closest('form');
+            boxes[i].hidden = !form || surnames(form).length < 2;
+        }
+    }
+
+    document.addEventListener('change', function (e) {
+        var box = e.target;
+        if (box.matches && box.matches('[data-travel-same-surname] input[type="checkbox"]') && box.checked && box.form) {
+            copySurname(box.form);
+        }
+    });
+
+    document.addEventListener('input', function (e) {
+        var el = e.target;
+        if (copyingSurname || !el.matches || !el.matches(SURNAME) || !el.form) return;
+        var box = sameSurnameBox(el.form);
+        if (!box || !box.checked) return;
+        if (surnames(el.form)[0] === el) {
+            copySurname(el.form);
+        } else {
+            box.checked = false;
+        }
+    });
+
+    // ── The guest form beside a tall summary ──────────────────────────────
+    // A short form stays in view, with its button, while the summary
+    // scrolls past it (booking-pages.css: sticky). Only while the whole
+    // form fits on the screen: a taller one would hide its own end.
+    function fitStickyForm() {
+        var col = document.querySelector('.travel-booking-page .travel-booking-col-main');
+        var side = document.querySelector('.travel-booking-page .travel-bsidebar');
+        if (!col || !side) return;
+        var fits = window.innerWidth > 900
+            && col.offsetHeight + 40 <= window.innerHeight
+            && col.offsetHeight < side.offsetHeight;
+        col.classList.toggle('travel-booking-col-main--sticky', fits);
+    }
+
+    function armStickyForm() {
+        fitStickyForm();
+        var pending = false;
+        var refit = function () {
+            if (pending) return;
+            pending = true;
+            window.requestAnimationFrame(function () { pending = false; fitStickyForm(); });
+        };
+        window.addEventListener('resize', refit);
+        // Re-priced rooms, notices and messages change both columns' height.
+        if (window.ResizeObserver) {
+            var observer = new window.ResizeObserver(refit);
+            var parts = document.querySelectorAll('.travel-booking-page .travel-booking-col-main, .travel-booking-page .travel-bsidebar');
+            for (var i = 0; i < parts.length; i++) observer.observe(parts[i]);
+        }
+    }
+
+    function ready() {
         armFeatureLists(document);
+        armSameSurname(document);
+        armStickyForm();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', ready);
+    } else {
+        ready();
     }
     window.TravelConditions.armFeatureLists = armFeatureLists;
+    window.TravelConditions.armSameSurname = armSameSurname;
+    window.TravelConditions.fitStickyForm = fitStickyForm;
 })();
