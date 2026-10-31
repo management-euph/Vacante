@@ -4603,3 +4603,27 @@ msgstr "Booking data of the request (api_request)"
 msgctxt "Languages::novoton_holidays.bv_request_unavailable"
 msgid "The request could not be built: [error]"
 msgstr "The request could not be built: [error]"
+
+msgctxt "Languages::novoton_holidays.invalid_dob_format"
+msgid "Invalid format. Use DD/MM/YYYY"
+msgstr "Invalid format. Use DD/MM/YYYY"
+
+msgctxt "Languages::novoton_holidays.invalid_day"
+msgid "The day must be between 1 and 31"
+msgstr "The day must be between 1 and 31"
+
+msgctxt "Languages::novoton_holidays.invalid_month"
+msgid "The month must be between 1 and 12"
+msgstr "The month must be between 1 and 12"
+
+msgctxt "Languages::novoton_holidays.invalid_year"
+msgid "Invalid year: enter the full year of birth (e.g. 1985)"
+msgstr "Invalid year: enter the full year of birth (e.g. 1985)"
+
+msgctxt "Languages::novoton_holidays.future_date"
+msgid "The date cannot be in the future"
+msgstr "The date cannot be in the future"
+
+msgctxt "Languages::novoton_holidays.searching"
+msgid "Searching..."
+msgstr "Searching..."

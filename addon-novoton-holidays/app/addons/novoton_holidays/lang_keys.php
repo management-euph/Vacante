@@ -1246,4 +1246,30 @@ return [
         'en' => 'The request could not be built: [error]',
         'ro' => 'Cererea nu a putut fi construită: [error]',
     ],
+    // Guest form date-of-birth checks and the search button's busy label
+    // (travel_core travel_i18n.tpl); never seeded before, so they rendered raw.
+    'novoton_holidays.invalid_dob_format' => [
+        'en' => 'Invalid format. Use DD/MM/YYYY',
+        'ro' => 'Format invalid. Folosiți ZZ/LL/AAAA',
+    ],
+    'novoton_holidays.invalid_day' => [
+        'en' => 'The day must be between 1 and 31',
+        'ro' => 'Ziua trebuie să fie între 1 și 31',
+    ],
+    'novoton_holidays.invalid_month' => [
+        'en' => 'The month must be between 1 and 12',
+        'ro' => 'Luna trebuie să fie între 1 și 12',
+    ],
+    'novoton_holidays.invalid_year' => [
+        'en' => 'Invalid year: enter the full year of birth (e.g. 1985)',
+        'ro' => 'An invalid: introduceți anul nașterii complet (ex. 1985)',
+    ],
+    'novoton_holidays.future_date' => [
+        'en' => 'The date cannot be in the future',
+        'ro' => 'Data nu poate fi în viitor',
+    ],
+    'novoton_holidays.searching' => [
+        'en' => 'Searching...',
+        'ro' => 'Se caută...',
+    ],
 ];
