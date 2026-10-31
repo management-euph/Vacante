@@ -244,10 +244,13 @@
 
         var roomId = radio.getAttribute('data-room-id');
         var boardId = radio.getAttribute('data-board-id');
+        // The board's supplement ("BB" + "HB" is half board) makes another offer
+        var extBoardId = radio.getAttribute('data-ext-board-id') || '';
         var quota = parseInt(radio.getAttribute('data-quota'), 10);
         var taken = 0;
         for (var n in selectedRooms) {
-            if (selectedRooms[n].room_id === roomId && selectedRooms[n].board_id === boardId) taken++;
+            if (selectedRooms[n].room_id === roomId && selectedRooms[n].board_id === boardId
+                && (selectedRooms[n].ext_board_id || '') === extBoardId) taken++;
         }
         var left = quota > 0 ? quota - taken : Infinity;
 
@@ -258,7 +261,8 @@
             if (other.getAttribute('data-occupancy') !== occupancy) return;
             var match = null;
             other.querySelectorAll('input[type="radio"]').forEach(function(r) {
-                if (!match && r.getAttribute('data-room-id') === roomId && r.getAttribute('data-board-id') === boardId) {
+                if (!match && r.getAttribute('data-room-id') === roomId && r.getAttribute('data-board-id') === boardId
+                    && (r.getAttribute('data-ext-board-id') || '') === extBoardId) {
                     match = r;
                 }
             });
@@ -331,6 +335,11 @@
             selectedRooms[roomNum].standard_price = parseFloat(radio.getAttribute('data-standard-price')) || 0;
             selectedRooms[roomNum].early_booking = parseFloat(radio.getAttribute('data-early-booking')) || 0;
             selectedRooms[roomNum].extras = radio.getAttribute('data-extras') || '';
+        }
+        // Novoton's board supplement ("BB" + "HB" is half board): booked with
+        // its board. Only providers that render the attribute send it.
+        if (radio.hasAttribute('data-ext-board-id')) {
+            selectedRooms[roomNum].ext_board_id = radio.getAttribute('data-ext-board-id') || '';
         }
 
         // Room header: the chosen room and its price
@@ -484,6 +493,9 @@
                     roomEntry.standard_price = selectedRooms[i].standard_price;
                     roomEntry.early_booking = selectedRooms[i].early_booking;
                     roomEntry.extras = selectedRooms[i].extras;
+                }
+                if ('ext_board_id' in selectedRooms[i]) {
+                    roomEntry.ext_board_id = selectedRooms[i].ext_board_id;
                 }
                 roomsData.push(roomEntry);
                 total += selectedRooms[i].price;

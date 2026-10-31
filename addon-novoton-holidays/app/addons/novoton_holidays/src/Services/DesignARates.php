@@ -331,11 +331,13 @@ final class DesignARates
         $nights = max(1, TypeCoerce::toInt($params['nights'] ?? 1));
         $checkIn = TypeCoerce::toString($params['check_in'] ?? '');
 
-        $boardId = TypeCoerce::toString($row['board_id'] ?? '');
-        [$mealKey, $mealRank] = self::meal($boardId);
+        // The board, or the supplement upgrading it: "BB" + "HB" is half
+        // board, an option of its own next to "BB" alone (OfferBoard)
+        $mealBoard = OfferBoard::meal(TypeCoerce::toString($row['board_id'] ?? ''), TypeCoerce::toString($row['ext_board_id'] ?? ''));
+        [$mealKey, $mealRank] = self::meal($mealBoard);
         $meal = $mealKey !== '' ? ($this->translate)($mealKey, []) : '';
         if ($meal === '' || $meal === $mealKey) {
-            $meal = TypeCoerce::toString($row['board_name'] ?? '') ?: $boardId;
+            $meal = TypeCoerce::toString($row['board_name'] ?? '') ?: $mealBoard;
         }
 
         $label = TypeCoerce::toString($row['room_type_display'] ?? '');
@@ -438,6 +440,7 @@ final class DesignARates
             'hotel_id' => $params['hotel_id'] ?? '',
             'room_id' => $row['room_id'] ?? '',
             'board_id' => $row['board_id'] ?? '',
+            'ext_board_id' => $row['ext_board_id'] ?? '',
             'check_in' => $params['check_in'] ?? '',
             'check_out' => $params['check_out'] ?? '',
             'nights' => $params['nights'] ?? '',

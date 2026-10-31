@@ -23,7 +23,7 @@ use Tygh\Addons\NovotonHolidays\Api\Contracts\PricingApiClientInterface;
  *
  * @phpstan-import-type BookedRoom from BookedRooms
  * @phpstan-import-type OfferRow from RoomOfferRows
- * @phpstan-type PricedRoom array{room_id: string, board_id: string, package_name: string, adults: int, children: int, childrenAges: list<int>, price: float, price_raw: float}
+ * @phpstan-type PricedRoom array{room_id: string, board_id: string, ext_board_id: string, package_name: string, adults: int, children: int, childrenAges: list<int>, price: float, price_raw: float}
  * @phpstan-type Quote array{rooms: non-empty-list<PricedRoom>, total: float, base: float, answer: \SimpleXMLElement, offer: OfferRow}
  */
 final class RoomsQuote
@@ -70,6 +70,7 @@ final class RoomsQuote
                 },
                 $params,
                 $room['package_name'],
+                $room['ext_board_id'],
                 $logContext + ['room' => $index + 1],
             );
             if ($found === null) {
@@ -78,6 +79,7 @@ final class RoomsQuote
                     'room' => $index + 1,
                     'room_id' => $room['room_id'],
                     'board_id' => $room['board_id'],
+                    'ext_board_id' => $room['ext_board_id'],
                     'package_name' => $room['package_name'],
                     'adults' => $room['adults'],
                     'children_ages' => $room['childrenAges'],
@@ -94,15 +96,18 @@ final class RoomsQuote
             $base += $raw;
 
             $board = $room['board_id'];
+            $extBoard = $room['ext_board_id'];
             if ($board === '') {
                 // No board asked for: the offer was priced on its cheapest
-                // board, so book that board.
+                // board, so book that board, with its supplement.
                 $board = $offer['board'] !== '' ? $offer['board'] : 'BB';
+                $extBoard = $offer['ext_board'];
             }
 
             $priced[] = [
                 'room_id' => $room['room_id'],
                 'board_id' => $board,
+                'ext_board_id' => $extBoard,
                 // The package the price comes from: the asked one, or, when
                 // the answer no longer offers it, the one BookedOffer priced.
                 'package_name' => $offer['package'] !== '' ? $offer['package'] : $room['package_name'],

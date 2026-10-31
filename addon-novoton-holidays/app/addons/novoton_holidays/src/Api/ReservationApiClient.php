@@ -259,7 +259,7 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
         <CheckOut>' . htmlspecialchars(TypeCoerce::toString($bookingData['check_out'] ?? '')) . '</CheckOut>
         <IdRoom>' . htmlspecialchars(TypeCoerce::toString($roomData['room_id'] ?? '')) . '</IdRoom>
         <IdBoard>' . htmlspecialchars(TypeCoerce::toString($roomData['board_id'] ?? '')) . '</IdBoard>
-        <IdExtBoard></IdExtBoard>
+        <IdExtBoard>' . htmlspecialchars(TypeCoerce::toString($roomData['ext_board_id'] ?? '')) . '</IdExtBoard>
         <IdStar>' . htmlspecialchars(TypeCoerce::toString($bookingData['star_rating'] ?? '')) . '</IdStar>
         <Holder>' . htmlspecialchars(TypeCoerce::toString($firstGuest['name'] ?? $bookingData['holder'] ?? '')) . '</Holder>
         <ISO_National>' . htmlspecialchars(TypeCoerce::toString($bookingData['iso_national'] ?? Constants::DEFAULT_ISO_NATIONAL)) . '</ISO_National>
@@ -277,7 +277,7 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
         <CheckOut>' . htmlspecialchars(TypeCoerce::toString($bookingData['check_out'] ?? '')) . '</CheckOut>
         <IdRoom>' . htmlspecialchars(TypeCoerce::toString($bookingData['room_id'] ?? '')) . '</IdRoom>
         <IdBoard>' . htmlspecialchars(TypeCoerce::toString($bookingData['board_id'] ?? '')) . '</IdBoard>
-        <IdExtBoard></IdExtBoard>
+        <IdExtBoard>' . htmlspecialchars(TypeCoerce::toString($bookingData['ext_board_id'] ?? '')) . '</IdExtBoard>
         <IdStar>' . htmlspecialchars(TypeCoerce::toString($bookingData['star_rating'] ?? '')) . '</IdStar>
         <Holder>' . htmlspecialchars(TypeCoerce::toString($bookingData['holder'] ?? '')) . '</Holder>
         <ISO_National>' . htmlspecialchars(TypeCoerce::toString($bookingData['iso_national'] ?? Constants::DEFAULT_ISO_NATIONAL)) . '</ISO_National>

@@ -41,7 +41,7 @@ final class BookedOfferTest extends TestCase
 
         self::assertNotNull($found);
         self::assertSame(
-            ['price' => 613.5, 'room' => 'DBL 2+0 ECONOMY', 'board' => 'ALL INCL', 'package' => self::PLAIN, 'early_booking' => 25.0, 'idcont' => '1335102'],
+            ['price' => 613.5, 'room' => 'DBL 2+0 ECONOMY', 'board' => 'ALL INCL', 'ext_board' => '', 'package' => self::PLAIN, 'early_booking' => 25.0, 'idcont' => '1335102'],
             $found['offer'],
         );
         self::assertSame([['DBL 2+0 ECONOMY', 'ALL INCL'], ['', '']], $this->questions());
@@ -96,6 +96,38 @@ final class BookedOfferTest extends TestCase
         self::assertNull(BookedOffer::find($this->holidayPark(), self::request('DBL 2+0 ECONOMY', 'BB'), self::PLAIN));
         self::assertNull(BookedOffer::find($this->holidayPark(), self::request('SUITE', 'ALL INCL'), ''));
         self::assertNull(BookedOffer::find(static fn (array $request): \SimpleXMLElement|false => false, self::request('DBL 2+0 ECONOMY', 'ALL INCL'), self::PLAIN));
+    }
+
+    /**
+     * Admiral (476), 5–9 Nov 2026, as Novoton answered: the room on "BB"
+     * comes back twice in package "BB/HB", "BB" alone at 415 and "BB" with
+     * the "HB" supplement (half board) at 535. Each booking gets its own.
+     */
+    public function testTheSupplementPicksItsOwnOfferOfTheSameBoard(): void
+    {
+        $ask = function (array $request): \SimpleXMLElement|false {
+            $this->asked[] = $request;
+            $xml = '<room_price>';
+            foreach ([['415.00', ''], ['535.00', 'HB']] as [$price, $ext]) {
+                $xml .= '<agent>TESTAGENT</agent><IdHotel>476</IdHotel><idcont>1292618</idcont>'
+                    . '<PackageName>ADMIRAL ***** BB/HB [STAY 22.09 - 19.12]</PackageName><Price>' . $price . '</Price>'
+                    . '<IdRoom>DBL 2+0 DELUXE NO BALCONY</IdRoom><Board>BB</Board><ExtBoard>' . $ext . '</ExtBoard>';
+            }
+
+            return new \SimpleXMLElement($xml . '</room_price>');
+        };
+        $request = ['room_id' => 'DBL 2+0 DELUXE NO BALCONY', 'board_id' => 'BB'] + self::request('', '');
+        $package = 'ADMIRAL ***** BB/HB [STAY 22.09 - 19.12]';
+
+        $half = BookedOffer::find($ask, $request, $package, 'HB');
+        $plain = BookedOffer::find($ask, $request, $package);
+
+        self::assertNotNull($half);
+        self::assertNotNull($plain);
+        self::assertSame([535.0, 'HB'], [$half['offer']['price'], $half['offer']['ext_board']]);
+        self::assertSame([415.0, ''], [$plain['offer']['price'], $plain['offer']['ext_board']]);
+        self::assertCount(2, $this->asked, 'each found in the answer of the room on its board');
+        self::assertNull(BookedOffer::find($ask, $request, $package, 'FB'), 'a supplement not offered is no price');
     }
 
     public function testTheQuestionOfEveryRoomIsNotAskedTwice(): void

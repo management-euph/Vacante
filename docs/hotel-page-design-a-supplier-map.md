@@ -151,6 +151,13 @@ terms). Tests: eurosite `DesignARatesTest`, `DesignAResultsWiringTest`.
   since Novoton answers some packages' rooms only without a board (Holiday
   Park, 270). Unpriced, the guest goes back to the same booking form
   (`BookingFormLink`).
+- A board can come with a supplement (`ExtBoard`): off-season Admiral (476)
+  sells half board as "BB" + "HB" next to "BB" alone, each at its own price.
+  The search keeps both (its de-dup used to keep only the cheaper), names the
+  option by the supplement (`OfferBoard::meal`), and `ext_board_id` travels
+  with its board through the Book link, the booking form, the re-price,
+  add_to_cart, the cart line, the checkout check and the reservation's
+  `IdExtBoard` (sent empty until then: half board was booked as breakfast).
 
 **"From" prices before dates**
 - Calendar prices (`CalendarPriceBuilder` → `novoton_hotels.calendar_prices_raw`):

@@ -40,15 +40,17 @@ final class BookedOffer
      * form showed the offer.
      *
      * The clicked package is looked for in both answers before another
-     * package's price is taken (pick()).
+     * package's price is taken (pick()). The board's supplement is part of
+     * the offer: "BB" alone and "BB" + "HB" (half board) are priced apart.
      *
      * @param \Closure(array<string, mixed>): (\SimpleXMLElement|false) $ask sends one room_price request
      * @param array<string, mixed> $request the booked room's room_price request (hotel, room, board, dates, guests)
      * @param string $package the clicked package ('' = cheapest of any package)
+     * @param string $extBoard the board's supplement ('' = none; OfferBoard)
      * @param array<string, mixed> $logContext who asks (hotel_id, source), for pick()'s log line
      * @return array{answer: \SimpleXMLElement, offer: OfferRow}|null null: neither answer offers this room + board
      */
-    public static function find(\Closure $ask, array $request, string $package, array $logContext = []): ?array
+    public static function find(\Closure $ask, array $request, string $package, string $extBoard = '', array $logContext = []): ?array
     {
         $room = rawurldecode(TypeCoerce::toString($request['room_id'] ?? ''));
         $board = TypeCoerce::toString($request['board_id'] ?? '');
@@ -63,7 +65,7 @@ final class BookedOffer
             if (!$answer instanceof \SimpleXMLElement) {
                 continue;
             }
-            $row = RoomOfferRows::cheapest(RoomOfferRows::fromXml($answer), $room, $board, $package);
+            $row = RoomOfferRows::cheapest(RoomOfferRows::fromXml($answer), $room, $board, $package, $extBoard);
             if ($row !== null) {
                 return ['answer' => $answer, 'offer' => $row];
             }
@@ -71,7 +73,7 @@ final class BookedOffer
         }
 
         foreach ($answers as $answer) {
-            $row = self::pick($answer, $room, $board, $package, $logContext);
+            $row = self::pick($answer, $room, $board, $package, $extBoard, $logContext);
             if ($row !== null) {
                 return ['answer' => $answer, 'offer' => $row];
             }
@@ -84,22 +86,24 @@ final class BookedOffer
      * @param string $room URL-decoded room id ('' = any)
      * @param string $board board id ('' = any)
      * @param string $package the clicked package ('' = cheapest of any package)
+     * @param string $extBoard the board's supplement ('' = none), kept when another package prices the room
      * @param array<string, mixed> $logContext who asks (hotel_id, source), for the fallback log line
      * @return OfferRow|null null: this room + board is not offered — no price
      */
-    public static function pick(\SimpleXMLElement $xml, string $room, string $board, string $package, array $logContext = []): ?array
+    public static function pick(\SimpleXMLElement $xml, string $room, string $board, string $package, string $extBoard = '', array $logContext = []): ?array
     {
         $rows = RoomOfferRows::fromXml($xml);
-        $row = RoomOfferRows::cheapest($rows, $room, $board, $package);
+        $row = RoomOfferRows::cheapest($rows, $room, $board, $package, $extBoard);
         if ($row !== null || RoomOfferRows::packageName($package) === '') {
             return $row;
         }
 
-        $row = RoomOfferRows::cheapest($rows, $room, $board);
+        $row = RoomOfferRows::cheapest($rows, $room, $board, '', $extBoard);
         if ($row !== null) {
             fn_log_event('general', 'runtime', ['message' => 'Novoton: booked package not offered, priced by room + board instead'] + $logContext + [
                 'room_id' => $room,
                 'board_id' => $board,
+                'ext_board_id' => $extBoard,
                 'package_name' => $package,
                 'priced_package' => $row['package'],
                 'price' => $row['price'],

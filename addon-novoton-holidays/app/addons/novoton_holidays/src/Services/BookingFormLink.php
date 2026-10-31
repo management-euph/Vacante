@@ -13,8 +13,8 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  * The form needs the room: a link without one (as add_to_cart built it)
  * made booking_form send the guest to the homepage under a second error,
  * "Date de rezervare invalide (missing room_id)". So the link carries the
- * room, board and package, the dates and guests, the price the form showed
- * and the rooms (no prices) it posted, one or several.
+ * room, board (with its supplement) and package, the dates and guests, the
+ * price the form showed and the rooms (no prices) it posted, one or several.
  *
  * Pure: no API, no CS-Cart.
  *
@@ -36,6 +36,7 @@ final class BookingFormLink
             'product_id' => $productId,
             'room_id' => TypeCoerce::toString($request['room_id'] ?? ''),
             'board_id' => TypeCoerce::toString($request['board_id'] ?? ''),
+            'ext_board_id' => TypeCoerce::toString($request['ext_board_id'] ?? ''),
             'package_name' => TypeCoerce::toString($request['package_name'] ?? ''),
             'check_in' => TypeCoerce::toString($request['check_in'] ?? ''),
             'check_out' => TypeCoerce::toString($request['check_out'] ?? ''),

@@ -489,7 +489,7 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
         // [4] Board display name (single-room)
         $board_id = PriceInfoFormatter::toScalar($extra['board_id'] ?? $extra['board'] ?? '');
         if (!empty($board_id)) {
-            $extra['board_display']        = fn_novoton_holidays_format_board_name($board_id);
+            $extra['board_display']        = fn_novoton_holidays_format_board_name($board_id, PriceInfoFormatter::toScalar($extra['ext_board_id'] ?? ''));
             $extra['board_name_formatted'] = $extra['board_display'];
         }
 
@@ -524,7 +524,7 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
                 $nvt_room['room_name_formatted'] = fn_novoton_holidays_format_room_type($r_id, $r_type);
             }
             if (!empty($r_bid)) {
-                $nvt_room['board_name_formatted'] = fn_novoton_holidays_format_board_name($r_bid);
+                $nvt_room['board_name_formatted'] = fn_novoton_holidays_format_board_name($r_bid, PriceInfoFormatter::toScalar($nvt_room['ext_board_id'] ?? ''));
             }
             $nvt_rooms[$idx] = $nvt_room;
         }

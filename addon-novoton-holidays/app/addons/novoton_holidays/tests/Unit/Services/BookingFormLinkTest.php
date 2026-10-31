@@ -42,12 +42,12 @@ final class BookingFormLinkTest extends TestCase
         $link = self::query(BookingFormLink::back(self::POSTED, 77, '7', $rooms, 721.05));
 
         self::assertSame([
-            'hotel_id' => '270', 'product_id' => '77', 'room_id' => 'DBL 2+1', 'board_id' => 'ALL INCL',
+            'hotel_id' => '270', 'product_id' => '77', 'room_id' => 'DBL 2+1', 'board_id' => 'ALL INCL', 'ext_board_id' => '',
             'package_name' => 'HOLIDAY PARK **** 2027', 'check_in' => '2027-07-10', 'check_out' => '2027-07-17',
             'nights' => '7', 'adults' => '2', 'children' => '1', 'children_ages' => '7', 'total_price' => '721.05', 'rooms' => '1',
         ], array_diff_key($link, ['rooms_data' => true]));
         self::assertSame(
-            [['room_id' => 'DBL 2+1', 'board_id' => 'ALL INCL', 'package_name' => 'HOLIDAY PARK **** 2027', 'adults' => 2, 'children' => 1, 'childrenAges' => [7]]],
+            [['room_id' => 'DBL 2+1', 'board_id' => 'ALL INCL', 'ext_board_id' => '', 'package_name' => 'HOLIDAY PARK **** 2027', 'adults' => 2, 'children' => 1, 'childrenAges' => [7]]],
             json_decode($link['rooms_data'], true),
             'the room the form books, without the posted prices',
         );
@@ -70,6 +70,22 @@ final class BookingFormLinkTest extends TestCase
         self::assertSame('2', $link['rooms']);
         self::assertSame(['DBL 2+1', 'TRP 2+1 AQUA'], array_column((array) json_decode($link['rooms_data'], true), 'room_id'));
         self::assertArrayNotHasKey('price', (array) json_decode($link['rooms_data'], true)[0]);
+    }
+
+    /** Admiral's half board ("BB" + "HB"): the form opens on that offer, not on "BB" alone. */
+    public function testTheBoardsSupplementGoesBackWithIt(): void
+    {
+        $posted = ['hotel_id' => '476', 'room_id' => 'DBL 2+0 DELUXE NO BALCONY', 'board_id' => 'BB', 'ext_board_id' => 'HB',
+            'package_name' => 'ADMIRAL ***** BB/HB [STAY 22.09 - 19.12]', 'children' => '0', 'children_ages' => '',
+            'rooms_data' => '[{"adults":2,"children":0,"childrenAges":[]}]'] + self::POSTED;
+        $rooms = BookedRooms::fromRequest($posted, []);
+        self::assertNotNull($rooms);
+
+        $link = self::query(BookingFormLink::back($posted, 77, '', $rooms, 588.5));
+
+        self::assertSame(['BB', 'HB'], [$link['board_id'], $link['ext_board_id']]);
+        self::assertSame('HB', ((array) json_decode($link['rooms_data'], true))[0]['ext_board_id'] ?? null);
+        self::assertSame($rooms, BookedRooms::fromRequest($link, []), 'and posts the same half-board booking again');
     }
 
     public function testRoomsThatDoNotMatchTheGuestsAreNotSentBack(): void
