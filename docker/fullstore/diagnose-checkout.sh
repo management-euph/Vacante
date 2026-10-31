@@ -104,6 +104,56 @@ foreach ($lines as $line) {
     );
 }
 
+// The checkout as the newest cart's visitor gets it: their session cookie,
+// travel_debug=1, which makes travel_core's checkout hook and card leave an
+// HTML comment each (what the hook was handed; card built or empty). Only
+// those comments and counts are printed, nothing of the page itself.
+echo "\n== The checkout as the newest cart's visitor gets it\n";
+$store = 'http://' . (getenv('CSCART_HTTP_HOST') ?: 'localhost:8080');
+$session = (string) ($rows(
+    "SELECT session_id FROM cscart_user_session_products WHERE type = 'C' AND session_id <> ''"
+    . ' ORDER BY timestamp DESC LIMIT 1'
+)[0]['session_id'] ?? '');
+$context = static fn (string $cookie): mixed => stream_context_create(['http' => [
+    'timeout' => 90,
+    'ignore_errors' => true,
+    'header' => $cookie !== '' ? "Cookie: {$cookie}\r\n" : '',
+]]);
+$cookieName = '';
+if ($session !== '') {
+    @file_get_contents($store . '/', false, $context(''));
+    foreach ($http_response_header ?? [] as $header) {
+        if (preg_match('/^Set-Cookie:\s*(sid_customer[^=;\s]*)=/i', $header, $m) === 1) {
+            $cookieName = $m[1];
+            break;
+        }
+    }
+}
+if ($session === '' || $cookieName === '') {
+    echo $session === '' ? "   (no saved cart has a session)\n" : "   (the store set no customer session cookie)\n";
+} else {
+    $html = (string) @file_get_contents(
+        $store . '/index.php?dispatch=checkout.checkout&travel_debug=1',
+        false,
+        $context("{$cookieName}={$session}"),
+    );
+    $answers = array_values(array_filter(
+        $http_response_header ?? [],
+        static fn (string $h): bool => str_starts_with($h, 'HTTP/') || stripos($h, 'Location:') === 0,
+    ));
+    echo '   ' . implode(' | ', $answers) . "\n";
+    echo '   products block: ' . (str_contains($html, 'ty-order-products') ? 'on the page' : 'NOT on the page')
+        . '; sidebar cards: ' . substr_count($html, 'class="travel-ccard travel-ccard--sidebar')
+        . '; stay summaries: ' . substr_count($html, 'class="travel-stay-summary"') . "\n";
+    preg_match_all('/<!-- travel_core [^<>]*?-->/', $html, $traces);
+    foreach ($traces[0] as $trace) {
+        echo "   {$trace}\n";
+    }
+    if ($traces[0] === []) {
+        echo "   (no travel_core trace: the card's checkout hook did not run on this page)\n";
+    }
+}
+
 echo "\n== Checkout page blocks, main content (Design > Layouts > Checkout)\n";
 $layouts = array_filter(
     $rows('SELECT * FROM cscart_bm_layouts'),
