@@ -25,7 +25,7 @@ if (!defined('TRAVEL_CORE_VERSION')) {
 
 // React bundle cache version — bump when JS bundles are rebuilt
 if (!defined('TRAVEL_CACHE_VER')) {
-    define('TRAVEL_CACHE_VER', '11');
+    define('TRAVEL_CACHE_VER', '12');
 }
 
 // Register PSR-4 autoloader for travel_core namespace.
