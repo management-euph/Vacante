@@ -14,8 +14,8 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  * The wording comes from language keys, which the admin can edit under
  * Translations: a registered email template would reach a store only at
  * install, and this project updates stores by pulling code. Sent only when
- * a review classified something new or changed a state; a quiet week sends
- * nothing.
+ * a review classified something new, changed a state, or the gate changed
+ * a product or held back (its brake); a quiet week sends nothing.
  */
 final class AvailabilityReportMail
 {
@@ -38,7 +38,7 @@ final class AvailabilityReportMail
     /**
      * The subject and body for a review summary; null when there is nothing new.
      *
-     * @param array{at: string, providers: array<string, array{mode: string, counts: array<string, int>, changed: int, first: int, changes: list<array{hotel_id: string, hotel_name: string, product_id: int, from: string, to: string, reason: string}>}>} $summary
+     * @param array{at: string, providers: array<string, array{mode: string, counts: array<string, int>, changed: int, first: int, changes: list<array{hotel_id: string, hotel_name: string, product_id: int, from: string, to: string, reason: string}>, gate?: array{hidden: int, shown: int, released: int, would_hide: int, braked: int}}>} $summary
      * @param array<string, string> $labels provider name => label
      *
      * @return array{subject: string, body: string}|null
@@ -47,11 +47,14 @@ final class AvailabilityReportMail
     {
         $changed = 0;
         $first = 0;
+        $gated = 0;
         foreach ($summary['providers'] as $provider) {
             $changed += $provider['changed'];
             $first += $provider['first'];
+            $gate = $provider['gate'] ?? [];
+            $gated += ($gate['hidden'] ?? 0) + ($gate['shown'] ?? 0) + ($gate['released'] ?? 0) + ($gate['braked'] ?? 0);
         }
-        if ($changed === 0 && $first === 0) {
+        if ($changed === 0 && $first === 0 && $gated === 0) {
             return null;
         }
 
@@ -66,6 +69,9 @@ final class AvailabilityReportMail
             }
             if ($provider['first'] > 0) {
                 $lines[] = '  ' . $t('travel_core.availability_mail_first', ['[n]' => (string) $provider['first']]);
+            }
+            foreach (self::gateLines($provider['mode'], $provider['gate'] ?? null) as $key => $n) {
+                $lines[] = '  ' . $t('travel_core.availability_mail_' . $key, ['[n]' => (string) $n]);
             }
             if ($provider['changes'] !== []) {
                 $lines[] = '  ' . $t('travel_core.availability_mail_changes', []) . ':';
@@ -85,17 +91,40 @@ final class AvailabilityReportMail
 
         return [
             // The first review changes nothing yet; it says so instead of "0 changes".
-            'subject' => $changed > 0
-                ? $t('travel_core.availability_mail_subject', ['[changed]' => (string) $changed])
-                : $t('travel_core.availability_mail_subject_first', ['[n]' => (string) $first]),
+            'subject' => match (true) {
+                $changed > 0 => $t('travel_core.availability_mail_subject', ['[changed]' => (string) $changed]),
+                $first > 0 => $t('travel_core.availability_mail_subject_first', ['[n]' => (string) $first]),
+                default => $t('travel_core.availability_mail_subject_gate', ['[n]' => (string) $gated]),
+            },
             'body' => implode("\n", $lines),
         ];
     }
 
     /**
+     * What the gate did for one supplier, as language key suffix => count:
+     * in Automatic mode the products it hid, showed and let go, and those its
+     * brake held; in Report only those it would hide.
+     *
+     * @param array{hidden: int, shown: int, released: int, would_hide: int, braked: int}|null $gate
+     *
+     * @return array<string, int>
+     */
+    public static function gateLines(string $mode, ?array $gate): array
+    {
+        if ($gate === null) {
+            return [];
+        }
+        $counts = $mode === 'automatic'
+            ? ['hidden' => $gate['hidden'], 'shown' => $gate['shown'], 'released' => $gate['released'], 'braked' => $gate['braked']]
+            : ['would_hide' => $gate['would_hide']];
+
+        return array_filter($counts, static fn (int $n): bool => $n > 0);
+    }
+
+    /**
      * Sends the review's email, if there is one, to the orders department.
      *
-     * @param array{at: string, providers: array<string, array{mode: string, counts: array<string, int>, changed: int, first: int, changes: list<array{hotel_id: string, hotel_name: string, product_id: int, from: string, to: string, reason: string}>}>} $summary
+     * @param array{at: string, providers: array<string, array{mode: string, counts: array<string, int>, changed: int, first: int, changes: list<array{hotel_id: string, hotel_name: string, product_id: int, from: string, to: string, reason: string}>, gate?: array{hidden: int, shown: int, released: int, would_hide: int, braked: int}}>} $summary
      * @param array<string, string> $labels
      */
     public function send(array $summary, array $labels, string $pageUrl, string $to): bool

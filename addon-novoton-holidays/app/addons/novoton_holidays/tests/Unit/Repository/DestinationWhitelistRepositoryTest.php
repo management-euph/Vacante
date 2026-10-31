@@ -76,7 +76,13 @@ final class DestinationWhitelistRepositoryTest extends TestCase
         self::assertSame([], $this->queries, 'nothing to disable: no query');
 
         $repo->disableProducts([12, 0, 13]);
-        self::assertSame("UPDATE ?:products SET status = 'D' WHERE product_id IN (?n) AND status = 'A'", $this->queries[0][0]);
-        self::assertSame([[12, 13]], $this->queries[0][1]);
+        $updates = array_values(array_filter($this->queries, static fn (array $q): bool => str_starts_with($q[0], 'UPDATE ?:products')));
+        self::assertSame('UPDATE ?:products SET status = ?s WHERE product_id IN (?n) AND ?p', $updates[0][0]);
+        self::assertSame(['D', [12, 13]], array_slice($updates[0][1], 0, 2));
+        // Active, or hidden by the availability gate: an admin's own hiding stays.
+        self::assertSame(
+            "(status = 'A' OR (status = 'H' AND product_id IN (SELECT product_id FROM ?:travel_hotel_availability WHERE provider = 'novoton' AND gate_hidden = 'Y')))",
+            $updates[0][1][2],
+        );
     }
 }

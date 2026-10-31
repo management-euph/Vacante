@@ -50,9 +50,13 @@ final class AvailabilityReviewTest extends TestCase
         CronRunLog::useStorage(null, null);
     }
 
-    private static function source(): HotelAvailabilitySourceInterface
+    private static function source(bool $sharedGate = false): HotelAvailabilitySourceInterface
     {
-        return new class () implements HotelAvailabilitySourceInterface {
+        return new class ($sharedGate) implements HotelAvailabilitySourceInterface {
+            public function __construct(private readonly bool $sharedGate)
+            {
+            }
+
             #[\Override]
             public function provider(): string
             {
@@ -62,7 +66,7 @@ final class AvailabilityReviewTest extends TestCase
             #[\Override]
             public function capabilities(): AvailabilityCapabilities
             {
-                return new AvailabilityCapabilities(HotelListCoverage::PerCountry, true, 'resort', false, true, true);
+                return new AvailabilityCapabilities(HotelListCoverage::PerCountry, true, 'resort', false, true, true, $this->sharedGate);
             }
 
             #[\Override]
@@ -170,6 +174,68 @@ final class AvailabilityReviewTest extends TestCase
 
         self::assertSame([], $summary['providers']);
         self::assertSame([], $this->sql);
+    }
+
+    /** @return list<string> the product status writes so far */
+    private function productWrites(): array
+    {
+        return array_values(array_filter($this->sql, static fn (string $q): bool => str_starts_with(trim($q), 'UPDATE ?:products')));
+    }
+
+    /** The gate changes products only in Automatic mode, and only for a supplier it acts for. */
+    public function testTheGateActsInAutomaticModeAndCountsInReportOnly(): void
+    {
+        DbStub::$getArray = static fn (): array => [];
+        DbStub::$getFields = static fn (string $query): array => str_contains($query, "p.status = 'A'") ? [15, 16] : [];
+        DbStub::$getField = static fn (string $query): string => str_contains($query, 'COUNT(DISTINCT') ? '400' : '';
+        $review = new AvailabilityReview();
+        $at = new \DateTimeImmutable('2027-02-15 06:00:00');
+
+        $report = $review->review(['novoton' => self::source(true)], ['novoton' => AvailabilityMode::Report], new AvailabilityThresholds(), $at);
+        self::assertSame('report', $report['providers']['novoton']['mode']);
+        self::assertSame(['hidden' => 0, 'shown' => 0, 'released' => 0, 'would_hide' => 2, 'braked' => 0], $report['providers']['novoton']['gate']);
+        self::assertSame([], $this->productWrites());
+
+        $automatic = $review->review(['novoton' => self::source(true)], ['novoton' => AvailabilityMode::Automatic], new AvailabilityThresholds(), $at);
+        self::assertSame('automatic', $automatic['providers']['novoton']['mode']);
+        self::assertSame(["UPDATE ?:products SET status = 'H' WHERE product_id IN (15,16) AND status = 'A'"], $this->productWrites());
+
+        $this->sql = [];
+        $ownGate = $review->review(['novoton' => self::source(false)], ['novoton' => AvailabilityMode::Automatic], new AvailabilityThresholds(), $at);
+        self::assertSame('report', $ownGate['providers']['novoton']['mode'], 'a supplier with a gate of its own stays Report only');
+        self::assertSame([], $this->productWrites());
+    }
+
+    /** On the days between reviews, a hotel the gate hid whose offers are back is shown the next morning; nothing is hidden. */
+    public function testTheDailyRunShowsHiddenHotelsWhoseOffersAreBack(): void
+    {
+        TravelProviderRegistry::register('novoton', 'Novoton', $this->createStub(\Tygh\Addons\TravelCore\Contracts\ProviderNormalizerInterface::class));
+        TravelProviderRegistry::setAvailabilitySource('novoton', self::source(true));
+        \Tygh\Registry::set('addons.travel_core.availability_mode_novoton', 'automatic');
+        self::runLog(['travel_core.hotel_availability' => ['started' => self::NOW - 86400, 'finished' => self::NOW - 86000, 'ok' => true]]);
+        DbStub::$getArray = static fn (string $query): array => str_contains($query, 'SELECT * FROM ?:travel_hotel_availability') ? [
+            ['provider' => 'novoton', 'hotel_id' => '8', 'product_id' => '8', 'offer_seen_at' => '2027-02-15 10:00:00', 'state' => 'dormant', 'state_since' => '2027-02-01 06:00:00', 'state_reason' => 'no_availability', 'season_published' => 'N', 'gate_hidden' => 'Y', 'created_at' => '2025-01-01 00:00:00'],
+            ['provider' => 'novoton', 'hotel_id' => '9', 'product_id' => '9', 'state' => 'dormant', 'state_since' => '2027-02-01 06:00:00', 'state_reason' => 'no_availability', 'season_published' => 'N', 'gate_hidden' => 'N', 'created_at' => '2025-01-01 00:00:00'],
+        ] : [];
+        $asked = [];
+        DbStub::$getFields = static function (string $query) use (&$asked): array {
+            $asked[] = $query;
+
+            return str_contains($query, "p.status = 'H'") ? [8] : [];
+        };
+
+        try {
+            $line = AvailabilityReview::runDaily((new \DateTimeImmutable())->setTimestamp(self::NOW));
+        } finally {
+            \Tygh\Registry::set('addons.travel_core.availability_mode_novoton', null);
+        }
+
+        self::assertStringContainsString('not due yet (weekly). 1 hidden hotels shown again', $line);
+        $sql = implode("\n", $this->sql);
+        self::assertStringContainsString("state = 'bookable', state_reason = 'offer_seen'", $sql, 'the hidden hotel is classified again');
+        self::assertStringNotContainsString("hotel_id IN ('9')", $sql, 'the others wait for the weekly review');
+        self::assertSame(["UPDATE ?:products SET status = 'A' WHERE product_id IN (8) AND status = 'H'"], $this->productWrites());
+        self::assertSame([], array_filter($asked, static fn (string $q): bool => str_contains($q, "p.status = 'A'")), 'nothing is hidden between reviews');
     }
 
     public function testTheDailyRunSaysWhyItDidNotReview(): void

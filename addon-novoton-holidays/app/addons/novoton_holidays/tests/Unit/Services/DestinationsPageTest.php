@@ -181,7 +181,9 @@ final class DestinationsPageTest extends TestCase
 
         self::assertStringContainsString('array_intersect($outside, $confirmed)', $src);
         $repo = (string) file_get_contents(dirname(__DIR__, 3) . '/src/Repository/DestinationWhitelistRepository.php');
-        self::assertStringContainsString("UPDATE ?:products SET status = 'D' WHERE product_id IN (?n) AND status = 'A'", $repo);
+        // Only live products (Active, or hidden by the availability gate) are disabled.
+        self::assertStringContainsString("'UPDATE ?:products SET status = ?s WHERE product_id IN (?n) AND ?p',", $repo);
+        self::assertStringContainsString('DestinationScope::liveProductSql(),', $repo);
         self::assertStringNotContainsString('DELETE FROM ?:products', $repo);
     }
 }

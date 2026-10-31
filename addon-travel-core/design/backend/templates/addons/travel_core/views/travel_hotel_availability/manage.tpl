@@ -1,7 +1,10 @@
-{** Travel Core - Hotel availability (report only)
+{** Travel Core - Hotel availability
     Every supplier hotel's state as the weekly review left it
-    (docs/novoton-availability-gaps-plan.md §6), with filters and a CSV of
-    what they match. Nothing here hides or changes a product. **}
+    (docs/novoton-availability-gaps-plan.md §6, §10), its product's status
+    and what the availability gate did or would do, with filters and a CSV
+    of what they match. A decision on a hotel (keep visible, keep hidden,
+    closed) is saved from its row and applied at once in Automatic mode; a
+    run the gate's brake held is confirmed from the supplier's tile. **}
 
 {capture name="sidebar"}
 <div class="sidebar-row">
@@ -36,6 +39,16 @@
                 <option value="">--</option>
                 {foreach from=$availability_offer_months item=months}
                     <option value="{$months}" {if $search.no_offer_months == $months}selected{/if}>{__("travel_core.availability_months", ["[n]" => $months])}</option>
+                {/foreach}
+            </select>
+        </div>
+
+        <div class="sidebar-field">
+            <label for="travel_avail_gate">{__("travel_core.availability_gate_filter")}:</label>
+            <select name="gate" id="travel_avail_gate">
+                <option value="">--</option>
+                {foreach from=$availability_gate_filters item=gate}
+                    <option value="{$gate}" {if $search.gate == $gate}selected{/if}>{__("travel_core.availability_gate_`$gate`")}</option>
                 {/foreach}
             </select>
         </div>
@@ -90,6 +103,32 @@
                 </ul>
             {else}
                 <div class="travel-cron-tile__note">{__("travel_core.availability_no_hotels_supplier")}</div>
+            {/if}
+            {* What the availability gate did (Automatic) or would do (Report only) *}
+            {assign var="gc" value=$availability_gate_counts.$provider|default:[]}
+            {if $gc}
+                <div class="travel-cron-tile__note travel-avail-gate">
+                    {if $availability_automatic.$provider}
+                        <a href="{"travel_hotel_availability.manage?provider=`$provider`&gate=hidden"|fn_url}">{__("travel_core.availability_tile_hidden", ["[n]" => $gc.hidden])}</a>
+                    {else}
+                        <a href="{"travel_hotel_availability.manage?provider=`$provider`&gate=would_hide"|fn_url}">{__("travel_core.availability_tile_would_hide", ["[n]" => $gc.would_hide])}</a>
+                    {/if}
+                    {if $gc.released > 0} · <a href="{"travel_hotel_availability.manage?provider=`$provider`&gate=released"|fn_url}">{__("travel_core.availability_tile_released", ["[n]" => $gc.released])}</a>{/if}
+                    {if $gc.override > 0} · <a href="{"travel_hotel_availability.manage?provider=`$provider`&gate=override"|fn_url}">{__("travel_core.availability_tile_override", ["[n]" => $gc.override])}</a>{/if}
+                </div>
+                {* The brake held the last review's hiding: the admin checks the list, then confirms *}
+                {assign var="braked" value=$availability_summary.providers.$provider.gate.braked|default:0}
+                {if $availability_automatic.$provider && $braked > 0 && $gc.would_hide > 0}
+                    <div class="travel-cron-hint travel-cron-hint--warn travel-avail-brake">
+                        <p>{__("travel_core.availability_braked", ["[n]" => $gc.would_hide, "[min]" => $availability_brake.min, "[percent]" => $availability_brake.percent])}
+                            <a href="{"travel_hotel_availability.manage?provider=`$provider`&gate=would_hide"|fn_url}">{__("travel_core.availability_braked_check")}</a></p>
+                        <form method="post" action="{"travel_hotel_availability.apply_gate"|fn_url}">
+                            <input type="hidden" name="security_hash" value="{$security_hash}" />
+                            <input type="hidden" name="provider" value="{$provider|escape:html}" />
+                            <button type="submit" class="btn btn-primary cm-confirm">{__("travel_core.availability_hide_now", ["[n]" => $gc.would_hide])}</button>
+                        </form>
+                    </div>
+                {/if}
             {/if}
         </div>
         {/foreach}
@@ -162,6 +201,7 @@
             <th>{__("travel_core.hotel")}</th>
             <th width="100">{__("travel_core.provider")}</th>
             <th width="180">{__("travel_core.availability_state")}</th>
+            <th width="230">{__("travel_core.availability_product")}</th>
             <th>{__("travel_core.availability_reason")}</th>
             <th width="120">{__("travel_core.availability_last_offer")}</th>
             <th width="170">{__("travel_core.availability_prices")}</th>
@@ -189,6 +229,33 @@
                 <span class="travel-cron-pill travel-cron-pill--{$availability_pills.$state|default:"none"}">{__("travel_core.availability_state_`$state`")}</span>
                 {if $row.state_since}<div class="muted travel-avail-sub">{__("travel_core.availability_since", ["[date]" => $row.state_since|date_format:"%d.%m.%Y"])}</div>{/if}
                 {if $row.season_published == "Y"}<div class="travel-avail-sub">{__("travel_core.availability_next_season")}</div>{/if}
+            </td>
+            <td>
+                {if $row.product_id}
+                    {if $row.product_status == "A"}{__("active")}{elseif $row.product_status == "H"}{__("hidden")}{elseif $row.product_status == "D"}{__("disabled")}{else}&mdash;{/if}
+                    {if $row.gate_hidden == "Y"}<div class="travel-avail-sub">{__("travel_core.availability_gate_hidden")}</div>{/if}
+                    {if $row.gate_released == "Y"}<div class="travel-avail-sub muted">{__("travel_core.availability_gate_released")}</div>{/if}
+                    {if $row.would_hide}<div class="travel-cron-hint travel-cron-hint--warn">{if $availability_automatic.$provider}{__("travel_core.availability_gate_next_review")}{else}{__("travel_core.availability_gate_would_hide")}{/if}</div>{/if}
+                    {* The admin's decision on this hotel: wins over the rules *}
+                    <form method="post" action="{""|fn_url}" class="travel-avail-override">
+                        <input type="hidden" name="dispatch" value="travel_hotel_availability.override" />
+                        <input type="hidden" name="security_hash" value="{$security_hash}" />
+                        <input type="hidden" name="provider" value="{$row.provider|escape:html}" />
+                        <input type="hidden" name="hotel_id" value="{$row.hotel_id|escape:html}" />
+                        <input type="hidden" name="hotel_name" value="{$row.hotel_name|escape:html}" />
+                        <input type="hidden" name="return_query" value="{$availability_return_query|escape:html}" />
+                        <select name="override" aria-label="{__("travel_core.availability_override_label", ["[hotel]" => $row.hotel_name|default:"#`$row.hotel_id`"])|escape:html}">
+                            <option value="">{__("travel_core.availability_override_none")}</option>
+                            {foreach from=$availability_overrides item=ov}
+                                <option value="{$ov}" {if $row.override == $ov}selected{/if}>{__("travel_core.availability_override_`$ov`")}</option>
+                            {/foreach}
+                        </select>
+                        <input type="text" name="override_note" value="{$row.override_note|escape:html}" maxlength="255" placeholder="{__("travel_core.availability_override_note")|escape:html}" aria-label="{__("travel_core.availability_override_note")|escape:html}" />
+                        <button type="submit" class="btn btn-small">{__("save")}</button>
+                    </form>
+                {else}
+                    <span class="muted">{__("travel_core.availability_no_product")}</span>
+                {/if}
             </td>
             <td>{if $row.state_reason}{__("travel_core.availability_reason_`$row.state_reason`")}{else}&mdash;{/if}</td>
             <td>

@@ -47,6 +47,7 @@ final class HotelAvailabilityRepository
         `state_reason`          VARCHAR(32)       NOT NULL DEFAULT \'\',
         `season_published`      CHAR(1)           NOT NULL DEFAULT \'N\' COMMENT \'Between seasons, next season already priced or offered\',
         `gate_hidden`           CHAR(1)           NOT NULL DEFAULT \'N\' COMMENT \'This gate set the product to Hidden\',
+        `gate_released`         CHAR(1)           NOT NULL DEFAULT \'N\' COMMENT \'An admin changed a gate-hidden product by hand: left alone until availability returns\',
         `override`              VARCHAR(16)       NOT NULL DEFAULT \'\' COMMENT \'Admin decision: keep_visible, keep_hidden, closed\',
         `override_note`         VARCHAR(255)      NOT NULL DEFAULT \'\',
         `override_by`           INT UNSIGNED      NOT NULL DEFAULT 0,
@@ -84,6 +85,7 @@ final class HotelAvailabilityRepository
      */
     public const array ADDED_COLUMNS = [
         'hotel_name' => "VARCHAR(255) NOT NULL DEFAULT '' COMMENT 'As the supplier lists it, for the report' AFTER `destination_key`",
+        'gate_released' => "CHAR(1) NOT NULL DEFAULT 'N' COMMENT 'An admin changed a gate-hidden product by hand: left alone until availability returns' AFTER `gate_hidden`",
     ];
 
     private static bool $ensured = false;
@@ -111,6 +113,34 @@ final class HotelAvailabilityRepository
             }
             self::$ensured = true;
         }
+    }
+
+    /**
+     * SQL: the products a supplier's availability gate hid (AvailabilityGate:
+     * Hidden by the gate, not by an admin), for the supplier's own queries
+     * that treat them as live: synced, checked, disabled with their
+     * destination. Already quoted.
+     */
+    public static function gateHiddenProductsSql(string $provider): string
+    {
+        self::ensureTables();
+
+        return db_quote("SELECT product_id FROM ?:travel_hotel_availability WHERE provider = ?s AND gate_hidden = 'Y'", $provider);
+    }
+
+    /** The gate hid this product: it stays bookable from a direct link (ProviderCartProduct). */
+    public function isGateHidden(string $provider, int $productId): bool
+    {
+        if ($productId <= 0) {
+            return false;
+        }
+        self::ensureTables();
+
+        return TypeCoerce::toInt(db_get_field(
+            "SELECT COUNT(*) FROM ?:travel_hotel_availability WHERE provider = ?s AND product_id = ?i AND gate_hidden = 'Y'",
+            $provider,
+            $productId,
+        )) > 0;
     }
 
     /** Lets a test run the heal again (it runs once per request). */

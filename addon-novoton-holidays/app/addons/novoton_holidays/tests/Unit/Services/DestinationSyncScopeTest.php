@@ -12,7 +12,9 @@ use Tygh\Registry;
 /**
  * Stage 2: the per-hotel API syncs (hotelinfo, priceinfo, facilities,
  * room_price) spend calls only on the destinations we sell — plus any hotel
- * still linked to an active product, so a live product never goes stale.
+ * still linked to a live product (Active, or hidden by the availability
+ * gate, which shows it again once it has offers), so a live product never
+ * goes stale.
  */
 final class DestinationSyncScopeTest extends TestCase
 {
@@ -56,7 +58,7 @@ final class DestinationSyncScopeTest extends TestCase
             . "(h.country = 'BULGARIA' AND TRIM(h.city) IN ('SUNNY BEACH', 'ST.CONSTANTINE & ELENA'))"
             . " OR h.country = 'ALBANIA')"
             . " AND (h.city IS NULL OR h.city NOT IN ('GIFT VOUCHER')))"
-            . " OR h.product_id IN (SELECT product_id FROM ?:products WHERE status = 'A'))",
+            . " OR h.product_id IN (SELECT product_id FROM ?:products WHERE (status = 'A' OR (status = 'H' AND product_id IN (SELECT product_id FROM ?:travel_hotel_availability WHERE provider = 'novoton' AND gate_hidden = 'Y')))))",
             $scope->syncWhere('h'),
         );
     }
@@ -69,7 +71,7 @@ final class DestinationSyncScopeTest extends TestCase
         ]);
 
         self::assertStringStartsWith('((1 = 0 AND', $scope->syncWhere());
-        self::assertStringEndsWith("OR product_id IN (SELECT product_id FROM ?:products WHERE status = 'A'))", $scope->syncWhere());
+        self::assertStringEndsWith("OR product_id IN (SELECT product_id FROM ?:products WHERE (status = 'A' OR (status = 'H' AND product_id IN (SELECT product_id FROM ?:travel_hotel_availability WHERE provider = 'novoton' AND gate_hidden = 'Y')))))", $scope->syncWhere());
     }
 
     /** @return iterable<string, array{string, string}> */

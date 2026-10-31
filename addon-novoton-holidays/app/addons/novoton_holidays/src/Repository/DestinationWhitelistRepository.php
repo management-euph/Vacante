@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
+use Tygh\Addons\NovotonHolidays\Services\DestinationScope;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
 
@@ -125,18 +126,20 @@ class DestinationWhitelistRepository
     }
 
     /**
-     * Active products linked to a Novoton hotel, with the hotel's place.
+     * Live products (Active, or hidden by the availability gate) linked to a
+     * Novoton hotel, with the hotel's place.
      *
      * @return list<array{product_id: int, hotel_name: string, country: string, resort: string}>
      */
     public function liveProducts(): array
     {
         $rows = self::asRowList(db_get_array(
-            "SELECT h.product_id, h.hotel_name, h.country, h.city
+            'SELECT h.product_id, h.hotel_name, h.country, h.city
              FROM ?:novoton_hotels h
              INNER JOIN ?:products p ON p.product_id = h.product_id
-             WHERE h.product_id > 0 AND p.status = 'A'
-             ORDER BY h.country, h.city, h.hotel_name",
+             WHERE h.product_id > 0 AND ?p
+             ORDER BY h.country, h.city, h.hotel_name',
+            DestinationScope::liveProductSql('p'),
         ));
         $out = [];
         foreach ($rows as $row) {
@@ -164,9 +167,13 @@ class DestinationWhitelistRepository
             return 0;
         }
 
+        // A product the availability gate hid goes too; the gate then lets
+        // go of it (AvailabilityGate: changed by hand).
         return TypeCoerce::toInt(db_query(
-            "UPDATE ?:products SET status = 'D' WHERE product_id IN (?n) AND status = 'A'",
+            'UPDATE ?:products SET status = ?s WHERE product_id IN (?n) AND ?p',
+            'D',
             $productIds,
+            DestinationScope::liveProductSql(),
         ));
     }
 
