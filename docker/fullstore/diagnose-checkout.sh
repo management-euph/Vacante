@@ -4,28 +4,36 @@
 # this machine needs to know, in one paste.
 #
 # travel_core puts the booking card (hotel, dates, guests, "edit guests") on
-#   - the cart page, through the hook cart_content:product_info;
-#   - the checkout's order summary, through block_checkout:product_extra.
-# A theme whose own templates do not call a hook never shows that card. This
-# prints, for the store as it runs:
+#   - the cart page, through the hook checkout:product_info (and
+#     cart_content:product_info, where a theme calls it);
+#   - the checkout's order summary, through block_checkout:product_extra,
+#     which blocks/checkout/products_in_cart.tpl calls for each product.
+# The card shows only where a template calls its hook and nothing replaces
+# that part of the page. This prints, for the store as it runs:
 #   - the storefront's theme and the "Skip the cart page for" setting;
+#   - the blocks of the checkout page (Design > Layouts > Checkout), each
+#     with its template, the theme copy rendered and whether it calls the
+#     card's hook;
+#   - every add-on's template hooks on the checkout's product list, with the
+#     add-on's status: an active add-on's .override.tpl on
+#     block_checkout:cart_items / cart_products replaces the list the card
+#     hangs on;
 #   - which templates call the card's hooks;
 #   - every hook the themes' checkout templates call;
 #   - travel_core's checkout hook files as each theme sees them.
-# Paths, hook names and settings only: no theme code is printed.
+# Paths, hook names, block names and settings only: no theme code is printed.
 #
 # Run from docker/fullstore:
-#   docker compose exec app bash /repo/docker/fullstore/diagnose-checkout.sh
+#   docker compose exec -T app bash /repo/docker/fullstore/diagnose-checkout.sh
 set -uo pipefail
 
 DOCROOT="${DOCROOT:-/var/www/html}"
 if ! cd "$DOCROOT/design/themes" 2>/dev/null; then
     echo "[diagnose-checkout] run this inside the app container, from docker/fullstore:" >&2
-    echo "    docker compose exec app bash /repo/docker/fullstore/diagnose-checkout.sh" >&2
+    echo "    docker compose exec -T app bash /repo/docker/fullstore/diagnose-checkout.sh" >&2
     exit 1
 fi
 
-echo "== Storefront theme and settings"
 php <<'PHP'
 <?php
 mysqli_report(MYSQLI_REPORT_OFF);
@@ -35,23 +43,95 @@ $db = @mysqli_connect(
     getenv('CSCART_DB_PASSWORD') ?: 'cscart',
     getenv('CSCART_DB_NAME') ?: 'cscart',
 );
+/** @return list<array<string, string|null>> */
+$rows = static function (string $sql) use ($db): array {
+    if (!$db) {
+        return [];
+    }
+    $result = mysqli_query($db, $sql);
+    if ($result === false) {
+        echo '   (' . mysqli_error($db) . ")\n";
+
+        return [];
+    }
+
+    return mysqli_fetch_all($result, MYSQLI_ASSOC);
+};
+
+echo "== Storefront theme and settings\n";
 if (!$db) {
     echo "   (the database does not answer)\n";
-    exit;
 }
-$queries = [
-    'theme' => "SELECT CONCAT(storefront_id, ' ', url, ': ', theme_name) FROM cscart_storefronts",
-    'Skip the cart page for' => "SELECT value FROM cscart_settings_objects WHERE name = 'skip_cart_for'",
-];
-foreach ($queries as $label => $sql) {
-    $rows = mysqli_query($db, $sql);
-    if ($rows === false) {
-        echo "   {$label}: (" . mysqli_error($db) . ")\n";
-        continue;
+$theme = '';
+foreach ($rows('SELECT storefront_id, url, theme_name FROM cscart_storefronts') as $sf) {
+    $theme = $theme !== '' ? $theme : (string) $sf['theme_name'];
+    echo "   theme: {$sf['storefront_id']} {$sf['url']}: {$sf['theme_name']}\n";
+}
+foreach ($rows("SELECT value FROM cscart_settings_objects WHERE name = 'skip_cart_for'") as $s) {
+    echo '   Skip the cart page for: ' . ((string) $s['value'] === '' ? '(nothing ticked)' : $s['value']) . "\n";
+}
+
+echo "\n== Checkout page blocks, main content (Design > Layouts > Checkout)\n";
+$layouts = array_filter(
+    $rows('SELECT * FROM cscart_bm_layouts'),
+    static fn (array $l): bool => (string) ($l['theme_name'] ?? '') === $theme,
+);
+foreach ($layouts as $layout) {
+    $default = in_array((string) ($layout['is_default'] ?? ''), ['1', 'Y'], true);
+    echo "-- layout {$layout['layout_id']} \"{$layout['name']}\"" . ($default ? ' (default)' : '') . "\n";
+    $blocks = $rows(
+        'SELECT c.position, g.grid_id, s.status AS snap_status, b.block_id, b.type, b.properties, d.name'
+        . ' FROM cscart_bm_locations l'
+        . ' JOIN cscart_bm_containers c ON c.location_id = l.location_id'
+        . ' JOIN cscart_bm_grids g ON g.container_id = c.container_id'
+        . ' JOIN cscart_bm_snapping s ON s.grid_id = g.grid_id'
+        . ' JOIN cscart_bm_blocks b ON b.block_id = s.block_id'
+        . " LEFT JOIN cscart_bm_blocks_descriptions d ON d.block_id = b.block_id AND d.lang_code = 'en'"
+        . " WHERE l.dispatch = 'checkout' AND c.position = 'CONTENT' AND l.layout_id = " . (int) $layout['layout_id']
+        . ' ORDER BY c.position, g.grid_id, s.`order`'
+    );
+    if ($blocks === []) {
+        echo "   (no checkout location in this layout)\n";
     }
-    while ($row = mysqli_fetch_row($rows)) {
-        echo "   {$label}: " . ((string) $row[0] === '' ? '(nothing ticked)' : $row[0]) . "\n";
+    foreach ($blocks as $b) {
+        $props = @unserialize((string) $b['properties'], ['allowed_classes' => false]);
+        $tpl = is_array($props) ? (string) ($props['template'] ?? '') : '';
+        $file = '';
+        foreach ([$theme, 'responsive'] as $t) {
+            if ($tpl !== '' && is_file("{$t}/templates/{$tpl}")) {
+                $file = "{$t}/templates/{$tpl}";
+                break;
+            }
+        }
+        $calls = $file !== '' && str_contains((string) file_get_contents($file), 'hook name="block_checkout:product_extra"');
+        printf(
+            "   %-8s grid %-5s %s \"%s\" [%s]\n      template: %s%s\n",
+            $b['position'],
+            $b['grid_id'],
+            (string) $b['snap_status'] === 'A' ? 'on ' : 'OFF',
+            $b['name'] ?? '',
+            $b['type'],
+            $tpl !== '' ? $tpl : '(none)',
+            $file !== '' ? " -> {$file}" . ($calls ? ' (calls the card hook)' : '') : '',
+        );
     }
+}
+
+echo "\n== Add-on template hooks on the checkout's product list (block_checkout:*)\n";
+$status = [];
+foreach ($rows('SELECT addon, status FROM cscart_addons') as $a) {
+    $status[(string) $a['addon']] = (string) $a['status'];
+}
+$hookFiles = glob('*/templates/addons/*/hooks/block_checkout/*.tpl') ?: [];
+sort($hookFiles);
+foreach ($hookFiles as $path) {
+    $parts = explode('/', $path);
+    $addon = $parts[3] ?? '?';
+    $state = $status[$addon] ?? '?';
+    echo '   ' . ($state === 'A' ? 'active  ' : 'inactive') . "  {$parts[0]}  {$addon}: block_checkout/" . basename($path) . "\n";
+}
+if ($hookFiles === []) {
+    echo "   (none)\n";
 }
 PHP
 
@@ -77,7 +157,7 @@ echo
 echo "== travel_core's checkout hook files as each theme sees them"
 for theme in */; do
     dir="${theme}templates/addons/travel_core/hooks"
-    for hook in block_checkout/product_extra.post.tpl cart_content/product_info.post.tpl; do
+    for hook in block_checkout/product_extra.post.tpl cart_content/product_info.post.tpl checkout/product_info.post.tpl; do
         if [ -e "$dir/$hook" ]; then
             echo "   ${theme}${hook}: present"
         else
