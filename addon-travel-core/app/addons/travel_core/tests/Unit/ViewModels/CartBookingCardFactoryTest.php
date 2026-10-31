@@ -287,4 +287,41 @@ final class CartBookingCardFactoryTest extends TestCase
         self::assertSame(['name' => '(DBL)', 'code' => ''], CartBookingCardFactory::splitCode('(DBL)'));
         self::assertSame(['name' => 'Suite (Sea View) Deluxe', 'code' => ''], CartBookingCardFactory::splitCode('Suite (Sea View) Deluxe'));
     }
+
+    /**
+     * REGRESSION (31 Oct 2026): the checkout's product list hands the card's
+     * hook rows without the cart line's extra, so the sidebar had no card,
+     * no guests and no "edit guests" although the cart held both bookings.
+     */
+    public function testACheckoutRowTakesItsBookingFromTheCartLine(): void
+    {
+        $cartLine = self::line();
+        $row = ['product_id' => 42, 'product' => 'Admiral Hotel subtitle', 'price' => 468.75, 'amount' => 1];
+
+        $line = CartBookingCardFactory::withCartExtra($row, '519910614', [519910614 => $cartLine]);
+
+        self::assertSame($cartLine['extra'], $line['extra']);
+        self::assertSame('Admiral Hotel subtitle', $line['product'], 'the row keeps its own display fields');
+        self::assertSame([], self::factory()->build($row, '519910614'), 'the bare row alone is no booking');
+        self::assertNotSame([], self::factory()->build($line, '519910614'));
+    }
+
+    public function testOnlyTheSameProductsCartLineLendsItsBooking(): void
+    {
+        $row = ['product_id' => 7, 'price' => 100.0];
+        $cartLines = [519910614 => self::line()];
+
+        self::assertSame($row, CartBookingCardFactory::withCartExtra($row, '519910614', $cartLines), 'another product');
+        self::assertSame($row, CartBookingCardFactory::withCartExtra($row, '', $cartLines), 'no cart id');
+        self::assertSame($row, CartBookingCardFactory::withCartExtra($row, '1', $cartLines), 'no such cart line');
+        self::assertSame($row, CartBookingCardFactory::withCartExtra($row, '1', [1 => ['product_id' => 7, 'extra' => ['gift' => 'Y']]]), 'a plain line');
+    }
+
+    public function testARowThatCarriesItsBookingIsKept(): void
+    {
+        $row = self::line(['hotel_name' => 'Row Hotel']);
+        $cartLines = [5 => self::line(['hotel_name' => 'Cart Hotel'])];
+
+        self::assertSame($row, CartBookingCardFactory::withCartExtra($row, '5', $cartLines));
+    }
 }

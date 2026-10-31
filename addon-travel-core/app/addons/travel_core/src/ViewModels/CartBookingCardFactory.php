@@ -158,6 +158,36 @@ final class CartBookingCardFactory
     }
 
     /**
+     * The line as the card reads it. The checkout's product list (CS-Cart's
+     * cart_products: name, price, photo) reaches the card's hook without
+     * the cart line's extra, where the booking is; the cart line of the same
+     * cart id (cart.products) holds it. A row that already carries a
+     * booking is kept as it is, and so is one whose cart line is another
+     * product's.
+     *
+     * @param array<string, mixed> $line the row a template hands the card
+     * @param array<array-key, mixed> $cartLines cart.products, keyed by cart id
+     * @return array<string, mixed>
+     */
+    public static function withCartExtra(array $line, string $cartId, array $cartLines): array
+    {
+        $extra = TypeCoerce::toStringMap($line['extra'] ?? null);
+        if (!empty($extra['travel_booking']) || $cartId === '') {
+            return $line;
+        }
+        $stored = $cartLines[$cartId] ?? null;
+        $stored = is_array($stored) ? $stored : [];
+        $storedExtra = TypeCoerce::toStringMap($stored['extra'] ?? null);
+        if (empty($storedExtra['travel_booking'])
+            || TypeCoerce::toInt($stored['product_id'] ?? 0) !== TypeCoerce::toInt($line['product_id'] ?? 0)) {
+            return $line;
+        }
+        $line['extra'] = $storedExtra + $extra;
+
+        return $line;
+    }
+
+    /**
      * "Double Room (DBL 2+0 DELUXE NO BALCONY)" → name "Double Room", code
      * "DBL 2+0 DELUXE NO BALCONY". A value without a trailing parenthesis,
      * or whose parenthesis only repeats the name, is all name.
