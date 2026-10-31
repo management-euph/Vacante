@@ -10,6 +10,7 @@ use Tygh\Addons\NovotonHolidays\Api\Contracts\PricingApiClientInterface;
 use Tygh\Addons\NovotonHolidays\Helpers\BookingRoomAssembler;
 use Tygh\Addons\NovotonHolidays\Services\ApiBookingRequestBuilder;
 use Tygh\Addons\NovotonHolidays\Services\BookedRooms;
+use Tygh\Addons\NovotonHolidays\Services\RoomOfferRows;
 use Tygh\Addons\NovotonHolidays\Services\RoomsQuote;
 
 /**
@@ -130,6 +131,51 @@ final class RoomsQuoteTest extends TestCase
         self::assertSame('BB', $quote['rooms'][0]['board_id']);
         self::assertSame('P', $quote['rooms'][0]['package_name']);
         self::assertSame('DBL', $quote['offer']['room']);
+    }
+
+    /**
+     * Holiday Park (270): Novoton answers "DBL 2+0 ECONOMY" on "ALL INCL"
+     * with an empty document (false) and the hotel's every room and board
+     * with the offer the search showed. add_to_cart rejected the booking
+     * ("Verificarea prețului a eșuat"); it is priced from that answer now,
+     * with that offer's own terms.
+     */
+    public function testARoomNovotonPricesOnlyWithoutItsBoardIsPricedAsTheSearchShowedIt(): void
+    {
+        $calls = [];
+        $pricing = $this->createStub(PricingApiClientInterface::class);
+        $pricing->method('applyCommission')->willReturnCallback(
+            static fn (float $price): float => $price * (1 + self::COMMISSION / 100),
+        );
+        $pricing->method('getRoomPrice')->willReturnCallback(static function (array $params) use (&$calls): \SimpleXMLElement|false {
+            $calls[] = [$params['room_id'], $params['board_id']];
+            if ($params['board_id'] !== '') {
+                return false;
+            }
+
+            return new \SimpleXMLElement('<room_price>'
+                . '<agent>T</agent><idcont>1</idcont><PackageName>HOLIDAY PARK **** +AQUAPARK 2027</PackageName>'
+                . '<Price>750.00</Price><IdRoom>TRP 2+1 AQUA</IdRoom><Board>ALL INCL</Board>'
+                . '<TermsOfPayment><Percent tillDate="2027-06-01">100</Percent></TermsOfPayment>'
+                . '<agent>T</agent><idcont>2</idcont><PackageName>HOLIDAY PARK **** 2027</PackageName>'
+                . '<Price>613.50</Price><IdRoom>DBL 2+0 ECONOMY</IdRoom><Board>ALL INCL</Board>'
+                . '<TermsOfPayment><Percent tillDate="2027-06-20">100</Percent></TermsOfPayment>'
+                . '</room_price>');
+        });
+        $rooms = BookedRooms::fromRequest(self::request([
+            'room_id' => 'DBL 2+0 ECONOMY',
+            'board_id' => 'ALL INCL',
+            'package_name' => 'HOLIDAY PARK **** 2027',
+        ]), []);
+        self::assertNotNull($rooms);
+
+        $quote = (new RoomsQuote($pricing))->price('270', '2027-07-10', '2027-07-17', $rooms);
+
+        self::assertNotNull($quote);
+        self::assertEqualsWithDelta(674.85, $quote['total'], 0.001);
+        self::assertSame(['ALL INCL', 'HOLIDAY PARK **** 2027'], [$quote['rooms'][0]['board_id'], $quote['rooms'][0]['package_name']]);
+        self::assertSame([['DBL 2+0 ECONOMY', 'ALL INCL'], ['', '']], $calls);
+        self::assertStringContainsString('2027-06-20', RoomOfferRows::terms($quote['answer'], $quote['offer'])['terms_of_payment']);
     }
 
     public function testARoomWithoutAPriceRejectsTheWholeBooking(): void
