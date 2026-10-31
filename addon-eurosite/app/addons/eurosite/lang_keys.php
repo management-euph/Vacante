@@ -1122,4 +1122,93 @@ return [
         'en' => '[n] live {product is|products are} outside the destination whitelist.',
         'ro' => '[n] {produs activ este|produse active sunt|de produse active sunt} în afara listei de destinații.',
     ],
+    // Room types (getRoomRequest, GCode) as offers show them: RoomTypeNames.
+    'eurosite.room_type_ap' => [
+        'en' => 'Apartment',
+        'ro' => 'Apartament',
+    ],
+    'eurosite.room_type_d2x' => [
+        'en' => 'Double room with 2 children',
+        'ro' => 'Cameră dublă cu 2 copii',
+    ],
+    'eurosite.room_type_d3c' => [
+        'en' => 'Double room, 3 adults, 1 child under 2 years',
+        'ro' => 'Cameră dublă, 3 adulți, 1 copil sub 2 ani',
+    ],
+    'eurosite.room_type_d3x' => [
+        'en' => 'Double room, 3 adults, 1 child over 2 years',
+        'ro' => 'Cameră dublă, 3 adulți, 1 copil peste 2 ani',
+    ],
+    'eurosite.room_type_db' => [
+        'en' => 'Double room',
+        'ro' => 'Cameră dublă',
+    ],
+    'eurosite.room_type_db3' => [
+        'en' => 'Double room, 3 adults',
+        'ro' => 'Cameră dublă, 3 adulți',
+    ],
+    'eurosite.room_type_dbc' => [
+        'en' => 'Double room with child under 2 years',
+        'ro' => 'Cameră dublă cu copil sub 2 ani',
+    ],
+    'eurosite.room_type_dbx' => [
+        'en' => 'Double room with child over 2 years',
+        'ro' => 'Cameră dublă cu copil peste 2 ani',
+    ],
+    'eurosite.room_type_q' => [
+        'en' => 'Quad room',
+        'ro' => 'Cameră cvadruplă',
+    ],
+    'eurosite.room_type_s2x' => [
+        'en' => 'Single room used as double, with 2 children',
+        'ro' => 'Cameră single folosită ca dublă, cu 2 copii',
+    ],
+    'eurosite.room_type_sb' => [
+        'en' => 'Single room',
+        'ro' => 'Cameră single',
+    ],
+    'eurosite.room_type_sbc' => [
+        'en' => 'Single room with child under 2 years',
+        'ro' => 'Cameră single cu copil sub 2 ani',
+    ],
+    'eurosite.room_type_sd' => [
+        'en' => 'Studio',
+        'ro' => 'Studio',
+    ],
+    'eurosite.room_type_tb' => [
+        'en' => 'Twin room (separate beds)',
+        'ro' => 'Cameră twin (paturi separate)',
+    ],
+    'eurosite.room_type_tbc' => [
+        'en' => 'Twin room with child under 2 years',
+        'ro' => 'Cameră twin cu copil sub 2 ani',
+    ],
+    'eurosite.room_type_tbx' => [
+        'en' => 'Twin room with child over 2 years',
+        'ro' => 'Cameră twin cu copil peste 2 ani',
+    ],
+    'eurosite.room_type_tr' => [
+        'en' => 'Triple room',
+        'ro' => 'Cameră triplă',
+    ],
+    'eurosite.room_type_trc' => [
+        'en' => 'Triple room with child under 2 years',
+        'ro' => 'Cameră triplă cu copil sub 2 ani',
+    ],
+    'eurosite.room_type_ts' => [
+        'en' => 'Twin room for sole use',
+        'ro' => 'Cameră twin în regim single',
+    ],
+    'eurosite.room_type_tsc' => [
+        'en' => 'Twin room for sole use, with child under 2 years',
+        'ro' => 'Cameră twin în regim single, cu copil sub 2 ani',
+    ],
+    'eurosite.room_type_tsx' => [
+        'en' => 'Twin room for sole use, with child over 2 years',
+        'ro' => 'Cameră twin în regim single, cu copil peste 2 ani',
+    ],
+    'eurosite.room_type_vl' => [
+        'en' => 'Villa',
+        'ro' => 'Vilă',
+    ],
 ];

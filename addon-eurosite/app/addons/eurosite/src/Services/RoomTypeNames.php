@@ -9,48 +9,66 @@ namespace Tygh\Addons\Eurosite\Services;
  *
  * Every offer room carries its hotel's own name ("Double Room") and its
  * general code (GCode="DB") from the getRoomRequest catalog (22 codes,
- * 31 Oct 2026). On a Romanian page the room reads by its code ("Cameră
- * dublă"); a hotel name that says more than the catalog name ("Double Room
- * Sea View") keeps that detail in brackets. Other languages, and a code the
- * catalog does not have yet, keep Eurosite's own name.
+ * 31 Oct 2026). The room reads by its code's language variable,
+ * eurosite.room_type_<code> ("Cameră dublă"), which admins can reword under
+ * Languages → Translations; a hotel name that says more than the catalog
+ * name ("Double Room Sea View") keeps that detail in brackets. A code
+ * without a label yet keeps Eurosite's own name.
  */
 final class RoomTypeNames
 {
-    /** GCode => [Eurosite's catalog name, Romanian]. */
+    /**
+     * GCode => Eurosite's catalog name, to tell a hotel's wording of the
+     * same room ("Double Room") from one that says more. Not a translation:
+     * those are the language variables.
+     */
     private const array CATALOG = [
-        'AP' => ['apartament', 'Apartament'],
-        'D2X' => ['double with 2 children', 'Cameră dublă cu 2 copii'],
-        'D3C' => ['double 3 adults 1 child under 2 years', 'Cameră dublă, 3 adulți, 1 copil sub 2 ani'],
-        'D3X' => ['double 3 adults 1 child over 2 years', 'Cameră dublă, 3 adulți, 1 copil peste 2 ani'],
-        'DB' => ['double', 'Cameră dublă'],
-        'DB3' => ['double 3 adults', 'Cameră dublă, 3 adulți'],
-        'DBC' => ['double with child ( age under 2 years )', 'Cameră dublă cu copil sub 2 ani'],
-        'DBX' => ['double with child ( age over 2 years )', 'Cameră dublă cu copil peste 2 ani'],
-        'Q' => ['quad', 'Cameră cvadruplă'],
-        'S2X' => ['single as double with 2 children', 'Cameră single folosită ca dublă, cu 2 copii'],
-        'SB' => ['single', 'Cameră single'],
-        'SBC' => ['single with child ( age under 2 years )', 'Cameră single cu copil sub 2 ani'],
-        'SD' => ['studio', 'Studio'],
-        'TB' => ['twin', 'Cameră twin (paturi separate)'],
-        'TBC' => ['twin with child ( age under 2 years )', 'Cameră twin cu copil sub 2 ani'],
-        'TBX' => ['twin with child ( age over 2 years )', 'Cameră twin cu copil peste 2 ani'],
-        'TR' => ['triple', 'Cameră triplă'],
-        'TRC' => ['triple with child ( age under 2 years )', 'Cameră triplă cu copil sub 2 ani'],
-        'TS' => ['twin for sole use', 'Cameră twin în regim single'],
-        'TSC' => ['twin for sole use with child ( age under 2 years )', 'Cameră twin în regim single, cu copil sub 2 ani'],
-        'TSX' => ['twin for sole use with child over 2 year2', 'Cameră twin în regim single, cu copil peste 2 ani'],
-        'VL' => ['vila', 'Vilă'],
+        'AP' => 'apartament',
+        'D2X' => 'double with 2 children',
+        'D3C' => 'double 3 adults 1 child under 2 years',
+        'D3X' => 'double 3 adults 1 child over 2 years',
+        'DB' => 'double',
+        'DB3' => 'double 3 adults',
+        'DBC' => 'double with child ( age under 2 years )',
+        'DBX' => 'double with child ( age over 2 years )',
+        'Q' => 'quad',
+        'S2X' => 'single as double with 2 children',
+        'SB' => 'single',
+        'SBC' => 'single with child ( age under 2 years )',
+        'SD' => 'studio',
+        'TB' => 'twin',
+        'TBC' => 'twin with child ( age under 2 years )',
+        'TBX' => 'twin with child ( age over 2 years )',
+        'TR' => 'triple',
+        'TRC' => 'triple with child ( age under 2 years )',
+        'TS' => 'twin for sole use',
+        'TSC' => 'twin for sole use with child ( age under 2 years )',
+        'TSX' => 'twin for sole use with child over 2 year2',
+        'VL' => 'vila',
     ];
+
+    /** The language variable of a room code: eurosite.room_type_db. */
+    public static function langKey(string $code): string
+    {
+        return 'eurosite.room_type_' . strtolower($code);
+    }
+
+    /** @return list<string> every catalog code */
+    public static function codes(): array
+    {
+        return array_map('strval', array_keys(self::CATALOG));
+    }
 
     /**
      * @param string $gcode the room's general code (GCode); '' when the offer has none
      * @param string $name the hotel's own name for the room
-     * @param string $lang the page's language ('ro', 'en', …)
+     * @param string $lang the page's language ('ro', 'en', …); '' outside the store: Eurosite's name
+     * @param (\Closure(string, string): string)|null $translate key, language => label (default: CS-Cart's __())
      */
-    public static function label(string $gcode, string $name, string $lang): string
+    public static function label(string $gcode, string $name, string $lang, ?\Closure $translate = null): string
     {
         $name = trim($name);
-        if (strtolower($lang) !== 'ro') {
+        if ($lang === '') {
             return $name;
         }
         $code = strtoupper(trim($gcode));
@@ -60,17 +78,32 @@ final class RoomTypeNames
         if ($code === '') {
             return $name;
         }
-        [$catalog, $ro] = self::CATALOG[$code];
+        $key = self::langKey($code);
+        $label = trim(($translate ?? self::translated(...))($key, $lang));
+        if ($label === '' || str_contains($label, $key)) {
+            // Not seeded yet: CS-Cart answers "_eurosite.room_type_db".
+            return $name;
+        }
 
-        return $name === '' || self::plain($name) === self::plain($catalog) ? $ro : "{$ro} ({$name})";
+        return $name === '' || self::plain($name) === self::plain(self::CATALOG[$code]) ? $label : "{$label} ({$name})";
+    }
+
+    private static function translated(string $key, string $lang): string
+    {
+        if (!function_exists('__')) {
+            return '';
+        }
+        $label = __($key, [], $lang);
+
+        return is_string($label) ? $label : '';
     }
 
     /** The catalog code whose name the hotel's name repeats; '' when none. */
     private static function codeOfName(string $name): string
     {
-        foreach (self::CATALOG as $code => [$catalog]) {
+        foreach (self::CATALOG as $code => $catalog) {
             if ($name !== '' && self::plain($name) === self::plain($catalog)) {
-                return $code;
+                return (string) $code;
             }
         }
 

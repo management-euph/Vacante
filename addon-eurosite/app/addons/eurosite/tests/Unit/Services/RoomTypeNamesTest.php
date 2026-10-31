@@ -8,13 +8,13 @@ use PHPUnit\Framework\TestCase;
 use Tygh\Addons\Eurosite\Services\RoomTypeNames;
 
 /**
- * A Eurosite room on a Romanian page reads by its general code; other
- * languages keep Eurosite's own name.
+ * A Eurosite room reads by its general code's language variable
+ * (eurosite.room_type_<code>, seeded from lang_keys.php).
  */
 final class RoomTypeNamesTest extends TestCase
 {
-    /** getRoomRequest as Eurosite answered it on 31 Oct 2026, with the agreed Romanian names. */
-    private const array CATALOG = [
+    /** The Romanian names agreed on 31 Oct 2026 for getRoomRequest's 22 codes. */
+    private const array RO = [
         'AP' => ['apartament', 'Apartament'],
         'DB' => ['double', 'Cameră dublă'],
         'DB3' => ['double 3 adults', 'Cameră dublă, 3 adulți'],
@@ -39,32 +39,46 @@ final class RoomTypeNamesTest extends TestCase
         'VL' => ['vila', 'Vilă'],
     ];
 
-    public function testEveryCatalogRoomReadsInRomanian(): void
+    /** CS-Cart's __() over the seeded labels: a missing one comes back raw. */
+    private static function seeded(): \Closure
     {
-        foreach (self::CATALOG as $code => [$name, $ro]) {
-            self::assertSame($ro, RoomTypeNames::label($code, $name, 'ro'), $code);
+        /** @var array<string, array<string, string>> $keys */
+        $keys = require dirname(__DIR__, 3) . '/lang_keys.php';
+
+        return static fn (string $key, string $lang): string => $keys[$key][$lang] ?? '_' . $key;
+    }
+
+    public function testEveryCatalogRoomIsSeededInEnglishAndRomanian(): void
+    {
+        self::assertEqualsCanonicalizing(array_keys(self::RO), RoomTypeNames::codes());
+        foreach (self::RO as $code => [$name, $ro]) {
+            self::assertSame($ro, RoomTypeNames::label($code, $name, 'ro', self::seeded()), $code);
+            self::assertNotSame($name, RoomTypeNames::label($code, $name, 'en', self::seeded()), "{$code}: an English label");
         }
     }
 
     public function testAHotelsOwnWordingOfTheSameRoomReadsTheSame(): void
     {
-        self::assertSame('Cameră dublă', RoomTypeNames::label('DB', 'Double Room', 'ro'));
-        self::assertSame('Cameră dublă', RoomTypeNames::label('db', '', 'ro'), 'no name: the code alone');
+        self::assertSame('Cameră dublă', RoomTypeNames::label('DB', 'Double Room', 'ro', self::seeded()));
+        self::assertSame('Double room', RoomTypeNames::label('DB', 'Double Room', 'en', self::seeded()));
+        self::assertSame('Cameră dublă', RoomTypeNames::label('db', '', 'ro', self::seeded()), 'no name: the code alone');
     }
 
     public function testWhatTheHotelAddsIsKept(): void
     {
-        self::assertSame('Cameră dublă (Double Room Sea View)', RoomTypeNames::label('DB', 'Double Room Sea View', 'ro'));
+        self::assertSame('Cameră dublă (Double Room Sea View)', RoomTypeNames::label('DB', 'Double Room Sea View', 'ro', self::seeded()));
     }
 
     public function testAnOfferWithoutACodeIsReadByItsName(): void
     {
-        self::assertSame('Vilă', RoomTypeNames::label('', 'Vila', 'ro'));
+        self::assertSame('Vilă', RoomTypeNames::label('', 'Vila', 'ro', self::seeded()));
     }
 
-    public function testOtherLanguagesAndUnknownCodesKeepEurositesName(): void
+    public function testWithoutALabelEurositesNameStays(): void
     {
-        self::assertSame('Double Room', RoomTypeNames::label('DB', 'Double Room', 'en'));
-        self::assertSame('Penthouse', RoomTypeNames::label('PH', 'Penthouse', 'ro'));
+        self::assertSame('Penthouse', RoomTypeNames::label('PH', 'Penthouse', 'ro', self::seeded()), 'a code not in the catalog');
+        $unseeded = static fn (string $key): string => '_' . $key;
+        self::assertSame('Double Room', RoomTypeNames::label('DB', 'Double Room', 'ro', $unseeded), 'a label not seeded yet');
+        self::assertSame('Double Room', RoomTypeNames::label('DB', 'Double Room', '', self::seeded()), 'outside the store');
     }
 }

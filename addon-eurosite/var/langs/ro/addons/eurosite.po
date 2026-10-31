@@ -1287,3 +1287,91 @@ msgstr "[n] {oraș vândut nu mai este|orașe vândute nu mai sunt|de orașe vâ
 msgctxt "Languages::eurosite.dest_alert_outside"
 msgid "[n] live {product is|products are} outside the destination whitelist."
 msgstr "[n] {produs activ este|produse active sunt|de produse active sunt} în afara listei de destinații."
+
+msgctxt "Languages::eurosite.room_type_ap"
+msgid "Apartment"
+msgstr "Apartament"
+
+msgctxt "Languages::eurosite.room_type_d2x"
+msgid "Double room with 2 children"
+msgstr "Cameră dublă cu 2 copii"
+
+msgctxt "Languages::eurosite.room_type_d3c"
+msgid "Double room, 3 adults, 1 child under 2 years"
+msgstr "Cameră dublă, 3 adulți, 1 copil sub 2 ani"
+
+msgctxt "Languages::eurosite.room_type_d3x"
+msgid "Double room, 3 adults, 1 child over 2 years"
+msgstr "Cameră dublă, 3 adulți, 1 copil peste 2 ani"
+
+msgctxt "Languages::eurosite.room_type_db"
+msgid "Double room"
+msgstr "Cameră dublă"
+
+msgctxt "Languages::eurosite.room_type_db3"
+msgid "Double room, 3 adults"
+msgstr "Cameră dublă, 3 adulți"
+
+msgctxt "Languages::eurosite.room_type_dbc"
+msgid "Double room with child under 2 years"
+msgstr "Cameră dublă cu copil sub 2 ani"
+
+msgctxt "Languages::eurosite.room_type_dbx"
+msgid "Double room with child over 2 years"
+msgstr "Cameră dublă cu copil peste 2 ani"
+
+msgctxt "Languages::eurosite.room_type_q"
+msgid "Quad room"
+msgstr "Cameră cvadruplă"
+
+msgctxt "Languages::eurosite.room_type_s2x"
+msgid "Single room used as double, with 2 children"
+msgstr "Cameră single folosită ca dublă, cu 2 copii"
+
+msgctxt "Languages::eurosite.room_type_sb"
+msgid "Single room"
+msgstr "Cameră single"
+
+msgctxt "Languages::eurosite.room_type_sbc"
+msgid "Single room with child under 2 years"
+msgstr "Cameră single cu copil sub 2 ani"
+
+msgctxt "Languages::eurosite.room_type_sd"
+msgid "Studio"
+msgstr "Studio"
+
+msgctxt "Languages::eurosite.room_type_tb"
+msgid "Twin room (separate beds)"
+msgstr "Cameră twin (paturi separate)"
+
+msgctxt "Languages::eurosite.room_type_tbc"
+msgid "Twin room with child under 2 years"
+msgstr "Cameră twin cu copil sub 2 ani"
+
+msgctxt "Languages::eurosite.room_type_tbx"
+msgid "Twin room with child over 2 years"
+msgstr "Cameră twin cu copil peste 2 ani"
+
+msgctxt "Languages::eurosite.room_type_tr"
+msgid "Triple room"
+msgstr "Cameră triplă"
+
+msgctxt "Languages::eurosite.room_type_trc"
+msgid "Triple room with child under 2 years"
+msgstr "Cameră triplă cu copil sub 2 ani"
+
+msgctxt "Languages::eurosite.room_type_ts"
+msgid "Twin room for sole use"
+msgstr "Cameră twin în regim single"
+
+msgctxt "Languages::eurosite.room_type_tsc"
+msgid "Twin room for sole use, with child under 2 years"
+msgstr "Cameră twin în regim single, cu copil sub 2 ani"
+
+msgctxt "Languages::eurosite.room_type_tsx"
+msgid "Twin room for sole use, with child over 2 years"
+msgstr "Cameră twin în regim single, cu copil peste 2 ani"
+
+msgctxt "Languages::eurosite.room_type_vl"
+msgid "Villa"
+msgstr "Vilă"
