@@ -71,6 +71,39 @@ foreach ($rows("SELECT value FROM cscart_settings_objects WHERE name = 'skip_car
     echo '   Skip the cart page for: ' . ((string) $s['value'] === '' ? '(nothing ticked)' : $s['value']) . "\n";
 }
 
+// The card needs the line's extra.travel_booking: a line added as a plain
+// product (no booking form) has none. Key names only: no values, no guests.
+echo "\n== Cart lines (Orders > Live carts), newest first\n";
+$lines = $rows(
+    'SELECT user_id, user_type, timestamp, product_id, amount, extra FROM cscart_user_session_products'
+    . " WHERE type = 'C' ORDER BY timestamp DESC, item_id LIMIT 12"
+);
+if ($lines === [] && $db) {
+    echo "   (no saved cart lines)\n";
+}
+foreach ($lines as $line) {
+    $item = @unserialize((string) $line['extra'], ['allowed_classes' => false]);
+    $item = is_array($item) ? $item : [];
+    $extra = is_array($item['extra'] ?? null) ? $item['extra'] : $item;
+    $name = $rows('SELECT product FROM cscart_product_descriptions WHERE lang_code = \'en\' AND product_id = ' . (int) $line['product_id'])[0]['product'] ?? '?';
+    $travelKeys = array_values(array_filter(
+        array_map('strval', array_keys($extra)),
+        static fn (string $k): bool => (bool) preg_match('/^(travel|novoton|sphinx|eurosite)_/', $k),
+    ));
+    printf(
+        "   %s %s%s  #%s \"%s\" x%s: travel_booking %s; %d extra keys%s\n",
+        date('Y-m-d H:i', (int) $line['timestamp']),
+        $line['user_type'] === 'R' ? 'customer ' : 'guest ',
+        $line['user_id'],
+        $line['product_id'],
+        $name,
+        $line['amount'],
+        empty($extra['travel_booking']) ? 'NO' : 'yes',
+        count($extra),
+        $travelKeys !== [] ? ' (' . implode(', ', $travelKeys) . ')' : '',
+    );
+}
+
 echo "\n== Checkout page blocks, main content (Design > Layouts > Checkout)\n";
 $layouts = array_filter(
     $rows('SELECT * FROM cscart_bm_layouts'),
