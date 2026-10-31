@@ -61,15 +61,11 @@
             {/foreach}
         </div>
 
-        <div class="travel-form-actions travel-form-actions--cta">
-            {if $eurosite_back_url}
-                <a href="{$eurosite_back_url|fn_url}" class="travel-btn-back">&larr; {__("eurosite.back_to_results")}</a>
-            {/if}
-            <button type="submit" class="travel-btn--primary eurosite-submit-btn">
-                {fn_travel_core_booking_cta_label("eurosite")} &rarr;
-            </button>
-        </div>
-        <p class="travel-cta-note">{__("travel_core.cta_note")}</p>
+        {include file="addons/travel_core/components/booking_form_actions.tpl"
+            fa_addon="eurosite"
+            fa_back_url=$eurosite_back_url|default:""
+            fa_back_label=__("eurosite.back_to_results")
+            fa_button_class="eurosite-submit-btn"}
 
         {include file="addons/travel_core/components/booking_conditions_modal.tpl"}
     </form>

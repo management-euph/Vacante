@@ -158,4 +158,27 @@ final class BookingStepsHeaderTest extends TestCase
         self::assertStringContainsString('<h2 class="travel-bsidebar-name">', $sidebar);
         self::assertStringNotContainsString('<h1', $sidebar);
     }
+
+    /**
+     * Editing a cart line: no progress bar, a header saying what is being
+     * changed: "Edit booking details #22" over the sidebar's hotel, place
+     * and dates. Both edit pages hand it their booking's number.
+     */
+    public function testEditModeSaysWhichBookingIsBeingChanged(): void
+    {
+        $tpl = self::tpl();
+
+        self::assertStringContainsString('__("travel_core.edit_booking_title", ["[id]" => $bs_booking_ref])', $tpl);
+        self::assertStringContainsString('<p class="travel-booking-head__context">{$bs_tbs.name|escape:html}', $tpl);
+        self::assertStringContainsString('{$bs_tbs.check_in|escape:html} &ndash; {$bs_tbs.check_out|default:""|escape:html}', $tpl);
+
+        $root = self::root();
+        foreach ([
+            'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/views/novoton_booking/booking_form.tpl' => 'bs_booking_ref=$booking_id|default:""',
+            'addon-novoton-holidays/design/themes/nova_theme/templates/addons/novoton_holidays/views/novoton_booking/booking_form.tpl' => 'bs_booking_ref=$booking_id|default:""',
+            'addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/booking_form.tpl' => 'bs_booking_ref=$edit_booking_id|default:""',
+        ] as $form => $ref) {
+            self::assertStringContainsString($ref, (string) file_get_contents($root . '/' . $form), $form);
+        }
+    }
 }

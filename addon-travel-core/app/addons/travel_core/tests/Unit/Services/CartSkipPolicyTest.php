@@ -123,25 +123,50 @@ final class CartSkipPolicyTest extends TestCase
         self::assertStringContainsString($needle, self::src($file));
     }
 
-    /** @return iterable<string, array{string, string, int}> */
+    /**
+     * The hotel forms' button lives in the shared actions row
+     * (booking_form_actions.tpl, which the form hands its add-on): there
+     * the form itself keeps one call, its mobile bar's.
+     *
+     * @return iterable<string, array{string, string, int, string}>
+     */
     public static function buttons(): iterable
     {
-        yield 'novoton responsive' => ['addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/views/novoton_booking/booking_form.tpl', 'fn_travel_core_booking_cta_label("novoton_holidays")', 2];
-        yield 'novoton nova_theme' => ['addon-novoton-holidays/design/themes/nova_theme/templates/addons/novoton_holidays/views/novoton_booking/booking_form.tpl', 'fn_travel_core_booking_cta_label("novoton_holidays")', 2];
-        yield 'sphinx hotel' => ['addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/booking_form.tpl', 'fn_travel_core_booking_cta_label("sphinx_holidays")', 2];
-        yield 'sphinx circuit' => ['addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/circuit_booking_form.tpl', 'fn_travel_core_booking_cta_label("sphinx_holidays", "sphinx_holidays.add_to_cart_btn")', 1];
-        yield 'sphinx package' => ['addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/package_booking_form.tpl', 'fn_travel_core_booking_cta_label("sphinx_holidays", "sphinx_holidays.add_to_cart_btn")', 1];
-        yield 'eurosite' => ['addon-eurosite/design/themes/responsive/templates/addons/eurosite/views/eurosite_booking/booking_form.tpl', 'fn_travel_core_booking_cta_label("eurosite")', 2];
+        yield 'novoton responsive' => ['addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/views/novoton_booking/booking_form.tpl', 'fn_travel_core_booking_cta_label("novoton_holidays")', 1, 'novoton_holidays'];
+        yield 'novoton nova_theme' => ['addon-novoton-holidays/design/themes/nova_theme/templates/addons/novoton_holidays/views/novoton_booking/booking_form.tpl', 'fn_travel_core_booking_cta_label("novoton_holidays")', 1, 'novoton_holidays'];
+        yield 'sphinx hotel' => ['addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/booking_form.tpl', 'fn_travel_core_booking_cta_label("sphinx_holidays")', 1, 'sphinx_holidays'];
+        yield 'sphinx circuit' => ['addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/circuit_booking_form.tpl', 'fn_travel_core_booking_cta_label("sphinx_holidays", "sphinx_holidays.add_to_cart_btn")', 1, ''];
+        yield 'sphinx package' => ['addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/package_booking_form.tpl', 'fn_travel_core_booking_cta_label("sphinx_holidays", "sphinx_holidays.add_to_cart_btn")', 1, ''];
+        yield 'eurosite' => ['addon-eurosite/design/themes/responsive/templates/addons/eurosite/views/eurosite_booking/booking_form.tpl', 'fn_travel_core_booking_cta_label("eurosite")', 1, 'eurosite'];
     }
 
     /** The button and the mobile bar both follow the setting (edit mode keeps its own label). */
     #[\PHPUnit\Framework\Attributes\DataProvider('buttons')]
-    public function testEveryBookingButtonTakesItsLabelFromThePolicy(string $file, string $needle, int $times): void
+    public function testEveryBookingButtonTakesItsLabelFromThePolicy(string $file, string $needle, int $times, string $actionsAddon): void
     {
         $tpl = self::src($file);
 
         self::assertSame($times, substr_count($tpl, $needle), $file);
         self::assertStringNotContainsString('__("travel_core.continue_to_checkout")', $tpl);
+        if ($actionsAddon !== '') {
+            self::assertStringContainsString('{include file="addons/travel_core/components/booking_form_actions.tpl"', $tpl, $file);
+            self::assertStringContainsString('fa_addon="' . $actionsAddon . '"', $tpl, $file);
+        }
+    }
+
+    /**
+     * The shared actions row asks the policy too: the new booking's button
+     * label, and where an edit's "Back to booking details" and "Cancel"
+     * return, the very place a saved edit lands.
+     */
+    public function testTheSharedActionsRowAsksThePolicy(): void
+    {
+        $tpl = self::src('addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/booking_form_actions.tpl');
+
+        self::assertSame(1, substr_count($tpl, '{fn_travel_core_booking_cta_label($fa_addon)}'));
+        self::assertStringContainsString('{$fa_return = fn_travel_core_after_add_to_cart_url($fa_addon)}', $tpl);
+        self::assertSame(2, substr_count($tpl, 'href="{$fa_return|fn_url}"'), 'back link and Cancel');
+        self::assertStringContainsString('{__("travel_core.save_changes")}', $tpl);
     }
 
     /** Error redirects stay on the cart: that is where the customer sees what went wrong. */

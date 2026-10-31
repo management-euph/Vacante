@@ -20,7 +20,7 @@
 
 <div class="travel-booking-page sphinx-booking-form">
 
-    {include file="addons/travel_core/components/booking_steps.tpl" bs_edit_mode=$is_edit_mode|default:false}
+    {include file="addons/travel_core/components/booking_steps.tpl" bs_edit_mode=$is_edit_mode|default:false bs_booking_ref=$edit_booking_id|default:""}
 
     {* 2-column layout (travel_core booking-pages.css): the shared summary
        sidebar on the left, the guest form on the right. The sidebar renders
@@ -80,13 +80,10 @@
         {* Submit *}
         {* Right-aligned with the guest cards, taller, more air around it —
            the same CTA row the other providers' booking pages use. *}
-        <div class="travel-form-actions travel-form-actions--cta sphinx-booking-submit">
-            <span></span>
-            <button type="submit" class="travel-btn--primary sphinx-offer-book-btn">
-                {if $is_edit_mode}{__("travel_core.save_changes")|default:"Save changes"}{else}{fn_travel_core_booking_cta_label("sphinx_holidays")} &rarr;{/if}
-            </button>
-        </div>
-        {if !$is_edit_mode}<p class="travel-cta-note">{__("travel_core.cta_note")}</p>{/if}
+        {include file="addons/travel_core/components/booking_form_actions.tpl"
+            fa_addon="sphinx_holidays"
+            fa_edit_mode=$is_edit_mode|default:false
+            fa_button_class="sphinx-offer-book-btn"}
 
         {* "What are my booking conditions?" modal (shared; its link sits in
            the sidebar's cancellation & payment card). Sphinx knows its terms
