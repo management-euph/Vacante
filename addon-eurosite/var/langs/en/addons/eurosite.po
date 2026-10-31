@@ -1287,3 +1287,91 @@ msgstr "[n] sold {city is|cities are} no longer in the Eurosite catalog."
 msgctxt "Languages::eurosite.dest_alert_outside"
 msgid "[n] live {product is|products are} outside the destination whitelist."
 msgstr "[n] live {product is|products are} outside the destination whitelist."
+
+msgctxt "Languages::eurosite.room_type_ap"
+msgid "Apartment"
+msgstr "Apartment"
+
+msgctxt "Languages::eurosite.room_type_d2x"
+msgid "Double room with 2 children"
+msgstr "Double room with 2 children"
+
+msgctxt "Languages::eurosite.room_type_d3c"
+msgid "Double room, 3 adults, 1 child under 2 years"
+msgstr "Double room, 3 adults, 1 child under 2 years"
+
+msgctxt "Languages::eurosite.room_type_d3x"
+msgid "Double room, 3 adults, 1 child over 2 years"
+msgstr "Double room, 3 adults, 1 child over 2 years"
+
+msgctxt "Languages::eurosite.room_type_db"
+msgid "Double room"
+msgstr "Double room"
+
+msgctxt "Languages::eurosite.room_type_db3"
+msgid "Double room, 3 adults"
+msgstr "Double room, 3 adults"
+
+msgctxt "Languages::eurosite.room_type_dbc"
+msgid "Double room with child under 2 years"
+msgstr "Double room with child under 2 years"
+
+msgctxt "Languages::eurosite.room_type_dbx"
+msgid "Double room with child over 2 years"
+msgstr "Double room with child over 2 years"
+
+msgctxt "Languages::eurosite.room_type_q"
+msgid "Quad room"
+msgstr "Quad room"
+
+msgctxt "Languages::eurosite.room_type_s2x"
+msgid "Single room used as double, with 2 children"
+msgstr "Single room used as double, with 2 children"
+
+msgctxt "Languages::eurosite.room_type_sb"
+msgid "Single room"
+msgstr "Single room"
+
+msgctxt "Languages::eurosite.room_type_sbc"
+msgid "Single room with child under 2 years"
+msgstr "Single room with child under 2 years"
+
+msgctxt "Languages::eurosite.room_type_sd"
+msgid "Studio"
+msgstr "Studio"
+
+msgctxt "Languages::eurosite.room_type_tb"
+msgid "Twin room (separate beds)"
+msgstr "Twin room (separate beds)"
+
+msgctxt "Languages::eurosite.room_type_tbc"
+msgid "Twin room with child under 2 years"
+msgstr "Twin room with child under 2 years"
+
+msgctxt "Languages::eurosite.room_type_tbx"
+msgid "Twin room with child over 2 years"
+msgstr "Twin room with child over 2 years"
+
+msgctxt "Languages::eurosite.room_type_tr"
+msgid "Triple room"
+msgstr "Triple room"
+
+msgctxt "Languages::eurosite.room_type_trc"
+msgid "Triple room with child under 2 years"
+msgstr "Triple room with child under 2 years"
+
+msgctxt "Languages::eurosite.room_type_ts"
+msgid "Twin room for sole use"
+msgstr "Twin room for sole use"
+
+msgctxt "Languages::eurosite.room_type_tsc"
+msgid "Twin room for sole use, with child under 2 years"
+msgstr "Twin room for sole use, with child under 2 years"
+
+msgctxt "Languages::eurosite.room_type_tsx"
+msgid "Twin room for sole use, with child over 2 years"
+msgstr "Twin room for sole use, with child over 2 years"
+
+msgctxt "Languages::eurosite.room_type_vl"
+msgid "Villa"
+msgstr "Villa"

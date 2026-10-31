@@ -107,7 +107,7 @@ and the admin form `views/payments/components/cc_processors/netopia_payments.tpl
 It ships responsive-theme templates only; on a nova_theme store they are linked
 into nova_theme too.
 
-1. Link it (`update.ps1` does it; by hand, run the repo copy of the link script):
+1. Link it (`update.cmd` does it; by hand, run the repo copy of the link script):
    ```bash
    docker compose exec app bash /repo/docker/fullstore/link-addons.sh
    ```
@@ -129,7 +129,7 @@ CS-Cart **4.21.2**, and it is not installed automatically.
 1. Get the code and link it (PowerShell, from `docker\fullstore`; the branch
    until it is merged, then `main`):
    ```powershell
-   .\update.ps1 -Branch claude/laughing-lovelace-2jb32g
+   .\update.cmd -Branch claude/laughing-lovelace-2jb32g
    ```
 2. Admin → **Add-ons** → **Manage add-ons** → *Profile types for customers and
    vendors* (it is under the not-installed add-ons) → **Install**.
@@ -151,7 +151,7 @@ nova_theme copies of its storefront templates (kept identical by `composer mirro
 because the block manager offers a block type only where its templates are in the
 store's theme. It needs CS-Cart **4.21.2** and is not installed automatically.
 
-1. Link it: `.\update.ps1` (or `docker compose exec app bash /repo/docker/fullstore/link-addons.sh`).
+1. Link it: `.\update.cmd` (or `docker compose exec app bash /repo/docker/fullstore/link-addons.sh`).
 2. Admin → **Add-ons** → **Manage add-ons** → *Pages in blocks* → **Install**.
 3. Admin → **Design → Layouts** → a grid → **Add block** → **Create new block** →
    *Page content*: pick the pages on the Content tab and the template (one under
@@ -162,15 +162,16 @@ store's theme. It needs CS-Cart **4.21.2** and is not installed automatically.
 **One command for the usual update** (PowerShell, from `docker\fullstore`):
 
 ```powershell
-.\update.ps1                  # pull the branch you are on
-.\update.ps1 -Branch main     # or switch first (any branch, e.g. a PR's)
+.\update.cmd                  # pull the branch you are on
+.\update.cmd -Branch main     # or switch first (any branch, e.g. a PR's)
 ```
 
 It pulls, re-links the addons (new folders, and per-file links of deleted files on
 HP Sure Click checkouts) and clears CS-Cart's cache; then open any admin page once and
 hard-refresh the storefront. No `rsync --delete` here: the store links the repo's folders,
-so a file deleted in git is gone from the store too. If Windows refuses to run scripts,
-use `powershell -ExecutionPolicy Bypass -File .\update.ps1`.
+so a file deleted in git is gone from the store too. `update.cmd` runs `update.ps1` past
+Windows' default script policy ("running scripts is disabled on this system"), with the same
+arguments; where scripts are allowed, `.\update.ps1` works the same.
 
 After a `git pull`, what you have to run depends on **which layer** you changed — most
 addon changes need nothing but a browser refresh, because addon source is symlinked live
@@ -185,7 +186,7 @@ from your repo (`/repo`) and opcache re-checks the file every request.
 | A new Travel Core table, column or setting (e.g. the hotel availability records) | load any **admin page** once: Travel Core adds them itself. **Don't re-install Travel Core for this**: uninstalling drops its tables, `travel_bookings` and the availability records included |
 | A new **Novoton** DB table, or an `addon.xml` scheme change | **re-install** the addon (Admin → Add-ons, or `install-addons.php` once it's inactive): this drops the add-on's tables and their data |
 | DB column covered by an addon's auto-heal map | load any **admin page** once (it runs the `ALTER TABLE`) |
-| `link-addons.sh` (e.g. a new addon in its map) | **`.\update.ps1`** or **`docker compose restart app`**: the container runs the working tree's copy (an image built before that change runs its own copy: rebuild it once) |
+| `link-addons.sh` (e.g. a new addon in its map) | **`.\update.cmd`** or **`docker compose restart app`**: the container runs the working tree's copy (an image built before that change runs its own copy: rebuild it once) |
 | `entrypoint.sh` / `install-addons.php` / `php-dev.ini` / `apache-cscart.conf` / `Dockerfile` | **`docker compose up -d --build`** — these are baked into the image |
 | A new `dev/` probe **file** (novoton / sphinx / sphinx_api_dev) | live (bind mount); a brand-new file → **`docker compose up -d`** |
 | Provider **data** already stored (e.g. hotel coordinates from an earlier sync) | **re-run the provider sync** — see *Stale coordinates* under Troubleshooting |

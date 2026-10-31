@@ -37,7 +37,7 @@ final class LanguageKeysParityTest extends TestCase
         $src = (string) file_get_contents($path);
         $out = [];
         preg_match_all(
-            '/msgctxt "Languages::(eurosite\.[a-z_]+)"\nmsgid "(?:[^"\\\\]|\\\\.)*"\nmsgstr "((?:[^"\\\\]|\\\\.)*)"/',
+            '/msgctxt "Languages::(eurosite\.[a-z0-9_]+)"\nmsgid "(?:[^"\\\\]|\\\\.)*"\nmsgstr "((?:[^"\\\\]|\\\\.)*)"/',
             $src,
             $matches,
             PREG_SET_ORDER,

@@ -19,6 +19,11 @@
 
 * text=auto eol=lf
 
+# Windows batch files are the one exception: cmd.exe misreads labels and
+# long lines in LF-only .cmd/.bat files.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
 # Binaries must never be touched.
 *.png  binary
 *.jpg  binary

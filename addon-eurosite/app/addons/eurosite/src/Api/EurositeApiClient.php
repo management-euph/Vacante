@@ -10,6 +10,7 @@ use Tygh\Addons\Eurosite\EurositeXmlBuilder;
 use Tygh\Addons\Eurosite\EurositeXmlParser;
 use Tygh\Addons\Eurosite\Exception\EurositeApiException;
 use Tygh\Addons\Eurosite\Services\FacilityTextParser;
+use Tygh\Addons\Eurosite\Services\RoomTypeNames;
 
 /**
  * Eurosite API facade — the MVP surface of the "individual accommodations"
@@ -765,11 +766,16 @@ final class EurositeApiClient
     private function mapOffer(?\SimpleXMLElement $product, \SimpleXMLElement $offer): HotelOffer
     {
         $rooms = [];
+        // Every page shows a room by 'name': in the store's language
+        // (RoomTypeNames); Eurosite's own words stay in 'supplier_name'.
+        $lang = defined('CART_LANGUAGE') ? self::str(constant('CART_LANGUAGE')) : '';
         foreach ($offer->BookingRoomTypes->Room ?? [] as $r) {
+            $gcode = trim((string) ($r['GCode'] ?? ''));
             $rooms[] = [
                 'code' => trim((string) ($r['Code'] ?? '')),
-                'gcode' => trim((string) ($r['GCode'] ?? '')),
-                'name' => trim((string) $r),
+                'gcode' => $gcode,
+                'name' => RoomTypeNames::label($gcode, trim((string) $r), $lang),
+                'supplier_name' => trim((string) $r),
                 'quantity' => trim((string) ($r['Quantity'] ?? '1')),
                 'price' => trim((string) ($r['ServicePrice'] ?? '')),
             ];
