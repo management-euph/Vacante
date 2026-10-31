@@ -87,6 +87,13 @@ touching devx.
   docker compose exec app bash /repo/docker/fullstore/export-theme.sh novoton 2027-07-10 2027-07-17
   docker compose exec app bash /repo/docker/fullstore/export-theme.sh 123 2026-11-02 2026-11-08
   ```
+- **No booking card on the cart or checkout page**: prints the storefront's
+  theme, the "Skip the cart page for" setting, and which of the store's
+  templates call the hooks the card hangs on (paths and hook names only, safe
+  to paste into a session):
+  ```bash
+  docker compose exec app bash /repo/docker/fullstore/diagnose-checkout.sh
+  ```
 - **Logs**: `docker compose logs -f app`
 - **Provider API probes** (the `dev/` folder — `dev/novoton`, `dev/sphinx` and the
   `dev/sphinx_api_dev` sandbox) are **bind-mounted** straight into the web root as
