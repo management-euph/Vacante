@@ -2742,7 +2742,7 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'ro' => 'Detalii tehnice',
     ],
     'travel_core.bv_technical_hint' => [
-        'en' => 'Every field the provider keeps for this booking, for troubleshooting.',
-        'ro' => 'Toate câmpurile pe care furnizorul le păstrează pentru această rezervare, pentru depanare.',
+        'en' => 'Every field the provider keeps for this booking, and what was sent to the supplier and what came back, for troubleshooting.',
+        'ro' => 'Toate câmpurile pe care furnizorul le păstrează pentru această rezervare, ce i s-a trimis furnizorului și ce a răspuns, pentru depanare.',
     ],
 ];

@@ -7,6 +7,7 @@ namespace Tygh\Addons\NovotonHolidays\Tests\Unit\Services;
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Services\BookingAdminProvider;
+use Tygh\Addons\NovotonHolidays\Services\ReservationExchange;
 use Tygh\Addons\NovotonHolidays\Services\SupplierRoomLabels;
 
 /**
@@ -92,7 +93,7 @@ final class BookingAdminProviderTest extends TestCase
         self::assertSame(['provider_action' => 'request_alternatives'], $actions[0]['extra_params']);
     }
 
-    public function testDisplayDataNamesEachRoomAsNovotonDoes(): void
+    public function testThePageNamesEachRoomAsNovotonDoesAndTheListNeverAsks(): void
     {
         $repo = $this->createMock(BookingRepositoryInterface::class);
         $repo->method('findById')->willReturn([
@@ -100,11 +101,27 @@ final class BookingAdminProviderTest extends TestCase
             'hotel_id' => '4402',
             'room_id' => 'QUAT 2+2 FRENCH BALCONY',
             'rooms_data' => '[{"room_id":"QUAT 2+2 FRENCH BALCONY"}]',
+            'api_request' => '{"hotel_id":"4402","room_id":"QUAT 2+2 FRENCH BALCONY"}',
         ]);
-        $provider = new BookingAdminProvider($repo, new SupplierRoomLabels(
-            static fn (): array => ['QUAT 2+2 FRENCH BALCONY' => 'QUATRIPLE'],
-        ));
+        $reads = 0;
+        $rooms = new SupplierRoomLabels(static function () use (&$reads): array {
+            $reads++;
 
-        self::assertSame(['QUAT 2+2 FRENCH BALCONY (QUATRIPLE)'], $provider->getDisplayData('1')['supplier_rooms']);
+            return ['QUAT 2+2 FRENCH BALCONY' => 'QUATRIPLE'];
+        });
+        $provider = new BookingAdminProvider($repo, $rooms, new ReservationExchange(static fn (): string => '<hotel_res_RQ/>', $rooms));
+
+        self::assertArrayNotHasKey('supplier_rooms', $provider->getDisplayData('1'));
+        self::assertSame(0, $reads, 'the bookings list reads no hotel for its rows');
+
+        $details = $provider->getPageDetails('1');
+        self::assertSame(['QUAT 2+2 FRENCH BALCONY (QUATRIPLE)'], $details['supplier_rooms']);
+        self::assertContains('<hotel_res_RQ/>', array_column($details['technical'] ?? [], 'value'));
+        self::assertSame(1, $reads, 'the page reads the hotel once');
+    }
+
+    public function testAMissingBookingHasNoPageDetails(): void
+    {
+        self::assertSame([], $this->providerReturning([])->getPageDetails('99'));
     }
 }

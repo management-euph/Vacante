@@ -3563,5 +3563,5 @@ msgid "Technical details"
 msgstr "Technical details"
 
 msgctxt "Languages::travel_core.bv_technical_hint"
-msgid "Every field the provider keeps for this booking, for troubleshooting."
-msgstr "Every field the provider keeps for this booking, for troubleshooting."
+msgid "Every field the provider keeps for this booking, and what was sent to the supplier and what came back, for troubleshooting."
+msgstr "Every field the provider keeps for this booking, and what was sent to the supplier and what came back, for troubleshooting."

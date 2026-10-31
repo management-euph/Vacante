@@ -3563,5 +3563,5 @@ msgid "Technical details"
 msgstr "Detalii tehnice"
 
 msgctxt "Languages::travel_core.bv_technical_hint"
-msgid "Every field the provider keeps for this booking, for troubleshooting."
-msgstr "Toate câmpurile pe care furnizorul le păstrează pentru această rezervare, pentru depanare."
+msgid "Every field the provider keeps for this booking, and what was sent to the supplier and what came back, for troubleshooting."
+msgstr "Toate câmpurile pe care furnizorul le păstrează pentru această rezervare, ce i s-a trimis furnizorului și ce a răspuns, pentru depanare."
