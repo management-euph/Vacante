@@ -30,10 +30,12 @@ grumphp:
             use_grumphp_paths: false
 
         # 4. Theme-mirror drift check — a commit must not ship un-mirrored
-        #    responsive/nova_theme copies (fix with `composer mirror`).
+        #    responsive/nova_theme copies (fix with `composer mirror`) — and
+        #    every template must compile with Smarty 5 (`composer templates`).
         shell:
             scripts:
                 - ['-c', 'php scripts/mirror-themes.php --check']
+                - ['-c', 'php scripts/compile-templates.php']
 
         # 5. Composer JSON validation
         composer:

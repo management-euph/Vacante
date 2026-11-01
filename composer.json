@@ -12,6 +12,7 @@
         "phpstan/phpstan": "^2.0",
         "phpstan/phpstan-strict-rules": "^2.0",
         "rector/rector": "^2.0",
+        "smarty/smarty": "^5.4",
         "spaze/phpstan-disallowed-calls": "^4.0"
     },
     "config": {
@@ -31,6 +32,8 @@
         "hooks:uninstall": "grumphp git:deinit",
 
         "mirror": "@php scripts/mirror-themes.php",
+
+        "templates": "@php scripts/compile-templates.php",
 
         "package": "@php scripts/package-addons.php",
 
@@ -70,6 +73,7 @@
 
         "check": [
             "@stan",
+            "@templates",
             "@fix:dry",
             "@rector:dry",
             "@test"
@@ -93,6 +97,7 @@
         "test:euph-pib":    "PHPUnit tests for the euph_pages_in_blocks addon (templates rendered by Smarty 5)",
         "test":             "Run PHPUnit across all addon suites",
         "test:integration:novoton": "Run novoton DB-backed integration tests (requires docker-compose.test.yml up)",
-        "check":         "Run PHPStan + CS Fixer dry-run + Rector dry-run + PHPUnit"
+        "templates":     "Compile every add-on template with Smarty 5, as the store does (compile-time fatals fail)",
+        "check":         "Run PHPStan + Smarty 5 template compile + CS Fixer dry-run + Rector dry-run + PHPUnit"
     }
 }
