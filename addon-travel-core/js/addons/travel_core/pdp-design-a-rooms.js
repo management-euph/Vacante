@@ -54,7 +54,7 @@
 
     /** A lang var's [placeholders] filled in; unknown ones stay. */
     function fill(template, values) {
-        return String(template || '').replace(/\[([a-z_]+)\]/g, function (match, key) {
+        return String(template || '').replace(/\[([a-z_]+)]/g, function (match, key) {
             return Object.prototype.hasOwnProperty.call(values, key) ? String(values[key]) : match;
         });
     }
