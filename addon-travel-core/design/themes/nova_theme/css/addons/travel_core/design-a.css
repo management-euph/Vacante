@@ -1115,13 +1115,6 @@
     margin-top: 1px;
     color: #4b5563;
 }
-.travel-pdpa .travel-pdpa-payl--free {
-    font-weight: 600;
-    color: #0f7b33;
-}
-.travel-pdpa .travel-pdpa-payl--free > .travel-pdpa-ico {
-    color: inherit;
-}
 
 /* What all the options share, said once right under them, set smaller
    than the price: cancellation 13 px, payment and the terms link 12 px. */
@@ -1141,10 +1134,6 @@
 .travel-pdpa .travel-pdpa-rterms .travel-pdpa-payl {
     font-size: 12px;
     color: #4b5563;
-}
-.travel-pdpa .travel-pdpa-rterms .travel-pdpa-payl--free {
-    font-size: 13px;
-    color: #0f7b33;
 }
 .travel-pdpa .travel-pdpa-linkbtn {
     display: inline-flex;

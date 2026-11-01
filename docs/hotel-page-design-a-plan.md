@@ -290,9 +290,8 @@ an internal code.
     as the search offers (`ProviderRoomLimit`, 12): it refused more than 5.
   - Suites: travel_core 1024, Novoton 1166 PHPUnit tests, 313 vitest tests.
   - **Before phase 5's pull request**: the split booking the owner chose —
-    the instantly confirmed rooms booked and paid now, the on-request rooms
-    requested apart. Today the page posts every room as one booking, so the
-    bar's "acum … · restul după confirmare" is not yet true. Then per-room
+    the instantly confirmed rooms booked now, the on-request rooms
+    requested apart (done 1 Nov 2026, below). Then per-room
     mode ("Aleg fiecare cameră separat"); Eurosite's whole-group offer
     (13c.3); the choices kept when the page reloads. (Each room's entry
     carries its board's supplement, `ext_board_id`, since #113 merged.)
@@ -322,13 +321,20 @@ an internal code.
   at once (OK) and asks the hotel only for the others (ASK, followed by
   `AskBookingPoller`, alternatives on RQ). One room, or a quota that
   cannot be read: one reservation, as before.
-  - **Not yet**: what the guest pays. Checkout still charges every room,
-    so the bar's "acum … · restul după confirmare" is not true yet.
-    Proposed: checkout charges the rooms confirmed at once; the rooms on
-    request become a balance (`BalanceService`, the deposit's "Pay
-    balance" link and email) that opens when the hotel confirms and is
-    cancelled when it refuses — the owner's call.
-- Next: the split booking's payment (above); Novoton rows through `RoomOfferRows`;
+  - **What the guest pays (the owner's call, 1 Nov 2026)**: checkout
+    charges every room in full, those on request too, a single room on
+    request as well. By card the guest pays when booking and the rooms the
+    hotel does not confirm are refunded; by bank transfer (which takes
+    days) the guest is told when the hotel confirms and pays then, or not
+    if it refuses. The texts say so: the payment line of a rate on request
+    ("Cu cardul acum (returnat dacă nu se confirmă) sau prin transfer,
+    după confirmare"), the steps of a request, and the bar's total with
+    the share on request ("din care … la cerere"), no longer "Nu plătești
+    nimic până confirmă hotelul" or "acum … · restul după confirmare". The
+    rooms on request have their own booking record (G2), whose status and
+    price say what to refund or collect. The store does not yet email the
+    guest when the hotel confirms (only alternatives when it refuses).
+- Next: Novoton rows through `RoomOfferRows`;
   the title row's after-search state ("10–17 iul. · de la 1.485 €", "Vezi
   camerele") and the compact summary's price (the section carries
   `data-cheapest`); the room facts the board shows beyond capacity (area,

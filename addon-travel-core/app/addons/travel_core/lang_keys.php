@@ -2528,8 +2528,8 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'ro' => 'Avans [percent]% acum, restul până la [date]',
     ],
     'travel_core.pdpa_r_pay_on_request' => [
-        'en' => 'You pay nothing until the hotel confirms',
-        'ro' => 'Nu plătești nimic până confirmă hotelul',
+        'en' => 'By card now (refunded if not confirmed) or by bank transfer once confirmed',
+        'ro' => 'Cu cardul acum (returnat dacă nu se confirmă) sau prin transfer, după confirmare',
     ],
     'travel_core.pdpa_r_terms' => [
         'en' => 'Payment and cancellation terms',
@@ -2708,12 +2708,12 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'ro' => 'Hotelul confirmă disponibilitatea în max. 48 h.',
     ],
     'travel_core.pdpa_r_request_step2_lead' => [
-        'en' => 'You pay nothing',
-        'ro' => 'Nu plătești nimic',
+        'en' => 'You choose how to pay:',
+        'ro' => 'Alegi cum plătești:',
     ],
     'travel_core.pdpa_r_request_step2' => [
-        'en' => 'until the hotel confirms.',
-        'ro' => 'până confirmă hotelul.',
+        'en' => 'by card when you book, refunded if the hotel doesn\'t confirm, or by bank transfer once we tell you it has confirmed.',
+        'ro' => 'cu cardul la rezervare, cu banii înapoi dacă hotelul nu confirmă, sau prin transfer bancar după ce îți spunem că a confirmat.',
     ],
     'travel_core.pdpa_r_request_step3_lead' => [
         'en' => 'If the hotel doesn\'t confirm,',
@@ -3025,8 +3025,8 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'ro' => 'Hotelul răspunde în max. 48 h.',
     ],
     'travel_core.pdpa_m_request_step2' => [
-        'en' => 'You pay nothing for this room until the hotel confirms.',
-        'ro' => 'Nu plătești nimic pentru camera aceasta până confirmă hotelul.',
+        'en' => 'By card you pay for it when you book and get the money back if it is not confirmed; by bank transfer you pay once it is confirmed.',
+        'ro' => 'Cu cardul o plătești la rezervare și îți returnăm banii dacă nu se confirmă; prin transfer bancar o plătești după confirmare.',
     ],
     'travel_core.pdpa_m_request_step3_lead' => [
         'en' => 'If the hotel does not confirm it,',
@@ -3117,12 +3117,12 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'ro' => 'Rezervă [booked] · cere [requested]',
     ],
     'travel_core.pdpa_m_book_mixed_aria' => [
-        'en' => 'Book [booked] now and request [requested] from the hotel; total [total], [now] payable now',
-        'ro' => 'Rezervă acum [booked] și cere la hotel [requested]; total [total], de plătit acum [now]',
+        'en' => 'Book [booked] now and request [requested] from the hotel; total [total]',
+        'ro' => 'Rezervă acum [booked] și cere la hotel [requested]; total [total]',
     ],
-    'travel_core.pdpa_m_pay_now' => [
-        'en' => 'now [amount] · the rest once confirmed',
-        'ro' => 'acum [amount] · restul după confirmare',
+    'travel_core.pdpa_m_request_part' => [
+        'en' => 'of which [amount] on request',
+        'ro' => 'din care [amount] la cerere',
     ],
     'travel_core.pdpa_m_reply_48h_for' => [
         'en' => 'Reply within 48 h for [rooms]',
@@ -3141,8 +3141,8 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'ro' => 'Camerele la cerere așteaptă hotelul:',
     ],
     'travel_core.pdpa_m_bar_step2' => [
-        'en' => 'it replies within 48 h; you pay nothing for them until it confirms.',
-        'ro' => 'răspunde în max. 48 h; nu plătești nimic pentru ele până confirmă.',
+        'en' => 'it replies within 48 h. By card you pay for them now and get the money back if they are not confirmed; by bank transfer, once they are.',
+        'ro' => 'răspunde în max. 48 h. Cu cardul le plătești acum și îți returnăm banii dacă nu se confirmă; prin transfer bancar, după confirmare.',
     ],
     'travel_core.pdpa_m_bar_step3_lead' => [
         'en' => 'If the hotel does not confirm them,',

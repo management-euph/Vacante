@@ -69,7 +69,7 @@
         data-t-book-aria="{__("travel_core.pdpa_m_book_aria")|escape:html}"
         data-t-book-mixed="{__("travel_core.pdpa_m_book_mixed")|escape:html}"
         data-t-book-mixed-aria="{__("travel_core.pdpa_m_book_mixed_aria")|escape:html}"
-        data-t-pay-now="{__("travel_core.pdpa_m_pay_now")|escape:html}"
+        data-t-request-part="{__("travel_core.pdpa_m_request_part")|escape:html}"
         data-t-reply-for="{__("travel_core.pdpa_m_reply_48h_for")|escape:html}">
         <div class="travel-pdpa-rhead">
             <h2 class="travel-pdpa-rhead__title" id="travel-pdpa-rooms-title">{__("travel_core.pdpa_r_title")}</h2>
