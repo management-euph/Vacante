@@ -4458,7 +4458,7 @@ msgstr "Rezervă toate camerele ([count])"
 
 msgctxt "Languages::novoton_holidays.mr_same_guests"
 msgid "Apply to the other rooms with the same guests ([count])"
-msgstr "Aplică la celelalte camere cu aceiași oaspeți ([count])"
+msgstr "Aplică la celelalte camere cu aceiași turiști ([count])"
 
 msgctxt "Languages::novoton_holidays.mr_next_room"
 msgid "Next room"
@@ -4474,7 +4474,7 @@ msgstr "Economisești [amount]"
 
 msgctxt "Languages::novoton_holidays.mr_guest_details_next"
 msgid "You will add the guest details on the next step."
-msgstr "Datele oaspeților le completezi la pasul următor."
+msgstr "Datele turiștilor le completezi la pasul următor."
 
 msgctxt "Languages::novoton_holidays.mr_room_unnamed"
 msgid "Room"
@@ -4518,7 +4518,7 @@ msgstr "Prețul unei rezervări de hotel din coșul dvs. s-a modificat, dar nu a
 
 msgctxt "Languages::novoton_holidays.guests_do_not_match_priced_stay"
 msgid "These guest details do not match the stay that was priced (for example, a date of birth gives a child a different age). Please check the details, or search for the stay again with the correct ages and book it again."
-msgstr "Datele oaspeților nu corespund sejurului pentru care a fost calculat prețul (de exemplu, data nașterii indică o altă vârstă pentru un copil). Vă rugăm să verificați datele sau să căutați din nou sejurul cu vârstele corecte și să îl rezervați."
+msgstr "Datele turiștilor nu corespund sejurului pentru care a fost calculat prețul (de exemplu, data nașterii indică o altă vârstă pentru un copil). Vă rugăm să verificați datele sau să căutați din nou sejurul cu vârstele corecte și să îl rezervați."
 
 msgctxt "Languages::novoton_holidays.addon_name"
 msgid "Novoton Holidays"
@@ -4534,7 +4534,7 @@ msgstr "A apărut o eroare la căutare. Vă rugăm să încercați mai târziu."
 
 msgctxt "Languages::novoton_holidays.booking_update_failed"
 msgid "Could not save the guest details. Please try again."
-msgstr "Datele oaspeților nu au putut fi salvate. Vă rugăm să încercați din nou."
+msgstr "Datele turiștilor nu au putut fi salvate. Vă rugăm să încercați din nou."
 
 msgctxt "Languages::novoton_holidays.missing_required_fields"
 msgid "Please fill in all required fields."

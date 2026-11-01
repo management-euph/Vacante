@@ -1068,7 +1068,7 @@ return [
     ],
     'novoton_holidays.mr_same_guests' => [
         'en' => 'Apply to the other rooms with the same guests ([count])',
-        'ro' => 'Aplică la celelalte camere cu aceiași oaspeți ([count])',
+        'ro' => 'Aplică la celelalte camere cu aceiași turiști ([count])',
     ],
     'novoton_holidays.mr_next_room' => [
         'en' => 'Next room',
@@ -1084,7 +1084,7 @@ return [
     ],
     'novoton_holidays.mr_guest_details_next' => [
         'en' => 'You will add the guest details on the next step.',
-        'ro' => 'Datele oaspeților le completezi la pasul următor.',
+        'ro' => 'Datele turiștilor le completezi la pasul următor.',
     ],
     'novoton_holidays.mr_room_unnamed' => [
         'en' => 'Room',
@@ -1156,7 +1156,7 @@ return [
     ],
     'novoton_holidays.guests_do_not_match_priced_stay' => [
         'en' => 'These guest details do not match the stay that was priced (for example, a date of birth gives a child a different age). Please check the details, or search for the stay again with the correct ages and book it again.',
-        'ro' => 'Datele oaspeților nu corespund sejurului pentru care a fost calculat prețul (de exemplu, data nașterii indică o altă vârstă pentru un copil). Vă rugăm să verificați datele sau să căutați din nou sejurul cu vârstele corecte și să îl rezervați.',
+        'ro' => 'Datele turiștilor nu corespund sejurului pentru care a fost calculat prețul (de exemplu, data nașterii indică o altă vârstă pentru un copil). Vă rugăm să verificați datele sau să căutați din nou sejurul cu vârstele corecte și să îl rezervați.',
     ],
     // Labels the code used without ever defining them: the admin menu showed
     // "(_novoton_holidays.addon_name)" and these rendered as raw "_novoton_holidays.*".
@@ -1174,7 +1174,7 @@ return [
     ],
     'novoton_holidays.booking_update_failed' => [
         'en' => 'Could not save the guest details. Please try again.',
-        'ro' => 'Datele oaspeților nu au putut fi salvate. Vă rugăm să încercați din nou.',
+        'ro' => 'Datele turiștilor nu au putut fi salvate. Vă rugăm să încercați din nou.',
     ],
     'novoton_holidays.missing_required_fields' => [
         'en' => 'Please fill in all required fields.',

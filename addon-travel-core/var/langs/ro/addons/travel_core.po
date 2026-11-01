@@ -10,7 +10,7 @@ msgstr "Travel Core"
 
 msgctxt "Addons::description::travel_core"
 msgid "Shared foundation for travel API integrations. Provides feature mapping, booking management, guest entry, search infrastructure, cart/checkout integration, exchange rates, email templates, and admin panel."
-msgstr "Fundație partajată pentru integrările cu API-uri de turism. Oferă mapare caracteristici, gestionare rezervări, introducere oaspeți, infrastructură căutare, integrare coș/comandă, cursuri valutare, șabloane email și panou de administrare. Instalare: 1. Travel Core, 2. Novoton, 3. Sphinx. Dezinstalare: 1. Novoton, 2. Sphinx, 3. Travel Core."
+msgstr "Fundație partajată pentru integrările cu API-uri de turism. Oferă mapare caracteristici, gestionare rezervări, introducere turiști, infrastructură căutare, integrare coș/comandă, cursuri valutare, șabloane email și panou de administrare. Instalare: 1. Travel Core, 2. Novoton, 3. Sphinx. Dezinstalare: 1. Novoton, 2. Sphinx, 3. Travel Core."
 
 msgctxt "SettingsSections::travel_core::general"
 msgid "General Settings"
@@ -344,7 +344,7 @@ msgstr "Masă"
 
 msgctxt "Languages::travel_core.guest_names"
 msgid "Guest Names"
-msgstr "Nume oaspeți"
+msgstr "Nume turiști"
 
 msgctxt "Languages::travel_core.view_booking"
 msgid "View Booking"
@@ -400,7 +400,7 @@ msgstr "Date"
 
 msgctxt "Languages::travel_core.guests"
 msgid "Guests"
-msgstr "Oaspeți"
+msgstr "Turiști"
 
 msgctxt "Languages::travel_core.admin_menu_travel"
 msgid "Travel"
@@ -1164,7 +1164,7 @@ msgstr "Hotel / vilă / apartament"
 
 msgctxt "Languages::travel_core.seo_ph_rating"
 msgid "Guest rating"
-msgstr "Nota oaspeților"
+msgstr "Nota turiștilor"
 
 msgctxt "Languages::travel_core.seo_ph_facilities"
 msgid "Top 3 facilities"
@@ -1528,7 +1528,7 @@ msgstr "Cine se cazează?"
 
 msgctxt "Languages::travel_core.step_guests"
 msgid "Guests"
-msgstr "Oaspeți"
+msgstr "Turiști"
 
 msgctxt "Languages::travel_core.step_payment"
 msgid "Payment"
@@ -1540,7 +1540,7 @@ msgstr "Înapoi la rezultatele căutării"
 
 msgctxt "Languages::travel_core.step_locked_hint"
 msgid "Enter the guest details first"
-msgstr "Completați mai întâi datele oaspeților"
+msgstr "Completați mai întâi datele turiștilor"
 
 msgctxt "Languages::travel_core.step_current"
 msgid "current step"
@@ -3208,7 +3208,7 @@ msgstr "Șterge datele"
 
 msgctxt "Languages::travel_core.change_guests"
 msgid "Change guests"
-msgstr "Schimbă oaspeții"
+msgstr "Schimbă turiștii"
 
 msgctxt "Languages::travel_core.lowest_prices"
 msgid "Lowest prices"
@@ -3628,7 +3628,7 @@ msgstr "Vezi pe site"
 
 msgctxt "Languages::travel_core.bv_guest"
 msgid "Guest"
-msgstr "Oaspete"
+msgstr "Turist"
 
 msgctxt "Languages::travel_core.bv_type"
 msgid "Type"
@@ -3708,7 +3708,7 @@ msgstr "Camerele căutate"
 
 msgctxt "Languages::travel_core.pdpa_m_tabs_groups"
 msgid "Rooms searched, grouped by their guests"
-msgstr "Camerele căutate, grupate după oaspeți"
+msgstr "Camerele căutate, grupate după turiști"
 
 msgctxt "Languages::travel_core.pdpa_m_room"
 msgid "Room [n]"
@@ -4012,4 +4012,4 @@ msgstr "Anulează"
 
 msgctxt "Languages::travel_core.same_surname"
 msgid "Same last name as Adult 1 for every guest"
-msgstr "Același nume de familie ca Adult 1 pentru toți oaspeții"
+msgstr "Același nume de familie ca Adult 1 pentru toți turiștii"

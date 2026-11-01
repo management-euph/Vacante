@@ -457,7 +457,7 @@ return [
     'sphinx_holidays.ph_region' => ['en' => 'Region', 'ro' => 'Regiune'],
     'sphinx_holidays.ph_property_type' => ['en' => 'Hotel / villa / apt', 'ro' => 'Hotel / vilă / apt'],
     'sphinx_holidays.ph_description' => ['en' => 'API description', 'ro' => 'Descriere API'],
-    'sphinx_holidays.ph_rating' => ['en' => 'Guest rating', 'ro' => 'Rating oaspeți'],
+    'sphinx_holidays.ph_rating' => ['en' => 'Guest rating', 'ro' => 'Rating turiști'],
     'sphinx_holidays.ph_facilities' => ['en' => 'Top 3 facilities', 'ro' => 'Top 3 facilități'],
     'sphinx_holidays.ph_boards' => ['en' => 'Meal plans', 'ro' => 'Tipuri masă'],
     'sphinx_holidays.ph_image_url' => ['en' => 'Main image URL', 'ro' => 'URL imagine principală'],

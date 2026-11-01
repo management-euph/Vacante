@@ -264,7 +264,7 @@ return [
     ],
     'travel_core.seo_ph_rating' => [
         'en' => 'Guest rating',
-        'ro' => 'Nota oaspeților',
+        'ro' => 'Nota turiștilor',
     ],
     'travel_core.seo_ph_facilities' => [
         'en' => 'Top 3 facilities',
@@ -641,7 +641,7 @@ return [
     ],
     'travel_core.step_guests' => [
         'en' => 'Guests',
-        'ro' => 'Oaspeți',
+        'ro' => 'Turiști',
     ],
     'travel_core.step_payment' => [
         'en' => 'Payment',
@@ -653,7 +653,7 @@ return [
     ],
     'travel_core.step_locked_hint' => [
         'en' => 'Enter the guest details first',
-        'ro' => 'Completați mai întâi datele oaspeților',
+        'ro' => 'Completați mai întâi datele turiștilor',
     ],
     'travel_core.step_current' => [
         'en' => 'current step',
@@ -2380,7 +2380,7 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
     ],
     'travel_core.change_guests' => [
         'en' => 'Change guests',
-        'ro' => 'Schimbă oaspeții',
+        'ro' => 'Schimbă turiștii',
     ],
     'travel_core.lowest_prices' => [
         'en' => 'Lowest prices',
@@ -2807,7 +2807,7 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
     ],
     'travel_core.bv_guest' => [
         'en' => 'Guest',
-        'ro' => 'Oaspete',
+        'ro' => 'Turist',
     ],
     'travel_core.bv_type' => [
         'en' => 'Type',
@@ -2890,7 +2890,7 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
     ],
     'travel_core.pdpa_m_tabs_groups' => [
         'en' => 'Rooms searched, grouped by their guests',
-        'ro' => 'Camerele căutate, grupate după oaspeți',
+        'ro' => 'Camerele căutate, grupate după turiști',
     ],
     'travel_core.pdpa_m_room' => [
         'en' => 'Room [n]',
@@ -3197,6 +3197,6 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
     // Guest form shortcut for families (booking_guest_hint.tpl).
     'travel_core.same_surname' => [
         'en' => 'Same last name as Adult 1 for every guest',
-        'ro' => 'Același nume de familie ca Adult 1 pentru toți oaspeții',
+        'ro' => 'Același nume de familie ca Adult 1 pentru toți turiștii',
     ],
 ];

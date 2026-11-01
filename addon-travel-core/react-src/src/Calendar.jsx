@@ -12,7 +12,7 @@
  * weekday header, close (X) button, and confirm button at the bottom.
  *
  * variant="a" (the Design A hotel page): a header with the stay and its
- * nights, a footer with the price legend, "Schimbă oaspeții", "Șterge
+ * nights, a footer with the price legend, "Schimbă turiștii", "Șterge
  * datele" and the search button; `selecting` says which date the next click
  * sets (the field that opened it); the check-out day shows no price.
  *

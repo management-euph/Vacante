@@ -163,9 +163,9 @@ an internal code.
   page (`[data-travel-design="a"]`) and asks `booking_config` with
   `design=a`, which adds per-night calendar prices (two adults, shopper's
   currency) from `IndicativePriceSourceInterface::nightlyCalendar()` and the
-  bar's texts. Split Check-in / Check-out fields, "Oaspeți", "Vezi
+  bar's texts. Split Check-in / Check-out fields, "Turiști", "Vezi
   prețurile"; calendar (`variant="a"`): stay header with nights, legend,
-  "Schimbă oaspeții", "Șterge datele", its own search button; opening from
+  "Schimbă turiștii", "Șterge datele", its own search button; opening from
   Check-out moves only the check-out; the check-out day shows no price.
   Shared calendar fixes: even day columns, full-width phone calendar.
   `TRAVEL_CACHE_VER` 9. Test: `DesignASearchBarTest`.
