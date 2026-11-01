@@ -5,53 +5,58 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Helpers;
 
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
+use Tygh\Addons\NovotonHolidays\Services\RoomOfferRows;
 
 /**
- * Assembles multi-room booking data into the per-package room groups and guest
+ * Assembles multi-room booking data into the reservation requests and guest
  * lists the Novoton reservation API expects.
  *
  * Stateless transformation, extracted from BookingSubmissionService:
- *   - groupRoomsByPackage()      groups rooms sharing package + dates
+ *   - groupRoomsByPackage()      the rooms one hotel_res_RQ books: those of the
+ *                                same hotel, package and stay
  *   - buildGroupGuestsAndRooms() builds each group's guest list + API rooms and
  *                                reverses commission to the net API price
- *
- * Behaviour is preserved verbatim from BookingSubmissionService.
  */
 class BookingRoomAssembler
 {
     /**
-     * Group rooms by (package_name + check_in + check_out).
+     * The reservation requests a booking's rooms go in: one per hotel,
+     * package and stay.
      *
-     * Rooms with identical grouping keys can be sent in a single API call.
+     * Novoton books several rooms in one hotel_res_RQ when they are for the
+     * same hotel, the same package and the same stay, its documentation's
+     * mandatory condition. Its example books two "DBL 2+1" rooms of SLAVEY
+     * **** for 1–6 Jul 2026 in one request: the hotel, package and dates said
+     * once, every guest listed once, one <hotel_acc> per room naming its
+     * guests. So every room that shares the three goes in one request, in
+     * booking order; a room of another package or stay starts a request of
+     * its own (order number -G2, BookingSubmissionService).
+     *
+     * The package is compared as RoomOfferRows compares it: a "+BEACH" that a
+     * link turned into " BEACH" is the same package, not a second
+     * reservation. The request names it as Novoton spells it, URL-decoded,
+     * in the spelling that kept its "+". A room without a package or dates
+     * of its own takes the booking's.
      *
      * @param list<mixed> $roomsData Decoded rooms_data — elements may be non-arrays
      * @param array<string, mixed> $bookingData
-     * @return array<string, array{package_name: string, check_in: string, check_out: string, rooms: list<array<int|string, mixed>>}>
+     * @return array<string, array{hotel_id: string, package_name: string, check_in: string, check_out: string, rooms: list<array<int|string, mixed>>}>
      */
     public function groupRoomsByPackage(array $roomsData, array $bookingData): array
     {
         $groups = [];
-        $defaultPackage = PriceInfoFormatter::toScalar($bookingData['package_name'] ?? '');
-        $defaultCheckIn = PriceInfoFormatter::toScalar($bookingData['check_in'] ?? '');
-        $defaultCheckOut = PriceInfoFormatter::toScalar($bookingData['check_out'] ?? '');
 
         foreach ($roomsData as $roomIdx => $room) {
             if (!is_array($room)) {
                 continue;
             }
-            $package = PriceInfoFormatter::toScalar($room['package_name'] ?? $defaultPackage);
-            $checkIn = PriceInfoFormatter::toScalar($room['check_in'] ?? $defaultCheckIn);
-            $checkOut = PriceInfoFormatter::toScalar($room['check_out'] ?? $defaultCheckOut);
-
-            $groupKey = md5($package . '|' . $checkIn . '|' . $checkOut);
+            $stay = self::stayOf($room, $bookingData);
+            $groupKey = self::requestKey($stay);
 
             if (!isset($groups[$groupKey])) {
-                $groups[$groupKey] = [
-                    'package_name' => $package,
-                    'check_in' => $checkIn,
-                    'check_out' => $checkOut,
-                    'rooms' => [],
-                ];
+                $groups[$groupKey] = $stay + ['rooms' => []];
+            } elseif (substr_count($stay['package_name'], '+') > substr_count($groups[$groupKey]['package_name'], '+')) {
+                $groups[$groupKey]['package_name'] = $stay['package_name'];
             }
 
             $room['original_index'] = $roomIdx;
@@ -59,6 +64,41 @@ class BookingRoomAssembler
         }
 
         return $groups;
+    }
+
+    /**
+     * A room's hotel, package and stay: its own, else the defaults' (the
+     * booking's, or the group's the room is in).
+     *
+     * @param array<int|string, mixed> $room
+     * @param array<string, mixed> $defaults hotel_id, package_name, check_in, check_out
+     * @return array{hotel_id: string, package_name: string, check_in: string, check_out: string}
+     */
+    public static function stayOf(array $room, array $defaults): array
+    {
+        $own = static function (string $field) use ($room, $defaults): string {
+            $value = trim(PriceInfoFormatter::toScalar($room[$field] ?? ''));
+
+            return $value !== '' ? $value : trim(PriceInfoFormatter::toScalar($defaults[$field] ?? ''));
+        };
+
+        return [
+            'hotel_id' => $own('hotel_id'),
+            'package_name' => RoomOfferRows::packageName($own('package_name')),
+            'check_in' => $own('check_in'),
+            'check_out' => $own('check_out'),
+        ];
+    }
+
+    /**
+     * Rooms with the same key go in one hotel_res_RQ: the same hotel, the
+     * same package (RoomOfferRows::packageKey) and the same stay.
+     *
+     * @param array{hotel_id: string, package_name: string, check_in: string, check_out: string} $stay
+     */
+    public static function requestKey(array $stay): string
+    {
+        return implode('|', [$stay['hotel_id'], RoomOfferRows::packageKey($stay['package_name']), $stay['check_in'], $stay['check_out']]);
     }
 
     /**
@@ -162,6 +202,7 @@ class BookingRoomAssembler
             $totalGroupPrice += $roomPriceWithCommission;
 
             $apiRooms[] = [
+                'room_num' => $roomNum,
                 'room_id' => PriceInfoFormatter::toScalar($room['room_id'] ?? $bookingData['room_id'] ?? ''),
                 'board_id' => PriceInfoFormatter::toScalar($room['board_id'] ?? $bookingData['board_id'] ?? ''),
                 'guests' => $roomGuests,

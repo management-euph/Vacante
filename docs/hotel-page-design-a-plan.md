@@ -296,6 +296,14 @@ an internal code.
     `ext_board_id` in each room's entry once #113 merges; per-room mode
     ("Aleg fiecare cameră separat"); Eurosite's whole-group offer (13c.3);
     the choices kept when the page reloads.
+  - The reservation of several rooms, by Novoton's documented example (two
+    "DBL 2+1" of SLAVEY **** in one hotel_res_RQ): every room of the same
+    hotel, package and stay goes in one request, the package compared as
+    `RoomOfferRows` compares it, so a "+BEACH" a link returned as " BEACH"
+    no longer splits the booking into two reservations; a request mixing
+    them is refused before sending. IdRoom keeps its "+" (the form post
+    sends it as the example's "%2b"; a literal "%2b" matches no room, read
+    with room_price).
   - **To check on the dev store**: a 6–12-room Novoton booking end to end
     (booking form, add_to_cart, checkout) — no real reservation can be
     sent from the session.

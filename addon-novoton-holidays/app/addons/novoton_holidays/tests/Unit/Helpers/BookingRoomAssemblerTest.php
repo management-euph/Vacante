@@ -62,6 +62,48 @@ class BookingRoomAssemblerTest extends TestCase
         $this->assertSame('2026-01-01', $group['check_in']);
     }
 
+    /**
+     * Novoton books several rooms in one request when they are for the same
+     * hotel, package and stay. A package as a link may have returned it
+     * ("+BEACH" as " BEACH", or "%2BBEACH") is still that package, a room
+     * without one takes the booking's, and the request names it with its "+".
+     */
+    public function testRoomsOfOneHotelPackageAndStayGoInOneRequest(): void
+    {
+        $groups = array_values($this->assembler->groupRoomsByPackage([
+            ['room_id' => 'DBL 2+0 DELUXE', 'package_name' => 'ADMIRAL *****  BEACH 2027'],
+            ['room_id' => 'DBL 2+0 DELUXE', 'package_name' => 'ADMIRAL ***** +BEACH 2027'],
+            ['room_id' => 'FAM 2+3 DELUXE', 'package_name' => 'ADMIRAL ***** %2BBEACH 2027 '],
+            ['room_id' => 'DBL 2+1 DELUXE', 'package_name' => ''],
+        ], ['hotel_id' => '476', 'package_name' => 'ADMIRAL ***** +BEACH 2027', 'check_in' => '2027-07-10', 'check_out' => '2027-07-17']));
+
+        $this->assertCount(1, $groups, 'one hotel, one package, one stay: one request');
+        $this->assertSame(
+            ['476', 'ADMIRAL ***** +BEACH 2027', '2027-07-10', '2027-07-17'],
+            [$groups[0]['hotel_id'], $groups[0]['package_name'], $groups[0]['check_in'], $groups[0]['check_out']],
+        );
+        $this->assertSame([0, 1, 2, 3], array_column($groups[0]['rooms'], 'original_index'), 'in booking order');
+    }
+
+    public function testAnotherHotelPackageOrStayStartsAnotherRequest(): void
+    {
+        $groups = array_values($this->assembler->groupRoomsByPackage([
+            ['room_id' => 'DBL 2+1'],
+            ['room_id' => 'DBL 2+1', 'package_name' => 'SLAVEY **** HB'],
+            ['room_id' => 'DBL 2+1', 'check_out' => '2026-07-08'],
+            ['room_id' => 'DBL 2+1', 'hotel_id' => '388'],
+            ['room_id' => 'DBL 2+1', 'package_name' => 'SLAVEY ****', 'check_in' => '2026-07-01'],
+        ], ['hotel_id' => '387', 'package_name' => 'SLAVEY ****', 'check_in' => '2026-07-01', 'check_out' => '2026-07-06']));
+
+        $this->assertSame(
+            [[0, 4], [1], [2], [3]],
+            array_map(static fn (array $g): array => array_column($g['rooms'], 'original_index'), $groups),
+        );
+        $this->assertSame(['387', '387', '387', '388'], array_column($groups, 'hotel_id'));
+        $this->assertSame(['SLAVEY ****', 'SLAVEY **** HB', 'SLAVEY ****', 'SLAVEY ****'], array_column($groups, 'package_name'));
+        $this->assertSame(['2026-07-06', '2026-07-06', '2026-07-08', '2026-07-06'], array_column($groups, 'check_out'));
+    }
+
     public function testGroupRoomsSkipsNonArrayElements(): void
     {
         $groups = $this->assembler->groupRoomsByPackage(['not-an-array', ['package_name' => 'P']], []);

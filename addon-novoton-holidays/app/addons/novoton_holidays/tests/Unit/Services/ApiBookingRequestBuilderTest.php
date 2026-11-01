@@ -6,6 +6,7 @@ namespace Tygh\Addons\NovotonHolidays\Tests\Unit\Services;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Tygh\Addons\NovotonHolidays\Exceptions\NovotonException;
 use Tygh\Addons\NovotonHolidays\Services\ApiBookingRequestBuilder;
 
 /**
@@ -87,5 +88,41 @@ class ApiBookingRequestBuilderTest extends TestCase
 
         $this->assertArrayNotHasKey('room_id', $result);
         $this->assertArrayNotHasKey('board_id', $result);
+    }
+
+    /** The request is its group's: hotel, package and stay come from the group. */
+    public function testTheRequestTakesItsGroupsHotelPackageAndStay(): void
+    {
+        $group = ['hotel_id' => '387', 'package_name' => 'SLAVEY ****', 'check_in' => '2026-07-01', 'check_out' => '2026-07-06',
+            'rooms' => [['room_id' => 'DBL 2+1'], ['room_id' => 'DBL 2+1', 'package_name' => 'slavey  ****']]];
+
+        $result = $this->builder->build($group, [], [], ['hotel_id' => '1', 'package_name' => 'Other', 'check_in' => '2026-01-01'], 1, 1, 1);
+
+        $this->assertSame(['387', 'SLAVEY ****', '2026-07-01', '2026-07-06'], [$result['hotel_id'], $result['package_name'], $result['check_in'], $result['check_out']]);
+    }
+
+    /**
+     * Novoton takes several rooms in one request only for the same hotel,
+     * package and stay: a group that mixes them is refused, nothing is sent.
+     *
+     * @return iterable<string, array{array<string, mixed>}>
+     */
+    public static function mixedRooms(): iterable
+    {
+        yield 'another package' => [['package_name' => 'Winter']];
+        yield 'another check-in' => [['check_in' => '2026-07-02']];
+        yield 'another check-out' => [['check_out' => '2026-07-09']];
+        yield 'another hotel' => [['hotel_id' => 'H2']];
+    }
+
+    /** @param array<string, mixed> $other */
+    #[\PHPUnit\Framework\Attributes\DataProvider('mixedRooms')]
+    public function testOneRequestNeverMixesHotelsPackagesOrStays(array $other): void
+    {
+        $group = $this->group();
+        $group['rooms'] = [['room_id' => 'DBL'], ['room_id' => 'DBL'] + $other];
+
+        $this->expectException(NovotonException::class);
+        $this->builder->build($group, [], [], ['hotel_id' => 'H1'], 1, 1, 1);
     }
 }

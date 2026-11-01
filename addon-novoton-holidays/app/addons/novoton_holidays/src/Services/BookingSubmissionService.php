@@ -11,7 +11,7 @@ declare(strict_types=1);
  * Orchestration:
  *   1. hydrateBookingFromDb()       — merge DB data into cart data
  *   2. resolveRoomsAndGuests()      — parse rooms_data + guests_data
- *   3. groupRoomsByPackage()        — group rooms for API batching
+ *   3. groupRoomsByPackage()        — one request per hotel + package + stay
  *   4. buildGroupGuestsAndRooms()   — construct per-group guest+room payload
  *   5. buildApiBookingRequest()     — construct API request payload
  *   6. persistBookingRecord()       — upsert booking row (transaction)
@@ -63,8 +63,10 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
      * Called from the fn_novoton_holidays_place_order_post hook after CS-Cart
      * creates the order record.
      *
-     * For multi-room bookings:
+     * For multi-room bookings (Novoton's condition for several rooms in one
+     * hotel_res_RQ: the same hotel, package and stay):
      *   - Sends ALL rooms in SINGLE API request IF same hotel, package, and dates
+     *     (a package compared as RoomOfferRows compares it: "+BEACH" = " BEACH")
      *   - Sends SEPARATE API calls if rooms have different packages or dates
      * @param array<string, mixed> $cart
      */
@@ -128,7 +130,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
                 $debugLogging,
             );
 
-            // 3. Group rooms by (package + dates)
+            // 3. Group rooms by (hotel + package + stay): one request each
             $roomGroups = $this->roomAssembler->groupRoomsByPackage($roomsData, $bookingData);
 
             if ($debugLogging) {
