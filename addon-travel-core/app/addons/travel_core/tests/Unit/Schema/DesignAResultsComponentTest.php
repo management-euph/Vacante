@@ -17,7 +17,10 @@ use PHPUnit\Framework\TestCase;
  *    forms RoomResultsBuilder::form() picks included;
  *  - it prints the view model's plain text escaped, never raw;
  *  - the hooks pdp-design-a.js drives (filters, radios and tills, sort,
- *    "see all", the ⓘ, terms on demand) are there.
+ *    "see all", the ⓘ, terms on demand) are there;
+ *  - several rooms (design_a_groups.tpl, boards 13c): the hooks
+ *    pdp-design-a-rooms.js drives (tabs, room counts, choices, notes, the
+ *    bar, the booking form) are there and the page loads the script.
  */
 final class DesignAResultsComponentTest extends TestCase
 {
@@ -33,6 +36,7 @@ final class DesignAResultsComponentTest extends TestCase
         'design_a_payment.tpl',
         'design_a_terms.tpl',
         'design_a_icon.tpl',
+        'design_a_groups.tpl',
     ];
 
     /** Lang keys the templates build from a value. */
@@ -46,6 +50,8 @@ final class DesignAResultsComponentTest extends TestCase
         'travel_core.pdpa_r_capacity_' => ['one', 'few', 'many'],
         'travel_core.pdpa_r_rooms_left_' => ['one', 'few', 'many'],
         'travel_core.pdpa_r_chip_' => ['free', 'immediate'],
+        'travel_core.pdpa_m_rooms_' => ['one', 'few', 'many'],
+        'travel_core.pdpa_m_ages_' => ['one', 'few', 'many'],
     ];
 
     private static function addonRoot(): string
@@ -126,7 +132,7 @@ final class DesignAResultsComponentTest extends TestCase
         preg_match_all('/\{\$(?:(?:travel_pdpa_(?:room|option|plan|results|section|chip)|set|deal|cancel|payment)\.[a-z_.]+|travel_pdpa_(?:line|perk|facility)|package|label)(\|[^}]*)?\}/', $src, $m, PREG_SET_ORDER);
         self::assertGreaterThan(30, count($m));
         foreach ($m as $output) {
-            $isNumberOrKey = preg_match('/\.(key|count|left|rate_count|room_count|from|meal_key|meals|index|amount|for|deposit_percent|capacity)$/', explode('|', trim($output[0], '{}'))[0]) === 1;
+            $isNumberOrKey = preg_match('/\.(key|count|left|rate_count|room_count|from|meal_key|meals|index|amount|for|deposit_percent|capacity|quota|unit|unit_was)$/', explode('|', trim($output[0], '{}'))[0]) === 1;
             if (!$isNumberOrKey) {
                 self::assertStringContainsString('|escape:html', $output[0], 'unescaped output: ' . $output[0]);
             }
@@ -165,6 +171,49 @@ final class DesignAResultsComponentTest extends TestCase
         self::assertMatchesRegularExpression('/\.travel-pdpa \[data-travel-live\] \[hidden\] \{\s*display: none !important;/', $css);
     }
 
+    public function testTheHooksTheRoomsScriptDrivesAreThere(): void
+    {
+        $src = self::all();
+        $js = (string) file_get_contents(self::addonRoot() . '/js/addons/travel_core/pdp-design-a-rooms.js');
+        $hooks = [
+            'data-travel-multi', 'data-travel-gtab', 'data-travel-gtab-state', 'data-travel-group', 'data-travel-gnotes',
+            'data-travel-qty', 'data-travel-qty-step', 'data-travel-choose', 'data-travel-cap', 'data-travel-till-label',
+            'data-travel-till-total', 'data-travel-till-was', 'data-travel-bar', 'data-travel-bar-progress', 'data-travel-bar-meter',
+            'data-travel-bar-picks', 'data-travel-bar-total', 'data-travel-bar-goto', 'data-travel-bar-cta', 'data-travel-bar-more',
+            'data-travel-bar-note', 'data-travel-bar-note-request', 'data-travel-bar-reply', 'data-travel-book', 'data-travel-book-form',
+            'data-travel-book-rooms', 'data-travel-book-total',
+            'data-quota=', 'data-left=', 'data-title=', 'data-unit=', 'data-unit-was=', 'data-meal-name=', 'data-meal-key=',
+            'data-on-request=', 'data-room-json=', 'data-size=', 'data-rooms=', 'data-adults=', 'data-ages=', 'data-guests=',
+            'data-money-symbol=', 'data-money-after=', 'data-money-decimals=', 'data-money-decimal=', 'data-money-thousands=',
+        ];
+        foreach ($hooks as $hook) {
+            self::assertStringContainsString($hook, $src, $hook);
+            self::assertStringContainsString(rtrim($hook, '='), $js, 'pdp-design-a-rooms.js drives ' . $hook);
+        }
+        // Every text the script composes is on the section.
+        preg_match_all("/\bt\(state, '([a-z-]+)'/", $js, $names);
+        preg_match_all("/'(state-done-|state-todo-|rooms-)'/", $js, $prefixed);
+        foreach (array_unique($names[1]) as $name) {
+            if (str_ends_with($name, '-')) {
+                continue; // a name completed with a form (below)
+            }
+            self::assertStringContainsString('data-t-' . $name . '="', $src, 'the script reads data-t-' . $name);
+        }
+        foreach (['state-done-one', 'state-done-many', 'state-todo-one', 'state-todo-many', 'rooms-one', 'rooms-few', 'rooms-many'] as $name) {
+            self::assertStringContainsString('data-t-' . $name . '="', $src, $name);
+        }
+        self::assertNotEmpty($prefixed[1]);
+        // The icons the script clones: <template data-travel-icon-<name>>
+        self::assertStringContainsString("'[data-travel-icon-' + name + ']'", $js);
+        foreach (['check', 'ok'] as $icon) {
+            self::assertStringContainsString('data-travel-icon-' . $icon . '>', $src, $icon);
+            self::assertStringContainsString("icon(state, '" . $icon . "')", $js, $icon);
+        }
+
+        $page = (string) file_get_contents(self::addonRoot() . '/design/themes/responsive/templates/addons/travel_core/blocks/product_templates/travelcore_design_a.tpl');
+        self::assertStringContainsString('{script src="js/addons/travel_core/pdp-design-a-rooms.js"}', $page);
+    }
+
     public function testRulesFromTheBoardAreKept(): void
     {
         $results = self::source('responsive', 'design_a_results.tpl');
@@ -181,7 +230,7 @@ final class DesignAResultsComponentTest extends TestCase
         self::assertStringContainsString('travel_core.pdpa_r_request', $till, 'on request: "Cere rezervarea"');
         self::assertStringContainsString('travel_core.pdpa_r_no_pay_yet', $till, '"Nu plătești încă" under the button');
         self::assertStringContainsString('role="dialog"', $till, 'the ⓘ opens a toggletip, not a hover tooltip');
-        self::assertSame(1, substr_count($till, 'class="travel-pdpa-btn'), 'one button per till: the room\'s only one');
+        self::assertSame(2, substr_count($till, 'class="travel-pdpa-btn'), 'one button per till: a group\'s "Alege pentru …", else the room\'s booking link');
         self::assertStringNotContainsString('travel-pdpa-btn--sec', $till);
 
         $option = self::source('responsive', 'design_a_option.tpl');

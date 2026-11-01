@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Services\ProviderRoomLimit;
 use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\TravelCore\ValueObjects\RoomType;
 
@@ -53,10 +54,12 @@ final class BookedRooms
     /**
      * @param array<string, mixed> $request the posted booking form (room_id already normalised)
      * @param array<string, mixed> $guestsData GuestDataService::parseAndValidateGuests()['guests_data']
+     * @param int|null $maxRooms the most rooms one booking takes; null: as many as the search offers (ProviderRoomLimit)
      * @return list<BookedRoom>|null null: rooms_data or the guests are inconsistent
      */
-    public static function fromRequest(array $request, array $guestsData, int $maxRooms = TravelConstants::MAX_ROOMS): ?array
+    public static function fromRequest(array $request, array $guestsData, ?int $maxRooms = null): ?array
     {
+        $maxRooms ??= ProviderRoomLimit::maxRooms('novoton');
         $posted = self::postedRooms($request['rooms_data'] ?? null);
         if ($posted === null || count($posted) > $maxRooms) {
             return null;

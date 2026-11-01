@@ -27,7 +27,8 @@ final class AddToCartPricesEveryRoomTest extends TestCase
         $src = self::controller();
 
         self::assertStringContainsString('BookedRooms::fromRequest($bookingData, $guests_data)', $src);
-        self::assertStringContainsString('RoomsQuote($api->pricing()))->price(', $src);
+        // with the hotel's quota: the split booking reserves the rooms on request apart
+        self::assertStringContainsString('RoomsQuote($api->pricing(), $api->availability()))->price(', $src);
         self::assertStringContainsString('$api_price = $quote[\'total\'];', $src);
         self::assertStringContainsString('$total_price = $api_price;', $src);
         // The old single-tuple quote is gone

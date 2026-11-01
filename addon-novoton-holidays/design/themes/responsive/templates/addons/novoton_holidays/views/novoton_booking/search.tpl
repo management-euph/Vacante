@@ -48,8 +48,12 @@
         {* ===== DESIGN A — the room-first results of the Design A hotel page
            (travel_core components/design_a_results.tpl, built by the
            controller from these rows when the page asks: design=a, one
-           room). Otherwise the cards below. ===== *}
-        {if $travel_design_a_results}
+           room; several rooms: components/design_a_groups.tpl, grouped by
+           their guests, booked by the same booking form). Otherwise the
+           cards below. ===== *}
+        {if $travel_design_a_groups}
+            {include file="addons/travel_core/components/design_a_groups.tpl" groups=$travel_design_a_groups book=$travel_design_a_book}
+        {elseif $travel_design_a_results}
             {include file="addons/travel_core/components/design_a_results.tpl" results=$travel_design_a_results}
         {else}
 

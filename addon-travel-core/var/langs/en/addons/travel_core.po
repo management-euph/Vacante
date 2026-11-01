@@ -3702,6 +3702,274 @@ msgctxt "Languages::travel_core.bv_technical_hint"
 msgid "Every field the provider keeps for this booking, and what was sent to the supplier and what came back, for troubleshooting."
 msgstr "Every field the provider keeps for this booking, and what was sent to the supplier and what came back, for troubleshooting."
 
+msgctxt "Languages::travel_core.pdpa_m_tabs"
+msgid "Rooms searched"
+msgstr "Rooms searched"
+
+msgctxt "Languages::travel_core.pdpa_m_tabs_groups"
+msgid "Rooms searched, grouped by their guests"
+msgstr "Rooms searched, grouped by their guests"
+
+msgctxt "Languages::travel_core.pdpa_m_room"
+msgid "Room [n]"
+msgstr "Room [n]"
+
+msgctxt "Languages::travel_core.pdpa_m_rooms_one"
+msgid "[n] room"
+msgstr "[n] room"
+
+msgctxt "Languages::travel_core.pdpa_m_rooms_few"
+msgid "[n] rooms"
+msgstr "[n] rooms"
+
+msgctxt "Languages::travel_core.pdpa_m_rooms_many"
+msgid "[n] rooms"
+msgstr "[n] rooms"
+
+msgctxt "Languages::travel_core.pdpa_m_numbers"
+msgid "Rooms [numbers]"
+msgstr "Rooms [numbers]"
+
+msgctxt "Languages::travel_core.pdpa_m_ages_one"
+msgid "([ages] year)"
+msgstr "([ages] year)"
+
+msgctxt "Languages::travel_core.pdpa_m_ages_few"
+msgid "([ages] years)"
+msgstr "([ages] years)"
+
+msgctxt "Languages::travel_core.pdpa_m_ages_many"
+msgid "([ages] years)"
+msgstr "([ages] years)"
+
+msgctxt "Languages::travel_core.pdpa_m_state_todo_one"
+msgid "Not chosen"
+msgstr "Not chosen"
+
+msgctxt "Languages::travel_core.pdpa_m_state_todo_many"
+msgid "Not chosen"
+msgstr "Not chosen"
+
+msgctxt "Languages::travel_core.pdpa_m_state_now"
+msgid "Choosing now"
+msgstr "Choosing now"
+
+msgctxt "Languages::travel_core.pdpa_m_state_part"
+msgid "[chosen] of [size] chosen · [left] to go"
+msgstr "[chosen] of [size] chosen · [left] to go"
+
+msgctxt "Languages::travel_core.pdpa_m_state_done_one"
+msgid "Chosen,"
+msgstr "Chosen,"
+
+msgctxt "Languages::travel_core.pdpa_m_state_done_many"
+msgid "Chosen,"
+msgstr "Chosen,"
+
+msgctxt "Languages::travel_core.pdpa_m_head_room"
+msgid "Room [n] · [guests]"
+msgstr "Room [n] · [guests]"
+
+msgctxt "Languages::travel_core.pdpa_m_head_group"
+msgid "[rooms] for [guests] each"
+msgstr "[rooms] for [guests] each"
+
+msgctxt "Languages::travel_core.pdpa_m_sub_two"
+msgid "Your choice is for both rooms."
+msgstr "Your choice is for both rooms."
+
+msgctxt "Languages::travel_core.pdpa_m_sub_many"
+msgid "Your choice is for all [n] rooms. You can also take different types: choose how many rooms of each."
+msgstr "Your choice is for all [n] rooms. You can also take different types: choose how many rooms of each."
+
+msgctxt "Languages::travel_core.pdpa_m_qty"
+msgid "Rooms"
+msgstr "Rooms"
+
+msgctxt "Languages::travel_core.pdpa_m_qty_of"
+msgid "of [n]"
+msgstr "of [n]"
+
+msgctxt "Languages::travel_core.pdpa_m_qty_less"
+msgid "One room fewer"
+msgstr "One room fewer"
+
+msgctxt "Languages::travel_core.pdpa_m_qty_more"
+msgid "One room more"
+msgstr "One room more"
+
+msgctxt "Languages::travel_core.pdpa_m_total_rooms"
+msgid "Total · [rooms] · [nights]"
+msgstr "Total · [rooms] · [nights]"
+
+msgctxt "Languages::travel_core.pdpa_m_per_room"
+msgid "[price] / room"
+msgstr "[price] / room"
+
+msgctxt "Languages::travel_core.pdpa_m_choose_room"
+msgid "Choose for Room [n]"
+msgstr "Choose for Room [n]"
+
+msgctxt "Languages::travel_core.pdpa_m_choose_rooms"
+msgid "Choose for [rooms]"
+msgstr "Choose for [rooms]"
+
+msgctxt "Languages::travel_core.pdpa_m_chosen"
+msgid "Chosen"
+msgstr "Chosen"
+
+msgctxt "Languages::travel_core.pdpa_m_chosen_rooms"
+msgid "Chosen · [rooms]"
+msgstr "Chosen · [rooms]"
+
+msgctxt "Languages::travel_core.pdpa_m_cap"
+msgid "Enough for [n] of the [size] rooms"
+msgstr "Enough for [n] of the [size] rooms"
+
+msgctxt "Languages::travel_core.pdpa_m_sold_out"
+msgid "No rooms of this type left"
+msgstr "No rooms of this type left"
+
+msgctxt "Languages::travel_core.pdpa_m_request_step1_lead"
+msgid "Only this room is on request."
+msgstr "Only this room is on request."
+
+msgctxt "Languages::travel_core.pdpa_m_request_step1"
+msgid "The other rooms you choose are booked at once."
+msgstr "The other rooms you choose are booked at once."
+
+msgctxt "Languages::travel_core.pdpa_m_request_step2_lead"
+msgid "The hotel replies within 48 h."
+msgstr "The hotel replies within 48 h."
+
+msgctxt "Languages::travel_core.pdpa_m_request_step2"
+msgid "You pay nothing for this room until the hotel confirms."
+msgstr "You pay nothing for this room until the hotel confirms."
+
+msgctxt "Languages::travel_core.pdpa_m_request_step3_lead"
+msgid "If the hotel does not confirm it,"
+msgstr "If the hotel does not confirm it,"
+
+msgctxt "Languages::travel_core.pdpa_m_request_step3"
+msgid "we email you similar alternatives for it; the other rooms stay booked."
+msgstr "we email you similar alternatives for it; the other rooms stay booked."
+
+msgctxt "Languages::travel_core.pdpa_m_done"
+msgid "[what] chosen for [rooms]: +[amount]."
+msgstr "[what] chosen for [rooms]: +[amount]."
+
+msgctxt "Languages::travel_core.pdpa_m_done_left"
+msgid "[left] more to choose for [guests] each."
+msgstr "[left] more to choose for [guests] each."
+
+msgctxt "Languages::travel_core.pdpa_m_undo"
+msgid "Undo"
+msgstr "Undo"
+
+msgctxt "Languages::travel_core.pdpa_m_undo_aria"
+msgid "Undo the choice for [rooms]"
+msgstr "Undo the choice for [rooms]"
+
+msgctxt "Languages::travel_core.pdpa_m_all_done"
+msgid "All [n] rooms are chosen."
+msgstr "All [n] rooms are chosen."
+
+msgctxt "Languages::travel_core.pdpa_m_suggest_lead"
+msgid "For the other [rooms], the closest:"
+msgstr "For the other [rooms], the closest:"
+
+msgctxt "Languages::travel_core.pdpa_m_suggest"
+msgid "[room] · [meal], [price] a room ([diff] compared with [was])."
+msgstr "[room] · [meal], [price] a room ([diff] compared with [was])."
+
+msgctxt "Languages::travel_core.pdpa_m_suggest_btn"
+msgid "Choose for [rooms] ([n] × [price] = [total])"
+msgstr "Choose for [rooms] ([n] × [price] = [total])"
+
+msgctxt "Languages::travel_core.pdpa_m_suggest_all"
+msgid "See all types"
+msgstr "See all types"
+
+msgctxt "Languages::travel_core.pdpa_m_bar"
+msgid "Rooms chosen"
+msgstr "Rooms chosen"
+
+msgctxt "Languages::travel_core.pdpa_m_bar_progress"
+msgid "Rooms chosen: [n] of [total]"
+msgstr "Rooms chosen: [n] of [total]"
+
+msgctxt "Languages::travel_core.pdpa_m_bar_pick"
+msgid "[rooms]: [room] · [meal]"
+msgstr "[rooms]: [room] · [meal]"
+
+msgctxt "Languages::travel_core.pdpa_m_change"
+msgid "Change"
+msgstr "Change"
+
+msgctxt "Languages::travel_core.pdpa_m_change_aria"
+msgid "Change the choice for [rooms]"
+msgstr "Change the choice for [rooms]"
+
+msgctxt "Languages::travel_core.pdpa_m_so_far"
+msgid "Total so far"
+msgstr "Total so far"
+
+msgctxt "Languages::travel_core.pdpa_m_total"
+msgid "Total"
+msgstr "Total"
+
+msgctxt "Languages::travel_core.pdpa_m_goto"
+msgid "Go to [rooms]"
+msgstr "Go to [rooms]"
+
+msgctxt "Languages::travel_core.pdpa_m_book"
+msgid "Book [rooms] · [total]"
+msgstr "Book [rooms] · [total]"
+
+msgctxt "Languages::travel_core.pdpa_m_book_aria"
+msgid "Book [rooms], total [total] for [nights]"
+msgstr "Book [rooms], total [total] for [nights]"
+
+msgctxt "Languages::travel_core.pdpa_m_book_mixed"
+msgid "Book [booked] · request [requested]"
+msgstr "Book [booked] · request [requested]"
+
+msgctxt "Languages::travel_core.pdpa_m_book_mixed_aria"
+msgid "Book [booked] now and request [requested] from the hotel; total [total], [now] payable now"
+msgstr "Book [booked] now and request [requested] from the hotel; total [total], [now] payable now"
+
+msgctxt "Languages::travel_core.pdpa_m_pay_now"
+msgid "now [amount] · the rest once confirmed"
+msgstr "now [amount] · the rest once confirmed"
+
+msgctxt "Languages::travel_core.pdpa_m_reply_48h_for"
+msgid "Reply within 48 h for [rooms]"
+msgstr "Reply within 48 h for [rooms]"
+
+msgctxt "Languages::travel_core.pdpa_m_bar_step1_lead"
+msgid "The rooms confirmed at once are booked now"
+msgstr "The rooms confirmed at once are booked now"
+
+msgctxt "Languages::travel_core.pdpa_m_bar_step1"
+msgid "and paid when you book."
+msgstr "and paid when you book."
+
+msgctxt "Languages::travel_core.pdpa_m_bar_step2_lead"
+msgid "The rooms on request wait for the hotel:"
+msgstr "The rooms on request wait for the hotel:"
+
+msgctxt "Languages::travel_core.pdpa_m_bar_step2"
+msgid "it replies within 48 h; you pay nothing for them until it confirms."
+msgstr "it replies within 48 h; you pay nothing for them until it confirms."
+
+msgctxt "Languages::travel_core.pdpa_m_bar_step3_lead"
+msgid "If the hotel does not confirm them,"
+msgstr "If the hotel does not confirm them,"
+
+msgctxt "Languages::travel_core.pdpa_m_bar_step3"
+msgid "we email you similar alternatives; the rooms booked stay booked."
+msgstr "we email you similar alternatives; the rooms booked stay booked."
+
 msgctxt "Languages::travel_core.edit_booking_title"
 msgid "Edit booking details #[id]"
 msgstr "Edit booking details #[id]"

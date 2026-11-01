@@ -11,7 +11,9 @@ use PHPUnit\Framework\TestCase;
  * (docs/hotel-page-design-a-plan.md, phase 4): the search builds them from
  * the same rows when the page asks (design=a) and the search is for one
  * room, and the results template shows them instead of today's cards.
- * Every other search page renders as before.
+ * Several rooms (phase 5, boards 13c): grouped by their guests when every
+ * room has rates, booked by the same booking form. Every other search page
+ * renders as before.
  */
 final class DesignAResultsWiringTest extends TestCase
 {
@@ -43,13 +45,28 @@ final class DesignAResultsWiringTest extends TestCase
         );
     }
 
+    public function testSeveralRoomsAreGroupedWhenEveryRoomHasRates(): void
+    {
+        $controller = (string) file_get_contents(self::addonRoot() . '/controllers/frontend/novoton_booking/search.php');
+
+        self::assertStringContainsString("} elseif (DesignA::requested(\$_REQUEST) && \$searchResult['is_multi_room']", $controller);
+        self::assertStringContainsString("&& DesignARates::everyRoomPriced(\$searchResult['all_room_results'], \$novotonParams)) {", $controller);
+        self::assertStringContainsString("\$view->assign('travel_design_a_groups', DesignARates::groupsView(\$searchResult['all_room_results'], \$novotonParams));", $controller);
+        self::assertStringContainsString("\$view->assign('travel_design_a_book', DesignARates::bookForm(\$novotonParams, TypeCoerce::toString(Registry::get('config.current_location'))));", $controller);
+        self::assertStringContainsString('use Tygh\\Registry;', $controller);
+    }
+
     public function testTheTemplateShowsThemInPlaceOfTodaysCards(): void
     {
         $src = self::template('responsive');
         self::assertSame($src, self::template('nova_theme'), 'nova_theme must match (composer mirror)');
 
         $results = strpos($src, '{if $novoton_results && $novoton_results|count > 0}');
-        $designA = strpos($src, '{if $travel_design_a_results}');
+        $designA = strpos($src, '{elseif $travel_design_a_results}');
+        $groups = strpos($src, '{if $travel_design_a_groups}');
+        self::assertIsInt($groups);
+        self::assertLessThan($designA, $groups, 'several rooms first');
+        self::assertStringContainsString('{include file="addons/travel_core/components/design_a_groups.tpl" groups=$travel_design_a_groups book=$travel_design_a_book}', $src);
         $include = strpos($src, '{include file="addons/travel_core/components/design_a_results.tpl" results=$travel_design_a_results}');
         $banner = strpos($src, 'novoton-early-banner');
         $close = strpos($src, '{/if}{* End of the Design A else *}');

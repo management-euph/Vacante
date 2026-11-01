@@ -42,15 +42,16 @@ use Tygh\Addons\TravelCore\Services\MoneyFormatter;
  *     index: int, key: string, meal: string, meal_key: string, name: string, package: string,
  *     deal: Deal|null, perks: list<string>, cancel: Cancel|null, payment: Payment|null,
  *     amount: float, price: string, was: string, off: string, per_night: string,
- *     on_request: bool, free: bool, book_url: string, chosen: bool
+ *     on_request: bool, free: bool, book_url: string, chosen: bool, room_json: string,
+ *     unit: float, unit_was: float, qty_price: string, qty_was: string
  * }
  * @phpstan-type RoomView array{
- *     key: string, name: string, title: string, code: string, capacity: int, capacity_form: string,
+ *     key: string, quota: string, name: string, title: string, code: string, capacity: int, capacity_form: string,
  *     facilities: list<string>, from: float, from_text: string, cheapest: bool,
  *     on_request: bool, immediate: bool, left: int, left_form: string,
  *     single: bool, options: list<OptionView>, chosen: int,
  *     package: string, deal: Deal|null, cancel: Cancel|null, payment: Payment|null,
- *     terms: list<TermsView>, meals: string, more: bool
+ *     terms: list<TermsView>, meals: string, more: bool, qty: int, qty_form: string
  * }
  * @phpstan-type ResultsView array{
  *     rate_count: int, rate_form: string, room_count: int, room_form: string,
@@ -87,6 +88,12 @@ final class RoomResultsBuilder
         private readonly MoneyFormatter $money,
         private readonly \Closure $formatDate,
     ) {
+    }
+
+    /** The formatter the amounts are printed with (RoomGroupsBuilder prints its totals the same way). */
+    public function money(): MoneyFormatter
+    {
+        return $this->money;
     }
 
     /**
@@ -333,6 +340,9 @@ final class RoomResultsBuilder
 
         return [
             'key' => $key,
+            // The room type across the groups of a search of several rooms (RoomGroupsBuilder): what one group
+            // takes of it, the others have fewer of.
+            'quota' => substr(md5($first->roomKey), 0, 10),
             'name' => $first->roomName,
             'title' => $first->roomTitle !== '' ? $first->roomTitle : $first->roomName,
             'code' => $first->roomCode,
@@ -356,6 +366,9 @@ final class RoomResultsBuilder
             'terms' => $this->terms($options),
             'meals' => implode(' ', array_keys($roomMeals)),
             'more' => $index >= self::ROOMS_SHOWN,
+            // How many rooms the till books: one, or a group's (RoomGroupsBuilder)
+            'qty' => 1,
+            'qty_form' => self::form(1),
         ];
     }
 
@@ -399,6 +412,13 @@ final class RoomResultsBuilder
             'free' => $rate->isFree(),
             'book_url' => $rate->bookUrl,
             'chosen' => $chosen,
+            'room_json' => $rate->roomData === [] ? '' : (string) json_encode($rate->roomData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            // One room's price and struck price in the shopper's currency, for a page that adds them up (several rooms),
+            // and the till's total and struck total for the rooms it books (the room's qty; RoomGroupsBuilder sets them)
+            'unit' => $this->money->toDisplay($rate->price),
+            'unit_was' => $struck ? $this->money->toDisplay($rate->standardPrice) : 0.0,
+            'qty_price' => $this->money->format($rate->price),
+            'qty_was' => $struck ? $this->money->format($rate->standardPrice) : '',
         ];
     }
 

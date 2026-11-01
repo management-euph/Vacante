@@ -342,4 +342,150 @@ final class DesignARatesTest extends TestCase
         $later = self::mapper(true, 'ro', '2026-10-01')->rates($rows, $params);
         self::assertSame(['Early Booking', ''], [$later[1]->discountLabel, $later[1]->discountUntil], 'a last day already gone is not shown');
     }
+
+    /** The search's params for these rooms (rooms_data, as the search form posts them). */
+    private static function severalRooms(array ...$rooms): array
+    {
+        return ['rooms_data' => array_map(
+            static fn (array $room): array => ['adults' => $room[0], 'children' => count($room[1]), 'childrenAges' => $room[1]],
+            $rooms,
+        )] + self::PARAMS;
+    }
+
+    /**
+     * @param array<string, mixed> $results a group's ResultsView
+     * @return array<string, mixed> its card of this room code
+     */
+    private static function card(array $results, string $code): array
+    {
+        foreach ($results['rooms'] as $room) {
+            if ($room['code'] === $code) {
+                return $room;
+            }
+        }
+        self::fail('no card for ' . $code);
+    }
+
+    /**
+     * Boards 13c: rooms 1 and 3 for two adults, room 2 for two adults and a
+     * child of 5. The two-adult rooms are one group, priced from room 1's
+     * rows (the batcher asks once for the same guests), de-duplicated as for
+     * one room; every rate carries the entry the booking of several rooms
+     * posts for a room, field for field today's selection's.
+     */
+    public function testSeveralRoomsAreGroupedByTheirGuestsWithEachRoomsBookingEntry(): void
+    {
+        $twoAdults = self::admiral();
+        // The same room, board and package with a "book 7, pay 6": one rate at the promotion's price.
+        $twoAdults[] = self::row('DBL 2+1 DELUXE', 'Cameră Dublă (DBL 2+1 DELUXE)', 1306, 19, ['extras' => '7=6', 'early_booking_discount' => 0.0]);
+        $family = [
+            self::row('DBL 2+1 DELUXE', 'Cameră Dublă (DBL 2+1 DELUXE)', 1830, 19),
+            self::row('FAM 2+3 DELUXE', 'Cameră Familială (FAM 2+3 DELUXE)', 2900, 3),
+        ];
+        $params = self::severalRooms([2, []], [2, [5]], [2, []]);
+        $money = new MoneyFormatter(['symbol' => '€', 'after' => 'Y', 'decimals' => 0, 'decimals_separator' => ',', 'thousands_separator' => '.']);
+        $builder = new RoomResultsBuilder($money, static fn (string $iso): string => $iso);
+
+        $view = self::mapper()->groups([1 => $twoAdults, 2 => $family, 3 => []], $params, $builder);
+
+        self::assertSame([3, 2, false, 7], [$view['room_count'], $view['group_count'], $view['by_room'], $view['nights']]);
+        [$pair, $child] = $view['groups'];
+        self::assertSame([[1, 3], '1, 3', 2, 2, []], [$pair['rooms'], $pair['numbers'], $pair['size'], $pair['adults'], $pair['ages']]);
+        self::assertSame([[2], '2', 1, [5]], [$child['rooms'], $child['numbers'], $child['size'], $child['ages']]);
+        self::assertSame(8, $pair['results']['room_count'], 'room 1\'s eight types, the promotion folded into its room\'s rate');
+        self::assertSame(2, $child['results']['room_count'], 'priced for the child: room 2\'s own rows');
+
+        $balcony = self::card($pair['results'], 'DBL 2+0 DELUXE NO BALCONY');
+        self::assertStringStartsWith('g1-', $balcony['key']);
+        self::assertSame([2, '2.970 €'], [$balcony['qty'], $balcony['options'][0]['qty_price']], 'both rooms of the group, 4 left');
+        self::assertSame(1, self::card($pair['results'], 'DBL 2+1 SUPERIOR DELUXE SEA SIDE')['qty'], 'one left: one room');
+        self::assertSame(
+            [
+                'room_id' => 'DBL 2+0 DELUXE NO BALCONY',
+                'board_id' => 'ULTRA ALL INCL',
+                'ext_board_id' => '',
+                'price' => 1485,
+                'room_display' => 'Cameră Dublă (DBL 2+0 DELUXE NO BALCONY)',
+                'board_name' => 'Ultra All Inclusive',
+                'package_name' => 'ADMIRAL ***** +BEACH 2027',
+                'standard_price' => 1485,
+                'early_booking' => 30,
+                'extras' => '',
+            ],
+            json_decode($balcony['options'][0]['room_json'], true),
+        );
+
+        $promotion = json_decode(self::card($pair['results'], 'DBL 2+1 DELUXE')['options'][0]['room_json'], true);
+        self::assertSame([1306, 1524, '7=6'], [$promotion['price'], $promotion['standard_price'], $promotion['extras']], 'charged the promotion, the standard price beside it');
+
+        $family = self::card($child['results'], 'DBL 2+1 DELUXE');
+        self::assertStringStartsWith('g2-', $family['key']);
+        self::assertSame(1830, json_decode($family['options'][0]['room_json'], true)['price']);
+        self::assertSame(
+            self::card($pair['results'], 'DBL 2+1 DELUXE')['quota'],
+            $family['quota'],
+            'one room type, one availability across the groups',
+        );
+
+        $one = $builder->build(self::mapper()->rates(self::admiral(), self::PARAMS), 7);
+        self::assertSame('', $one['rooms'][0]['options'][0]['room_json'], 'one room books by its link');
+    }
+
+    /**
+     * Half board sold as "BB" with the "HB" supplement (#113) is booked as
+     * offered when several rooms are booked too: each room's entry carries
+     * the board and its supplement, as today's selection posts them.
+     */
+    public function testEachRoomsEntryCarriesTheBoardsSupplement(): void
+    {
+        $rows = [
+            self::row('DBL 2+0 DELUXE NO BALCONY', 'Cameră Dublă (DBL 2+0 DELUXE NO BALCONY)', 415, 4, ['board_id' => 'BB', 'board_name' => 'Mic Dejun']),
+            self::row('DBL 2+0 DELUXE NO BALCONY', 'Cameră Dublă (DBL 2+0 DELUXE NO BALCONY)', 535, 4, ['board_id' => 'BB', 'ext_board_id' => 'HB']),
+        ];
+        $params = self::severalRooms([2, []], [2, []]);
+        $money = new MoneyFormatter(['symbol' => '€', 'after' => 'Y', 'decimals' => 0, 'decimals_separator' => ',', 'thousands_separator' => '.']);
+
+        $view = self::mapper()->groups([1 => $rows, 2 => $rows], $params, new RoomResultsBuilder($money, static fn (string $iso): string => $iso));
+
+        $entries = [];
+        foreach (self::card($view['groups'][0]['results'], 'DBL 2+0 DELUXE NO BALCONY')['options'] as $option) {
+            $entry = json_decode($option['room_json'], true);
+            $entries[] = [$entry['board_id'], $entry['ext_board_id'], $entry['board_name'], $entry['price']];
+        }
+        usort($entries, static fn (array $a, array $b): int => $a[3] <=> $b[3]);
+        self::assertSame([['BB', '', 'Mic Dejun Inclus', 415], ['BB', 'HB', 'Demipensiune', 535]], $entries);
+    }
+
+    public function testTheBookingOfSeveralRoomsGoesToTodaysBookingForm(): void
+    {
+        $form = DesignARates::bookForm(self::severalRooms([2, []], [2, [5]], [2, []]), 'https://shop.example');
+
+        self::assertSame('https://shop.example', $form['url']);
+        self::assertSame(
+            [
+                'dispatch' => 'novoton_booking.booking_form',
+                'hotel_id' => '476',
+                'check_in' => '2027-07-10',
+                'check_out' => '2027-07-17',
+                'nights' => 7,
+                'num_rooms' => 3,
+                'multi_room' => 1,
+            ],
+            $form['fields'],
+        );
+        self::assertSame(['rooms_data', 'total_price'], [$form['rooms_field'], $form['total_field']]);
+        self::assertSame('index.php', DesignARates::bookForm(self::PARAMS, '')['url']);
+    }
+
+    public function testSeveralRoomsShowOnlyWhenEveryRoomHasRates(): void
+    {
+        $rows = [self::row('DBL 2+1 DELUXE', 'Cameră Dublă (DBL 2+1 DELUXE)', 1524, 19)];
+        $params = self::severalRooms([2, []], [2, [5]]);
+
+        self::assertTrue(DesignARates::everyRoomPriced([1 => $rows, 2 => $rows], $params));
+        self::assertFalse(DesignARates::everyRoomPriced([1 => $rows, 2 => []], $params), 'today\'s selection says which room has none');
+        self::assertFalse(DesignARates::everyRoomPriced([1 => $rows], $params));
+        self::assertFalse(DesignARates::everyRoomPriced([1 => $rows], self::severalRooms([2, []])), 'one room: the one-room page');
+        self::assertFalse(DesignARates::everyRoomPriced([1 => $rows], self::PARAMS));
+    }
 }

@@ -7,8 +7,12 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 use Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface;
 
 /**
- * Runs the multi-room availability search: builds one price request per room,
- * fires them all in parallel (curl_multi batch), parses each response, and
+ * Runs the multi-room availability search: builds one price request per
+ * distinct occupancy (rooms with the same adults and children's ages share
+ * one answer: twelve rooms of three kinds are three requests, keyed by the
+ * first such room), fires them in parallel (curl_multi batch), reads the
+ * hotel's quota once (rooms left per type, 0 = on request, as the one-room
+ * search does), parses each room's options from its occupancy's answer, and
  * aggregates them into the standard availability envelope (first room's options
  * as `results`, every room's options in `all_room_results`, total option count,
  * max capacity, early-booking discounts).
@@ -46,11 +50,11 @@ class MultiRoomSearchBatcher
         callable $log,
     ): array {
         $log('=== MULTI-ROOM SEARCH MODE ===');
-        $log('Sending ' . count($roomsData) . ' room requests in parallel via curl_multi');
 
-        // Build all room requests upfront for batch execution
+        // Build one request per distinct occupancy upfront for batch execution
         $batchRequests = [];
-        $roomMeta = []; // roomKey => occupancy metadata
+        $roomMeta = []; // roomKey => occupancy metadata and the request it reads
+        $requestFor = []; // occupancy => the request key of its first room
 
         foreach ($roomsData as $roomIdx => $roomOccupancy) {
             $roomNum = PriceInfoFormatter::toInt($roomIdx) + 1;
@@ -68,33 +72,46 @@ class MultiRoomSearchBatcher
             }
 
             $roomKey = "room_{$roomNum}";
-            $batchRequests[$roomKey] = [
-                'hotel_id' => $hotelId,
-                'room_id' => '',
-                'board_id' => '',
-                'star_rating' => '',
-                'check_in' => $checkIn,
-                'check_out' => $checkOut,
-                'adults' => $roomAdults,
-                'children' => $roomChildrenAges,
-            ];
+            $ages = $roomChildrenAges;
+            sort($ages);
+            $occupancy = $roomAdults . '|' . implode(',', $ages);
+            if (!isset($requestFor[$occupancy])) {
+                $requestFor[$occupancy] = $roomKey;
+                $batchRequests[$roomKey] = [
+                    'hotel_id' => $hotelId,
+                    'room_id' => '',
+                    'board_id' => '',
+                    'star_rating' => '',
+                    'check_in' => $checkIn,
+                    'check_out' => $checkOut,
+                    'adults' => $roomAdults,
+                    'children' => $roomChildrenAges,
+                ];
+            }
             $roomMeta[$roomKey] = [
                 'roomNum' => $roomNum,
+                'request' => $requestFor[$occupancy],
                 'occupancy' => "{$roomAdults} adults"
                     . ($roomChildrenCount > 0 ? ", {$roomChildrenCount} children" : ''),
             ];
         }
 
-        // Execute ALL room requests in parallel via curl_multi
+        // Execute one request per occupancy in parallel via curl_multi
+        $log('Sending ' . count($batchRequests) . ' price requests for ' . count($roomMeta) . ' rooms in parallel via curl_multi');
         $batchResponses = $api->pricing()->getRoomPriceBatch($batchRequests, count($batchRequests));
 
-        // Process batch results
+        // Rooms left per type (0 = on request), as the one-room search reads them
+        $quotaMap = [];
+        try {
+            $quotaMap = $api->availability()->getHotelQuotaAll($hotelId, $checkIn, $checkOut);
+        } catch (\Throwable $e) {
+            $log('=== QUOTA FETCH ERROR: ' . $e->getMessage() . ' ===');
+        }
+
+        // Process each room from its occupancy's answer
         $allRoomResults = [];
-        foreach ($batchResponses as $roomKey => $response) {
-            $meta = $roomMeta[$roomKey] ?? null;
-            if ($meta === null) {
-                continue;
-            }
+        foreach ($roomMeta as $meta) {
+            $response = $batchResponses[$meta['request']] ?? ['data' => false, 'rawXml' => ''];
             $roomNum = $meta['roomNum'];
             $occupancyStr = $meta['occupancy'];
             $roomResults = [];
@@ -110,7 +127,7 @@ class MultiRoomSearchBatcher
                     $checkIn,
                     $checkOut,
                     $mealPlan,
-                    [],
+                    $quotaMap,
                     $roomTypeMap,
                     $roomNum,
                     $occupancyStr,

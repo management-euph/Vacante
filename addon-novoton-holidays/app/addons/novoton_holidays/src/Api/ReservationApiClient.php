@@ -195,7 +195,7 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
             $xml .= '
     <Guests>
         <IdGuest>' . TypeCoerce::toString($guest['id'] ?? $id) . '</IdGuest>
-        <Name>' . htmlspecialchars(TypeCoerce::toString($guest['name'] ?? '')) . '</Name>
+        <Name>' . htmlspecialchars(RequestText::latin(TypeCoerce::toString($guest['name'] ?? ''))) . '</Name>
         <BirthDay>' . htmlspecialchars(TypeCoerce::toString($guest['birthday'] ?? '')) . '</BirthDay>
         <Age>' . TypeCoerce::toInt($guest['age'] ?? $defaultAge) . '</Age>
     </Guests>';
@@ -216,7 +216,7 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
             $xml .= '
             <room_acc>
                 <IdGuest>' . TypeCoerce::toString($guest['id'] ?? $id) . '</IdGuest>
-                <Name>' . htmlspecialchars(TypeCoerce::toString($guest['name'] ?? '')) . '</Name>
+                <Name>' . htmlspecialchars(RequestText::latin(TypeCoerce::toString($guest['name'] ?? ''))) . '</Name>
             </room_acc>';
             $id++;
         }
@@ -225,6 +225,24 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
 
     /**
      * Build the full hotel_res_RQ XML (shared by createReservation and generateReservationXml).
+     *
+     * Several rooms go in one request as Novoton's documentation shows it
+     * (two "DBL 2+1" of SLAVEY ****, 1–6 Jul 2026): the hotel, package and
+     * stay once, every guest once in <Guests> (IdGuest 1, 2, …), then one
+     * <hotel_acc> per room with its own room, board, holder and <room_acc>
+     * naming its guests by IdGuest. The rooms of one request share hotel,
+     * package and stay (BookingRoomAssembler::groupRoomsByPackage).
+     *
+     * Names, holders, remarks and comments go in plain Latin letters
+     * (RequestText): the request is declared windows-1251, which has no
+     * Romanian letters. The booking keeps them as typed.
+     *
+     * IdRoom keeps its "+" ("DBL 2+1"): the request is posted as a form
+     * field, which sends it as %2B, the "%2b" of the documentation's example
+     * (written for a URL). A literal "%2b" in the XML is not the room: a
+     * room_price asked with "DBL 2%2b0 DELUXE NO BALCONY" answers nothing,
+     * with "DBL 2+0 DELUXE NO BALCONY" that room (Admiral, 1 Nov 2026).
+     *
      * @param array<string, mixed> $bookingData
      */
     private function buildReservationXml(array $bookingData): string
@@ -261,10 +279,10 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
         <IdBoard>' . htmlspecialchars(TypeCoerce::toString($roomData['board_id'] ?? '')) . '</IdBoard>
         <IdExtBoard>' . htmlspecialchars(TypeCoerce::toString($roomData['ext_board_id'] ?? '')) . '</IdExtBoard>
         <IdStar>' . htmlspecialchars(TypeCoerce::toString($bookingData['star_rating'] ?? '')) . '</IdStar>
-        <Holder>' . htmlspecialchars(TypeCoerce::toString($firstGuest['name'] ?? $bookingData['holder'] ?? '')) . '</Holder>
+        <Holder>' . htmlspecialchars(RequestText::latin(TypeCoerce::toString($firstGuest['name'] ?? $bookingData['holder'] ?? ''))) . '</Holder>
         <ISO_National>' . htmlspecialchars(TypeCoerce::toString($bookingData['iso_national'] ?? Constants::DEFAULT_ISO_NATIONAL)) . '</ISO_National>
-        <Remark>' . htmlspecialchars(TypeCoerce::toString($remark)) . '</Remark>
-        <Comment>' . htmlspecialchars(TypeCoerce::toString($comment) . ' [Room ' . ($roomIdx + 1) . ']') . '</Comment>' . $roomAccXml . '
+        <Remark>' . htmlspecialchars(RequestText::latin(TypeCoerce::toString($remark))) . '</Remark>
+        <Comment>' . htmlspecialchars(RequestText::latin(TypeCoerce::toString($comment)) . ' [Room ' . TypeCoerce::toInt($roomData['room_num'] ?? $roomIdx + 1) . ']') . '</Comment>' . $roomAccXml . '
     </hotel_acc>';
             }
         } else {
@@ -279,10 +297,10 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
         <IdBoard>' . htmlspecialchars(TypeCoerce::toString($bookingData['board_id'] ?? '')) . '</IdBoard>
         <IdExtBoard>' . htmlspecialchars(TypeCoerce::toString($bookingData['ext_board_id'] ?? '')) . '</IdExtBoard>
         <IdStar>' . htmlspecialchars(TypeCoerce::toString($bookingData['star_rating'] ?? '')) . '</IdStar>
-        <Holder>' . htmlspecialchars(TypeCoerce::toString($bookingData['holder'] ?? '')) . '</Holder>
+        <Holder>' . htmlspecialchars(RequestText::latin(TypeCoerce::toString($bookingData['holder'] ?? ''))) . '</Holder>
         <ISO_National>' . htmlspecialchars(TypeCoerce::toString($bookingData['iso_national'] ?? Constants::DEFAULT_ISO_NATIONAL)) . '</ISO_National>
-        <Remark>' . htmlspecialchars(TypeCoerce::toString($remark)) . '</Remark>
-        <Comment>' . htmlspecialchars(TypeCoerce::toString($comment)) . '</Comment>' . $roomAccXml . '
+        <Remark>' . htmlspecialchars(RequestText::latin(TypeCoerce::toString($remark))) . '</Remark>
+        <Comment>' . htmlspecialchars(RequestText::latin(TypeCoerce::toString($comment))) . '</Comment>' . $roomAccXml . '
     </hotel_acc>';
         }
 
@@ -330,9 +348,9 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
   <IdBoard>' . htmlspecialchars(TypeCoerce::toString($requestData['board_id'] ?? '')) . '</IdBoard>
   <IdExtBoard>' . htmlspecialchars(TypeCoerce::toString($requestData['ext_board_id'] ?? '')) . '</IdExtBoard>
   <IdStar>' . htmlspecialchars(TypeCoerce::toString($requestData['star_rating'] ?? '')) . '</IdStar>
-  <Holder>' . htmlspecialchars(TypeCoerce::toString($requestData['holder'] ?? '')) . '</Holder>
-  <Remark>' . htmlspecialchars(TypeCoerce::toString($requestData['remark'] ?? '')) . '</Remark>
-  <Comment>' . htmlspecialchars(TypeCoerce::toString($requestData['comment'] ?? '')) . '</Comment>
+  <Holder>' . htmlspecialchars(RequestText::latin(TypeCoerce::toString($requestData['holder'] ?? ''))) . '</Holder>
+  <Remark>' . htmlspecialchars(RequestText::latin(TypeCoerce::toString($requestData['remark'] ?? ''))) . '</Remark>
+  <Comment>' . htmlspecialchars(RequestText::latin(TypeCoerce::toString($requestData['comment'] ?? ''))) . '</Comment>
 ' . $roomAccXml . '
 </hotel_acc>
 </hotel_request>';

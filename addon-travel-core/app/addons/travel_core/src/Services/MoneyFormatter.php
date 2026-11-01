@@ -120,4 +120,27 @@ final class MoneyFormatter
     {
         return ($this->toDisplay)($primaryAmount);
     }
+
+    /**
+     * formatDisplay()'s rules for a script that adds amounts up itself (the
+     * Design A page with several rooms: a room count × a price, the rooms
+     * chosen together), so it prints them as the server does.
+     *
+     * @return array{symbol: string, after: bool, decimals: int, decimal: string, thousands: string}
+     */
+    public function scriptFormat(): array
+    {
+        $symbol = TypeCoerce::toString($this->currency['symbol'] ?? '');
+        if ($symbol === '') {
+            $symbol = TypeCoerce::toString($this->currency['currency_code'] ?? '');
+        }
+
+        return [
+            'symbol' => $symbol,
+            'after' => TypeCoerce::toString($this->currency['after'] ?? 'N') === 'Y',
+            'decimals' => $this->roundPrices ? 0 : max(0, TypeCoerce::toInt($this->currency['decimals'] ?? 2)),
+            'decimal' => TypeCoerce::toString($this->currency['decimals_separator'] ?? '.') ?: '.',
+            'thousands' => TypeCoerce::toString($this->currency['thousands_separator'] ?? ','),
+        ];
+    }
 }

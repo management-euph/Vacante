@@ -1,5 +1,6 @@
 {script src="js/tygh/exceptions.js"}
 {script src="js/addons/travel_core/pdp-design-a.js"}
+{script src="js/addons/travel_core/pdp-design-a-rooms.js"}
 
 {*
     Travel Core · Design A — hotel page with the search bar under the photos.

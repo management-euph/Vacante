@@ -6,7 +6,10 @@
     all three and pins the till to the bottom of the screen while the card
     is in view (design-a.css): __offer holds the options and the till, so
     the till sticks only while they are on screen.
-    Included by design_a_results.tpl with $travel_pdpa_room set.
+    Included by design_a_results.tpl with $travel_pdpa_room set, and
+    $travel_pdpa_hn, the level of the room's name (one down in a group of
+    several rooms). data-quota / data-left: the room type and how many are
+    left of it, which the page shares between the groups of several rooms.
 *}
 {$travel_pdpa_room_id = "travel-pdpa-`$travel_pdpa_room.key`"}
 <li class="travel-pdpa-rcard" id="{$travel_pdpa_room_id}"
@@ -16,11 +19,14 @@
     data-from-text="{$travel_pdpa_room.from_text|escape:html}"
     data-name="{$travel_pdpa_room.name|escape:html}"
     data-meals="{$travel_pdpa_room.meals}"
+    data-quota="{$travel_pdpa_room.quota}"
+    data-left="{$travel_pdpa_room.left}"
+    data-title="{$travel_pdpa_room.title|escape:html}"
     {if $travel_pdpa_room.more}hidden{/if}>
     <div class="travel-pdpa-rcard__info">
         {if $travel_pdpa_room.cheapest}<span class="travel-pdpa-cue travel-pdpa-rcard__cue">{__("travel_core.pdpa_r_cheapest")}</span>{/if}
         <div class="travel-pdpa-rcard__nm">
-            <h3 class="travel-pdpa-rcard__name">{$travel_pdpa_room.title|escape:html}</h3>
+            <h{$travel_pdpa_hn|default:3} class="travel-pdpa-rcard__name">{$travel_pdpa_room.title|escape:html}</h{$travel_pdpa_hn|default:3}>
             {if $travel_pdpa_room.code}<p class="travel-pdpa-rcard__code"><span class="travel-pdpa-sr">{__("travel_core.pdpa_r_room_code")}: </span>{$travel_pdpa_room.code|escape:html}</p>{/if}
         </div>
         {if $travel_pdpa_room.on_request || $travel_pdpa_room.immediate || $travel_pdpa_room.left > 0}

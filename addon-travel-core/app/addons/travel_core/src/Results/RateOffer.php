@@ -54,6 +54,8 @@ final class RateOffer
      * @param bool $freeCancellation free to cancel today, the last free day not known yet (it comes with the terms)
      * @param string $termsUrl where the terms load from when they are not in the search (JSON {sections}); '' = in $terms / $timeline
      * @param string $paymentText how payment works, as the store words it for a supplier without payment terms in the search
+     * @param array<string, scalar> $roomData what a booking of several rooms (RoomGroupsBuilder) posts for one room at this
+     *                                        rate: the supplier's room entry without its guests; [] = one room, by $bookUrl
      */
     public function __construct(
         public readonly string $roomKey,
@@ -83,6 +85,7 @@ final class RateOffer
         public readonly bool $freeCancellation = false,
         public readonly string $termsUrl = '',
         public readonly string $paymentText = '',
+        public readonly array $roomData = [],
     ) {
     }
 

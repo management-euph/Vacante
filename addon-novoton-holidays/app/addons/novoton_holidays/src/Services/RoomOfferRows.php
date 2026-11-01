@@ -174,8 +174,10 @@ final class RoomOfferRows
      * search-card links and form posts where "+" can come back as a space
      * (the same loss fn_novoton_holidays_normalize_room_code repairs for
      * rooms), so "+BEACH" and " BEACH" must still be the same package.
+     * The rooms of one reservation are grouped by it too
+     * (BookingRoomAssembler::groupRoomsByPackage).
      */
-    private static function packageKey(string $package): string
+    public static function packageKey(string $package): string
     {
         $key = str_replace('+', ' ', self::packageName($package));
         $key = preg_replace('/\s+/u', ' ', $key) ?? $key;
