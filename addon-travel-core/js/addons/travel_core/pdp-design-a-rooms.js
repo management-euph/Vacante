@@ -531,7 +531,7 @@
             return;
         }
         var total = 0;
-        var now = 0;
+        var onRequest = 0;
         var booked = 0;
         var requested = [];
         var picks = bar.querySelector('[data-travel-bar-picks]');
@@ -546,8 +546,8 @@
                 total += amount;
                 if (choice.onRequest) {
                     requested = requested.concat(rooms);
+                    onRequest += amount;
                 } else {
-                    now += amount;
                     booked += choice.qty;
                 }
                 if (!picks) {
@@ -583,8 +583,9 @@
             totalEl.className = 'travel-pdpa-bbar__total' + (all ? ' travel-pdpa-bbar__total--all' : '');
             totalEl.appendChild(document.createTextNode(t(state, all ? 'total' : 'so-far') + ' '));
             totalEl.appendChild(el('b', 'travel-pdpa-num', price(state, total)));
+            // Every room is paid when booking; the rooms on request are refunded if not confirmed
             if (all && requested.length > 0) {
-                totalEl.appendChild(el('span', 'travel-pdpa-bbar__split', t(state, 'pay-now', { amount: price(state, now) })));
+                totalEl.appendChild(el('span', 'travel-pdpa-bbar__split', t(state, 'request-part', { amount: price(state, onRequest) })));
             }
         }
 
@@ -611,8 +612,7 @@
                     button.setAttribute('aria-label', t(state, 'book-mixed-aria', {
                         booked: roomsText(state, booked),
                         requested: roomsText(state, requested.length),
-                        total: price(state, total),
-                        now: price(state, now)
+                        total: price(state, total)
                     }));
                 } else {
                     button.textContent = t(state, 'book', { rooms: roomsText(state, state.rooms), total: price(state, total) });

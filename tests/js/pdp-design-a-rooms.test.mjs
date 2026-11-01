@@ -48,8 +48,8 @@ const TEXTS = {
     book: 'Rezervă [rooms] · [total]',
     'book-aria': 'Rezervă [rooms], total [total] pentru [nights]',
     'book-mixed': 'Rezervă [booked] · cere [requested]',
-    'book-mixed-aria': 'Rezervă acum [booked] și cere la hotel [requested]; total [total], de plătit acum [now]',
-    'pay-now': 'acum [amount] · restul după confirmare',
+    'book-mixed-aria': 'Rezervă acum [booked] și cere la hotel [requested]; total [total], plătit la rezervare',
+    'request-part': 'din care [amount] la cerere, returnați dacă hotelul nu confirmă',
     'reply-for': 'Răspuns în max. 48 h pentru [rooms]'
 };
 
@@ -302,7 +302,8 @@ describe('booking every room', () => {
         click(tillOf('g2', 'dlx', 1).querySelector('[data-travel-choose]'));
 
         expect(text($('[data-travel-book]'))).toBe('Rezervă 8 camere · cere 2 camere');
-        expect(text($('[data-travel-bar-total]'))).toBe('Total 7.460 €acum 5.400 € · restul după confirmare');
+        // Every room is paid when booking; the on-request share is the part refunded if not confirmed
+        expect(text($('[data-travel-bar-total]'))).toBe('Total 7.460 €din care 2.060 € la cerere, returnați dacă hotelul nu confirmă');
         expect($('[data-travel-bar-note]').hidden).toBe(true);
         expect($('[data-travel-bar-note-request]').hidden).toBe(false);
         expect(text($('[data-travel-bar-reply]'))).toBe('Răspuns în max. 48 h pentru Camerele 9–10');
