@@ -124,7 +124,7 @@
                         <p class="travel-pdpa-ghead__sub">{__("travel_core.pdpa_m_sub_many", ["[n]" => $travel_pdpa_g.size])}</p>
                     {/if}
                 </div>
-                {include file="addons/travel_core/components/design_a_results.tpl" results=$travel_pdpa_g.results scope="-`$travel_pdpa_g.key`" group=$travel_pdpa_g}
+                {include file="addons/travel_core/components/design_a_results.tpl" results=$travel_pdpa_g.results id_suffix="-`$travel_pdpa_g.key`" group=$travel_pdpa_g}
             </div>
         {/foreach}
 

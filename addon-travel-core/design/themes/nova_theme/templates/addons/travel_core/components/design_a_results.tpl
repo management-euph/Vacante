@@ -15,12 +15,14 @@
     orders the rooms, "see all" shows the others.
 
     Several rooms (design_a_groups.tpl): one list per group of rooms with the
-    same guests, with group (RoomGroupsBuilder GroupView) and scope (the
+    same guests, with group (RoomGroupsBuilder GroupView) and id_suffix (the
     group's id suffix): the group's heading names the list, the room names
-    are one level down and every id is the group's own.
+    are one level down and every id is the group's own. Not "scope": Smarty
+    5 keeps that {include} attribute for a variable scope and refuses any
+    other value when it compiles the page.
 *}
 {$travel_pdpa_results = $results}
-{$travel_pdpa_scope = $scope|default:""}
+{$travel_pdpa_scope = $id_suffix|default:""}
 {$travel_pdpa_group = $group|default:[]}
 {if $travel_pdpa_group}{$travel_pdpa_hn = 4}{else}{$travel_pdpa_hn = 3}{/if}
 {if $travel_pdpa_results && $travel_pdpa_results.rooms}

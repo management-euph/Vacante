@@ -54,6 +54,29 @@ jobs:
             echo "OK: baseline did not grow."
           fi
 
+  # ── Smarty 5 template compile (the engine of CS-Cart 4.19.1+) ──
+  # A template Smarty 5 refuses to compile takes its whole page down (an
+  # {include} passing scope="…" killed the Design A hotel page with several
+  # rooms). Compiles every add-on template as the store would; see
+  # scripts/compile-templates.php for what CS-Cart adds and how it is allowed.
+  templates:
+    name: Smarty 5 templates compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+
+      - name: Install root dev dependencies
+        run: composer install --no-progress --no-interaction
+
+      - name: Compile every add-on template
+        run: php scripts/compile-templates.php
+
   # ── PHP CS Fixer (dry-run; fails if formatting would change) ──
   phpcsfixer:
     name: PHP CS Fixer (dry-run)
