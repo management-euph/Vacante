@@ -43,7 +43,7 @@
         {$rooms_data_url = ''}
     {/if}
     {$nvt_results_url = "novoton_booking.search?hotel_id=`$booking_data.hotel_id`&product_id=`$product_id`&check_in=`$booking_data.check_in`&check_out=`$booking_data.check_out`&nights=`$booking_data.nights`&adults=`$booking_data.adults`&children=`$booking_data.children`&children_ages=`$booking_data.children_ages`&rooms=`$booking_data.num_rooms|default:1`&rooms_data=`$rooms_data_url`"}
-    {include file="addons/travel_core/components/booking_steps.tpl" bs_edit_mode=$is_edit_mode|default:false bs_search_url=$nvt_results_url}
+    {include file="addons/travel_core/components/booking_steps.tpl" bs_edit_mode=$is_edit_mode|default:false bs_booking_ref=$booking_id|default:"" bs_search_url=$nvt_results_url}
     <form action="{if $is_edit_mode}{fn_url("novoton_booking.update_booking")}{else}{fn_url("novoton_booking.add_to_cart")}{/if}" method="post" id="novoton-booking-form">
         <input type="hidden" name="security_hash" value="{$security_hash}" />
         {if $is_edit_mode}
@@ -138,16 +138,14 @@
                 {/foreach}
             </div>
             
-            {* Form Actions *}
-            <div class="travel-form-actions travel-form-actions--cta">
-                <a href="{$nvt_results_url|fn_url}" class="travel-btn-back">
-                    &larr; {__("novoton_holidays.back_to_results")}
-                </a>
-                <button type="submit" class="travel-btn--primary" id="booking-submit-btn">
-                    {if $is_edit_mode}{__("novoton_holidays.update_booking")}{else}{fn_travel_core_booking_cta_label("novoton_holidays")} &rarr;{/if}
-                </button>
-            </div>
-            {if !$is_edit_mode}<p class="travel-cta-note">{__("travel_core.cta_note")}</p>{/if}
+            {* Form actions (shared): back to the results and the payment
+               button; editing, back to the booking, Cancel and Save. *}
+            {include file="addons/travel_core/components/booking_form_actions.tpl"
+                fa_addon="novoton_holidays"
+                fa_edit_mode=$is_edit_mode|default:false
+                fa_back_url=$nvt_results_url
+                fa_back_label=__("novoton_holidays.back_to_results")
+                fa_button_id="booking-submit-btn"}
 
             {* "What are my booking conditions?" modal (shared; its link sits in
                the sidebar's cancellation & payment card). Its body is filled
@@ -159,7 +157,7 @@
         </div>{* /travel-booking-layout *}
     </form>
 
-    {if $is_edit_mode}{$nvt_cta_label = __("novoton_holidays.update_booking")}{else}{$nvt_cta_label = fn_travel_core_booking_cta_label("novoton_holidays")}{/if}
+    {if $is_edit_mode}{$nvt_cta_label = __("travel_core.save_changes")}{else}{$nvt_cta_label = fn_travel_core_booking_cta_label("novoton_holidays")}{/if}
     {include file="addons/travel_core/components/booking_mobile_bar.tpl" mb_form_id="novoton-booking-form" mb_label=$nvt_cta_label}
 </div>
 

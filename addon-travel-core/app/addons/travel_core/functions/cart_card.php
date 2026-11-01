@@ -37,7 +37,13 @@ defined('BOOTSTRAP') or die('Access denied');
  */
 function fn_travel_core_cart_booking_card(mixed $product, mixed $cart_id = ''): array
 {
-    $line = TypeCoerce::toStringMap($product);
+    // The checkout's rows come without the cart line's extra (the booking):
+    // take it from the session cart line of the same cart id. $_SESSION is
+    // the authoritative store (Helpers\SessionAccessor); read raw, as cart
+    // ids are numeric keys.
+    $sessionCart = $_SESSION['cart'] ?? null;
+    $cartLines = is_array($sessionCart) && is_array($sessionCart['products'] ?? null) ? $sessionCart['products'] : [];
+    $line = CartBookingCardFactory::withCartExtra(TypeCoerce::toStringMap($product), TypeCoerce::toString($cart_id), $cartLines);
     $extra = TypeCoerce::toStringMap($line['extra'] ?? null);
     if (empty($extra['travel_booking'])) {
         return [];

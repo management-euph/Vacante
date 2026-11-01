@@ -41,6 +41,7 @@
     {$tcc = fn_travel_core_cart_booking_card($product|default:[], $key|default:'')}
 {/if}
 {$tcc_context = $tcc_context|default:"cart"}
+{if $smarty.request.travel_debug|default:""}<!-- travel_core card ({$tcc_context|escape:html}): {if $tcc}built{else}empty{/if} -->{/if}
 {$tcc_sidebar = $tcc_context == "sidebar"}
 {if $tcc}
 <div class="travel-ccard travel-ccard--{$tcc_context}">

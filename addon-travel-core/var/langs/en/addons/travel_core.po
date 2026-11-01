@@ -3701,3 +3701,19 @@ msgstr "Technical details"
 msgctxt "Languages::travel_core.bv_technical_hint"
 msgid "Every field the provider keeps for this booking, and what was sent to the supplier and what came back, for troubleshooting."
 msgstr "Every field the provider keeps for this booking, and what was sent to the supplier and what came back, for troubleshooting."
+
+msgctxt "Languages::travel_core.edit_booking_title"
+msgid "Edit booking details #[id]"
+msgstr "Edit booking details #[id]"
+
+msgctxt "Languages::travel_core.edit_back_to_booking"
+msgid "Back to booking details"
+msgstr "Back to booking details"
+
+msgctxt "Languages::travel_core.edit_cancel"
+msgid "Cancel"
+msgstr "Cancel"
+
+msgctxt "Languages::travel_core.same_surname"
+msgid "Same last name as Adult 1 for every guest"
+msgstr "Same last name as Adult 1 for every guest"

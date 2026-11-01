@@ -11,7 +11,8 @@
 
     Parameters:
       mb_form_id  (string, required) id of the booking <form>.
-      mb_label    (string, required) button label (same as the form's CTA).
+      mb_label    (string, required) button label (same as the form's CTA);
+                  a new booking's (not $is_edit_mode) gets the CTA's lock.
 *}
 {$tbs = $travel_booking_sidebar}
 {if $tbs && $mb_form_id}
@@ -20,6 +21,6 @@
         <span>{__("travel_core.total_price")|default:"Total"}</span>
         <strong class="price-total">{$tbs.total nofilter}</strong>
     </div>
-    <button type="button" class="travel-btn--primary" data-travel-submit-proxy="{$mb_form_id|escape:html}">{$mb_label}</button>
+    <button type="button" class="travel-btn--primary" data-travel-submit-proxy="{$mb_form_id|escape:html}">{if !$is_edit_mode|default:false}<svg class="travel-btn__lock" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg> {/if}{$mb_label}</button>
 </div>
 {/if}

@@ -9,22 +9,31 @@
     aria-current; future steps are plain text — clicking ahead to payment
     before the guest details are in would only produce validation errors.
     The bar is not shown when editing a cart line (not a step of a new
-    booking); the title still is.
+    booking): the header says what is being changed instead, "Edit booking
+    details #22" over "ADMIRAL, Golden Sands, Varna · 09 Nov 2026 –
+    15 Nov 2026" (the sidebar's own hotel, place and dates).
 
     Parameters:
-      bs_edit_mode   (bool, default false) hide the bar in edit mode.
+      bs_edit_mode   (bool, default false) editing a cart line: no bar, the
+                     context header.
+      bs_booking_ref (string) edit mode: the booking's number in the title.
       bs_title       (string) the page H1; defaults to "Complete Booking"
-                     (edit mode: $page_title, e.g. "Edit booking").
+                     (edit mode: "Edit booking details #ref", else
+                     $page_title).
       bs_search_url  (string, dispatch URL) where "Search" leads; defaults
                      to the sidebar's "Change your selection" URL. No URL →
                      the step is shown done but not linked.
 *}
-{if $bs_edit_mode|default:false}{$bs_default_title = $page_title|default:""}{else}{$bs_default_title = __("travel_core.complete_booking_title")}{/if}
+{if $bs_edit_mode|default:false && $bs_booking_ref|default:""}{$bs_default_title = __("travel_core.edit_booking_title", ["[id]" => $bs_booking_ref])}{elseif $bs_edit_mode|default:false}{$bs_default_title = $page_title|default:""}{else}{$bs_default_title = __("travel_core.complete_booking_title")}{/if}
 {$bs_heading = $bs_title|default:$bs_default_title}
 {$bs_back = $bs_search_url|default:$travel_booking_sidebar.change_url|default:""}
 <div class="travel-booking-head{if $bs_edit_mode|default:false} travel-booking-head--no-steps{/if}">
     {if $bs_heading}
         <h1 class="travel-booking-head__title">{$bs_heading|escape:html}</h1>
+    {/if}
+    {$bs_tbs = $travel_booking_sidebar|default:[]}
+    {if $bs_edit_mode|default:false && $bs_tbs.name|default:""}
+        <p class="travel-booking-head__context">{$bs_tbs.name|escape:html}{if $bs_tbs.location_line|default:""}, {$bs_tbs.location_line|escape:html}{/if}{if $bs_tbs.check_in|default:""} &middot; {$bs_tbs.check_in|escape:html} &ndash; {$bs_tbs.check_out|default:""|escape:html}{/if}</p>
     {/if}
     {if !$bs_edit_mode|default:false}
     <nav class="travel-steps-nav" aria-label="{__("travel_core.booking_progress")|escape:html}">
