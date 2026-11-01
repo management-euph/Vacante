@@ -840,6 +840,14 @@
             });
         });
 
+        // More than two lines of choices: behind "Vezi alegerile (N)", the bar keeps to the totals (a phone: always)
+        var lines = picks ? picks.children.length : 0;
+        bar.classList.toggle('travel-pdpa-bbar--many', lines > 2);
+        var more = bar.querySelector('[data-travel-bar-more]');
+        if (more) {
+            more.textContent = t(state, 'bar-more', { n: lines });
+        }
+
         var all = chosen === state.rooms;
         var progress = bar.querySelector('[data-travel-bar-progress]');
         if (progress) {

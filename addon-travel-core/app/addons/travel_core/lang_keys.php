@@ -3109,6 +3109,10 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Rooms chosen: [n] of [total]',
         'ro' => 'Camere alese: [n] din [total]',
     ],
+    'travel_core.pdpa_m_bar_more' => [
+        'en' => 'See your choices ([n])',
+        'ro' => 'Vezi alegerile ([n])',
+    ],
     'travel_core.pdpa_m_bar_pick' => [
         'en' => '[rooms]: [room] · [meal]',
         'ro' => '[rooms]: [room] · [meal]',

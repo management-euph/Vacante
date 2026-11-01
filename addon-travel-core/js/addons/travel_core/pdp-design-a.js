@@ -513,6 +513,26 @@
         });
     }
 
+    /**
+     * A toggletip opens under its ⓘ; where the window leaves no room under
+     * it (its bottom, or the bar of the rooms chosen held there), above it,
+     * so the bar never covers it.
+     */
+    function placeTip(pop) {
+        pop.classList.remove('travel-pdpa-tip__pop--up');
+        var bottom = window.innerHeight || document.documentElement.clientHeight;
+        var bar = document.querySelector('[data-travel-bar]:not([hidden])');
+        if (bar && !bar.contains(pop)) {
+            var top = bar.getBoundingClientRect().top;
+            if (top > 0 && top < bottom) {
+                bottom = top;
+            }
+        }
+        if (pop.getBoundingClientRect().bottom > bottom - 8) {
+            pop.classList.add('travel-pdpa-tip__pop--up');
+        }
+    }
+
     function toggleTip(button) {
         var pop = document.getElementById(button.getAttribute('aria-controls') || '');
         if (!pop) {
@@ -522,6 +542,9 @@
         closeTips(button);
         button.setAttribute('aria-expanded', open ? 'true' : 'false');
         pop.hidden = !open;
+        if (open) {
+            placeTip(pop);
+        }
     }
 
     function resultsClick(target) {

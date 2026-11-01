@@ -365,6 +365,13 @@ an internal code.
     open ones (it showed the next group while the open group still had
     rooms to choose; board 13c.7); on a phone its buttons wrap to a line
     of their own (the bar scrolled the page sideways at 390 px).
+  - From the owner's UX review (1 Nov 2026): past two lines of choices the
+    bar folds them behind "Vezi alegerile (N)" on a computer too (a 12-room
+    booking made it ≈230 px high; now 78 px), the phone's bar is the board's
+    13c.10 shape (the progress and the total on one line, the buttons
+    under them); the ⓘ of a room on request ("Cum funcționează cererea")
+    opens above its button when the bar or the window's bottom would cover
+    it, and sits over the bar if they meet.
 - Next: Novoton rows through `RoomOfferRows`;
   the title row's after-search state ("10–17 iul. · de la 1.485 €", "Vezi
   camerele") and the compact summary's price (the section carries

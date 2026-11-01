@@ -71,6 +71,7 @@
         data-t-suggest-all="{__("travel_core.pdpa_m_suggest_all")|escape:html}"
         data-t-bar-progress="{__("travel_core.pdpa_m_bar_progress")|escape:html}"
         data-t-bar-pick="{__("travel_core.pdpa_m_bar_pick")|escape:html}"
+        data-t-bar-more="{__("travel_core.pdpa_m_bar_more")|escape:html}"
         data-t-change="{__("travel_core.pdpa_m_change")|escape:html}"
         data-t-change-aria="{__("travel_core.pdpa_m_change_aria")|escape:html}"
         data-t-so-far="{__("travel_core.pdpa_m_so_far")|escape:html}"
@@ -177,10 +178,11 @@
                         <p class="travel-pdpa-bbar__t" role="status" data-travel-bar-progress></p>
                         <div class="travel-pdpa-meter" aria-hidden="true"><span data-travel-bar-meter></span></div>
                     </div>
+                    {* More than two lines of choices (or a phone): behind "Vezi alegerile (N)" *}
+                    <button type="button" class="travel-pdpa-btn travel-pdpa-btn--sec travel-pdpa-btn--sm travel-pdpa-bbar__more" data-travel-bar-more aria-expanded="false" aria-controls="travel-pdpa-bbar-picks">{__("travel_core.pdpa_m_bar")}</button>
                     <div class="travel-pdpa-bbar__picks" id="travel-pdpa-bbar-picks" data-travel-bar-picks></div>
                 </div>
                 <div class="travel-pdpa-bbar__r">
-                    <button type="button" class="travel-pdpa-btn travel-pdpa-btn--sec travel-pdpa-btn--sm travel-pdpa-bbar__more" data-travel-bar-more aria-expanded="false" aria-controls="travel-pdpa-bbar-picks">{__("travel_core.pdpa_m_bar")}</button>
                     <p class="travel-pdpa-bbar__total" data-travel-bar-total></p>
                     <a class="travel-pdpa-btn travel-pdpa-btn--sec travel-pdpa-bbar__goto" href="#travel-pdpa-rooms" data-travel-bar-goto hidden></a>
                     <div class="travel-pdpa-cta travel-pdpa-bbar__cta" data-travel-bar-cta hidden>

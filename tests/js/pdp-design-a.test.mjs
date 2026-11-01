@@ -536,6 +536,25 @@ describe('a room on request: the ⓘ', () => {
         click(document.body);
         expect(pop.hidden).toBe(true);
     });
+
+    it('opens above the ⓘ where the bar of the rooms chosen would cover it', () => {
+        const bar = document.createElement('div');
+        bar.setAttribute('data-travel-bar', '');
+        bar.getBoundingClientRect = () => ({ top: 600, bottom: 768, left: 0, right: 1024, width: 1024, height: 168 });
+        document.body.appendChild(bar);
+        pop.getBoundingClientRect = () => ({ top: 480, bottom: 640, left: 700, right: 1020, width: 320, height: 160 });
+
+        click(tip);
+        expect(pop.classList.contains('travel-pdpa-tip__pop--up')).toBe(true);
+        click(tip);
+
+        // room under it (no bar): it opens under the ⓘ as before
+        bar.remove();
+        pop.getBoundingClientRect = () => ({ top: 300, bottom: 460, left: 700, right: 1020, width: 320, height: 160 });
+        click(tip);
+        expect(pop.classList.contains('travel-pdpa-tip__pop--up')).toBe(false);
+        click(tip);
+    });
 });
 
 describe('terms loaded when opened (a supplier without them in the search)', () => {

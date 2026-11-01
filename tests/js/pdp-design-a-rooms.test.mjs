@@ -46,6 +46,7 @@ const TEXTS = {
     'suggest-all': 'Văd toate tipurile',
     'bar-progress': 'Camere alese: [n] din [total]',
     'bar-pick': '[rooms]: [room] · [meal]',
+    'bar-more': 'Vezi alegerile ([n])',
     change: 'Schimbă',
     'change-aria': 'Schimbă alegerea pentru [rooms]',
     'so-far': 'Total până acum',
@@ -149,6 +150,7 @@ function page({ deluxeLeft = 10, seaLeft = 2, kidsOnRequest = false } = {}) {
                 <template data-travel-icon-ok><svg></svg></template>
                 <div data-travel-bar hidden>
                     <p data-travel-bar-progress></p><span data-travel-bar-meter></span>
+                    <button type="button" data-travel-bar-more aria-expanded="false">Camerele alese</button>
                     <div data-travel-bar-picks></div>
                     <p data-travel-bar-total></p>
                     <a href="#" data-travel-bar-goto hidden></a>
@@ -483,6 +485,20 @@ describe('room by room (board 13c.9)', () => {
         ]);
         expect(rooms[1]).toEqual({ room_id: 'DBL 2+1 DELUXE SEA SIDE', board_id: 'BB', price: 735, room_num: 2, adults: 2, children: 0, childrenAges: [] });
         expect(submitted.querySelector('[data-travel-book-total]').value).toBe(String(7 * 675 + 735 + 2 * 765) + '.00');
+    });
+
+    it('past two lines of choices the bar folds them behind "Vezi alegerile (N)"', () => {
+        click(byRoomSwitch('g1'));
+        click(tillOf('g1', 'dlx', 0).querySelector('[data-travel-choose]'));
+        click(tillOf('g1', 'sea', 0).querySelector('[data-travel-choose]'));
+        const bar = $('[data-travel-bar]');
+        expect(bar.classList.contains('travel-pdpa-bbar--many')).toBe(false);
+
+        click(tillOf('g1', 'dlx', 0).querySelector('[data-travel-choose]'));
+        expect(bar.classList.contains('travel-pdpa-bbar--many')).toBe(true);
+        expect(text($('[data-travel-bar-more]'))).toBe('Vezi alegerile (3)');
+        click($('[data-travel-bar-more]'));
+        expect([bar.classList.contains('travel-pdpa-bbar--open'), $('[data-travel-bar-more]').getAttribute('aria-expanded')]).toEqual([true, 'true']);
     });
 
     it('undo reopens the room it frees', () => {

@@ -1355,7 +1355,7 @@
     position: absolute;
     top: 100%;
     right: 0;
-    z-index: 5;
+    z-index: 6; /* over the bar of the rooms chosen (5) */
     width: 320px;
     max-width: calc(100vw - 32px);
     margin-top: 8px;
@@ -1365,6 +1365,12 @@
     background: #fff;
     box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
     text-align: left;
+}
+/* No room under the ⓘ (the window's bottom, the bar): above it (pdp-design-a.js). */
+.travel-pdpa .travel-pdpa-tip__pop--up {
+    top: auto;
+    bottom: 100%;
+    margin: 0 0 8px;
 }
 .travel-pdpa .travel-pdpa-tip__h {
     margin: 0 28px 8px 0;
@@ -2175,6 +2181,20 @@
 .travel-pdpa .travel-pdpa-bbar__more {
     display: none;
 }
+/* More than two lines of choices: the bar keeps to the progress and the
+   totals, "Vezi alegerile (N)" opens the list (a phone: always). */
+.travel-pdpa .travel-pdpa-bbar--many .travel-pdpa-bbar__more {
+    display: inline-flex;
+    justify-self: start;
+}
+.travel-pdpa .travel-pdpa-bbar--many .travel-pdpa-bbar__picks {
+    display: none;
+}
+.travel-pdpa .travel-pdpa-bbar--many.travel-pdpa-bbar--open .travel-pdpa-bbar__picks {
+    display: grid;
+    max-height: 40vh;
+    overflow-y: auto;
+}
 
 @media (max-width: 767px) {
     .travel-pdpa .travel-pdpa-gtab {
@@ -2210,39 +2230,51 @@
     .travel-pdpa .travel-pdpa-till--group .travel-pdpa-cta {
         flex: 1 1 100%;
     }
+    /* The phone (board 13c.10): the progress and the total on one line,
+       "Vezi alegerile (N)" under the progress (the list opens over the
+       bar's buttons), then "Mergi la …" or the booking button, the width
+       of the bar. */
     .travel-pdpa .travel-pdpa-bbar__in {
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 6px 12px;
         padding: 10px 16px;
     }
-    /* The phone keeps the progress and the total; the picks open on "Vezi alegerile". */
-    .travel-pdpa .travel-pdpa-bbar__picks,
+    .travel-pdpa .travel-pdpa-bbar__l,
+    .travel-pdpa .travel-pdpa-bbar__r {
+        display: contents;
+    }
+    .travel-pdpa .travel-pdpa-bbar__prog {
+        grid-area: 1 / 1;
+    }
     .travel-pdpa .travel-pdpa-meter {
         display: none;
     }
-    .travel-pdpa .travel-pdpa-bbar--open .travel-pdpa-bbar__picks {
+    .travel-pdpa .travel-pdpa-bbar__more {
+        display: inline-flex;
+        grid-area: 2 / 1;
+        justify-self: start;
+        min-height: 44px;
+    }
+    .travel-pdpa .travel-pdpa-bbar__total {
+        grid-area: 1 / 2 / 3 / 3;
+    }
+    .travel-pdpa .travel-pdpa-bbar__picks,
+    .travel-pdpa .travel-pdpa-bbar--many .travel-pdpa-bbar__picks {
+        display: none;
+        grid-area: 3 / 1 / 4 / 3;
+    }
+    .travel-pdpa .travel-pdpa-bbar--open .travel-pdpa-bbar__picks,
+    .travel-pdpa .travel-pdpa-bbar--many.travel-pdpa-bbar--open .travel-pdpa-bbar__picks {
         display: grid;
         gap: 4px;
         max-height: 40vh;
         overflow-y: auto;
     }
-    .travel-pdpa .travel-pdpa-bbar__more {
-        display: inline-flex;
-        min-height: 44px;
-    }
-    .travel-pdpa .travel-pdpa-bbar__r {
-        flex: 1 1 100%;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        gap: 8px 12px;
-    }
-    /* No room beside the total on a phone: "Mergi la …" and the booking
-       button take a line of their own, the width of the bar. */
     .travel-pdpa .travel-pdpa-bbar__goto,
     .travel-pdpa .travel-pdpa-bbar__cta {
-        flex: 1 1 100%;
-    }
-    .travel-pdpa .travel-pdpa-bbar__goto {
-        justify-content: center;
+        grid-column: 1 / -1;
     }
     .travel-pdpa .travel-pdpa-bbar__btn {
         width: 100%;

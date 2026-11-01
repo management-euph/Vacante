@@ -3926,6 +3926,10 @@ msgctxt "Languages::travel_core.pdpa_m_bar_progress"
 msgid "Rooms chosen: [n] of [total]"
 msgstr "Rooms chosen: [n] of [total]"
 
+msgctxt "Languages::travel_core.pdpa_m_bar_more"
+msgid "See your choices ([n])"
+msgstr "See your choices ([n])"
+
 msgctxt "Languages::travel_core.pdpa_m_bar_pick"
 msgid "[rooms]: [room] · [meal]"
 msgstr "[rooms]: [room] · [meal]"
