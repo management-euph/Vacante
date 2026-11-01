@@ -292,10 +292,10 @@ an internal code.
   - **Before phase 5's pull request**: the split booking the owner chose —
     the instantly confirmed rooms booked and paid now, the on-request rooms
     requested apart. Today the page posts every room as one booking, so the
-    bar's "acum … · restul după confirmare" is not yet true. Then
-    `ext_board_id` in each room's entry once #113 merges; per-room mode
-    ("Aleg fiecare cameră separat"); Eurosite's whole-group offer (13c.3);
-    the choices kept when the page reloads.
+    bar's "acum … · restul după confirmare" is not yet true. Then per-room
+    mode ("Aleg fiecare cameră separat"); Eurosite's whole-group offer
+    (13c.3); the choices kept when the page reloads. (Each room's entry
+    carries its board's supplement, `ext_board_id`, since #113 merged.)
   - The reservation of several rooms, by Novoton's documented example (two
     "DBL 2+1" of SLAVEY **** in one hotel_res_RQ): every room of the same
     hotel, package and stay goes in one request, the package compared as

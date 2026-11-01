@@ -567,6 +567,8 @@ final class DesignARates
         return [
             'room_id' => TypeCoerce::toString($row['room_id'] ?? ''),
             'board_id' => TypeCoerce::toString($row['board_id'] ?? ''),
+            // The board's supplement ("BB" + "HB" is half board), as today's selection posts it
+            'ext_board_id' => TypeCoerce::toString($row['ext_board_id'] ?? ''),
             'price' => $charged,
             'room_display' => $roomName,
             'board_name' => $boardName,

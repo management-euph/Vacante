@@ -403,6 +403,7 @@ final class DesignARatesTest extends TestCase
             [
                 'room_id' => 'DBL 2+0 DELUXE NO BALCONY',
                 'board_id' => 'ULTRA ALL INCL',
+                'ext_board_id' => '',
                 'price' => 1485,
                 'room_display' => 'Cameră Dublă (DBL 2+0 DELUXE NO BALCONY)',
                 'board_name' => 'Ultra All Inclusive',
@@ -428,6 +429,31 @@ final class DesignARatesTest extends TestCase
 
         $one = $builder->build(self::mapper()->rates(self::admiral(), self::PARAMS), 7);
         self::assertSame('', $one['rooms'][0]['options'][0]['room_json'], 'one room books by its link');
+    }
+
+    /**
+     * Half board sold as "BB" with the "HB" supplement (#113) is booked as
+     * offered when several rooms are booked too: each room's entry carries
+     * the board and its supplement, as today's selection posts them.
+     */
+    public function testEachRoomsEntryCarriesTheBoardsSupplement(): void
+    {
+        $rows = [
+            self::row('DBL 2+0 DELUXE NO BALCONY', 'Cameră Dublă (DBL 2+0 DELUXE NO BALCONY)', 415, 4, ['board_id' => 'BB', 'board_name' => 'Mic Dejun']),
+            self::row('DBL 2+0 DELUXE NO BALCONY', 'Cameră Dublă (DBL 2+0 DELUXE NO BALCONY)', 535, 4, ['board_id' => 'BB', 'ext_board_id' => 'HB']),
+        ];
+        $params = self::severalRooms([2, []], [2, []]);
+        $money = new MoneyFormatter(['symbol' => '€', 'after' => 'Y', 'decimals' => 0, 'decimals_separator' => ',', 'thousands_separator' => '.']);
+
+        $view = self::mapper()->groups([1 => $rows, 2 => $rows], $params, new RoomResultsBuilder($money, static fn (string $iso): string => $iso));
+
+        $entries = [];
+        foreach (self::card($view['groups'][0]['results'], 'DBL 2+0 DELUXE NO BALCONY')['options'] as $option) {
+            $entry = json_decode($option['room_json'], true);
+            $entries[] = [$entry['board_id'], $entry['ext_board_id'], $entry['board_name'], $entry['price']];
+        }
+        usort($entries, static fn (array $a, array $b): int => $a[3] <=> $b[3]);
+        self::assertSame([['BB', '', 'Mic Dejun Inclus', 415], ['BB', 'HB', 'Demipensiune', 535]], $entries);
     }
 
     public function testTheBookingOfSeveralRoomsGoesToTodaysBookingForm(): void
