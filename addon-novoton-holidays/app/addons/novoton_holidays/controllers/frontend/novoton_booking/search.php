@@ -22,6 +22,7 @@ use Tygh\Addons\NovotonHolidays\Services\DesignARates;
 use Tygh\Addons\NovotonHolidays\Services\NovotonAvailabilityRecorder;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Results\DesignA;
+use Tygh\Registry;
 
 try {
 
@@ -105,10 +106,15 @@ try {
         );
 
         // ── 6b. The Design A hotel page asked (design=a): its room-first
-        // results from the same rows (one room; several rooms keep the
-        // current selection until Design A's multi-room step). ──────────
+        // results from the same rows. Several rooms (boards 13c): grouped
+        // by their guests, when every room has rates (else the selection
+        // below says which configuration has none). ─────────────────────
         if (DesignA::requested($_REQUEST) && $results !== [] && !$searchResult['is_multi_room']) {
             $view->assign('travel_design_a_results', DesignARates::view($results, $novotonParams));
+        } elseif (DesignA::requested($_REQUEST) && $searchResult['is_multi_room']
+            && DesignARates::everyRoomPriced($searchResult['all_room_results'], $novotonParams)) {
+            $view->assign('travel_design_a_groups', DesignARates::groupsView($searchResult['all_room_results'], $novotonParams));
+            $view->assign('travel_design_a_book', DesignARates::bookForm($novotonParams, TypeCoerce::toString(Registry::get('config.current_location'))));
         }
 
     } else {

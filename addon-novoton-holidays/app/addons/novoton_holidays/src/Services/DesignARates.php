@@ -9,6 +9,8 @@ use Tygh\Addons\NovotonHolidays\ViewModels\NovotonBookingSidebarBuilder;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Results\DesignA;
 use Tygh\Addons\TravelCore\Results\RateOffer;
+use Tygh\Addons\TravelCore\Results\RoomGroupsBuilder;
+use Tygh\Addons\TravelCore\Results\RoomResultsBuilder;
 use Tygh\Addons\TravelCore\Services\DepositPlan;
 use Tygh\Addons\TravelCore\Services\DepositPolicy;
 use Tygh\Addons\TravelCore\Services\MoneyFormatter;
@@ -40,6 +42,11 @@ use Tygh\Addons\TravelCore\ViewModels\TermsTimelineFactory;
  *    cancellation day while ahead, full charge from today = non-refundable,
  *    the deposit DepositPlan allows;
  *  - quota 0 / RQ = on request; the booking link exactly as today's card.
+ *
+ * Several rooms (groupsView, boards 13c): the rooms grouped by their guests,
+ * each group's cards from its occupancy's rows, and every rate with the
+ * entry the booking of several rooms posts for a room (roomData: the fields
+ * today's selection posts, multiroom-booking.js).
  *
  * Amounts: rows are in the API currency with commission; the rates are in
  * the store's primary currency ($toPrimary).
@@ -148,6 +155,125 @@ final class DesignARates
     }
 
     /**
+     * The Design A view of a search of several rooms (design_a_groups.tpl,
+     * boards 13c): the rooms searched grouped by their guests, each group's
+     * cards from the rows of its first room (the same guests got the same
+     * answer: MultiRoomSearchBatcher), de-duplicated as for one room.
+     *
+     * @param array<int, list<array<string, mixed>>> $roomRows all_room_results: the rows per room number (1, 2, …)
+     * @param array<string, mixed> $params novoton_params of the search
+     * @return array<string, mixed>
+     */
+    public static function groupsView(array $roomRows, array $params): array
+    {
+        return self::forStore()->groups(
+            $roomRows,
+            $params,
+            DesignA::builder(),
+            self::facilities(TypeCoerce::toString($params['hotel_id'] ?? '')),
+        );
+    }
+
+    /**
+     * groupsView() with this mapper and builder.
+     *
+     * @param array<int, list<array<string, mixed>>> $roomRows all_room_results
+     * @param array<string, mixed> $params novoton_params
+     * @param list<string> $facilities the hotel's room facilities
+     * @return array<string, mixed>
+     */
+    public function groups(array $roomRows, array $params, RoomResultsBuilder $builder, array $facilities = []): array
+    {
+        $searched = self::searchedRooms($params);
+        $first = [];
+        foreach ($searched as $i => $room) {
+            $ages = $room['children'];
+            sort($ages);
+            $first[$room['adults'] . '|' . implode(',', $ages)] ??= $i + 1;
+        }
+
+        return (new RoomGroupsBuilder($builder))->build(
+            $searched,
+            function (int $adults, array $ages) use ($first, $roomRows, $params, $facilities): array {
+                $rows = $roomRows[$first[$adults . '|' . implode(',', $ages)] ?? 0] ?? [];
+
+                return $this->rates(SearchService::deduplicateResults($rows), $params, $facilities, true);
+            },
+            max(1, TypeCoerce::toInt($params['nights'] ?? 1)),
+        );
+    }
+
+    /**
+     * Where the booking of several rooms goes: the booking form, by the GET
+     * form today's selection posts (multiroom-booking.js), the rooms as a
+     * JSON list (rooms_data) and their total (total_price).
+     *
+     * @param array<string, mixed> $params novoton_params of the search
+     * @param string $base the storefront's address (config.current_location)
+     * @return array{url: string, fields: array<string, string|int>, rooms_field: string, total_field: string}
+     */
+    public static function bookForm(array $params, string $base): array
+    {
+        return [
+            'url' => $base !== '' ? $base : 'index.php',
+            'fields' => [
+                'dispatch' => 'novoton_booking.booking_form',
+                'hotel_id' => TypeCoerce::toString($params['hotel_id'] ?? ''),
+                'check_in' => TypeCoerce::toString($params['check_in'] ?? ''),
+                'check_out' => TypeCoerce::toString($params['check_out'] ?? ''),
+                'nights' => TypeCoerce::toInt($params['nights'] ?? 1),
+                'num_rooms' => count(self::searchedRooms($params)),
+                'multi_room' => 1,
+            ],
+            'rooms_field' => 'rooms_data',
+            'total_field' => 'total_price',
+        ];
+    }
+
+    /**
+     * Design A shows several rooms when every room searched has rates; else
+     * today's selection says which configuration has none.
+     *
+     * @param array<int, list<array<string, mixed>>> $roomRows all_room_results
+     * @param array<string, mixed> $params novoton_params
+     */
+    public static function everyRoomPriced(array $roomRows, array $params): bool
+    {
+        $count = count(self::searchedRooms($params));
+        if ($count < 2) {
+            return false;
+        }
+        for ($room = 1; $room <= $count; $room++) {
+            if (($roomRows[$room] ?? []) === []) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * The rooms searched, in order: adults and the children's ages.
+     *
+     * @param array<string, mixed> $params novoton_params
+     * @return list<array{adults: int, children: list<int>}>
+     */
+    private static function searchedRooms(array $params): array
+    {
+        $rooms = [];
+        foreach (is_array($params['rooms_data'] ?? null) ? $params['rooms_data'] : [] as $room) {
+            $room = is_array($room) ? $room : [];
+            $ages = [];
+            foreach (is_array($room['childrenAges'] ?? null) ? $room['childrenAges'] : [] as $age) {
+                $ages[] = TypeCoerce::toInt($age);
+            }
+            $rooms[] = ['adults' => max(1, TypeCoerce::toInt($room['adults'] ?? 2)), 'children' => $ages];
+        }
+
+        return $rooms;
+    }
+
+    /**
      * The hotel's room facilities (hotelinfo, saved with the hotel), in the
      * shopper's language: Novoton has none per room.
      *
@@ -168,16 +294,17 @@ final class DesignARates
     }
 
     /**
-     * @param list<array<string, mixed>> $rows novoton_results of a one-room search
+     * @param list<array<string, mixed>> $rows novoton_results of a one-room search, or one room's of several
      * @param array<string, mixed> $params novoton_params of that search
      * @param list<string> $facilities the hotel's room facilities
+     * @param bool $several a search of several rooms: each rate carries the room's booking entry (roomData)
      * @return list<RateOffer>
      */
-    public function rates(array $rows, array $params, array $facilities = []): array
+    public function rates(array $rows, array $params, array $facilities = [], bool $several = false): array
     {
         $rates = [];
         foreach ($rows as $row) {
-            $rate = $this->rate($row, $params, $facilities);
+            $rate = $this->rate($row, $params, $facilities, $several);
             if ($rate !== null) {
                 $rates[] = $rate;
             }
@@ -319,7 +446,7 @@ final class DesignARates
      * @param array<string, mixed> $params
      * @param list<string> $facilities
      */
-    private function rate(array $row, array $params, array $facilities): ?RateOffer
+    private function rate(array $row, array $params, array $facilities, bool $several = false): ?RateOffer
     {
         $roomId = TypeCoerce::toString($row['room_id'] ?? '');
         $total = TypeCoerce::toFloat($row['total_price'] ?? 0);
@@ -419,7 +546,33 @@ final class DesignARates
             capacity: self::capacity($roomId),
             packageName: self::plain(TypeCoerce::toString($row['package_name'] ?? '')),
             discountUntil: $discountUntil,
+            roomData: $several ? self::roomData($row, $charged, $label !== '' ? $label : $roomId, $meal) : [],
         );
+    }
+
+    /**
+     * One room of a booking of several rooms, as today's selection posts it
+     * (multiroom-booking.js): the room, board and package add_to_cart prices
+     * again, the price shown (the API amount, compared, never charged) and
+     * the names and discount the booking form shows. The page adds room_num
+     * and the room's guests.
+     *
+     * @param array<string, mixed> $row
+     * @return array<string, scalar>
+     */
+    private static function roomData(array $row, float $charged, string $roomName, string $boardName): array
+    {
+        return [
+            'room_id' => TypeCoerce::toString($row['room_id'] ?? ''),
+            'board_id' => TypeCoerce::toString($row['board_id'] ?? ''),
+            'price' => $charged,
+            'room_display' => $roomName,
+            'board_name' => $boardName,
+            'package_name' => TypeCoerce::toString($row['package_name'] ?? ''),
+            'standard_price' => TypeCoerce::toFloat($row['total_price'] ?? 0),
+            'early_booking' => TypeCoerce::toFloat($row['early_booking_discount'] ?? 0),
+            'extras' => TypeCoerce::toString($row['extras_label'] ?? ''),
+        ];
     }
 
     /**

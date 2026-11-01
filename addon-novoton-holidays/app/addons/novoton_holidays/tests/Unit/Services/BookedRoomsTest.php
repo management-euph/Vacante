@@ -80,6 +80,22 @@ final class BookedRoomsTest extends TestCase
     }
 
     /**
+     * The search offers up to twelve rooms (ProviderRoomLimit, the guest
+     * picker) and the hotel page books them together (boards 13c): a
+     * booking of twelve is priced, not refused at five.
+     */
+    public function testAsManyRoomsAsTheSearchOffersAreBooked(): void
+    {
+        $room = ['room_id' => 'DBL 2+0', 'board_id' => 'AI', 'package_name' => 'P1', 'adults' => 2, 'children' => 0, 'childrenAges' => []];
+        $rooms = BookedRooms::fromRequest(self::request(['rooms_data' => json_encode(array_fill(0, 12, $room))]), []);
+
+        self::assertNotNull($rooms);
+        self::assertCount(12, $rooms);
+        self::assertSame(['DBL 2+0', 'AI', 'P1', 2, 0, []], array_values($rooms[11]));
+        self::assertNull(BookedRooms::fromRequest(self::request(['rooms_data' => json_encode(array_fill(0, 3, $room))]), [], 2), 'a lower limit given still holds');
+    }
+
+    /**
      * @return iterable<string, array{array<string, mixed>, array<string, mixed>}>
      */
     public static function inconsistentPostings(): iterable
@@ -93,7 +109,7 @@ final class BookedRoomsTest extends TestCase
         yield 'not JSON' => [['rooms_data' => '{oops'], []];
         yield 'not a list' => [['rooms_data' => json_encode(['a' => ['room_id' => 'DBL', 'adults' => 2]])], []];
         yield 'a room that is not an object' => [['rooms_data' => json_encode([1, 2])], []];
-        yield 'more rooms than allowed' => [['rooms_data' => json_encode(array_fill(0, 6, $two[0]))], []];
+        yield 'more rooms than the search offers' => [['rooms_data' => json_encode(array_fill(0, 13, $two[0]))], []];
         yield 'a second room without a room id' => [['rooms_data' => json_encode([$two[0], ['adults' => 2]])], []];
         yield 'a second room without adults' => [['rooms_data' => json_encode([$two[0], ['room_id' => 'DBL']])], []];
         yield 'no adults' => [['rooms_data' => json_encode([['room_id' => 'DBL', 'adults' => 0]])], []];

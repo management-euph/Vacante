@@ -263,8 +263,44 @@ an internal code.
 - 29 Oct 2026 — the owner dropped the "Oferte speciale" chip (the struck
   price and its badge already say it); Qodana's three "redundant character
   escape" warnings in `pdp-design-a.js` fixed.
-- Next: Novoton rows through `RoomOfferRows`; the title row's after-search
-  state ("10–17 iul. · de la 1.485 €", "Vezi camerele") and the compact
-  summary's price (the section carries `data-cheapest`); the room facts the
-  board shows beyond capacity (area, bed) once a source exists; phase 5
-  (several rooms).
+- 1 Nov 2026 — **phase 5, step 5a: several rooms in Design A (boards
+  13c), Novoton** — committed on the branch, no pull request yet:
+  - travel_core `Results\RoomGroupsBuilder`: the rooms searched grouped by
+    their guests (same adults, same children's ages), one tab per group
+    ("Camerele 1–8 · 2 adulți"), each group's 13b cards priced for its
+    guests and keyed per group; every till counts the group's rooms (at
+    most the rooms left of the type) with its totals. `RateOffer::roomData`
+    (the entry the booking posts per room), `MoneyFormatter::scriptFormat()`
+    (the page's prices in the shopper's currency format).
+  - `components/design_a_groups.tpl` (tabs, panels, the sticky bar, the GET
+    form to today's booking form) and the till's group mode (room counter,
+    "Alege pentru 8 camere"); CSS #61; `pdp-design-a-rooms.js`: choices per
+    group, availability shared across groups (`quota`), the next group
+    opened, "Anulează" instead of a confirmation, the amber partial state,
+    the closest type suggested (same meal, enough rooms, the difference
+    shown, never applied by itself), "Mergi la …" only when the next rooms
+    are not the ones open, "Vezi alegerile", the mixed label "Rezervă 7
+    camere · cere 1". 67 texts en / ro.
+  - Novoton: the multi-room search asks once per distinct occupancy (twelve
+    rooms of three kinds = three requests) and now reads the hotel's quota,
+    so several rooms get "rooms left" and on request like one room;
+    `DesignARates::groups()` / `bookForm()` / `everyRoomPriced()`; the
+    search shows the groups when every room searched has rates (else
+    today's selection says which has none). add_to_cart books as many rooms
+    as the search offers (`ProviderRoomLimit`, 12): it refused more than 5.
+  - Suites: travel_core 1024, Novoton 1166 PHPUnit tests, 313 vitest tests.
+  - **Before phase 5's pull request**: the split booking the owner chose —
+    the instantly confirmed rooms booked and paid now, the on-request rooms
+    requested apart. Today the page posts every room as one booking, so the
+    bar's "acum … · restul după confirmare" is not yet true. Then
+    `ext_board_id` in each room's entry once #113 merges; per-room mode
+    ("Aleg fiecare cameră separat"); Eurosite's whole-group offer (13c.3);
+    the choices kept when the page reloads.
+  - **To check on the dev store**: a 6–12-room Novoton booking end to end
+    (booking form, add_to_cart, checkout) — no real reservation can be
+    sent from the session.
+- Next: the split booking (above); Novoton rows through `RoomOfferRows`;
+  the title row's after-search state ("10–17 iul. · de la 1.485 €", "Vezi
+  camerele") and the compact summary's price (the section carries
+  `data-cheapest`); the room facts the board shows beyond capacity (area,
+  bed) once a source exists.
