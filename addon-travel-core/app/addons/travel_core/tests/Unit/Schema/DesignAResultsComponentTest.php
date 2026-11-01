@@ -182,6 +182,10 @@ final class DesignAResultsComponentTest extends TestCase
             'data-travel-bar-picks', 'data-travel-bar-total', 'data-travel-bar-goto', 'data-travel-bar-cta', 'data-travel-bar-more',
             'data-travel-bar-note', 'data-travel-bar-note-request', 'data-travel-bar-reply', 'data-travel-book', 'data-travel-book-form',
             'data-travel-book-rooms', 'data-travel-book-total',
+            // room by room (board 13c.9)
+            'data-travel-by-room', 'data-travel-sub-group', 'data-travel-sub-rooms', 'data-travel-strip', 'data-travel-strip-vp',
+            'data-travel-strip-nav', 'data-travel-stab', 'data-travel-stab-state', 'data-travel-spanel', 'data-travel-stephead',
+            'data-travel-qty-box', 'data-travel-per-room',
             'data-quota=', 'data-left=', 'data-title=', 'data-unit=', 'data-unit-was=', 'data-meal-name=', 'data-meal-key=',
             'data-on-request=', 'data-room-json=', 'data-size=', 'data-rooms=', 'data-adults=', 'data-ages=', 'data-guests=',
             'data-money-symbol=', 'data-money-after=', 'data-money-decimals=', 'data-money-decimal=', 'data-money-thousands=',

@@ -7,7 +7,8 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
  * counts the group's rooms (at most the rooms left of the type, shared
  * between the groups) and chooses them; notes say what was added, offer the
  * closest type when one runs out and undo; the bar books every room with
- * the entries the supplier's booking of several rooms reads.
+ * the entries the supplier's booking of several rooms reads. A group of
+ * several rooms can also be chosen room by room (board 13c.9).
  */
 
 const TEXTS = {
@@ -19,10 +20,15 @@ const TEXTS = {
     'state-todo-one': 'Nealeasă',
     'state-todo-many': 'Nealese',
     'state-now': 'Alegi acum',
+    'state-now-count': 'Alegi acum · [chosen] din [size]',
     'state-part': '[chosen] din [size] alese · mai alegi [left]',
     'state-done-one': 'Aleasă,',
     'state-done-many': 'Alese,',
     'choose-room': 'Alege pentru Camera [n]',
+    'total-one': 'Total · [nights] · [guests]',
+    'head-room': 'Camera [n] · [guests]',
+    'by-room': 'Aleg fiecare cameră separat',
+    'by-group': 'Aleg pentru tot grupul',
     'choose-rooms': 'Alege pentru [rooms]',
     chosen: 'Aleasă',
     'chosen-rooms': 'Aleasă · [rooms]',
@@ -60,7 +66,7 @@ function attr(value) {
 /** One option's till of a group's room card, as design_a_till.tpl prints it. */
 function till(group, option) {
     const counter = group.size > 1
-        ? `<div class="travel-pdpa-qty"><div class="travel-pdpa-qty__c">
+        ? `<div class="travel-pdpa-qty" data-travel-qty-box><div class="travel-pdpa-qty__c">
                <button type="button" data-travel-qty-step="-1">-</button>
                <span data-travel-qty>${option.qty}</span>
                <button type="button" data-travel-qty-step="1">+</button></div></div>`
@@ -71,7 +77,8 @@ function till(group, option) {
                  data-on-request="${option.onRequest ? 1 : 0}" data-room-json="${attr(JSON.stringify(option.json))}"${option.index === 0 ? '' : ' hidden'}>
         ${counter}
         <p class="travel-pdpa-till__sum">${group.size > 1 ? '<span data-travel-till-label></span>' : ''}
-            <span data-travel-till-was>${option.unitWas ? '<s></s>' : ''}</span><b data-travel-till-total></b></p>
+            <span data-travel-till-was>${option.unitWas ? '<s></s>' : ''}</span><b data-travel-till-total></b>
+            ${group.size > 1 ? `<span data-travel-per-room>${option.unit} € / cameră</span>` : ''}</p>
         <p data-travel-cap hidden></p>
         <div class="travel-pdpa-cta"><button type="button" data-travel-choose aria-pressed="false">Alege</button></div>
     </div>`;
@@ -107,11 +114,29 @@ function page({ deluxeLeft = 10, seaLeft = 2, kidsOnRequest = false } = {}) {
     ];
     const texts = Object.entries(TEXTS).map(([k, v]) => `data-t-${k}="${attr(v)}"`).join(' ');
     const tabs = groups.map(([g], i) => `<button type="button" role="tab" data-travel-gtab="${g.key}" aria-selected="${i === 0}"><span data-travel-gtab-state></span></button>`).join('');
+    // A group of several rooms: the switch to room by room, its line, the strip of its rooms (design_a_groups.tpl)
+    const byRoom = (g) => `
+            <div class="travel-pdpa-ghead">
+                <button type="button" data-travel-by-room>Aleg fiecare cameră separat</button>
+                <p data-travel-sub-group>Alegerea se aplică la toate cele ${g.size} camere.</p>
+                <p data-travel-sub-rooms hidden>Alegi fiecare cameră pe rând.</p>
+            </div>
+            <div data-travel-strip hidden>
+                <button type="button" data-travel-strip-nav="-1"></button>
+                <div data-travel-strip-vp><div role="tablist">${g.rooms.map((n) => `
+                    <button type="button" role="tab" id="travel-pdpa-stab-${g.key}-${n}" aria-selected="false" tabindex="-1" data-travel-stab="${n}"><span data-travel-stab-state></span></button>`).join('')}
+                </div></div>
+                <button type="button" data-travel-strip-nav="1"></button>
+            </div>`;
     const panels = groups.map(([g, rooms], i) => `
         <div class="travel-pdpa-gpanel" role="tabpanel" data-travel-group="${g.key}" data-size="${g.size}" data-rooms="${g.rooms.join(',')}"
              data-adults="${g.adults}" data-ages="${g.ages}" data-guests="${g.guests}"${i === 0 ? '' : ' hidden'}>
             <div data-travel-gnotes></div>
-            <section data-travel-results><ul data-travel-room-list>${rooms.map((r) => card(g, r)).join('')}</ul></section>
+            ${g.size > 1 ? byRoom(g) : ''}
+            <div data-travel-spanel id="travel-pdpa-spanel-${g.key}">
+                ${g.size > 1 ? '<p data-travel-stephead hidden></p>' : ''}
+                <section data-travel-results><ul data-travel-room-list>${rooms.map((r) => card(g, r)).join('')}</ul></section>
+            </div>
         </div>`).join('');
 
     document.body.innerHTML = `
@@ -156,6 +181,9 @@ const pickMeal = (key, room, option) => {
     radio.dispatchEvent(new Event('change', { bubbles: true }));
 };
 const text = (node) => node.textContent.replace(/\s+/g, ' ').trim();
+const roomTab = (key, n) => $(`[data-travel-group="${key}"] [data-travel-stab="${n}"]`);
+const byRoomSwitch = (key) => $(`[data-travel-group="${key}"] [data-travel-by-room]`);
+const picks = () => Array.from(document.querySelectorAll('[data-travel-bar-picks] .travel-pdpa-bbar__pick > span')).map(text);
 
 let submitted = null;
 
@@ -260,6 +288,8 @@ describe('a type that runs short', () => {
 
         expect(tab('g1').getAttribute('aria-selected')).toBe('true');
         expect(text(tab('g1'))).toBe('6 din 8 alese · mai alegi 2 camere');
+        // the next rooms to choose are the ones open: no "Mergi la" (board 13c.7)
+        expect($('[data-travel-bar-goto]').hidden).toBe(true);
         const notes = text(panel('g1').querySelector('[data-travel-gnotes]'));
         expect(notes).toContain('Am ales Cameră Dublă Deluxe · Ultra All Inclusive pentru Camerele 1–6: +5.430 €. Mai alegi 2 camere pentru câte 2 adulți.');
         expect(notes).toContain('Pentru celelalte 2 camere, cea mai apropiată: Cameră Dublă Deluxe, spre mare · Ultra All Inclusive, 965 € de cameră (+60 € față de Cameră Dublă Deluxe).');
@@ -317,5 +347,164 @@ describe('booking every room', () => {
         expect(document.activeElement).toBe(tab('g2'));
         tab('g2').dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
         expect(tab('g1').getAttribute('aria-selected')).toBe('true');
+    });
+});
+
+describe('room by room (board 13c.9)', () => {
+    beforeEach(() => page());
+
+    it('opens the group\'s rooms one by one: the strip, the room open, its tills without a count', () => {
+        click(byRoomSwitch('g1'));
+
+        const strip = $('[data-travel-group="g1"] [data-travel-strip]');
+        expect(strip.hidden).toBe(false);
+        expect(text(byRoomSwitch('g1'))).toBe('Aleg pentru tot grupul');
+        expect($('[data-travel-group="g1"] [data-travel-sub-group]').hidden).toBe(true);
+        expect($('[data-travel-group="g1"] [data-travel-sub-rooms]').hidden).toBe(false);
+        expect(roomTab('g1', 1).getAttribute('aria-selected')).toBe('true');
+        expect(roomTab('g1', 1).getAttribute('tabindex')).toBe('0');
+        expect(text(roomTab('g1', 1))).toBe('Alegi acum');
+        expect(text(roomTab('g1', 2))).toBe('Nealeasă');
+        expect(text($('[data-travel-group="g1"] [data-travel-stephead]'))).toBe('Camera 1 · 2 adulți');
+        const spanel = $('#travel-pdpa-spanel-g1');
+        expect([spanel.getAttribute('role'), spanel.getAttribute('aria-labelledby')]).toEqual(['tabpanel', 'travel-pdpa-stab-g1-1']);
+
+        const deluxe = tillOf('g1', 'dlx');
+        expect(deluxe.querySelector('[data-travel-qty-box]').hidden).toBe(true);
+        expect(deluxe.querySelector('[data-travel-per-room]').hidden).toBe(true);
+        expect(text(deluxe.querySelector('[data-travel-till-label]'))).toBe('Total · 6 nopți · 2 adulți');
+        expect(text(deluxe.querySelector('[data-travel-till-total]'))).toBe('675 €');
+        expect(text(deluxe.querySelector('[data-travel-choose]'))).toBe('Alege pentru Camera 1');
+        // two sea-view rooms are enough for this room: no cap note
+        expect(tillOf('g1', 'sea').querySelector('[data-travel-cap]').hidden).toBe(true);
+
+        // and back: the group's count again
+        click(byRoomSwitch('g1'));
+        expect(strip.hidden).toBe(true);
+        expect(spanel.hasAttribute('role')).toBe(false);
+        expect(deluxe.querySelector('[data-travel-qty-box]').hidden).toBe(false);
+        expect(text(deluxe.querySelector('[data-travel-choose]'))).toBe('Alege pentru 8 camere');
+    });
+
+    it('chooses a room at a time, each its own type and meal, and opens the next room', () => {
+        click(byRoomSwitch('g1'));
+        pickMeal('g1', 'dlx', 1);
+        click(tillOf('g1', 'dlx', 1).querySelector('[data-travel-choose]'));
+
+        expect(text(panel('g1').querySelector('[data-travel-gnotes] [role="status"]'))).toBe(
+            'Am ales Cameră Dublă Deluxe · Ultra All Inclusive pentru Camera 1: +905 €. Mai alegi 7 camere pentru câte 2 adulți.'
+        );
+        expect(text(roomTab('g1', 1))).toBe('Aleasă, 905 €');
+        expect(roomTab('g1', 2).getAttribute('aria-selected')).toBe('true');
+        expect(text($('[data-travel-group="g1"] [data-travel-stephead]'))).toBe('Camera 2 · 2 adulți');
+        expect(text(tab('g1'))).toBe('Alegi acum · 1 din 8');
+        // the till of Camera 2 is not the one chosen for Camera 1
+        expect(text(tillOf('g1', 'dlx', 1).querySelector('[data-travel-choose]'))).toBe('Alege pentru Camera 2');
+
+        click(tillOf('g1', 'sea', 0).querySelector('[data-travel-choose]'));
+        expect(picks()).toEqual([
+            'Camera 1: Cameră Dublă Deluxe · Ultra All Inclusive · 905 €',
+            'Camera 2: Cameră Dublă Deluxe, spre mare · Mic dejun · 735 €'
+        ]);
+        expect(text($('[data-travel-bar-total]'))).toBe('Total până acum 1.640 €');
+        expect(roomTab('g1', 3).getAttribute('aria-selected')).toBe('true');
+        expect($('[data-travel-bar-goto]').hidden).toBe(true);
+
+        // back to Camera 1: its choice is pressed; pressed again it lets go
+        click(roomTab('g1', 1));
+        const chosen = tillOf('g1', 'dlx', 1).querySelector('[data-travel-choose]');
+        expect([chosen.getAttribute('aria-pressed'), text(chosen)]).toEqual(['true', 'Aleasă']);
+        click(chosen);
+        expect(text(roomTab('g1', 1))).toBe('Alegi acum');
+        expect(picks()).toEqual(['Camera 2: Cameră Dublă Deluxe, spre mare · Mic dejun · 735 €']);
+
+        // another group complete and open: "Mergi la" the group still to choose
+        click(tab('g2'));
+        click(tillOf('g2', 'dlx', 0).querySelector('[data-travel-choose]'));
+        click(tab('g2'));
+        expect(text($('[data-travel-bar-goto]'))).toBe('Mergi la Camerele 1–8');
+    });
+
+    it('a type with no room left for the room open says so', () => {
+        click(byRoomSwitch('g1'));
+        click(tillOf('g1', 'sea', 0).querySelector('[data-travel-choose]'));
+        click(tillOf('g1', 'sea', 0).querySelector('[data-travel-choose]'));
+
+        // the two sea-view rooms are Camera 1 and 2; Camera 3 is open
+        const sea = tillOf('g1', 'sea', 0);
+        expect(text(sea.querySelector('[data-travel-cap]'))).toBe('Nu mai sunt camere de acest tip');
+        expect(sea.querySelector('[data-travel-choose]').disabled).toBe(true);
+        // Camera 1 can still change to the other meal of its own room type
+        click(roomTab('g1', 1));
+        expect(tillOf('g1', 'sea', 1).querySelector('[data-travel-choose]').disabled).toBe(false);
+    });
+
+    it('a group chosen at once opens room by room with its choice in every room, and comes back as one choice', () => {
+        pickMeal('g1', 'dlx', 1);
+        click(tillOf('g1', 'dlx', 1).querySelector('[data-travel-choose]'));
+        click(tab('g1'));
+        click(byRoomSwitch('g1'));
+
+        expect([1, 2, 8].map((n) => text(roomTab('g1', n)))).toEqual(['Aleasă, 905 €', 'Aleasă, 905 €', 'Aleasă, 905 €']);
+        expect(roomTab('g1', 1).getAttribute('aria-selected')).toBe('true');
+        expect(picks()).toHaveLength(8);
+
+        // Camera 3 takes the sea view: every room was chosen, so the next group to choose opens
+        click(roomTab('g1', 3));
+        pickMeal('g1', 'sea', 1);
+        click(tillOf('g1', 'sea', 1).querySelector('[data-travel-choose]'));
+        expect(tab('g2').getAttribute('aria-selected')).toBe('true');
+        expect(picks()[2]).toBe('Camera 3: Cameră Dublă Deluxe, spre mare · Ultra All Inclusive · 965 €');
+
+        click(tab('g1'));
+        click(byRoomSwitch('g1'));
+        expect(picks()).toEqual([
+            'Camerele 1–7: Cameră Dublă Deluxe · Ultra All Inclusive · 7 × 905 €',
+            'Camera 8: Cameră Dublă Deluxe, spre mare · Ultra All Inclusive · 965 €'
+        ]);
+        expect(text(tab('g1'))).toBe('Alese, 7.300 €');
+        expect(tillOf('g1', 'dlx', 1).querySelector('[data-travel-choose]').getAttribute('aria-pressed')).toBe('true');
+    });
+
+    it('books each room with what was chosen for it', () => {
+        click(byRoomSwitch('g1'));
+        for (let n = 1; n <= 8; n++) {
+            click(tillOf('g1', n === 2 ? 'sea' : 'dlx', 0).querySelector('[data-travel-choose]'));
+        }
+        expect(tab('g2').getAttribute('aria-selected')).toBe('true');
+        click(tillOf('g2', 'dlx', 0).querySelector('[data-travel-choose]'));
+        click($('[data-travel-book]'));
+
+        const rooms = JSON.parse(submitted.querySelector('[data-travel-book-rooms]').value);
+        expect(rooms.map((r) => r.room_num)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+        expect(rooms.map((r) => r.room_id)).toEqual([
+            'DBL 2+1 DELUXE', 'DBL 2+1 DELUXE SEA SIDE', 'DBL 2+1 DELUXE', 'DBL 2+1 DELUXE', 'DBL 2+1 DELUXE',
+            'DBL 2+1 DELUXE', 'DBL 2+1 DELUXE', 'DBL 2+1 DELUXE', 'DBL 2+1 DELUXE', 'DBL 2+1 DELUXE'
+        ]);
+        expect(rooms[1]).toEqual({ room_id: 'DBL 2+1 DELUXE SEA SIDE', board_id: 'BB', price: 735, room_num: 2, adults: 2, children: 0, childrenAges: [] });
+        expect(submitted.querySelector('[data-travel-book-total]').value).toBe(String(7 * 675 + 735 + 2 * 765) + '.00');
+    });
+
+    it('undo reopens the room it frees', () => {
+        click(byRoomSwitch('g1'));
+        click(tillOf('g1', 'dlx', 0).querySelector('[data-travel-choose]'));
+        expect(roomTab('g1', 2).getAttribute('aria-selected')).toBe('true');
+
+        click(panel('g1').querySelector('[data-travel-undo]'));
+        expect(roomTab('g1', 1).getAttribute('aria-selected')).toBe('true');
+        expect(text(roomTab('g1', 1))).toBe('Alegi acum');
+        expect($('[data-travel-bar]').hidden).toBe(true);
+    });
+
+    it('the rooms\' tabs move with the arrow keys', () => {
+        click(byRoomSwitch('g1'));
+        roomTab('g1', 1).dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+        expect(roomTab('g1', 2).getAttribute('aria-selected')).toBe('true');
+        expect(document.activeElement).toBe(roomTab('g1', 2));
+        roomTab('g1', 2).dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
+        expect(roomTab('g1', 8).getAttribute('aria-selected')).toBe('true');
+        expect(text(tillOf('g1', 'dlx').querySelector('[data-travel-choose]'))).toBe('Alege pentru Camera 8');
+        roomTab('g1', 8).dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+        expect(roomTab('g1', 1).getAttribute('aria-selected')).toBe('true');
     });
 });

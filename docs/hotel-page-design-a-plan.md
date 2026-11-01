@@ -337,6 +337,34 @@ an internal code.
     emailed (the rooms, their price, the order; an unpaid order can be paid
     by bank transfer now); refused or cancelled, also as soon as sent, the
     store is emailed what to refund (paid order) or not to collect (unpaid).
+- 1 Nov 2026 — **phase 5, "Aleg fiecare cameră separat" (board 13c.9)**
+  and a Smarty 5 fix:
+  - The hotel page with several rooms died at compile time ("illegal
+    value … for "scope" attribute"): `design_a_groups.tpl` passed a
+    group's id suffix to `design_a_results.tpl` as `scope`, an `{include}`
+    attribute Smarty 5 keeps for a variable scope. It is `id_suffix` now,
+    and `scripts/compile-templates.php` (`composer templates`, a CI job,
+    the grumphp hook) compiles every add-on template with Smarty 5, as the
+    store does: the old include fails it with the store's own error.
+  - Room by room: a group of several rooms gets "Aleg fiecare cameră
+    separat" in its head; it opens a strip of the group's rooms (one tab
+    each, arrows when they do not fit, arrow keys), the room open named
+    over the cards ("Camera 3 · 2 adulți") and tills without a count that
+    choose for that room ("Alege pentru Camera 3"); a choice opens the next
+    room still to choose, then the next group. The group's tab says
+    "Alegi acum · 2 din 8", each room's tab its price once chosen, the bar
+    one line per room ("Camera 2: … · 660 €", "Schimbă" opens that room),
+    the booking posts each room with what was chosen for it. Switching
+    keeps what is chosen: each choice of the group becomes one per room;
+    "Aleg pentru tot grupul" makes the rooms chosen alike one choice again
+    (a group's rooms have the same guests, so which room takes which
+    number does not matter). The room open is named "Camera N · guests",
+    not the board's "Camera 3 din 8": past the first group a room's number
+    is not its place in the group (Camera 9 of 2).
+  - The bar: "Mergi la …" only when the next rooms to choose are not the
+    open ones (it showed the next group while the open group still had
+    rooms to choose; board 13c.7); on a phone its buttons wrap to a line
+    of their own (the bar scrolled the page sideways at 390 px).
 - Next: Novoton rows through `RoomOfferRows`;
   the title row's after-search state ("10–17 iul. · de la 1.485 €", "Vezi
   camerele") and the compact summary's price (the section carries

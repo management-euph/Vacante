@@ -3782,6 +3782,34 @@ msgctxt "Languages::travel_core.pdpa_m_sub_many"
 msgid "Your choice is for all [n] rooms. You can also take different types: choose how many rooms of each."
 msgstr "Alegerea se aplică la toate cele [n] camere. Poți lua și tipuri diferite: alegi câte camere vrei din fiecare."
 
+msgctxt "Languages::travel_core.pdpa_m_by_room"
+msgid "Choose each room separately"
+msgstr "Aleg fiecare cameră separat"
+
+msgctxt "Languages::travel_core.pdpa_m_by_group"
+msgid "One choice for the whole group"
+msgstr "Aleg pentru tot grupul"
+
+msgctxt "Languages::travel_core.pdpa_m_sub_rooms"
+msgid "You choose each room in turn. You can go back to one choice for the whole group at any time."
+msgstr "Alegi fiecare cameră pe rând. Te poți întoarce oricând la o singură alegere pentru tot grupul."
+
+msgctxt "Languages::travel_core.pdpa_m_strip"
+msgid "Rooms [numbers], one by one"
+msgstr "Camerele [numbers], una câte una"
+
+msgctxt "Languages::travel_core.pdpa_m_strip_prev"
+msgid "Previous rooms"
+msgstr "Camerele anterioare"
+
+msgctxt "Languages::travel_core.pdpa_m_strip_next"
+msgid "Next rooms"
+msgstr "Camerele următoare"
+
+msgctxt "Languages::travel_core.pdpa_m_state_now_count"
+msgid "Choosing now · [chosen] of [size]"
+msgstr "Alegi acum · [chosen] din [size]"
+
 msgctxt "Languages::travel_core.pdpa_m_qty"
 msgid "Rooms"
 msgstr "Camere"

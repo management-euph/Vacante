@@ -2964,6 +2964,35 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Your choice is for all [n] rooms. You can also take different types: choose how many rooms of each.',
         'ro' => 'Alegerea se aplică la toate cele [n] camere. Poți lua și tipuri diferite: alegi câte camere vrei din fiecare.',
     ],
+    // Room by room in a group (board 13c.9)
+    'travel_core.pdpa_m_by_room' => [
+        'en' => 'Choose each room separately',
+        'ro' => 'Aleg fiecare cameră separat',
+    ],
+    'travel_core.pdpa_m_by_group' => [
+        'en' => 'One choice for the whole group',
+        'ro' => 'Aleg pentru tot grupul',
+    ],
+    'travel_core.pdpa_m_sub_rooms' => [
+        'en' => 'You choose each room in turn. You can go back to one choice for the whole group at any time.',
+        'ro' => 'Alegi fiecare cameră pe rând. Te poți întoarce oricând la o singură alegere pentru tot grupul.',
+    ],
+    'travel_core.pdpa_m_strip' => [
+        'en' => 'Rooms [numbers], one by one',
+        'ro' => 'Camerele [numbers], una câte una',
+    ],
+    'travel_core.pdpa_m_strip_prev' => [
+        'en' => 'Previous rooms',
+        'ro' => 'Camerele anterioare',
+    ],
+    'travel_core.pdpa_m_strip_next' => [
+        'en' => 'Next rooms',
+        'ro' => 'Camerele următoare',
+    ],
+    'travel_core.pdpa_m_state_now_count' => [
+        'en' => 'Choosing now · [chosen] of [size]',
+        'ro' => 'Alegi acum · [chosen] din [size]',
+    ],
     'travel_core.pdpa_m_qty' => [
         'en' => 'Rooms',
         'ro' => 'Camere',

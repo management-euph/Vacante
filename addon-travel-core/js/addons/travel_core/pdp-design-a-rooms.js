@@ -22,6 +22,13 @@
  *    then the only booking button. A room on request is booked apart: the
  *    button says both ("Rezervă 11 camere · cere 1 cameră") and the total
  *    what is paid now.
+ *  - "Aleg fiecare cameră separat" (board 13c.9): a group of several rooms
+ *    chosen room by room. A strip of the group's rooms, one tab each, the
+ *    tills choosing for the room open ("Alege pentru Camera 3", no count);
+ *    a choice opens the next room still to choose, then the next group.
+ *    Each of the group's choices becomes one per room; "Aleg pentru tot
+ *    grupul" makes the rooms chosen alike one choice again (a group's rooms
+ *    have the same guests, so which takes which number is the same).
  *  - Booking: the supplier's GET form (data-travel-book-form) with the rooms
  *    as a JSON list in room order, each its option's room_json plus room_num,
  *    adults, children and childrenAges — the entries the supplier's booking
@@ -112,6 +119,24 @@
         Array.prototype.forEach.call(root.querySelectorAll(selector), fn);
     }
 
+    function clear(node) {
+        while (node.firstChild) {
+            node.removeChild(node.firstChild);
+        }
+    }
+
+    function copy(source, extra) {
+        var out = {};
+        Object.keys(source).forEach(function (key) {
+            out[key] = source[key];
+        });
+        Object.keys(extra).forEach(function (key) {
+            out[key] = extra[key];
+        });
+
+        return out;
+    }
+
     function el(tag, className, text) {
         var node = document.createElement(tag);
         if (className) {
@@ -159,7 +184,11 @@
             choices: [],
             note: null,
             seq: 0,
-            open: groups.length > 0 ? groups[0].key : ''
+            open: groups.length > 0 ? groups[0].key : '',
+            // Room by room: the groups chosen so, the room open in each, the room its strip last scrolled to
+            byRoom: {},
+            roomOpen: {},
+            revealed: {}
         };
     }
 
@@ -245,16 +274,97 @@
         return null;
     }
 
-    /** The room numbers each choice of a group books, in the order chosen. */
+    /**
+     * The room numbers each choice of a group books: a choice made for one
+     * room (room by room) holds that room, the others take the rooms left in
+     * the order chosen.
+     */
     function numbering(state, g) {
+        var choices = choicesOf(state, g.key);
+        var held = {};
+        choices.forEach(function (choice) {
+            if (choice.room) {
+                held[choice.room] = true;
+            }
+        });
+        var free = g.rooms.filter(function (room) { return !held[room]; });
         var next = 0;
         var map = {};
-        choicesOf(state, g.key).forEach(function (choice) {
-            map[choice.id] = g.rooms.slice(next, next + choice.qty);
+        choices.forEach(function (choice) {
+            if (choice.room) {
+                map[choice.id] = [choice.room];
+                return;
+            }
+            map[choice.id] = free.slice(next, next + choice.qty);
             next += choice.qty;
         });
 
         return map;
+    }
+
+    /** A group's choices in the order of the rooms they book. */
+    function inRoomOrder(state, g) {
+        var map = numbering(state, g);
+        var first = function (choice) { return (map[choice.id] || [])[0] || 0; };
+
+        return choicesOf(state, g.key).slice().sort(function (a, b) { return first(a) - first(b); });
+    }
+
+    /** Whether a group of several rooms is chosen room by room ("Aleg fiecare cameră separat"). */
+    function byRoom(state, g) {
+        return g.size > 1 && state.byRoom[g.key] === true;
+    }
+
+    /** The choice that books a room of a group, if any. */
+    function roomChoice(state, g, room) {
+        var map = numbering(state, g);
+        var choices = choicesOf(state, g.key);
+        for (var i = 0; i < choices.length; i++) {
+            if ((map[choices[i].id] || []).indexOf(room) >= 0) {
+                return choices[i];
+            }
+        }
+
+        return null;
+    }
+
+    /** The room open's choice when it is this card's option (room by room). */
+    function roomChosenFor(state, g, card, index) {
+        var held = roomChoice(state, g, state.roomOpen[g.key]);
+
+        return held && held.card === card && held.option === index ? held : null;
+    }
+
+    /** The next room of a group still to choose after one, round the group; 0 when every room is chosen. */
+    function nextRoom(state, g, after) {
+        var start = g.rooms.indexOf(after) + 1;
+        for (var n = 0; n < g.rooms.length; n++) {
+            var room = g.rooms[(start + n) % g.rooms.length];
+            if (!roomChoice(state, g, room)) {
+                return room;
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * Whether a card can take a room of a group chosen room by room: 1, or 0
+     * when no room of its type is left that another choice does not hold
+     * (the room's own choice left out: a new one replaces it).
+     */
+    function capRoom(state, g, card, room) {
+        var left = toInt(card.getAttribute('data-left'));
+        if (left <= 0) {
+            return 1;
+        }
+        var held = roomChoice(state, g, room);
+        var quota = card.getAttribute('data-quota');
+        var others = state.choices.reduce(function (sum, choice) {
+            return choice.quota === quota && choice !== held ? sum + choice.qty : sum;
+        }, 0);
+
+        return left - others > 0 ? 1 : 0;
     }
 
     function roomsLabel(state, rooms) {
@@ -292,7 +402,21 @@
         return template && template.content ? template.content.cloneNode(true) : document.createTextNode('');
     }
 
+    /** Shows or hides a till's room count and its price per room (room by room: neither). */
+    function tillCount(till, shown) {
+        ['[data-travel-qty-box]', '[data-travel-per-room]'].forEach(function (selector) {
+            var node = till.querySelector(selector);
+            if (node) {
+                node.hidden = !shown;
+            }
+        });
+    }
+
     function renderTill(state, g, card, till) {
+        if (byRoom(state, g)) {
+            return renderRoomTill(state, g, card, till);
+        }
+        tillCount(till, true);
         var index = till.getAttribute('data-travel-for');
         var chosen = chosenFor(state, card, index);
         var cap = capOf(state, g, card);
@@ -359,6 +483,49 @@
         return out;
     }
 
+    /** A till of a group chosen room by room: it chooses for the room open, one room, no count. */
+    function renderRoomTill(state, g, card, till) {
+        var room = state.roomOpen[g.key];
+        var chosen = roomChosenFor(state, g, card, till.getAttribute('data-travel-for'));
+        var unit = toNumber(till.getAttribute('data-unit'));
+        var unitWas = toNumber(till.getAttribute('data-unit-was'));
+        var out = !chosen && capRoom(state, g, card, room) === 0;
+        tillCount(till, false);
+
+        var label = till.querySelector('[data-travel-till-label]');
+        if (label) {
+            label.textContent = t(state, 'total-one', { nights: state.nights, guests: g.guests });
+        }
+        var total = till.querySelector('[data-travel-till-total]');
+        if (total) {
+            total.textContent = price(state, unit);
+        }
+        var was = till.querySelector('[data-travel-till-was] s');
+        if (was && unitWas > 0) {
+            was.textContent = price(state, unitWas);
+        }
+        var capNote = till.querySelector('[data-travel-cap]');
+        if (capNote) {
+            capNote.textContent = out ? t(state, 'sold-out') : '';
+            capNote.hidden = !out;
+        }
+        var button = till.querySelector('[data-travel-choose]');
+        if (button) {
+            button.setAttribute('aria-pressed', chosen ? 'true' : 'false');
+            button.disabled = out;
+            clear(button);
+            if (chosen) {
+                button.appendChild(icon(state, 'check'));
+                button.appendChild(document.createTextNode(t(state, 'chosen')));
+            } else {
+                button.appendChild(document.createTextNode(t(state, 'choose-room', { n: room })));
+            }
+            button.setAttribute('aria-label', button.textContent + ': ' + (card.getAttribute('data-title') || '') + ', ' + (till.getAttribute('data-meal-name') || '') + ', ' + price(state, unit));
+        }
+
+        return out;
+    }
+
     function renderCards(state) {
         state.groups.forEach(function (g) {
             each(g.panel, '[data-travel-room]', function (card) {
@@ -396,6 +563,10 @@
                 stateEl.appendChild(icon(state, 'ok'));
                 stateEl.appendChild(el('span', 'travel-pdpa-sr', t(state, 'state-done-' + (g.size === 1 ? 'one' : 'many')) + ' '));
                 stateEl.appendChild(el('b', 'travel-pdpa-num', price(state, sum)));
+            } else if (count > 0 && open && byRoom(state, g)) {
+                // Room by room the rooms are chosen one at a time: no amber while the group is open
+                stateEl.classList.add('travel-pdpa-gtab__s--now');
+                stateEl.appendChild(document.createTextNode(t(state, 'state-now-count', { chosen: count, size: g.size })));
             } else if (count > 0) {
                 stateEl.classList.add('travel-pdpa-gtab__s--part');
                 stateEl.appendChild(el('span', 'travel-pdpa-dot'));
@@ -409,6 +580,109 @@
                 stateEl.lastChild.setAttribute('aria-hidden', 'true');
                 stateEl.appendChild(document.createTextNode(t(state, 'state-todo-' + (g.size === 1 ? 'one' : 'many'))));
             }
+        });
+    }
+
+    /** The strip's arrows: shown when its tabs do not fit, each off at its end. */
+    function stripNav(strip) {
+        var vp = strip.querySelector('[data-travel-strip-vp]');
+        if (!vp) {
+            return;
+        }
+        var overflow = vp.scrollWidth > vp.clientWidth + 1;
+        each(strip, '[data-travel-strip-nav]', function (nav) {
+            nav.hidden = !overflow;
+            nav.disabled = toInt(nav.getAttribute('data-travel-strip-nav')) < 0
+                ? vp.scrollLeft <= 0
+                : vp.scrollLeft + vp.clientWidth >= vp.scrollWidth - 1;
+        });
+    }
+
+    /** Scrolls the strip, not the page, so that a room's tab shows. */
+    function revealTab(strip, tab) {
+        var vp = strip.querySelector('[data-travel-strip-vp]');
+        if (!vp || !tab) {
+            return;
+        }
+        var start = tab.offsetLeft;
+        var end = start + tab.offsetWidth;
+        if (start < vp.scrollLeft) {
+            vp.scrollLeft = start;
+        } else if (end > vp.scrollLeft + vp.clientWidth) {
+            vp.scrollLeft = end - vp.clientWidth;
+        }
+    }
+
+    function roomState(state, g, room, stateEl) {
+        var held = roomChoice(state, g, room);
+        stateEl.className = 'travel-pdpa-stab__s';
+        clear(stateEl);
+        if (held) {
+            stateEl.appendChild(icon(state, 'ok'));
+            stateEl.appendChild(el('span', 'travel-pdpa-sr', t(state, 'state-done-one') + ' '));
+            stateEl.appendChild(el('b', 'travel-pdpa-num', price(state, held.unit)));
+        } else if (room === state.roomOpen[g.key]) {
+            stateEl.classList.add('travel-pdpa-stab__s--now');
+            stateEl.appendChild(document.createTextNode(t(state, 'state-now')));
+        } else {
+            stateEl.appendChild(el('span', 'travel-pdpa-dot'));
+            stateEl.lastChild.setAttribute('aria-hidden', 'true');
+            stateEl.appendChild(document.createTextNode(t(state, 'state-todo-one')));
+        }
+    }
+
+    /** Each group's switch, its line under the heading and, room by room, the strip and the room open. */
+    function renderStrips(state) {
+        state.groups.forEach(function (g) {
+            var on = byRoom(state, g);
+            var toggle = g.panel.querySelector('[data-travel-by-room]');
+            if (toggle) {
+                toggle.textContent = t(state, on ? 'by-group' : 'by-room');
+            }
+            each(g.panel, '[data-travel-sub-group]', function (sub) { sub.hidden = on; });
+            each(g.panel, '[data-travel-sub-rooms]', function (sub) { sub.hidden = !on; });
+            var room = state.roomOpen[g.key];
+            var head = g.panel.querySelector('[data-travel-stephead]');
+            if (head) {
+                head.hidden = !on;
+                head.textContent = on ? t(state, 'head-room', { n: room, guests: g.guests }) : '';
+            }
+            var spanel = g.panel.querySelector('[data-travel-spanel]');
+            if (spanel && on) {
+                spanel.setAttribute('role', 'tabpanel');
+                spanel.setAttribute('aria-labelledby', 'travel-pdpa-stab-' + g.key + '-' + room);
+            } else if (spanel) {
+                spanel.removeAttribute('role');
+                spanel.removeAttribute('aria-labelledby');
+            }
+            var strip = g.panel.querySelector('[data-travel-strip]');
+            if (!strip) {
+                return;
+            }
+            strip.hidden = !on;
+            if (!on) {
+                state.revealed[g.key] = 0;
+                return;
+            }
+            var openTab = null;
+            each(strip, '[data-travel-stab]', function (tab) {
+                var number = toInt(tab.getAttribute('data-travel-stab'));
+                var open = number === room;
+                tab.setAttribute('aria-selected', open ? 'true' : 'false');
+                tab.setAttribute('tabindex', open ? '0' : '-1');
+                if (open) {
+                    openTab = tab;
+                }
+                var stateEl = tab.querySelector('[data-travel-stab-state]');
+                if (stateEl) {
+                    roomState(state, g, number, stateEl);
+                }
+            });
+            if (g.key === state.open && state.revealed[g.key] !== room) {
+                revealTab(strip, openTab);
+                state.revealed[g.key] = room;
+            }
+            stripNav(strip);
         });
     }
 
@@ -486,7 +760,7 @@
             notes.appendChild(note);
         }
 
-        var best = openGroup ? suggestion(state, openGroup) : null;
+        var best = openGroup && !byRoom(state, openGroup) ? suggestion(state, openGroup) : null;
         if (best) {
             var hint = el('div', 'travel-pdpa-note');
             var hintBody = el('div', 'travel-pdpa-note__body');
@@ -540,7 +814,7 @@
         }
         state.groups.forEach(function (g) {
             var map = numbering(state, g);
-            choicesOf(state, g.key).forEach(function (choice) {
+            inRoomOrder(state, g).forEach(function (choice) {
                 var rooms = map[choice.id] || [];
                 var amount = choice.unit * choice.qty;
                 total += amount;
@@ -590,7 +864,9 @@
         }
 
         var goto = bar.querySelector('[data-travel-bar-goto]');
-        var next = all ? null : nextToChoose(state, state.open);
+        // The rooms to choose next: the open group's while it has rooms left (no "Mergi la"), else the next group's
+        var openNow = group(state, state.open);
+        var next = all ? null : (openNow && remaining(state, openNow) > 0 ? openNow : nextToChoose(state, state.open));
         if (goto) {
             var show = !!next && next.key !== state.open;
             goto.hidden = !show;
@@ -636,6 +912,7 @@
 
     function render(state) {
         renderTabs(state);
+        renderStrips(state);
         renderCards(state);
         renderNotes(state);
         renderBar(state);
@@ -655,7 +932,32 @@
         }
     }
 
+    /** A choice of a card's option for a group: qty rooms, or one room (room by room). */
+    function newChoice(state, g, card, till, qty, room) {
+        state.seq += 1;
+
+        return {
+            id: state.seq,
+            group: g.key,
+            card: card,
+            quota: card.getAttribute('data-quota') || '',
+            option: till.getAttribute('data-travel-for'),
+            qty: qty,
+            room: room,
+            unit: toNumber(till.getAttribute('data-unit')),
+            meal: till.getAttribute('data-meal-name') || '',
+            mealKey: till.getAttribute('data-meal-key') || '',
+            title: card.getAttribute('data-title') || '',
+            onRequest: till.getAttribute('data-on-request') === '1',
+            json: till.getAttribute('data-room-json') || ''
+        };
+    }
+
     function choose(state, g, card, till, qty) {
+        if (byRoom(state, g)) {
+            chooseRoom(state, g, card, till);
+            return;
+        }
         var cap = capOf(state, g, card);
         var count = Math.max(1, Math.min(qty || tillQty(till) || 1, cap));
         if (cap < 1) {
@@ -665,21 +967,7 @@
             // The group is complete: a new choice replaces what it holds.
             state.choices = state.choices.filter(function (choice) { return choice.group !== g.key; });
         }
-        state.seq += 1;
-        var choice = {
-            id: state.seq,
-            group: g.key,
-            card: card,
-            quota: card.getAttribute('data-quota') || '',
-            option: till.getAttribute('data-travel-for'),
-            qty: count,
-            unit: toNumber(till.getAttribute('data-unit')),
-            meal: till.getAttribute('data-meal-name') || '',
-            mealKey: till.getAttribute('data-meal-key') || '',
-            title: card.getAttribute('data-title') || '',
-            onRequest: till.getAttribute('data-on-request') === '1',
-            json: till.getAttribute('data-room-json') || ''
-        };
+        var choice = newChoice(state, g, card, till, count, 0);
         state.choices.push(choice);
         state.note = choice.id;
         if (remaining(state, g) === 0) {
@@ -689,6 +977,80 @@
             }
         }
         render(state);
+    }
+
+    /**
+     * Room by room: the room open takes the option (in place of its choice,
+     * if it had one); the next room still to choose opens, else the next
+     * group still to choose.
+     */
+    function chooseRoom(state, g, card, till) {
+        var room = state.roomOpen[g.key];
+        if (capRoom(state, g, card, room) < 1) {
+            return;
+        }
+        state.choices = state.choices.filter(function (choice) { return !(choice.group === g.key && choice.room === room); });
+        var choice = newChoice(state, g, card, till, 1, room);
+        state.choices.push(choice);
+        state.note = choice.id;
+        var next = nextRoom(state, g, room);
+        if (next) {
+            state.roomOpen[g.key] = next;
+        } else {
+            var nextGroup = nextToChoose(state, g.key);
+            if (nextGroup) {
+                state.open = nextGroup.key;
+            }
+        }
+        render(state);
+    }
+
+    /**
+     * Room by room or one choice for the whole group. Room by room, each of
+     * the group's choices becomes one per room it books; back to the group,
+     * the rooms chosen alike (the same card and option) become one choice
+     * again, in room order.
+     */
+    function setByRoom(state, g, on) {
+        if (g.size < 2 || byRoom(state, g) === on) {
+            return;
+        }
+        var map = numbering(state, g);
+        var mine = [];
+        inRoomOrder(state, g).forEach(function (choice) {
+            if (on) {
+                (map[choice.id] || []).forEach(function (room) {
+                    state.seq += 1;
+                    mine.push(copy(choice, { id: state.seq, qty: 1, room: room }));
+                });
+                return;
+            }
+            var alike = mine.filter(function (held) { return held.card === choice.card && held.option === choice.option; })[0];
+            if (alike) {
+                alike.qty += choice.qty;
+            } else {
+                mine.push(copy(choice, { room: 0 }));
+            }
+        });
+        state.choices = state.choices.filter(function (choice) { return choice.group !== g.key; }).concat(mine);
+        state.byRoom[g.key] = on;
+        state.note = null;
+        if (on) {
+            state.roomOpen[g.key] = nextRoom(state, g, 0) || g.rooms[0];
+        }
+        render(state);
+    }
+
+    function openRoom(state, g, room, focus) {
+        if (!byRoom(state, g) || g.rooms.indexOf(room) < 0) {
+            return;
+        }
+        state.roomOpen[g.key] = room;
+        render(state);
+        var tab = focus ? g.panel.querySelector('[data-travel-stab="' + room + '"]') : null;
+        if (tab) {
+            tab.focus();
+        }
     }
 
     function letGo(state, id) {
@@ -704,6 +1066,9 @@
         if (removed) {
             state.note = null;
             state.open = removed.group;
+            if (removed.room && state.byRoom[removed.group]) {
+                state.roomOpen[removed.group] = removed.room;
+            }
         }
         render(state);
     }
@@ -777,6 +1142,32 @@
             openGroup(state, tab.getAttribute('data-travel-gtab'), false);
             return;
         }
+        var toggle = target.closest('[data-travel-by-room]');
+        if (toggle) {
+            var toggleGroup = groupOfPanel(state, toggle);
+            if (toggleGroup) {
+                setByRoom(state, toggleGroup, !byRoom(state, toggleGroup));
+            }
+            return;
+        }
+        var roomTab = target.closest('[data-travel-stab]');
+        if (roomTab) {
+            var roomGroup = groupOfPanel(state, roomTab);
+            if (roomGroup) {
+                openRoom(state, roomGroup, toInt(roomTab.getAttribute('data-travel-stab')), false);
+            }
+            return;
+        }
+        var nav = target.closest('[data-travel-strip-nav]');
+        if (nav && !nav.disabled) {
+            var strip = nav.closest('[data-travel-strip]');
+            var vp = strip ? strip.querySelector('[data-travel-strip-vp]') : null;
+            if (vp) {
+                vp.scrollLeft += toInt(nav.getAttribute('data-travel-strip-nav')) * Math.max(120, Math.round(vp.clientWidth * 0.8));
+                stripNav(strip);
+            }
+            return;
+        }
         var step = target.closest('[data-travel-qty-step]');
         if (step && !step.disabled) {
             var stepTill = step.closest('.travel-pdpa-till--group');
@@ -799,7 +1190,8 @@
             var card = chooseButton.closest('[data-travel-room]');
             var g = groupOfPanel(state, chooseButton);
             if (till && card && g) {
-                var held = chosenFor(state, card, till.getAttribute('data-travel-for'));
+                var index = till.getAttribute('data-travel-for');
+                var held = byRoom(state, g) ? roomChosenFor(state, g, card, index) : chosenFor(state, card, index);
                 if (held) {
                     letGo(state, held.id);
                 } else {
@@ -844,6 +1236,9 @@
             var id = toInt(change.getAttribute('data-travel-change'));
             var held2 = state.choices.filter(function (choice) { return choice.id === id; })[0];
             if (held2) {
+                if (held2.room && state.byRoom[held2.group]) {
+                    state.roomOpen[held2.group] = held2.room;
+                }
                 openGroup(state, held2.group, false);
                 if (held2.card.scrollIntoView) {
                     held2.card.scrollIntoView({ block: 'center' });
@@ -870,30 +1265,66 @@
         }
     }
 
-    /** The tabs as a tab list: arrows, Home and End move between them. */
+    /** Where a key moves in a tab list of n tabs from the one at `at`; -1: it does not. */
+    function moveTo(key, at, n) {
+        if (key === 'ArrowRight') {
+            return (at + 1) % n;
+        }
+        if (key === 'ArrowLeft') {
+            return (at - 1 + n) % n;
+        }
+        if (key === 'Home') {
+            return 0;
+        }
+
+        return key === 'End' ? n - 1 : -1;
+    }
+
+    /** The tabs as tab lists (the groups, a group's rooms): arrows, Home and End move between them. */
     function onKeydown(event) {
-        var tab = event.target && event.target.closest ? event.target.closest('[data-travel-gtab]') : null;
-        var section = tab ? sectionOf(tab) : null;
+        var target = event.target && event.target.closest ? event.target : null;
+        var section = target ? sectionOf(target) : null;
         if (!section) {
             return;
         }
         var state = stateOf(section);
-        var keys = state.groups.map(function (g) { return g.key; });
-        var at = keys.indexOf(tab.getAttribute('data-travel-gtab'));
-        var to = -1;
-        if (event.key === 'ArrowRight') {
-            to = (at + 1) % keys.length;
-        } else if (event.key === 'ArrowLeft') {
-            to = (at - 1 + keys.length) % keys.length;
-        } else if (event.key === 'Home') {
-            to = 0;
-        } else if (event.key === 'End') {
-            to = keys.length - 1;
+        var tab = target.closest('[data-travel-gtab]');
+        var roomTab = tab ? null : target.closest('[data-travel-stab]');
+        var to;
+        if (tab) {
+            var keys = state.groups.map(function (g) { return g.key; });
+            to = moveTo(event.key, keys.indexOf(tab.getAttribute('data-travel-gtab')), keys.length);
+            if (to >= 0) {
+                event.preventDefault();
+                openGroup(state, keys[to], true);
+            }
+        } else if (roomTab) {
+            var g = groupOfPanel(state, roomTab);
+            if (!g) {
+                return;
+            }
+            to = moveTo(event.key, g.rooms.indexOf(toInt(roomTab.getAttribute('data-travel-stab'))), g.rooms.length);
+            if (to >= 0) {
+                event.preventDefault();
+                openRoom(state, g, g.rooms[to], true);
+            }
         }
-        if (to >= 0) {
-            event.preventDefault();
-            openGroup(state, keys[to], true);
+    }
+
+    /** The strips' arrows follow their scroll and the window's width. */
+    function onStripScroll(event) {
+        var vp = event.target;
+        if (vp && vp.matches && vp.matches('[data-travel-strip-vp]')) {
+            stripNav(vp.closest('[data-travel-strip]'));
         }
+    }
+
+    function onResize() {
+        each(document, '[data-travel-multi] [data-travel-strip]', function (strip) {
+            if (!strip.hidden) {
+                stripNav(strip);
+            }
+        });
     }
 
     /** A meal switched in a group's card: its till shows the other option (pdp-design-a.js), counted afresh. */
@@ -914,6 +1345,8 @@
     document.addEventListener('keydown', onKeydown);
     document.addEventListener('change', onChange);
     document.addEventListener('travel:results-swapped', init);
+    document.addEventListener('scroll', onStripScroll, true);
+    window.addEventListener('resize', onResize);
 
     window.TravelPdpDesignARooms = {
         form: form,

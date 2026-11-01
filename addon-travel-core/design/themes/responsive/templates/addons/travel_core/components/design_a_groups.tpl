@@ -13,10 +13,16 @@
                room_json with room_num, adults, children, childrenAges) and
                total_field (their total).
 
+    A group of several rooms is chosen in one go (its tills count the rooms)
+    or, with "Aleg fiecare cameră separat" (board 13c.9), room by room: a
+    strip of the group's rooms, one tab each, the tills choosing for the
+    room open ("Alege pentru Camera 3"); "Aleg pentru tot grupul" goes back.
+
     pdp-design-a.js drives each list's filters, radios and tills as for one
     room; pdp-design-a-rooms.js the tabs, the room counts, the choices and
-    their notes, the bar and the booking. The texts it composes are on the
-    section (data-t-*), with the placeholders the lang vars have.
+    their notes, the room-by-room strip, the bar and the booking. The texts
+    it composes are on the section (data-t-*), with the placeholders the
+    lang vars have.
 *}
 {$travel_pdpa_groups = $groups}
 {$travel_pdpa_book = $book}
@@ -39,10 +45,15 @@
         data-t-state-todo-one="{__("travel_core.pdpa_m_state_todo_one")|escape:html}"
         data-t-state-todo-many="{__("travel_core.pdpa_m_state_todo_many")|escape:html}"
         data-t-state-now="{__("travel_core.pdpa_m_state_now")|escape:html}"
+        data-t-state-now-count="{__("travel_core.pdpa_m_state_now_count")|escape:html}"
         data-t-state-part="{__("travel_core.pdpa_m_state_part")|escape:html}"
         data-t-state-done-one="{__("travel_core.pdpa_m_state_done_one")|escape:html}"
         data-t-state-done-many="{__("travel_core.pdpa_m_state_done_many")|escape:html}"
         data-t-choose-room="{__("travel_core.pdpa_m_choose_room")|escape:html}"
+        data-t-total-one="{__("travel_core.pdpa_r_total")|escape:html}"
+        data-t-head-room="{__("travel_core.pdpa_m_head_room")|escape:html}"
+        data-t-by-room="{__("travel_core.pdpa_m_by_room")|escape:html}"
+        data-t-by-group="{__("travel_core.pdpa_m_by_group")|escape:html}"
         data-t-choose-rooms="{__("travel_core.pdpa_m_choose_rooms")|escape:html}"
         data-t-chosen="{__("travel_core.pdpa_m_chosen")|escape:html}"
         data-t-chosen-rooms="{__("travel_core.pdpa_m_chosen_rooms")|escape:html}"
@@ -118,13 +129,41 @@
                             {__("travel_core.pdpa_m_head_group", ["[rooms]" => __("travel_core.pdpa_m_rooms_`$travel_pdpa_g.size_form`", ["[n]" => $travel_pdpa_g.size]), "[guests]" => $travel_pdpa_gguests|escape:html])}
                         {/if}
                     </h3>
+                    {if $travel_pdpa_g.size > 1}
+                        <button type="button" class="travel-pdpa-linkbtn travel-pdpa-ghead__by" data-travel-by-room aria-controls="travel-pdpa-strip-{$travel_pdpa_g.key}">{__("travel_core.pdpa_m_by_room")}</button>
+                    {/if}
                     {if $travel_pdpa_g.size == 2}
-                        <p class="travel-pdpa-ghead__sub">{__("travel_core.pdpa_m_sub_two")}</p>
+                        <p class="travel-pdpa-ghead__sub" data-travel-sub-group>{__("travel_core.pdpa_m_sub_two")}</p>
                     {elseif $travel_pdpa_g.size > 2}
-                        <p class="travel-pdpa-ghead__sub">{__("travel_core.pdpa_m_sub_many", ["[n]" => $travel_pdpa_g.size])}</p>
+                        <p class="travel-pdpa-ghead__sub" data-travel-sub-group>{__("travel_core.pdpa_m_sub_many", ["[n]" => $travel_pdpa_g.size])}</p>
+                    {/if}
+                    {if $travel_pdpa_g.size > 1}
+                        <p class="travel-pdpa-ghead__sub" data-travel-sub-rooms hidden>{__("travel_core.pdpa_m_sub_rooms")}</p>
                     {/if}
                 </div>
-                {include file="addons/travel_core/components/design_a_results.tpl" results=$travel_pdpa_g.results id_suffix="-`$travel_pdpa_g.key`" group=$travel_pdpa_g}
+                {if $travel_pdpa_g.size > 1}
+                    {* Room by room (board 13c.9): one tab per room of the group *}
+                    <div class="travel-pdpa-strip" id="travel-pdpa-strip-{$travel_pdpa_g.key}" data-travel-strip hidden>
+                        <button type="button" class="travel-pdpa-strip__nav travel-pdpa-strip__nav--prev" data-travel-strip-nav="-1" tabindex="-1" aria-label="{__("travel_core.pdpa_m_strip_prev")}">{include file="addons/travel_core/components/design_a_icon.tpl" icon="chev"}</button>
+                        <div class="travel-pdpa-strip__vp" data-travel-strip-vp>
+                            <div class="travel-pdpa-stabs" role="tablist" aria-label="{__("travel_core.pdpa_m_strip", ["[numbers]" => $travel_pdpa_g.numbers])}">
+                                {foreach $travel_pdpa_g.rooms as $travel_pdpa_n}
+                                    <button type="button" class="travel-pdpa-stab" role="tab" id="travel-pdpa-stab-{$travel_pdpa_g.key}-{$travel_pdpa_n}"
+                                            aria-selected="false" aria-controls="travel-pdpa-spanel-{$travel_pdpa_g.key}" tabindex="-1" data-travel-stab="{$travel_pdpa_n}">
+                                        <span class="travel-pdpa-stab__t">{__("travel_core.pdpa_m_room", ["[n]" => $travel_pdpa_n])}</span>
+                                        <span class="travel-pdpa-stab__g">{$travel_pdpa_gguests|escape:html}</span>
+                                        <span class="travel-pdpa-stab__s" data-travel-stab-state><span class="travel-pdpa-dot" aria-hidden="true"></span>{__("travel_core.pdpa_m_state_todo_one")}</span>
+                                    </button>
+                                {/foreach}
+                            </div>
+                        </div>
+                        <button type="button" class="travel-pdpa-strip__nav travel-pdpa-strip__nav--next" data-travel-strip-nav="1" tabindex="-1" aria-label="{__("travel_core.pdpa_m_strip_next")}">{include file="addons/travel_core/components/design_a_icon.tpl" icon="chev"}</button>
+                    </div>
+                {/if}
+                <div class="travel-pdpa-spanel" id="travel-pdpa-spanel-{$travel_pdpa_g.key}" data-travel-spanel>
+                    {if $travel_pdpa_g.size > 1}<p class="travel-pdpa-stephead" data-travel-stephead hidden></p>{/if}
+                    {include file="addons/travel_core/components/design_a_results.tpl" results=$travel_pdpa_g.results id_suffix="-`$travel_pdpa_g.key`" group=$travel_pdpa_g}
+                </div>
             </div>
         {/foreach}
 
@@ -143,7 +182,7 @@
                 <div class="travel-pdpa-bbar__r">
                     <button type="button" class="travel-pdpa-btn travel-pdpa-btn--sec travel-pdpa-btn--sm travel-pdpa-bbar__more" data-travel-bar-more aria-expanded="false" aria-controls="travel-pdpa-bbar-picks">{__("travel_core.pdpa_m_bar")}</button>
                     <p class="travel-pdpa-bbar__total" data-travel-bar-total></p>
-                    <a class="travel-pdpa-btn travel-pdpa-btn--sec" href="#travel-pdpa-rooms" data-travel-bar-goto hidden></a>
+                    <a class="travel-pdpa-btn travel-pdpa-btn--sec travel-pdpa-bbar__goto" href="#travel-pdpa-rooms" data-travel-bar-goto hidden></a>
                     <div class="travel-pdpa-cta travel-pdpa-bbar__cta" data-travel-bar-cta hidden>
                         <button type="button" class="travel-pdpa-btn travel-pdpa-bbar__btn" data-travel-book></button>
                         <p class="travel-pdpa-cta__note" data-travel-bar-note>{__("travel_core.pdpa_r_no_pay_yet")}</p>

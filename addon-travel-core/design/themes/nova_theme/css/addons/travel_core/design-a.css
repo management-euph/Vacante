@@ -1799,6 +1799,134 @@
     font-size: 13px;
     color: #4b5563;
 }
+.travel-pdpa .travel-pdpa-ghead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 16px;
+}
+.travel-pdpa .travel-pdpa-ghead .travel-pdpa-ghead__sub {
+    flex: 1 1 100%;
+}
+
+/* Room by room in a group (board 13c.9): "Aleg fiecare cameră separat" in
+   the group's head, then a strip of the group's rooms, one tab each (the
+   arrows scroll it when the tabs do not fit), and the room open named over
+   the cards. The tabs are the group tabs' smaller kin: the room open
+   underlined in navy, a room's state its own text, no ring. */
+.travel-pdpa .travel-pdpa-strip {
+    display: flex;
+    align-items: stretch;
+    gap: 4px;
+    margin-top: 12px;
+}
+.travel-pdpa .travel-pdpa-strip__vp {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.travel-pdpa .travel-pdpa-strip__vp::-webkit-scrollbar {
+    display: none;
+}
+.travel-pdpa .travel-pdpa-stabs {
+    display: flex;
+    box-shadow: inset 0 -1px 0 #e0e7ef;
+}
+.travel-pdpa .travel-pdpa-stab {
+    display: grid;
+    flex: none;
+    align-content: center;
+    gap: 2px;
+    min-width: 116px;
+    min-height: 60px;
+    margin: 0;
+    padding: 8px 14px 6px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: none;
+    color: #4b5563;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.travel-pdpa .travel-pdpa-stab:hover {
+    background: #f6f8fb;
+}
+.travel-pdpa .travel-pdpa-stab[aria-selected="true"] {
+    border-bottom-color: var(--travel-pdpa-navy);
+}
+.travel-pdpa .travel-pdpa-stab:focus-visible,
+.travel-pdpa .travel-pdpa-strip__nav:focus-visible {
+    outline: 3px solid var(--travel-pdpa-navy);
+    outline-offset: -3px;
+}
+.travel-pdpa .travel-pdpa-stab__t {
+    font-size: 14px;
+    font-weight: 600;
+    color: #0f172a;
+}
+.travel-pdpa .travel-pdpa-stab[aria-selected="true"] .travel-pdpa-stab__t {
+    color: var(--travel-pdpa-navy);
+}
+.travel-pdpa .travel-pdpa-stab__g {
+    font-size: 12px;
+    color: #4b5563;
+}
+.travel-pdpa .travel-pdpa-stab__s {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+}
+.travel-pdpa .travel-pdpa-stab__s--now {
+    font-weight: 600;
+    color: var(--travel-pdpa-navy);
+}
+.travel-pdpa .travel-pdpa-stab__s b {
+    font-weight: 700;
+    color: var(--travel-pdpa-navy);
+    font-variant-numeric: tabular-nums;
+}
+.travel-pdpa .travel-pdpa-stab__s .travel-pdpa-ico {
+    color: #16a34a;
+}
+.travel-pdpa .travel-pdpa-strip__nav {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: none;
+    color: var(--travel-pdpa-navy);
+    cursor: pointer;
+}
+.travel-pdpa .travel-pdpa-strip__nav:hover {
+    background: #f6f8fb;
+}
+.travel-pdpa .travel-pdpa-strip__nav:disabled {
+    background: none;
+    color: #9ca3af;
+    cursor: default;
+}
+.travel-pdpa .travel-pdpa-strip__nav--prev .travel-pdpa-ico {
+    transform: rotate(90deg);
+}
+.travel-pdpa .travel-pdpa-strip__nav--next .travel-pdpa-ico {
+    transform: rotate(-90deg);
+}
+.travel-pdpa .travel-pdpa-stephead {
+    margin: 16px 0 0;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #0f172a;
+}
 
 /* What a choice did ("Am ales … : +7.240 €", "Anulează") and, when a type
    ran short, the closest one for the rest: notes over the open group. */
@@ -2053,6 +2181,10 @@
         min-width: 200px;
         padding: 10px 14px 8px;
     }
+    .travel-pdpa .travel-pdpa-stab {
+        min-width: 104px;
+        padding: 8px 10px 6px;
+    }
     /* A group's till stays in its card: the bar holds the bottom of the screen. */
     .travel-pdpa .travel-pdpa-results--group .travel-pdpa-rcard__till {
         position: static;
@@ -2099,6 +2231,20 @@
     }
     .travel-pdpa .travel-pdpa-bbar__r {
         flex: 1 1 100%;
+        flex-wrap: wrap;
         justify-content: space-between;
+        gap: 8px 12px;
+    }
+    /* No room beside the total on a phone: "Mergi la …" and the booking
+       button take a line of their own, the width of the bar. */
+    .travel-pdpa .travel-pdpa-bbar__goto,
+    .travel-pdpa .travel-pdpa-bbar__cta {
+        flex: 1 1 100%;
+    }
+    .travel-pdpa .travel-pdpa-bbar__goto {
+        justify-content: center;
+    }
+    .travel-pdpa .travel-pdpa-bbar__btn {
+        width: 100%;
     }
 }
