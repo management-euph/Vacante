@@ -244,7 +244,12 @@ function fn_novoton_holidays_cron_resinfo(): array
         return ['success' => false, 'error' => 'API not available'];
     }
 
-    $stats = (new \Tygh\Addons\NovotonHolidays\Services\AskBookingPoller($api, _nvt_booking_repo()))->poll();
+    $stats = (new \Tygh\Addons\NovotonHolidays\Services\AskBookingPoller(
+        $api,
+        _nvt_booking_repo(),
+        null,
+        static fn (array $booking, string $status): string => \Tygh\Addons\NovotonHolidays\Services\RequestAnswerMail::forStore()->answered($booking, $status),
+    ))->poll();
 
     return ['success' => true] + $stats;
 }

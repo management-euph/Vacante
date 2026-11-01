@@ -4627,3 +4627,31 @@ msgstr "Data nu poate fi în viitor"
 msgctxt "Languages::novoton_holidays.searching"
 msgid "Searching..."
 msgstr "Se caută..."
+
+msgctxt "Languages::novoton_holidays.request_confirmed_subject"
+msgid "The hotel confirmed your rooms: [hotel]"
+msgstr "Hotelul a confirmat camerele: [hotel]"
+
+msgctxt "Languages::novoton_holidays.request_confirmed_title"
+msgid "The hotel confirmed the rooms you requested"
+msgstr "Hotelul a confirmat camerele cerute"
+
+msgctxt "Languages::novoton_holidays.request_confirmed_body"
+msgid "For order #[order_id], [hotel] has confirmed these rooms for [from] – [to]:"
+msgstr "Pentru comanda #[order_id], [hotel] a confirmat aceste camere pentru [from] – [to]:"
+
+msgctxt "Languages::novoton_holidays.request_confirmed_amount"
+msgid "These rooms come to [amount]."
+msgstr "Valoarea acestor camere: [amount]."
+
+msgctxt "Languages::novoton_holidays.request_confirmed_pay"
+msgid "If you pay by bank transfer, you can pay order #[order_id] now: [total], with the bank details from your order email."
+msgstr "Dacă plătești prin transfer bancar, poți plăti acum comanda #[order_id]: [total], cu datele bancare din emailul comenzii."
+
+msgctxt "Languages::novoton_holidays.request_confirmed_paid"
+msgid "We have received the payment for your order: there is nothing more to do."
+msgstr "Am primit plata comenzii: nu mai ai nimic de făcut."
+
+msgctxt "Languages::novoton_holidays.request_confirmed_thanks"
+msgid "Thank you, and have a lovely stay!"
+msgstr "Îți mulțumim și îți dorim un sejur minunat!"

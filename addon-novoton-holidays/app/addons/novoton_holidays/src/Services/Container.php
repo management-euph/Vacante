@@ -292,6 +292,8 @@ class Container
         return $this->resolve('bookingSubmissionService', fn (): \Tygh\Addons\NovotonHolidays\Services\BookingSubmissionService => new BookingSubmissionService(
             $this->bookingRepository(),
             $this->novotonApi()->reservations(),
+            null,
+            static fn (array $booking, string $status): string => RequestAnswerMail::forStore()->answered($booking, $status),
         ));
     }
 

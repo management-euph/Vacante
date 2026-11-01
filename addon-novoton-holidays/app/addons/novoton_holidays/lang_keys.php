@@ -1272,4 +1272,33 @@ return [
         'en' => 'Searching...',
         'ro' => 'Se caută...',
     ],
+    // The hotel confirmed a booking on request: the guest's email (RequestAnswerMail).
+    'novoton_holidays.request_confirmed_subject' => [
+        'en' => 'The hotel confirmed your rooms: [hotel]',
+        'ro' => 'Hotelul a confirmat camerele: [hotel]',
+    ],
+    'novoton_holidays.request_confirmed_title' => [
+        'en' => 'The hotel confirmed the rooms you requested',
+        'ro' => 'Hotelul a confirmat camerele cerute',
+    ],
+    'novoton_holidays.request_confirmed_body' => [
+        'en' => 'For order #[order_id], [hotel] has confirmed these rooms for [from] – [to]:',
+        'ro' => 'Pentru comanda #[order_id], [hotel] a confirmat aceste camere pentru [from] – [to]:',
+    ],
+    'novoton_holidays.request_confirmed_amount' => [
+        'en' => 'These rooms come to [amount].',
+        'ro' => 'Valoarea acestor camere: [amount].',
+    ],
+    'novoton_holidays.request_confirmed_pay' => [
+        'en' => 'If you pay by bank transfer, you can pay order #[order_id] now: [total], with the bank details from your order email.',
+        'ro' => 'Dacă plătești prin transfer bancar, poți plăti acum comanda #[order_id]: [total], cu datele bancare din emailul comenzii.',
+    ],
+    'novoton_holidays.request_confirmed_paid' => [
+        'en' => 'We have received the payment for your order: there is nothing more to do.',
+        'ro' => 'Am primit plata comenzii: nu mai ai nimic de făcut.',
+    ],
+    'novoton_holidays.request_confirmed_thanks' => [
+        'en' => 'Thank you, and have a lovely stay!',
+        'ro' => 'Îți mulțumim și îți dorim un sejur minunat!',
+    ],
 ];
