@@ -28,12 +28,6 @@ use Tygh\Addons\NovotonHolidays\Helpers\BookingRoomAssembler;
  */
 class ApiBookingRequestBuilder
 {
-    /** Romanian letters without their diacritics, for when intl is missing. */
-    private const array ROMANIAN = [
-        'ă' => 'a', 'â' => 'a', 'î' => 'i', 'ș' => 's', 'ş' => 's', 'ț' => 't', 'ţ' => 't',
-        'Ă' => 'A', 'Â' => 'A', 'Î' => 'I', 'Ș' => 'S', 'Ş' => 'S', 'Ț' => 'T', 'Ţ' => 'T',
-    ];
-
     /**
      * @param array<string, mixed> $group
      * @param list<array<string, mixed>> $allGuests
@@ -95,19 +89,13 @@ class ApiBookingRequestBuilder
     }
 
     /**
-     * The guest's notes as the rooms' <Remark>: plain text on one line,
-     * without diacritics — the request is declared windows-1251, which has
-     * no Romanian letters ("Vă rugăm camere alăturate" → "Va rugam camere
-     * alaturate") — and at most 2000 characters, as an alternatives request
-     * keeps them.
+     * The guest's notes as the rooms' <Remark>: plain text on one line, at
+     * most 2000 characters, as an alternatives request keeps them. The
+     * request writes it without diacritics (Api\RequestText).
      */
     public static function remark(string $notes): string
     {
-        $text = strtr(html_entity_decode(strip_tags($notes), ENT_QUOTES | ENT_HTML5, 'UTF-8'), self::ROMANIAN);
-        if (class_exists(\Transliterator::class)) {
-            $ascii = \Transliterator::create('Latin-ASCII')?->transliterate($text);
-            $text = is_string($ascii) ? $ascii : $text;
-        }
+        $text = html_entity_decode(strip_tags($notes), ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
         return mb_substr(trim((string) preg_replace('/\s+/u', ' ', $text)), 0, 2000);
     }

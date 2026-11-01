@@ -193,6 +193,44 @@ final class ReservationApiClientTest extends TestCase
         self::assertStringNotContainsStringIgnoringCase('%2b', $xml);
     }
 
+    /**
+     * The request is declared windows-1251, which has no Romanian letters:
+     * names, holders, the remark and the comment go without diacritics,
+     * Cyrillic as Bulgaria writes it in Latin letters.
+     */
+    public function testNamesAndNotesReachNovotonInPlainLatinLetters(): void
+    {
+        $adult = static fn (string $name): array => ['name' => $name, 'birthday' => '', 'age' => 40, 'type' => 'adult'];
+        $booking = ['guests' => [$adult('Ștefan Țurcanu'), $adult('Ioana Bălan'), $adult('Николай Иванов')], 'rooms' => [
+            ['room_id' => 'DBL 2+0', 'board_id' => 'BB', 'guests' => [$adult('Ștefan Țurcanu'), $adult('Ioana Bălan')]],
+            ['room_id' => 'SGL', 'board_id' => 'BB', 'guests' => [$adult('Николай Иванов')]],
+        ], 'remark' => 'Vă rugăm camere alăturate', 'comment' => 'Sosire târzie'] + self::BOOKING;
+
+        $xml = $this->client()->generateReservationXml($booking);
+        $rq = simplexml_load_string($xml);
+
+        self::assertNotFalse($rq);
+        self::assertSame(['1' => 'Stefan Turcanu', '2' => 'Ioana Balan', '3' => 'Nikolay Ivanov'], self::guests($rq->Guests));
+        self::assertSame(['1' => 'Stefan Turcanu', '2' => 'Ioana Balan'], self::guests($rq->hotel_acc[0]->room_acc));
+        self::assertSame(['Stefan Turcanu', 'Nikolay Ivanov'], [(string) $rq->hotel_acc[0]->Holder, (string) $rq->hotel_acc[1]->Holder]);
+        self::assertSame('Va rugam camere alaturate', (string) $rq->hotel_acc[0]->Remark);
+        self::assertSame('Sosire tarzie [Room 1]', (string) $rq->hotel_acc[0]->Comment);
+        self::assertSame(1, preg_match('/^[\x00-\x7F]*$/', $xml), 'nothing windows-1251 would misread');
+
+        $one = simplexml_load_string($this->client()->generateReservationXml(['holder' => 'Ștefan Țurcanu', 'remark' => 'Vă rog', 'comment' => 'Mulțumim'] + self::BOOKING));
+        self::assertNotFalse($one);
+        self::assertSame(['Stefan Turcanu', 'Va rog', 'Multumim'], [(string) $one->hotel_acc->Holder, (string) $one->hotel_acc->Remark, (string) $one->hotel_acc->Comment]);
+
+        $request = simplexml_load_string($this->client()->generateHotelRequestXml([
+            'hotel_id' => '4658', 'check_in' => '2026-10-31', 'check_out' => '2026-11-02',
+            'holder' => 'Request from ana@example.com', 'remark' => 'Cameră cu vedere la mare', 'comment' => 'Contact: Ana Bălan',
+            'guests' => [['id' => 1, 'name' => 'Ana Bălan']], 'room_guests' => [['id' => 1, 'name' => 'Ana Bălan']],
+        ]));
+        self::assertNotFalse($request);
+        self::assertSame(['Camera cu vedere la mare', 'Contact: Ana Balan'], [(string) $request->hotel_acc->Remark, (string) $request->hotel_acc->Comment]);
+        self::assertSame(['1' => 'Ana Balan'], self::guests($request->Guests));
+    }
+
     public function testAnAlternativesRequestSendsItsGuestsToo(): void
     {
         $xml = $this->client()->generateHotelRequestXml([

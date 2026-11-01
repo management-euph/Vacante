@@ -82,7 +82,7 @@ final class BookingSubmissionServiceOneRequestTest extends TestCase
         self::assertCount(3, $sent[0]['rooms'], 'one <hotel_acc> per room');
         self::assertSame([1, 2, 3], array_column($sent[0]['rooms'], 'room_num'));
         self::assertCount(6, $sent[0]['guests'], 'every guest once');
-        self::assertSame('Va rugam camere alaturate', $sent[0]['remark'], 'the notes typed at checkout');
+        self::assertSame('Vă rugăm camere alăturate', $sent[0]['remark'], 'the notes typed at checkout');
     }
 
     public function testARoomOfAnotherPackageIsARequestOfItsOwn(): void
