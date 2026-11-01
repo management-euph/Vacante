@@ -36,6 +36,15 @@ use Tygh\Addons\TravelCore\Services\MoneyFormatter;
  *   - a free step exists only while today is before the first penalty;
  *   - `free_until` is the LAST free day, and only while it is still ahead.
  *
+ * What a provider knows beyond its windows comes as `$meta` (Novoton, 1 Nov
+ * 2026): the hour a deadline day ends (`cutoff`, "23:59": a step says
+ * "until 4 Nov, 23:59", today's or tomorrow's deadline is named so,
+ * `to_rel`), the arrival (`check_in`: the last period goes on through
+ * arrival and no-show, `is_last` / `from_arrival`) and each night's share
+ * of the total (`night_shares`, per-stay fees left out: "N nights" is the
+ * first N nights, exact, in any currency, with or without a commission;
+ * without them N average nights, `approx`).
+ *
  * Pure: today, the date format and the formatter are injected.
  */
 final class TermsTimelineFactory
@@ -53,10 +62,14 @@ final class TermsTimelineFactory
 
     /**
      * @param list<array<string, mixed>> $windows
-     * @return array{steps: list<array<string, mixed>>, free_until: string, full_charge_now: bool}
+     * @param array{cutoff?: string, check_in?: string, night_shares?: list<float>} $meta what the provider knows beyond its windows (above)
+     * @return array{steps: list<array<string, mixed>>, free_until: string, full_charge_now: bool, cutoff: string}
      */
-    public function cancellation(array $windows, float $total, int $nights = 0): array
+    public function cancellation(array $windows, float $total, int $nights = 0, array $meta = []): array
     {
+        $cutoff = trim($meta['cutoff'] ?? '');
+        $checkIn = self::iso($meta['check_in'] ?? null) ?? '';
+        $nightShares = self::shares($meta['night_shares'] ?? [], $nights);
         $rows = [];
         foreach ($windows as $w) {
             $from = self::iso($w['from'] ?? null);
@@ -96,7 +109,7 @@ final class TermsTimelineFactory
             }
         }
 
-        $rows = self::mergeEqualNeighbours($rows, $total, $nights);
+        $rows = self::mergeEqualNeighbours($rows, $total, $nights, $nightShares);
 
         $steps = [];
         $firstPenaltyFrom = null;
@@ -111,7 +124,7 @@ final class TermsTimelineFactory
             $isCurrent = !$r['no_show']
                 && ($r['from'] === null || $r['from'] <= $this->today)
                 && ($r['to'] === null || $r['to'] >= $this->today);
-            $steps[] = $this->step($r, $kind, $isCurrent, $total, $nights);
+            $steps[] = $this->step($r, $kind, $isCurrent, $total, $nights, $nightShares, $cutoff);
         }
 
         // Nothing charges before the first penalty → that stretch is free,
@@ -124,7 +137,18 @@ final class TermsTimelineFactory
                 true,
                 $total,
                 $nights,
+                $nightShares,
+                $cutoff,
             ));
+        }
+
+        // The arrival known: the last period goes on through arrival and no-show.
+        if ($checkIn !== '' && $steps !== []) {
+            $last = array_key_last($steps);
+            if ($steps[$last]['is_no_show'] !== true) {
+                $steps[$last]['is_last'] = true;
+                $steps[$last]['from_arrival'] = $steps[$last]['from_iso'] === $checkIn;
+            }
         }
 
         $freeUntil = '';
@@ -139,7 +163,7 @@ final class TermsTimelineFactory
             $fullNow = $s['kind'] === self::KIND_FULL;
         }
 
-        return ['steps' => $steps, 'free_until' => $freeUntil, 'full_charge_now' => $fullNow];
+        return ['steps' => $steps, 'free_until' => $freeUntil, 'full_charge_now' => $fullNow, 'cutoff' => $cutoff];
     }
 
     /**
@@ -148,15 +172,16 @@ final class TermsTimelineFactory
      * for the same thing.
      *
      * @param list<array{from: ?string, to: ?string, percent: ?float, amount: ?float, nights: ?int, no_show: bool}> $rows
+     * @param list<float> $nightShares
      * @return list<array{from: ?string, to: ?string, percent: ?float, amount: ?float, nights: ?int, no_show: bool}>
      */
-    private static function mergeEqualNeighbours(array $rows, float $total, int $nights): array
+    private static function mergeEqualNeighbours(array $rows, float $total, int $nights, array $nightShares = []): array
     {
         $out = [];
         foreach ($rows as $r) {
             $last = count($out) - 1;
             if ($last >= 0 && !$r['no_show'] && !$out[$last]['no_show']
-                && self::charge($r, $total, $nights) === self::charge($out[$last], $total, $nights)
+                && self::charge($r, $total, $nights, $nightShares) === self::charge($out[$last], $total, $nights, $nightShares)
                 && $out[$last]['to'] !== null && $r['from'] === self::addDays($out[$last]['to'], 1)) {
                 $out[$last]['to'] = $r['to'];
                 continue;
@@ -173,15 +198,16 @@ final class TermsTimelineFactory
      * else as given.
      *
      * @param array{percent: ?float, amount: ?float, nights: ?int} $r
+     * @param list<float> $nightShares
      */
-    private static function charge(array $r, float $total, int $nights): string
+    private static function charge(array $r, float $total, int $nights, array $nightShares = []): string
     {
         $amount = $r['amount'];
         if ($total > 0) {
             if ($r['percent'] !== null) {
                 $amount = $total * min(100.0, max(0.0, $r['percent'])) / 100;
             } elseif ($amount === null && $r['nights'] !== null && $nights > 0) {
-                $amount = $total / $nights * min($r['nights'], $nights);
+                $amount = self::nightsAmount($r['nights'], $total, $nights, $nightShares);
             }
             if ($amount !== null) {
                 return (string) (int) round(min($total, max(0.0, $amount)) * 100);
@@ -269,10 +295,53 @@ final class TermsTimelineFactory
     }
 
     /**
+     * Each night's share of the total as the provider gave it: one per
+     * night, none negative, together at most the whole; else none (the
+     * average night).
+     *
+     * @return list<float>
+     */
+    private static function shares(mixed $value, int $nights): array
+    {
+        if ($nights <= 0 || !is_array($value) || count($value) !== $nights) {
+            return [];
+        }
+        $shares = [];
+        foreach ($value as $share) {
+            if (!is_int($share) && !is_float($share)) {
+                return [];
+            }
+            $shares[] = (float) $share;
+        }
+        if (min($shares) < 0 || array_sum($shares) > 1.000001) {
+            return [];
+        }
+
+        return $shares;
+    }
+
+    /**
+     * What N nights cost: the first N nights at their own share of the total
+     * when the provider gave them, else N average nights.
+     *
+     * @param list<float> $nightShares
+     */
+    private static function nightsAmount(int $n, float $total, int $nights, array $nightShares): float
+    {
+        $n = min(max(0, $n), $nights);
+        if ($nightShares !== []) {
+            return $total * array_sum(array_slice($nightShares, 0, $n));
+        }
+
+        return $total / $nights * $n;
+    }
+
+    /**
      * @param array<string, mixed> $r
+     * @param list<float> $nightShares
      * @return array<string, mixed>
      */
-    private function step(array $r, string $kind, bool $isCurrent, float $total, int $nights): array
+    private function step(array $r, string $kind, bool $isCurrent, float $total, int $nights, array $nightShares = [], string $cutoff = ''): array
     {
         // A penalty is at most the whole price: a supplier figure above 100%
         // (an amount sent as a percent) is the full price, not 499% of it.
@@ -281,11 +350,13 @@ final class TermsTimelineFactory
         $amount = self::optFloat($r['amount'] ?? null);
         $amount = $amount !== null && $total > 0 ? min($total, $amount) : $amount;
         $n = self::optInt($r['nights'] ?? null);
+        $approx = false;
         if ($amount === null && $kind !== self::KIND_FREE && $total > 0) {
             if ($percent !== null) {
                 $amount = $total * $percent / 100;
             } elseif ($n !== null && $nights > 0) {
-                $amount = $total / $nights * min($n, $nights);
+                $amount = min($total, self::nightsAmount($n, $total, $nights, $nightShares));
+                $approx = $nightShares === [];
             }
         }
         if ($percent === null && $n === null && $amount !== null && $total > 0) {
@@ -303,9 +374,17 @@ final class TermsTimelineFactory
             'from_label' => $from !== null && !$isCurrent ? $this->date($from) : '',
             'to_iso' => $to ?? '',
             'to_label' => $to !== null ? $this->date($to) : '',
+            // The hour the deadline day ends (the provider's), and a deadline of today or tomorrow named so
+            'to_time' => $to !== null ? $cutoff : '',
+            'to_rel' => $to === null ? '' : ($to === $this->today ? 'today' : ($to === self::addDays($this->today, 1) ? 'tomorrow' : '')),
+            // Set by cancellation() once the arrival is known: the last period, from the arrival day
+            'is_last' => false,
+            'from_arrival' => false,
             'percent_label' => $n === null && $percent !== null && $kind !== self::KIND_FREE ? self::percent($percent) : '',
             'nights' => $n !== null && $kind !== self::KIND_FREE ? $n : 0,
             'amount_label' => $amount !== null && $kind !== self::KIND_FREE ? $this->money->format($amount) : '',
+            // N average nights: the provider did not give each night's price
+            'approx' => $approx,
         ];
     }
 

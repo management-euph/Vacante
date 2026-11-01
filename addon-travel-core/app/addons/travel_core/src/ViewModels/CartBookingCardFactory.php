@@ -62,6 +62,8 @@ final class CartBookingCardFactory
      * @param array<string, mixed> $imagePair CS-Cart image pair of the product
      * @param array<string, mixed> $terms provider terms (TravelProviderRegistry::cartTerms()):
      *                                    cancel_windows / payment_rows (TermsTimelineFactory input),
+     *                                    cancel_meta (optional: what the provider knows beyond its
+     *                                    windows, TermsTimelineFactory::cancellation()'s $meta),
      *                                    cancel_lines / payment_lines (prose fallback)
      * @return array<string, mixed> empty when the line is not a travel booking
      */
@@ -101,7 +103,7 @@ final class CartBookingCardFactory
 
         $timelineInput = self::termsInput($terms);
         $timeline = new TermsTimelineFactory($this->money, $this->today, $this->dateFormat);
-        $cancellation = $timeline->cancellation($timelineInput['cancel_windows'], $stayTotal, $nights);
+        $cancellation = $timeline->cancellation($timelineInput['cancel_windows'], $stayTotal, $nights, $timelineInput['cancel_meta']);
         $paymentSteps = $timeline->payment($timelineInput['payment_rows'], $stayTotal);
 
         $leadGuest = '';
@@ -139,6 +141,8 @@ final class CartBookingCardFactory
             // booking_terms_timeline.tpl's input, every key it reads present.
             'terms' => [
                 'cancel_steps' => $cancellation['steps'],
+                // The hour a deadline day ends, when the provider gave it: the note under the steps
+                'cancel_cutoff' => $cancellation['steps'] !== [] ? $cancellation['cutoff'] : '',
                 'payment_steps' => $paymentSteps,
                 // Prose only when the provider's terms produced no timeline.
                 'cancel_lines' => $cancellation['steps'] === [] ? $timelineInput['cancel_lines'] : [],
@@ -473,7 +477,7 @@ final class CartBookingCardFactory
 
     /**
      * @param array<string, mixed> $terms
-     * @return array{cancel_windows: list<array<string, mixed>>, payment_rows: list<array<string, mixed>>, cancel_lines: list<string>, payment_lines: list<string>}
+     * @return array{cancel_windows: list<array<string, mixed>>, cancel_meta: array{cutoff?: string, check_in?: string, night_shares?: list<float>}, payment_rows: list<array<string, mixed>>, cancel_lines: list<string>, payment_lines: list<string>}
      */
     private static function termsInput(array $terms): array
     {
@@ -484,10 +488,46 @@ final class CartBookingCardFactory
 
         return [
             'cancel_windows' => TypeCoerce::toRowList($terms['cancel_windows'] ?? null),
+            'cancel_meta' => self::cancelMeta($terms['cancel_meta'] ?? null),
             'payment_rows' => TypeCoerce::toRowList($terms['payment_rows'] ?? null),
             'cancel_lines' => $lines($terms['cancel_lines'] ?? null),
             'payment_lines' => $lines($terms['payment_lines'] ?? null),
         ];
+    }
+
+    /**
+     * What the provider knows of the stay beyond its cancellation windows
+     * (TermsTimelineFactory::cancellation()'s $meta), as its hook handed it:
+     * the hour a deadline day ends ("23:59"), the arrival, each night's
+     * share of the price. A value that is not one of these is left out.
+     *
+     * @return array{cutoff?: string, check_in?: string, night_shares?: list<float>}
+     */
+    private static function cancelMeta(mixed $value): array
+    {
+        $meta = TypeCoerce::toArrayMap($value);
+        $out = [];
+        $cutoff = trim(TypeCoerce::toString($meta['cutoff'] ?? ''));
+        if (preg_match('/^([01]?\d|2[0-3]):[0-5]\d$/', $cutoff) === 1) {
+            $out['cutoff'] = $cutoff;
+        }
+        $checkIn = trim(TypeCoerce::toString($meta['check_in'] ?? ''));
+        if ($checkIn !== '') {
+            $out['check_in'] = $checkIn;
+        }
+        $shares = [];
+        foreach (TypeCoerce::toList($meta['night_shares'] ?? null) as $share) {
+            if (!is_numeric($share) || (float) $share < 0 || (float) $share > 1) {
+                $shares = [];
+                break;
+            }
+            $shares[] = (float) $share;
+        }
+        if ($shares !== []) {
+            $out['night_shares'] = $shares;
+        }
+
+        return $out;
     }
 
     /** @param array<string, mixed> $extra */

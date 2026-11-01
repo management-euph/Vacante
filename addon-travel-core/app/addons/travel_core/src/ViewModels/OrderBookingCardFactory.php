@@ -284,8 +284,10 @@ final class OrderBookingCardFactory
             || ($start !== null && $start <= $this->today);
         if ($over) {
             $card['cancel'] = ['state' => '', 'free_until' => '', 'now' => [], 'then' => []];
+            // No "today" left: no step in force, no deadline of today or
+            // tomorrow, no last period "from today" (the admin's reference)
             $terms['cancel_steps'] = array_map(
-                static fn (array $step): array => ['is_current' => false] + $step,
+                static fn (array $step): array => ['is_current' => false, 'to_rel' => '', 'is_last' => false] + $step,
                 $admin ? TypeCoerce::toRowList($terms['cancel_steps'] ?? null) : [],
             );
             if (!$admin) {

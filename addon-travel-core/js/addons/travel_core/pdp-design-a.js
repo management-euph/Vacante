@@ -665,6 +665,76 @@
     }
 
     /*
+     * "Condiții de plată și anulare" on a phone (design_a_terms.tpl, board
+     * 14.6): the panel is a bottom sheet over the page (CSS under 768 px).
+     * Opened, the page under it stops scrolling, the focus goes to its ×
+     * and its button says what the card's does ("Rezervă · 785 €"); the ×,
+     * a tap beside it or Esc close it, its button closes it and presses the
+     * card's own (the booking link, or "Alege pentru …" with several rooms).
+     */
+    function isPhone() {
+        return typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 767px)').matches;
+    }
+
+    /** The button of the till the card shows (its chosen option). */
+    function cardButton(details) {
+        var room = details.closest('[data-travel-room]');
+        var till = room ? room.querySelector('.travel-pdpa-till:not([hidden])') : null;
+
+        return till ? till.querySelector('.travel-pdpa-till__btn') : null;
+    }
+
+    function openSheet(details) {
+        document.documentElement.classList.add('travel-pdpa-sheet-open');
+        var cta = details.querySelector('[data-travel-terms-cta]');
+        if (cta) {
+            var button = cardButton(details);
+            var till = button ? button.closest('.travel-pdpa-till') : null;
+            var total = till ? till.querySelector('.travel-pdpa-till__total') : null;
+            cta.textContent = button ? button.textContent.trim() + (total ? ' · ' + total.textContent.trim() : '') : '';
+            cta.disabled = !button || button.disabled === true;
+        }
+        var close = details.querySelector('[data-travel-terms-close]');
+        if (close) {
+            close.focus();
+        }
+    }
+
+    function sheetClosed(details) {
+        if (!document.querySelector('.travel-pdpa-terms[open]')) {
+            document.documentElement.classList.remove('travel-pdpa-sheet-open');
+        }
+        var summary = details.querySelector('summary');
+        if (summary && isPhone()) {
+            summary.focus();
+        }
+    }
+
+    function sheetClick(target) {
+        var close = target.closest('[data-travel-terms-close]');
+        if (close) {
+            close.closest('.travel-pdpa-terms').open = false;
+            return true;
+        }
+        var cta = target.closest('[data-travel-terms-cta]');
+        if (cta) {
+            var details = cta.closest('.travel-pdpa-terms');
+            var button = cardButton(details);
+            details.open = false;
+            if (button) {
+                button.click();
+            }
+            return true;
+        }
+        // Beside the sheet: the backdrop is the open <details> itself
+        if (target.matches('.travel-pdpa-terms[open]') && isPhone()) {
+            target.open = false;
+            return true;
+        }
+        return false;
+    }
+
+    /*
      * Results that keep arriving (Sphinx polls its search): the supplier
      * renders a live container (data-travel-live: the poll url, the interval,
      * the most polls); each answer — JSON {html, done, cursor} — brings the
@@ -858,7 +928,7 @@
         if (!page) {
             return;
         }
-        if (resultsClick(target)) {
+        if (sheetClick(target) || resultsClick(target)) {
             return;
         }
         var tile = target.closest('[data-travel-gallery-index]');
@@ -899,6 +969,11 @@
         if (event.key !== 'Escape') {
             return;
         }
+        var sheet = isPhone() ? document.querySelector('.travel-pdpa .travel-pdpa-terms[open]') : null;
+        if (sheet) {
+            sheet.open = false;
+            return;
+        }
         var open = document.querySelector('[data-travel-tip][aria-expanded="true"]');
         if (open) {
             closeTips(null);
@@ -912,7 +987,21 @@
         if (details && details.open && details.hasAttribute('data-travel-terms-url')) {
             loadTerms(details);
         }
+        if (details && details.matches('.travel-pdpa .travel-pdpa-terms')) {
+            if (details.open && isPhone()) {
+                openSheet(details);
+            } else if (!details.open) {
+                sheetClosed(details);
+            }
+        }
     }, true);
+
+    // Grown past a phone with a sheet open: the panel is inline again, the page scrolls.
+    window.addEventListener('resize', function () {
+        if (!isPhone()) {
+            document.documentElement.classList.remove('travel-pdpa-sheet-open');
+        }
+    });
 
     // Results swapped in by the inline search may keep arriving.
     document.addEventListener('travel:results-swapped', armLiveResults);

@@ -18,6 +18,9 @@ use Tygh\Addons\TravelCore\Services\MoneyFormatter;
  */
 final class RoomResultsBuilderTest extends TestCase
 {
+    /** What a cancel line carries beyond its kind and day when the terms say no more (no hour, no penalty today). */
+    private const array NO_CANCEL_DETAIL = ['time' => '', 'rel' => '', 'amount' => '', 'nights' => 0, 'approx' => false, 'percent' => ''];
+
     private static function builder(): RoomResultsBuilder
     {
         return new RoomResultsBuilder(
@@ -110,7 +113,7 @@ final class RoomResultsBuilderTest extends TestCase
         self::assertSame('book?room=DBL%202%2B0%20DELUXE%20NO%20BALCONY', $option['book_url']);
 
         // What is said once for the room: cancellation, payment, terms.
-        self::assertSame(['kind' => RoomResultsBuilder::CANCEL_FREE, 'until' => '30.06.2027'], $room['cancel']);
+        self::assertSame(['kind' => RoomResultsBuilder::CANCEL_FREE, 'until' => '30.06.2027'] + self::NO_CANCEL_DETAIL, $room['cancel']);
         self::assertNull($option['cancel']);
         self::assertSame(['on_request' => false, 'deposit_percent' => 0, 'balance_due' => '', 'text' => ''], $room['payment']);
         self::assertNull($option['payment']);
@@ -221,7 +224,7 @@ final class RoomResultsBuilderTest extends TestCase
         self::assertSame(['960 €', '−12%', '141 €'], [$uai['was'], $uai['off'], $uai['per_night']]);
 
         // The same cancellation and payment for both: said once, under them.
-        self::assertSame(['kind' => 'free', 'until' => '03.11.2026'], $first['cancel']);
+        self::assertSame(['kind' => 'free', 'until' => '03.11.2026'] + self::NO_CANCEL_DETAIL, $first['cancel']);
         self::assertSame([null, null], array_column($first['options'], 'cancel'));
         self::assertNotNull($first['payment']);
         self::assertSame(1, $first['left']);
@@ -260,9 +263,9 @@ final class RoomResultsBuilderTest extends TestCase
         self::assertSame(3, $view['rate_count'], 'the same meal on other terms is another choice');
         self::assertNull($room['cancel']);
         self::assertSame([
-            ['kind' => RoomResultsBuilder::CANCEL_NON_REFUNDABLE, 'until' => ''],
-            ['kind' => RoomResultsBuilder::CANCEL_FREE, 'until' => '30.06.2027'],
-            ['kind' => RoomResultsBuilder::CANCEL_FREE_OPEN, 'until' => ''],
+            ['kind' => RoomResultsBuilder::CANCEL_NON_REFUNDABLE, 'until' => ''] + self::NO_CANCEL_DETAIL,
+            ['kind' => RoomResultsBuilder::CANCEL_FREE, 'until' => '30.06.2027'] + self::NO_CANCEL_DETAIL,
+            ['kind' => RoomResultsBuilder::CANCEL_FREE_OPEN, 'until' => ''] + self::NO_CANCEL_DETAIL,
         ], array_column($room['options'], 'cancel'));
         self::assertNull($room['payment']);
         self::assertSame([0, 30, 0], array_map(static fn (array $o): int => $o['payment']['deposit_percent'] ?? -1, $room['options']));
@@ -296,6 +299,30 @@ final class RoomResultsBuilderTest extends TestCase
             static fn (array $set): array => [$set['for'], $set['url']],
             $room['terms'],
         ), 'an option with no terms has no link');
+    }
+
+    /**
+     * The card's line comes from the period holding today (Novoton's terms of
+     * 1 Nov 2026): free until 4 Nov at 23:59, today's deadline named so, and
+     * past the free window what cancelling costs from today.
+     */
+    public function testTheCancelLineSaysThePeriodHoldingToday(): void
+    {
+        $free = ['kind' => 'free', 'is_current' => true, 'is_no_show' => false, 'to_iso' => '2026-11-04', 'to_time' => '23:59', 'to_rel' => 'today'];
+        $room = self::builder()->build([new RateOffer('R', 'R', 'BB', 785.0, 'b', freeCancellationUntil: '2026-11-04', timeline: ['cancel_steps' => [$free]])], 7)['rooms'][0];
+        self::assertSame(['free', '04.11.2026', '23:59', 'today'], [$room['cancel']['kind'], $room['cancel']['until'], $room['cancel']['time'], $room['cancel']['rel']]);
+
+        $twoNights = ['kind' => 'partial', 'is_current' => true, 'is_no_show' => false, 'to_iso' => '2026-11-08', 'nights' => 2, 'approx' => false,
+            'percent_label' => '', 'amount_label' => '220 €'];
+        $room = self::builder()->build([new RateOffer('R', 'R', 'BB', 785.0, 'b', timeline: ['cancel_steps' => [$twoNights]])], 7)['rooms'][0];
+        self::assertSame(
+            ['kind' => RoomResultsBuilder::CANCEL_PENALTY, 'until' => '', 'time' => '', 'rel' => '', 'amount' => '220 €', 'nights' => 2, 'approx' => false, 'percent' => ''],
+            $room['cancel'],
+        );
+
+        // A period not yet begun says nothing on the card
+        $later = ['kind' => 'partial', 'is_current' => false, 'is_no_show' => false, 'nights' => 2, 'amount_label' => '220 €'];
+        self::assertNull(self::builder()->build([new RateOffer('R', 'R', 'BB', 785.0, 'b', timeline: ['cancel_steps' => [$later]])], 7)['rooms'][0]['cancel']);
     }
 
     public function testAPaymentTextStandsForTheDepositRules(): void

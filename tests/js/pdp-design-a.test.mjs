@@ -663,3 +663,67 @@ describe('results that keep arriving (Sphinx polls)', () => {
         </section>`;
     }
 });
+
+describe('the terms on a phone: a bottom sheet (board 14.6)', () => {
+    let details;
+    let booked;
+
+    beforeAll(() => {
+        window.matchMedia = (query) => ({ matches: query === '(max-width: 767px)', media: query, addListener() {}, removeListener() {} });
+        page().insertAdjacentHTML('beforeend', `
+            <ul><li class="travel-pdpa-rcard" data-travel-room>
+                <details class="travel-pdpa-terms">
+                    <summary class="travel-pdpa-terms__toggle">Condiții de plată și anulare</summary>
+                    <div class="travel-pdpa-terms__panel" data-travel-terms-panel>
+                        <div class="travel-pdpa-terms__sheethead"><button type="button" data-travel-terms-close aria-label="Închide condițiile">×</button></div>
+                        <div class="travel-pdpa-terms__body"><ol class="travel-timeline"><li>Până pe 4 nov. 2026, ora 23:59</li></ol></div>
+                        <div class="travel-pdpa-terms__sheetfoot"><button type="button" data-travel-terms-cta></button></div>
+                    </div>
+                </details>
+                <div class="travel-pdpa-till" data-travel-for="0" hidden><b class="travel-pdpa-till__total">995 €</b><a class="travel-pdpa-till__btn" href="#hb">Rezervă</a></div>
+                <div class="travel-pdpa-till" data-travel-for="1"><b class="travel-pdpa-till__total">785 €</b><a class="travel-pdpa-till__btn" href="#bb">Rezervă</a></div>
+            </li></ul>`);
+        details = document.querySelector('.travel-pdpa-terms');
+        booked = vi.fn((event) => event.preventDefault());
+        document.querySelector('[href="#bb"]').addEventListener('click', booked);
+    });
+
+    const open = () => {
+        details.open = true;
+        details.dispatchEvent(new Event('toggle'));
+    };
+    const shut = () => details.dispatchEvent(new Event('toggle'));
+
+    it('stops the page scrolling, focuses its × and says what the card books', () => {
+        open();
+        expect(document.documentElement.classList.contains('travel-pdpa-sheet-open')).toBe(true);
+        expect(document.activeElement).toBe(details.querySelector('[data-travel-terms-close]'));
+        expect(details.querySelector('[data-travel-terms-cta]').textContent).toBe('Rezervă · 785 €');
+
+        click(details.querySelector('[data-travel-terms-close]'));
+        shut();
+        expect(details.open).toBe(false);
+        expect(document.documentElement.classList.contains('travel-pdpa-sheet-open')).toBe(false);
+        expect(document.activeElement).toBe(details.querySelector('summary'));
+    });
+
+    it('closes on Esc and on a tap beside it', () => {
+        open();
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        expect(details.open).toBe(false);
+        shut();
+
+        open();
+        click(details);
+        expect(details.open).toBe(false);
+        shut();
+    });
+
+    it('its button closes it and presses the card\'s own', () => {
+        open();
+        click(details.querySelector('[data-travel-terms-cta]'));
+        expect(details.open).toBe(false);
+        expect(booked).toHaveBeenCalledTimes(1);
+        shut();
+    });
+});

@@ -3351,8 +3351,8 @@ msgid "[percent]% deposit now, the rest by [date]"
 msgstr "Avans [percent]% acum, restul până la [date]"
 
 msgctxt "Languages::travel_core.pdpa_r_pay_on_request"
-msgid "By card now (refunded if not confirmed) or by bank transfer once confirmed"
-msgstr "Cu cardul acum (returnat dacă nu se confirmă) sau prin transfer, după confirmare"
+msgid "If the hotel does not confirm, you pay nothing: anything paid is refunded"
+msgstr "Dacă hotelul nu confirmă, nu plătești: îți returnăm orice sumă achitată"
 
 msgctxt "Languages::travel_core.pdpa_r_terms"
 msgid "Payment and cancellation terms"
@@ -3369,6 +3369,106 @@ msgstr "Nerambursabil"
 msgctxt "Languages::travel_core.pdpa_r_free_until"
 msgid "Free cancellation until [date] inclusive"
 msgstr "Anulare gratuită până la [date] inclusiv"
+
+msgctxt "Languages::travel_core.pdpa_r_free_until_time"
+msgid "Free cancellation until [date], [time]"
+msgstr "Anulare gratuită până pe [date], ora [time]"
+
+msgctxt "Languages::travel_core.pdpa_r_free_tomorrow"
+msgid "Free cancellation until tomorrow ([date]), [time]"
+msgstr "Anulare gratuită până mâine ([date]), ora [time]"
+
+msgctxt "Languages::travel_core.pdpa_r_free_today"
+msgid "Free cancellation until today, [time]"
+msgstr "Anulare gratuită până azi la ora [time]"
+
+msgctxt "Languages::travel_core.pdpa_r_penalty_now"
+msgid "Cancelling costs [amount] from today ([what])"
+msgstr "Anularea costă [amount] de azi ([what])"
+
+msgctxt "Languages::travel_core.pdpa_r_penalty_now_plain"
+msgid "Cancelling costs [amount] from today"
+msgstr "Anularea costă [amount] de azi"
+
+msgctxt "Languages::travel_core.pdpa_r_what_first_nights"
+msgid "the first night|the first [n] nights"
+msgstr "prima noapte|primele [n] nopți|primele [n] de nopți"
+
+msgctxt "Languages::travel_core.pdpa_r_what_nights_avg"
+msgid "one night at the average rate|[n] nights at the average rate"
+msgstr "o noapte la prețul mediu|[n] nopți la prețul mediu|[n] de nopți la prețul mediu"
+
+msgctxt "Languages::travel_core.pdpa_r_what_percent"
+msgid "[percent] of the price"
+msgstr "[percent] din preț"
+
+msgctxt "Languages::travel_core.pdpa_r_no_free_lead"
+msgid "No free cancellation"
+msgstr "Fără anulare gratuită"
+
+msgctxt "Languages::travel_core.pdpa_r_no_free_today"
+msgid "from today."
+msgstr "de azi."
+
+msgctxt "Languages::travel_core.pdpa_r_nrf_lead"
+msgid "Non-refundable:"
+msgstr "Nerambursabil:"
+
+msgctxt "Languages::travel_core.pdpa_r_nrf_warn"
+msgid "if you cancel, you get no refund."
+msgstr "dacă anulezi, nu primești banii înapoi."
+
+msgctxt "Languages::travel_core.tl_until_time"
+msgid "Until [date], [time]"
+msgstr "Până pe [date], ora [time]"
+
+msgctxt "Languages::travel_core.tl_until_tomorrow"
+msgid "Until tomorrow ([date]), [time]"
+msgstr "Până mâine ([date]), ora [time]"
+
+msgctxt "Languages::travel_core.tl_until_today"
+msgid "Until today, [time]"
+msgstr "Până azi la ora [time]"
+
+msgctxt "Languages::travel_core.tl_last_from"
+msgid "From [date], and no-show"
+msgstr "Din [date] și la neprezentare"
+
+msgctxt "Languages::travel_core.tl_last_arrival"
+msgid "From [date] (arrival day), and no-show"
+msgstr "Din [date] (ziua sosirii) și la neprezentare"
+
+msgctxt "Languages::travel_core.tl_last_today"
+msgid "From today, and no-show"
+msgstr "De azi și la neprezentare"
+
+msgctxt "Languages::travel_core.tl_cost_first_nights"
+msgid "Costs the first night|Costs the first [n] nights"
+msgstr "Costă prima noapte|Costă primele [n] nopți|Costă primele [n] de nopți"
+
+msgctxt "Languages::travel_core.tl_cost_nights_avg"
+msgid "Costs one night at the average rate|Costs [n] nights at the average rate"
+msgstr "Costă o noapte la prețul mediu|Costă [n] nopți la prețul mediu|Costă [n] de nopți la prețul mediu"
+
+msgctxt "Languages::travel_core.tl_cost_all"
+msgid "Costs the full price"
+msgstr "Costă tot prețul"
+
+msgctxt "Languages::travel_core.tl_cost_percent"
+msgid "Costs [percent] of the price"
+msgstr "Costă [percent] din preț"
+
+msgctxt "Languages::travel_core.tl_cost"
+msgid "Costs"
+msgstr "Costă"
+
+msgctxt "Languages::travel_core.tl_cutoff_note"
+msgid "Deadlines run until [time] on the day shown, Romanian time."
+msgstr "Termenele țin până la ora [time] a zilei scrise, ora României."
+
+msgctxt "Languages::travel_core.tl_terms_close"
+msgid "Close the terms"
+msgstr "Închide condițiile"
 
 msgctxt "Languages::travel_core.pdpa_r_per_night"
 msgid "≈ [price] / night"
@@ -3531,12 +3631,12 @@ msgid "The hotel confirms availability within 48 h."
 msgstr "Hotelul confirmă disponibilitatea în max. 48 h."
 
 msgctxt "Languages::travel_core.pdpa_r_request_step2_lead"
-msgid "You choose how to pay:"
-msgstr "Alegi cum plătești:"
+msgid "You don't pay for a room the hotel does not confirm:"
+msgstr "Nu plătești o cameră pe care hotelul nu o confirmă:"
 
 msgctxt "Languages::travel_core.pdpa_r_request_step2"
-msgid "by card when you book, refunded if the hotel doesn't confirm, or by bank transfer once we tell you it has confirmed."
-msgstr "cu cardul la rezervare, cu banii înapoi dacă hotelul nu confirmă, sau prin transfer bancar după ce îți spunem că a confirmat."
+msgid "anything paid is refunded."
+msgstr "orice sumă achitată îți este returnată."
 
 msgctxt "Languages::travel_core.pdpa_r_request_step3_lead"
 msgid "If the hotel doesn't confirm,"
@@ -3871,8 +3971,8 @@ msgid "The hotel replies within 48 h."
 msgstr "Hotelul răspunde în max. 48 h."
 
 msgctxt "Languages::travel_core.pdpa_m_request_step2"
-msgid "By card you pay for it when you book and get the money back if it is not confirmed; by bank transfer you pay once it is confirmed."
-msgstr "Cu cardul o plătești la rezervare și îți returnăm banii dacă nu se confirmă; prin transfer bancar o plătești după confirmare."
+msgid "If it is not confirmed, you don't pay for it: anything paid for it is refunded."
+msgstr "Dacă nu se confirmă, nu o plătești: orice sumă achitată pentru ea îți este returnată."
 
 msgctxt "Languages::travel_core.pdpa_m_request_step3_lead"
 msgid "If the hotel does not confirm it,"
@@ -3991,8 +4091,8 @@ msgid "The rooms on request wait for the hotel:"
 msgstr "Camerele la cerere așteaptă hotelul:"
 
 msgctxt "Languages::travel_core.pdpa_m_bar_step2"
-msgid "it replies within 48 h. By card you pay for them now and get the money back if they are not confirmed; by bank transfer, once they are."
-msgstr "răspunde în max. 48 h. Cu cardul le plătești acum și îți returnăm banii dacă nu se confirmă; prin transfer bancar, după confirmare."
+msgid "it replies within 48 h. You don't pay for them unless confirmed: anything paid for them is refunded."
+msgstr "răspunde în max. 48 h. Nu le plătești dacă nu se confirmă: orice sumă achitată pentru ele îți este returnată."
 
 msgctxt "Languages::travel_core.pdpa_m_bar_step3_lead"
 msgid "If the hotel does not confirm them,"

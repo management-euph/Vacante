@@ -133,7 +133,11 @@ final class DesignARatesTest extends TestCase
         self::assertSame(['Double Room Superior', 'Twin Room with Sea View'], array_column($view['rooms'], 'title'), 'cheapest room first');
         $twin = $view['rooms'][1];
         self::assertSame([false, false], [$twin['on_request'], $twin['immediate']], 'one option on request: each says its own');
-        self::assertSame(['kind' => 'free_open', 'until' => ''], $twin['options'][0]['cancel'], '"Anulare gratuită", no day');
+        self::assertSame(
+            ['kind' => 'free_open', 'until' => '', 'time' => '', 'rel' => '', 'amount' => '', 'nights' => 0, 'approx' => false, 'percent' => ''],
+            $twin['options'][0]['cancel'],
+            '"Anulare gratuită", no day',
+        );
         self::assertNull($twin['options'][1]['cancel']);
         self::assertSame(['880 €', '1.100 €', '−20%'], [$twin['options'][0]['price'], $twin['options'][0]['was'], $twin['options'][0]['off']]);
         self::assertSame([0, 1], array_column($twin['terms'], 'for'), 'each option loads its own terms');

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Results;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\MoneyFormatter;
 
 /**
@@ -36,7 +37,7 @@ use Tygh\Addons\TravelCore\Services\MoneyFormatter;
  * @phpstan-type Payment array{on_request: bool, deposit_percent: int, balance_due: string, text: string}
  * @phpstan-type Terms list<array{title: string, lines: list<string>}>
  * @phpstan-type Deal array{name: string, until: string, saving: string}
- * @phpstan-type Cancel array{kind: string, until: string}
+ * @phpstan-type Cancel array{kind: string, until: string, time: string, rel: string, amount: string, nights: int, approx: bool, percent: string}
  * @phpstan-type TermsView array{for: int, terms: Terms, timeline: array<string, mixed>, url: string}
  * @phpstan-type OptionView array{
  *     index: int, key: string, meal: string, meal_key: string, name: string, package: string,
@@ -76,6 +77,8 @@ final class RoomResultsBuilder
     public const CANCEL_FREE = 'free';
     public const CANCEL_FREE_OPEN = 'free_open';
     public const CANCEL_NON_REFUNDABLE = 'non_refundable';
+    // Cancelling already costs something today (no free cancellation any more): said with its amount
+    public const CANCEL_PENALTY = 'penalty';
 
     public const CHIP_FREE = 'free';
     public const CHIP_IMMEDIATE = 'immediate';
@@ -441,17 +444,74 @@ final class RoomResultsBuilder
         ];
     }
 
-    /** @return Cancel|null null = nothing known before the terms */
+    /**
+     * What the card says on cancelling, from the period holding today
+     * (TermsTimelineFactory's current step, when the rate has a timeline):
+     * free until a day (its hour and "today" / "tomorrow" when the provider
+     * gives them), already costing something today (with the amount),
+     * non-refundable, or free with the day in the terms.
+     *
+     * @return Cancel|null null = nothing known before the terms
+     */
     private function cancel(RateOffer $rate): ?array
     {
+        $now = self::currentStep($rate->timeline);
         if ($rate->nonRefundable) {
-            return ['kind' => self::CANCEL_NON_REFUNDABLE, 'until' => ''];
+            return self::cancelLine(self::CANCEL_NON_REFUNDABLE);
         }
         if ($rate->freeCancellationUntil !== '') {
-            return ['kind' => self::CANCEL_FREE, 'until' => ($this->formatDate)($rate->freeCancellationUntil)];
+            return self::cancelLine(self::CANCEL_FREE, [
+                'until' => ($this->formatDate)($rate->freeCancellationUntil),
+                'time' => TypeCoerce::toString($now['to_time'] ?? ''),
+                'rel' => TypeCoerce::toString($now['to_rel'] ?? ''),
+            ]);
+        }
+        if ($now !== null && ($now['kind'] ?? '') === 'partial' && TypeCoerce::toString($now['amount_label'] ?? '') !== '') {
+            return self::cancelLine(self::CANCEL_PENALTY, [
+                'amount' => TypeCoerce::toString($now['amount_label']),
+                'nights' => TypeCoerce::toInt($now['nights'] ?? 0),
+                'approx' => ($now['approx'] ?? false) === true,
+                'percent' => TypeCoerce::toString($now['percent_label'] ?? ''),
+            ]);
         }
 
-        return $rate->freeCancellation ? ['kind' => self::CANCEL_FREE_OPEN, 'until' => ''] : null;
+        return $rate->freeCancellation ? self::cancelLine(self::CANCEL_FREE_OPEN) : null;
+    }
+
+    /**
+     * @param array{until?: string, time?: string, rel?: string, amount?: string, nights?: int, approx?: bool, percent?: string} $set
+     * @return Cancel
+     */
+    private static function cancelLine(string $kind, array $set = []): array
+    {
+        return [
+            'kind' => $kind,
+            'until' => $set['until'] ?? '',
+            'time' => $set['time'] ?? '',
+            'rel' => $set['rel'] ?? '',
+            'amount' => $set['amount'] ?? '',
+            'nights' => $set['nights'] ?? 0,
+            'approx' => $set['approx'] ?? false,
+            'percent' => $set['percent'] ?? '',
+        ];
+    }
+
+    /**
+     * The cancelling period holding today, from a rate's structured terms.
+     *
+     * @param array<string, mixed> $timeline
+     * @return array<array-key, mixed>|null
+     */
+    private static function currentStep(array $timeline): ?array
+    {
+        $steps = $timeline['cancel_steps'] ?? [];
+        foreach (is_array($steps) ? $steps : [] as $step) {
+            if (is_array($step) && ($step['is_current'] ?? false) === true && ($step['is_no_show'] ?? false) !== true) {
+                return $step;
+            }
+        }
+
+        return null;
     }
 
     /** @return Payment */

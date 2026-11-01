@@ -34,6 +34,51 @@ use Tygh\Addons\TravelCore\ViewModels\HotelHeaderViewModel;
 final class NovotonBookingSidebarBuilder
 {
     /**
+     * The hour a Novoton deadline day ends: a <Penalty tillDate> holds until
+     * 23:59 of that day, Bulgarian time, the same as Romania's (owner, 1 Nov
+     * 2026). The timeline says "until 4 Nov, 23:59".
+     */
+    public const string CANCEL_CUTOFF = '23:59';
+
+    /**
+     * What the shared timeline knows of a Novoton stay beyond its windows
+     * (TermsTimelineFactory::cancellation()'s $meta): the deadline hour, the
+     * arrival (the last period runs through it) and, when priceinfo gave
+     * them, each night's share of the price (NightShares: the first N
+     * nights, exact).
+     *
+     * @param list<float> $nightShares
+     * @return array{cutoff: string, check_in: string, night_shares?: list<float>}
+     */
+    public static function cancelMeta(string $checkIn, array $nightShares = []): array
+    {
+        return ['cutoff' => self::CANCEL_CUTOFF, 'check_in' => $checkIn]
+            + ($nightShares !== [] ? ['night_shares' => $nightShares] : []);
+    }
+
+    /**
+     * Each night's share of the price as a cart line keeps it (add_to_cart),
+     * or [] when the line has none or a value is not a share (0-1).
+     *
+     * @return list<float>
+     */
+    public static function nightShares(mixed $value): array
+    {
+        if (!is_array($value) || $value === []) {
+            return [];
+        }
+        $shares = [];
+        foreach ($value as $share) {
+            if (!is_numeric($share) || (float) $share < 0 || (float) $share > 1) {
+                return [];
+            }
+            $shares[] = (float) $share;
+        }
+
+        return $shares;
+    }
+
+    /**
      * The shared hotel identity (name, stars, sanitized location line,
      * always-present map URL) both modes assign.
      *
@@ -316,20 +361,22 @@ final class NovotonBookingSidebarBuilder
      * plus the formatted lines as the prose fallback.
      *
      * @param array<string, mixed> $extra
-     * @return array{cancel_windows: list<array<string, mixed>>, payment_rows: list<array<string, mixed>>, cancel_lines: list<string>, payment_lines: list<string>}
+     * @return array{cancel_windows: list<array<string, mixed>>, cancel_meta: array{cutoff: string, check_in: string, night_shares?: list<float>}, payment_rows: list<array<string, mixed>>, cancel_lines: list<string>, payment_lines: list<string>}
      */
     public static function cartTerms(array $extra): array
     {
+        $checkIn = TypeCoerce::toString($extra['check_in'] ?? '');
         [$windows, $installments] = self::terms(
             TermsFormatter::parseCancellationTerms(
                 TypeCoerce::toString($extra['terms_of_cancellation_raw'] ?? ''),
-                TypeCoerce::toString($extra['check_in'] ?? ''),
+                $checkIn,
             ),
             TermsFormatter::parsePaymentTerms(TypeCoerce::toString($extra['terms_of_payment_raw'] ?? '')),
         );
 
         return [
             'cancel_windows' => $windows,
+            'cancel_meta' => self::cancelMeta($checkIn, self::nightShares($extra['night_shares'] ?? null)),
             'payment_rows' => $installments,
             'cancel_lines' => BookingSidebarFactory::termLines(TypeCoerce::toString($extra['terms_of_cancellation'] ?? '')),
             'payment_lines' => BookingSidebarFactory::termLines(TypeCoerce::toString($extra['terms_of_payment'] ?? '')),

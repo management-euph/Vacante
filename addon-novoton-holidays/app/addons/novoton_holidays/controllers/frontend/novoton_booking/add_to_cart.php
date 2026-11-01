@@ -324,9 +324,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
     $nights = TypeCoerce::toInt($bookingData['nights'] ?? 0);
     if ($nights <= 0) {
         try {
-            $d1 = new \DateTime($check_in);
-            $d2 = new \DateTime($check_out);
-            $nights = (int) $d1->diff($d2)->days;
+            $nights = (int) (new \DateTime($check_in))->diff(new \DateTime($check_out))->days;
         } catch (\Exception $e) {
             $nights = 7;
         }
@@ -497,6 +495,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
             'terms_of_cancellation' => fn_novoton_holidays_format_cancellation_terms($terms_of_cancellation, $check_in),
             'terms_of_payment_raw' => $terms_of_payment,
             'terms_of_cancellation_raw' => $terms_of_cancellation,
+            'night_shares' => \Tygh\Addons\NovotonHolidays\Services\NightShares::forStore()->forBooking($bdHotelId, $priced_rooms, $check_in, $nights, $terms_of_cancellation),
             'remark' => $remark,
             'important' => $important,
             'total_price' => $total_price,

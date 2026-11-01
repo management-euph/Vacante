@@ -2528,8 +2528,8 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'ro' => 'Avans [percent]% acum, restul până la [date]',
     ],
     'travel_core.pdpa_r_pay_on_request' => [
-        'en' => 'By card now (refunded if not confirmed) or by bank transfer once confirmed',
-        'ro' => 'Cu cardul acum (returnat dacă nu se confirmă) sau prin transfer, după confirmare',
+        'en' => 'If the hotel does not confirm, you pay nothing: anything paid is refunded',
+        'ro' => 'Dacă hotelul nu confirmă, nu plătești: îți returnăm orice sumă achitată',
     ],
     'travel_core.pdpa_r_terms' => [
         'en' => 'Payment and cancellation terms',
@@ -2546,6 +2546,106 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
     'travel_core.pdpa_r_free_until' => [
         'en' => 'Free cancellation until [date] inclusive',
         'ro' => 'Anulare gratuită până la [date] inclusiv',
+    ],
+    'travel_core.pdpa_r_free_until_time' => [
+        'en' => 'Free cancellation until [date], [time]',
+        'ro' => 'Anulare gratuită până pe [date], ora [time]',
+    ],
+    'travel_core.pdpa_r_free_tomorrow' => [
+        'en' => 'Free cancellation until tomorrow ([date]), [time]',
+        'ro' => 'Anulare gratuită până mâine ([date]), ora [time]',
+    ],
+    'travel_core.pdpa_r_free_today' => [
+        'en' => 'Free cancellation until today, [time]',
+        'ro' => 'Anulare gratuită până azi la ora [time]',
+    ],
+    'travel_core.pdpa_r_penalty_now' => [
+        'en' => 'Cancelling costs [amount] from today ([what])',
+        'ro' => 'Anularea costă [amount] de azi ([what])',
+    ],
+    'travel_core.pdpa_r_penalty_now_plain' => [
+        'en' => 'Cancelling costs [amount] from today',
+        'ro' => 'Anularea costă [amount] de azi',
+    ],
+    'travel_core.pdpa_r_what_first_nights' => [
+        'en' => 'the first night|the first [n] nights',
+        'ro' => 'prima noapte|primele [n] nopți|primele [n] de nopți',
+    ],
+    'travel_core.pdpa_r_what_nights_avg' => [
+        'en' => 'one night at the average rate|[n] nights at the average rate',
+        'ro' => 'o noapte la prețul mediu|[n] nopți la prețul mediu|[n] de nopți la prețul mediu',
+    ],
+    'travel_core.pdpa_r_what_percent' => [
+        'en' => '[percent] of the price',
+        'ro' => '[percent] din preț',
+    ],
+    'travel_core.pdpa_r_no_free_lead' => [
+        'en' => 'No free cancellation',
+        'ro' => 'Fără anulare gratuită',
+    ],
+    'travel_core.pdpa_r_no_free_today' => [
+        'en' => 'from today.',
+        'ro' => 'de azi.',
+    ],
+    'travel_core.pdpa_r_nrf_lead' => [
+        'en' => 'Non-refundable:',
+        'ro' => 'Nerambursabil:',
+    ],
+    'travel_core.pdpa_r_nrf_warn' => [
+        'en' => 'if you cancel, you get no refund.',
+        'ro' => 'dacă anulezi, nu primești banii înapoi.',
+    ],
+    'travel_core.tl_until_time' => [
+        'en' => 'Until [date], [time]',
+        'ro' => 'Până pe [date], ora [time]',
+    ],
+    'travel_core.tl_until_tomorrow' => [
+        'en' => 'Until tomorrow ([date]), [time]',
+        'ro' => 'Până mâine ([date]), ora [time]',
+    ],
+    'travel_core.tl_until_today' => [
+        'en' => 'Until today, [time]',
+        'ro' => 'Până azi la ora [time]',
+    ],
+    'travel_core.tl_last_from' => [
+        'en' => 'From [date], and no-show',
+        'ro' => 'Din [date] și la neprezentare',
+    ],
+    'travel_core.tl_last_arrival' => [
+        'en' => 'From [date] (arrival day), and no-show',
+        'ro' => 'Din [date] (ziua sosirii) și la neprezentare',
+    ],
+    'travel_core.tl_last_today' => [
+        'en' => 'From today, and no-show',
+        'ro' => 'De azi și la neprezentare',
+    ],
+    'travel_core.tl_cost_first_nights' => [
+        'en' => 'Costs the first night|Costs the first [n] nights',
+        'ro' => 'Costă prima noapte|Costă primele [n] nopți|Costă primele [n] de nopți',
+    ],
+    'travel_core.tl_cost_nights_avg' => [
+        'en' => 'Costs one night at the average rate|Costs [n] nights at the average rate',
+        'ro' => 'Costă o noapte la prețul mediu|Costă [n] nopți la prețul mediu|Costă [n] de nopți la prețul mediu',
+    ],
+    'travel_core.tl_cost_all' => [
+        'en' => 'Costs the full price',
+        'ro' => 'Costă tot prețul',
+    ],
+    'travel_core.tl_cost_percent' => [
+        'en' => 'Costs [percent] of the price',
+        'ro' => 'Costă [percent] din preț',
+    ],
+    'travel_core.tl_cost' => [
+        'en' => 'Costs',
+        'ro' => 'Costă',
+    ],
+    'travel_core.tl_cutoff_note' => [
+        'en' => 'Deadlines run until [time] on the day shown, Romanian time.',
+        'ro' => 'Termenele țin până la ora [time] a zilei scrise, ora României.',
+    ],
+    'travel_core.tl_terms_close' => [
+        'en' => 'Close the terms',
+        'ro' => 'Închide condițiile',
     ],
     'travel_core.pdpa_r_per_night' => [
         'en' => '≈ [price] / night',
@@ -2708,12 +2808,12 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'ro' => 'Hotelul confirmă disponibilitatea în max. 48 h.',
     ],
     'travel_core.pdpa_r_request_step2_lead' => [
-        'en' => 'You choose how to pay:',
-        'ro' => 'Alegi cum plătești:',
+        'en' => 'You don\'t pay for a room the hotel does not confirm:',
+        'ro' => 'Nu plătești o cameră pe care hotelul nu o confirmă:',
     ],
     'travel_core.pdpa_r_request_step2' => [
-        'en' => 'by card when you book, refunded if the hotel doesn\'t confirm, or by bank transfer once we tell you it has confirmed.',
-        'ro' => 'cu cardul la rezervare, cu banii înapoi dacă hotelul nu confirmă, sau prin transfer bancar după ce îți spunem că a confirmat.',
+        'en' => 'anything paid is refunded.',
+        'ro' => 'orice sumă achitată îți este returnată.',
     ],
     'travel_core.pdpa_r_request_step3_lead' => [
         'en' => 'If the hotel doesn\'t confirm,',
@@ -3054,8 +3154,8 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'ro' => 'Hotelul răspunde în max. 48 h.',
     ],
     'travel_core.pdpa_m_request_step2' => [
-        'en' => 'By card you pay for it when you book and get the money back if it is not confirmed; by bank transfer you pay once it is confirmed.',
-        'ro' => 'Cu cardul o plătești la rezervare și îți returnăm banii dacă nu se confirmă; prin transfer bancar o plătești după confirmare.',
+        'en' => 'If it is not confirmed, you don\'t pay for it: anything paid for it is refunded.',
+        'ro' => 'Dacă nu se confirmă, nu o plătești: orice sumă achitată pentru ea îți este returnată.',
     ],
     'travel_core.pdpa_m_request_step3_lead' => [
         'en' => 'If the hotel does not confirm it,',
@@ -3174,8 +3274,8 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'ro' => 'Camerele la cerere așteaptă hotelul:',
     ],
     'travel_core.pdpa_m_bar_step2' => [
-        'en' => 'it replies within 48 h. By card you pay for them now and get the money back if they are not confirmed; by bank transfer, once they are.',
-        'ro' => 'răspunde în max. 48 h. Cu cardul le plătești acum și îți returnăm banii dacă nu se confirmă; prin transfer bancar, după confirmare.',
+        'en' => 'it replies within 48 h. You don\'t pay for them unless confirmed: anything paid for them is refunded.',
+        'ro' => 'răspunde în max. 48 h. Nu le plătești dacă nu se confirmă: orice sumă achitată pentru ele îți este returnată.',
     ],
     'travel_core.pdpa_m_bar_step3_lead' => [
         'en' => 'If the hotel does not confirm them,',

@@ -18,6 +18,10 @@
     the hotel. pdp-design-a-rooms.js counts, chooses and books (the bar);
     room by room (board 13c.9) it hides the count and the price per room and
     chooses for the room open ("Alege pentru Camera 3").
+
+    Past the free cancellation (Cancel "penalty") or non-refundable, a
+    short word over the button says so before booking ("Fără anulare
+    gratuită de azi.", "Nerambursabil: …"); the card's line has the amount.
 *}
 {if $travel_pdpa_option.on_request}
     {$travel_pdpa_action = __("travel_core.pdpa_r_request")}
@@ -25,6 +29,8 @@
     {$travel_pdpa_action = __("travel_core.pdpa_r_book")}
 {/if}
 {$travel_pdpa_tip_id = "travel-pdpa-`$travel_pdpa_room.key`-tip`$travel_pdpa_option.index`"}
+{* What cancelling costs today, the option's own or the room's (design_a_cancel.tpl): said again over the button *}
+{$travel_pdpa_tcancel = $travel_pdpa_option.cancel|default:$travel_pdpa_room.cancel}
 {if $travel_pdpa_group}
     {$travel_pdpa_size = $travel_pdpa_group.size}
     {$travel_pdpa_qty = $travel_pdpa_room.qty}
@@ -66,6 +72,11 @@
             {/if}
         </p>
         <p class="travel-pdpa-capnote" data-travel-cap{if !($travel_pdpa_size > 1 && $travel_pdpa_room.left > 0 && $travel_pdpa_room.left < $travel_pdpa_size)} hidden{/if}>{if $travel_pdpa_size > 1 && $travel_pdpa_room.left > 0 && $travel_pdpa_room.left < $travel_pdpa_size}{__("travel_core.pdpa_m_cap", ["[n]" => $travel_pdpa_room.left, "[size]" => $travel_pdpa_size])}{/if}</p>
+        {if $travel_pdpa_tcancel && $travel_pdpa_tcancel.kind == "penalty"}
+            <p class="travel-pdpa-tillwarn">{include file="addons/travel_core/components/design_a_icon.tpl" icon="alert" size=14}<span><b>{__("travel_core.pdpa_r_no_free_lead")}</b> {__("travel_core.pdpa_r_no_free_today")}</span></p>
+        {elseif $travel_pdpa_tcancel && $travel_pdpa_tcancel.kind == "non_refundable"}
+            <p class="travel-pdpa-tillwarn travel-pdpa-tillwarn--full">{include file="addons/travel_core/components/design_a_icon.tpl" icon="alert" size=14}<span><b>{__("travel_core.pdpa_r_nrf_lead")}</b> {__("travel_core.pdpa_r_nrf_warn")}</span></p>
+        {/if}
         <div class="travel-pdpa-cta">
             <button type="button" class="travel-pdpa-btn travel-pdpa-till__btn" data-travel-choose aria-pressed="false"
                     aria-label="{$travel_pdpa_choose|escape:html}: {$travel_pdpa_room.title|escape:html}, {$travel_pdpa_option.meal|escape:html}, {$travel_pdpa_option.qty_price|escape:html}">{$travel_pdpa_choose}</button>
@@ -94,6 +105,11 @@
         <b class="travel-pdpa-till__total">{$travel_pdpa_option.price|escape:html}</b>
         {if $travel_pdpa_option.per_night}<span class="travel-pdpa-unit">{__("travel_core.pdpa_r_per_night", ["[price]" => $travel_pdpa_option.per_night|escape:html])}</span>{/if}
     </p>
+    {if $travel_pdpa_tcancel && $travel_pdpa_tcancel.kind == "penalty"}
+        <p class="travel-pdpa-tillwarn">{include file="addons/travel_core/components/design_a_icon.tpl" icon="alert" size=14}<span><b>{__("travel_core.pdpa_r_no_free_lead")}</b> {__("travel_core.pdpa_r_no_free_today")}</span></p>
+    {elseif $travel_pdpa_tcancel && $travel_pdpa_tcancel.kind == "non_refundable"}
+        <p class="travel-pdpa-tillwarn travel-pdpa-tillwarn--full">{include file="addons/travel_core/components/design_a_icon.tpl" icon="alert" size=14}<span><b>{__("travel_core.pdpa_r_nrf_lead")}</b> {__("travel_core.pdpa_r_nrf_warn")}</span></p>
+    {/if}
     <div class="travel-pdpa-cta">
         <a href="{$travel_pdpa_option.book_url|escape:html}" class="travel-pdpa-btn travel-pdpa-till__btn"
            aria-label="{$travel_pdpa_action|escape:html}: {$travel_pdpa_room.title|escape:html}, {$travel_pdpa_option.meal|escape:html}, {$travel_pdpa_option.price|escape:html}">{$travel_pdpa_action}</a>
