@@ -3969,3 +3969,19 @@ msgstr "If the hotel does not confirm them,"
 msgctxt "Languages::travel_core.pdpa_m_bar_step3"
 msgid "we email you similar alternatives; the rooms booked stay booked."
 msgstr "we email you similar alternatives; the rooms booked stay booked."
+
+msgctxt "Languages::travel_core.edit_booking_title"
+msgid "Edit booking details #[id]"
+msgstr "Edit booking details #[id]"
+
+msgctxt "Languages::travel_core.edit_back_to_booking"
+msgid "Back to booking details"
+msgstr "Back to booking details"
+
+msgctxt "Languages::travel_core.edit_cancel"
+msgid "Cancel"
+msgstr "Cancel"
+
+msgctxt "Languages::travel_core.same_surname"
+msgid "Same last name as Adult 1 for every guest"
+msgstr "Same last name as Adult 1 for every guest"

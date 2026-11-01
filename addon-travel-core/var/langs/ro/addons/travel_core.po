@@ -3969,3 +3969,19 @@ msgstr "Dacă hotelul nu le confirmă,"
 msgctxt "Languages::travel_core.pdpa_m_bar_step3"
 msgid "we email you similar alternatives; the rooms booked stay booked."
 msgstr "îți trimitem pe email alternative similare; camerele rezervate rămân rezervate."
+
+msgctxt "Languages::travel_core.edit_booking_title"
+msgid "Edit booking details #[id]"
+msgstr "Editare detalii rezervare #[id]"
+
+msgctxt "Languages::travel_core.edit_back_to_booking"
+msgid "Back to booking details"
+msgstr "Înapoi la detalii rezervare"
+
+msgctxt "Languages::travel_core.edit_cancel"
+msgid "Cancel"
+msgstr "Anulează"
+
+msgctxt "Languages::travel_core.same_surname"
+msgid "Same last name as Adult 1 for every guest"
+msgstr "Același nume de familie ca Adult 1 pentru toți oaspeții"

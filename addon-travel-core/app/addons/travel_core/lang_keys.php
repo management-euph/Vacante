@@ -3152,4 +3152,22 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'we email you similar alternatives; the rooms booked stay booked.',
         'ro' => 'îți trimitem pe email alternative similare; camerele rezervate rămân rezervate.',
     ],
+    // Editing a cart line's guests (booking_steps.tpl header, booking_form_actions.tpl).
+    'travel_core.edit_booking_title' => [
+        'en' => 'Edit booking details #[id]',
+        'ro' => 'Editare detalii rezervare #[id]',
+    ],
+    'travel_core.edit_back_to_booking' => [
+        'en' => 'Back to booking details',
+        'ro' => 'Înapoi la detalii rezervare',
+    ],
+    'travel_core.edit_cancel' => [
+        'en' => 'Cancel',
+        'ro' => 'Anulează',
+    ],
+    // Guest form shortcut for families (booking_guest_hint.tpl).
+    'travel_core.same_surname' => [
+        'en' => 'Same last name as Adult 1 for every guest',
+        'ro' => 'Același nume de familie ca Adult 1 pentru toți oaspeții',
+    ],
 ];
