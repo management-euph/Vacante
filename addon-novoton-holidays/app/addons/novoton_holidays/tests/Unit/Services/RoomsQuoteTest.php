@@ -6,6 +6,7 @@ namespace Tygh\Addons\NovotonHolidays\Tests\Unit\Services;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Tygh\Addons\NovotonHolidays\Api\Contracts\AvailabilityApiClientInterface;
 use Tygh\Addons\NovotonHolidays\Api\Contracts\PricingApiClientInterface;
 use Tygh\Addons\NovotonHolidays\Helpers\BookingRoomAssembler;
 use Tygh\Addons\NovotonHolidays\Services\ApiBookingRequestBuilder;
@@ -65,6 +66,37 @@ final class RoomsQuoteTest extends TestCase
         self::assertSame(['SUITE'], array_values(array_unique(array_column($this->calls, 'room_id'))));
         // Identical rooms share one room_price call
         self::assertCount(1, $this->calls);
+    }
+
+    /**
+     * The split booking: with the hotel's quota (add_to_cart), each room of
+     * a booking of several says whether the hotel confirms it at once. One
+     * suite left: the second suite is on request. Without the quota, or for
+     * one room, the rooms are priced as before and nothing is asked.
+     */
+    public function testEachRoomSaysWhetherTheHotelConfirmsItAtOnce(): void
+    {
+        $two = self::request([
+            'rooms_data' => json_encode([
+                ['room_id' => 'SUITE', 'board_id' => 'AI', 'package_name' => 'LUX', 'adults' => 2, 'children' => 0],
+                ['room_id' => 'SUITE', 'board_id' => 'AI', 'package_name' => 'LUX', 'adults' => 2, 'children' => 0],
+            ]),
+        ]);
+        $rooms = BookedRooms::fromRequest($two, []);
+        self::assertNotNull($rooms);
+        $availability = $this->createMock(AvailabilityApiClientInterface::class);
+        $availability->expects(self::once())->method('getHotelQuotaAll')->with('476', '2026-10-05', '2026-10-11')
+            ->willReturn(['SUITE' => '1', 'DBL' => '4']);
+
+        $quote = (new RoomsQuote($this->pricing(), $availability))->price('476', '2026-10-05', '2026-10-11', $rooms);
+
+        self::assertNotNull($quote);
+        self::assertSame([false, true], array_column($quote['rooms'], 'on_request'));
+        self::assertEqualsWithDelta(3300.0, $quote['total'], 0.001, 'both suites are charged as before');
+
+        $before = $this->quote($two, []);
+        self::assertNotNull($before);
+        self::assertSame([], array_column($before['rooms'], 'on_request'), 'no quota asked: no mark');
     }
 
     /**

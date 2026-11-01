@@ -104,6 +104,28 @@ class BookingRoomAssemblerTest extends TestCase
         $this->assertSame(['2026-07-06', '2026-07-06', '2026-07-08', '2026-07-06'], array_column($groups, 'check_out'));
     }
 
+    /**
+     * The split booking: the rooms on request go in a request of their own,
+     * after the rooms the hotel confirms at once (whose request keeps the
+     * booking's own record), so one room on request does not hold the others.
+     */
+    public function testRoomsOnRequestGoInARequestOfTheirOwnAfterTheOthers(): void
+    {
+        $groups = array_values($this->assembler->groupRoomsByPackage([
+            ['room_id' => 'FAM 2+2', 'on_request' => true],
+            ['room_id' => 'DBL 2+0', 'on_request' => false],
+            ['room_id' => 'DBL 2+0'],
+            ['room_id' => 'DBL 2+0', 'on_request' => true],
+        ], ['hotel_id' => '476', 'package_name' => 'ADMIRAL ***** +BEACH 2027', 'check_in' => '2027-07-10', 'check_out' => '2027-07-17']));
+
+        $this->assertSame([false, true], array_column($groups, 'on_request'));
+        $this->assertSame(
+            [[1, 2], [0, 3]],
+            array_map(static fn (array $g): array => array_column($g['rooms'], 'original_index'), $groups),
+        );
+        $this->assertSame(['ADMIRAL ***** +BEACH 2027', 'ADMIRAL ***** +BEACH 2027'], array_column($groups, 'package_name'), 'the same hotel, package and stay');
+    }
+
     public function testGroupRoomsSkipsNonArrayElements(): void
     {
         $groups = $this->assembler->groupRoomsByPackage(['not-an-array', ['package_name' => 'P']], []);

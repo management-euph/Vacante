@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\NovotonHolidays\Api\Contracts\AvailabilityApiClientInterface;
 use Tygh\Addons\NovotonHolidays\Api\Contracts\PricingApiClientInterface;
 
 /**
@@ -21,15 +22,22 @@ use Tygh\Addons\NovotonHolidays\Api\Contracts\PricingApiClientInterface;
  *
  * Identical questions share one room_price call.
  *
+ * Given the availability client (add_to_cart), each room of a booking of
+ * several also says whether the hotel confirms it at once or it is on
+ * request (on_request, RoomAvailability): the split booking reserves the
+ * rooms on request apart.
+ *
  * @phpstan-import-type BookedRoom from BookedRooms
  * @phpstan-import-type OfferRow from RoomOfferRows
- * @phpstan-type PricedRoom array{room_id: string, board_id: string, ext_board_id: string, package_name: string, adults: int, children: int, childrenAges: list<int>, price: float, price_raw: float}
+ * @phpstan-type PricedRoom array{room_id: string, board_id: string, ext_board_id: string, package_name: string, adults: int, children: int, childrenAges: list<int>, price: float, price_raw: float, on_request?: bool}
  * @phpstan-type Quote array{rooms: non-empty-list<PricedRoom>, total: float, base: float, answer: \SimpleXMLElement, offer: OfferRow}
  */
 final class RoomsQuote
 {
-    public function __construct(private readonly PricingApiClientInterface $pricing)
-    {
+    public function __construct(
+        private readonly PricingApiClientInterface $pricing,
+        private readonly ?AvailabilityApiClientInterface $availability = null,
+    ) {
     }
 
     /**
@@ -121,6 +129,19 @@ final class RoomsQuote
 
         if ($first === null) {
             return null;
+        }
+
+        $availability = $this->availability;
+        if ($availability !== null) {
+            $flags = RoomAvailability::flags(
+                array_column($priced, 'room_id'),
+                static fn (): array => $availability->getHotelQuotaAll($hotelId, $checkIn, $checkOut),
+            );
+            if ($flags !== null) {
+                foreach ($priced as $n => $pricedRoom) {
+                    $priced[$n] = $pricedRoom + ['on_request' => $flags[$n] ?? false];
+                }
+            }
         }
 
         return [

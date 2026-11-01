@@ -173,7 +173,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
     // room + board AND package — never the first <Price> of the answer.
     $api = fn_novoton_holidays_get_api();
     $quote = $api !== null && $booked_rooms !== null
-        ? (new \Tygh\Addons\NovotonHolidays\Services\RoomsQuote($api->pricing()))->price(
+        ? (new \Tygh\Addons\NovotonHolidays\Services\RoomsQuote($api->pricing(), $api->availability()))->price(
             $bdHotelId,
             $check_in,
             $check_out,
@@ -338,7 +338,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
     // rooms_data as priced: the reservation (BookingRoomAssembler) and the
     // booking records (BookingRecordBuilder) are built from it, so each room
     // carries the server's price, never the posted one (novoton-money-9).
-    // Display names come from the ids, not from the form.
+    // Display names come from the ids, on request from the hotel's quota, not from the form.
     $rooms_data = [];
     $room_ids_for_db = [];
     $room_types_for_db = [];

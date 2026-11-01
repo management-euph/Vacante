@@ -30,16 +30,17 @@ final class BookingSubmissionServiceOneRequestTest extends TestCase
      * two adults each.
      *
      * @param list<string> $packages each room's package
+     * @param list<int> $onRequest the rooms (1, 2, …) the hotel's quota left on request
      * @return list<array<string, mixed>> the requests sent, in order
      */
-    private function submit(array $packages): array
+    private function submit(array $packages, array $onRequest = []): array
     {
         $rooms = [];
         $guests = [];
         foreach ($packages as $i => $package) {
             $n = $i + 1;
             $rooms[] = ['room_id' => 'DBL 2+0 DELUXE', 'board_id' => 'ULTRA ALL INCL', 'package_name' => $package,
-                'adults' => 2, 'children' => 0, 'childrenAges' => [], 'price' => 1485.0];
+                'adults' => 2, 'children' => 0, 'childrenAges' => [], 'price' => 1485.0, 'on_request' => in_array($n, $onRequest, true)];
             $guests["room{$n}_adult_1"] = ['api_name' => "Guest {$n}A", 'age' => 40];
             $guests["room{$n}_adult_2"] = ['api_name' => "Guest {$n}B", 'age' => 40];
         }
@@ -93,5 +94,22 @@ final class BookingSubmissionServiceOneRequestTest extends TestCase
         self::assertSame(['55-G1', '55-G2'], array_column($sent, 'order_num'));
         self::assertSame(['ADMIRAL ***** +BEACH 2027', 'ADMIRAL ***** 2027'], array_column($sent, 'package_name'));
         self::assertSame([[1, 3], [2]], [array_column($sent[0]['rooms'], 'room_num'), array_column($sent[1]['rooms'], 'room_num')]);
+    }
+
+    /**
+     * The split booking: a room on request goes in a reservation of its own,
+     * so the hotel confirms the other rooms at once instead of holding all
+     * of them on request.
+     */
+    public function testARoomOnRequestIsReservedApartFromTheRoomsConfirmedAtOnce(): void
+    {
+        $package = 'ADMIRAL ***** +BEACH 2027';
+        $sent = $this->submit([$package, $package, $package], [1]);
+
+        self::assertCount(2, $sent);
+        self::assertSame(['55-G1', '55-G2'], array_column($sent, 'order_num'));
+        self::assertSame([[2, 3], [1]], [array_column($sent[0]['rooms'], 'room_num'), array_column($sent[1]['rooms'], 'room_num')], 'confirmed at once first');
+        self::assertSame([$package, $package], array_column($sent, 'package_name'));
+        self::assertSame([4, 2], [count($sent[0]['guests']), count($sent[1]['guests'])], 'each request lists its own guests');
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Helpers;
 
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
+use Tygh\Addons\NovotonHolidays\Services\RoomAvailability;
 use Tygh\Addons\NovotonHolidays\Services\RoomOfferRows;
 
 /**
@@ -38,9 +39,14 @@ class BookingRoomAssembler
      * in the spelling that kept its "+". A room without a package or dates
      * of its own takes the booking's.
      *
+     * The rooms on request (RoomAvailability, read from the hotel's quota
+     * when the booking went into the cart) go in a request of their own,
+     * after those the hotel confirms at once: the split booking the owner
+     * chose, so a room on request does not hold the others.
+     *
      * @param list<mixed> $roomsData Decoded rooms_data — elements may be non-arrays
      * @param array<string, mixed> $bookingData
-     * @return array<string, array{hotel_id: string, package_name: string, check_in: string, check_out: string, rooms: list<array<int|string, mixed>>}>
+     * @return array<string, array{hotel_id: string, package_name: string, check_in: string, check_out: string, on_request: bool, rooms: list<array<int|string, mixed>>}>
      */
     public function groupRoomsByPackage(array $roomsData, array $bookingData): array
     {
@@ -51,10 +57,11 @@ class BookingRoomAssembler
                 continue;
             }
             $stay = self::stayOf($room, $bookingData);
-            $groupKey = self::requestKey($stay);
+            $onRequest = RoomAvailability::onRequest($room);
+            $groupKey = self::requestKey($stay) . ($onRequest ? '|on request' : '');
 
             if (!isset($groups[$groupKey])) {
-                $groups[$groupKey] = $stay + ['rooms' => []];
+                $groups[$groupKey] = $stay + ['on_request' => $onRequest, 'rooms' => []];
             } elseif (substr_count($stay['package_name'], '+') > substr_count($groups[$groupKey]['package_name'], '+')) {
                 $groups[$groupKey]['package_name'] = $stay['package_name'];
             }
@@ -63,7 +70,9 @@ class BookingRoomAssembler
             $groups[$groupKey]['rooms'][] = $room;
         }
 
-        return $groups;
+        // The rooms confirmed at once first: the booking's own record is theirs
+        return array_filter($groups, static fn (array $g): bool => !$g['on_request'])
+            + array_filter($groups, static fn (array $g): bool => $g['on_request']);
     }
 
     /**

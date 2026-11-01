@@ -312,7 +312,23 @@ an internal code.
   - **To check on the dev store**: a 6–12-room Novoton booking end to end
     (booking form, add_to_cart, checkout) — no real reservation can be
     sent from the session.
-- Next: the split booking (above); Novoton rows through `RoomOfferRows`;
+- 1 Nov 2026 — **phase 5, the split booking, step 1 (Novoton's side)**:
+  add_to_cart reads the hotel's quota for a booking of several rooms
+  (`RoomsQuote` with the availability client, `RoomAvailability`; cached
+  3 minutes after the search) and marks each room `on_request`: with N
+  left of a type, its first N rooms are confirmed at once. At the order,
+  the rooms on request go in a hotel_res_RQ of their own, after the rooms
+  confirmed at once (`BookingRoomAssembler`), so Novoton confirms those
+  at once (OK) and asks the hotel only for the others (ASK, followed by
+  `AskBookingPoller`, alternatives on RQ). One room, or a quota that
+  cannot be read: one reservation, as before.
+  - **Not yet**: what the guest pays. Checkout still charges every room,
+    so the bar's "acum … · restul după confirmare" is not true yet.
+    Proposed: checkout charges the rooms confirmed at once; the rooms on
+    request become a balance (`BalanceService`, the deposit's "Pay
+    balance" link and email) that opens when the hotel confirms and is
+    cancelled when it refuses — the owner's call.
+- Next: the split booking's payment (above); Novoton rows through `RoomOfferRows`;
   the title row's after-search state ("10–17 iul. · de la 1.485 €", "Vezi
   camerele") and the compact summary's price (the section carries
   `data-cheapest`); the room facts the board shows beyond capacity (area,
