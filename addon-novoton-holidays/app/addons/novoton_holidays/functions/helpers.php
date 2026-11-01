@@ -117,15 +117,16 @@ function fn_novoton_holidays_get_view()
  *                                     template_code, tpl (+ any other keys
  *                                     CS-Cart's mailer accepts).
  * @param string $area                 'A' for admin, 'C' for customer.
+ * @param string|null $lang            the mail's language (the order's); null: the mailer's default
  */
-function fn_novoton_holidays_send_mail(array $params, string $area = 'A'): bool
+function fn_novoton_holidays_send_mail(array $params, string $area = 'A', ?string $lang = null): bool
 {
     try {
         $mailer = \Tygh\Tygh::$app['mailer'];
         if (!is_object($mailer) || !method_exists($mailer, 'send')) {
             return false;
         }
-        return (bool) $mailer->send($params, $area);
+        return (bool) ($lang !== null ? $mailer->send($params, $area, $lang) : $mailer->send($params, $area));
     } catch (\Throwable) {
         return false;
     }

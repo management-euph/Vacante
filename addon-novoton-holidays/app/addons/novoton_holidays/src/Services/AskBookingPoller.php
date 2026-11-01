@@ -26,6 +26,10 @@ use Tygh\Addons\TravelCore\TravelConstants;
  * A booking Novoton does not answer for is skipped until the next run; it no
  * longer stops the run for the others.
  *
+ * Each answer that ends the polling is handed on ($answered,
+ * RequestAnswerMail): the guest is told when the hotel confirms, the store
+ * when it refuses or cancels.
+ *
  * Shared by the resinfo job and Travel Core's "Sync statuses" button, which
  * used to fetch the hotel list of every country instead.
  */
@@ -43,11 +47,14 @@ final class AskBookingPoller
 
     /**
      * @param (\Closure(string): void)|null $output one line of the run's log
+     * @param (\Closure(array<string, mixed>, string): string)|null $answered the booking and Novoton's answer;
+     *                                                                        returns who was told ('' = nobody)
      */
     public function __construct(
         private readonly NovotonApiKitInterface $api,
         private readonly BookingRepositoryInterface $bookings,
         ?\Closure $output = null,
+        private readonly ?\Closure $answered = null,
     ) {
         $this->output = $output ?? static function (string $line): void {
         };
@@ -106,6 +113,19 @@ final class AskBookingPoller
             ]);
             $stats['changed']++;
             ($this->output)("Booking #{$bookingId}: {$status} ({$internal}), no longer asked about.");
+
+            if ($this->answered !== null) {
+                try {
+                    $told = ($this->answered)(['novoton_status' => $status, 'status' => $internal] + $booking, $status);
+                } catch (\Throwable $e) {
+                    // The answer is stored; an email that cannot go out never stops the run
+                    $told = '';
+                    ($this->output)("Booking #{$bookingId}: no email ({$e->getMessage()}).");
+                }
+                if ($told !== '') {
+                    ($this->output)("Booking #{$bookingId}: the {$told} was emailed.");
+                }
+            }
         }
 
         return $stats;

@@ -332,8 +332,11 @@ an internal code.
     the share on request ("din care … la cerere"), no longer "Nu plătești
     nimic până confirmă hotelul" or "acum … · restul după confirmare". The
     rooms on request have their own booking record (G2), whose status and
-    price say what to refund or collect. The store does not yet email the
-    guest when the hotel confirms (only alternatives when it refuses).
+    price say what to refund or collect. When the hotel answers
+    (`AskBookingPoller`, `RequestAnswerMail`): confirmed, the guest is
+    emailed (the rooms, their price, the order; an unpaid order can be paid
+    by bank transfer now); refused or cancelled, also as soon as sent, the
+    store is emailed what to refund (paid order) or not to collect (unpaid).
 - Next: Novoton rows through `RoomOfferRows`;
   the title row's after-search state ("10–17 iul. · de la 1.485 €", "Vezi
   camerele") and the compact summary's price (the section carries

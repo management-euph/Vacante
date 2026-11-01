@@ -7,6 +7,7 @@ namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\AskBookingPoller;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\NovotonHolidays\Services\RequestAnswerMail;
 
 /**
  * Bookings still on request (ASK): asks Novoton about each, every 15
@@ -42,6 +43,7 @@ class ResInfoCommand extends AbstractCronCommand
             function (string $line): void {
                 $this->output($line);
             },
+            static fn (array $booking, string $status): string => RequestAnswerMail::forStore()->answered($booking, $status),
         );
         $stats = $poller->poll();
 

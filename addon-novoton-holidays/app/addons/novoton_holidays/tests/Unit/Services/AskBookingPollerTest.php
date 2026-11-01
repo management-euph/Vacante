@@ -23,8 +23,9 @@ final class AskBookingPollerTest extends TestCase
     /**
      * @param array<string, string|\Throwable> $answers reservation number => Status, or what the call throws
      * @param list<array<string, mixed>> $bookings
+     * @param (\Closure(array<string, mixed>, string): string)|null $answered
      */
-    private function poller(array $answers, array $bookings): AskBookingPoller
+    private function poller(array $answers, array $bookings, ?\Closure $answered = null): AskBookingPoller
     {
         $reservations = $this->createStub(ReservationApiClientInterface::class);
         $reservations->method('getReservationInfo')->willReturnCallback(static function (string $id) use ($answers): \SimpleXMLElement {
@@ -46,7 +47,7 @@ final class AskBookingPollerTest extends TestCase
             return true;
         });
 
-        return new AskBookingPoller($api, $repo);
+        return new AskBookingPoller($api, $repo, null, $answered);
     }
 
     /** @return array<string, mixed> */
@@ -99,6 +100,49 @@ final class AskBookingPollerTest extends TestCase
         self::assertSame('Good', AskBookingPoller::novotonStatus('confirmed'));
         self::assertSame('ST', AskBookingPoller::novotonStatus('Rejected'));
         self::assertSame('WT', AskBookingPoller::novotonStatus('WT'));
+    }
+
+    /**
+     * Each answer that ends the polling is handed on (RequestAnswerMail: the
+     * guest when the hotel confirms, the store when it refuses or cancels),
+     * with the booking as it now stands; one still ASK is not.
+     */
+    public function testEachAnswerThatEndsThePollingIsHandedOn(): void
+    {
+        $told = [];
+        $answered = static function (array $booking, string $status) use (&$told): string {
+            $told[] = [$booking['booking_id'], $status, $booking['status'], $booking['novoton_status']];
+
+            return $status === 'Good' ? 'guest' : '';
+        };
+
+        $this->poller(
+            ['R1' => 'OK', 'R2' => 'RQ', 'R3' => 'ASK', 'R4' => 'ST'],
+            [self::booking(1, 'R1'), self::booking(2, 'R2'), self::booking(3, 'R3'), self::booking(4, 'R4')],
+            $answered,
+        )->poll();
+
+        self::assertSame([
+            [1, 'Good', 'confirmed', 'Good'],
+            [2, 'RQ', 'pending', 'RQ'],
+            [4, 'ST', 'cancelled', 'ST'],
+        ], $told);
+    }
+
+    public function testAnEmailThatCannotGoOutNeverStopsTheRun(): void
+    {
+        $answered = static function (array $booking): string {
+            if ($booking['booking_id'] === 1) {
+                throw new \RuntimeException('SMTP down');
+            }
+
+            return 'guest';
+        };
+
+        $stats = $this->poller(['R1' => 'OK', 'R2' => 'OK'], [self::booking(1, 'R1'), self::booking(2, 'R2')], $answered)->poll();
+
+        self::assertSame(['checked' => 2, 'changed' => 2, 'errors' => 0], $stats);
+        self::assertSame(['confirmed', 'confirmed'], array_column($this->written(), 'status'), 'both answers stored');
     }
 
     public function testABookingWithoutAReservationNumberIsSkipped(): void

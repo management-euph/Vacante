@@ -43,10 +43,16 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
     private readonly BookingRoomsGuestsResolver $roomsGuestsResolver;
     private readonly BookingRecordBuilder $recordBuilder;
 
+    /**
+     * @param (\Closure(array<string, mixed>, string): string)|null $answered a reservation the hotel refused (RQ) or
+     *                                                                        cancelled (ST) as it was sent: the store is told
+     *                                                                        (RequestAnswerMail); returns who was told
+     */
     public function __construct(
         BookingRepositoryInterface $bookingRepo,
         ReservationApiClientInterface $reservations,
         ?GuestDataNormalizer $guestDataNormalizer = null,
+        private readonly ?\Closure $answered = null,
     ) {
         $this->bookingRepo = $bookingRepo;
         $this->reservations = $reservations;
@@ -413,6 +419,20 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
             }
 
             $this->bookingRepo->update($bookingId, $update);
+
+            // Refused or cancelled as soon as it was sent: the store is told what to refund
+            if ($this->answered !== null
+                && in_array($novotonStatus, [Constants::NOVOTON_STATUS_ALTERNATIVES_PENDING, Constants::NOVOTON_STATUS_CANCELLED], true)) {
+                try {
+                    ($this->answered)($update + ['order_id' => $orderId] + ($this->bookingRepo->findById($bookingId) ?? []), $novotonStatus);
+                } catch (\Throwable $e) {
+                    fn_log_event('general', 'runtime', [
+                        'message' => 'Novoton - Refusal email not sent',
+                        'booking_id' => $bookingId,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
 
             if ($debug) {
                 fn_log_event('general', 'runtime', [
