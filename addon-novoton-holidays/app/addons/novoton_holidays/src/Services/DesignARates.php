@@ -113,6 +113,7 @@ final class DesignARates
         private readonly string $lang,
         private readonly string $today,
         private readonly bool $depositOffered,
+        private readonly ?NightShares $nightShares = null,
     ) {
     }
 
@@ -134,6 +135,7 @@ final class DesignARates
             defined('CART_LANGUAGE') ? strtolower(TypeCoerce::toString(CART_LANGUAGE)) : 'ro',
             $today,
             DepositPolicy::current()->offers('novoton_holidays'),
+            NightShares::forStore(),
         );
     }
 
@@ -197,7 +199,7 @@ final class DesignARates
             function (int $adults, array $ages) use ($first, $roomRows, $params, $facilities): array {
                 $rows = $roomRows[$first[$adults . '|' . implode(',', $ages)] ?? 0] ?? [];
 
-                return $this->rates(SearchService::deduplicateResults($rows), $params, $facilities, true);
+                return $this->rates(SearchService::deduplicateResults($rows), $params, $facilities, true, ['adults' => $adults, 'children' => $ages]);
             },
             max(1, TypeCoerce::toInt($params['nights'] ?? 1)),
         );
@@ -298,13 +300,14 @@ final class DesignARates
      * @param array<string, mixed> $params novoton_params of that search
      * @param list<string> $facilities the hotel's room facilities
      * @param bool $several a search of several rooms: each rate carries the room's booking entry (roomData)
+     * @param array{adults: int, children: list<int>}|null $guests the room's guests (a group's), else the search's
      * @return list<RateOffer>
      */
-    public function rates(array $rows, array $params, array $facilities = [], bool $several = false): array
+    public function rates(array $rows, array $params, array $facilities = [], bool $several = false, ?array $guests = null): array
     {
         $rates = [];
         foreach ($rows as $row) {
-            $rate = $this->rate($row, $params, $facilities, $several);
+            $rate = $this->rate($row, $params, $facilities, $several, $guests);
             if ($rate !== null) {
                 $rates[] = $rate;
             }
@@ -445,8 +448,9 @@ final class DesignARates
      * @param array<string, mixed> $row
      * @param array<string, mixed> $params
      * @param list<string> $facilities
+     * @param array{adults: int, children: list<int>}|null $guests
      */
-    private function rate(array $row, array $params, array $facilities, bool $several = false): ?RateOffer
+    private function rate(array $row, array $params, array $facilities, bool $several = false, ?array $guests = null): ?RateOffer
     {
         $roomId = TypeCoerce::toString($row['room_id'] ?? '');
         $total = TypeCoerce::toFloat($row['total_price'] ?? 0);
@@ -496,7 +500,12 @@ final class DesignARates
             TermsFormatter::parseCancellationTerms(TypeCoerce::toString($row['terms_of_cancellation'] ?? ''), $checkIn),
             TermsFormatter::parsePaymentTerms(TypeCoerce::toString($row['terms_of_payment'] ?? '')),
         );
-        $cancellation = $this->timeline->cancellation($windows, $price, $nights);
+        $cancellation = $this->timeline->cancellation(
+            $windows,
+            $price,
+            $nights,
+            NovotonBookingSidebarBuilder::cancelMeta($checkIn, $this->nightShares($row, $params, $guests, $windows, $nights, $charged)),
+        );
         $freeUntil = '';
         foreach ($cancellation['steps'] as $step) {
             if (($step['is_current'] ?? false) === true && ($step['kind'] ?? '') === TermsTimelineFactory::KIND_FREE) {
@@ -542,7 +551,7 @@ final class DesignARates
             terms: $terms,
             facilities: $facilities,
             timeline: $cancellation['steps'] !== [] || $paymentSteps !== []
-                ? ['cancel_steps' => $cancellation['steps'], 'payment_steps' => $paymentSteps]
+                ? ['cancel_steps' => $cancellation['steps'], 'payment_steps' => $paymentSteps, 'cancel_cutoff' => $cancellation['cutoff']]
                 : [],
             roomCode: trim(RoomType::normalizeRoomCode($roomId)),
             capacity: self::capacity($roomId),
@@ -577,6 +586,41 @@ final class DesignARates
             'early_booking' => TypeCoerce::toFloat($row['early_booking_discount'] ?? 0),
             'extras' => TypeCoerce::toString($row['extras_label'] ?? ''),
         ];
+    }
+
+    /**
+     * Each night's share of the row's price (NightShares) when a penalty
+     * counts nights: "2 nopți" is the stay's first two, exact. None for a
+     * board with a supplement (priceinfo prices the board alone) or when
+     * priceinfo does not rebuild the price: the average night, "≈".
+     *
+     * @param array<string, mixed> $row
+     * @param array<string, mixed> $params
+     * @param array{adults: int, children: list<int>}|null $guests
+     * @param list<array<string, mixed>> $windows
+     * @return list<float>
+     */
+    private function nightShares(array $row, array $params, ?array $guests, array $windows, int $nights, float $charged): array
+    {
+        if ($this->nightShares === null || !NightShares::needed($windows, $nights)
+            || TypeCoerce::toString($row['ext_board_id'] ?? '') !== '') {
+            return [];
+        }
+        $guests ??= [
+            'adults' => max(1, TypeCoerce::toInt($params['adults'] ?? 2)),
+            'children' => TypeCoerce::toIntList($params['children_ages_array'] ?? []),
+        ];
+
+        return $this->nightShares->for([
+            'hotel_id' => TypeCoerce::toString($params['hotel_id'] ?? ''),
+            'package_name' => TypeCoerce::toString($row['package_name'] ?? ''),
+            'room_id' => TypeCoerce::toString($row['room_id'] ?? ''),
+            'board_id' => TypeCoerce::toString($row['board_id'] ?? ''),
+            'check_in' => TypeCoerce::toString($params['check_in'] ?? ''),
+            'nights' => $nights,
+            'adults' => $guests['adults'],
+            'children_ages' => $guests['children'],
+        ], $charged);
     }
 
     /**

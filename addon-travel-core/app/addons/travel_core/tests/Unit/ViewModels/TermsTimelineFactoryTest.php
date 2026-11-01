@@ -232,4 +232,105 @@ final class TermsTimelineFactoryTest extends TestCase
         self::assertNotSame([], $f->split([['due' => null, 'percent' => 30], ['due' => '2026-10-03', 'percent' => 70]], 360.0), 'balance 7 days away');
         self::assertSame([], $f->split([], 360.0));
     }
+
+    /**
+     * Novoton's windows for Admiral, 9-16 Nov 2026 (room_price of 1 Nov 2026): free until 4 Nov,
+     * 2 nights 5-8 Nov, 100% from 9 Nov (the arrival); 785 € for 7 nights, each 110 € (priceinfo)
+     * plus a 15 € handling fee: each night 110/785 of the price (nightShares()).
+     *
+     * @return list<array<string, mixed>>
+     */
+    private static function admiral(): array
+    {
+        return [
+            ['to' => '2026-11-04', 'nights' => 0, 'no_show' => false],
+            ['to' => '2026-11-08', 'nights' => 2, 'no_show' => false],
+            ['to' => '2026-11-09', 'percent' => 100.0, 'no_show' => false],
+        ];
+    }
+
+    public function testNovotonDeadlinesEndAt2359AndTheLastPeriodGoesOnFromTheArrival(): void
+    {
+        $t = self::factory('2026-11-01')->cancellation(self::admiral(), 785.0, 7, [
+            'cutoff' => '23:59',
+            'check_in' => '2026-11-09',
+            'night_shares' => self::nightShares([110, 110, 110, 110, 110, 110, 110], 785.0),
+        ]);
+
+        self::assertSame('23:59', $t['cutoff']);
+        self::assertSame(['free', 'partial', 'full'], array_column($t['steps'], 'kind'));
+        [$free, $two, $all] = $t['steps'];
+        self::assertSame(['11/04/2026', '23:59', ''], [$free['to_label'], $free['to_time'], $free['to_rel']]);
+        self::assertSame(['220,00 €', 2, false], [$two['amount_label'], $two['nights'], $two['approx']], 'the first two nights, at their own price');
+        self::assertSame(['785,00 €', true, true, '11/09/2026'], [$all['amount_label'], $all['is_last'], $all['from_arrival'], $all['from_label']]);
+        self::assertFalse($two['is_last']);
+    }
+
+    public function testWithoutEachNightsPriceNNightsAreTheAverageAndSaySo(): void
+    {
+        $two = self::factory('2026-11-01')->cancellation(self::admiral(), 785.0, 7, ['check_in' => '2026-11-09'])['steps'][1];
+
+        self::assertSame(['224,29 €', true], [$two['amount_label'], $two['approx']]);
+        self::assertSame('', $two['to_time'], 'no hour without the provider\'s');
+    }
+
+    public function testADeadlineOfTodayOrTomorrowIsNamedSo(): void
+    {
+        $tomorrow = self::factory('2026-11-03')->cancellation(self::admiral(), 785.0, 7, ['cutoff' => '23:59'])['steps'][0];
+        $today = self::factory('2026-11-04')->cancellation(self::admiral(), 785.0, 7, ['cutoff' => '23:59'])['steps'][0];
+
+        self::assertSame(['free', 'tomorrow'], [$tomorrow['kind'], $tomorrow['to_rel']]);
+        self::assertSame(['free', 'today'], [$today['kind'], $today['to_rel']]);
+    }
+
+    public function testPastTheFreeWindowThePenaltyHoldsTodayAndOnArrivalDayEverything(): void
+    {
+        $meta = ['cutoff' => '23:59', 'check_in' => '2026-11-09', 'night_shares' => self::nightShares(array_fill(0, 7, 110), 785.0)];
+        $sixth = self::factory('2026-11-06')->cancellation(self::admiral(), 785.0, 7, $meta);
+        self::assertSame(['partial', 'full'], array_column($sixth['steps'], 'kind'));
+        self::assertTrue($sixth['steps'][0]['is_current']);
+        self::assertSame('', $sixth['free_until']);
+
+        $ninth = self::factory('2026-11-09')->cancellation(self::admiral(), 785.0, 7, $meta);
+        self::assertCount(1, $ninth['steps']);
+        self::assertSame(['full', true, true], [$ninth['steps'][0]['kind'], $ninth['steps'][0]['is_current'], $ninth['steps'][0]['is_last']]);
+        self::assertTrue($ninth['full_charge_now']);
+    }
+
+    public function testTheFirstNightsAreTheirOwnSeasonsNotTheAverage(): void
+    {
+        // 28 Nov - 5 Dec: 3 nights at 110 €, 4 at 120 € (December), 15 € handling fee: 825 €
+        $two = self::factory('2026-11-01')->cancellation(self::admiral(), 825.0, 7, [
+            'night_shares' => self::nightShares([110, 110, 110, 120, 120, 120, 120], 825.0),
+        ])['steps'][1];
+
+        self::assertSame(['220,00 €', false], [$two['amount_label'], $two['approx']], 'not 235,71 €, the average');
+    }
+
+    public function testNightSharesThatAreNotOnePerNightOrNotPartsOfTheWholeAreNotUsed(): void
+    {
+        $cases = [
+            'two of seven' => [0.14, 0.14],
+            'negative' => [0.5, -0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
+            'more than the whole' => array_fill(0, 7, 0.2),
+            'not numbers' => array_fill(0, 7, '0.14'),
+            'not a list' => '0.14',
+        ];
+        foreach ($cases as $name => $shares) {
+            $two = self::factory('2026-11-01')->cancellation(self::admiral(), 785.0, 7, ['night_shares' => $shares])['steps'][1];
+
+            self::assertSame(['224,29 €', true], [$two['amount_label'], $two['approx']], $name);
+        }
+    }
+
+    /**
+     * Each night's share of a stay's price, as the provider gives them.
+     *
+     * @param list<int|float> $nights each night's price
+     * @return list<float>
+     */
+    private static function nightShares(array $nights, float $total): array
+    {
+        return array_map(static fn (int|float $night): float => $night / $total, $nights);
+    }
 }

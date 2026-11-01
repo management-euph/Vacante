@@ -82,13 +82,38 @@ final class NovotonBookingSidebarTermsTest extends TestCase
         self::assertSame([['due' => null, 'percent' => 100.0]], $terms['payment_rows']);
         self::assertSame(['Free until 01.10.2026', '50% until 04.10.2026'], $terms['cancel_lines']);
         self::assertSame([], $terms['payment_lines']);
+        // A deadline day ends at 23:59 (Bulgaria's time, Romania's); the last period runs through the arrival
+        self::assertSame(['cutoff' => '23:59', 'check_in' => '2026-10-05'], $terms['cancel_meta']);
     }
 
     public function testCartLineWithoutTermsGetsNone(): void
     {
         self::assertSame(
-            ['cancel_windows' => [], 'payment_rows' => [], 'cancel_lines' => [], 'payment_lines' => []],
+            [
+                'cancel_windows' => [],
+                'cancel_meta' => ['cutoff' => '23:59', 'check_in' => ''],
+                'payment_rows' => [],
+                'cancel_lines' => [],
+                'payment_lines' => [],
+            ],
             NovotonBookingSidebarBuilder::cartTerms([]),
         );
+    }
+
+    public function testACartLinesNightSharesGoToTheTimeline(): void
+    {
+        $terms = NovotonBookingSidebarBuilder::cartTerms(['check_in' => '2026-11-09', 'night_shares' => [0.25, '0.25', 0.5]]);
+
+        self::assertSame(['cutoff' => '23:59', 'check_in' => '2026-11-09', 'night_shares' => [0.25, 0.25, 0.5]], $terms['cancel_meta']);
+    }
+
+    public function testNightSharesAreAllSharesOrNone(): void
+    {
+        self::assertSame([0.5, 0.0], NovotonBookingSidebarBuilder::nightShares(['a' => 0.5, 'b' => '0']));
+        self::assertSame([], NovotonBookingSidebarBuilder::nightShares([0.5, 'x']));
+        self::assertSame([], NovotonBookingSidebarBuilder::nightShares([0.5, -0.1]));
+        self::assertSame([], NovotonBookingSidebarBuilder::nightShares([0.5, 110]), 'a price, not a share');
+        self::assertSame([], NovotonBookingSidebarBuilder::nightShares('0.5,0.5'));
+        self::assertSame([], NovotonBookingSidebarBuilder::nightShares(null));
     }
 }

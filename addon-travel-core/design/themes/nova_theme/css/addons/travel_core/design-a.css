@@ -1204,6 +1204,156 @@
     color: #4b5563;
 }
 
+/* Cancelling already costs something today (RoomResultsBuilder "penalty"):
+   the card's line in amber, and a short word over the till's button. */
+.travel-pdpa .travel-pdpa-pen {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: #7a4a00;
+}
+.travel-pdpa .travel-pdpa-pen > .travel-pdpa-ico,
+.travel-pdpa .travel-pdpa-tillwarn > .travel-pdpa-ico {
+    flex: none;
+    margin-top: 1px;
+}
+.travel-pdpa .travel-pdpa-tillwarn {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin: 0 0 8px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: #fff7ed;
+    color: #7a3b00;
+    font-size: 12px;
+    line-height: 1.4;
+    text-align: left;
+}
+.travel-pdpa .travel-pdpa-tillwarn--full {
+    background: #fbe4e1;
+    color: #a3271b;
+}
+
+/* "Condiții de plată și anulare" (board 14): the link's chevron turns when
+   open; one list of periods (booking_terms_timeline.tpl), each its when,
+   what cancelling costs and the amount on the right, a dot of its colour
+   on one line; no bar, no box repeating the card's line. On a phone the
+   panel is a bottom sheet (below). */
+.travel-pdpa .travel-pdpa-terms__toggle .travel-pdpa-ico {
+    margin-left: 2px;
+    transition: transform .15s;
+}
+.travel-pdpa .travel-pdpa-terms[open] > .travel-pdpa-terms__toggle .travel-pdpa-ico {
+    transform: rotate(180deg);
+}
+.travel-pdpa .travel-pdpa-terms__sheethead,
+.travel-pdpa .travel-pdpa-terms__sheetfoot {
+    display: none;
+}
+.travel-pdpa .travel-timeline {
+    display: grid;
+    margin: 0 0 10px;
+    padding: 0;
+    list-style: none;
+}
+.travel-pdpa .travel-timeline__step {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 12px;
+    row-gap: 1px;
+    padding: 0 0 14px 24px;
+}
+.travel-pdpa .travel-timeline__step:last-child {
+    padding-bottom: 2px;
+}
+.travel-pdpa .travel-timeline__step::after {
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: 16px;
+    bottom: 0;
+    width: 2px;
+    background: #e0e7ef;
+}
+.travel-pdpa .travel-timeline__step:last-child::after {
+    display: none;
+}
+.travel-pdpa .travel-timeline__step::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 3px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #f59e0b;
+}
+.travel-pdpa .travel-timeline__step--free::before {
+    background: #16a34a;
+}
+.travel-pdpa .travel-timeline__step--full::before {
+    background: #dc2626;
+}
+.travel-pdpa .travel-timeline__when {
+    grid-column: 1;
+    font-weight: 600;
+    color: #1f2937;
+}
+.travel-pdpa .travel-timeline__what {
+    grid-column: 1;
+    color: #4b5563;
+}
+.travel-pdpa .travel-timeline__step--free .travel-timeline__what {
+    color: #0f7b33;
+    font-weight: 600;
+}
+.travel-pdpa .travel-timeline__amt {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+    font-weight: 700;
+    color: #0f172a;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.travel-pdpa .travel-timeline__tag {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 0 7px;
+    border-radius: 999px;
+    background: #e9eff8;
+    color: #003580;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 18px;
+    vertical-align: 1px;
+}
+.travel-pdpa .travel-timeline__note {
+    margin: 0 0 8px;
+    font-size: 12px;
+    color: #6b7280;
+}
+.travel-pdpa .travel-bsidebar-payment {
+    padding-top: 10px;
+    border-top: 1px solid #eef2f7;
+}
+.travel-pdpa .travel-bsidebar-payment__title {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 700;
+    color: #0f172a;
+}
+.travel-pdpa .travel-bsidebar-payment ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
 /* The till: the chosen option's meal, the stay and guests, the struck
    price with its badge (a line of the same height without one, so totals
    and buttons line up from card to card), the total, per night, the
@@ -1355,7 +1505,7 @@
     position: absolute;
     top: 100%;
     right: 0;
-    z-index: 5;
+    z-index: 6; /* over the bar of the rooms chosen (5) */
     width: 320px;
     max-width: calc(100vw - 32px);
     margin-top: 8px;
@@ -1365,6 +1515,12 @@
     background: #fff;
     box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
     text-align: left;
+}
+/* No room under the ⓘ (the window's bottom, the bar): above it (pdp-design-a.js). */
+.travel-pdpa .travel-pdpa-tip__pop--up {
+    top: auto;
+    bottom: 100%;
+    margin: 0 0 8px;
 }
 .travel-pdpa .travel-pdpa-tip__h {
     margin: 0 28px 8px 0;
@@ -1503,6 +1659,13 @@
         min-width: 200px;
         margin-top: 0;
     }
+    /* The till is a row here: "Fără anulare gratuită de azi" is a line of
+       its own above the price and the button (board 14.8). */
+    .travel-pdpa .travel-pdpa-tillwarn {
+        flex: 1 1 100%;
+        order: -1;
+        margin: 0;
+    }
 }
 
 /* Phones: one column — the room, its options and what they share, then
@@ -1559,6 +1722,9 @@
         flex-wrap: nowrap;
         padding: 12px 16px;
     }
+    .travel-pdpa .travel-pdpa-till:has(> .travel-pdpa-tillwarn) {
+        flex-wrap: wrap;
+    }
     .travel-pdpa .travel-pdpa-till__btn {
         min-width: 150px;
     }
@@ -1570,6 +1736,87 @@
     .travel-pdpa .travel-pdpa-rcard__amen,
     .travel-pdpa .travel-pdpa-terms__toggle {
         min-height: 44px;
+    }
+    /* The terms on a phone: a bottom sheet over the page (pdp-design-a.js
+       locks the page and fills the sheet's button from the card's). */
+    .travel-pdpa .travel-pdpa-terms[open]::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1000;
+        background: rgba(15, 23, 42, .45);
+    }
+    .travel-pdpa .travel-pdpa-terms[open] > .travel-pdpa-terms__panel {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1001;
+        display: grid;
+        max-height: 85vh;
+        overflow-y: auto;
+        border-radius: 16px 16px 0 0;
+        background: #fff;
+        box-shadow: 0 -8px 24px rgba(15, 23, 42, .18);
+    }
+    .travel-pdpa .travel-pdpa-terms[open] .travel-pdpa-terms__sheethead {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px 16px 4px;
+    }
+    .travel-pdpa .travel-pdpa-terms[open] .travel-pdpa-terms__body {
+        margin: 0;
+        padding: 8px 16px;
+        border: 0;
+        font-size: 14px;
+    }
+    .travel-pdpa .travel-pdpa-terms[open] .travel-pdpa-terms__sheetfoot {
+        position: sticky;
+        bottom: 0;
+        display: block;
+        padding: 12px 16px 16px;
+        border-top: 1px solid #e0e7ef;
+        background: #fff;
+    }
+    .travel-pdpa .travel-pdpa-terms__sheett {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .travel-pdpa .travel-pdpa-terms__sheets {
+        margin: 2px 0 0;
+        font-size: 12px;
+        color: #4b5563;
+    }
+    .travel-pdpa .travel-pdpa-terms__x {
+        display: inline-flex;
+        flex: none;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        margin: -8px -8px 0 0;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: none;
+        color: #4b5563;
+        cursor: pointer;
+    }
+    .travel-pdpa .travel-pdpa-terms__cta {
+        width: 100%;
+        min-height: 48px;
+        font-size: 16px;
+        font-weight: 700;
+    }
+    .travel-pdpa .travel-pdpa-terms__cta:empty {
+        display: none;
     }
     .travel-pdpa .travel-pdpa-meals {
         grid-template-columns: none;
@@ -1798,6 +2045,134 @@
     margin: 4px 0 0;
     font-size: 13px;
     color: #4b5563;
+}
+.travel-pdpa .travel-pdpa-ghead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 16px;
+}
+.travel-pdpa .travel-pdpa-ghead .travel-pdpa-ghead__sub {
+    flex: 1 1 100%;
+}
+
+/* Room by room in a group (board 13c.9): "Aleg fiecare cameră separat" in
+   the group's head, then a strip of the group's rooms, one tab each (the
+   arrows scroll it when the tabs do not fit), and the room open named over
+   the cards. The tabs are the group tabs' smaller kin: the room open
+   underlined in navy, a room's state its own text, no ring. */
+.travel-pdpa .travel-pdpa-strip {
+    display: flex;
+    align-items: stretch;
+    gap: 4px;
+    margin-top: 12px;
+}
+.travel-pdpa .travel-pdpa-strip__vp {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.travel-pdpa .travel-pdpa-strip__vp::-webkit-scrollbar {
+    display: none;
+}
+.travel-pdpa .travel-pdpa-stabs {
+    display: flex;
+    box-shadow: inset 0 -1px 0 #e0e7ef;
+}
+.travel-pdpa .travel-pdpa-stab {
+    display: grid;
+    flex: none;
+    align-content: center;
+    gap: 2px;
+    min-width: 116px;
+    min-height: 60px;
+    margin: 0;
+    padding: 8px 14px 6px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: none;
+    color: #4b5563;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.travel-pdpa .travel-pdpa-stab:hover {
+    background: #f6f8fb;
+}
+.travel-pdpa .travel-pdpa-stab[aria-selected="true"] {
+    border-bottom-color: var(--travel-pdpa-navy);
+}
+.travel-pdpa .travel-pdpa-stab:focus-visible,
+.travel-pdpa .travel-pdpa-strip__nav:focus-visible {
+    outline: 3px solid var(--travel-pdpa-navy);
+    outline-offset: -3px;
+}
+.travel-pdpa .travel-pdpa-stab__t {
+    font-size: 14px;
+    font-weight: 600;
+    color: #0f172a;
+}
+.travel-pdpa .travel-pdpa-stab[aria-selected="true"] .travel-pdpa-stab__t {
+    color: var(--travel-pdpa-navy);
+}
+.travel-pdpa .travel-pdpa-stab__g {
+    font-size: 12px;
+    color: #4b5563;
+}
+.travel-pdpa .travel-pdpa-stab__s {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+}
+.travel-pdpa .travel-pdpa-stab__s--now {
+    font-weight: 600;
+    color: var(--travel-pdpa-navy);
+}
+.travel-pdpa .travel-pdpa-stab__s b {
+    font-weight: 700;
+    color: var(--travel-pdpa-navy);
+    font-variant-numeric: tabular-nums;
+}
+.travel-pdpa .travel-pdpa-stab__s .travel-pdpa-ico {
+    color: #16a34a;
+}
+.travel-pdpa .travel-pdpa-strip__nav {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: none;
+    color: var(--travel-pdpa-navy);
+    cursor: pointer;
+}
+.travel-pdpa .travel-pdpa-strip__nav:hover {
+    background: #f6f8fb;
+}
+.travel-pdpa .travel-pdpa-strip__nav:disabled {
+    background: none;
+    color: #9ca3af;
+    cursor: default;
+}
+.travel-pdpa .travel-pdpa-strip__nav--prev .travel-pdpa-ico {
+    transform: rotate(90deg);
+}
+.travel-pdpa .travel-pdpa-strip__nav--next .travel-pdpa-ico {
+    transform: rotate(-90deg);
+}
+.travel-pdpa .travel-pdpa-stephead {
+    margin: 16px 0 0;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #0f172a;
 }
 
 /* What a choice did ("Am ales … : +7.240 €", "Anulează") and, when a type
@@ -2047,11 +2422,29 @@
 .travel-pdpa .travel-pdpa-bbar__more {
     display: none;
 }
+/* More than two lines of choices: the bar keeps to the progress and the
+   totals, "Vezi alegerile (N)" opens the list (a phone: always). */
+.travel-pdpa .travel-pdpa-bbar--many .travel-pdpa-bbar__more {
+    display: inline-flex;
+    justify-self: start;
+}
+.travel-pdpa .travel-pdpa-bbar--many .travel-pdpa-bbar__picks {
+    display: none;
+}
+.travel-pdpa .travel-pdpa-bbar--many.travel-pdpa-bbar--open .travel-pdpa-bbar__picks {
+    display: grid;
+    max-height: 40vh;
+    overflow-y: auto;
+}
 
 @media (max-width: 767px) {
     .travel-pdpa .travel-pdpa-gtab {
         min-width: 200px;
         padding: 10px 14px 8px;
+    }
+    .travel-pdpa .travel-pdpa-stab {
+        min-width: 104px;
+        padding: 8px 10px 6px;
     }
     /* A group's till stays in its card: the bar holds the bottom of the screen. */
     .travel-pdpa .travel-pdpa-results--group .travel-pdpa-rcard__till {
@@ -2078,27 +2471,59 @@
     .travel-pdpa .travel-pdpa-till--group .travel-pdpa-cta {
         flex: 1 1 100%;
     }
+    /* The phone (board 13c.10): the progress and the total on one line,
+       "Vezi alegerile (N)" under the progress (the list opens over the
+       bar's buttons), then "Mergi la …" or the booking button, the width
+       of the bar. */
     .travel-pdpa .travel-pdpa-bbar__in {
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 6px 12px;
         padding: 10px 16px;
     }
-    /* The phone keeps the progress and the total; the picks open on "Vezi alegerile". */
-    .travel-pdpa .travel-pdpa-bbar__picks,
+    .travel-pdpa .travel-pdpa-bbar__l,
+    .travel-pdpa .travel-pdpa-bbar__r {
+        display: contents;
+    }
+    .travel-pdpa .travel-pdpa-bbar__prog {
+        grid-area: 1 / 1;
+    }
     .travel-pdpa .travel-pdpa-meter {
         display: none;
     }
-    .travel-pdpa .travel-pdpa-bbar--open .travel-pdpa-bbar__picks {
+    .travel-pdpa .travel-pdpa-bbar__more {
+        display: inline-flex;
+        grid-area: 2 / 1;
+        justify-self: start;
+        min-height: 44px;
+    }
+    .travel-pdpa .travel-pdpa-bbar__total {
+        grid-area: 1 / 2 / 3 / 3;
+    }
+    .travel-pdpa .travel-pdpa-bbar__picks,
+    .travel-pdpa .travel-pdpa-bbar--many .travel-pdpa-bbar__picks {
+        display: none;
+        grid-area: 3 / 1 / 4 / 3;
+    }
+    .travel-pdpa .travel-pdpa-bbar--open .travel-pdpa-bbar__picks,
+    .travel-pdpa .travel-pdpa-bbar--many.travel-pdpa-bbar--open .travel-pdpa-bbar__picks {
         display: grid;
         gap: 4px;
         max-height: 40vh;
         overflow-y: auto;
     }
-    .travel-pdpa .travel-pdpa-bbar__more {
-        display: inline-flex;
-        min-height: 44px;
+    .travel-pdpa .travel-pdpa-bbar__goto,
+    .travel-pdpa .travel-pdpa-bbar__cta {
+        grid-column: 1 / -1;
     }
-    .travel-pdpa .travel-pdpa-bbar__r {
-        flex: 1 1 100%;
-        justify-content: space-between;
+    .travel-pdpa .travel-pdpa-bbar__btn {
+        width: 100%;
     }
+}
+
+/* A bottom sheet open (pdp-design-a.js): the page under it does not scroll. */
+.travel-pdpa-sheet-open,
+.travel-pdpa-sheet-open body {
+    overflow: hidden;
 }

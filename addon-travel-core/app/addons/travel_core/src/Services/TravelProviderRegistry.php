@@ -247,7 +247,9 @@ class TravelProviderRegistry
      * own cart lines, for the cart / checkout booking card
      * (ViewModels\CartBookingCardFactory). The resolver gets the line's extra
      * and returns [] for lines it does not own, else
-     * {cancel_windows, payment_rows, cancel_lines, payment_lines}.
+     * {cancel_windows, payment_rows, cancel_lines, payment_lines} and,
+     * optionally, cancel_meta (TermsTimelineFactory::cancellation()'s $meta:
+     * the hour a deadline day ends, the arrival, each night's price).
      *
      * @param callable(array<string, mixed>): array<string, mixed> $resolver
      */

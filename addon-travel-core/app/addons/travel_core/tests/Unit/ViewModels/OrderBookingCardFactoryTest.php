@@ -480,6 +480,30 @@ final class OrderBookingCardFactoryTest extends TestCase
         self::assertContains(true, array_column($ahead['terms']['cancel_steps'], 'is_current'), 'a trip ahead keeps "today"');
     }
 
+    public function testAFinishedTripsLastPeriodDoesNotStartToday(): void
+    {
+        // The provider's deadline hour and arrival (Novoton) make the last
+        // period "from today and on no-show" while the trip is ahead; once
+        // it began, the admin's schedule names no today and no tomorrow.
+        $terms = [
+            'cancel_windows' => [['to' => '2026-10-03', 'percent' => 0], ['to' => self::TODAY, 'percent' => 100]],
+            'cancel_meta' => ['cutoff' => '23:59', 'check_in' => self::TODAY],
+        ];
+        $extra = ['check_in' => self::TODAY, 'check_out' => '2026-10-15'];
+        $ahead = self::factory()->build(self::item(['check_in' => '2026-10-09', 'check_out' => '2026-10-16']), 'admin', self::booking(), [], [], [
+            'cancel_windows' => [['to' => '2026-10-03', 'percent' => 0], ['to' => '2026-10-09', 'percent' => 100]],
+            'cancel_meta' => ['cutoff' => '23:59', 'check_in' => '2026-10-09'],
+        ]);
+        self::assertSame([true], array_column($ahead['terms']['cancel_steps'], 'is_last'), 'a trip ahead: the last period runs from today');
+
+        $admin = self::factory()->build(self::item($extra), 'admin', self::booking(), [], [], $terms);
+
+        self::assertNotSame([], $admin['terms']['cancel_steps']);
+        self::assertNotContains(true, array_column($admin['terms']['cancel_steps'], 'is_last'));
+        self::assertSame([''], array_values(array_unique(array_column($admin['terms']['cancel_steps'], 'to_rel'))));
+        self::assertSame('23:59', $admin['terms']['cancel_cutoff']);
+    }
+
     public function testAPackagesRawApiRoomsKeepTheirNames(): void
     {
         // sphinx packages store the API's own rows: {code, name, adults, children_ages}.

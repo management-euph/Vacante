@@ -333,7 +333,26 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
             date('Y-m-d'),
             \Tygh\Addons\TravelCore\Services\TravelCoreConfig::getDateFormat(),
         );
-        $timeline = $timelineFactory->cancellation($timelineWindows, $primary_new_price, $nights);
+        // "2 nopți" are the stay's first two nights, exact, when a penalty
+        // counts nights (NightShares: priceinfo, checked against this quote)
+        $night_shares = \Tygh\Addons\NovotonHolidays\Services\NightShares::needed($timelineWindows, $nights) && $quoted['ext_board'] === ''
+            ? \Tygh\Addons\NovotonHolidays\Services\NightShares::forStore()->for([
+                'hotel_id' => TypeCoerce::toString($hotel_id),
+                'package_name' => $quoted['package'] !== '' ? $quoted['package'] : TypeCoerce::toString($package_name),
+                'room_id' => $quoted['room'] !== '' ? $quoted['room'] : TypeCoerce::toString($room_id),
+                'board_id' => $quoted['board'] !== '' ? $quoted['board'] : TypeCoerce::toString($board_id),
+                'check_in' => TypeCoerce::toString($check_in),
+                'nights' => $nights,
+                'adults' => $adults,
+                'children_ages' => $children_ages,
+            ], TypeCoerce::toFloat($new_price))
+            : [];
+        $timeline = $timelineFactory->cancellation(
+            $timelineWindows,
+            $primary_new_price,
+            $nights,
+            \Tygh\Addons\NovotonHolidays\ViewModels\NovotonBookingSidebarBuilder::cancelMeta(TypeCoerce::toString($check_in), $night_shares),
+        );
         $payment_steps = $timelineFactory->payment($timelineInstallments, $primary_new_price);
         $payment_split = $timelineFactory->split($timelineInstallments, $primary_new_price);
         if ($timeline['steps'] !== []) {
@@ -382,6 +401,8 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
         }
         $terms_view = [
             'cancel_steps' => $timeline['steps'],
+            // A deadline day ends at 23:59, Romania's time: the note under the steps
+            'cancel_cutoff' => $timeline['steps'] !== [] ? $timeline['cutoff'] : '',
             'payment_steps' => $payment_steps,
             'cancel_lines' => $cancellation_lines,
             'cancel_free_until' => $timeline['steps'] !== [] ? '' : $free_cancellation_until,

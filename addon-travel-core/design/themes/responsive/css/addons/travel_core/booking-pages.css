@@ -1713,7 +1713,7 @@ body.travel-conditions-open {
 
 /* Cancellation & payment timeline (items 1, 7, 11) */
 :is(.travel-booking-page, .travel-ccard) .travel-timeline { list-style: none; margin: 2px 0 14px; padding: 0 0 0 20px; border-left: 2px solid #e5e7eb; }
-:is(.travel-booking-page, .travel-ccard) .travel-timeline__step { position: relative; padding: 0 0 14px 12px; }
+:is(.travel-booking-page, .travel-ccard) .travel-timeline__step { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 10px; padding: 0 0 14px 12px; }
 :is(.travel-booking-page, .travel-ccard) .travel-timeline__step:last-child { padding-bottom: 2px; }
 :is(.travel-booking-page, .travel-ccard) .travel-timeline__step::before {
     content: ""; position: absolute; left: -29px; top: 3px; width: 12px; height: 12px; border-radius: 50%;
@@ -1722,8 +1722,15 @@ body.travel-conditions-open {
 :is(.travel-booking-page, .travel-ccard) .travel-timeline__step--free::before { border-color: #16a34a; }
 :is(.travel-booking-page, .travel-ccard) .travel-timeline__step--current::before { background: #f59e0b; border-color: #f59e0b; box-shadow: 0 0 0 4px #fef3c7; }
 :is(.travel-booking-page, .travel-ccard) .travel-timeline__step--current.travel-timeline__step--free::before { background: #16a34a; border-color: #16a34a; box-shadow: 0 0 0 4px #dcfce7; }
-:is(.travel-booking-page, .travel-ccard) .travel-timeline__when { display: block; font-size: 13px; color: #4b5563; }
-:is(.travel-booking-page, .travel-ccard) .travel-timeline__what { display: block; font-size: 14px; color: #1f2937; margin-top: 1px; }
+:is(.travel-booking-page, .travel-ccard) .travel-timeline__when { display: block; grid-column: 1; font-size: 13px; color: #4b5563; }
+:is(.travel-booking-page, .travel-ccard) .travel-timeline__what { display: block; grid-column: 1; font-size: 14px; color: #1f2937; margin-top: 1px; }
+/* What cancelling costs then, on the right; "≈" before N average nights */
+:is(.travel-booking-page, .travel-ccard) .travel-timeline__amt {
+    grid-column: 2; grid-row: 1 / span 2; align-self: center; font-size: 14px; font-weight: 700; color: #1f2937;
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+/* "Termenele țin până la ora 23:59 a zilei scrise, ora României." */
+:is(.travel-booking-page, .travel-ccard) .travel-timeline__note { margin: -6px 0 14px; font-size: 12px; color: #6b7280; }
 :is(.travel-booking-page, .travel-ccard) .travel-timeline__what strong { font-weight: 700; }
 :is(.travel-booking-page, .travel-ccard) .travel-timeline__step--free .travel-timeline__what { color: #15803d; font-weight: 600; }
 :is(.travel-booking-page, .travel-ccard) .travel-timeline__tag {

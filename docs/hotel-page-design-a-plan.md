@@ -163,9 +163,9 @@ an internal code.
   page (`[data-travel-design="a"]`) and asks `booking_config` with
   `design=a`, which adds per-night calendar prices (two adults, shopper's
   currency) from `IndicativePriceSourceInterface::nightlyCalendar()` and the
-  bar's texts. Split Check-in / Check-out fields, "Oaspeți", "Vezi
+  bar's texts. Split Check-in / Check-out fields, "Turiști", "Vezi
   prețurile"; calendar (`variant="a"`): stay header with nights, legend,
-  "Schimbă oaspeții", "Șterge datele", its own search button; opening from
+  "Schimbă turiștii", "Șterge datele", its own search button; opening from
   Check-out moves only the check-out; the check-out day shows no price.
   Shared calendar fixes: even day columns, full-width phone calendar.
   `TRAVEL_CACHE_VER` 9. Test: `DesignASearchBarTest`.
@@ -337,7 +337,81 @@ an internal code.
     emailed (the rooms, their price, the order; an unpaid order can be paid
     by bank transfer now); refused or cancelled, also as soon as sent, the
     store is emailed what to refund (paid order) or not to collect (unpaid).
-- Next: Novoton rows through `RoomOfferRows`;
+- 1 Nov 2026 — **phase 5, "Aleg fiecare cameră separat" (board 13c.9)**
+  and a Smarty 5 fix:
+  - The hotel page with several rooms died at compile time ("illegal
+    value … for "scope" attribute"): `design_a_groups.tpl` passed a
+    group's id suffix to `design_a_results.tpl` as `scope`, an `{include}`
+    attribute Smarty 5 keeps for a variable scope. It is `id_suffix` now,
+    and `scripts/compile-templates.php` (`composer templates`, a CI job,
+    the grumphp hook) compiles every add-on template with Smarty 5, as the
+    store does: the old include fails it with the store's own error.
+  - Room by room: a group of several rooms gets "Aleg fiecare cameră
+    separat" in its head; it opens a strip of the group's rooms (one tab
+    each, arrows when they do not fit, arrow keys), the room open named
+    over the cards ("Camera 3 · 2 adulți") and tills without a count that
+    choose for that room ("Alege pentru Camera 3"); a choice opens the next
+    room still to choose, then the next group. The group's tab says
+    "Alegi acum · 2 din 8", each room's tab its price once chosen, the bar
+    one line per room ("Camera 2: … · 660 €", "Schimbă" opens that room),
+    the booking posts each room with what was chosen for it. Switching
+    keeps what is chosen: each choice of the group becomes one per room;
+    "Aleg pentru tot grupul" makes the rooms chosen alike one choice again
+    (a group's rooms have the same guests, so which room takes which
+    number does not matter). The room open is named "Camera N · guests",
+    not the board's "Camera 3 din 8": past the first group a room's number
+    is not its place in the group (Camera 9 of 2).
+  - The bar: "Mergi la …" only when the next rooms to choose are not the
+    open ones (it showed the next group while the open group still had
+    rooms to choose; board 13c.7); on a phone its buttons wrap to a line
+    of their own (the bar scrolled the page sideways at 390 px).
+  - From the owner's UX review (1 Nov 2026): past two lines of choices the
+    bar folds them behind "Vezi alegerile (N)" on a computer too (a 12-room
+    booking made it ≈230 px high; now 78 px), the phone's bar is the board's
+    13c.10 shape (the progress and the total on one line, the buttons
+    under them); the ⓘ of a room on request ("Cum funcționează cererea")
+    opens above its button when the bar or the window's bottom would cover
+    it, and sits over the bar if they meet.
+- 1 Nov 2026 — **cancellation and payment terms (board 14, v2)**, from
+  the owner's Novoton example (Admiral, 9-16 Nov: free until 4 Nov, 2
+  nights 5-8 Nov, 100% from 9 Nov) and UX review:
+  - A Novoton `tillDate` holds until 23:59 that day, Bulgarian time, the
+    same as Romania's (owner): the card says "Anulare gratuită până pe 4
+    nov. 2026, ora 23:59", "… până mâine (4 nov. 2026), ora 23:59" the day
+    before and "Anulare gratuită până azi la ora 23:59" on the day; the
+    list says it once under the periods ("Termenele țin până la ora 23:59
+    a zilei scrise, ora României."). The last period runs on through the
+    arrival and no-show ("Din 9 nov. 2026 (ziua sosirii) și la
+    neprezentare"). `TermsTimelineFactory::cancellation()` takes these as
+    `$meta` (cutoff, check_in, night_shares): a provider without them shows
+    the steps as before.
+  - Past the free days the card says what cancelling costs today ("Anularea
+    costă 220,00 € de azi (primele 2 nopți)") and the till warns over the
+    button ("Fără anulare gratuită de azi."; "Nerambursabil: dacă anulezi,
+    nu primești banii înapoi."), on a line of its own when the till is a row.
+  - "2 nopți" is the stay's first two nights at their own season's price:
+    priceinfo (`NightShares`) rebuilds the quote (785 € = 7 × 110 € + a
+    15 € handling fee, within 1 €, as the admin's price comparison checks)
+    and gives each night's share of the price, the per-stay fees left out:
+    220,00 €, not 224,29 €; 28 Nov - 5 Dec (two seasons) 220 €, not
+    235,71 €. Shares, so the same list holds in lei, with the commission,
+    and for a cart line of several rooms (each room weighed by its price,
+    stored on the line by `add_to_cart`). When priceinfo does not rebuild
+    the quote (or prices a board with a supplement) the amount is the
+    average night, marked "≈" ("2 nopți la prețul mediu"). Open with
+    Novoton: are they the first N nights, and is the handling fee part of
+    the penalty (assumed: yes, no).
+  - "Condiții de plată și anulare": one list (each period's dates, what it
+    costs, the amount on the right), the link's chevron turns; on a phone
+    a bottom sheet with its title, × and "Rezervă · 785,00 €" at its foot
+    (Escape and the backdrop close it; the page under it does not scroll).
+  - No payment method is named in the terms (owner: there may be others):
+    the on-request lines say any sum paid is returned, not how.
+  - The booking form's re-check, the cart and order cards show the same
+    list (deadline hour, arrival, exact nights); an order whose stay began
+    names no "today" in the admin's schedule.
+- Next: the combined list of several rooms' terms in the bar (board 14.5);
+  Novoton rows through `RoomOfferRows`;
   the title row's after-search state ("10–17 iul. · de la 1.485 €", "Vezi
   camerele") and the compact summary's price (the section carries
   `data-cheapest`); the room facts the board shows beyond capacity (area,

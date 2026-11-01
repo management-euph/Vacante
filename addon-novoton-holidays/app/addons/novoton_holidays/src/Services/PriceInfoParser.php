@@ -45,6 +45,17 @@ class PriceInfoParser
 
     private readonly OccupancyStructureBuilder $occupancyStructureBuilder;
 
+    /**
+     * What this parser already read, by hotel and package / by hotel: one
+     * calculation per room of a hotel page (NightShares) reads each once.
+     *
+     * @var array<string, array<string, mixed>|null>
+     */
+    private array $loadedPriceinfo = [];
+
+    /** @var array<string, array<string, mixed>|null> */
+    private array $loadedHotelinfo = [];
+
     public function __construct(
         ?callable $logger = null,
         ?HotelPackageRepositoryInterface $packageRepo = null,
@@ -103,10 +114,17 @@ class PriceInfoParser
      */
     public function loadPriceInfo(string $hotelId, string $packageName): ?array
     {
+        $key = $hotelId . "\0" . $packageName;
+        if (array_key_exists($key, $this->loadedPriceinfo)) {
+            $this->priceinfo = $this->loadedPriceinfo[$key];
+
+            return $this->priceinfo;
+        }
         $row = $this->packageRepo->findByHotelAndPackageName($hotelId, $packageName);
         $json = $row['priceinfo_data'] ?? null;
 
         if (empty($json)) {
+            $this->loadedPriceinfo[$key] = null;
             return null;
         }
 
@@ -114,6 +132,7 @@ class PriceInfoParser
         $decoded = json_decode($json, true);
         /** @var array<string, mixed>|null $decoded */
         $this->priceinfo = is_array($decoded) ? $decoded : null;
+        $this->loadedPriceinfo[$key] = $this->priceinfo;
         return $this->priceinfo;
     }
 
@@ -123,8 +142,10 @@ class PriceInfoParser
      */
     public function loadHotelInfo(string $hotelId): ?array
     {
-        $hotel = $this->hotelRepo->findByIdAsDto($hotelId);
-        $this->hotelinfo = $hotel?->rawHotelData;
+        if (!array_key_exists($hotelId, $this->loadedHotelinfo)) {
+            $this->loadedHotelinfo[$hotelId] = $this->hotelRepo->findByIdAsDto($hotelId)?->rawHotelData;
+        }
+        $this->hotelinfo = $this->loadedHotelinfo[$hotelId];
         return $this->hotelinfo;
     }
 

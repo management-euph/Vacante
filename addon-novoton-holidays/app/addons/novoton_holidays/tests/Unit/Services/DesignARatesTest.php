@@ -7,6 +7,7 @@ namespace Tygh\Addons\NovotonHolidays\Tests\Unit\Services;
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\NovotonHolidays\Api\Contracts\PricingApiClientInterface;
 use Tygh\Addons\NovotonHolidays\Services\DesignARates;
+use Tygh\Addons\NovotonHolidays\Services\NightShares;
 use Tygh\Addons\NovotonHolidays\Services\SearchService;
 use Tygh\Addons\TravelCore\Results\RateOffer;
 use Tygh\Addons\TravelCore\Results\RoomResultsBuilder;
@@ -265,6 +266,56 @@ final class DesignARatesTest extends TestCase
         );
     }
 
+    public function testThreeNightsAreTheStaysFirstThreeAtTheirOwnPrice(): void
+    {
+        // priceinfo of the first room: 3 nights at 200 €, 4 at 210 €, a 45 € handling fee: 1.485 €
+        $queries = [];
+        $nightShares = new NightShares(static function (array $query) use (&$queries): array {
+            $queries[] = $query;
+            $byNight = [];
+            foreach ([200.0, 200.0, 200.0, 210.0, 210.0, 210.0, 210.0] as $i => $price) {
+                $byNight[] = ['date' => '', 'season' => 1, 'price' => $price];
+            }
+
+            return [
+                'success' => true,
+                'price' => 1485.0,
+                'price_without_commission' => 1485.0,
+                'breakdown' => ['base_per_night' => $byNight, 'fees' => ['handling_fee' => 45.0, 'company_fee' => 0.0]],
+            ];
+        });
+        $money = new MoneyFormatter(['symbol' => '€', 'after' => 'Y', 'decimals' => 0, 'decimals_separator' => ',', 'thousands_separator' => '.']);
+        $mapper = new DesignARates(
+            new TermsTimelineFactory($money, self::TODAY, '%d.%m.%Y'),
+            static fn (float $amount): float => $amount,
+            static fn (string $key, array $replace): string => strtr(self::TEXTS[$key] ?? $key, $replace),
+            static fn (string $url): string => '/index.php?dispatch=' . $url,
+            'ro',
+            self::TODAY,
+            true,
+            $nightShares,
+        );
+
+        $rates = $mapper->rates(array_slice(self::admiral(), 0, 2), self::PARAMS);
+
+        $steps = $rates[0]->timeline['cancel_steps'];
+        self::assertSame(['free', 'partial', 'full'], array_column($steps, 'kind'));
+        self::assertSame(['600 €', 3, false], [$steps[1]['amount_label'], $steps[1]['nights'], $steps[1]['approx']], 'not 636 €, three average nights');
+        self::assertSame('23:59', $rates[0]->timeline['cancel_cutoff']);
+        self::assertSame(
+            [
+                'hotel_id' => '476', 'package_name' => 'ADMIRAL ***** +BEACH 2027', 'room_id' => 'DBL 2+0 DELUXE NO BALCONY',
+                'board_id' => 'ULTRA ALL INCL', 'check_in' => '2027-07-10', 'nights' => 7, 'adults' => 2, 'children_ages' => [],
+                'booking_date' => date('Y-m-d'),
+            ],
+            $queries[0],
+        );
+
+        // The second room: priceinfo's 1.485 € is not its 1.524 € → three average nights, "≈"
+        $second = $rates[1]->timeline['cancel_steps'][1];
+        self::assertSame(['653 €', true], [$second['amount_label'], $second['approx']]);
+    }
+
     public function testTheBuilderTurnsThemIntoTheBoardsSingleMealPlanCase(): void
     {
         $money = new MoneyFormatter(['symbol' => '€', 'after' => 'Y', 'decimals' => 0, 'decimals_separator' => ',', 'thousands_separator' => '.']);
@@ -284,7 +335,11 @@ final class DesignARatesTest extends TestCase
         self::assertSame('ADMIRAL ***** +BEACH 2027', $option['package'], 'one option: its package stays on it');
         self::assertSame(['name' => 'Early Booking', 'until' => '', 'saving' => '636 €'], $option['deal']);
         self::assertSame(['1.485 €', '2.121 €', '−30%'], [$option['price'], $option['was'], $option['off']]);
-        self::assertSame(['kind' => 'free', 'until' => '30.06.2027'], $room['cancel']);
+        self::assertSame(
+            ['kind' => 'free', 'until' => '30.06.2027', 'time' => '23:59', 'rel' => '', 'amount' => '', 'nights' => 0, 'approx' => false, 'percent' => ''],
+            $room['cancel'],
+            '"Anulare gratuită până pe 30.06.2027, ora 23:59": a Novoton deadline day ends at 23:59',
+        );
         self::assertCount(1, $room['terms']);
         self::assertNotSame([], $room['terms'][0]['timeline'], 'the terms timeline, as in the booking sidebar');
         self::assertSame([true, 'Early Booking'], [$view['struck'], $view['struck_deal']]);

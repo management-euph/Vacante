@@ -978,7 +978,7 @@ msgstr "Descriere API"
 
 msgctxt "Languages::sphinx_holidays.ph_rating"
 msgid "Guest rating"
-msgstr "Rating oaspeți"
+msgstr "Rating turiști"
 
 msgctxt "Languages::sphinx_holidays.ph_facilities"
 msgid "Top 3 facilities"

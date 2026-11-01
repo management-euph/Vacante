@@ -536,6 +536,25 @@ describe('a room on request: the ⓘ', () => {
         click(document.body);
         expect(pop.hidden).toBe(true);
     });
+
+    it('opens above the ⓘ where the bar of the rooms chosen would cover it', () => {
+        const bar = document.createElement('div');
+        bar.setAttribute('data-travel-bar', '');
+        bar.getBoundingClientRect = () => ({ top: 600, bottom: 768, left: 0, right: 1024, width: 1024, height: 168 });
+        document.body.appendChild(bar);
+        pop.getBoundingClientRect = () => ({ top: 480, bottom: 640, left: 700, right: 1020, width: 320, height: 160 });
+
+        click(tip);
+        expect(pop.classList.contains('travel-pdpa-tip__pop--up')).toBe(true);
+        click(tip);
+
+        // room under it (no bar): it opens under the ⓘ as before
+        bar.remove();
+        pop.getBoundingClientRect = () => ({ top: 300, bottom: 460, left: 700, right: 1020, width: 320, height: 160 });
+        click(tip);
+        expect(pop.classList.contains('travel-pdpa-tip__pop--up')).toBe(false);
+        click(tip);
+    });
 });
 
 describe('terms loaded when opened (a supplier without them in the search)', () => {
@@ -643,4 +662,68 @@ describe('results that keep arriving (Sphinx polls)', () => {
             <div data-travel-no-match hidden></div>
         </section>`;
     }
+});
+
+describe('the terms on a phone: a bottom sheet (board 14.6)', () => {
+    let details;
+    let booked;
+
+    beforeAll(() => {
+        window.matchMedia = (query) => ({ matches: query === '(max-width: 767px)', media: query, addListener() {}, removeListener() {} });
+        page().insertAdjacentHTML('beforeend', `
+            <ul><li class="travel-pdpa-rcard" data-travel-room>
+                <details class="travel-pdpa-terms">
+                    <summary class="travel-pdpa-terms__toggle">Condiții de plată și anulare</summary>
+                    <div class="travel-pdpa-terms__panel" data-travel-terms-panel>
+                        <div class="travel-pdpa-terms__sheethead"><button type="button" data-travel-terms-close aria-label="Închide condițiile">×</button></div>
+                        <div class="travel-pdpa-terms__body"><ol class="travel-timeline"><li>Până pe 4 nov. 2026, ora 23:59</li></ol></div>
+                        <div class="travel-pdpa-terms__sheetfoot"><button type="button" data-travel-terms-cta></button></div>
+                    </div>
+                </details>
+                <div class="travel-pdpa-till" data-travel-for="0" hidden><b class="travel-pdpa-till__total">995 €</b><a class="travel-pdpa-till__btn" href="#hb">Rezervă</a></div>
+                <div class="travel-pdpa-till" data-travel-for="1"><b class="travel-pdpa-till__total">785 €</b><a class="travel-pdpa-till__btn" href="#bb">Rezervă</a></div>
+            </li></ul>`);
+        details = document.querySelector('.travel-pdpa-terms');
+        booked = vi.fn((event) => event.preventDefault());
+        document.querySelector('[href="#bb"]').addEventListener('click', booked);
+    });
+
+    const open = () => {
+        details.open = true;
+        details.dispatchEvent(new Event('toggle'));
+    };
+    const shut = () => details.dispatchEvent(new Event('toggle'));
+
+    it('stops the page scrolling, focuses its × and says what the card books', () => {
+        open();
+        expect(document.documentElement.classList.contains('travel-pdpa-sheet-open')).toBe(true);
+        expect(document.activeElement).toBe(details.querySelector('[data-travel-terms-close]'));
+        expect(details.querySelector('[data-travel-terms-cta]').textContent).toBe('Rezervă · 785 €');
+
+        click(details.querySelector('[data-travel-terms-close]'));
+        shut();
+        expect(details.open).toBe(false);
+        expect(document.documentElement.classList.contains('travel-pdpa-sheet-open')).toBe(false);
+        expect(document.activeElement).toBe(details.querySelector('summary'));
+    });
+
+    it('closes on Esc and on a tap beside it', () => {
+        open();
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        expect(details.open).toBe(false);
+        shut();
+
+        open();
+        click(details);
+        expect(details.open).toBe(false);
+        shut();
+    });
+
+    it('its button closes it and presses the card\'s own', () => {
+        open();
+        click(details.querySelector('[data-travel-terms-cta]'));
+        expect(details.open).toBe(false);
+        expect(booked).toHaveBeenCalledTimes(1);
+        shut();
+    });
 });

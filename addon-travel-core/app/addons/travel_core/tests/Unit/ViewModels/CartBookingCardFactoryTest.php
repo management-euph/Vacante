@@ -178,6 +178,42 @@ final class CartBookingCardFactoryTest extends TestCase
         self::assertSame([], $card['terms']['cancel_lines'], 'prose only without a timeline');
     }
 
+    public function testTheProvidersDeadlineHourArrivalAndNightPricesReachTheTimeline(): void
+    {
+        // Novoton (cartTerms' cancel_meta): a deadline day ends at 23:59, the
+        // last period runs through the arrival, "2 nights" is the first two.
+        $windows = [
+            ['to' => '2026-10-01', 'percent' => 0],
+            ['to' => '2026-10-04', 'nights' => 2],
+            ['to' => '2026-10-05', 'percent' => 100],
+        ];
+        $card = self::factory()->build(self::line(), '', null, [], [
+            'cancel_windows' => $windows,
+            'cancel_meta' => ['cutoff' => '23:59', 'check_in' => '2026-10-05', 'night_shares' => [0.16, 0.16, 0.16, 0.16, 0.16, 0.16]],
+        ]);
+
+        $steps = $card['terms']['cancel_steps'];
+        self::assertSame('23:59', $card['terms']['cancel_cutoff']);
+        self::assertSame(['23:59', '23:59', '23:59'], array_column($steps, 'to_time'));
+        self::assertSame(['tomorrow', '', ''], array_column($steps, 'to_rel'));
+        self::assertSame([false, false, true], array_column($steps, 'is_last'));
+        self::assertTrue($steps[2]['from_arrival']);
+        self::assertSame('$150.00', $steps[1]['amount_label'], 'the first two nights, exact: 32% of $468.75');
+        self::assertFalse($steps[1]['approx']);
+
+        // What is not a deadline hour or a list of shares is left out: the
+        // average night again, no hour, the note gone.
+        $bad = self::factory()->build(self::line(), '', null, [], [
+            'cancel_windows' => $windows,
+            'cancel_meta' => ['cutoff' => '25:00', 'night_shares' => [0.14, 'x', 0.16, 0.16, 0.16, 0.16]],
+        ]);
+        self::assertSame('', $bad['terms']['cancel_cutoff']);
+        self::assertSame(['', '', ''], array_column($bad['terms']['cancel_steps'], 'to_time'));
+        self::assertSame('$156.25', $bad['terms']['cancel_steps'][1]['amount_label']);
+        self::assertTrue($bad['terms']['cancel_steps'][1]['approx']);
+        self::assertNotContains(true, array_column($bad['terms']['cancel_steps'], 'is_last'), 'no arrival, no last period');
+    }
+
     public function testCancellingAlreadyCostsSomething(): void
     {
         $partial = self::factory()->build(self::line(), '', null, [], [
