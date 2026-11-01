@@ -62,7 +62,7 @@ final class BookingSubmissionServiceOneRequestTest extends TestCase
             return new \SimpleXMLElement('<hotel_res_RS><IdNum>3119' . count($sent) . '</IdNum><Status>Good</Status></hotel_res_RS>');
         });
 
-        (new BookingSubmissionService($repo, $reservations))->submitOrder(55, ['products' => [
+        (new BookingSubmissionService($repo, $reservations))->submitOrder(55, ['notes' => 'Vă rugăm camere alăturate', 'products' => [
             'c1' => ['product_id' => 7, 'price' => 1485.0 * count($packages), 'extra' => ['novoton_booking' => true, 'novoton_booking_id' => 12]],
         ]]);
 
@@ -82,6 +82,7 @@ final class BookingSubmissionServiceOneRequestTest extends TestCase
         self::assertCount(3, $sent[0]['rooms'], 'one <hotel_acc> per room');
         self::assertSame([1, 2, 3], array_column($sent[0]['rooms'], 'room_num'));
         self::assertCount(6, $sent[0]['guests'], 'every guest once');
+        self::assertSame('Va rugam camere alaturate', $sent[0]['remark'], 'the notes typed at checkout');
     }
 
     public function testARoomOfAnotherPackageIsARequestOfItsOwn(): void

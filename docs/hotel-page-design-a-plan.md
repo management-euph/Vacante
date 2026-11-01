@@ -303,7 +303,10 @@ an internal code.
     no longer splits the booking into two reservations; a request mixing
     them is refused before sending. IdRoom keeps its "+" (the form post
     sends it as the example's "%2b"; a literal "%2b" matches no room, read
-    with room_price).
+    with room_price). The guest's "Customer's notes" from checkout are each
+    room's Remark, without diacritics (the request is declared
+    windows-1251). Separate bookings in one order stay separate requests
+    (the owner's call).
   - **To check on the dev store**: a 6–12-room Novoton booking end to end
     (booking form, add_to_cart, checkout) — no real reservation can be
     sent from the session.

@@ -90,6 +90,23 @@ class ApiBookingRequestBuilderTest extends TestCase
         $this->assertArrayNotHasKey('board_id', $result);
     }
 
+    /**
+     * The guest's notes from checkout are the rooms' remark for the hotel:
+     * plain text on one line, without the diacritics windows-1251 cannot
+     * carry. The comment keeps them as typed.
+     */
+    public function testTheGuestsNotesAreTheRemark(): void
+    {
+        $notes = "Vă rugăm camere <b>alăturate</b>,\n  sosire târzie. Mulțumim!";
+
+        $result = $this->builder->build($this->group(), [], [], ['hotel_id' => 'H1'], 1, 1, 1, $notes);
+
+        $this->assertSame('Va rugam camere alaturate, sosire tarzie. Multumim!', $result['remark']);
+        $this->assertSame($notes, $result['comment']);
+        $this->assertSame('', $this->builder->build($this->group(), [], [], [], 1, 1, 1)['remark'], 'no notes, no remark');
+        $this->assertSame(2000, mb_strlen(ApiBookingRequestBuilder::remark(str_repeat('ă', 2500))));
+    }
+
     /** The request is its group's: hotel, package and stay come from the group. */
     public function testTheRequestTakesItsGroupsHotelPackageAndStay(): void
     {

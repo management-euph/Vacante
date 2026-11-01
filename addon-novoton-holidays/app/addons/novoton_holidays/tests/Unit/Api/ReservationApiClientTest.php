@@ -145,7 +145,8 @@ final class ReservationApiClientTest extends TestCase
      * INCL, each with two adults and a child of 7. The booking's rooms_data
      * and guests, through the store's grouping and request builder, give
      * that request: the hotel, package and stay once, the six guests once,
-     * one <hotel_acc> per room with its holder and its three guests.
+     * one <hotel_acc> per room with its holder, its three guests and the
+     * guest's notes from checkout as its remark.
      *
      * IdRoom keeps its "+": the form post sends it as the example's "%2b".
      * IdStar stays empty, as in every reservation the store has sent.
@@ -164,7 +165,8 @@ final class ReservationApiClientTest extends TestCase
         $groups = array_values($assembler->groupRoomsByPackage([$room, $room], $booking));
         self::assertCount(1, $groups, 'one request');
         [$all, $rooms] = $assembler->buildGroupGuestsAndRooms($groups[0], $guests, $booking, 0.0);
-        $xml = $this->client()->generateReservationXml((new ApiBookingRequestBuilder())->build($groups[0], $all, $rooms, $booking, 7, 1, 1));
+        $notes = 'Please provide rooms close to each other, if possible';
+        $xml = $this->client()->generateReservationXml((new ApiBookingRequestBuilder())->build($groups[0], $all, $rooms, $booking, 7, 1, 1, $notes));
         $rq = simplexml_load_string($xml);
 
         self::assertNotFalse($rq);
@@ -184,6 +186,7 @@ final class ReservationApiClientTest extends TestCase
                 [(string) $acc->CheckIn, (string) $acc->CheckOut, (string) $acc->IdRoom, (string) $acc->IdBoard, (string) $acc->IdExtBoard, (string) $acc->Holder],
             );
             self::assertSame($inRoom, self::guests($acc->room_acc));
+            self::assertSame($notes, (string) $acc->Remark);
             self::assertStringEndsWith('[Room ' . ($i + 1) . ']', (string) $acc->Comment);
         }
         self::assertStringContainsString('<IdRoom>DBL 2+1</IdRoom>', $xml);

@@ -18,12 +18,22 @@ use Tygh\Addons\NovotonHolidays\Helpers\BookingRoomAssembler;
  * package and the same stay (BookingRoomAssembler::groupRoomsByPackage):
  * a group whose rooms do not all share them is refused, nothing is sent.
  *
+ * The guest's notes from checkout ("Customer's notes", the order's notes)
+ * are each room's <Remark> for the hotel, as Novoton's example asks for
+ * "rooms close to each other", and stay in the <Comment> as before.
+ *
  * Extracted from BookingSubmissionService. Pure — depends only on the
  * passed group/guests/rooms/booking arrays — so it is directly unit-testable;
  * the service delegates to it inside its per-group loop.
  */
 class ApiBookingRequestBuilder
 {
+    /** Romanian letters without their diacritics, for when intl is missing. */
+    private const array ROMANIAN = [
+        'ă' => 'a', 'â' => 'a', 'î' => 'i', 'ș' => 's', 'ş' => 's', 'ț' => 't', 'ţ' => 't',
+        'Ă' => 'A', 'Â' => 'A', 'Î' => 'I', 'Ș' => 'S', 'Ş' => 'S', 'Ț' => 'T', 'Ţ' => 'T',
+    ];
+
     /**
      * @param array<string, mixed> $group
      * @param list<array<string, mixed>> $allGuests
@@ -70,7 +80,7 @@ class ApiBookingRequestBuilder
             'guests' => $allGuests,
             'rooms' => $apiRooms,
             'order_num' => $orderId . $suffix,
-            'remark' => '',
+            'remark' => self::remark($orderComment),
             'comment' => $orderComment,
         ];
 
@@ -82,5 +92,23 @@ class ApiBookingRequestBuilder
         }
 
         return $apiData;
+    }
+
+    /**
+     * The guest's notes as the rooms' <Remark>: plain text on one line,
+     * without diacritics — the request is declared windows-1251, which has
+     * no Romanian letters ("Vă rugăm camere alăturate" → "Va rugam camere
+     * alaturate") — and at most 2000 characters, as an alternatives request
+     * keeps them.
+     */
+    public static function remark(string $notes): string
+    {
+        $text = strtr(html_entity_decode(strip_tags($notes), ENT_QUOTES | ENT_HTML5, 'UTF-8'), self::ROMANIAN);
+        if (class_exists(\Transliterator::class)) {
+            $ascii = \Transliterator::create('Latin-ASCII')?->transliterate($text);
+            $text = is_string($ascii) ? $ascii : $text;
+        }
+
+        return mb_substr(trim((string) preg_replace('/\s+/u', ' ', $text)), 0, 2000);
     }
 }
