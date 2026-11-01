@@ -94,6 +94,8 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
     $hotel_id = PriceInfoFormatter::toScalar($data['hotel_id'] ?? '');
     $room_id = PriceInfoFormatter::toScalar($data['room_id'] ?? '');
     $board_id = PriceInfoFormatter::toScalar($data['board_id'] ?? '');
+    // The board's supplement ("BB" + "HB" is half board): part of the offer
+    $ext_board_id = PriceInfoFormatter::toScalar($data['ext_board_id'] ?? '');
     $check_in = PriceInfoFormatter::toScalar($data['check_in'] ?? '');
     $nights = PriceInfoFormatter::toInt($data['nights'] ?? 7);
     $adults = PriceInfoFormatter::toInt($data['adults'] ?? 2);
@@ -182,6 +184,7 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
                 'nocache' => true,
             ],
             $package_name,
+            $ext_board_id,
             ['source' => 'ajax_recalculate_price', 'hotel_id' => $hotel_id, 'check_in' => $check_in],
         );
         if ($found === null) {

@@ -53,6 +53,7 @@
         <input type="hidden" name="hotel_id" value="{$booking_data.hotel_id}" />
         <input type="hidden" name="room_id" value="{$booking_data.room_id}" />
         <input type="hidden" name="board_id" value="{$booking_data.board_id}" />
+        <input type="hidden" name="ext_board_id" value="{$booking_data.ext_board_id|default:''}" />
         <input type="hidden" name="check_in" value="{$booking_data.check_in}" />
         <input type="hidden" name="check_out" value="{$booking_data.check_out}" />
         <input type="hidden" name="nights" value="{$booking_data.nights}" />
@@ -189,6 +190,7 @@ window.bookingData = {ldelim}
     currentPrice: {$booking_data.total_price|default:0},
     roomId: '{$booking_data.room_id|default:""}',
     boardId: '{$booking_data.board_id|default:""}',
+    extBoardId: '{$booking_data.ext_board_id|default:""|escape:"javascript"}',
     packageName: '{$booking_data.package_name|default:""|escape:"javascript"}',
     nights: {$booking_data.nights|default:7},
     adults: {$booking_data.adults|default:2},

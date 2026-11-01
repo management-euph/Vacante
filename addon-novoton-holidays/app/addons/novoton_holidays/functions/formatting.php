@@ -49,11 +49,12 @@ function fn_novoton_holidays_board_label(string $boardId): string
 
 /**
  * Format board name for display — same label everywhere (cart hooks, order
- * hooks, booking records, emails, search card).
+ * hooks, booking records, emails, search card). With the board's supplement
+ * it is the supplement's name: "BB" + "HB" is half board (OfferBoard).
  */
-function fn_novoton_holidays_format_board_name(string $boardId): string
+function fn_novoton_holidays_format_board_name(string $boardId, string $extBoardId = ''): string
 {
-    return DisplayFormatter::boardLabel($boardId);
+    return DisplayFormatter::boardLabel(\Tygh\Addons\NovotonHolidays\Services\OfferBoard::meal($boardId, $extBoardId));
 }
 
 /**

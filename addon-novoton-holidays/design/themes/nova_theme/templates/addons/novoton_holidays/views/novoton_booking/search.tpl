@@ -228,8 +228,9 @@
                                     {/if}
 
                                     {* Normalize the provider code (trim/upper/strip spaces) so
-                                       variants like "HB +" still map to the translated name *}
-                                    {$__bcode = $result.board_id|default:''|trim|upper|replace:' ':''}
+                                       variants like "HB +" still map to the translated name; the board's
+                                       supplement ("BB" + "HB" = half board) names the meal *}
+                                    {$__bcode = $result.ext_board_id|default:$result.board_id|default:''|trim|upper|replace:' ':''}
                                     {if $__bcode == 'AI' || $__bcode == 'ALLINCL' || $__bcode == 'ALLINCLUSIVE'}
                                         {$board_display = {__('novoton_holidays.all_inclusive')|default:'All Inclusive'}}
                                     {elseif $__bcode == 'UAI' || $__bcode|strpos:'ULTRA' !== false}
@@ -265,6 +266,7 @@
                                                data-room-num="{$room_num}"
                                                data-room-id="{$result.room_id}"
                                                data-board-id="{$result.board_id}"
+                                               data-ext-board-id="{$result.ext_board_id|default:''}"
                                                data-price="{$result.extras_price|default:$result.total_price}"
                                                data-standard-price="{$result.total_price}"
                                                data-was-price="{$mr_was_price}"
@@ -420,8 +422,9 @@
                 {/if}
 
                 {* Normalize the provider code (trim/upper/strip spaces) so
-                   variants like "HB +" still map to the translated name *}
-                {$__bcode = $result.board_id|default:''|trim|upper|replace:' ':''}
+                   variants like "HB +" still map to the translated name; the board's
+                   supplement ("BB" + "HB" = half board) names the meal *}
+                {$__bcode = $result.ext_board_id|default:$result.board_id|default:''|trim|upper|replace:' ':''}
                 {if $__bcode == 'AI' || $__bcode == 'ALLINCL' || $__bcode == 'ALLINCLUSIVE'}
                     {$board_display = {__('novoton_holidays.all_inclusive')|default:'All Inclusive'}}
                 {elseif $__bcode == 'UAI' || $__bcode|strpos:'ULTRA' !== false}
@@ -506,7 +509,7 @@
                     <div class="travel-offer-details novoton-offer-choices-zone">
                         {* Translated meal plan first, raw provider code in parens when it
                            differs — e.g. "Demipensiune (HB +)" *}
-                        <div class="travel-offer-board novoton-board">{$board_display}{if $result.board_id && $result.board_id|trim != $board_display} ({$result.board_id|trim}){/if}</div>
+                        <div class="travel-offer-board novoton-board">{$board_display}{if $result.board_id && $result.board_id|trim != $board_display} ({$result.board_id|trim}{if $result.ext_board_id} + {$result.ext_board_id|trim}{/if}){/if}</div>
 
                         {* Free Cancellation Date *}
                         {if $result.free_cancellation_date}
@@ -602,7 +605,7 @@
                                 </div>
                             {/if}
                         </div>
-                        <a href="{fn_url("novoton_booking.booking_form?hotel_id=`$novoton_params.hotel_id`&room_id=`$result.room_id|escape:'url'`&board_id=`$result.board_id|escape:'url'`&check_in=`$check_in_date`&check_out=`$check_out_date`&nights=`$novoton_params.nights`&adults=`$novoton_params.adults`&children=`$novoton_params.children_count`&children_ages=`$novoton_params.children_ages|default:''`&price=`$result.extras_price|default:$result.total_price`&package_name=`$result_package_name|escape:'url'`&room_name=`$room_display|escape:'url'`&board_name=`$board_display|escape:'url'`&rooms_data=`$single_room_data|json_encode|escape:'url'`&extras=`$result.extras_label|default:''|escape:'url'`&extras_price=`$result.extras_price|default:''`&standard_price=`$result.total_price`&early_booking=`$result.early_booking_discount|default:0`&is_on_request=`$result.is_on_request|default:0`&rooms_available=`$result.rooms_available|default:0`")}"
+                        <a href="{fn_url("novoton_booking.booking_form?hotel_id=`$novoton_params.hotel_id`&room_id=`$result.room_id|escape:'url'`&board_id=`$result.board_id|escape:'url'`&ext_board_id=`$result.ext_board_id|default:''|escape:'url'`&check_in=`$check_in_date`&check_out=`$check_out_date`&nights=`$novoton_params.nights`&adults=`$novoton_params.adults`&children=`$novoton_params.children_count`&children_ages=`$novoton_params.children_ages|default:''`&price=`$result.extras_price|default:$result.total_price`&package_name=`$result_package_name|escape:'url'`&room_name=`$room_display|escape:'url'`&board_name=`$board_display|escape:'url'`&rooms_data=`$single_room_data|json_encode|escape:'url'`&extras=`$result.extras_label|default:''|escape:'url'`&extras_price=`$result.extras_price|default:''`&standard_price=`$result.total_price`&early_booking=`$result.early_booking_discount|default:0`&is_on_request=`$result.is_on_request|default:0`&rooms_available=`$result.rooms_available|default:0`")}"
                            class="travel-offer-book-btn">
                             {__("novoton_holidays.book")}
                         </a>

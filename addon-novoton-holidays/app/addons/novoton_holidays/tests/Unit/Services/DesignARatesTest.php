@@ -11,6 +11,7 @@ use Tygh\Addons\NovotonHolidays\Services\SearchService;
 use Tygh\Addons\TravelCore\Results\RateOffer;
 use Tygh\Addons\TravelCore\Results\RoomResultsBuilder;
 use Tygh\Addons\TravelCore\Services\MoneyFormatter;
+use Tygh\Addons\TravelCore\ValueObjects\BoardType;
 use Tygh\Addons\TravelCore\ViewModels\TermsTimelineFactory;
 
 /**
@@ -186,6 +187,7 @@ final class DesignARatesTest extends TestCase
             'hotel_id' => '476',
             'room_id' => 'DBL 2+0 DELUXE NO BALCONY',
             'board_id' => 'ULTRA ALL INCL',
+            'ext_board_id' => '',
             'check_in' => '2027-07-10',
             'check_out' => '2027-07-17',
             'nights' => '7',
@@ -204,6 +206,25 @@ final class DesignARatesTest extends TestCase
             'is_on_request' => '0',
             'rooms_available' => '4',
         ], $query);
+    }
+
+    /**
+     * Admiral off-season: "BB" alone and "BB" with the "HB" supplement in
+     * one package. Half board is an option of its own, named and ranked as
+     * half board, and its link books the supplement.
+     */
+    public function testTheBoardsSupplementIsAMealPlanOfItsOwn(): void
+    {
+        [$breakfast, $half] = self::mapper()->rates([
+            self::row('DBL 2+0 DELUXE NO BALCONY', 'Cameră Dublă (DBL 2+0 DELUXE NO BALCONY)', 415, 4, ['board_id' => 'BB']),
+            self::row('DBL 2+0 DELUXE NO BALCONY', 'Cameră Dublă (DBL 2+0 DELUXE NO BALCONY)', 535, 4, ['board_id' => 'BB', 'ext_board_id' => 'HB']),
+        ], self::PARAMS);
+
+        self::assertSame(['Mic Dejun Inclus', RateOffer::MEAL_BREAKFAST], [$breakfast->mealPlan, $breakfast->mealRank]);
+        self::assertSame(['Demipensiune', RateOffer::MEAL_HALF_BOARD], [$half->mealPlan, $half->mealRank]);
+        self::assertSame($breakfast->roomKey, $half->roomKey, 'one room card, two options');
+        parse_str((string) parse_url($half->bookUrl, PHP_URL_QUERY), $query);
+        self::assertSame(['BB', 'HB', 'Demipensiune'], [$query['board_id'] ?? null, $query['ext_board_id'] ?? null, $query['board_name'] ?? null]);
     }
 
     public function testQuotaZeroIsOnRequestAndPaysNothingBeforeTheHotelConfirms(): void
@@ -267,6 +288,32 @@ final class DesignARatesTest extends TestCase
         self::assertCount(1, $room['terms']);
         self::assertNotSame([], $room['terms'][0]['timeline'], 'the terms timeline, as in the booking sidebar');
         self::assertSame([true, 'Early Booking'], [$view['struck'], $view['struck_deal']]);
+    }
+
+    /**
+     * The fixture's third offer is "BB" with the "HB" supplement (half
+     * board). The search row carries the supplement and is named, filtered
+     * and shown as half board, and the de-dup keeps it next to "BB" alone of
+     * the same room and package: it kept only the cheaper of the two, so
+     * half board was never offered.
+     */
+    public function testTheSearchKeepsTheBoardsSupplement(): void
+    {
+        require_once dirname(__DIR__, 3) . '/functions/formatting.php';
+        $pricing = $this->createStub(PricingApiClientInterface::class);
+        $pricing->method('applyCommission')->willReturnArgument(0);
+        $xml = (string) file_get_contents(dirname(__DIR__, 2) . '/Fixtures/room_price_476.xml');
+        $search = new SearchService($pricing);
+        $rows = $search->parseRoomPriceResponse($xml, 7, '2026-10-10', '2026-10-17');
+
+        self::assertSame(['', '', 'HB'], array_column($rows, 'ext_board_id'));
+        self::assertSame(BoardType::toDisplayName('HB'), $rows[2]['board_name']);
+        self::assertSame([675.0], array_column($search->parseRoomPriceResponse($xml, 7, '2026-10-10', '2026-10-17', 'HB'), 'total_price'), 'the half-board filter finds it');
+        $params = ['check_in' => '2026-10-10', 'check_out' => '2026-10-17', 'nights' => 7] + self::PARAMS;
+        self::assertSame('Demipensiune', self::mapper(true, 'ro', '2026-09-01')->rates([$rows[2]], $params)[0]->mealPlan);
+
+        $plain = ['ext_board_id' => '', 'total_price' => 555.0] + $rows[2];
+        self::assertSame(['HB', ''], array_column(SearchService::deduplicateResults([$rows[2], $plain]), 'ext_board_id'));
     }
 
     /**

@@ -216,18 +216,25 @@ class SearchService implements SearchServiceInterface
             $importants = $xml->xpath('//Important');
             $termsPayment = $xml->xpath('//TermsOfPayment');
             $termsCancellation = $xml->xpath('//TermsOfCancellation');
+            // ExtBoard: the board's supplement ("BB" + "HB" is half board,
+            // priced apart from "BB" alone; OfferBoard), sent with every
+            // offer, empty without one. Read only when it lines up with the
+            // prices, else no offer gets another's.
+            $extBoards = $xml->xpath('//ExtBoard') ?: [];
 
             $pricesCount = count($prices ?: []);
+            $extAligned = count($extBoards) === $pricesCount;
             for ($i = 0; $i < $pricesCount; $i++) {
                 $roomId = isset($idRooms[$i]) ? (string)$idRooms[$i] : '';
                 $boardId = isset($boards[$i]) ? (string)$boards[$i] : '';
+                $extBoardId = $extAligned ? trim((string) $extBoards[$i]) : '';
                 $price = isset($prices[$i]) ? (float) (string) $prices[$i] : 0;
 
                 if (empty($roomId) || $price <= 0) {
                     continue;
                 }
 
-                if (!$searchAllBoards && !self::matchesMealPlan($boardId, $mealPlan)) {
+                if (!$searchAllBoards && !self::matchesMealPlan(OfferBoard::meal($boardId, $extBoardId), $mealPlan)) {
                     continue;
                 }
 
@@ -242,7 +249,8 @@ class SearchService implements SearchServiceInterface
                     'room_name' => str_replace(['%2b', '%2B'], '+', $roomId),
                     'room_type_display' => RoomType::formatRoomLabel($roomId, PriceInfoFormatter::toScalar($roomTypeMap[$roomId] ?? '')),
                     'board_id' => $boardId,
-                    'board_name' => BoardType::toDisplayName($boardId),
+                    'ext_board_id' => $extBoardId,
+                    'board_name' => BoardType::toDisplayName(OfferBoard::meal($boardId, $extBoardId)),
                     'package_name' => rawurldecode(self::xpathValue($packageNames, $i)),
                     'price_data' => null,
                     'nights' => $nights,
@@ -278,6 +286,7 @@ class SearchService implements SearchServiceInterface
             // Single result (root is room_price itself)
             $roomId = (string)$xml->IdRoom;
             $boardId = (string)$xml->Board;
+            $extBoardId = trim((string) $xml->ExtBoard);
             $price = (float) (string) $xml->Price;
             $packageName = (string)$xml->PackageName;
             $remark = isset($xml->remark) ? (string)$xml->remark : '';
@@ -286,7 +295,7 @@ class SearchService implements SearchServiceInterface
                 return [];
             }
 
-            if (!$searchAllBoards && !self::matchesMealPlan($boardId, $mealPlan)) {
+            if (!$searchAllBoards && !self::matchesMealPlan(OfferBoard::meal($boardId, $extBoardId), $mealPlan)) {
                 return [];
             }
 
@@ -301,7 +310,8 @@ class SearchService implements SearchServiceInterface
                 'room_name' => str_replace(['%2b', '%2B'], '+', $roomId),
                 'room_type_display' => RoomType::formatRoomLabel($roomId, PriceInfoFormatter::toScalar($roomTypeMap[$roomId] ?? '')),
                 'board_id' => $boardId,
-                'board_name' => BoardType::toDisplayName($boardId),
+                'ext_board_id' => $extBoardId,
+                'board_name' => BoardType::toDisplayName(OfferBoard::meal($boardId, $extBoardId)),
                 'package_name' => rawurldecode($packageName),
                 'price_data' => null, // SimpleXMLElement not serializable for cache
                 'nights' => $nights,
@@ -449,8 +459,11 @@ class SearchService implements SearchServiceInterface
     {
         $unique = [];
         foreach ($results as $result) {
+            // The board's supplement is part of the offer: "BB" alone and
+            // "BB" + "HB" are two (OfferBoard), not one kept at the cheaper price
             $key = PriceInfoFormatter::toScalar($result['room_id'] ?? '')
                 . '|' . PriceInfoFormatter::toScalar($result['board_id'] ?? '')
+                . '|' . PriceInfoFormatter::toScalar($result['ext_board_id'] ?? '')
                 . '|' . PriceInfoFormatter::toScalar($result['package_name'] ?? '');
 
             if (!isset($unique[$key])) {

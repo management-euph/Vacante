@@ -42,9 +42,9 @@ final class RoomOfferRowsTest extends TestCase
         $rows = RoomOfferRows::fromXml(self::fixture());
 
         self::assertSame([
-            ['price' => 795.0, 'room' => self::ROOM, 'board' => self::UAI, 'package' => self::BEACH, 'early_booking' => 0.0, 'idcont' => '1280335'],
-            ['price' => 600.0, 'room' => self::ROOM, 'board' => self::UAI, 'package' => self::BEACH_EB, 'early_booking' => 25.0, 'idcont' => '1296501'],
-            ['price' => 675.0, 'room' => self::ROOM, 'board' => 'BB', 'package' => 'ADMIRAL ***** BB/HB [STAY 22.09 - 19.12]', 'early_booking' => 0.0, 'idcont' => '1292618'],
+            ['price' => 795.0, 'room' => self::ROOM, 'board' => self::UAI, 'ext_board' => '', 'package' => self::BEACH, 'early_booking' => 0.0, 'idcont' => '1280335'],
+            ['price' => 600.0, 'room' => self::ROOM, 'board' => self::UAI, 'ext_board' => '', 'package' => self::BEACH_EB, 'early_booking' => 25.0, 'idcont' => '1296501'],
+            ['price' => 675.0, 'room' => self::ROOM, 'board' => 'BB', 'ext_board' => 'HB', 'package' => 'ADMIRAL ***** BB/HB [STAY 22.09 - 19.12]', 'early_booking' => 0.0, 'idcont' => '1292618'],
         ], $rows);
     }
 
@@ -86,6 +86,30 @@ final class RoomOfferRowsTest extends TestCase
         self::assertNull(RoomOfferRows::cheapest($rows, self::ROOM, 'BB', self::BEACH));
     }
 
+    /**
+     * The fixture's 675 offer is "BB" with the "HB" supplement: half board.
+     * Asked for with its supplement it is found; asked for as "BB" alone it
+     * is not that offer; without the supplement pinned (null), as before.
+     */
+    public function testTheSupplementPinsTheOffer(): void
+    {
+        $rows = RoomOfferRows::fromXml(self::fixture());
+
+        self::assertSame(675.0, RoomOfferRows::cheapest($rows, self::ROOM, 'BB', '', 'HB')['price'] ?? null);
+        self::assertSame(675.0, RoomOfferRows::cheapest($rows, self::ROOM, 'bb', '', 'hb')['price'] ?? null);
+        self::assertNull(RoomOfferRows::cheapest($rows, self::ROOM, 'BB', '', ''));
+        self::assertSame(675.0, RoomOfferRows::cheapest($rows, self::ROOM, 'BB')['price'] ?? null);
+        // No board asked for: no supplement to pin, every offer of the room
+        self::assertCount(3, RoomOfferRows::matching($rows, self::ROOM, '', '', 'HB'));
+        // A plain "BB" next to it in the same package
+        $twin = str_replace('<ExtBoard>HB</ExtBoard>', '<ExtBoard/>', (string) self::fixture()->asXML());
+        $both = array_merge($rows, RoomOfferRows::fromXml(new \SimpleXMLElement(str_replace('<Price>675.00</Price>', '<Price>555.00</Price>', $twin))));
+        self::assertSame([555.0, 675.0], [
+            RoomOfferRows::cheapest($both, self::ROOM, 'BB', '', '')['price'] ?? null,
+            RoomOfferRows::cheapest($both, self::ROOM, 'BB', '', 'HB')['price'] ?? null,
+        ]);
+    }
+
     public function testAPackageNotInTheAnswerMatchesNothing(): void
     {
         self::assertNull(RoomOfferRows::cheapest(RoomOfferRows::fromXml(self::fixture()), self::ROOM, self::UAI, 'ADMIRAL ***** HB ONLY'));
@@ -108,8 +132,8 @@ final class RoomOfferRowsTest extends TestCase
         $rows = RoomOfferRows::fromXml($xml);
 
         self::assertSame([
-            ['price' => 1200.0, 'room' => 'DBL+SEA', 'board' => 'AI', 'package' => 'Summer A', 'early_booking' => 0.0, 'idcont' => ''],
-            ['price' => 1030.0, 'room' => 'DBL+SEA', 'board' => 'AI', 'package' => 'Summer B', 'early_booking' => 10.0, 'idcont' => ''],
+            ['price' => 1200.0, 'room' => 'DBL+SEA', 'board' => 'AI', 'ext_board' => '', 'package' => 'Summer A', 'early_booking' => 0.0, 'idcont' => ''],
+            ['price' => 1030.0, 'room' => 'DBL+SEA', 'board' => 'AI', 'ext_board' => '', 'package' => 'Summer B', 'early_booking' => 10.0, 'idcont' => ''],
         ], $rows, 'a zero price is no offer');
         self::assertSame(1200.0, RoomOfferRows::cheapest($rows, 'DBL+SEA', 'AI', 'Summer A')['price'] ?? null);
     }
@@ -121,7 +145,7 @@ final class RoomOfferRowsTest extends TestCase
             '<room_price><agent>X</agent><PackageName>P</PackageName><Price>800</Price><IdRoom>DBL</IdRoom><IdBoard>HB</IdBoard></room_price>',
         ));
 
-        self::assertSame([['price' => 800.0, 'room' => 'DBL', 'board' => 'HB', 'package' => 'P', 'early_booking' => 0.0, 'idcont' => '']], $rows);
+        self::assertSame([['price' => 800.0, 'room' => 'DBL', 'board' => 'HB', 'ext_board' => '', 'package' => 'P', 'early_booking' => 0.0, 'idcont' => '']], $rows);
     }
 
     /** Room and board one level up (<rooms><IdRoom/><board>…<Price/></board>). */
@@ -155,9 +179,9 @@ final class RoomOfferRowsTest extends TestCase
         $rows = RoomOfferRows::fromXml($xml);
 
         self::assertSame([
-            ['price' => 795.0, 'room' => 'DBL', 'board' => 'UAI', 'package' => 'P1', 'early_booking' => 0.0, 'idcont' => ''],
-            ['price' => 600.0, 'room' => '', 'board' => 'BB', 'package' => 'P2', 'early_booking' => 0.0, 'idcont' => ''],
-            ['price' => 675.0, 'room' => 'DBL', 'board' => 'HB', 'package' => 'P3', 'early_booking' => 20.0, 'idcont' => ''],
+            ['price' => 795.0, 'room' => 'DBL', 'board' => 'UAI', 'ext_board' => '', 'package' => 'P1', 'early_booking' => 0.0, 'idcont' => ''],
+            ['price' => 600.0, 'room' => '', 'board' => 'BB', 'ext_board' => '', 'package' => 'P2', 'early_booking' => 0.0, 'idcont' => ''],
+            ['price' => 675.0, 'room' => 'DBL', 'board' => 'HB', 'ext_board' => '', 'package' => 'P3', 'early_booking' => 20.0, 'idcont' => ''],
         ], $rows);
         // The positional pairing invented a DBL/BB offer at 600 (P3's room
         // on P2's price) and lost DBL/HB altogether.

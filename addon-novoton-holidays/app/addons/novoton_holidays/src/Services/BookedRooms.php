@@ -23,7 +23,8 @@ use Tygh\Addons\TravelCore\ValueObjects\RoomType;
  * Each room keeps exactly the values the reservation will carry:
  *   - room_id, board_id, package_name: the room's own, else the request's
  *     (single room only for the room id, as the one-room search card posts
- *     rooms_data with occupancy only);
+ *     rooms_data with occupancy only); ext_board_id, the board's supplement
+ *     (OfferBoard), comes with whichever board the room takes;
  *   - adults, children: the room's own (the request's for a single room
  *     without them);
  *   - childrenAges: for child i of room N the age of guest room{N}_child_{i}
@@ -36,7 +37,7 @@ use Tygh\Addons\TravelCore\ValueObjects\RoomType;
  *
  * Pure: no API, no CS-Cart.
  *
- * @phpstan-type BookedRoom array{room_id: string, board_id: string, package_name: string, adults: int, children: int, childrenAges: list<int>}
+ * @phpstan-type BookedRoom array{room_id: string, board_id: string, ext_board_id: string, package_name: string, adults: int, children: int, childrenAges: list<int>}
  */
 final class BookedRooms
 {
@@ -192,8 +193,10 @@ final class BookedRooms
         }
 
         $board = self::text($posting['board_id'] ?? null);
+        $extBoard = self::text($posting['ext_board_id'] ?? null);
         if ($board === '') {
             $board = self::text($request['board_id'] ?? null);
+            $extBoard = self::text($request['ext_board_id'] ?? null);
         }
         $package = self::text($posting['package_name'] ?? null);
         if ($package === '') {
@@ -227,6 +230,7 @@ final class BookedRooms
         return [
             'room_id' => $roomId,
             'board_id' => $board,
+            'ext_board_id' => $extBoard,
             'package_name' => $package,
             'adults' => $adults,
             'children' => $children,

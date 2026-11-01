@@ -59,6 +59,7 @@ class BookingRoomsGuestsResolver
                 'room_name' => PriceInfoFormatter::toScalar($bookingData['room_type'] ?? $bookingData['room_name'] ?? $bookingData['room_id'] ?? ''),
                 'room_type_display' => PriceInfoFormatter::toScalar($bookingData['room_type'] ?? $bookingData['room_name'] ?? $bookingData['room_id'] ?? ''),
                 'board_id' => PriceInfoFormatter::toScalar($bookingData['board_id'] ?? ''),
+                'ext_board_id' => PriceInfoFormatter::toScalar($bookingData['ext_board_id'] ?? ''),
                 'board_name' => PriceInfoFormatter::toScalar($bookingData['board_name'] ?? $bookingData['board_id'] ?? ''),
                 'package_name' => PriceInfoFormatter::toScalar($bookingData['package_name'] ?? ''),
                 'check_in' => PriceInfoFormatter::toScalar($bookingData['check_in'] ?? ''),
