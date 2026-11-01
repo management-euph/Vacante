@@ -323,15 +323,17 @@ an internal code.
   cannot be read: one reservation, as before.
   - **What the guest pays (the owner's call, 1 Nov 2026)**: checkout
     charges every room in full, those on request too, a single room on
-    request as well. The guest pays by card (the rooms the hotel does not
-    confirm are refunded) or by bank transfer. The texts say so: the
-    payment line of a rate on request ("Plată integrală la rezervare,
-    returnată dacă hotelul nu confirmă"), the steps of a request, and the
-    bar's total with the share on request ("din care … la cerere,
-    returnați dacă hotelul nu confirmă"), no longer "Nu plătești nimic
-    până confirmă hotelul" or "acum … · restul după confirmare". The
-    rooms on request have their own booking record (G2), whose price is
-    what to refund if the hotel refuses.
+    request as well. By card the guest pays when booking and the rooms the
+    hotel does not confirm are refunded; by bank transfer (which takes
+    days) the guest is told when the hotel confirms and pays then, or not
+    if it refuses. The texts say so: the payment line of a rate on request
+    ("Cu cardul acum (returnat dacă nu se confirmă) sau prin transfer,
+    după confirmare"), the steps of a request, and the bar's total with
+    the share on request ("din care … la cerere"), no longer "Nu plătești
+    nimic până confirmă hotelul" or "acum … · restul după confirmare". The
+    rooms on request have their own booking record (G2), whose status and
+    price say what to refund or collect. The store does not yet email the
+    guest when the hotel confirms (only alternatives when it refuses).
 - Next: Novoton rows through `RoomOfferRows`;
   the title row's after-search state ("10–17 iul. · de la 1.485 €", "Vezi
   camerele") and the compact summary's price (the section carries

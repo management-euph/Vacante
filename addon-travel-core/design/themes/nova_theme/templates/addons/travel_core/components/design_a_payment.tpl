@@ -1,8 +1,8 @@
 {*
     How a Design A option, or all of a room's options, is paid
-    (RoomResultsBuilder Payment): on request, the full price on booking,
-    refunded if the hotel does not confirm (the owner's rule: checkout
-    charges every room, those on request too); the store's own words for a
+    (RoomResultsBuilder Payment): on request, by card on booking (refunded
+    if the hotel does not confirm) or by bank transfer once it confirms (the
+    owner's rule: checkout charges every room, those on request too); the store's own words for a
     supplier without payment terms in the search, a deposit and the rest by
     a date (DepositPlan), or the full price on booking.
     Params: payment

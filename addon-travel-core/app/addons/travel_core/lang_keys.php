@@ -2528,8 +2528,8 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'ro' => 'Avans [percent]% acum, restul până la [date]',
     ],
     'travel_core.pdpa_r_pay_on_request' => [
-        'en' => 'Full payment when you book, refunded if the hotel doesn\'t confirm',
-        'ro' => 'Plată integrală la rezervare, returnată dacă hotelul nu confirmă',
+        'en' => 'By card now (refunded if not confirmed) or by bank transfer once confirmed',
+        'ro' => 'Cu cardul acum (returnat dacă nu se confirmă) sau prin transfer, după confirmare',
     ],
     'travel_core.pdpa_r_terms' => [
         'en' => 'Payment and cancellation terms',
@@ -2708,20 +2708,20 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'ro' => 'Hotelul confirmă disponibilitatea în max. 48 h.',
     ],
     'travel_core.pdpa_r_request_step2_lead' => [
-        'en' => 'You pay in full when you book,',
-        'ro' => 'Plătești integral la rezervare,',
+        'en' => 'You choose how to pay:',
+        'ro' => 'Alegi cum plătești:',
     ],
     'travel_core.pdpa_r_request_step2' => [
-        'en' => 'as for any booking.',
-        'ro' => 'ca la orice rezervare.',
+        'en' => 'by card when you book, refunded if the hotel doesn\'t confirm, or by bank transfer once we tell you it has confirmed.',
+        'ro' => 'cu cardul la rezervare, cu banii înapoi dacă hotelul nu confirmă, sau prin transfer bancar după ce îți spunem că a confirmat.',
     ],
     'travel_core.pdpa_r_request_step3_lead' => [
         'en' => 'If the hotel doesn\'t confirm,',
         'ro' => 'Dacă hotelul nu confirmă,',
     ],
     'travel_core.pdpa_r_request_step3' => [
-        'en' => 'we refund you in full and email you similar alternatives: hotels in the same area, of the same category.',
-        'ro' => 'îți returnăm integral banii și îți trimitem pe email alternative similare: hoteluri din aceeași zonă, de aceeași categorie.',
+        'en' => 'we email you similar alternatives: hotels in the same area, of the same category.',
+        'ro' => 'îți trimitem pe email alternative similare: hoteluri din aceeași zonă, de aceeași categorie.',
     ],
     'travel_core.pdpa_r_close' => [
         'en' => 'Close',
@@ -3025,16 +3025,16 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'ro' => 'Hotelul răspunde în max. 48 h.',
     ],
     'travel_core.pdpa_m_request_step2' => [
-        'en' => 'You pay for this room with the others, when you book.',
-        'ro' => 'O plătești odată cu celelalte camere, la rezervare.',
+        'en' => 'By card you pay for it when you book and get the money back if it is not confirmed; by bank transfer you pay once it is confirmed.',
+        'ro' => 'Cu cardul o plătești la rezervare și îți returnăm banii dacă nu se confirmă; prin transfer bancar o plătești după confirmare.',
     ],
     'travel_core.pdpa_m_request_step3_lead' => [
         'en' => 'If the hotel does not confirm it,',
         'ro' => 'Dacă hotelul nu o confirmă,',
     ],
     'travel_core.pdpa_m_request_step3' => [
-        'en' => 'we refund it and email you similar alternatives for it; the other rooms stay booked.',
-        'ro' => 'îți returnăm banii pentru ea și îți trimitem pe email alternative similare; celelalte camere rămân rezervate.',
+        'en' => 'we email you similar alternatives for it; the other rooms stay booked.',
+        'ro' => 'îți trimitem pe email alternative similare pentru ea; celelalte camere rămân rezervate.',
     ],
     'travel_core.pdpa_m_done' => [
         'en' => '[what] chosen for [rooms]: +[amount].',
@@ -3117,40 +3117,40 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'ro' => 'Rezervă [booked] · cere [requested]',
     ],
     'travel_core.pdpa_m_book_mixed_aria' => [
-        'en' => 'Book [booked] now and request [requested] from the hotel; total [total], paid when you book',
-        'ro' => 'Rezervă acum [booked] și cere la hotel [requested]; total [total], plătit la rezervare',
+        'en' => 'Book [booked] now and request [requested] from the hotel; total [total]',
+        'ro' => 'Rezervă acum [booked] și cere la hotel [requested]; total [total]',
     ],
     'travel_core.pdpa_m_request_part' => [
-        'en' => 'of which [amount] on request, refunded if the hotel doesn\'t confirm',
-        'ro' => 'din care [amount] la cerere, returnați dacă hotelul nu confirmă',
+        'en' => 'of which [amount] on request',
+        'ro' => 'din care [amount] la cerere',
     ],
     'travel_core.pdpa_m_reply_48h_for' => [
         'en' => 'Reply within 48 h for [rooms]',
         'ro' => 'Răspuns în max. 48 h pentru [rooms]',
     ],
     'travel_core.pdpa_m_bar_step1_lead' => [
-        'en' => 'You pay every room when you book;',
-        'ro' => 'Plătești toate camerele la rezervare;',
+        'en' => 'The rooms confirmed at once are booked now',
+        'ro' => 'Camerele cu confirmare imediată se rezervă acum',
     ],
     'travel_core.pdpa_m_bar_step1' => [
-        'en' => 'the rooms confirmed at once are booked now.',
-        'ro' => 'camerele cu confirmare imediată se rezervă acum.',
+        'en' => 'and paid when you book.',
+        'ro' => 'și se plătesc la rezervare.',
     ],
     'travel_core.pdpa_m_bar_step2_lead' => [
         'en' => 'The rooms on request wait for the hotel:',
         'ro' => 'Camerele la cerere așteaptă hotelul:',
     ],
     'travel_core.pdpa_m_bar_step2' => [
-        'en' => 'it replies within 48 h.',
-        'ro' => 'răspunde în max. 48 h.',
+        'en' => 'it replies within 48 h. By card you pay for them now and get the money back if they are not confirmed; by bank transfer, once they are.',
+        'ro' => 'răspunde în max. 48 h. Cu cardul le plătești acum și îți returnăm banii dacă nu se confirmă; prin transfer bancar, după confirmare.',
     ],
     'travel_core.pdpa_m_bar_step3_lead' => [
         'en' => 'If the hotel does not confirm them,',
         'ro' => 'Dacă hotelul nu le confirmă,',
     ],
     'travel_core.pdpa_m_bar_step3' => [
-        'en' => 'we refund them and email you similar alternatives; the rooms booked stay booked.',
-        'ro' => 'îți returnăm banii pentru ele și îți trimitem pe email alternative similare; camerele rezervate rămân rezervate.',
+        'en' => 'we email you similar alternatives; the rooms booked stay booked.',
+        'ro' => 'îți trimitem pe email alternative similare; camerele rezervate rămân rezervate.',
     ],
     // Editing a cart line's guests (booking_steps.tpl header, booking_form_actions.tpl).
     'travel_core.edit_booking_title' => [

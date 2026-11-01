@@ -583,7 +583,7 @@
             totalEl.className = 'travel-pdpa-bbar__total' + (all ? ' travel-pdpa-bbar__total--all' : '');
             totalEl.appendChild(document.createTextNode(t(state, all ? 'total' : 'so-far') + ' '));
             totalEl.appendChild(el('b', 'travel-pdpa-num', price(state, total)));
-            // Every room is paid when booking; the rooms on request are refunded if not confirmed
+            // The share on request: by card paid now and refunded if not confirmed, by bank transfer paid once confirmed
             if (all && requested.length > 0) {
                 totalEl.appendChild(el('span', 'travel-pdpa-bbar__split', t(state, 'request-part', { amount: price(state, onRequest) })));
             }
