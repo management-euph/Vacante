@@ -15,20 +15,23 @@ namespace Tygh\Addons\TravelCore\Results;
  *    2 adulți" (Camerele 1–8). A group of one room is that room: "Camera 2 ·
  *    2 adulți + 1 copil". Two or three rooms with different guests are
  *    therefore one tab per room, as on board 13c.1.
- *  - One choice covers the group: a card's till counts the rooms, at most
- *    the group's and at most the rooms left of that type (the page lowers
- *    the second as other groups take rooms of the same type: `quota`), and
- *    its button names how many it covers.
+ *  - One choice covers the group: a card's till counts the rooms (`qty`,
+ *    at most the group's and at most the rooms left of that type; the page
+ *    lowers it as other groups take rooms of the same type: `quota`), its
+ *    total is for that count and its button names how many it covers.
+ *  - Room cards are keyed per group (`g2-room-…`): the same room type is a
+ *    card in several groups, each with its own radios and till.
  *
  * @phpstan-import-type ResultsView from RoomResultsBuilder
  * @phpstan-type GroupView array{
- *     key: string, index: int, rooms: list<int>, numbers: string, size: int, size_form: string,
+ *     key: string, index: int, rooms: list<int>, rooms_csv: string, numbers: string, size: int, size_form: string,
  *     adults: int, adults_form: string, ages: list<int>, ages_text: string, ages_form: string,
  *     children: int, children_form: string, results: ResultsView
  * }
  * @phpstan-type GroupsView array{
  *     room_count: int, room_form: string, group_count: int, by_room: bool,
- *     nights: int, nights_form: string, groups: list<GroupView>
+ *     nights: int, nights_form: string, groups: list<GroupView>,
+ *     money: array{symbol: string, after: bool, decimals: int, decimal: string, thousands: string}
  * }
  */
 final class RoomGroupsBuilder
@@ -62,6 +65,7 @@ final class RoomGroupsBuilder
                 'key' => 'g' . ($index + 1),
                 'index' => $index,
                 'rooms' => $group['rooms'],
+                'rooms_csv' => implode(',', $group['rooms']),
                 'numbers' => self::numbers($group['rooms']),
                 'size' => $size,
                 'size_form' => RoomResultsBuilder::form($size),
@@ -72,7 +76,11 @@ final class RoomGroupsBuilder
                 'ages_form' => RoomResultsBuilder::form($group['ages'] === [] ? 0 : (int) max($group['ages'])),
                 'children' => $children,
                 'children_form' => RoomResultsBuilder::form($children),
-                'results' => $this->rooms->build($ratesFor($group['adults'], $group['ages']), $nights, $group['adults'], $children),
+                'results' => $this->counted(
+                    'g' . ($index + 1),
+                    $size,
+                    $this->rooms->build($ratesFor($group['adults'], $group['ages']), $nights, $group['adults'], $children),
+                ),
             ];
         }
         $roomCount = count($searched);
@@ -85,7 +93,32 @@ final class RoomGroupsBuilder
             'nights' => $nights,
             'nights_form' => RoomResultsBuilder::form($nights),
             'groups' => $views,
+            'money' => $this->rooms->money()->scriptFormat(),
         ];
+    }
+
+    /**
+     * A group's cards: keyed for the group, each till counting the group's
+     * rooms (at most the rooms left of the type) with its totals for them.
+     *
+     * @param ResultsView $results
+     * @return ResultsView
+     */
+    private function counted(string $group, int $size, array $results): array
+    {
+        $money = $this->rooms->money();
+        foreach ($results['rooms'] as $r => $room) {
+            $qty = $room['left'] > 0 ? min($size, $room['left']) : $size;
+            $results['rooms'][$r]['key'] = $group . '-' . $room['key'];
+            $results['rooms'][$r]['qty'] = $qty;
+            $results['rooms'][$r]['qty_form'] = RoomResultsBuilder::form($qty);
+            foreach ($room['options'] as $o => $option) {
+                $results['rooms'][$r]['options'][$o]['qty_price'] = $money->formatDisplay($option['unit'] * $qty);
+                $results['rooms'][$r]['options'][$o]['qty_was'] = $option['unit_was'] > 0 ? $money->formatDisplay($option['unit_was'] * $qty) : '';
+            }
+        }
+
+        return $results;
     }
 
     /**

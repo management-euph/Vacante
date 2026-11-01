@@ -2881,4 +2881,275 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Every field the provider keeps for this booking, and what was sent to the supplier and what came back, for troubleshooting.',
         'ro' => 'Toate câmpurile pe care furnizorul le păstrează pentru această rezervare, ce i s-a trimis furnizorului și ce a răspuns, pentru depanare.',
     ],
+    // Design A, several rooms (components/design_a_groups.tpl, Results\RoomGroupsBuilder,
+    // pdp-design-a-rooms.js). [rooms] / [guests] / [nights] take the *_one / *_few / *_many form
+    // RoomResultsBuilder::form() picks; the script fills the placeholders it builds.
+    'travel_core.pdpa_m_tabs' => [
+        'en' => 'Rooms searched',
+        'ro' => 'Camerele căutate',
+    ],
+    'travel_core.pdpa_m_tabs_groups' => [
+        'en' => 'Rooms searched, grouped by their guests',
+        'ro' => 'Camerele căutate, grupate după oaspeți',
+    ],
+    'travel_core.pdpa_m_room' => [
+        'en' => 'Room [n]',
+        'ro' => 'Camera [n]',
+    ],
+    'travel_core.pdpa_m_rooms_one' => [
+        'en' => '[n] room',
+        'ro' => '[n] cameră',
+    ],
+    'travel_core.pdpa_m_rooms_few' => [
+        'en' => '[n] rooms',
+        'ro' => '[n] camere',
+    ],
+    'travel_core.pdpa_m_rooms_many' => [
+        'en' => '[n] rooms',
+        'ro' => '[n] de camere',
+    ],
+    'travel_core.pdpa_m_numbers' => [
+        'en' => 'Rooms [numbers]',
+        'ro' => 'Camerele [numbers]',
+    ],
+    'travel_core.pdpa_m_ages_one' => [
+        'en' => '([ages] year)',
+        'ro' => '([ages] an)',
+    ],
+    'travel_core.pdpa_m_ages_few' => [
+        'en' => '([ages] years)',
+        'ro' => '([ages] ani)',
+    ],
+    'travel_core.pdpa_m_ages_many' => [
+        'en' => '([ages] years)',
+        'ro' => '([ages] de ani)',
+    ],
+    'travel_core.pdpa_m_state_todo_one' => [
+        'en' => 'Not chosen',
+        'ro' => 'Nealeasă',
+    ],
+    'travel_core.pdpa_m_state_todo_many' => [
+        'en' => 'Not chosen',
+        'ro' => 'Nealese',
+    ],
+    'travel_core.pdpa_m_state_now' => [
+        'en' => 'Choosing now',
+        'ro' => 'Alegi acum',
+    ],
+    'travel_core.pdpa_m_state_part' => [
+        'en' => '[chosen] of [size] chosen · [left] to go',
+        'ro' => '[chosen] din [size] alese · mai alegi [left]',
+    ],
+    'travel_core.pdpa_m_state_done_one' => [
+        'en' => 'Chosen,',
+        'ro' => 'Aleasă,',
+    ],
+    'travel_core.pdpa_m_state_done_many' => [
+        'en' => 'Chosen,',
+        'ro' => 'Alese,',
+    ],
+    'travel_core.pdpa_m_head_room' => [
+        'en' => 'Room [n] · [guests]',
+        'ro' => 'Camera [n] · [guests]',
+    ],
+    'travel_core.pdpa_m_head_group' => [
+        'en' => '[rooms] for [guests] each',
+        'ro' => '[rooms] pentru câte [guests]',
+    ],
+    'travel_core.pdpa_m_sub_two' => [
+        'en' => 'Your choice is for both rooms.',
+        'ro' => 'Alegerea se aplică la ambele camere.',
+    ],
+    'travel_core.pdpa_m_sub_many' => [
+        'en' => 'Your choice is for all [n] rooms. You can also take different types: choose how many rooms of each.',
+        'ro' => 'Alegerea se aplică la toate cele [n] camere. Poți lua și tipuri diferite: alegi câte camere vrei din fiecare.',
+    ],
+    'travel_core.pdpa_m_qty' => [
+        'en' => 'Rooms',
+        'ro' => 'Camere',
+    ],
+    'travel_core.pdpa_m_qty_of' => [
+        'en' => 'of [n]',
+        'ro' => 'din [n]',
+    ],
+    'travel_core.pdpa_m_qty_less' => [
+        'en' => 'One room fewer',
+        'ro' => 'O cameră mai puțin',
+    ],
+    'travel_core.pdpa_m_qty_more' => [
+        'en' => 'One room more',
+        'ro' => 'O cameră în plus',
+    ],
+    'travel_core.pdpa_m_total_rooms' => [
+        'en' => 'Total · [rooms] · [nights]',
+        'ro' => 'Total · [rooms] · [nights]',
+    ],
+    'travel_core.pdpa_m_per_room' => [
+        'en' => '[price] / room',
+        'ro' => '[price] / cameră',
+    ],
+    'travel_core.pdpa_m_choose_room' => [
+        'en' => 'Choose for Room [n]',
+        'ro' => 'Alege pentru Camera [n]',
+    ],
+    'travel_core.pdpa_m_choose_rooms' => [
+        'en' => 'Choose for [rooms]',
+        'ro' => 'Alege pentru [rooms]',
+    ],
+    'travel_core.pdpa_m_chosen' => [
+        'en' => 'Chosen',
+        'ro' => 'Aleasă',
+    ],
+    'travel_core.pdpa_m_chosen_rooms' => [
+        'en' => 'Chosen · [rooms]',
+        'ro' => 'Aleasă · [rooms]',
+    ],
+    'travel_core.pdpa_m_cap' => [
+        'en' => 'Enough for [n] of the [size] rooms',
+        'ro' => 'Ajung pentru [n] din cele [size] camere',
+    ],
+    'travel_core.pdpa_m_sold_out' => [
+        'en' => 'No rooms of this type left',
+        'ro' => 'Nu mai sunt camere de acest tip',
+    ],
+    'travel_core.pdpa_m_request_step1_lead' => [
+        'en' => 'Only this room is on request.',
+        'ro' => 'Doar camera aceasta e la cerere.',
+    ],
+    'travel_core.pdpa_m_request_step1' => [
+        'en' => 'The other rooms you choose are booked at once.',
+        'ro' => 'Celelalte camere alese se rezervă imediat.',
+    ],
+    'travel_core.pdpa_m_request_step2_lead' => [
+        'en' => 'The hotel replies within 48 h.',
+        'ro' => 'Hotelul răspunde în max. 48 h.',
+    ],
+    'travel_core.pdpa_m_request_step2' => [
+        'en' => 'You pay nothing for this room until the hotel confirms.',
+        'ro' => 'Nu plătești nimic pentru camera aceasta până confirmă hotelul.',
+    ],
+    'travel_core.pdpa_m_request_step3_lead' => [
+        'en' => 'If the hotel does not confirm it,',
+        'ro' => 'Dacă hotelul nu o confirmă,',
+    ],
+    'travel_core.pdpa_m_request_step3' => [
+        'en' => 'we email you similar alternatives for it; the other rooms stay booked.',
+        'ro' => 'îți trimitem pe email alternative similare pentru ea; celelalte camere rămân rezervate.',
+    ],
+    'travel_core.pdpa_m_done' => [
+        'en' => '[what] chosen for [rooms]: +[amount].',
+        'ro' => 'Am ales [what] pentru [rooms]: +[amount].',
+    ],
+    'travel_core.pdpa_m_done_left' => [
+        'en' => '[left] more to choose for [guests] each.',
+        'ro' => 'Mai alegi [left] pentru câte [guests].',
+    ],
+    'travel_core.pdpa_m_undo' => [
+        'en' => 'Undo',
+        'ro' => 'Anulează',
+    ],
+    'travel_core.pdpa_m_undo_aria' => [
+        'en' => 'Undo the choice for [rooms]',
+        'ro' => 'Anulează alegerea pentru [rooms]',
+    ],
+    'travel_core.pdpa_m_all_done' => [
+        'en' => 'All [n] rooms are chosen.',
+        'ro' => 'Toate cele [n] camere sunt alese.',
+    ],
+    'travel_core.pdpa_m_suggest_lead' => [
+        'en' => 'For the other [rooms], the closest:',
+        'ro' => 'Pentru celelalte [rooms], cea mai apropiată:',
+    ],
+    'travel_core.pdpa_m_suggest' => [
+        'en' => '[room] · [meal], [price] a room ([diff] compared with [was]).',
+        'ro' => '[room] · [meal], [price] de cameră ([diff] față de [was]).',
+    ],
+    'travel_core.pdpa_m_suggest_btn' => [
+        'en' => 'Choose for [rooms] ([n] × [price] = [total])',
+        'ro' => 'Alege pentru [rooms] ([n] × [price] = [total])',
+    ],
+    'travel_core.pdpa_m_suggest_all' => [
+        'en' => 'See all types',
+        'ro' => 'Văd toate tipurile',
+    ],
+    'travel_core.pdpa_m_bar' => [
+        'en' => 'Rooms chosen',
+        'ro' => 'Camerele alese',
+    ],
+    'travel_core.pdpa_m_bar_progress' => [
+        'en' => 'Rooms chosen: [n] of [total]',
+        'ro' => 'Camere alese: [n] din [total]',
+    ],
+    'travel_core.pdpa_m_bar_pick' => [
+        'en' => '[rooms]: [room] · [meal]',
+        'ro' => '[rooms]: [room] · [meal]',
+    ],
+    'travel_core.pdpa_m_change' => [
+        'en' => 'Change',
+        'ro' => 'Schimbă',
+    ],
+    'travel_core.pdpa_m_change_aria' => [
+        'en' => 'Change the choice for [rooms]',
+        'ro' => 'Schimbă alegerea pentru [rooms]',
+    ],
+    'travel_core.pdpa_m_so_far' => [
+        'en' => 'Total so far',
+        'ro' => 'Total până acum',
+    ],
+    'travel_core.pdpa_m_total' => [
+        'en' => 'Total',
+        'ro' => 'Total',
+    ],
+    'travel_core.pdpa_m_goto' => [
+        'en' => 'Go to [rooms]',
+        'ro' => 'Mergi la [rooms]',
+    ],
+    'travel_core.pdpa_m_book' => [
+        'en' => 'Book [rooms] · [total]',
+        'ro' => 'Rezervă [rooms] · [total]',
+    ],
+    'travel_core.pdpa_m_book_aria' => [
+        'en' => 'Book [rooms], total [total] for [nights]',
+        'ro' => 'Rezervă [rooms], total [total] pentru [nights]',
+    ],
+    'travel_core.pdpa_m_book_mixed' => [
+        'en' => 'Book [booked] · request [requested]',
+        'ro' => 'Rezervă [booked] · cere [requested]',
+    ],
+    'travel_core.pdpa_m_book_mixed_aria' => [
+        'en' => 'Book [booked] now and request [requested] from the hotel; total [total], [now] payable now',
+        'ro' => 'Rezervă acum [booked] și cere la hotel [requested]; total [total], de plătit acum [now]',
+    ],
+    'travel_core.pdpa_m_pay_now' => [
+        'en' => 'now [amount] · the rest once confirmed',
+        'ro' => 'acum [amount] · restul după confirmare',
+    ],
+    'travel_core.pdpa_m_reply_48h_for' => [
+        'en' => 'Reply within 48 h for [rooms]',
+        'ro' => 'Răspuns în max. 48 h pentru [rooms]',
+    ],
+    'travel_core.pdpa_m_bar_step1_lead' => [
+        'en' => 'The rooms confirmed at once are booked now',
+        'ro' => 'Camerele cu confirmare imediată se rezervă acum',
+    ],
+    'travel_core.pdpa_m_bar_step1' => [
+        'en' => 'and paid when you book.',
+        'ro' => 'și se plătesc la rezervare.',
+    ],
+    'travel_core.pdpa_m_bar_step2_lead' => [
+        'en' => 'The rooms on request wait for the hotel:',
+        'ro' => 'Camerele la cerere așteaptă hotelul:',
+    ],
+    'travel_core.pdpa_m_bar_step2' => [
+        'en' => 'it replies within 48 h; you pay nothing for them until it confirms.',
+        'ro' => 'răspunde în max. 48 h; nu plătești nimic pentru ele până confirmă.',
+    ],
+    'travel_core.pdpa_m_bar_step3_lead' => [
+        'en' => 'If the hotel does not confirm them,',
+        'ro' => 'Dacă hotelul nu le confirmă,',
+    ],
+    'travel_core.pdpa_m_bar_step3' => [
+        'en' => 'we email you similar alternatives; the rooms booked stay booked.',
+        'ro' => 'îți trimitem pe email alternative similare; camerele rezervate rămân rezervate.',
+    ],
 ];

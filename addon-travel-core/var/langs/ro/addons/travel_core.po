@@ -3701,3 +3701,271 @@ msgstr "Detalii tehnice"
 msgctxt "Languages::travel_core.bv_technical_hint"
 msgid "Every field the provider keeps for this booking, and what was sent to the supplier and what came back, for troubleshooting."
 msgstr "Toate câmpurile pe care furnizorul le păstrează pentru această rezervare, ce i s-a trimis furnizorului și ce a răspuns, pentru depanare."
+
+msgctxt "Languages::travel_core.pdpa_m_tabs"
+msgid "Rooms searched"
+msgstr "Camerele căutate"
+
+msgctxt "Languages::travel_core.pdpa_m_tabs_groups"
+msgid "Rooms searched, grouped by their guests"
+msgstr "Camerele căutate, grupate după oaspeți"
+
+msgctxt "Languages::travel_core.pdpa_m_room"
+msgid "Room [n]"
+msgstr "Camera [n]"
+
+msgctxt "Languages::travel_core.pdpa_m_rooms_one"
+msgid "[n] room"
+msgstr "[n] cameră"
+
+msgctxt "Languages::travel_core.pdpa_m_rooms_few"
+msgid "[n] rooms"
+msgstr "[n] camere"
+
+msgctxt "Languages::travel_core.pdpa_m_rooms_many"
+msgid "[n] rooms"
+msgstr "[n] de camere"
+
+msgctxt "Languages::travel_core.pdpa_m_numbers"
+msgid "Rooms [numbers]"
+msgstr "Camerele [numbers]"
+
+msgctxt "Languages::travel_core.pdpa_m_ages_one"
+msgid "([ages] year)"
+msgstr "([ages] an)"
+
+msgctxt "Languages::travel_core.pdpa_m_ages_few"
+msgid "([ages] years)"
+msgstr "([ages] ani)"
+
+msgctxt "Languages::travel_core.pdpa_m_ages_many"
+msgid "([ages] years)"
+msgstr "([ages] de ani)"
+
+msgctxt "Languages::travel_core.pdpa_m_state_todo_one"
+msgid "Not chosen"
+msgstr "Nealeasă"
+
+msgctxt "Languages::travel_core.pdpa_m_state_todo_many"
+msgid "Not chosen"
+msgstr "Nealese"
+
+msgctxt "Languages::travel_core.pdpa_m_state_now"
+msgid "Choosing now"
+msgstr "Alegi acum"
+
+msgctxt "Languages::travel_core.pdpa_m_state_part"
+msgid "[chosen] of [size] chosen · [left] to go"
+msgstr "[chosen] din [size] alese · mai alegi [left]"
+
+msgctxt "Languages::travel_core.pdpa_m_state_done_one"
+msgid "Chosen,"
+msgstr "Aleasă,"
+
+msgctxt "Languages::travel_core.pdpa_m_state_done_many"
+msgid "Chosen,"
+msgstr "Alese,"
+
+msgctxt "Languages::travel_core.pdpa_m_head_room"
+msgid "Room [n] · [guests]"
+msgstr "Camera [n] · [guests]"
+
+msgctxt "Languages::travel_core.pdpa_m_head_group"
+msgid "[rooms] for [guests] each"
+msgstr "[rooms] pentru câte [guests]"
+
+msgctxt "Languages::travel_core.pdpa_m_sub_two"
+msgid "Your choice is for both rooms."
+msgstr "Alegerea se aplică la ambele camere."
+
+msgctxt "Languages::travel_core.pdpa_m_sub_many"
+msgid "Your choice is for all [n] rooms. You can also take different types: choose how many rooms of each."
+msgstr "Alegerea se aplică la toate cele [n] camere. Poți lua și tipuri diferite: alegi câte camere vrei din fiecare."
+
+msgctxt "Languages::travel_core.pdpa_m_qty"
+msgid "Rooms"
+msgstr "Camere"
+
+msgctxt "Languages::travel_core.pdpa_m_qty_of"
+msgid "of [n]"
+msgstr "din [n]"
+
+msgctxt "Languages::travel_core.pdpa_m_qty_less"
+msgid "One room fewer"
+msgstr "O cameră mai puțin"
+
+msgctxt "Languages::travel_core.pdpa_m_qty_more"
+msgid "One room more"
+msgstr "O cameră în plus"
+
+msgctxt "Languages::travel_core.pdpa_m_total_rooms"
+msgid "Total · [rooms] · [nights]"
+msgstr "Total · [rooms] · [nights]"
+
+msgctxt "Languages::travel_core.pdpa_m_per_room"
+msgid "[price] / room"
+msgstr "[price] / cameră"
+
+msgctxt "Languages::travel_core.pdpa_m_choose_room"
+msgid "Choose for Room [n]"
+msgstr "Alege pentru Camera [n]"
+
+msgctxt "Languages::travel_core.pdpa_m_choose_rooms"
+msgid "Choose for [rooms]"
+msgstr "Alege pentru [rooms]"
+
+msgctxt "Languages::travel_core.pdpa_m_chosen"
+msgid "Chosen"
+msgstr "Aleasă"
+
+msgctxt "Languages::travel_core.pdpa_m_chosen_rooms"
+msgid "Chosen · [rooms]"
+msgstr "Aleasă · [rooms]"
+
+msgctxt "Languages::travel_core.pdpa_m_cap"
+msgid "Enough for [n] of the [size] rooms"
+msgstr "Ajung pentru [n] din cele [size] camere"
+
+msgctxt "Languages::travel_core.pdpa_m_sold_out"
+msgid "No rooms of this type left"
+msgstr "Nu mai sunt camere de acest tip"
+
+msgctxt "Languages::travel_core.pdpa_m_request_step1_lead"
+msgid "Only this room is on request."
+msgstr "Doar camera aceasta e la cerere."
+
+msgctxt "Languages::travel_core.pdpa_m_request_step1"
+msgid "The other rooms you choose are booked at once."
+msgstr "Celelalte camere alese se rezervă imediat."
+
+msgctxt "Languages::travel_core.pdpa_m_request_step2_lead"
+msgid "The hotel replies within 48 h."
+msgstr "Hotelul răspunde în max. 48 h."
+
+msgctxt "Languages::travel_core.pdpa_m_request_step2"
+msgid "You pay nothing for this room until the hotel confirms."
+msgstr "Nu plătești nimic pentru camera aceasta până confirmă hotelul."
+
+msgctxt "Languages::travel_core.pdpa_m_request_step3_lead"
+msgid "If the hotel does not confirm it,"
+msgstr "Dacă hotelul nu o confirmă,"
+
+msgctxt "Languages::travel_core.pdpa_m_request_step3"
+msgid "we email you similar alternatives for it; the other rooms stay booked."
+msgstr "îți trimitem pe email alternative similare pentru ea; celelalte camere rămân rezervate."
+
+msgctxt "Languages::travel_core.pdpa_m_done"
+msgid "[what] chosen for [rooms]: +[amount]."
+msgstr "Am ales [what] pentru [rooms]: +[amount]."
+
+msgctxt "Languages::travel_core.pdpa_m_done_left"
+msgid "[left] more to choose for [guests] each."
+msgstr "Mai alegi [left] pentru câte [guests]."
+
+msgctxt "Languages::travel_core.pdpa_m_undo"
+msgid "Undo"
+msgstr "Anulează"
+
+msgctxt "Languages::travel_core.pdpa_m_undo_aria"
+msgid "Undo the choice for [rooms]"
+msgstr "Anulează alegerea pentru [rooms]"
+
+msgctxt "Languages::travel_core.pdpa_m_all_done"
+msgid "All [n] rooms are chosen."
+msgstr "Toate cele [n] camere sunt alese."
+
+msgctxt "Languages::travel_core.pdpa_m_suggest_lead"
+msgid "For the other [rooms], the closest:"
+msgstr "Pentru celelalte [rooms], cea mai apropiată:"
+
+msgctxt "Languages::travel_core.pdpa_m_suggest"
+msgid "[room] · [meal], [price] a room ([diff] compared with [was])."
+msgstr "[room] · [meal], [price] de cameră ([diff] față de [was])."
+
+msgctxt "Languages::travel_core.pdpa_m_suggest_btn"
+msgid "Choose for [rooms] ([n] × [price] = [total])"
+msgstr "Alege pentru [rooms] ([n] × [price] = [total])"
+
+msgctxt "Languages::travel_core.pdpa_m_suggest_all"
+msgid "See all types"
+msgstr "Văd toate tipurile"
+
+msgctxt "Languages::travel_core.pdpa_m_bar"
+msgid "Rooms chosen"
+msgstr "Camerele alese"
+
+msgctxt "Languages::travel_core.pdpa_m_bar_progress"
+msgid "Rooms chosen: [n] of [total]"
+msgstr "Camere alese: [n] din [total]"
+
+msgctxt "Languages::travel_core.pdpa_m_bar_pick"
+msgid "[rooms]: [room] · [meal]"
+msgstr "[rooms]: [room] · [meal]"
+
+msgctxt "Languages::travel_core.pdpa_m_change"
+msgid "Change"
+msgstr "Schimbă"
+
+msgctxt "Languages::travel_core.pdpa_m_change_aria"
+msgid "Change the choice for [rooms]"
+msgstr "Schimbă alegerea pentru [rooms]"
+
+msgctxt "Languages::travel_core.pdpa_m_so_far"
+msgid "Total so far"
+msgstr "Total până acum"
+
+msgctxt "Languages::travel_core.pdpa_m_total"
+msgid "Total"
+msgstr "Total"
+
+msgctxt "Languages::travel_core.pdpa_m_goto"
+msgid "Go to [rooms]"
+msgstr "Mergi la [rooms]"
+
+msgctxt "Languages::travel_core.pdpa_m_book"
+msgid "Book [rooms] · [total]"
+msgstr "Rezervă [rooms] · [total]"
+
+msgctxt "Languages::travel_core.pdpa_m_book_aria"
+msgid "Book [rooms], total [total] for [nights]"
+msgstr "Rezervă [rooms], total [total] pentru [nights]"
+
+msgctxt "Languages::travel_core.pdpa_m_book_mixed"
+msgid "Book [booked] · request [requested]"
+msgstr "Rezervă [booked] · cere [requested]"
+
+msgctxt "Languages::travel_core.pdpa_m_book_mixed_aria"
+msgid "Book [booked] now and request [requested] from the hotel; total [total], [now] payable now"
+msgstr "Rezervă acum [booked] și cere la hotel [requested]; total [total], de plătit acum [now]"
+
+msgctxt "Languages::travel_core.pdpa_m_pay_now"
+msgid "now [amount] · the rest once confirmed"
+msgstr "acum [amount] · restul după confirmare"
+
+msgctxt "Languages::travel_core.pdpa_m_reply_48h_for"
+msgid "Reply within 48 h for [rooms]"
+msgstr "Răspuns în max. 48 h pentru [rooms]"
+
+msgctxt "Languages::travel_core.pdpa_m_bar_step1_lead"
+msgid "The rooms confirmed at once are booked now"
+msgstr "Camerele cu confirmare imediată se rezervă acum"
+
+msgctxt "Languages::travel_core.pdpa_m_bar_step1"
+msgid "and paid when you book."
+msgstr "și se plătesc la rezervare."
+
+msgctxt "Languages::travel_core.pdpa_m_bar_step2_lead"
+msgid "The rooms on request wait for the hotel:"
+msgstr "Camerele la cerere așteaptă hotelul:"
+
+msgctxt "Languages::travel_core.pdpa_m_bar_step2"
+msgid "it replies within 48 h; you pay nothing for them until it confirms."
+msgstr "răspunde în max. 48 h; nu plătești nimic pentru ele până confirmă."
+
+msgctxt "Languages::travel_core.pdpa_m_bar_step3_lead"
+msgid "If the hotel does not confirm them,"
+msgstr "Dacă hotelul nu le confirmă,"
+
+msgctxt "Languages::travel_core.pdpa_m_bar_step3"
+msgid "we email you similar alternatives; the rooms booked stay booked."
+msgstr "îți trimitem pe email alternative similare; camerele rezervate rămân rezervate."

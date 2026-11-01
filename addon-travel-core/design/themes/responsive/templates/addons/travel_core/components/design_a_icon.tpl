@@ -1,7 +1,7 @@
 {*
     One stroke icon of the Design A room cards (design_a_results.tpl),
     decorative: the text next to it says what it means.
-    Params: icon = users | check | alert | clock | card | meal | info | sort | zap | key | tag | pct | calx | x | chev; size (px, default 16)
+    Params: icon = users | check | alert | clock | card | meal | info | sort | zap | key | tag | pct | calx | x | chev | minus | plus; size (px, default 16)
 *}
 {$travel_pdpa_icon_size = $size|default:16}
 <svg class="travel-pdpa-ico" width="{$travel_pdpa_icon_size}" height="{$travel_pdpa_icon_size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
@@ -19,6 +19,8 @@
 {elseif $icon == "calx"}<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M14 14l-4 4M10 14l4 4"/>
 {elseif $icon == "x"}<path d="M18 6 6 18M6 6l12 12"/>
 {elseif $icon == "chev"}<path d="m6 9 6 6 6-6"/>
+{elseif $icon == "minus"}<path d="M5 12h14"/>
+{elseif $icon == "plus"}<path d="M12 5v14M5 12h14"/>
 {else}<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
 {/if}
 </svg>

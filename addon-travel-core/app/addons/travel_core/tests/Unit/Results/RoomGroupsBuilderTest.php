@@ -35,7 +35,7 @@ final class RoomGroupsBuilderTest extends TestCase
      * @param list<int> $ages
      * @return list<RateOffer>
      */
-    private static function rates(int $adults, array $ages): array
+    private static function rates(int $adults, array $ages, int $left = 10): array
     {
         $per = 300 * $adults + 90 * count($ages);
         $rates = [];
@@ -48,7 +48,7 @@ final class RoomGroupsBuilderTest extends TestCase
                 bookUrl: '',
                 roomTitle: 'Cameră Dublă Deluxe',
                 mealRank: $rank,
-                roomsLeft: 10,
+                roomsLeft: $left,
                 roomCode: 'DBL 2+1 DELUXE',
                 capacity: 3,
                 roomData: ['room_id' => 'DBL 2+1 DELUXE', 'board_id' => $board, 'price' => round($per * $factor)],
@@ -145,6 +145,34 @@ final class RoomGroupsBuilderTest extends TestCase
         self::assertSame('1–3, 5, 7–8', RoomGroupsBuilder::numbers([1, 2, 3, 5, 7, 8]));
         self::assertSame('4', RoomGroupsBuilder::numbers([4]));
         self::assertSame('', RoomGroupsBuilder::numbers([]));
+    }
+
+    public function testATillCountsTheGroupsRoomsUpToTheRoomsLeft(): void
+    {
+        $eight = array_fill(0, 8, ['adults' => 2, 'children' => []]);
+        $plenty = self::builder()->build($eight, static fn (int $a, array $c): array => self::rates($a, $c), 6);
+        $short = self::builder()->build($eight, static fn (int $a, array $c): array => self::rates($a, $c, 6), 6);
+
+        $room = $plenty['groups'][0]['results']['rooms'][0];
+        self::assertSame(8, $room['qty']);
+        self::assertSame('600 €', $room['options'][0]['price'], 'the options keep one room\'s price, for comparing');
+        self::assertSame('4.800 €', $room['options'][0]['qty_price'], 'the till: 8 × 600 €');
+        self::assertSame(600.0, $room['options'][0]['unit']);
+        self::assertSame(6, $short['groups'][0]['results']['rooms'][0]['qty'], 'only 6 left: the till counts 6 of the 8');
+        self::assertSame('3.600 €', $short['groups'][0]['results']['rooms'][0]['options'][0]['qty_price']);
+    }
+
+    public function testCardsAreKeyedPerGroupAndTheMoneyFormatTravels(): void
+    {
+        $calls = [];
+        $view = self::builder()->build([['adults' => 2, 'children' => []], ['adults' => 2, 'children' => [7]]], self::asked($calls), 6);
+
+        $first = $view['groups'][0]['results']['rooms'][0];
+        $second = $view['groups'][1]['results']['rooms'][0];
+        self::assertStringStartsWith('g1-room-', $first['key']);
+        self::assertStringStartsWith('g2-room-', $second['key']);
+        self::assertSame(1, $first['qty'], 'a group of one room books one');
+        self::assertSame(['symbol' => '€', 'after' => true, 'decimals' => 0, 'decimal' => ',', 'thousands' => '.'], $view['money']);
     }
 
     public function testAOneRoomSearchNeedsNoBookingData(): void
