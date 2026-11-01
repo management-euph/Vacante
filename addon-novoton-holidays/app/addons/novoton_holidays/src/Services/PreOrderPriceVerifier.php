@@ -306,8 +306,9 @@ final class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
     /**
      * The offer a cart line was sold from, out of a room_price answer.
      *
-     * Same room (URL-decoded, as add_to_cart matches it), same board, and —
-     * when the line carries one — the same package: a package that is no
+     * Same room (URL-decoded, as add_to_cart matches it), same board and
+     * supplement (OfferBoard), and — when the line carries one — the same
+     * package: a package that is no
      * longer offered is NEVER swapped for another package's price, that
      * would bill the customer for a stay they did not choose.
      * Without a package: the cheapest offer of the room + board.
@@ -324,6 +325,7 @@ final class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             rawurldecode(PriceInfoFormatter::toScalar($extra['room_id'] ?? '')),
             PriceInfoFormatter::toScalar($extra['board_id'] ?? ''),
             PriceInfoFormatter::toScalar($extra['package_name'] ?? ''),
+            PriceInfoFormatter::toScalar($extra['ext_board_id'] ?? ''),
         );
 
         return ['row' => $row, 'offer_missing' => $row === null && $rows !== []];
@@ -359,7 +361,8 @@ final class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
      * children and children_ages — the values the reservation sends
      * (BookingRoomsGuestsResolver, BookingRoomAssembler, ApiBookingRequestBuilder):
      *   - the rooms of rooms_data; without it, the line's own tuple;
-     *   - room, board and package: the room's own, else the line's;
+     *   - room, board and package: the room's own, else the line's; the
+     *     board's supplement with whichever board the room takes;
      *   - adults: the room's own, else 2; children: the room's count;
      *   - child i of room N: the age of guest room{N}_child_{i} when the
      *     guest has one (guests_data), else the room's childrenAges[i - 1].
@@ -404,6 +407,8 @@ final class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             $lines[] = [
                 'room_id' => PriceInfoFormatter::toScalar($room['room_id'] ?? $extra['room_id'] ?? ''),
                 'board_id' => PriceInfoFormatter::toScalar($room['board_id'] ?? $extra['board_id'] ?? ''),
+                // The board's supplement comes with whichever board the room takes
+                'ext_board_id' => PriceInfoFormatter::toScalar(isset($room['board_id']) ? ($room['ext_board_id'] ?? '') : ($extra['ext_board_id'] ?? '')),
                 'package_name' => PriceInfoFormatter::toScalar($room['package_name'] ?? $extra['package_name'] ?? ''),
                 'adults' => PriceInfoFormatter::toInt($room['adults'] ?? 2),
                 'children' => count($ages),
@@ -468,13 +473,27 @@ final class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
         return implode('|', [
             PriceInfoFormatter::toScalar($extra['hotel_id'] ?? ''),
             PriceInfoFormatter::toScalar($extra['room_id'] ?? ''),
-            PriceInfoFormatter::toScalar($extra['board_id'] ?? ''),
+            self::boardKey($extra),
             PriceInfoFormatter::toScalar($extra['check_in'] ?? ''),
             PriceInfoFormatter::toScalar($extra['check_out'] ?? ''),
             PriceInfoFormatter::toInt($extra['adults'] ?? 2),
             implode(',', self::parseChildrenAges($extra)),
             RoomOfferRows::packageName(PriceInfoFormatter::toScalar($extra['package_name'] ?? '')),
         ]);
+    }
+
+    /**
+     * The board part of the recipe: "BB" alone, "BB+HB" with the half-board
+     * supplement, so the two offers never share a price.
+     *
+     * @param array<string, mixed> $extra
+     */
+    private static function boardKey(array $extra): string
+    {
+        $board = PriceInfoFormatter::toScalar($extra['board_id'] ?? '');
+        $extBoard = trim(PriceInfoFormatter::toScalar($extra['ext_board_id'] ?? ''));
+
+        return $extBoard !== '' ? $board . '+' . $extBoard : $board;
     }
 
     /**
@@ -520,6 +539,8 @@ final class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             $rows,
             rawurldecode(PriceInfoFormatter::toScalar($extra['room_id'] ?? '')),
             PriceInfoFormatter::toScalar($extra['board_id'] ?? ''),
+            '',
+            PriceInfoFormatter::toScalar($extra['ext_board_id'] ?? ''),
         );
         foreach ($sameRoom as $row) {
             $offered[] = ($row['package'] !== '' ? $row['package'] : '-') . ': ' . number_format($row['price'], 2);

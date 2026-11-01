@@ -195,6 +195,25 @@ final class PreOrderPriceVerifierTest extends TestCase
     }
 
     /**
+     * The fixture's 675 offer is "BB" with the "HB" supplement (half board):
+     * a line booked on it is compared with it; a line booked as "BB" alone
+     * is not (that offer is gone), and the two never share a Silent Sync
+     * price.
+     */
+    public function testTheSupplementIsPartOfTheLinesOffer(): void
+    {
+        $rows = RoomOfferRows::fromXml(self::fixture());
+        $half = ['room_id' => self::ROOM, 'board_id' => 'BB', 'ext_board_id' => 'HB', 'package_name' => 'ADMIRAL ***** BB/HB [STAY 22.09 - 19.12]'];
+        $plain = ['ext_board_id' => ''] + $half;
+
+        self::assertSame(675.0, PreOrderPriceVerifier::lineOffer($rows, $half)['row']['price'] ?? null);
+        self::assertSame(['row' => null, 'offer_missing' => true], PreOrderPriceVerifier::lineOffer($rows, $plain));
+        $lines = [PreOrderPriceVerifier::roomLines($half + ['hotel_id' => '476'])[0], PreOrderPriceVerifier::roomLines($plain + ['hotel_id' => '476'])[0]];
+        self::assertSame(['HB', ''], array_column($lines, 'ext_board_id'));
+        self::assertNotSame(PreOrderPriceVerifier::priceCacheKey($lines[0]), PreOrderPriceVerifier::priceCacheKey($lines[1]));
+    }
+
+    /**
      * C2/H4: every room of the reservation is re-priced with its own room,
      * board, package, adults and child ages — not only the line's top-level
      * room — and the line is compared with their sum.
@@ -434,8 +453,9 @@ final class PreOrderPriceVerifierTest extends TestCase
     }
 
     /**
-     * Room 1: the "+BEACH" UAI double at 795; room 2: the BB/HB package's BB
-     * double at 675, with a child of 7.
+     * Room 1: the "+BEACH" UAI double at 795; room 2: the BB/HB package's
+     * half-board double ("BB" + the "HB" supplement) at 675, with a child
+     * of 7.
      *
      * @return array{products: array<int, array<string, mixed>>}
      */
@@ -449,7 +469,7 @@ final class PreOrderPriceVerifierTest extends TestCase
             'num_rooms' => 2,
             'rooms_data' => [
                 ['room_id' => self::ROOM, 'board_id' => self::UAI, 'package_name' => self::BEACH, 'adults' => 2, 'children' => 0, 'childrenAges' => [], 'price' => 795.0],
-                ['room_id' => self::ROOM, 'board_id' => 'BB', 'package_name' => 'ADMIRAL ***** BB/HB [STAY 22.09 - 19.12]', 'adults' => 2, 'children' => 1, 'childrenAges' => [7], 'price' => 675.0],
+                ['room_id' => self::ROOM, 'board_id' => 'BB', 'ext_board_id' => 'HB', 'package_name' => 'ADMIRAL ***** BB/HB [STAY 22.09 - 19.12]', 'adults' => 2, 'children' => 1, 'childrenAges' => [7], 'price' => 675.0],
             ],
         ] + $cart['products'][42]['extra'];
 

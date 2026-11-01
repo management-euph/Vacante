@@ -28,6 +28,7 @@ final class BookedRoomsTest extends TestCase
         self::assertSame([[
             'room_id' => 'DBL 2+1',
             'board_id' => 'BB',
+            'ext_board_id' => '',
             'package_name' => 'ADMIRAL +BEACH',
             'adults' => 2,
             'children' => 1,
@@ -43,6 +44,7 @@ final class BookedRoomsTest extends TestCase
         self::assertSame([[
             'room_id' => 'DBL 2+1',
             'board_id' => 'BB',
+            'ext_board_id' => '',
             'package_name' => 'ADMIRAL +BEACH',
             'adults' => 3,
             'children' => 2,
@@ -75,8 +77,41 @@ final class BookedRoomsTest extends TestCase
 
         self::assertNotNull($rooms);
         self::assertCount(2, $rooms);
-        self::assertSame(['DBL', 'BB', 'P1', 2, 0, []], array_values($rooms[0]));
-        self::assertSame(['FAM 2+2', 'AI', 'P2', 2, 2, [4, 8]], array_values($rooms[1]));
+        self::assertSame(['DBL', 'BB', '', 'P1', 2, 0, []], array_values($rooms[0]));
+        self::assertSame(['FAM 2+2', 'AI', '', 'P2', 2, 2, [4, 8]], array_values($rooms[1]));
+    }
+
+    /**
+     * Admiral's half board off-season: "BB" + the "HB" supplement. The
+     * supplement goes with the board a room takes: the request's with the
+     * request's board, the room's own with its own board, never the
+     * request's on another board.
+     */
+    public function testTheSupplementGoesWithItsBoard(): void
+    {
+        $one = BookedRooms::fromRequest(
+            self::request(['ext_board_id' => 'HB', 'rooms_data' => json_encode([['adults' => 2, 'children' => 0]])]),
+            [],
+        );
+        self::assertNotNull($one);
+        self::assertSame(['BB', 'HB'], [$one[0]['board_id'], $one[0]['ext_board_id']]);
+
+        $two = BookedRooms::fromRequest(
+            self::request([
+                'ext_board_id' => 'HB',
+                'rooms_data' => json_encode([
+                    ['room_id' => 'DBL', 'board_id' => 'BB', 'ext_board_id' => 'HB', 'adults' => 2],
+                    ['room_id' => 'FAM', 'board_id' => 'AI', 'adults' => 2],
+                    ['room_id' => 'SGL', 'adults' => 1],
+                ]),
+            ]),
+            [],
+        );
+        self::assertNotNull($two);
+        self::assertSame(
+            [['BB', 'HB'], ['AI', ''], ['BB', 'HB']],
+            array_map(static fn (array $room): array => [$room['board_id'], $room['ext_board_id']], $two),
+        );
     }
 
     /**
@@ -91,7 +126,7 @@ final class BookedRoomsTest extends TestCase
 
         self::assertNotNull($rooms);
         self::assertCount(12, $rooms);
-        self::assertSame(['DBL 2+0', 'AI', 'P1', 2, 0, []], array_values($rooms[11]));
+        self::assertSame(['DBL 2+0', 'AI', '', 'P1', 2, 0, []], array_values($rooms[11]));
         self::assertNull(BookedRooms::fromRequest(self::request(['rooms_data' => json_encode(array_fill(0, 3, $room))]), [], 2), 'a lower limit given still holds');
     }
 

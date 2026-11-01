@@ -23,7 +23,11 @@ namespace Tygh\Addons\NovotonHolidays\Services;
  *
  * Pure: no API, no CS-Cart.
  *
- * @phpstan-type OfferRow array{price: float, room: string, board: string, package: string, early_booking: float, idcont: string}
+ * An offer's board is the board it is sold on, its ext_board the supplement
+ * upgrading it ('' = none): Admiral's "BB" + "HB" is half board, at a price
+ * of its own next to the plain "BB" (OfferBoard::meal).
+ *
+ * @phpstan-type OfferRow array{price: float, room: string, board: string, ext_board: string, package: string, early_booking: float, idcont: string}
  */
 final class RoomOfferRows
 {
@@ -114,33 +118,41 @@ final class RoomOfferRows
      * any package asked for (as QuoteOfferReader does) — otherwise an answer
      * that never carries package names could never be priced at all.
      *
+     * $extBoard pins the supplement on the board asked for ('' = none):
+     * "BB" alone and "BB" + "HB" are two offers. null leaves it out, as
+     * before supplements were read; with no board asked for there is none
+     * to pin.
+     *
      * @param list<OfferRow> $rows
      * @return list<OfferRow>
      */
-    public static function matching(array $rows, ?string $room, ?string $board, string $package = ''): array
+    public static function matching(array $rows, ?string $room, ?string $board, string $package = '', ?string $extBoard = null): array
     {
         $room = trim((string) $room);
         $board = trim((string) $board);
         $packageKey = self::packageKey($package);
+        $extBoard = $board !== '' && $extBoard !== null ? trim($extBoard) : null;
 
         return array_values(array_filter(
             $rows,
             static fn (array $row): bool => ($room === '' || strcasecmp(trim($row['room']), $room) === 0)
                 && ($board === '' || strcasecmp($row['board'], $board) === 0)
+                && ($extBoard === null || strcasecmp($row['ext_board'], $extBoard) === 0)
                 && ($packageKey === '' || $row['package'] === '' || self::packageKey($row['package']) === $packageKey),
         ));
     }
 
     /**
-     * The lowest-priced offer of that room + board (+ package), or null.
+     * The lowest-priced offer of that room + board (+ package, + supplement:
+     * matching()), or null.
      *
      * @param list<OfferRow> $rows
      * @return OfferRow|null
      */
-    public static function cheapest(array $rows, ?string $room, ?string $board, string $package = ''): ?array
+    public static function cheapest(array $rows, ?string $room, ?string $board, string $package = '', ?string $extBoard = null): ?array
     {
         $best = null;
-        foreach (self::matching($rows, $room, $board, $package) as $row) {
+        foreach (self::matching($rows, $room, $board, $package, $extBoard) as $row) {
             if ($best === null || $row['price'] < $best['price']) {
                 $best = $row;
             }
@@ -192,6 +204,8 @@ final class RoomOfferRows
         if (!isset($fields['IdBoard']) && !isset($fields['Board'])) {
             $inherit[] = 'IdBoard';
             $inherit[] = 'Board';
+            $inherit[] = 'IdExtBoard';
+            $inherit[] = 'ExtBoard';
         }
         foreach ($inherit as $name) {
             if (isset($fields[$name])) {
@@ -244,16 +258,22 @@ final class RoomOfferRows
      */
     private static function row(array $fields): array
     {
-        // The API uses IdBoard or Board depending on the endpoint.
+        // The API uses IdBoard or Board depending on the endpoint, and so
+        // IdExtBoard or ExtBoard for the board's supplement.
         $board = trim($fields['IdBoard'] ?? '');
         if ($board === '') {
             $board = trim($fields['Board'] ?? '');
+        }
+        $extBoard = trim($fields['IdExtBoard'] ?? '');
+        if ($extBoard === '') {
+            $extBoard = trim($fields['ExtBoard'] ?? '');
         }
 
         return [
             'price' => (float) trim($fields['Price'] ?? ''),
             'room' => rawurldecode($fields['IdRoom'] ?? ''),
             'board' => $board,
+            'ext_board' => $extBoard,
             'package' => self::packageName($fields['PackageName'] ?? ''),
             'early_booking' => (float) trim($fields['early_booking'] ?? ''),
             'idcont' => trim($fields['idcont'] ?? ''),

@@ -178,6 +178,52 @@ final class RoomsQuoteTest extends TestCase
         self::assertStringContainsString('2027-06-20', RoomOfferRows::terms($quote['answer'], $quote['offer'])['terms_of_payment']);
     }
 
+    /**
+     * Admiral (476), 5–9 Nov 2026: the room on "BB" comes back as "BB" alone
+     * at 415 and "BB" with the "HB" supplement (half board) at 535. A
+     * half-board booking is charged 535 and the reservation books "BB" +
+     * "HB"; it was charged 415 and booked on breakfast alone.
+     */
+    public function testAHalfBoardSupplementIsChargedAndBooked(): void
+    {
+        $pricing = $this->createStub(PricingApiClientInterface::class);
+        $pricing->method('applyCommission')->willReturnCallback(
+            static fn (float $price): float => $price * (1 + self::COMMISSION / 100),
+        );
+        $offer = static fn (string $price, string $ext): string => '<agent>T</agent><idcont>1292618</idcont>'
+            . '<PackageName>ADMIRAL ***** BB/HB [STAY 22.09 - 19.12]</PackageName><Price>' . $price . '</Price>'
+            . '<IdRoom>DBL 2+0 DELUXE NO BALCONY</IdRoom><Board>BB</Board><ExtBoard>' . $ext . '</ExtBoard>';
+        $pricing->method('getRoomPrice')->willReturn(new \SimpleXMLElement('<room_price>' . $offer('415.00', '') . $offer('535.00', 'HB') . '</room_price>'));
+        $booked = static fn (string $ext): ?array => BookedRooms::fromRequest(self::request([
+            'room_id' => 'DBL 2+0 DELUXE NO BALCONY',
+            'board_id' => 'BB',
+            'ext_board_id' => $ext,
+            'package_name' => 'ADMIRAL ***** BB/HB [STAY 22.09 - 19.12]',
+        ]), []);
+        $half = $booked('HB');
+        $plain = $booked('');
+        self::assertNotNull($half);
+        self::assertNotNull($plain);
+
+        $quote = (new RoomsQuote($pricing))->price('476', '2026-11-05', '2026-11-09', $half);
+        $plainQuote = (new RoomsQuote($pricing))->price('476', '2026-11-05', '2026-11-09', $plain);
+
+        self::assertNotNull($quote);
+        self::assertNotNull($plainQuote);
+        self::assertEqualsWithDelta(588.5, $quote['total'], 0.001);
+        self::assertEqualsWithDelta(456.5, $plainQuote['total'], 0.001);
+        self::assertSame(['BB', 'HB'], [$quote['rooms'][0]['board_id'], $quote['rooms'][0]['ext_board_id']]);
+
+        $bookingData = ['hotel_id' => '476', 'room_id' => 'X', 'board_id' => 'X', 'package_name' => 'X', 'check_in' => '2026-11-05', 'check_out' => '2026-11-09', 'holder_name' => 'Ana Pop'];
+        $assembler = new BookingRoomAssembler();
+        $groups = array_values($assembler->groupRoomsByPackage($quote['rooms'], $bookingData));
+        [$allGuests, $apiRooms] = $assembler->buildGroupGuestsAndRooms($groups[0], [], $bookingData, self::COMMISSION);
+        $apiData = (new ApiBookingRequestBuilder())->build($groups[0], $allGuests, $apiRooms, $bookingData, 1001, 1, 1);
+
+        self::assertSame(['BB', 'HB'], [$apiRooms[0]['board_id'], $apiRooms[0]['ext_board_id']]);
+        self::assertSame(['BB', 'HB'], [$apiData['board_id'], $apiData['ext_board_id']]);
+    }
+
     public function testARoomWithoutAPriceRejectsTheWholeBooking(): void
     {
         $request = self::request([

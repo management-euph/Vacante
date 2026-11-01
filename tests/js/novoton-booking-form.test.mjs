@@ -175,6 +175,37 @@ describe('the "was" price after a re-price (shared sidebar hooks)', () => {
     });
 });
 
+describe('the price re-check asks for the booked offer', () => {
+    it('sends the board supplement with the board it belongs to', () => {
+        const saved = { ...window.bookingData };
+        const fetchSpy = vi.fn(() => new Promise(() => {}));
+        vi.stubGlobal('fetch', fetchSpy);
+        Object.assign(window.bookingData, {
+            hotelId: '476', roomId: 'DBL 2+0 DELUXE NO BALCONY', boardId: 'BB', extBoardId: 'HB',
+            packageName: 'ADMIRAL ***** BB/HB [STAY 22.09 - 19.12]', nights: 4, adults: 2,
+            numRooms: 1, roomsData: [], currentPrice: 588.5,
+        });
+
+        window.triggerPriceRecalculationInline([], 1, true);
+        // Admiral's half board: "BB" + "HB", priced apart from "BB" alone
+        expect(JSON.parse(fetchSpy.mock.calls[0][1].body)).toMatchObject({ board_id: 'BB', ext_board_id: 'HB' });
+
+        Object.assign(window.bookingData, {
+            numRooms: 2,
+            roomsData: [
+                { room_id: 'DBL', board_id: 'BB', ext_board_id: 'HB', adults: 2 },
+                { room_id: 'FAM', board_id: 'AI', adults: 2 },
+            ],
+        });
+        window.triggerPriceRecalculationInline([], 2, true);
+        // Room 2's own board, without room 1's supplement
+        expect(JSON.parse(fetchSpy.mock.calls[1][1].body)).toMatchObject({ room_id: 'FAM', board_id: 'AI', ext_board_id: '' });
+
+        vi.unstubAllGlobals();
+        window.bookingData = saved;
+    });
+});
+
 describe('submit validation', () => {
     it('blocks submit and shows an inline message on the empty field (no alert)', () => {
         const form = document.getElementById('novoton-booking-form');

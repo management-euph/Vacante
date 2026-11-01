@@ -56,6 +56,7 @@ use Tygh\Addons\NovotonHolidays\ViewModels\NovotonBookingSidebarBuilder;
     if ($is_multi_room && empty($bookingData['room_id']) && is_array($rooms_data[0] ?? null) && !empty($rooms_data[0]['room_id'])) {
         $bookingData['room_id'] = PriceInfoFormatter::toScalar($rooms_data[0]['room_id']);
         $bookingData['board_id'] = PriceInfoFormatter::toScalar($rooms_data[0]['board_id'] ?? 'AI');
+        $bookingData['ext_board_id'] = PriceInfoFormatter::toScalar($rooms_data[0]['ext_board_id'] ?? '');
     }
 
     // Validate required data
@@ -112,6 +113,8 @@ use Tygh\Addons\NovotonHolidays\ViewModels\NovotonBookingSidebarBuilder;
         'hotel_id' => $bdHotelId,
         'room_id' => PriceInfoFormatter::toScalar($bookingData['room_id']),
         'board_id' => PriceInfoFormatter::toScalar($bookingData['board_id'] ?? 'BB'),
+        // The board's supplement ("BB" + "HB" is half board; OfferBoard)
+        'ext_board_id' => PriceInfoFormatter::toScalar($bookingData['ext_board_id'] ?? ''),
         'check_in' => PriceInfoFormatter::toScalar($bookingData['check_in']),
         'check_out' => PriceInfoFormatter::toScalar($bookingData['check_out']),
         'nights' => PriceInfoFormatter::toInt($bookingData['nights'] ?? 7),
@@ -138,8 +141,8 @@ use Tygh\Addons\NovotonHolidays\ViewModels\NovotonBookingSidebarBuilder;
         }
 
         // Z3: Format board name consistently
-        $formatted_board_name = fn_novoton_holidays_format_board_name($booking['board_id']);
-        if ($formatted_board_name === $booking['board_id'] && !empty($bookingData['board_name'])) {
+        $formatted_board_name = fn_novoton_holidays_format_board_name($booking['board_id'], $booking['ext_board_id']);
+        if ($formatted_board_name === $booking['board_id'] && $booking['ext_board_id'] === '' && !empty($bookingData['board_name'])) {
             // If format function didn't change it, try the passed board_name
             $formatted_board_name = fn_novoton_holidays_format_board_name(PriceInfoFormatter::toScalar($bookingData['board_name']));
         }
@@ -149,6 +152,7 @@ use Tygh\Addons\NovotonHolidays\ViewModels\NovotonBookingSidebarBuilder;
                 'room_id' => $booking['room_id'],
                 'room_name' => PriceInfoFormatter::toScalar($bookingData['room_name'] ?? $booking['room_id']),
                 'board_id' => $booking['board_id'],
+                'ext_board_id' => $booking['ext_board_id'],
                 'board_name' => $formatted_board_name,
                 'adults' => $booking['adults'],
                 'children' => $booking['children'],

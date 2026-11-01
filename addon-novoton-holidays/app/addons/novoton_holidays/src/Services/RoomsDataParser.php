@@ -44,6 +44,7 @@ class RoomsDataParser
                 'room_id' => $bookingData['room_id'] ?? '',
                 'room_name' => RoomType::formatRoomLabel(TypeCoerce::toString($bookingData['room_id'] ?? '')),
                 'board_id' => $bookingData['board_id'] ?? 'BB',
+                'ext_board_id' => $bookingData['ext_board_id'] ?? '',
                 'adults' => TypeCoerce::toInt($bookingData['adults'] ?? 2),
                 'children' => TypeCoerce::toInt($bookingData['children'] ?? 0),
                 'childrenAges' => $this->parseChildrenAges($bookingData),

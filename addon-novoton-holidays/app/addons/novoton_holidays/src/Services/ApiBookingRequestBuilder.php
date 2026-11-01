@@ -11,7 +11,7 @@ use Tygh\Addons\NovotonHolidays\Helpers\BookingRoomAssembler;
  * Constructs the Novoton reservation API request payload for a single room
  * group: hotel/package/dates, the holder name (first guest, else booking
  * holder), guests + rooms, the order number (suffixed per group), and the
- * single-room shortcut that pins room_id/board_id.
+ * single-room shortcut that pins room_id/board_id (and the board's supplement).
  *
  * One request books every room of its group, and Novoton takes several
  * rooms in one request only when they are for the same hotel, the same
@@ -83,6 +83,8 @@ class ApiBookingRequestBuilder
             $firstGroupRoom = is_array($groupRooms[0] ?? null) ? $groupRooms[0] : [];
             $apiData['room_id'] = PriceInfoFormatter::toScalar($firstGroupRoom['room_id'] ?? $bookingData['room_id'] ?? '');
             $apiData['board_id'] = PriceInfoFormatter::toScalar($firstGroupRoom['board_id'] ?? $bookingData['board_id'] ?? '');
+            // The board's supplement comes with whichever board the room takes
+            $apiData['ext_board_id'] = PriceInfoFormatter::toScalar(isset($firstGroupRoom['board_id']) ? ($firstGroupRoom['ext_board_id'] ?? '') : ($bookingData['ext_board_id'] ?? ''));
         }
 
         return $apiData;

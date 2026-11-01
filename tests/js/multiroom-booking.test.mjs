@@ -119,6 +119,22 @@ describe('booking submission', () => {
         expect(roomsData[1]).not.toHaveProperty('standard_price');
     });
 
+    it('posts the board supplement only for the radios that carry one', () => {
+        document.getElementById('multi-room-booking-form').submit = vi.fn();
+        document.querySelector('input[name="room_1_selection"]').setAttribute('data-ext-board-id', 'HB');
+
+        selectRadio('room_1_selection');
+        selectRadio('room_2_selection');
+        document.getElementById('book-multi-room-btn').disabled = false;
+        document.getElementById('book-multi-room-btn')
+            .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+        const roomsData = JSON.parse(document.getElementById('hidden_rooms_data').value);
+        // Novoton's "BB" + "HB" is half board: booked with its board
+        expect(roomsData[0]).toMatchObject({ board_id: 'BB', ext_board_id: 'HB' });
+        expect(roomsData[1]).not.toHaveProperty('ext_board_id');
+    });
+
     it('does not submit while the button is disabled', () => {
         const submitSpy = vi.fn();
         document.getElementById('multi-room-booking-form').submit = submitSpy;
@@ -264,6 +280,23 @@ describe('4+ rooms: one room open at a time', () => {
         expect(document.querySelector('input[name="room_4_selection"]').checked).toBe(true);
         expect(document.querySelector('input[name="room_3_selection"]').checked).toBe(false);
         expect(isOpen(3)).toBe(true);
+    });
+
+    it('applies a choice with its board supplement, not the same board without it', () => {
+        renderRooms({ rooms: ['2a0c', '2a0c'], stepper: true });
+        // Each room: "BB" alone first, then "BB" + "HB" (half board)
+        document.querySelectorAll('input[type="radio"]').forEach((radio, i) => {
+            radio.setAttribute('data-room-id', 'DBL');
+            radio.setAttribute('data-board-id', 'BB');
+            radio.setAttribute('data-ext-board-id', i % 2 === 0 ? '' : 'HB');
+        });
+
+        pick(1, 1);
+        click('[data-room="1"] .novoton-mr-next__same');
+
+        const room2 = document.querySelectorAll('input[name="room_2_selection"]');
+        expect(room2[1].checked).toBe(true);
+        expect(room2[0].checked).toBe(false);
     });
 
     it('never applies a room type to more rooms than the hotel has left', () => {

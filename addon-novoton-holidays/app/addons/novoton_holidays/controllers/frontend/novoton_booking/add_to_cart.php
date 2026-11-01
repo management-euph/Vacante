@@ -334,7 +334,6 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 
     // Room 1's board (no board asked for: the cheapest board it was priced on)
     $board_id = $first_room['board_id'];
-    $board_name = fn_novoton_holidays_format_board_name($board_id);
 
     // rooms_data as priced: the reservation (BookingRoomAssembler) and the
     // booking records (BookingRecordBuilder) are built from it, so each room
@@ -355,7 +354,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
         $rooms_data[] = $priced_room + [
             'room_name' => $room_display,
             'room_type_display' => $room_display,
-            'board_name' => fn_novoton_holidays_format_board_name($priced_room['board_id']),
+            'board_name' => fn_novoton_holidays_format_board_name($priced_room['board_id'], $priced_room['ext_board_id']),
             'children_ages_str' => $valid_ages !== []
                 ? implode(', ', $valid_ages) . ' ' . TypeCoerce::toString(__('novoton_holidays.years_old'))
                 : '',
@@ -477,7 +476,8 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
             'room_name' => str_replace(['%2b', '%2B'], '+', $room_id_str),
             'room_type_display' => fn_novoton_holidays_format_room_type($room_id_str),
             'board_id' => $board_id,
-            'board_name' => $board_name,
+            'ext_board_id' => $first_room['ext_board_id'],
+            'board_name' => fn_novoton_holidays_format_board_name($board_id, $first_room['ext_board_id']),
             'check_in' => $check_in,
             'check_out' => $check_out,
             'nights' => $nights,

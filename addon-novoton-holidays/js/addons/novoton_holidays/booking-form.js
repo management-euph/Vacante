@@ -330,6 +330,7 @@ function triggerPriceRecalculationInline(childrenAges, roomNum, isInitialLoad) {
         roomData = {
             room_id: window.bookingData.roomId,
             board_id: window.bookingData.boardId,
+            ext_board_id: window.bookingData.extBoardId || '',
             adults: window.bookingData.adults,
             price: window.bookingData.currentPrice
         };
@@ -348,6 +349,9 @@ function triggerPriceRecalculationInline(childrenAges, roomNum, isInitialLoad) {
         hotel_id: window.bookingData.hotelId,
         room_id: roomData.room_id || window.bookingData.roomId,
         board_id: roomData.board_id || window.bookingData.boardId,
+        // The board's supplement ("BB" + "HB" is half board) goes with
+        // whichever board is sent: the room's own, else the page's
+        ext_board_id: roomData.board_id ? (roomData.ext_board_id || '') : (window.bookingData.extBoardId || ''),
         check_in: window.bookingData.checkIn,
         nights: window.bookingData.nights,
         adults: roomData.adults || window.bookingData.adults,

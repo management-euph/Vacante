@@ -109,6 +109,28 @@ final class ReservationApiClientTest extends TestCase
         self::assertSame('19', (string) $rq->OrderNum);
     }
 
+    /**
+     * Admiral's half board off-season is "BB" with the "HB" supplement: the
+     * reservation books both, room by room. It was always sent empty, so a
+     * half-board stay was booked on breakfast alone.
+     */
+    public function testTheBoardsSupplementIsBooked(): void
+    {
+        $one = simplexml_load_string($this->client()->generateReservationXml(['ext_board_id' => 'HB'] + self::BOOKING));
+        $plain = simplexml_load_string($this->client()->generateReservationXml(self::BOOKING));
+        $two = simplexml_load_string($this->client()->generateReservationXml(['rooms' => [
+            ['room_id' => 'DBL 2+0', 'board_id' => 'BB', 'ext_board_id' => 'HB', 'guests' => []],
+            ['room_id' => 'DBL 2+0', 'board_id' => 'BB', 'guests' => []],
+        ]] + self::BOOKING));
+
+        self::assertNotFalse($one);
+        self::assertNotFalse($plain);
+        self::assertNotFalse($two);
+        self::assertSame(['BB', 'HB'], [(string) $one->hotel_acc->IdBoard, (string) $one->hotel_acc->IdExtBoard]);
+        self::assertSame('', (string) $plain->hotel_acc->IdExtBoard);
+        self::assertSame(['HB', ''], [(string) $two->hotel_acc[0]->IdExtBoard, (string) $two->hotel_acc[1]->IdExtBoard]);
+    }
+
     public function testEveryGuestIsSent(): void
     {
         $rq = simplexml_load_string($this->client()->generateReservationXml(self::BOOKING));

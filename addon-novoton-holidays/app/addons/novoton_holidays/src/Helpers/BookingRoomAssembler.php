@@ -205,6 +205,9 @@ class BookingRoomAssembler
                 'room_num' => $roomNum,
                 'room_id' => PriceInfoFormatter::toScalar($room['room_id'] ?? $bookingData['room_id'] ?? ''),
                 'board_id' => PriceInfoFormatter::toScalar($room['board_id'] ?? $bookingData['board_id'] ?? ''),
+                // The board's supplement ("BB" + "HB" is half board) comes with
+                // whichever board the room takes
+                'ext_board_id' => PriceInfoFormatter::toScalar(isset($room['board_id']) ? ($room['ext_board_id'] ?? '') : ($bookingData['ext_board_id'] ?? '')),
                 'guests' => $roomGuests,
             ];
         }

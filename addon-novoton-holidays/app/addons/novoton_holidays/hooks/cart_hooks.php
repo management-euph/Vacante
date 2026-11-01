@@ -345,7 +345,7 @@ function fn_novoton_holidays_add_booking_display_data(array &$product, ?array $c
     /** @var array<string, mixed> $bdExtra */
     $bdExtra = is_array($product['extra'] ?? null) ? $product['extra'] : [];
     $board_id = PriceInfoFormatter::toScalar($bdExtra['board_id'] ?? '');
-    $bdExtra['board_name'] = fn_novoton_holidays_format_board_name($board_id);
+    $bdExtra['board_name'] = fn_novoton_holidays_format_board_name($board_id, PriceInfoFormatter::toScalar($bdExtra['ext_board_id'] ?? ''));
 
     $room_id = PriceInfoFormatter::toScalar($bdExtra['room_id'] ?? '');
     $room_type = PriceInfoFormatter::toScalar($bdExtra['room_type'] ?? '');
