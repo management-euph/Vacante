@@ -79,9 +79,21 @@ final class RoomOccupancyTest extends TestCase
     public function testTheCartCardGetsEachRoomWithItsGuests(): void
     {
         self::assertSame([
-            ['room_name' => 'Double Room', 'code' => '40', 'adults' => 2, 'children' => 0, 'childrenAges' => []],
-            ['room_name' => 'Family Room', 'code' => '41', 'adults' => 2, 'children' => 2, 'childrenAges' => [8, 3]],
+            ['room_name' => 'Double Room', 'board_name' => '', 'code' => '40', 'adults' => 2, 'children' => 0, 'childrenAges' => []],
+            ['room_name' => 'Family Room', 'board_name' => '', 'code' => '41', 'adults' => 2, 'children' => 2, 'childrenAges' => [8, 3]],
         ], RoomOccupancy::displayRooms(self::snapshot()));
+    }
+
+    /** An offer has one meal plan, the same for each of its rooms, as pages show it. */
+    public function testEachRoomCarriesTheOffersMealPlan(): void
+    {
+        $snapshot = self::snapshot() + ['meals' => [['type' => '2', 'code' => '2036', 'name' => 'BB', 'label' => 'Mic dejun (BB)']]];
+
+        self::assertSame(['Mic dejun (BB)', 'Mic dejun (BB)'], array_column(RoomOccupancy::displayRooms($snapshot), 'board_name'));
+
+        // An offer stored before labels existed: the hotel's own text.
+        $older = self::snapshot() + ['meals' => [['type' => '2', 'code' => '2036', 'name' => 'BB']]];
+        self::assertSame(['BB', 'BB'], array_column(RoomOccupancy::displayRooms($older), 'board_name'));
     }
 
     public function testASnapshotFromBeforeMultiRoomIsOneRoom(): void

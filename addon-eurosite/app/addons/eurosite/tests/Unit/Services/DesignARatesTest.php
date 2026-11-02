@@ -83,6 +83,25 @@ final class DesignARatesTest extends TestCase
         ];
     }
 
+    /**
+     * A card shows the meal as pages do ("Mic dejun (BB)", MealPlanNames),
+     * ranked by the hotel's own words; Type="2" is Eurosite's service type
+     * (meals), the same on every meal.
+     */
+    public function testACardShowsTheMealPlanAndRanksItByTheHotelsWords(): void
+    {
+        $bb = [['type' => '2', 'code' => '2036', 'name' => 'BB', 'label' => 'Mic dejun (BB)', 'price' => '0']];
+        $ai = [['type' => '2', 'code' => '25', 'name' => 'All Inclusive', 'label' => 'All inclusive', 'price' => '0']];
+
+        [$breakfast, $allInclusive] = self::mapper()->rates([
+            ['offer' => self::offer('5879', 'Camera verde', $bb, 334.0), 'key' => 'cg01'],
+            ['offer' => self::offer('5879', 'Camera verde', $ai, 520.0), 'key' => 'cg02'],
+        ]);
+
+        self::assertSame(['Mic dejun (BB)', RateOffer::MEAL_BREAKFAST], [$breakfast->mealPlan, $breakfast->mealRank]);
+        self::assertSame(['All inclusive', RateOffer::MEAL_ALL_INCLUSIVE], [$allInclusive->mealPlan, $allInclusive->mealRank]);
+    }
+
     public function testEachBookableOfferIsOneRoomAtOneMealPlan(): void
     {
         $rates = self::mapper()->rates(self::condor());

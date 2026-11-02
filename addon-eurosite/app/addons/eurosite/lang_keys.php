@@ -1211,4 +1211,37 @@ return [
         'en' => 'Villa',
         'ro' => 'Vilă',
     ],
+    // Meal plans as offers show them, read from the hotel's own text: MealPlanNames.
+    'eurosite.meal_plan_ultra_all_inclusive' => [
+        'en' => 'Ultra all inclusive',
+        'ro' => 'Ultra all inclusive',
+    ],
+    'eurosite.meal_plan_all_inclusive' => [
+        'en' => 'All inclusive',
+        'ro' => 'All inclusive',
+    ],
+    'eurosite.meal_plan_full_board' => [
+        'en' => 'Full board',
+        'ro' => 'Pensiune completă',
+    ],
+    'eurosite.meal_plan_half_board' => [
+        'en' => 'Half board',
+        'ro' => 'Demipensiune',
+    ],
+    'eurosite.meal_plan_breakfast' => [
+        'en' => 'Breakfast',
+        'ro' => 'Mic dejun',
+    ],
+    'eurosite.meal_plan_self_catering' => [
+        'en' => 'Self catering',
+        'ro' => 'Self catering',
+    ],
+    'eurosite.meal_plan_meal_vouchers' => [
+        'en' => 'Meal vouchers',
+        'ro' => 'Bonuri valorice',
+    ],
+    'eurosite.meal_plan_room_only' => [
+        'en' => 'Room only',
+        'ro' => 'Fără masă',
+    ],
 ];
