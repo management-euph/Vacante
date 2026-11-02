@@ -10,6 +10,9 @@ declare(strict_types=1);
  *   php hotel_search.php --country=RO --city=ROMM --check-in=2026-08-10 \
  *       --nights=7 --adults=2 [--children=8,5] [--room=DB] [--limit=5]
  *       [--tourop=LA --product=RO0486]   (one hotel: the store's EUS-LA-RO0486)
+ *   php hotel_search.php --code=EUS-LA-RO0486 --check-in=2026-11-09 --nights=6
+ *       (the store's product code: tour operator, hotel, and in the docker
+ *        store its country and city from the store's own hotel list)
  * Usage (browser):
  *   hotel_search.php?country=RO&city=ROMM&check_in=2026-08-10&nights=7&adults=2&limit=5
  */
@@ -28,6 +31,8 @@ if (euro_wants_help()) {
        . "  --tourop=CODE     only this tour operator's offers (e.g. LA)\n"
        . "  --product=CODE    only this hotel (needs --tourop): the store's\n"
        . "                    EUS-LA-RO0486 is --tourop=LA --product=RO0486\n"
+       . "  --code=EUS-LA-RO0486  the store's product code instead: tour operator\n"
+       . "                    and hotel, and (docker store) its country and city\n"
        . "  --limit=N         first N repeated rows only\n";
     exit;
 }
@@ -43,10 +48,20 @@ $room     = euro_param('room', 'DB') ?? 'DB';
 $limit    = (int) (euro_param('limit', '0') ?? '0');
 $tourop   = strtoupper(trim(euro_param('tourop', '') ?? ''));
 $product  = strtoupper(trim(euro_param('product', '') ?? ''));
+// The store's product code (EUS-LA-RO0486) names the tour operator and the
+// hotel; the store's own hotel list knows its country and city.
+if (preg_match('/^EUS-([A-Z0-9]+)-([A-Z0-9_]+)$/', strtoupper(trim(euro_param('code', '') ?? '')), $m) === 1) {
+    [$tourop, $product] = [$m[1], $m[2]];
+}
+$storeHotel = $city === '' ? euro_store_hotel($tourop, $product) : [];
+if ($storeHotel !== []) {
+    [$country, $city] = [$storeHotel['country'] !== '' ? strtoupper($storeHotel['country']) : $country, $storeHotel['city']];
+}
 
 if ($city === '') {
     euro_out_setup();
-    echo "Missing --city= (find codes with cities.php). --help for usage.\n";
+    echo "Missing --city= (find codes with cities.php), or a store hotel's --code=EUS-LA-RO0486"
+        . " (its city is read from the store's hotel list, in the docker store). --help for usage.\n";
     exit(1);
 }
 
@@ -78,5 +93,10 @@ $details = '  <getHotelPriceRequest>'
     . '<PeriodOfStay><CheckIn>' . euro_esc($checkIn) . '</CheckIn><CheckOut>' . euro_esc($checkOut) . '</CheckOut></PeriodOfStay>'
     . '<Rooms>' . $roomXml . '</Rooms>'
     . '</getHotelPriceRequest>';
+
+if ($storeHotel !== []) {
+    euro_out_setup();
+    echo "Store hotel: {$storeHotel['name']} (EUS-{$tourop}-{$product}), country {$country}, city {$city}: from the store's Eurosite hotel list\n";
+}
 
 euro_run($cfg, 'getHotelPriceRequest', $details, $limit);
