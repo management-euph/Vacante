@@ -715,7 +715,7 @@ cover:
 | 1b | Eurosite and Sphinx: record what their existing checks and hotel-page searches already fetch, hotel-list completeness, bookings read back, dashboard cards; Sphinx stores `giata_id` (§15.3); Eurosite's `full` takes its steps' run locks (§4.5) — **done 2026-10-23 (§16.4)** | No | M |
 | 2 | Hotel-page panels; "notify me" and "prices are out" emails; similar hotels; date-picker window; language keys. All suppliers; Eurosite first needs a request flow. **Back end done 2026-10-27 (§16.6); the panels on both hotel page templates and the date-picker window done 2026-10-30 (§16.8)**, behind a switch that is off; listing labels moved to phase 6 | Yes | M |
 | 3 | Automatic mode, per supplier: dormant / left the list → Hidden, and back to Active; brake; overrides; `gateHidden` for bookings. Novoton first (Feb–Mar 2027). **Built for Novoton 2026-10-30 (§16.9)**: offered in its settings, switched on by the admin after the Feb–Mar 2027 review | Yes | M |
-| 4 | Closed hotels: mark closed, redirect target, 301 controller, grace checks | Yes | S |
+| 4 | Closed hotels: mark closed, redirect target, 301 controller, grace checks — **built 2026-11-02 (§16.10)**; redirects only in Automatic mode | Yes | S |
 | 5 | Purchasing list of not-offered hotels with their demand | Staff only | S |
 | 6 | Eurosite and Sphinx switch to Automatic once their records cover a season (about autumn 2027), and their old gates are removed; listing labels and sorting | Yes | M |
 
@@ -1449,7 +1449,28 @@ list out of the per-hotel syncs (§7.4). To check on the store once
 Automatic runs: that CS-Cart 4.21.2 leaves Hidden products out of the
 sitemap (§9).
 
-### 16.10 Next
+### 16.10 Phase 4, closed hotels (built 2026-11-02)
+
+Like phase 3, nothing changes for customers until a supplier is in
+Automatic mode: a closed hotel is hidden by the gate, and its page redirects
+only then. The suites pass (Travel Core 1047, Novoton 1232, Eurosite 360,
+Sphinx 627) with PHPStan level 10, both CS Fixer configs and Rector; the
+redirect's queries and the proposal were run on MariaDB 10.11, the page
+rendered with Smarty 5.
+
+| Piece | Where (travel_core) | Notes |
+|---|---|---|
+| Proposed to close | `Repository\HotelAvailabilityListing::proposeClosed()`, the review's `proposed` count | Gone from the supplier's list for 6 months (rule 3) and no decision yet: a badge, a "Proposed to close" filter, a count on the supplier's tile, a CSV column, a line in the weekly email |
+| Closing | the "Closed" decision (`Services\AvailabilityOverride`) | Schedules the page's redirect for the closing day plus 6 months (`AvailabilityThresholds::$closedRedirectMonths`, new column `redirect_from`, healed), to the resort page; closing again keeps it as set; any other decision removes it, and the page comes back under its old address |
+| Where and when | the closed hotel's row; `Services\ClosedHotelRedirects::configure()` | Another product by its code (the same hotel at another supplier, or a similar hotel) or empty for the resort page; a day, today for at once. Never to the hotel itself or to another closed one, so redirects cannot loop. The row says where it goes and from when, or why it waits |
+| Who redirects | `ClosedHotelRedirects::refresh()`, daily (Travel Core's daily run) and after each change | The supplier is in Automatic mode, the product is Hidden (an admin who shows it again wants it seen), the day is reached, no stay booked there is still to come (`travel_bookings`, not cancelled or failed), no balance is open (`travel_balances`), and there is an active page to go to: the chosen product, else the product's main category, else it waits. A failed refresh keeps the last list and is logged |
+| The 301 | `controllers/frontend/products.pre.php` | Reads only the stored list (storage_data), so any other product page costs one small query; `fn_redirect($url, false, true)`: permanent, never to another site. The product stays Hidden, never disabled or deleted; never a 404 or 410 |
+
+To check on the store: that `fn_redirect()`'s third argument sends a 301 on
+CS-Cart 4.21.2 (§7.4), and that switching a supplier back to Report only
+stops its redirects at the next daily run.
+
+### 16.11 Next
 
 6. Calibration on the live store (§14) once the suppliers have recorded for a
    few weeks; then set the privacy policy page and switch the panels on.
@@ -1457,5 +1478,5 @@ sitemap (§9).
    "Would be hidden" list for Novoton on the Hotel availability page, set
    decisions where needed (keep visible, closed), then switch Novoton to
    Automatic.
-8. Phase 4 (closed hotels: the 301 after 6 months) and phase 5 (the
-   purchasing list) need no season of data and can come before or after.
+8. Phase 5 (the purchasing list) needs no season of data and can come
+   before or after; it first needs page views counted (§7.2).
