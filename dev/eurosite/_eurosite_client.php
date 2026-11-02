@@ -290,8 +290,10 @@ function euro_section(string $title): void
  * Run a call and print request + response. This is what most probes end with.
  *
  * @param int $limit 0 = print the whole response; >0 = trim repeated rows.
+  *
+ * @return string the response body ('' when empty), for a probe that reads it further
  */
-function euro_run(array $cfg, string $requestType, string $detailsXml, int $limit = 0): void
+function euro_run(array $cfg, string $requestType, string $detailsXml, int $limit = 0): string
 {
     euro_out_setup();
 
@@ -318,7 +320,7 @@ function euro_run(array $cfg, string $requestType, string $detailsXml, int $limi
     euro_section('RESPONSE');
     if ($res['body'] === '') {
         echo "(empty body)\n";
-        return;
+        return '';
     }
     echo euro_format_xml($res['body'], $limit) . "\n";
 
@@ -327,4 +329,6 @@ function euro_run(array $cfg, string $requestType, string $detailsXml, int $limi
            . "were rejected — set EUROSITE_API_USER / EUROSITE_API_PASSWORD to a valid\n"
            . "XML account (the spec placeholders always get this refusal).\n";
     }
+
+    return $res['body'];
 }
