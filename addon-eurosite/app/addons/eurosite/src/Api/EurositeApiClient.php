@@ -10,6 +10,7 @@ use Tygh\Addons\Eurosite\EurositeXmlBuilder;
 use Tygh\Addons\Eurosite\EurositeXmlParser;
 use Tygh\Addons\Eurosite\Exception\EurositeApiException;
 use Tygh\Addons\Eurosite\Services\FacilityTextParser;
+use Tygh\Addons\Eurosite\Services\MealPlanNames;
 use Tygh\Addons\Eurosite\Services\RoomTypeNames;
 
 /**
@@ -783,9 +784,14 @@ final class EurositeApiClient
         $meals = [];
         foreach ($offer->Meals->Meal ?? [] as $m) {
             $meals[] = [
+                // Eurosite's service type (2 = meals), not the meal plan.
                 'type' => trim((string) ($m['Type'] ?? '')),
                 'code' => trim((string) ($m['Code'] ?? '')),
+                // The hotel's own text, as sent: the board features match it.
                 'name' => trim((string) $m),
+                // What a page shows: the plan the text names, in the store's
+                // language, the text in brackets ("Mic dejun (BB)", MealPlanNames).
+                'label' => MealPlanNames::label(trim((string) $m), $lang),
                 'price' => trim((string) ($m['ServicePrice'] ?? '')),
             ];
         }

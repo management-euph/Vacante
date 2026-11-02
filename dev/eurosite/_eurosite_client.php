@@ -58,6 +58,46 @@ function euro_config(): array
 }
 
 /**
+ * A store hotel's place, from the store's own Eurosite hotel list
+ * (?:eurosite_hotels), so a probe can be pointed at a product code alone
+ * (EUS-LA-RO0486) without looking up its city first. Only where the store's
+ * database answers, i.e. inside the docker store's app container
+ * (CSCART_DB_* as docker/fullstore sets them); elsewhere, or for a hotel the
+ * store does not have, [] and the probe asks for --city as before.
+ *
+ * @return array{country: string, city: string, name: string}|array{}
+ */
+function euro_store_hotel(string $tourop, string $product): array
+{
+    if ($tourop === '' || $product === '' || !function_exists('mysqli_connect')) {
+        return [];
+    }
+    mysqli_report(MYSQLI_REPORT_OFF);
+    $db = @mysqli_connect(
+        getenv('CSCART_DB_HOST') ?: 'db',
+        getenv('CSCART_DB_USER') ?: 'cscart',
+        getenv('CSCART_DB_PASSWORD') ?: 'cscart',
+        getenv('CSCART_DB_NAME') ?: 'cscart',
+    );
+    if (!$db) {
+        return [];
+    }
+    $stmt = mysqli_prepare($db, 'SELECT country_code, city_code, name FROM cscart_eurosite_hotels WHERE tourop_code = ? AND product_code = ? LIMIT 1');
+    if ($stmt === false) {
+        return [];
+    }
+    mysqli_stmt_bind_param($stmt, 'ss', $tourop, $product);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $row = $result !== false ? mysqli_fetch_assoc($result) : null;
+    if (!is_array($row) || (string) $row['city_code'] === '') {
+        return [];
+    }
+
+    return ['country' => (string) $row['country_code'], 'city' => (string) $row['city_code'], 'name' => (string) $row['name']];
+}
+
+/**
  * Read a probe parameter: `--key=value` on the CLI, `?key=value` in a browser.
  */
 function euro_param(string $key, ?string $default = null): ?string
@@ -68,9 +108,9 @@ function euro_param(string $key, ?string $default = null): ?string
         if (euro_is_cli()) {
             $pos = 0;
             foreach (array_slice($GLOBALS['argv'] ?? [], 1) as $arg) {
-                if (preg_match('/^--([a-zA-Z0-9_]+)=(.*)$/s', $arg, $m)) {
+                if (preg_match('/^--([a-zA-Z0-9_-]+)=(.*)$/s', $arg, $m)) {
                     $cli[$m[1]] = $m[2];
-                } elseif (preg_match('/^--([a-zA-Z0-9_]+)$/', $arg, $m)) {
+                } elseif (preg_match('/^--([a-zA-Z0-9_-]+)$/', $arg, $m)) {
                     $cli[$m[1]] = '1';
                 } else {
                     $cli[(string) $pos++] = $arg;
@@ -250,8 +290,10 @@ function euro_section(string $title): void
  * Run a call and print request + response. This is what most probes end with.
  *
  * @param int $limit 0 = print the whole response; >0 = trim repeated rows.
+  *
+ * @return string the response body ('' when empty), for a probe that reads it further
  */
-function euro_run(array $cfg, string $requestType, string $detailsXml, int $limit = 0): void
+function euro_run(array $cfg, string $requestType, string $detailsXml, int $limit = 0): string
 {
     euro_out_setup();
 
@@ -278,7 +320,7 @@ function euro_run(array $cfg, string $requestType, string $detailsXml, int $limi
     euro_section('RESPONSE');
     if ($res['body'] === '') {
         echo "(empty body)\n";
-        return;
+        return '';
     }
     echo euro_format_xml($res['body'], $limit) . "\n";
 
@@ -287,4 +329,6 @@ function euro_run(array $cfg, string $requestType, string $detailsXml, int $limi
            . "were rejected — set EUROSITE_API_USER / EUROSITE_API_PASSWORD to a valid\n"
            . "XML account (the spec placeholders always get this refusal).\n";
     }
+
+    return $res['body'];
 }

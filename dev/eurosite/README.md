@@ -45,7 +45,7 @@ currently empty.
 | `rooms.php` | getRoomRequest | `--limit=N` |
 | `own_hotels.php` | getOwnHotelsRequest | `--city=CODE --limit=N` |
 | `tag_offers.php` | getTagOffersRequest | `--limit=N` |
-| `hotel_search.php` | getHotelPriceRequest | `--country --city --check-in --nights --adults [--children=8,5] [--room=DB] --limit=N` |
+| `hotel_search.php` | getHotelPriceRequest | `--country --city --check-in --nights --adults [--children=8,5] [--room=DB] [--tourop=LA --product=RO0486] --limit=N` (one hotel: the store's product code EUS-LA-RO0486 is tour operator LA, product RO0486), or `--code=EUS-LA-RO0486`: in the docker store the hotel's country and city come from the store's own hotel list, so no `--city` |
 | `product_info.php` | getProductInfoRequest | `--country --city --product [--type=hotel] --limit=N` |
 | `booking_info.php` | getBookingRequest | `--ref=REF [--source=client|api]` |
 | `search_diagnose.php` | getHotelPriceRequest battery | `[--report=FILE]` — outage evidence report (EN+RO) for the operator |

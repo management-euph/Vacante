@@ -78,7 +78,7 @@
                     </div>
                     <div class="travel-offer-details">
                         {foreach from=$offer.meals item=meal}
-                            <div class="travel-offer-board">{$meal.name|escape:html}</div>
+                            <div class="travel-offer-board">{$meal.label|default:$meal.name|escape:html}</div>
                         {/foreach}
                         {if !$offer.bookable}
                             <div class="eurosite-offer-availability eurosite-availability--stop">{__("eurosite.stop_sale", ["[default]" => "Stop sale — not bookable"])}</div>
