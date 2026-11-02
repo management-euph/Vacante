@@ -2862,6 +2862,82 @@ msgctxt "Languages::travel_core.availability_override_report"
 msgid "It applies once this supplier is in Automatic mode."
 msgstr "Se aplică după ce acest furnizor trece în modul Automat."
 
+msgctxt "Languages::travel_core.availability_gate_propose_closed"
+msgid "Proposed to close"
+msgstr "Propuse pentru închidere"
+
+msgctxt "Languages::travel_core.availability_tile_propose_closed"
+msgid "Proposed to close: [n]"
+msgstr "Propuse pentru închidere: [n]"
+
+msgctxt "Languages::travel_core.availability_propose_closed"
+msgid "Gone from the supplier's list for [months] months: proposed to close."
+msgstr "Lipsește din lista furnizorului de [months] luni: propus pentru închidere."
+
+msgctxt "Languages::travel_core.availability_mail_propose_closed"
+msgid "Gone from the supplier's list for 6 months, proposed to close: [n]"
+msgstr "Lipsesc din lista furnizorului de 6 luni, propuse pentru închidere: [n]"
+
+msgctxt "Languages::travel_core.availability_redirect_resort"
+msgid "its resort page"
+msgstr "pagina stațiunii"
+
+msgctxt "Languages::travel_core.availability_redirect_active"
+msgid "Its page redirects (301) to [target]."
+msgstr "Pagina lui redirecționează (301) către [target]."
+
+msgctxt "Languages::travel_core.availability_redirect_scheduled"
+msgid "Its page redirects (301) to [target] from [date]."
+msgstr "Pagina lui redirecționează (301) către [target] din [date]."
+
+msgctxt "Languages::travel_core.availability_redirect_report"
+msgid "Its page redirects to [target] from [date], once this supplier is in Automatic mode."
+msgstr "Pagina lui redirecționează către [target] din [date], după ce acest furnizor trece în modul Automat."
+
+msgctxt "Languages::travel_core.availability_redirect_waits_not_hidden"
+msgid "The redirect waits: the product is not hidden."
+msgstr "Redirecționarea așteaptă: produsul nu este ascuns."
+
+msgctxt "Languages::travel_core.availability_redirect_waits_bookings"
+msgid "The redirect waits: a stay booked there is not over yet."
+msgstr "Redirecționarea așteaptă: un sejur rezervat acolo nu s-a încheiat încă."
+
+msgctxt "Languages::travel_core.availability_redirect_waits_balance"
+msgid "The redirect waits: a balance for it is still to be paid."
+msgstr "Redirecționarea așteaptă: un rest de plată pentru el nu este achitat încă."
+
+msgctxt "Languages::travel_core.availability_redirect_waits_no_target"
+msgid "The redirect waits: there is no active page to send it to (resort page or product)."
+msgstr "Redirecționarea așteaptă: nu există o pagină activă spre care să trimită (pagina stațiunii sau un produs)."
+
+msgctxt "Languages::travel_core.availability_redirect_target"
+msgid "Product code (empty: the resort page)"
+msgstr "Cod produs (gol: pagina stațiunii)"
+
+msgctxt "Languages::travel_core.availability_redirect_from_label"
+msgid "Redirect from"
+msgstr "Redirecționează din"
+
+msgctxt "Languages::travel_core.availability_redirect_saved"
+msgid "The redirect for [hotel] is saved."
+msgstr "Redirecționarea pentru [hotel] a fost salvată."
+
+msgctxt "Languages::travel_core.availability_redirect_unknown"
+msgid "The hotel was not found."
+msgstr "Hotelul nu a fost găsit."
+
+msgctxt "Languages::travel_core.availability_redirect_not_closed"
+msgid "Mark the hotel closed first."
+msgstr "Marcați mai întâi hotelul ca închis."
+
+msgctxt "Languages::travel_core.availability_redirect_bad_target"
+msgid "No product has that code, or it is this hotel or another closed one."
+msgstr "Niciun produs nu are acest cod, sau este chiar acest hotel ori alt hotel închis."
+
+msgctxt "Languages::travel_core.availability_redirect_bad_date"
+msgid "The date is not valid."
+msgstr "Data nu este validă."
+
 msgctxt "Languages::travel_core.availability_override_failed"
 msgid "The decision could not be saved: the hotel was not found."
 msgstr "Decizia nu a putut fi salvată: hotelul nu a fost găsit."

@@ -94,6 +94,8 @@ final class AvailabilityReview
             if ($sources === []) {
                 return ['status' => 'none'] + $outcome;
             }
+            // Closed hotels whose redirect starts today, or no longer may (plan §7.4).
+            (new ClosedHotelRedirects())->refresh($now);
             $due = $force || self::isDue(CronRunLog::get('travel_core', self::JOB), $now->getTimestamp());
             $busy = self::busyJobs($sources, TravelProviderRegistry::getCronProviders(), $now->getTimestamp());
             if (!$due) {
@@ -334,7 +336,7 @@ final class AvailabilityReview
      * $hiddenOnly, only the hotels the gate hid; the destinations' peers
      * still come from every record).
      *
-     * @return array{counts: array<string, int>, changed: int, first: int, changes: list<array{hotel_id: string, hotel_name: string, product_id: int, from: string, to: string, reason: string}>}
+     * @return array{counts: array<string, int>, changed: int, first: int, changes: list<array{hotel_id: string, hotel_name: string, product_id: int, from: string, to: string, reason: string}>, proposed: int}
      */
     public function reviewProvider(string $provider, AvailabilityThresholds $limits, \DateTimeImmutable $now, bool $hiddenOnly = false): array
     {
@@ -351,6 +353,7 @@ final class AvailabilityReview
         $changes = [];
         $changed = 0;
         $first = 0;
+        $proposed = 0;
         foreach ($rows as $row) {
             if ($hiddenOnly && TypeCoerce::toString($row['gate_hidden'] ?? '') !== 'Y') {
                 continue;
@@ -360,6 +363,10 @@ final class AvailabilityReview
             $state = $verdict->state->value;
             $season = $verdict->seasonPublished ? 'Y' : 'N';
             $counts[$state]++;
+            // Gone from the list for months and nobody decided yet (plan §5 rule 3).
+            if ($verdict->proposeClosed && $record->override === '') {
+                $proposed++;
+            }
 
             $oldState = TypeCoerce::toString($row['state'] ?? '');
             if ($oldState === $state
@@ -427,7 +434,7 @@ final class AvailabilityReview
             );
         }
 
-        return ['counts' => $counts, 'changed' => $changed, 'first' => $first, 'changes' => $changes];
+        return ['counts' => $counts, 'changed' => $changed, 'first' => $first, 'changes' => $changes, 'proposed' => $proposed];
     }
 
     /**
@@ -438,7 +445,7 @@ final class AvailabilityReview
      * @param array<string, HotelAvailabilitySourceInterface> $sources
      * @param array<string, AvailabilityMode> $modes
      *
-     * @return array{at: string, providers: array<string, array{mode: string, counts: array<string, int>, changed: int, first: int, changes: list<array{hotel_id: string, hotel_name: string, product_id: int, from: string, to: string, reason: string}>, gate: array{hidden: int, shown: int, released: int, would_hide: int, braked: int}}>}
+     * @return array{at: string, providers: array<string, array{mode: string, counts: array<string, int>, changed: int, first: int, changes: list<array{hotel_id: string, hotel_name: string, product_id: int, from: string, to: string, reason: string}>, proposed: int, gate: array{hidden: int, shown: int, released: int, would_hide: int, braked: int}}>}
      */
     public function review(array $sources, array $modes, AvailabilityThresholds $limits, \DateTimeImmutable $now): array
     {

@@ -27,6 +27,7 @@ use Tygh\Addons\TravelCore\Services\AvailabilityCard;
 use Tygh\Addons\TravelCore\Services\AvailabilityGate;
 use Tygh\Addons\TravelCore\Services\AvailabilityOverride;
 use Tygh\Addons\TravelCore\Services\AvailabilityReview;
+use Tygh\Addons\TravelCore\Services\ClosedHotelRedirects;
 use Tygh\Addons\TravelCore\Services\TravelCoreConfig;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
 use Tygh\Tygh;
@@ -87,6 +88,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $mode === 'override') {
     return [CONTROLLER_STATUS_REDIRECT, 'travel_hotel_availability.manage' . ($back !== '' ? '?' . $back : '')];
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $mode === 'redirect') {
+    $hotelId = RequestCoerce::string($_REQUEST, 'hotel_id');
+    $hotelName = RequestCoerce::string($_REQUEST, 'hotel_name');
+    $status = (new ClosedHotelRedirects())->configure(
+        RequestCoerce::string($_REQUEST, 'provider'),
+        $hotelId,
+        RequestCoerce::string($_REQUEST, 'redirect_target'),
+        RequestCoerce::string($_REQUEST, 'redirect_from'),
+        TypeCoerce::toInt((new SessionAccessor())->auth()['user_id'] ?? 0),
+        new DateTimeImmutable(),
+    );
+
+    if ($status === 'saved') {
+        fn_set_notification('N', __('notice'), __('travel_core.availability_redirect_saved', ['[hotel]' => $hotelName !== '' ? $hotelName : '#' . $hotelId]));
+    } else {
+        fn_set_notification('E', __('error'), __('travel_core.availability_redirect_' . $status));
+    }
+    $back = (string) preg_replace('/[^A-Za-z0-9_=&%.+-]/', '', RequestCoerce::string($_REQUEST, 'return_query'));
+
+    return [CONTROLLER_STATUS_REDIRECT, 'travel_hotel_availability.manage' . ($back !== '' ? '?' . $back : '')];
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $mode === 'apply_gate') {
     $provider = RequestCoerce::string($_REQUEST, 'provider');
     $outcome = (new AvailabilityOverride())->confirmHiding($provider, TypeCoerce::toInt((new SessionAccessor())->auth()['user_id'] ?? 0), new DateTimeImmutable());
@@ -117,7 +140,7 @@ if ($mode === 'manage') {
     $listing = new HotelAvailabilityListing();
     [$rows, $search] = $listing->getListing(TypeCoerce::toStringMap($_REQUEST), $now);
     $counts = $listing->counts();
-    $gateCounts = $listing->gateCounts();
+    $gateCounts = $listing->gateCounts($now);
 
     // Suppliers that record availability now, and any that recorded before.
     $providers = array_values(array_unique(array_merge(
@@ -163,6 +186,9 @@ if ($mode === 'manage') {
         $view->assign('availability_overrides', AvailabilityGate::OVERRIDES);
         $view->assign('availability_gate_filters', HotelAvailabilityListing::GATE_FILTERS);
         $view->assign('availability_brake', ['min' => AvailabilityGate::BRAKE_MIN, 'percent' => AvailabilityGate::BRAKE_PERCENT]);
+        // Closed hotels: where and from when their pages redirect, or why not yet.
+        $view->assign('availability_redirects', (new ClosedHotelRedirects())->describe($rows, array_fill_keys($automatic, true)));
+        $view->assign('availability_propose_months', (new \Tygh\Addons\TravelCore\ValueObjects\AvailabilityThresholds())->closedProposalMonths);
         $view->assign('availability_dormant_months', TravelCoreConfig::getAvailabilityThresholds()->dormantMonths);
         $view->assign('availability_offer_months', HotelAvailabilityListing::OFFER_MONTHS);
         $view->assign('availability_summary', AvailabilityReview::lastSummary());

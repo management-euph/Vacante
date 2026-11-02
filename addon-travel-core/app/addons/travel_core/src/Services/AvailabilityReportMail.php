@@ -38,7 +38,7 @@ final class AvailabilityReportMail
     /**
      * The subject and body for a review summary; null when there is nothing new.
      *
-     * @param array{at: string, providers: array<string, array{mode: string, counts: array<string, int>, changed: int, first: int, changes: list<array{hotel_id: string, hotel_name: string, product_id: int, from: string, to: string, reason: string}>, gate?: array{hidden: int, shown: int, released: int, would_hide: int, braked: int}}>} $summary
+     * @param array{at: string, providers: array<string, array{mode: string, counts: array<string, int>, changed: int, first: int, changes: list<array{hotel_id: string, hotel_name: string, product_id: int, from: string, to: string, reason: string}>, proposed?: int, gate?: array{hidden: int, shown: int, released: int, would_hide: int, braked: int}}>} $summary
      * @param array<string, string> $labels provider name => label
      *
      * @return array{subject: string, body: string}|null
@@ -72,6 +72,9 @@ final class AvailabilityReportMail
             }
             foreach (self::gateLines($provider['mode'], $provider['gate'] ?? null) as $key => $n) {
                 $lines[] = '  ' . $t('travel_core.availability_mail_' . $key, ['[n]' => (string) $n]);
+            }
+            if (($provider['proposed'] ?? 0) > 0) {
+                $lines[] = '  ' . $t('travel_core.availability_mail_propose_closed', ['[n]' => (string) $provider['proposed']]);
             }
             if ($provider['changes'] !== []) {
                 $lines[] = '  ' . $t('travel_core.availability_mail_changes', []) . ':';
@@ -124,7 +127,7 @@ final class AvailabilityReportMail
     /**
      * Sends the review's email, if there is one, to the orders department.
      *
-     * @param array{at: string, providers: array<string, array{mode: string, counts: array<string, int>, changed: int, first: int, changes: list<array{hotel_id: string, hotel_name: string, product_id: int, from: string, to: string, reason: string}>, gate?: array{hidden: int, shown: int, released: int, would_hide: int, braked: int}}>} $summary
+     * @param array{at: string, providers: array<string, array{mode: string, counts: array<string, int>, changed: int, first: int, changes: list<array{hotel_id: string, hotel_name: string, product_id: int, from: string, to: string, reason: string}>, proposed?: int, gate?: array{hidden: int, shown: int, released: int, would_hide: int, braked: int}}>} $summary
      * @param array<string, string> $labels
      */
     public function send(array $summary, array $labels, string $pageUrl, string $to): bool

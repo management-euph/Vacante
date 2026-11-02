@@ -109,13 +109,21 @@ final class HotelAvailabilityListingTest extends TestCase
         self::assertSame(" AND a.gate_released = 'Y'", HotelAvailabilityListing::condition(['gate' => 'released'] + $filters, $now));
         self::assertSame(" AND a.override <> ''", HotelAvailabilityListing::condition(['gate' => 'override'] + $filters, $now));
         self::assertStringStartsWith(" AND (a.product_id > 0 AND p.status = 'A'", HotelAvailabilityListing::condition(['gate' => 'would_hide'] + $filters, $now));
+        self::assertSame(
+            " AND (a.state = 'left_feed' AND a.override = '' AND a.state_since IS NOT NULL AND a.state_since <= '2026-08-15 00:00:00')",
+            HotelAvailabilityListing::condition(['gate' => 'propose_closed'] + $filters, $now),
+            'gone from the list for 6 months, nobody decided yet',
+        );
     }
 
     public function testGateCountsPerSupplier(): void
     {
-        DbStub::$getArray = static fn (): array => [['provider' => 'novoton', 'would_hide' => '4', 'hidden' => '2', 'released' => '1', 'override' => '3']];
+        DbStub::$getArray = static fn (): array => [['provider' => 'novoton', 'would_hide' => '4', 'hidden' => '2', 'released' => '1', 'override' => '3', 'propose_closed' => '5']];
 
-        self::assertSame(['novoton' => ['would_hide' => 4, 'hidden' => 2, 'released' => 1, 'override' => 3]], (new HotelAvailabilityListing())->gateCounts());
+        self::assertSame(
+            ['novoton' => ['would_hide' => 4, 'hidden' => 2, 'released' => 1, 'override' => 3, 'propose_closed' => 5]],
+            (new HotelAvailabilityListing())->gateCounts(new \DateTimeImmutable('2027-02-15')),
+        );
     }
 
     public function testCountsHaveEveryStateForEverySupplier(): void

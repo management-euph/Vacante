@@ -53,6 +53,7 @@ final class HotelAvailabilityRepository
         `override_by`           INT UNSIGNED      NOT NULL DEFAULT 0,
         `override_at`           DATETIME          DEFAULT NULL,
         `redirect_to`           VARCHAR(255)      NOT NULL DEFAULT \'\' COMMENT \'Closed hotels: target product, category or URL\',
+        `redirect_from`         DATE              DEFAULT NULL COMMENT \'Closed hotels: the redirect (301) starts on this day\',
         `created_at`            DATETIME          NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT \'Recording started\',
         `updated_at`            TIMESTAMP         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         PRIMARY KEY (`provider`, `hotel_id`),
@@ -86,6 +87,7 @@ final class HotelAvailabilityRepository
     public const array ADDED_COLUMNS = [
         'hotel_name' => "VARCHAR(255) NOT NULL DEFAULT '' COMMENT 'As the supplier lists it, for the report' AFTER `destination_key`",
         'gate_released' => "CHAR(1) NOT NULL DEFAULT 'N' COMMENT 'An admin changed a gate-hidden product by hand: left alone until availability returns' AFTER `gate_hidden`",
+        'redirect_from' => "DATE DEFAULT NULL COMMENT 'Closed hotels: the redirect (301) starts on this day' AFTER `redirect_to`",
     ];
 
     private static bool $ensured = false;
