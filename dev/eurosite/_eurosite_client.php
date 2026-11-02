@@ -68,9 +68,9 @@ function euro_param(string $key, ?string $default = null): ?string
         if (euro_is_cli()) {
             $pos = 0;
             foreach (array_slice($GLOBALS['argv'] ?? [], 1) as $arg) {
-                if (preg_match('/^--([a-zA-Z0-9_]+)=(.*)$/s', $arg, $m)) {
+                if (preg_match('/^--([a-zA-Z0-9_-]+)=(.*)$/s', $arg, $m)) {
                     $cli[$m[1]] = $m[2];
-                } elseif (preg_match('/^--([a-zA-Z0-9_]+)$/', $arg, $m)) {
+                } elseif (preg_match('/^--([a-zA-Z0-9_-]+)$/', $arg, $m)) {
                     $cli[$m[1]] = '1';
                 } else {
                     $cli[(string) $pos++] = $arg;

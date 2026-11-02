@@ -9,6 +9,7 @@ declare(strict_types=1);
  * Usage (CLI):
  *   php hotel_search.php --country=RO --city=ROMM --check-in=2026-08-10 \
  *       --nights=7 --adults=2 [--children=8,5] [--room=DB] [--limit=5]
+ *       [--tourop=LA --product=RO0486]   (one hotel: the store's EUS-LA-RO0486)
  * Usage (browser):
  *   hotel_search.php?country=RO&city=ROMM&check_in=2026-08-10&nights=7&adults=2&limit=5
  */
@@ -24,6 +25,9 @@ if (euro_wants_help()) {
        . "  --adults=N        (default 2)\n"
        . "  --children=8,5    child ages, comma separated (default none)\n"
        . "  --room=CODE       room code for the occupancy (default DB)\n"
+       . "  --tourop=CODE     only this tour operator's offers (e.g. LA)\n"
+       . "  --product=CODE    only this hotel (needs --tourop): the store's\n"
+       . "                    EUS-LA-RO0486 is --tourop=LA --product=RO0486\n"
        . "  --limit=N         first N repeated rows only\n";
     exit;
 }
@@ -37,10 +41,18 @@ $adults   = max(1, (int) (euro_param('adults', '2') ?? '2'));
 $children = trim(euro_param('children', '') ?? '');
 $room     = euro_param('room', 'DB') ?? 'DB';
 $limit    = (int) (euro_param('limit', '0') ?? '0');
+$tourop   = strtoupper(trim(euro_param('tourop', '') ?? ''));
+$product  = strtoupper(trim(euro_param('product', '') ?? ''));
 
 if ($city === '') {
     euro_out_setup();
     echo "Missing --city= (find codes with cities.php). --help for usage.\n";
+    exit(1);
+}
+
+if ($product !== '' && $tourop === '') {
+    euro_out_setup();
+    echo "--product= needs --tourop= too (Eurosite asks for both). --help for usage.\n";
     exit(1);
 }
 
@@ -61,6 +73,8 @@ if ($children !== '') {
 $details = '  <getHotelPriceRequest>'
     . '<CountryCode>' . euro_esc($country) . '</CountryCode>'
     . '<CityCode>' . euro_esc($city) . '</CityCode>'
+    . ($tourop !== '' ? '<TourOpCode>' . euro_esc($tourop) . '</TourOpCode>' : '')
+    . ($product !== '' ? '<ProductCode>' . euro_esc($product) . '</ProductCode>' : '')
     . '<PeriodOfStay><CheckIn>' . euro_esc($checkIn) . '</CheckIn><CheckOut>' . euro_esc($checkOut) . '</CheckOut></PeriodOfStay>'
     . '<Rooms>' . $roomXml . '</Rooms>'
     . '</getHotelPriceRequest>';
