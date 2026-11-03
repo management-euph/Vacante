@@ -102,6 +102,34 @@ final class DesignARatesTest extends TestCase
         self::assertSame(['All inclusive', RateOffer::MEAL_ALL_INCLUSIVE], [$allInclusive->mealPlan, $allInclusive->mealRank]);
     }
 
+    /**
+     * One room sold at two rates (Casa Georgius Krauss, 2 Nov 2026): the
+     * same meal, two prices. Each option names its rate (GrilaName) and the
+     * non-refundable one carries the card's "Nerambursabil" pill.
+     */
+    public function testEachOptionNamesItsRateAndTheNonRefundableOneSaysSo(): void
+    {
+        $bb = [['type' => '2', 'code' => '2036', 'name' => 'BB', 'label' => 'Mic dejun (BB)', 'price' => '0']];
+
+        [$nonRefundable, $flexible] = self::mapper()->rates([
+            ['offer' => self::offer('5879', 'Camera verde', $bb, 334.0, ['grila' => 'Cazare cu mic dejun - nerambursabil']), 'key' => 'cg01'],
+            ['offer' => self::offer('5879', 'Camera verde', $bb, 371.0, ['grila' => 'Cazare cu mic dejun - flexibil']), 'key' => 'cg02'],
+        ]);
+
+        self::assertSame($nonRefundable->roomKey, $flexible->roomKey, 'one card, two options');
+        self::assertSame(['Cazare cu mic dejun - nerambursabil', true], [$nonRefundable->rateName, $nonRefundable->nonRefundable]);
+        self::assertSame(['Cazare cu mic dejun - flexibil', false], [$flexible->rateName, $flexible->nonRefundable]);
+    }
+
+    public function testARateNamedStandardNamesNothing(): void
+    {
+        self::assertSame('', DesignARates::rateName('Standard'));
+        self::assertSame('', DesignARates::rateName(' '));
+        self::assertTrue(DesignARates::nonRefundable('Tarif NON-REFUNDABLE'));
+        self::assertTrue(DesignARates::nonRefundable('Cazare fără rambursare'));
+        self::assertFalse(DesignARates::nonRefundable('Cazare cu mic dejun - flexibil'));
+    }
+
     public function testEachBookableOfferIsOneRoomAtOneMealPlan(): void
     {
         $rates = self::mapper()->rates(self::condor());
