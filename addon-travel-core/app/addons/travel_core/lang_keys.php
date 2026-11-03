@@ -2082,6 +2082,22 @@ Dacă ați plătit deja, vă rugăm să ignorați acest email.',
         'en' => 'The date is not valid.',
         'ro' => 'Data nu este validă.',
     ],
+    'travel_core.availability_sort_demand' => [
+        'en' => 'Most wanted',
+        'ro' => 'Cele mai căutate',
+    ],
+    'travel_core.availability_demand' => [
+        'en' => 'Page views: [views] · waiting to be notified: [waiting] · requests in 12 months: [requests]',
+        'ro' => 'Vizualizări: [views] · așteaptă anunțul: [waiting] · cereri în 12 luni: [requests]',
+    ],
+    'travel_core.availability_purchasing_list' => [
+        'en' => 'Purchasing list (CSV)',
+        'ro' => 'Listă de achiziții (CSV)',
+    ],
+    'travel_core.availability_purchasing_list_hint' => [
+        'en' => 'The hotels this supplier does not offer while their resort sells, most wanted first: for the account manager, to ask for allotment or a contract.',
+        'ro' => 'Hotelurile pe care acest furnizor nu le oferă deși stațiunea lor se vinde, cele mai căutate primele: pentru managerul de cont, ca să ceară alocare sau contract.',
+    ],
     'travel_core.availability_override_failed' => [
         'en' => 'The decision could not be saved: the hotel was not found.',
         'ro' => 'Decizia nu a putut fi salvată: hotelul nu a fost găsit.',

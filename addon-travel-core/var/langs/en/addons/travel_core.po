@@ -2938,6 +2938,22 @@ msgctxt "Languages::travel_core.availability_redirect_bad_date"
 msgid "The date is not valid."
 msgstr "The date is not valid."
 
+msgctxt "Languages::travel_core.availability_sort_demand"
+msgid "Most wanted"
+msgstr "Most wanted"
+
+msgctxt "Languages::travel_core.availability_demand"
+msgid "Page views: [views] · waiting to be notified: [waiting] · requests in 12 months: [requests]"
+msgstr "Page views: [views] · waiting to be notified: [waiting] · requests in 12 months: [requests]"
+
+msgctxt "Languages::travel_core.availability_purchasing_list"
+msgid "Purchasing list (CSV)"
+msgstr "Purchasing list (CSV)"
+
+msgctxt "Languages::travel_core.availability_purchasing_list_hint"
+msgid "The hotels this supplier does not offer while their resort sells, most wanted first: for the account manager, to ask for allotment or a contract."
+msgstr "The hotels this supplier does not offer while their resort sells, most wanted first: for the account manager, to ask for allotment or a contract."
+
 msgctxt "Languages::travel_core.availability_override_failed"
 msgid "The decision could not be saved: the hotel was not found."
 msgstr "The decision could not be saved: the hotel was not found."

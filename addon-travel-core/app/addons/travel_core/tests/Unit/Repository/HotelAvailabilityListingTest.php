@@ -116,6 +116,20 @@ final class HotelAvailabilityListingTest extends TestCase
         );
     }
 
+    /** The purchasing list (plan §7.2): not-offered hotels, most wanted first, with their demand in the CSV. */
+    public function testThePurchasingListSortsByDemand(): void
+    {
+        self::assertSame('demand', HotelAvailabilityListing::normalize(['sort_by' => 'demand'])['sort_by']);
+
+        [, $search] = (new HotelAvailabilityListing())->getListing(['state' => 'not_offered', 'sort_by' => 'demand'], new \DateTimeImmutable('2027-02-15'));
+        self::assertSame(['not_offered', 'demand'], [$search['state'], $search['sort_by']]);
+        self::assertStringContainsString('ORDER BY a.demand_waiting DESC, a.demand_requests DESC, a.demand_views DESC, a.hotel_name', $this->sql[1]);
+
+        $csv = HotelAvailabilityListing::csv([['hotel_id' => '476', 'demand_views' => '1200', 'demand_waiting' => '3', 'demand_requests' => '2']]);
+        self::assertStringContainsString(';page_views;notify_me_waiting;alternatives_requests_12_months', strtok($csv, "\n") ?: '');
+        self::assertStringEndsWith(";1200;3;2\n", $csv);
+    }
+
     public function testGateCountsPerSupplier(): void
     {
         DbStub::$getArray = static fn (): array => [['provider' => 'novoton', 'would_hide' => '4', 'hidden' => '2', 'released' => '1', 'override' => '3', 'propose_closed' => '5']];

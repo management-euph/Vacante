@@ -66,6 +66,7 @@
                 <option value="hotel" {if $search.sort_by == "hotel"}selected{/if}>{__("travel_core.availability_sort_hotel")}</option>
                 <option value="offer" {if $search.sort_by == "offer"}selected{/if}>{__("travel_core.availability_sort_offer")}</option>
                 <option value="changed" {if $search.sort_by == "changed"}selected{/if}>{__("travel_core.availability_sort_changed")}</option>
+                <option value="demand" {if $search.sort_by == "demand"}selected{/if}>{__("travel_core.availability_sort_demand")}</option>
             </select>
         </div>
 
@@ -119,6 +120,12 @@
                     {if $gc.override > 0} · <a href="{"travel_hotel_availability.manage?provider=`$provider`&gate=override"|fn_url}">{__("travel_core.availability_tile_override", ["[n]" => $gc.override])}</a>{/if}
                     {if $gc.propose_closed > 0} · <a href="{"travel_hotel_availability.manage?provider=`$provider`&gate=propose_closed"|fn_url}">{__("travel_core.availability_tile_propose_closed", ["[n]" => $gc.propose_closed])}</a>{/if}
                 </div>
+                {* The purchasing list (§7.2): hotels the supplier does not offer while their resort sells, most wanted first *}
+                {if $availability_counts.$provider.not_offered > 0}
+                    <div class="travel-cron-tile__note">
+                        <a href="{"travel_hotel_availability.export?provider=`$provider`&state=not_offered&sort_by=demand"|fn_url}" title="{__("travel_core.availability_purchasing_list_hint")|escape:html}">{__("travel_core.availability_purchasing_list")}</a>
+                    </div>
+                {/if}
                 {* The brake held the last review's hiding: the admin checks the list, then confirms *}
                 {assign var="braked" value=$availability_summary.providers.$provider.gate.braked|default:0}
                 {if $availability_automatic.$provider && $braked > 0 && $gc.would_hide > 0}
@@ -226,6 +233,9 @@
                 <div class="muted travel-avail-sub">
                     {$row.hotel_id|escape:html}{if $row.destination_key} · {$row.destination_key|escape:html}{/if}{if !$row.product_id} · {__("travel_core.availability_no_product")}{/if}
                 </div>
+                {if $row.demand_views > 0 || $row.demand_waiting > 0 || $row.demand_requests > 0}
+                    <div class="travel-avail-sub">{__("travel_core.availability_demand", ["[views]" => $row.demand_views|default:0, "[waiting]" => $row.demand_waiting|default:0, "[requests]" => $row.demand_requests|default:0])}</div>
+                {/if}
             </td>
             <td>{$availability_labels.$provider|default:$provider|escape:html}</td>
             <td>

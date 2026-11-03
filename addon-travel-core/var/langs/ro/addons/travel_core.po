@@ -2938,6 +2938,22 @@ msgctxt "Languages::travel_core.availability_redirect_bad_date"
 msgid "The date is not valid."
 msgstr "Data nu este validă."
 
+msgctxt "Languages::travel_core.availability_sort_demand"
+msgid "Most wanted"
+msgstr "Cele mai căutate"
+
+msgctxt "Languages::travel_core.availability_demand"
+msgid "Page views: [views] · waiting to be notified: [waiting] · requests in 12 months: [requests]"
+msgstr "Vizualizări: [views] · așteaptă anunțul: [waiting] · cereri în 12 luni: [requests]"
+
+msgctxt "Languages::travel_core.availability_purchasing_list"
+msgid "Purchasing list (CSV)"
+msgstr "Listă de achiziții (CSV)"
+
+msgctxt "Languages::travel_core.availability_purchasing_list_hint"
+msgid "The hotels this supplier does not offer while their resort sells, most wanted first: for the account manager, to ask for allotment or a contract."
+msgstr "Hotelurile pe care acest furnizor nu le oferă deși stațiunea lor se vinde, cele mai căutate primele: pentru managerul de cont, ca să ceară alocare sau contract."
+
 msgctxt "Languages::travel_core.availability_override_failed"
 msgid "The decision could not be saved: the hotel was not found."
 msgstr "Decizia nu a putut fi salvată: hotelul nu a fost găsit."

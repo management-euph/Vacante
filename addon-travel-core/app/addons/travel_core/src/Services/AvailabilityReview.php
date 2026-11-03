@@ -53,8 +53,10 @@ final class AvailabilityReview
     /** The Hotel availability page, where the weekly email points. */
     public const string PAGE = 'travel_hotel_availability.manage';
 
-    public function __construct(private readonly AvailabilityGate $gate = new AvailabilityGate())
-    {
+    public function __construct(
+        private readonly AvailabilityGate $gate = new AvailabilityGate(),
+        private readonly HotelDemand $demand = new HotelDemand(),
+    ) {
     }
 
     /**
@@ -432,6 +434,10 @@ final class AvailabilityReview
                 'INSERT INTO ?:travel_hotel_state_log (provider, hotel_id, product_id, old_state, new_state, reason, created_at) VALUES ?p',
                 implode(', ', $chunk),
             );
+        }
+        // How much customers want each hotel, for the purchasing list (§7.2): weekly is enough.
+        if (!$hiddenOnly) {
+            $this->demand->refresh($provider, $rows, $now);
         }
 
         return ['counts' => $counts, 'changed' => $changed, 'first' => $first, 'changes' => $changes, 'proposed' => $proposed];

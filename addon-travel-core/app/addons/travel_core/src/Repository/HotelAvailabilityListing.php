@@ -33,6 +33,8 @@ final class HotelAvailabilityListing
         // Longest without an offer first; never offered before everything.
         'offer' => 'a.offer_seen_at IS NOT NULL, a.offer_seen_at, a.hotel_name',
         'changed' => 'a.state_since IS NULL, a.state_since DESC, a.hotel_name',
+        // Most wanted first: the purchasing list (§7.2).
+        'demand' => 'a.demand_waiting DESC, a.demand_requests DESC, a.demand_views DESC, a.hotel_name',
     ];
 
     /** Most rows one CSV holds. */
@@ -65,6 +67,9 @@ final class HotelAvailabilityListing
         'decision' => 'override',
         'proposed_to_close' => 'propose_closed',
         'redirect_from' => 'redirect_from',
+        'page_views' => 'demand_views',
+        'notify_me_waiting' => 'demand_waiting',
+        'alternatives_requests_12_months' => 'demand_requests',
     ];
 
     /** The records with their product's status, as every read here wants them. */

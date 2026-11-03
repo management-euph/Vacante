@@ -80,6 +80,16 @@ final class HotelAvailabilityAdminTest extends TestCase
         self::assertStringContainsString('{foreach from=$availability_gate_filters item=gate}', $tpl);
     }
 
+    /** The purchasing list is a CSV per supplier of the hotels it does not offer, most wanted first (plan §7.2). */
+    public function testEachSupplierHasItsPurchasingList(): void
+    {
+        $tpl = self::template('travel_hotel_availability/manage.tpl');
+
+        self::assertStringContainsString('{"travel_hotel_availability.export?provider=`$provider`&state=not_offered&sort_by=demand"|fn_url}', $tpl);
+        self::assertStringContainsString('<option value="demand"', $tpl);
+        self::assertStringContainsString('travel_core.availability_demand', $tpl);
+    }
+
     public function testThePageIsInTheMenusAndAllowed(): void
     {
         self::assertStringContainsString("'travel_hotel_availability.manage'", self::file('schemas/menu/actions.post.php'));
