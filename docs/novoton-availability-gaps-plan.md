@@ -716,7 +716,7 @@ cover:
 | 2 | Hotel-page panels; "notify me" and "prices are out" emails; similar hotels; date-picker window; language keys. All suppliers; Eurosite first needs a request flow. **Back end done 2026-10-27 (§16.6); the panels on both hotel page templates and the date-picker window done 2026-10-30 (§16.8)**, behind a switch that is off; listing labels moved to phase 6 | Yes | M |
 | 3 | Automatic mode, per supplier: dormant / left the list → Hidden, and back to Active; brake; overrides; `gateHidden` for bookings. Novoton first (Feb–Mar 2027). **Built for Novoton 2026-10-30 (§16.9)**: offered in its settings, switched on by the admin after the Feb–Mar 2027 review | Yes | M |
 | 4 | Closed hotels: mark closed, redirect target, 301 controller, grace checks — **built 2026-11-02 (§16.10)**; redirects only in Automatic mode | Yes | S |
-| 5 | Purchasing list of not-offered hotels with their demand | Staff only | S |
+| 5 | Purchasing list of not-offered hotels with their demand — **built 2026-11-03 (§16.11)** | Staff only | S |
 | 6 | Eurosite and Sphinx switch to Automatic once their records cover a season (about autumn 2027), and their old gates are removed; listing labels and sorting | Yes | M |
 
 **Repo rules every phase must pass:**
@@ -1470,7 +1470,24 @@ To check on the store: that `fn_redirect()`'s third argument sends a 301 on
 CS-Cart 4.21.2 (§7.4), and that switching a supplier back to Report only
 stops its redirects at the next daily run.
 
-### 16.11 Next
+### 16.11 Phase 5, the purchasing list (built 2026-11-03)
+
+For staff only, in every mode. The suites pass (Travel Core 1051, Novoton
+1232, Eurosite 360, Sphinx 627) with PHPStan level 10, both CS Fixer
+configs and Rector; the queries were run on MariaDB 10.11, the page
+rendered with Smarty 5.
+
+| Piece | Where (travel_core) | Notes |
+|---|---|---|
+| Demand per hotel | `Services\HotelDemand`, run by the weekly review | Kept on each record (new columns `demand_views`, `demand_waiting`, `demand_requests`, healed): the product page's views from CS-Cart's own count (`?:product_popularity.viewed`, once per visit, all time; a store without that table counts none), the "notify me" requests still waiting, the alternatives requests of the last 12 months. Read per supplier and matched in PHP, so tables created with different collations never meet in one query; only changed records are written |
+| On the page | `views/travel_hotel_availability/manage.tpl` | A hotel's demand under its name, a "Most wanted" sort, the demand in the CSV |
+| The purchasing list | each supplier's tile: "Purchasing list (CSV)" | The CSV of the hotels the supplier does not offer while their resort sells (not offered), most wanted first, for the account manager to ask for allotment or a contract (§7.2) |
+
+Page views are all-time totals, so a hotel listed for years weighs more than
+a new one; if that misleads, a later step can keep weekly snapshots and
+count views per period.
+
+### 16.12 Next
 
 6. Calibration on the live store (§14) once the suppliers have recorded for a
    few weeks; then set the privacy policy page and switch the panels on.
@@ -1478,5 +1495,7 @@ stops its redirects at the next daily run.
    "Would be hidden" list for Novoton on the Hotel availability page, set
    decisions where needed (keep visible, closed), then switch Novoton to
    Automatic.
-8. Phase 5 (the purchasing list) needs no season of data and can come
-   before or after; it first needs page views counted (§7.2).
+8. Phase 6 (about autumn 2027): Eurosite and Sphinx to the shared rules once
+   their records cover a season, their own gates retired; listing labels and
+   bookable hotels first in listings (they need the store's category list
+   templates).
