@@ -4,7 +4,7 @@ Updated 4 November 2026.
 
 Production needs 40 cron lines: 1 for Travel Core, 15 for Novoton, 12 for Eurosite and 12 for Sphinx, plus up to 10 more depending on what you sell. The times follow the suppliers' answers of 28 October 2026 and are ordered so no job starts before the one it depends on. Their answers, what changed and the questions still open are at the end.
 
-This file replaces the schedule in `CRON_JOBS.txt` (March 2026). When a job is added, moved or dropped, change its row here in the same pull request.
+This plan replaces the schedule in `CRON_JOBS.txt` (March 2026). `Production_Cron_Plan.pdf` is a print copy of `Production_Cron_Plan.md`; when they differ, the .md is right. When a job is added, moved or dropped, change its row in the .md in the same pull request.
 
 ## Setting up the lines
 
