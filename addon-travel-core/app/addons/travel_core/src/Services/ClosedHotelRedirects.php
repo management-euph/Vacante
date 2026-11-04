@@ -192,6 +192,13 @@ final class ClosedHotelRedirects
      * ('' = the hotel's resort page), from this day (Y-m-d; today or earlier
      * redirects at once). Applied at once.
      *
+     * @param string $provider the supplier, such as 'novoton'
+     * @param string $hotelId the supplier's hotel id
+     * @param string $targetCode another product's code, or '' for the resort page
+     * @param string $from the redirect's first day (Y-m-d)
+     * @param int $userId the admin, for the state log
+     * @param \DateTimeImmutable $now when the admin saved it
+     *
      * @return 'saved'|'unknown'|'not_closed'|'bad_target'|'bad_date'
      */
     public function configure(string $provider, string $hotelId, string $targetCode, string $from, int $userId, \DateTimeImmutable $now): string
