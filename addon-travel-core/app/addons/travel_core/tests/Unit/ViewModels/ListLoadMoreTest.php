@@ -34,4 +34,26 @@ final class ListLoadMoreTest extends TestCase
     {
         self::assertSame($expected, ListLoadMore::from($search));
     }
+
+    public function testTheNextPageKeepsWhatTheVisitorChose(): void
+    {
+        self::assertSame(
+            'categories.view?category_id=166&sort_by=price&sort_order=asc&layout=travelcore_cards&features_hash=12-3&page=2',
+            ListLoadMore::nextUrl('categories.view', [
+                'dispatch' => 'categories.view',
+                'category_id' => '166',
+                'sort_by' => 'price',
+                'sort_order' => 'asc',
+                'layout' => 'travelcore_cards',
+                'features_hash' => '12-3',
+                'page' => '1',
+                'is_ajax' => '1',
+                'result_ids' => 'pagination_contents',
+                'Bad Key' => 'x',
+                'empty' => '',
+                'list' => ['a'],
+            ], 2),
+        );
+        self::assertSame('products.search?q=mamaia%20sea&page=3', ListLoadMore::nextUrl('products.search', ['q' => 'mamaia sea', 'page' => 2], 3));
+    }
 }

@@ -16,6 +16,7 @@ declare(strict_types=1);
  * @package TravelCore
  */
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\ViewModels\ListCardFactory;
 use Tygh\Addons\TravelCore\ViewModels\ListLoadMore;
 
@@ -43,5 +44,9 @@ function fn_travel_core_assign_list_cards(string $dispatch): void
     }
     $cards = (new ListCardFactory())->forProducts($products);
     $view->assign('travel_list_cards', $cards);
-    $view->assign('travel_list_more', $cards !== [] ? ListLoadMore::from($view->getTemplateVars('search')) : null);
+    $more = $cards !== [] ? ListLoadMore::from($view->getTemplateVars('search')) : null;
+    if ($more !== null) {
+        $more['url'] = TypeCoerce::toString(fn_url(ListLoadMore::nextUrl($dispatch, $_REQUEST, $more['next_page'])));
+    }
+    $view->assign('travel_list_more', $more);
 }

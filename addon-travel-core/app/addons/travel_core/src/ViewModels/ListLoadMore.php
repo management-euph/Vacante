@@ -45,4 +45,30 @@ final class ListLoadMore
             'count' => min($perPage, $left),
         ];
     }
+
+    /** Request keys that never ride into the next page's link: the page itself and CS-Cart's AJAX and service keys. */
+    private const array DROP = ['dispatch', 'page', 'is_ajax', 'result_ids', 'full_render', 'callback', 'security_hash', '_'];
+
+    /**
+     * The next page's internal URL ("categories.view?category_id=5&sort_by=price&page=2"),
+     * keeping what the visitor chose (sorting, view, filters, page size);
+     * fn_url() turns it into the store's (SEO) address.
+     *
+     * @param array<array-key, mixed> $request the page's request ($_REQUEST)
+     */
+    public static function nextUrl(string $dispatch, array $request, int $nextPage): string
+    {
+        $keep = [];
+        foreach ($request as $key => $value) {
+            if (!is_string($key) || in_array($key, self::DROP, true) || preg_match('/^[a-z0-9_]+$/', $key) !== 1) {
+                continue;
+            }
+            if (is_scalar($value) && (string) $value !== '') {
+                $keep[$key] = (string) $value;
+            }
+        }
+        $keep['page'] = (string) max(2, $nextPage);
+
+        return $dispatch . '?' . http_build_query($keep, '', '&', PHP_QUERY_RFC3986);
+    }
 }
