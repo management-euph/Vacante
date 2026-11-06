@@ -31,6 +31,7 @@
  *        (or php /repo/dev/tools/eurosite-hotel-name.php hotel=ALTUS on an older container)
  */
 
+use Tygh\Addons\Eurosite\Services\ConfigProvider;
 use Tygh\Addons\Eurosite\Services\Container;
 
 $hn_is_cli = PHP_SAPI === 'cli';
@@ -95,6 +96,16 @@ function hn_flag(string $name): string
     return preg_match('/(^|\s)CM(\s|$)/u', $name) === 1 ? '   <-- has "CM"' : '';
 }
 
+/** An error message without the API address and the account (the repo is public; outputs get pasted). */
+function hn_mask(string $text): string
+{
+    $url = ConfigProvider::getApiUrl();
+    $host = parse_url($url, PHP_URL_HOST);
+    $secrets = array_filter([$url, is_string($host) ? $host : '', ConfigProvider::getApiUser(), ConfigProvider::getApiPassword()], static fn (string $s): bool => strlen(trim($s)) >= 3);
+
+    return str_ireplace($secrets, '<hidden>', $text);
+}
+
 /**
  * One live call: the raw response body, or null with the reason printed.
  * Only the request DETAILS are echoed — the envelope carries the account.
@@ -106,7 +117,7 @@ function hn_call(string $requestType, string $detailsXml): ?\SimpleXMLElement
         $xml = Container::getXmlBuilder()->envelope($requestType, $detailsXml, '901', date('Y-m-d\TH:i:s'));
         $raw = Container::getHttpClient()->post($xml);
     } catch (\Throwable $e) {
-        echo "FAILED: ", $e->getMessage(), "\n";
+        echo "FAILED: ", hn_mask($e->getMessage()), "\n";
 
         return null;
     }
@@ -119,7 +130,7 @@ function hn_call(string $requestType, string $detailsXml): ?\SimpleXMLElement
     $details = $doc->ResponseDetails;
     foreach (($details instanceof \SimpleXMLElement ? $details->children() : null) ?? [] as $child) {
         if ($child->getName() === 'Errors') {
-            echo "API ERROR:\n", (string) $child->asXML(), "\n";
+            echo "API ERROR:\n", hn_mask((string) $child->asXML()), "\n";
 
             return null;
         }
