@@ -162,10 +162,30 @@ function euro_envelope(array $cfg, string $requestType, string $detailsXml): str
         . '</Request>';
 }
 
-/** Mask <RequestPass> before echoing a request body. */
+/** Mask the account (<RequestUser>, <RequestPass>) before echoing a request body. */
 function euro_mask(string $xml): string
 {
-    return (string) preg_replace('/<RequestPass>.*?<\/RequestPass>/', '<RequestPass>*****</RequestPass>', $xml);
+    return (string) preg_replace(
+        ['/<RequestUser>.*?<\/RequestUser>/s', '/<RequestPass>.*?<\/RequestPass>/s'],
+        ['<RequestUser>*****</RequestUser>', '<RequestPass>*****</RequestPass>'],
+        $xml,
+    );
+}
+
+/**
+ * The text without the API address and the account set in the environment
+ * (the repo is public, and these outputs get pasted): a cURL error can name
+ * the host, an API error the user.
+ */
+function euro_hide(array $cfg, string $text): string
+{
+    $host = parse_url((string) $cfg['url'], PHP_URL_HOST);
+    $secrets = array_filter(
+        [(string) $cfg['url'], is_string($host) ? $host : '', (string) $cfg['user'], (string) $cfg['password']],
+        static fn (string $s): bool => strlen(trim($s)) >= 3 && !in_array($s, [EURO_DEFAULT_USER, EURO_DEFAULT_PASSWORD], true),
+    );
+
+    return str_ireplace($secrets, '<hidden>', $text);
 }
 
 /**
@@ -298,15 +318,16 @@ function euro_run(array $cfg, string $requestType, string $detailsXml, int $limi
     euro_out_setup();
 
     euro_section("Eurosite API · RequestType={$requestType}");
-    echo "Endpoint : {$cfg['url']}\n";
+    // Neither the address nor the account is printed: the repo is public.
+    echo "Endpoint : " . ($cfg['url'] === EURO_DEFAULT_API_URL ? "the spec's default" : 'EUROSITE_API_URL (not printed)') . "\n";
     echo "Language : {$cfg['lang']}\n";
-    echo "User     : " . ($cfg['user'] === EURO_DEFAULT_USER ? 'YourUser (spec placeholder)' : $cfg['user']) . "\n";
+    echo "User     : " . ($cfg['user'] === EURO_DEFAULT_USER ? 'YourUser (spec placeholder)' : 'EUROSITE_API_USER (not printed)') . "\n";
     echo "Limit    : " . ($limit > 0 ? (string) $limit : '(none — full response)') . "\n";
 
     $envelope = euro_envelope($cfg, $requestType, $detailsXml);
 
     euro_section('REQUEST (credentials masked)');
-    echo euro_format_xml(euro_mask($envelope)) . "\n";
+    echo euro_hide($cfg, euro_format_xml(euro_mask($envelope))) . "\n";
 
     $res = euro_call($cfg, $envelope);
 
@@ -314,7 +335,7 @@ function euro_run(array $cfg, string $requestType, string $detailsXml, int $limi
     echo "HTTP code : {$res['code']}\n";
     echo "Time      : " . number_format($res['ms'], 1) . " ms\n";
     if ($res['error'] !== '') {
-        echo "cURL error: {$res['error']}\n";
+        echo 'cURL error: ' . euro_hide($cfg, $res['error']) . "\n";
     }
 
     euro_section('RESPONSE');
@@ -322,7 +343,7 @@ function euro_run(array $cfg, string $requestType, string $detailsXml, int $limi
         echo "(empty body)\n";
         return '';
     }
-    echo euro_format_xml($res['body'], $limit) . "\n";
+    echo euro_hide($cfg, euro_format_xml($res['body'], $limit)) . "\n";
 
     if (str_contains($res['body'], '<ErrorId>-1000</ErrorId>')) {
         echo "\nNOTE: -1000 'not authorised to access this server' means the credentials\n"
