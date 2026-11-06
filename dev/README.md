@@ -46,18 +46,30 @@ and heal the store itself:
   envelope with the account. `?hotel=ALTUS` (part of the name or product
   code), `?product_id=123`, `&check_in=YYYY-MM-DD&nights=7`, `&search=0`.
   `http://localhost:8080/dev/tools/eurosite-hotel-name.php?hotel=ALTUS`
-- `tools/eurosite-packages.php` — the package module (Pachete), READ-ONLY,
-  with the store's account: getPackageNVRoutesRequest for every package
-  (Transport=search, which the spec says is in general enough; `?transport=bus,plane`
-  tells them apart) with each destination city's hotels in the store, then a sample
-  getPackageNVPriceRequest (the destination with the most
-  store hotels, from Bucharest, on its next date; a few stay lengths until
-  one answers): each hotel's offers with PackageId / PackageVariantId, room,
-  meal and services (bus or flights with times and seats, transfers, airport
-  tax, package fee), and whether the hotel is in the store's hotel list with
-  a product. `?transport=bus,plane`, `&sample=3`, `&city=…&dep_city=…&check_in=…&nights=7`,
-  `&search=0`, `&raw=1`. Nothing is booked or written; the store's circuit
-  breaker is not touched. `http://localhost:8080/dev/tools/eurosite-packages.php`
+- `tools/eurosite-packages.php` — how the store's Eurosite account can sell
+  transport with a hotel, READ-ONLY, with the store's account. (1) The package
+  module (Pachete): getPackageNVRoutesRequest with Transport=search (the spec
+  says that is in general enough; `?transport=bus,plane` tells them apart),
+  each destination city with its hotels in the store; then a sample
+  getPackageNVPriceRequest (the destination with the most store hotels, from
+  Bucharest, on its next date; a few stay lengths until one answers): each
+  hotel's offers with PackageId / PackageVariantId, room, meal and services
+  (bus or flights with times and seats, transfers, airport tax, package fee),
+  and whether the hotel is in the store's hotel list with a product.
+  (2) Charters (spec "Transport"): getCharterCitiesRequest for departures and
+  arrivals, then a sample getCharterPriceRequest from Bucharest to the arrival
+  city with the most store hotels, on a few dates until one answers.
+  (3) Hotel supplements: for the busiest whitelisted cities, the storefront's
+  own hotel search, then getHotelServiceTypesRequest on a store hotel's offer
+  (a month ahead and next summer) — meals, other services, transport (with a
+  CharterId when it is a charter) — and each transport supplement's price.
+  A summary says which of the three the account has. Params: `&sample=3`,
+  `&city=…&dep_city=…&check_in=…&nights=7`, `&search=0`, `&packages=0`,
+  `&charter=0`, `&charter_from=…&charter_to=…&charter_date=…`,
+  `&supplements=0|N`, `&hotel=ALTUS`, `&hotel_city=…`, `&hotel_check_in=…`,
+  `&raw=1`. Nothing is booked or written; the store's circuit breaker is not
+  touched; neither the API address nor the account is printed, errors
+  included. `http://localhost:8080/dev/tools/eurosite-packages.php`
 
 Each folder has a shared `_*_client.php` (the standalone HTTP client +
 pretty-printer) plus one probe file per API feature. This mirrors the existing
