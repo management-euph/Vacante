@@ -28,6 +28,7 @@
  *   ...&check_in=2026-12-10&nights=5     → the stay for step 4 (default +30 days, 7 nights)
  *   ...&search=0                         → skip step 4
  *   CLI: docker compose exec app php /var/www/html/dev/tools/eurosite-hotel-name.php hotel=ALTUS
+ *        (or php /repo/dev/tools/eurosite-hotel-name.php hotel=ALTUS on an older container)
  */
 
 use Tygh\Addons\Eurosite\Services\Container;
@@ -43,7 +44,12 @@ if (!$hn_is_cli) {
     header('Content-Type: text/plain; charset=utf-8');
 }
 
+// dev/ is normally mounted inside the docroot. A container created before
+// that mount still has the repo at /repo, so `php /repo/dev/tools/…` works too.
 $hn_docroot = dirname(__DIR__, 2);
+if (!is_file($hn_docroot . '/init.php') && is_file('/var/www/html/init.php')) {
+    $hn_docroot = '/var/www/html';
+}
 if (!is_file($hn_docroot . '/init.php')) {
     exit("No CS-Cart init.php at {$hn_docroot} — this tool only works from the fullstore\n"
         . "container, where dev/ is mounted inside the CS-Cart docroot (see docker/fullstore).\n");
