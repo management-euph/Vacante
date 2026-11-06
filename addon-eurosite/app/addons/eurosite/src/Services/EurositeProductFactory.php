@@ -400,6 +400,8 @@ final class EurositeProductFactory
      * not bookable (refresh() then keeps the last price).
      *
      * @param array<string, mixed> $hotel
+     *
+     * @return float the catalog price, 0.0 when there is none
      */
     private function storePrice(array $hotel): float
     {

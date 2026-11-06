@@ -81,10 +81,31 @@ final class CatalogPriceTest extends TestCase
             },
         );
 
-        self::assertSame(['products' => 333, 'priced' => 332, 'unpriced' => 1], $catalog->syncAll());
+        $stats = $catalog->syncAll();
+        self::assertSame(333, $stats['products']);
+        self::assertSame(332, $stats['priced']);
+        self::assertSame(1, $stats['unpriced']);
+        self::assertSame(['sphinx' => ['products' => 333, 'priced' => 332, 'unpriced' => 1, 'unpriced_codes' => ['C3']]], $stats['by_provider']);
         self::assertSame([0, 500, 1000], $pages);
         self::assertSame([3, 0.0], $this->written[0]);
         self::assertSame([6, 70.0], $this->written[1]);
         self::assertCount(333, $this->written);
+    }
+
+    public function testTheReportNamesEachSupplier(): void
+    {
+        $stats = ['products' => 14, 'priced' => 2, 'unpriced' => 12, 'by_provider' => [
+            'eurosite' => ['products' => 12, 'priced' => 0, 'unpriced' => 12, 'unpriced_codes' => ['EUS-LA-RO1', 'EUS-LA-RO2', 'EUS-LA-RO3', 'EUS-LA-RO4', 'EUS-LA-RO5', 'EUS-LA-RO6', 'EUS-LA-RO7', 'EUS-LA-RO8', 'EUS-LA-RO9', 'EUS-LA-RO10']],
+            'novoton' => ['products' => 2, 'priced' => 2, 'unpriced' => 0, 'unpriced_codes' => []],
+        ]];
+        $labels = ['eurosite' => 'Eurosite', 'novoton' => 'Novoton Holidays'];
+
+        self::assertSame(
+            "Catalog prices: 14 hotel product(s), 2 with a price, 12 without\n"
+            . "  Eurosite (eurosite): 12 hotel product(s), 0 with a price, 12 without — without a price: EUS-LA-RO1, EUS-LA-RO2, EUS-LA-RO3, EUS-LA-RO4, EUS-LA-RO5, EUS-LA-RO6, EUS-LA-RO7, EUS-LA-RO8, EUS-LA-RO9, EUS-LA-RO10 and 2 more\n"
+            . '  Novoton Holidays (novoton): 2 hotel product(s), 2 with a price, 0 without',
+            CatalogPrice::report($stats, static fn (string $p): string => $labels[$p]),
+        );
+        self::assertStringContainsString('no supplier owns any product', CatalogPrice::report(['products' => 0, 'priced' => 0, 'unpriced' => 0, 'by_provider' => []], static fn (string $p): string => $p));
     }
 }

@@ -63,7 +63,12 @@ if (!$hn_is_cli) {
     header('Content-Type: text/plain; charset=utf-8');
 }
 
-/** @return string request/CLI parameter */
+/**
+ * @param string $key the parameter (?key=value, or key=value on the CLI)
+ * @param string $default when it is not given
+ *
+ * @return string request/CLI parameter
+ */
 function hn_param(string $key, string $default = ''): string
 {
     if (PHP_SAPI === 'cli') {

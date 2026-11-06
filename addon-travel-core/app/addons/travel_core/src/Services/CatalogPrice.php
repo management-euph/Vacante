@@ -42,6 +42,9 @@ final class CatalogPrice
     /** Its cron mode, recorded under 'travel_core'. */
     public const string JOB = 'catalog_prices';
 
+    /** Product codes listed per supplier for the hotels left without a price. */
+    private const int LISTED_UNPRICED = 10;
+
     /** Products read at a time by syncAll(). */
     private const int BATCH = 500;
 
@@ -83,6 +86,9 @@ final class CatalogPrice
     /**
      * Write it to the hotel's product.
      *
+     * @param string $provider the supplier ('novoton', 'sphinx', 'eurosite')
+     * @param string $hotelId the supplier's own hotel id
+     *
      * @return float|null the price written, or null when the hotel has no product
      */
     public function syncHotel(string $provider, string $hotelId): ?float
@@ -99,36 +105,48 @@ final class CatalogPrice
 
     /**
      * Reprice every product a supplier owns; products no supplier owns are
-     * left alone.
+     * left alone. The totals come per supplier too, with the first product
+     * codes left without a price, so the run says where they are.
      *
-     * @return array{products: int, priced: int, unpriced: int}
+     * @return array{products: int, priced: int, unpriced: int, by_provider: array<string, array{products: int, priced: int, unpriced: int, unpriced_codes: list<string>}>}
      */
     public function syncAll(): array
     {
-        $stats = ['products' => 0, 'priced' => 0, 'unpriced' => 0];
+        $stats = ['products' => 0, 'priced' => 0, 'unpriced' => 0, 'by_provider' => []];
         $after = 0;
         do {
             $rows = ($this->products)($after, self::BATCH);
             foreach ($rows as $row) {
                 $productId = TypeCoerce::toInt($row['product_id'] ?? 0);
                 $after = max($after, $productId);
-                $hotel = $productId > 0 ? ($this->owner)($productId, TypeCoerce::toString($row['product_code'] ?? '')) : null;
+                $productCode = TypeCoerce::toString($row['product_code'] ?? '');
+                $hotel = $productId > 0 ? ($this->owner)($productId, $productCode) : null;
                 if ($hotel === null) {
                     continue;
                 }
                 $price = $this->forHotel($hotel->providerName, $hotel->hotelId);
                 ($this->write)($productId, $price);
+                $kind = $price > 0 ? 'priced' : 'unpriced';
                 $stats['products']++;
-                $stats[$price > 0 ? 'priced' : 'unpriced']++;
+                $stats[$kind]++;
+                $provider = $stats['by_provider'][$hotel->providerName] ?? ['products' => 0, 'priced' => 0, 'unpriced' => 0, 'unpriced_codes' => []];
+                $provider['products']++;
+                $provider[$kind]++;
+                if ($kind === 'unpriced' && count($provider['unpriced_codes']) < self::LISTED_UNPRICED) {
+                    $provider['unpriced_codes'][] = $productCode !== '' ? $productCode : '#' . $productId;
+                }
+                $stats['by_provider'][$hotel->providerName] = $provider;
             }
         } while (count($rows) === self::BATCH);
+        ksort($stats['by_provider']);
 
         return $stats;
     }
 
     /**
      * The daily exchange-rates line's step (and the catalog_prices mode):
-     * reprice every hotel product, recorded for Travel Core -> Tools.
+     * reprice every hotel product, recorded for Travel Core -> Tools. The
+     * report names each supplier (its add-on's label) with its own totals.
      */
     public static function runDaily(): string
     {
@@ -138,12 +156,45 @@ final class CatalogPrice
             static fn (): array => ['success' => true] + (new self())->syncAll(),
         );
 
-        return sprintf(
+        return self::report($result, static fn (string $provider): string => TypeCoerce::toString(TravelProviderRegistry::get($provider)['label'] ?? '') ?: $provider);
+    }
+
+    /**
+     * The run's report: the totals, then one line per supplier.
+     *
+     * @param array{products: int, priced: int, unpriced: int, by_provider: array<string, array{products: int, priced: int, unpriced: int, unpriced_codes: list<string>}>} $stats
+     * @param \Closure(string): string $label supplier => its name in the report
+     *
+     * @return string the lines, newline-separated
+     */
+    public static function report(array $stats, \Closure $label): string
+    {
+        $lines = [sprintf(
             'Catalog prices: %d hotel product(s), %d with a price, %d without',
-            $result['products'],
-            $result['priced'],
-            $result['unpriced'],
-        );
+            $stats['products'],
+            $stats['priced'],
+            $stats['unpriced'],
+        )];
+        foreach ($stats['by_provider'] as $provider => $row) {
+            $line = sprintf(
+                '  %s (%s): %d hotel product(s), %d with a price, %d without',
+                $label($provider),
+                $provider,
+                $row['products'],
+                $row['priced'],
+                $row['unpriced'],
+            );
+            if ($row['unpriced_codes'] !== []) {
+                $more = $row['unpriced'] - count($row['unpriced_codes']);
+                $line .= ' — without a price: ' . implode(', ', $row['unpriced_codes']) . ($more > 0 ? sprintf(' and %d more', $more) : '');
+            }
+            $lines[] = $line;
+        }
+        if ($stats['by_provider'] === []) {
+            $lines[] = '  no supplier owns any product (are the supplier add-ons active?)';
+        }
+
+        return implode("\n", $lines);
     }
 
     /**

@@ -54,7 +54,11 @@ final class ListLoadMore
      * keeping what the visitor chose (sorting, view, filters, page size);
      * fn_url() turns it into the store's (SEO) address.
      *
+     * @param string $dispatch the list page ('categories.view', 'products.search')
      * @param array<array-key, mixed> $request the page's request ($_REQUEST)
+     * @param int $nextPage the page the link opens
+     *
+     * @return string the internal URL, for fn_url()
      */
     public static function nextUrl(string $dispatch, array $request, int $nextPage): string
     {

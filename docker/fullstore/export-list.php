@@ -37,7 +37,11 @@ function lsave(string $out, string $name, string $body): void
     lsay(sprintf('%s (%d bytes)', $name, strlen($body)));
 }
 
-/** @param mixed $value */
+/**
+ * @param mixed $value
+ *
+ * @return string pretty JSON, newline-terminated
+ */
 function ljson(mixed $value): string
 {
     return (string) json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR) . "\n";
@@ -92,7 +96,12 @@ foreach (['fn_get_products_views', 'fn_get_products_sorting', 'fn_get_products_s
 lsave($out, 'core-functions.txt', $source);
 
 // The busiest categories (active products, any link), with their own view settings.
-/** @return list<array<string, mixed>> the rows, or [] with the error said (a column this version lacks) */
+/**
+ * @param string $what the rows' name, for the error line
+ * @param callable(): mixed $query the query
+ *
+ * @return list<array<string, mixed>> the rows, or [] with the error said (a column this version lacks)
+ */
 function lrows(string $what, callable $query): array
 {
     try {

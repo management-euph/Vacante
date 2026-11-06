@@ -77,7 +77,11 @@ final class ListCardFactory
         return $cards;
     }
 
-    /** @return array{kind: string, stars: int, place: string, from_price: string, cta: string} */
+    /**
+     * @param HotelSeoData $hotel the supplier's hotel
+     *
+     * @return array{kind: string, stars: int, place: string, from_price: string, cta: string}
+     */
     private function card(HotelSeoData $hotel): array
     {
         $nightly = ($this->nightly)($hotel->providerName, $hotel->hotelId);

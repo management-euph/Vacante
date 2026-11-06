@@ -64,6 +64,8 @@ final class HotelLocationLine
      * (city, region) and the country, cased and de-duplicated as build()
      * does. A street never shows on a list card.
      *
+     * @param HotelSeoData $hotel the supplier's hotel
+     *
      * @return array{places: list<string>, country: string}
      */
     public static function destination(HotelSeoData $hotel): array
