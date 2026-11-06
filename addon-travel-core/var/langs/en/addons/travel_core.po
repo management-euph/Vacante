@@ -4117,3 +4117,39 @@ msgstr "Cancel"
 msgctxt "Languages::travel_core.same_surname"
 msgid "Same last name as Adult 1 for every guest"
 msgstr "Same last name as Adult 1 for every guest"
+
+msgctxt "Languages::travel_core.list_view_cards"
+msgid "Travel Core: hotel cards"
+msgstr "Travel Core: hotel cards"
+
+msgctxt "Languages::travel_core.list_cta_hotel"
+msgid "See availability"
+msgstr "See availability"
+
+msgctxt "Languages::travel_core.list_from"
+msgid "from"
+msgstr "from"
+
+msgctxt "Languages::travel_core.list_per_night"
+msgid "/ night · indicative price"
+msgstr "/ night · indicative price"
+
+msgctxt "Languages::travel_core.list_for_two"
+msgid "for 2 adults"
+msgstr "for 2 adults"
+
+msgctxt "Languages::travel_core.list_price_with_dates"
+msgid "You see the price once you pick dates."
+msgstr "You see the price once you pick dates."
+
+msgctxt "Languages::travel_core.list_shown"
+msgid "Showing [from]–[to] of [total]"
+msgstr "Showing [from]–[to] of [total]"
+
+msgctxt "Languages::travel_core.list_load_more"
+msgid "Load [count] more"
+msgstr "Load [count] more"
+
+msgctxt "Languages::travel_core.list_footnote"
+msgid "Indicative prices for one night and 2 adults, from the latest prices we know; you see the final price once you pick dates."
+msgstr "Indicative prices for one night and 2 adults, from the latest prices we know; you see the final price once you pick dates."
