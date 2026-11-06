@@ -1375,3 +1375,35 @@ msgstr "Cameră twin în regim single, cu copil peste 2 ani"
 msgctxt "Languages::eurosite.room_type_vl"
 msgid "Villa"
 msgstr "Vilă"
+
+msgctxt "Languages::eurosite.meal_plan_ultra_all_inclusive"
+msgid "Ultra all inclusive"
+msgstr "Ultra all inclusive"
+
+msgctxt "Languages::eurosite.meal_plan_all_inclusive"
+msgid "All inclusive"
+msgstr "All inclusive"
+
+msgctxt "Languages::eurosite.meal_plan_full_board"
+msgid "Full board"
+msgstr "Pensiune completă"
+
+msgctxt "Languages::eurosite.meal_plan_half_board"
+msgid "Half board"
+msgstr "Demipensiune"
+
+msgctxt "Languages::eurosite.meal_plan_breakfast"
+msgid "Breakfast"
+msgstr "Mic dejun"
+
+msgctxt "Languages::eurosite.meal_plan_self_catering"
+msgid "Self catering"
+msgstr "Self catering"
+
+msgctxt "Languages::eurosite.meal_plan_meal_vouchers"
+msgid "Meal vouchers"
+msgstr "Bonuri valorice"
+
+msgctxt "Languages::eurosite.meal_plan_room_only"
+msgid "Room only"
+msgstr "Fără masă"

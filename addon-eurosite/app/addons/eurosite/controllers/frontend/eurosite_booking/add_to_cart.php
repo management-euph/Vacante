@@ -24,6 +24,7 @@ use Tygh\Addons\Eurosite\Services\BookingCartProduct;
 use Tygh\Addons\Eurosite\Services\BookingReturnUrl;
 use Tygh\Addons\Eurosite\Services\ConfigProvider;
 use Tygh\Addons\Eurosite\Services\Container;
+use Tygh\Addons\Eurosite\Services\DesignARates;
 use Tygh\Addons\Eurosite\Services\OfferContextStore;
 use Tygh\Addons\Eurosite\Services\RoomOccupancy;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
@@ -221,7 +222,7 @@ $bookingId = Container::bookings()->create([
     'rooms_data'    => (string) json_encode($roomsData, JSON_UNESCAPED_UNICODE),
     'room_type'     => $rooms !== [] ? TypeCoerce::toString($rooms[0]['name'] ?? '') : '',
     'board_id'      => $meals !== [] ? TypeCoerce::toString($meals[0]['code'] ?? '') : '',
-    'meal_name'     => $meals !== [] ? TypeCoerce::toString($meals[0]['name'] ?? '') : '',
+    'meal_name'     => $meals !== [] ? DesignARates::mealLabel($meals[0]) : '',
     'guest_name'    => $holderName,
     'guest_email'   => $guestEmail,
     'guest_phone'   => $guestPhone,
@@ -265,6 +266,8 @@ $cart['products'][$cartId] = [
         'rooms_data'          => (string) json_encode($roomsData, JSON_UNESCAPED_UNICODE),
         'num_rooms'           => count($roomsData),
         'room_name'           => $rooms !== [] ? TypeCoerce::toString($rooms[0]['name'] ?? '') : '',
+        // The meal on the cart, checkout and order cards ("Mic dejun (BB)").
+        'board_name'          => $meals !== [] ? DesignARates::mealLabel($meals[0]) : '',
         'adults'              => TypeCoerce::toInt($snapshot['adults'] ?? 2),
         'children_ages'       => implode(',', $childrenAges),
         'guests_data'         => (string) json_encode($guests, JSON_UNESCAPED_UNICODE),

@@ -26,7 +26,7 @@ final class HotelOffer
 {
     /**
      * @param list<array<string, string>> $rooms Room rows: code/gcode/name/quantity/price
-     * @param list<array<string, string>> $meals Meal rows: type/code/name/price
+     * @param list<array<string, string>> $meals Meal rows: type/code/name/label/price (type: Eurosite's service type, 2 = meals; label: what a page shows, MealPlanNames)
      */
     public function __construct(
         public readonly string $productCode,

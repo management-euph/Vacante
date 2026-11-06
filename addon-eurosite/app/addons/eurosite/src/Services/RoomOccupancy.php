@@ -152,15 +152,21 @@ final class RoomOccupancy
 
     /**
      * The rooms as the shared cart card and booking record read them
-     * (rooms_data: room_name, adults, children, childrenAges) — plus the
-     * offer's room code, which the booking submission sends back.
+     * (rooms_data: room_name, board_name, adults, children, childrenAges) —
+     * plus the offer's room code, which the booking submission sends back.
+     * An offer has one meal plan, the same for each of its rooms
+     * ("Mic dejun (BB)").
      *
      * @param array<string, mixed> $snapshot
-     * @return list<array{room_name: string, code: string, adults: int, children: int, childrenAges: list<int>}>
+     * @return list<array{room_name: string, board_name: string, code: string, adults: int, children: int, childrenAges: list<int>}>
      */
     public static function displayRooms(array $snapshot): array
     {
         $offerRooms = TypeCoerce::toRowList($snapshot['rooms'] ?? null);
+        $board = implode(', ', array_values(array_unique(array_filter(array_map(
+            DesignARates::mealLabel(...),
+            TypeCoerce::toRowList($snapshot['meals'] ?? null),
+        )))));
         $rows = [];
         foreach (self::itemRooms($snapshot) as $i => $room) {
             $offerRoom = $offerRooms[$i] ?? $offerRooms[0] ?? [];
@@ -168,6 +174,7 @@ final class RoomOccupancy
             $ages = $room['children'];
             $rows[] = [
                 'room_name' => TypeCoerce::toString($offerRoom['name'] ?? ''),
+                'board_name' => $board,
                 'code' => TypeCoerce::toString($room['code']),
                 'adults' => TypeCoerce::toInt($room['adults']),
                 'children' => count($ages),

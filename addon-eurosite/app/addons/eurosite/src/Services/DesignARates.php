@@ -19,7 +19,9 @@ use Tygh\Addons\TravelCore\Services\DateHelper;
  *
  *  - the room as the hotel names it ("Double Room"); its code is the
  *    hotel's internal number, so none shows;
- *  - the meal plan(s) as sent ("Mic dejun"), ranked by name (MealRank);
+ *  - the meal plan(s) the hotel's text names, in the store's language,
+ *    the text in brackets ("Mic dejun (BB)", MealPlanNames), ranked by the
+ *    same words (MealRank);
  *    an offer without one is room only;
  *  - the price on the cart line's scale (the offer's currency through the
  *    store's coefficient, as add_to_cart charges it), the price before the
@@ -110,16 +112,18 @@ final class DesignARates
         }
 
         $meals = [];
+        $ranks = [];
         foreach ($offer->meals as $meal) {
-            $name = trim(TypeCoerce::toString($meal['name'] ?? ''));
-            if ($name !== '' && !in_array($name, $meals, true)) {
-                $meals[] = $name;
+            $name = self::mealLabel($meal);
+            if ($name === '' || in_array($name, $meals, true)) {
+                continue;
+            }
+            $meals[] = $name;
+            $rank = MealRank::of(TypeCoerce::toString($meal['name'] ?? ''));
+            if ($rank !== RateOffer::MEAL_OTHER) {
+                $ranks[] = $rank;
             }
         }
-        $ranks = array_values(array_filter(
-            array_map(static fn (string $name): int => MealRank::of($name), $meals),
-            static fn (int $rank): bool => $rank !== RateOffer::MEAL_OTHER,
-        ));
         if ($meals === []) {
             $meals = [$this->roomOnly];
             $ranks = [RateOffer::MEAL_ROOM_ONLY];
@@ -149,6 +153,19 @@ final class DesignARates
             ])),
             paymentText: $this->paymentText,
         );
+    }
+
+    /**
+     * A meal as a page shows it: its label ("Mic dejun (BB)",
+     * MealPlanNames), else the hotel's own text (an offer stored before).
+     *
+     * @param array<string, mixed> $meal an offer's meal row
+     */
+    public static function mealLabel(array $meal): string
+    {
+        $label = trim(TypeCoerce::toString($meal['label'] ?? ''));
+
+        return $label !== '' ? $label : trim(TypeCoerce::toString($meal['name'] ?? ''));
     }
 
     /**

@@ -81,7 +81,7 @@ final class BookingSidebarBuilder
         $roomNames = RoomOccupancy::displayRooms($snapshot);
         $mealNames = [];
         foreach (TypeCoerce::toRowList($snapshot['meals'] ?? null) as $meal) {
-            $name = trim(TypeCoerce::toString($meal['name'] ?? ''));
+            $name = DesignARates::mealLabel($meal);
             if ($name !== '') {
                 $mealNames[] = $name;
             }
