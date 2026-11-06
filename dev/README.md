@@ -57,10 +57,11 @@ and heal the store itself:
   (bus or flights with times and seats, transfers, airport tax, package fee),
   and whether the hotel is in the store's hotel list with a product.
   (2) Charters (spec "Transport"): getCharterCitiesRequest for departures and
-  arrivals, then a sample getCharterPriceRequest from Bucharest to the arrival
-  city with the most store hotels, on a few dates until one answers.
-  (3) Hotel supplements: for the busiest whitelisted cities, the storefront's
-  own hotel search, then getHotelServiceTypesRequest on a store hotel's offer
+  arrivals, then getCharterPriceRequest from Bucharest to every arrival city
+  abroad, every two weeks over the next eleven months until one answers.
+  (3) Hotel supplements: in the whitelisted cities, charter destinations
+  first (a hotel without a product page counts too), the storefront's own
+  hotel search, then getHotelServiceTypesRequest on a store hotel's offer
   (a month ahead and next summer) — meals, other services, transport (with a
   CharterId when it is a charter) — and each transport supplement's price.
   A summary says which of the three the account has. Params: `&sample=3`,
