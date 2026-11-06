@@ -41,7 +41,6 @@ if (!$hn_is_cli) {
         http_response_code(403);
         exit("eurosite-hotel-name is a local sandbox tool - refusing non-localhost request\n");
     }
-    header('Content-Type: text/plain; charset=utf-8');
 }
 
 // dev/ is normally mounted inside the docroot. A container created before
@@ -58,6 +57,11 @@ if (!is_file($hn_docroot . '/init.php')) {
 const AREA = 'A';
 const ACCOUNT_TYPE = 'admin';
 require $hn_docroot . '/init.php';
+// After init: CS-Cart sends its own text/html header, and a browser would
+// then swallow every <Tag> of the raw XML below.
+if (!$hn_is_cli) {
+    header('Content-Type: text/plain; charset=utf-8');
+}
 
 /** @return string request/CLI parameter */
 function hn_param(string $key, string $default = ''): string
