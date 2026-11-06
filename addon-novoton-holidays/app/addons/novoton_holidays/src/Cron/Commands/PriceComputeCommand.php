@@ -6,7 +6,6 @@ namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Helpers\SeasonDates;
-use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoService;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
@@ -284,34 +283,30 @@ class PriceComputeCommand extends AbstractCronCommand
     }
 
     /**
-     * Update CS-Cart product price from the hotel's lowest min_price (with commission).
+     * Update the hotel's CS-Cart catalog price: its indicative nightly price
+     * (one night, 2 adults, commission included — Travel Core's
+     * CatalogPrice, the same basis at every supplier, so CS-Cart's sort by
+     * price compares like with like; board 15). 0 when the hotel has no
+     * price yet.
      *
      * @param string $hotelId Hotel ID
-     * @return bool True if product price was updated
+     * @return bool True when the product got a price above 0
      */
     public static function updateProductPrice(string $hotelId): bool
     {
-        /** @var array<string, mixed>|null $row */
-        $row = db_get_row(
-            'SELECT h.product_id, MIN(p.min_price) AS lowest_price
-             FROM ?:novoton_hotels h
-             JOIN ?:novoton_hotel_packages p ON p.hotel_id = h.hotel_id
-             WHERE h.hotel_id = ?s AND p.min_price > 0 AND h.product_id > 0
-             GROUP BY h.product_id',
+        $productId = PriceInfoFormatter::toInt(db_get_field(
+            'SELECT product_id FROM ?:novoton_hotels WHERE hotel_id = ?s AND product_id > 0',
             $hotelId,
-        );
-
-        if (empty($row) || empty($row['product_id']) || empty($row['lowest_price'])) {
+        ));
+        if ($productId <= 0) {
             return false;
         }
 
-        $commission = ConfigProvider::getCommission();
-        $price = PriceInfoFormatter::toFloat($row['lowest_price']) * (1 + ($commission / 100));
-        $price = ConfigProvider::isRoundPrices() ? round($price) : round($price, 2);
+        // To the cent, as Travel Core's daily repricing writes it.
+        $price = (new \Tygh\Addons\TravelCore\Services\CatalogPrice())->forHotel('novoton', $hotelId);
+        self::writeBasePrice($productId, $price);
 
-        self::writeBasePrice(PriceInfoFormatter::toInt($row['product_id']), $price);
-
-        return true;
+        return $price > 0;
     }
 
     /**
@@ -324,17 +319,7 @@ class PriceComputeCommand extends AbstractCronCommand
      */
     public static function writeBasePrice(int $productId, float $price): void
     {
-        if ($productId <= 0) {
-            return;
-        }
-
-        db_query(
-            'INSERT INTO ?:product_prices (product_id, price, lower_limit, usergroup_id)
-             VALUES (?i, ?d, 1, 0)
-             ON DUPLICATE KEY UPDATE price = VALUES(price)',
-            $productId,
-            $price,
-        );
+        \Tygh\Addons\TravelCore\Services\CatalogPrice::writeBase($productId, $price);
     }
 
     /**

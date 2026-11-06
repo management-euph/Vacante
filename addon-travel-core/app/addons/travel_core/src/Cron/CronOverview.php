@@ -26,9 +26,10 @@ final class CronOverview
 
     /**
      * Every mode Travel Core's cron entry points record under 'travel_core';
-     * hotel_availability is the weekly review the exchange rates line runs.
+     * hotel_availability is the weekly review the exchange rates line runs,
+     * catalog_prices the hotel products' prices it reprices (CatalogPrice).
      */
-    public const array CORE_MODES = ['exchange_rates', 'expire_alternative_requests', 'balances', 'hotel_availability'];
+    public const array CORE_MODES = ['exchange_rates', 'expire_alternative_requests', 'balances', 'hotel_availability', 'catalog_prices'];
 
     /**
      * The command that runs Travel Core's job, in both forms.

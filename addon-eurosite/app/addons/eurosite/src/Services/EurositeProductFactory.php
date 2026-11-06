@@ -41,9 +41,6 @@ final class EurositeProductFactory
     /** @var array<string, int> "root/country/city" => category_id */
     private array $categoryCache = [];
 
-    /** @var array<string, float> currency => coefficient to the primary currency */
-    private array $coefficients = [];
-
     public function __construct(
         private readonly HotelRepository $hotels,
         private readonly ?EurositeFeatureAssigner $features = null,
@@ -395,20 +392,20 @@ final class EurositeProductFactory
         }
     }
 
-    /** @param array<string, mixed> $hotel */
+    /**
+     * The product's catalog price: the hotel's indicative nightly price (one
+     * night, 2 adults, commission included — Travel Core's CatalogPrice, the
+     * same basis at every supplier, so CS-Cart's sort by price compares like
+     * with like; board 15), no longer the 7-night stay. 0 while the hotel is
+     * not bookable (refresh() then keeps the last price).
+     *
+     * @param array<string, mixed> $hotel
+     *
+     * @return float the catalog price, 0.0 when there is none
+     */
     private function storePrice(array $hotel): float
     {
-        $price = TypeCoerce::toFloat($hotel['min_price'] ?? 0);
-        if ($price <= 0) {
-            return 0.0;
-        }
-        $currency = TypeCoerce::toString($hotel['price_currency'] ?? '') ?: ConfigProvider::getDefaultCurrency();
-        $this->coefficients[$currency] ??= TypeCoerce::toFloat(db_get_field(
-            'SELECT coefficient FROM ?:currencies WHERE currency_code = ?s',
-            $currency,
-        ));
-
-        return self::toStorePrice($price, $this->coefficients[$currency]);
+        return (new \Tygh\Addons\TravelCore\Services\CatalogPrice())->forHotel('eurosite', TypeCoerce::toString($hotel['product_code'] ?? ''));
     }
 
     private function category(int $root, string $country, string $city): int

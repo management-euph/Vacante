@@ -37,6 +37,15 @@ and heal the store itself:
   cache. Nothing is booked, written or cached; no credential is printed. `?cities=RO0218,RO2M`,
   `?check_in=YYYY-MM-DD&nights=7`, `&download=1` saves the file.
   `http://localhost:8080/dev/tools/eurosite-sample.php`
+- `tools/eurosite-hotel-name.php` — where one Eurosite hotel's name comes
+  from (e.g. the "CM" in "ALTUS CM"): the store's synced row and product name
+  per language, what the SEO name template would make of it, then READ-ONLY
+  live getOwnHotelsRequest (raw `<Hotel>`), getProductInfoRequest
+  (`<ProductName>`) and a sample getHotelPriceRequest, with a summary of which
+  answers carry the suffix. Only request details are printed, never the
+  envelope with the account. `?hotel=ALTUS` (part of the name or product
+  code), `?product_id=123`, `&check_in=YYYY-MM-DD&nights=7`, `&search=0`.
+  `http://localhost:8080/dev/tools/eurosite-hotel-name.php?hotel=ALTUS`
 
 Each folder has a shared `_*_client.php` (the standalone HTTP client +
 pretty-printer) plus one probe file per API feature. This mirrors the existing

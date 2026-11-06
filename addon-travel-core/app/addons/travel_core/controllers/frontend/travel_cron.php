@@ -40,14 +40,15 @@ if ($mode === 'run') {
         $cron_mode = isset($_REQUEST['cron_mode']) ? preg_replace('/[^a-z0-9_]/', '', strtolower(RequestCoerce::string($_REQUEST, 'cron_mode'))) : '';
     }
 
-    $supported_modes = ['exchange_rates', 'expire_alternative_requests', 'balances'];
+    $supported_modes = ['exchange_rates', 'expire_alternative_requests', 'balances', 'catalog_prices'];
 
     if (empty($cron_mode) || !in_array($cron_mode, $supported_modes, true)) {
         header('Content-Type: text/plain');
         echo "Travel Core Cron - Available modes:\n";
         echo "  exchange_rates              - Update BNR exchange rates; also the weekly hotel availability review and the \"notify me\" emails\n";
         echo "  expire_alternative_requests - Expire stale availability requests (&days=30) and purge old terminal rows (&purge_days=180)\n";
-        echo "  balances                    - Deposit bookings: balance reminders (7 and 2 days before) and overdue alerts (daily)\n\n";
+        echo "  balances                    - Deposit bookings: balance reminders (7 and 2 days before) and overdue alerts (daily)\n";
+        echo "  catalog_prices              - Every hotel product's price = its indicative nightly price (also runs on the daily exchange_rates line)\n\n";
         echo "Usage: dispatch=travel_cron.run&access_key=KEY&cron_mode=exchange_rates\n";
         exit;
     }
@@ -55,7 +56,9 @@ if ($mode === 'run') {
     header('Content-Type: text/plain');
     echo "[" . date('Y-m-d H:i:s') . "] Travel Core Cron - Mode: {$cron_mode}\n\n";
 
-    if ($cron_mode === 'balances') {
+    if ($cron_mode === 'catalog_prices') {
+        echo \Tygh\Addons\TravelCore\Services\CatalogPrice::runDaily() . "\n";
+    } elseif ($cron_mode === 'balances') {
         $r = CronRunLog::record('travel_core', 'balances', static fn (): array => ['success' => true]
             + (new \Tygh\Addons\TravelCore\Services\BalanceReminder())->run(date('Y-m-d')));
         echo 'Balance reminders sent: ' . $r['reminded'] . ', overdue alerts: ' . $r['overdue'] . "\n";
@@ -96,6 +99,8 @@ if ($mode === 'run') {
         echo \Tygh\Addons\TravelCore\Services\AvailabilityReview::runDaily() . "\n";
         // And the hotel page's "notify me" emails, once booking opens.
         echo \Tygh\Addons\TravelCore\Services\AvailabilityNotifyMail::runDaily() . "\n";
+        // And the catalog prices: a new exchange rate moves them (board 15).
+        echo \Tygh\Addons\TravelCore\Services\CatalogPrice::runDaily() . "\n";
     }
 
     echo "\n[" . date('Y-m-d H:i:s') . "] Cron job completed.\n";

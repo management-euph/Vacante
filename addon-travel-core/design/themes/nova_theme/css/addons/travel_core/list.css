@@ -1,0 +1,482 @@
+/**
+ * Travel Core — the hotel list card (board 15, docs/hotel-list-plan.md):
+ * components/list_card.tpl inside the Travel Core list view
+ * (blocks/product_list_templates/travelcore_cards_list.tpl, _grid.tpl).
+ *
+ * Every rule is scoped under .travel-list, the view's list, so CS-Cart's own
+ * list views and every other page are untouched. One card for every
+ * supplier: a row on desktop (photo · facts · price and button), tiles in
+ * the grid view, one column on the phone whatever the view. Design A
+ * colours: navy #003580, the button blue of the hotel page.
+ */
+
+.travel-list {
+    --travel-list-navy: #003580;
+    --travel-list-blue: var(--nvt-search-btn-bg, #006ce4);
+    --travel-list-text: var(--nvt-text, #1a1a1a);
+    --travel-list-muted: #4b5563;
+    --travel-list-line: #e0e7ef;
+    --travel-list-radius: 14px;
+    display: grid;
+    gap: 16px;
+    margin: 0 0 8px;
+    padding: 0;
+    list-style: none;
+}
+
+.travel-list .travel-lc {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr) 236px;
+    overflow: hidden;
+    margin: 0;
+    border: 1px solid var(--travel-list-line);
+    border-radius: var(--travel-list-radius);
+    background: #fff;
+    color: var(--travel-list-text);
+}
+
+.travel-list .travel-lc__photo {
+    display: block;
+    min-height: 184px;
+    margin: 12px 0 12px 12px;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #e5e9f0;
+}
+.travel-list .travel-lc__photo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 184px;
+    object-fit: cover;
+}
+
+.travel-list .travel-lc__body {
+    display: grid;
+    align-content: start;
+    gap: 8px;
+    min-width: 0;
+    padding: 16px 18px;
+}
+.travel-list .travel-lc__t {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px 10px;
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.3;
+}
+.travel-list .travel-lc__name {
+    font-weight: 700;
+    color: #0f172a;
+    text-decoration: none;
+}
+.travel-list .travel-lc__name:hover,
+.travel-list .travel-lc__name:focus-visible {
+    color: var(--travel-list-navy);
+    text-decoration: underline;
+}
+.travel-list .travel-lc__stars {
+    font-size: 14px;
+    letter-spacing: 1px;
+    color: #febb02;
+}
+.travel-list .travel-lc__loc {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    font-size: 13px;
+    color: var(--travel-list-muted);
+}
+.travel-list .travel-lc__loc svg {
+    flex: none;
+    color: #6b7280;
+}
+
+.travel-list .travel-lc__fact {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+}
+.travel-list .travel-lc__fact svg {
+    flex: none;
+    color: var(--travel-list-navy);
+}
+.travel-list .travel-lc__hl {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    margin: 2px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 13px;
+    color: #374151;
+}
+.travel-list .travel-lc__hl li {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.4;
+}
+.travel-list .travel-lc__hl svg {
+    flex: none;
+    color: #15803d;
+}
+
+.travel-list .travel-lc__price {
+    display: grid;
+    align-content: space-between;
+    gap: 14px;
+    padding: 16px 18px;
+    border-left: 1px solid var(--travel-list-line);
+    text-align: right;
+}
+.travel-list .travel-lc__p {
+    display: grid;
+    justify-items: end;
+    gap: 2px;
+    margin: 0;
+}
+.travel-list .travel-lc__l,
+.travel-list .travel-lc__u,
+.travel-list .travel-lc__per {
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--travel-list-muted);
+}
+.travel-list .travel-lc__v {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--travel-list-navy);
+    font-variant-numeric: tabular-nums;
+}
+.travel-list .travel-lc__p--none {
+    font-size: 13px;
+    line-height: 1.45;
+    color: #1f2937;
+}
+
+.travel-list .travel-lc__cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 16px;
+    border: 1px solid var(--travel-list-blue);
+    border-radius: 8px;
+    background: var(--travel-list-blue);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none;
+    white-space: normal;
+}
+.travel-list .travel-lc__cta:hover,
+.travel-list .travel-lc__cta:focus-visible {
+    filter: brightness(.94);
+    color: #fff;
+    text-decoration: none;
+}
+.travel-list .travel-lc__cta--sec {
+    border-color: var(--travel-list-navy);
+    background: #fff;
+    color: var(--travel-list-navy);
+}
+.travel-list .travel-lc__cta--sec:hover,
+.travel-list .travel-lc__cta--sec:focus-visible {
+    background: #eef5fd;
+    color: var(--travel-list-navy);
+    filter: none;
+}
+
+/* Grid view: tiles, three a row — the photo on top, the price and button at the foot. */
+.travel-list--grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.travel-list--grid .travel-lc {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr auto;
+}
+.travel-list--grid .travel-lc__photo {
+    min-height: 0;
+    margin: 10px 10px 0;
+    aspect-ratio: 3 / 2;
+}
+.travel-list--grid .travel-lc__photo img {
+    min-height: 0;
+}
+.travel-list--grid .travel-lc__body {
+    gap: 7px;
+    padding: 12px 14px 6px;
+}
+.travel-list--grid .travel-lc__t {
+    font-size: 16px;
+}
+/* The tile keeps the essentials: the facilities are the row's. */
+.travel-list--grid .travel-lc__hl {
+    display: none;
+}
+.travel-list--grid .travel-lc__price {
+    gap: 10px;
+    padding: 10px 14px 14px;
+    border-top: 1px solid #eef2f7;
+    border-left: 0;
+    text-align: left;
+}
+.travel-list--grid .travel-lc__p {
+    justify-items: start;
+}
+.travel-list--grid .travel-lc__v {
+    font-size: 22px;
+}
+
+/* Under the list: how many are shown, "Load N more", the page links. */
+.travel-list-more {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 20px 0 0;
+}
+.travel-list-more__t {
+    margin: 0;
+    font-size: 13px;
+    color: #4b5563;
+}
+.travel-list-more__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 20px;
+    border: 1px solid #003580;
+    border-radius: 8px;
+    background: #fff;
+    color: #003580;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+.travel-list-more__btn:hover,
+.travel-list-more__btn:focus-visible {
+    background: #eef5fd;
+    color: #003580;
+    text-decoration: none;
+}
+.travel-list-more__btn[aria-busy="true"] {
+    opacity: .6;
+    cursor: progress;
+}
+.travel-list-foot {
+    margin: 14px 0 0;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+@media (max-width: 1100px) {
+    .travel-list .travel-lc {
+        grid-template-columns: 200px minmax(0, 1fr) 220px;
+    }
+    .travel-list .travel-lc__cta {
+        padding: 0 12px;
+        font-size: 14px;
+    }
+    .travel-list--grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .travel-list--grid .travel-lc {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* Destination chips above the list (hooks/categories/view_subcategories.override.tpl),
+   inside CS-Cart's <ul class="subcategories">: the busiest first, the rest
+   behind "All destinations (N)" — a checkbox, no script. */
+.subcategories:has(> .travel-dest) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 18px;
+    padding: 0;
+    list-style: none;
+}
+.subcategories:has(> .travel-dest)::before,
+.subcategories:has(> .travel-dest)::after {
+    content: none;
+}
+.travel-dest {
+    float: none;
+    width: auto;
+    margin: 0;
+    padding: 0;
+}
+.travel-dest--more {
+    display: none;
+}
+/* Holds its visually hidden checkbox inside the (scrolling) row. */
+.travel-dest--all {
+    position: relative;
+}
+.subcategories:has(.travel-dest__toggle:checked) .travel-dest--more {
+    display: block;
+}
+.travel-dest__chip,
+.travel-dest__all {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid #d6dde6;
+    border-radius: 18px;
+    background: #fff;
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+}
+.travel-dest__chip:hover,
+.travel-dest__chip:focus-visible,
+.travel-dest__all:hover {
+    border-color: #003580;
+    color: #003580;
+    text-decoration: none;
+}
+.travel-dest__n {
+    font-size: 12px;
+    font-weight: 600;
+    color: #4b5563;
+}
+.travel-dest__all {
+    border-style: dashed;
+    color: #003580;
+}
+.travel-dest__toggle {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+.travel-dest__toggle:focus-visible + .travel-dest__all {
+    outline: 2px solid #006ce4;
+    outline-offset: 2px;
+}
+.travel-dest__close,
+.travel-dest__toggle:checked + .travel-dest__all .travel-dest__open {
+    display: none;
+}
+.travel-dest__toggle:checked + .travel-dest__all .travel-dest__close {
+    display: inline;
+}
+
+/* CS-Cart's view switch (views/products/components/sorting.tpl) draws each
+   view's icon as .ty-icon-<view name>: the Travel Core views take the
+   glyphs of CS-Cart's own list and grid. */
+.ty-icon-travelcore-cards-list,
+.ty-icon-travelcore-cards-grid {
+    font-family: glyphs;
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    line-height: 1;
+    text-transform: none;
+    -webkit-font-smoothing: antialiased;
+}
+.ty-icon-travelcore-cards-list::before {
+    content: "\e8e9";
+}
+.ty-icon-travelcore-cards-grid::before {
+    content: "\e9b0";
+}
+
+/* Phone: one column whatever the view; the price and the button share the foot. */
+@media (max-width: 767px) {
+    .travel-list,
+    .travel-list--grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 14px;
+    }
+    .travel-list .travel-lc,
+    .travel-list--grid .travel-lc {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: none;
+        border-radius: 12px;
+    }
+    .travel-list .travel-lc__photo,
+    .travel-list--grid .travel-lc__photo {
+        min-height: 0;
+        margin: 10px 10px 0;
+        aspect-ratio: 16 / 9;
+    }
+    .travel-list .travel-lc__photo img {
+        min-height: 0;
+    }
+    .travel-list .travel-lc__body {
+        gap: 7px;
+        padding: 12px 14px 6px;
+    }
+    .travel-list .travel-lc__t {
+        font-size: 17px;
+    }
+    .travel-list .travel-lc__price,
+    .travel-list--grid .travel-lc__price {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: end;
+        gap: 12px;
+        padding: 12px 14px 14px;
+        border-top: 1px solid #eef2f7;
+        border-left: 0;
+        text-align: left;
+    }
+    .travel-list .travel-lc__p {
+        justify-items: start;
+    }
+    .travel-list .travel-lc__v {
+        font-size: 22px;
+    }
+    .travel-list .travel-lc__cta {
+        min-width: 150px;
+    }
+    .travel-list-more {
+        justify-content: center;
+        text-align: center;
+    }
+    .travel-list-more__btn {
+        width: 100%;
+    }
+    /* The destination chips scroll in one row; "All destinations" wraps them. */
+    .subcategories:has(> .travel-dest) {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    .subcategories:has(.travel-dest__toggle:checked) {
+        flex-wrap: wrap;
+        overflow-x: visible;
+    }
+    .travel-dest {
+        flex: none;
+    }
+    /* One column on the phone, so no grid / list switch (decision 1). */
+    .cm-pagination-container:has(.travel-list) .ty-sort-container__views-icons {
+        display: none;
+    }
+}

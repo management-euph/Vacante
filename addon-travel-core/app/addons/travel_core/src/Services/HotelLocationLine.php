@@ -59,6 +59,34 @@ final class HotelLocationLine
     }
 
     /**
+     * The destination style without the street, split for the hotel list
+     * card ("Mamaia, Constanța · România"): the places under the country
+     * (city, region) and the country, cased and de-duplicated as build()
+     * does. A street never shows on a list card.
+     *
+     * @param HotelSeoData $hotel the supplier's hotel
+     *
+     * @return array{places: list<string>, country: string}
+     */
+    public static function destination(HotelSeoData $hotel): array
+    {
+        $country = self::caseLabel(trim((string) ($hotel->country ?? '')));
+        $seen = $country !== '' ? [mb_strtolower($country, 'UTF-8') => true] : [];
+        $places = [];
+        foreach ([$hotel->city, $hotel->region] as $raw) {
+            $part = self::caseLabel(trim((string) ($raw ?? '')));
+            $key = mb_strtolower($part, 'UTF-8');
+            if ($part === '' || isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $places[] = $part;
+        }
+
+        return ['places' => $places, 'country' => $country];
+    }
+
+    /**
      * Re-case a place label ONLY when it is single-case (all-upper or
      * all-lower); mixed-case values are someone's deliberate spelling
      * ("Palma de Mallorca", "Antalya City") and pass through untouched.

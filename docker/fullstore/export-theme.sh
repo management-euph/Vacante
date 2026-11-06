@@ -6,6 +6,10 @@
 #
 #   - the product page, photo, price and tabs templates of every installed
 #     theme (design/themes/*/templates/...);
+#   - the category list templates (list views, sorting, pagination, filters)
+#     and, from export-list.php, the views CS-Cart finds, the Appearance
+#     settings and the busiest category page as a visitor gets it
+#     (CATEGORY=<id> picks another);
 #   - the compiled theme CSS (var/cache/.../standalone*.css);
 #   - the CS-Cart version;
 #   - with a product id, or a supplier (novoton, sphinx, eurosite: it picks
@@ -81,10 +85,31 @@ copy() {
     mkdir -p -- "$OUT/$(dirname -- "$1")"
     cp -- "$1" "$OUT/$1"
 }
+# The category list (board 15, docs/hotel-list-plan.md): every list view, the
+# sorting / pagination / filter templates around it.
+LIST_TEMPLATES=(
+    views/categories/view.tpl
+    views/products/search.tpl
+    views/products/components/sorting.tpl
+    views/products/components/product_icon.tpl
+    common/pagination.tpl
+)
+LIST_DIRS=(
+    blocks/product_list_templates
+    blocks/list_templates
+    blocks/product_filters
+    views/categories/components
+)
 for theme in design/themes/*/; do
     [ -f "${theme}manifest.json" ] && copy "${theme}manifest.json"
-    for tpl in "${TEMPLATES[@]}"; do
+    for tpl in "${TEMPLATES[@]}" "${LIST_TEMPLATES[@]}"; do
         [ -f "${theme}templates/$tpl" ] && copy "${theme}templates/$tpl"
+    done
+    for dir in "${LIST_DIRS[@]}"; do
+        [ -d "${theme}templates/$dir" ] || continue
+        while IFS= read -r tpl; do
+            copy "$tpl"
+        done < <(find "${theme}templates/$dir" -type f -name '*.tpl' | sort)
     done
 done
 
@@ -98,6 +123,12 @@ php -r '@file_get_contents($argv[1] . "/", false, stream_context_create(["http" 
 if [ -n "$HOTEL" ]; then
     php "$REPO/docker/fullstore/export-theme.php" "$STORE_URL" "$OUT" "$HOTEL" "$CHECK_IN" "$CHECK_OUT"
 fi
+
+# The category list: views CS-Cart finds, Appearance settings, the busiest
+# category as a visitor gets it (export-list.php). CATEGORY=<id> picks one.
+mkdir -p -- "$OUT/list"
+php "$REPO/docker/fullstore/export-list.php" "$STORE_URL" "$OUT/list" "${CATEGORY:-}" || say_list_failed=1
+[ -z "${say_list_failed:-}" ] || echo "[export-theme] the category-list part failed; the rest of the export is complete" >&2
 
 # The compiled CSS, newest first (CS-Cart builds it on a storefront visit).
 css_count=0

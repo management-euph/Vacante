@@ -192,6 +192,9 @@ function fn_travel_core_dispatch_before_display(): void
         _travel_core_prepare_hotel_seo_data($productId);
     }
 
+    // ── Category and product-search pages: the hotel list card (board 15) ──
+    fn_travel_core_assign_list_cards($dispatch);
+
     // ── DEBUG MODE: append ?travel_debug=1 to any page ──
     // Runs AFTER all variable assignments so captured state is accurate.
     if (!empty($_REQUEST['travel_debug'])) {

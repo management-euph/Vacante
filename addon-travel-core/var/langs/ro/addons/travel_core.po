@@ -4117,3 +4117,59 @@ msgstr "Anulează"
 msgctxt "Languages::travel_core.same_surname"
 msgid "Same last name as Adult 1 for every guest"
 msgstr "Același nume de familie ca Adult 1 pentru toți turiștii"
+
+msgctxt "Languages::travel_core.list_view_list"
+msgid "Travel Core: hotel cards, list"
+msgstr "Travel Core: carduri de hotel, listă"
+
+msgctxt "Languages::travel_core.list_view_grid"
+msgid "Travel Core: hotel cards, grid"
+msgstr "Travel Core: carduri de hotel, grilă"
+
+msgctxt "Languages::travel_core.list_cta_product"
+msgid "See details"
+msgstr "Vezi detalii"
+
+msgctxt "Languages::travel_core.list_cta_hotel"
+msgid "See availability"
+msgstr "Vezi disponibilitățile"
+
+msgctxt "Languages::travel_core.list_from"
+msgid "from"
+msgstr "de la"
+
+msgctxt "Languages::travel_core.list_per_night"
+msgid "/ night · indicative price"
+msgstr "/ noapte · preț orientativ"
+
+msgctxt "Languages::travel_core.list_for_two"
+msgid "for 2 adults"
+msgstr "pentru 2 adulți"
+
+msgctxt "Languages::travel_core.list_price_with_dates"
+msgid "You see the price once you pick dates."
+msgstr "Prețul îl vezi după ce alegi datele."
+
+msgctxt "Languages::travel_core.list_shown"
+msgid "Showing [from]–[to] of [total]"
+msgstr "Afișate [from]–[to] din [total]"
+
+msgctxt "Languages::travel_core.list_load_more"
+msgid "Load [count] more"
+msgstr "Încarcă încă [count]"
+
+msgctxt "Languages::travel_core.list_footnote"
+msgid "Indicative prices for one night and 2 adults, from the latest prices we know; you see the final price once you pick dates."
+msgstr "Prețuri orientative pentru o noapte și 2 adulți, din ultimele prețuri cunoscute; prețul final îl vezi după ce alegi datele."
+
+msgctxt "Languages::travel_core.list_facilities"
+msgid "Facilities"
+msgstr "Dotări"
+
+msgctxt "Languages::travel_core.list_all_destinations"
+msgid "All destinations ([n])"
+msgstr "Toate destinațiile ([n])"
+
+msgctxt "Languages::travel_core.list_fewer_destinations"
+msgid "Fewer destinations"
+msgstr "Mai puține destinații"

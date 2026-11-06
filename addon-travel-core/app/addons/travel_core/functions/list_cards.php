@@ -1,0 +1,62 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Travel Core — the hotel list card (board 15) on CS-Cart's own list pages.
+ *
+ * A category page and the store's product search draw their products with
+ * CS-Cart's list views; for every product a supplier owns, the Travel Core
+ * list views (blocks/product_list_templates/travelcore_cards_list.tpl and
+ * travelcore_cards_grid.tpl, body components/list_view.tpl) draw the
+ * card instead, from $travel_list_cards (product id => card, see
+ * ViewModels\ListCardFactory) and, under it, "Load N more" from
+ * $travel_list_more (ViewModels\ListLoadMore). Stored data only: no
+ * supplier call.
+ *
+ * @package TravelCore
+ */
+
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\ViewModels\ListCardFactory;
+use Tygh\Addons\TravelCore\ViewModels\ListDestinations;
+use Tygh\Addons\TravelCore\ViewModels\ListLoadMore;
+
+defined('BOOTSTRAP') or die('Access denied');
+
+/** The list pages whose products get the card. */
+const TRAVEL_CORE_LIST_DISPATCHES = ['categories.view', 'products.search'];
+
+/**
+ * Assign $travel_list_cards for the products the current list page shows
+ * (called from dispatch_before_display, after the controller set them),
+ * "Load N more" under them, and on a category drawn with a Travel Core view
+ * the destination chips above (hooks/categories/view_subcategories.override.tpl).
+ */
+function fn_travel_core_assign_list_cards(string $dispatch): void
+{
+    if (!in_array($dispatch, TRAVEL_CORE_LIST_DISPATCHES, true)) {
+        return;
+    }
+    $view = \Tygh\Tygh::$app['view'];
+    if (!is_object($view) || !method_exists($view, 'getTemplateVars') || !method_exists($view, 'assign')) {
+        return;
+    }
+    $products = $view->getTemplateVars('products');
+    $cards = is_array($products) && $products !== [] ? (new ListCardFactory())->forProducts($products) : [];
+    $view->assign('travel_list_cards', $cards);
+    $more = $cards !== [] ? ListLoadMore::from($view->getTemplateVars('search')) : null;
+    if ($more !== null) {
+        $more['url'] = TypeCoerce::toString(fn_url(ListLoadMore::nextUrl($dispatch, $_REQUEST, $more['next_page'])));
+    }
+    $view->assign('travel_list_more', $more);
+
+    // The chips replace CS-Cart's subcategory links only where the hotel
+    // list is shown: its cards are on the page, or a Travel Core view is.
+    $layout = TypeCoerce::toString($view->getTemplateVars('selected_layout'));
+    $travelView = $cards !== [] || str_starts_with($layout, 'travelcore_cards');
+    $view->assign(
+        'travel_list_destinations',
+        $dispatch === 'categories.view' && $travelView ? ListDestinations::from($view->getTemplateVars('subcategories')) : null,
+    );
+}

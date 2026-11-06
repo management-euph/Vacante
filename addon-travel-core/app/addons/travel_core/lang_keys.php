@@ -3303,4 +3303,62 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Same last name as Adult 1 for every guest',
         'ro' => 'Același nume de familie ca Adult 1 pentru toți turiștii',
     ],
+    // Hotel list card (board 15): ViewModels\ListCardFactory, components/list_card.tpl,
+    // components/list_view.tpl and the two list views in blocks/product_list_templates/.
+    'travel_core.list_view_list' => [
+        'en' => 'Travel Core: hotel cards, list',
+        'ro' => 'Travel Core: carduri de hotel, listă',
+    ],
+    'travel_core.list_view_grid' => [
+        'en' => 'Travel Core: hotel cards, grid',
+        'ro' => 'Travel Core: carduri de hotel, grilă',
+    ],
+    'travel_core.list_facilities' => [
+        'en' => 'Facilities',
+        'ro' => 'Dotări',
+    ],
+    'travel_core.list_all_destinations' => [
+        'en' => 'All destinations ([n])',
+        'ro' => 'Toate destinațiile ([n])',
+    ],
+    'travel_core.list_fewer_destinations' => [
+        'en' => 'Fewer destinations',
+        'ro' => 'Mai puține destinații',
+    ],
+    'travel_core.list_cta_product' => [
+        'en' => 'See details',
+        'ro' => 'Vezi detalii',
+    ],
+    'travel_core.list_cta_hotel' => [
+        'en' => 'See availability',
+        'ro' => 'Vezi disponibilitățile',
+    ],
+    'travel_core.list_from' => [
+        'en' => 'from',
+        'ro' => 'de la',
+    ],
+    'travel_core.list_per_night' => [
+        'en' => '/ night · indicative price',
+        'ro' => '/ noapte · preț orientativ',
+    ],
+    'travel_core.list_for_two' => [
+        'en' => 'for 2 adults',
+        'ro' => 'pentru 2 adulți',
+    ],
+    'travel_core.list_price_with_dates' => [
+        'en' => 'You see the price once you pick dates.',
+        'ro' => 'Prețul îl vezi după ce alegi datele.',
+    ],
+    'travel_core.list_shown' => [
+        'en' => 'Showing [from]–[to] of [total]',
+        'ro' => 'Afișate [from]–[to] din [total]',
+    ],
+    'travel_core.list_load_more' => [
+        'en' => 'Load [count] more',
+        'ro' => 'Încarcă încă [count]',
+    ],
+    'travel_core.list_footnote' => [
+        'en' => 'Indicative prices for one night and 2 adults, from the latest prices we know; you see the final price once you pick dates.',
+        'ro' => 'Prețuri orientative pentru o noapte și 2 adulți, din ultimele prețuri cunoscute; prețul final îl vezi după ce alegi datele.',
+    ],
 ];
