@@ -46,6 +46,8 @@ currently empty.
 | `own_hotels.php` | getOwnHotelsRequest | `--city=CODE --limit=N` |
 | `tag_offers.php` | getTagOffersRequest | `--limit=N` |
 | `hotel_search.php` | getHotelPriceRequest | `--country --city --check-in --nights --adults [--children=8,5] [--room=DB] [--tourop=LA --product=RO0486] --limit=N` (one hotel: the store's product code EUS-LA-RO0486 is tour operator LA, product RO0486), or `--code=EUS-LA-RO0486`: in the docker store the hotel's country and city come from the store's own hotel list, so no `--city` |
+| `package_routes.php` | getPackageNVRoutesRequest | `[--transport=search\|bus\|plane] --limit=N` — package destinations, departure cities and dates |
+| `package_search.php` | getPackageNVPriceRequest | `--country --city [--zone] [--dep-country=RO] --dep-city --transport --check-in --nights [--days=1] --adults [--children=8,5] [--room=DB] [--tourop] --limit=N` — hotels + transport, PackageId / PackageVariantId, services |
 | `product_info.php` | getProductInfoRequest | `--country --city --product [--type=hotel] --limit=N` |
 | `booking_info.php` | getBookingRequest | `--ref=REF [--source=client|api]` |
 | `search_diagnose.php` | getHotelPriceRequest battery | `[--report=FILE]` — outage evidence report (EN+RO) for the operator |

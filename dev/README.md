@@ -46,6 +46,17 @@ and heal the store itself:
   envelope with the account. `?hotel=ALTUS` (part of the name or product
   code), `?product_id=123`, `&check_in=YYYY-MM-DD&nights=7`, `&search=0`.
   `http://localhost:8080/dev/tools/eurosite-hotel-name.php?hotel=ALTUS`
+- `tools/eurosite-packages.php` — the package module (Pachete), READ-ONLY,
+  with the store's account: getPackageNVRoutesRequest per transport (bus,
+  plane) with each destination city's hotels in the store, then a sample
+  getPackageNVPriceRequest per transport (the destination with the most
+  store hotels, from Bucharest, on its next date; a few stay lengths until
+  one answers): each hotel's offers with PackageId / PackageVariantId, room,
+  meal and services (bus or flights with times and seats, transfers, airport
+  tax, package fee), and whether the hotel is in the store's hotel list with
+  a product. `?transport=bus`, `&sample=3`, `&city=…&dep_city=…&check_in=…&nights=7`,
+  `&search=0`, `&raw=1`. Nothing is booked or written; the store's circuit
+  breaker is not touched. `http://localhost:8080/dev/tools/eurosite-packages.php`
 
 Each folder has a shared `_*_client.php` (the standalone HTTP client +
 pretty-printer) plus one probe file per API feature. This mirrors the existing
