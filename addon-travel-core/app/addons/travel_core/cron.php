@@ -85,6 +85,8 @@ echo fn_travel_core_format_exchange_rate_output($result) . "\n";
 echo \Tygh\Addons\TravelCore\Services\AvailabilityReview::runDaily() . "\n";
 // So do the hotel page's "notify me" emails: one per guest, once booking opens.
 echo \Tygh\Addons\TravelCore\Services\AvailabilityNotifyMail::runDaily() . "\n";
+// And the catalog prices: a new exchange rate moves them (board 15).
+echo \Tygh\Addons\TravelCore\Services\CatalogPrice::runDaily() . "\n";
 
 $exitCode = TypeCoerce::toBool($result['success'] ?? false) ? 0 : 1;
 echo "\n[" . date('Y-m-d H:i:s') . "] Cron job completed.\n";

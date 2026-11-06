@@ -245,9 +245,7 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
 
         $packagesUpdated = 0;
 
-        // Store each package in novoton_hotel_packages, flag for cron recomputation,
-        // and compute min_price inline for immediate product price update.
-        $lowestPrice = null;
+        // Store each package in novoton_hotel_packages, flagged for cron recomputation.
 
         foreach (TypeCoerce::toRowList($packages) as $pkg) {
             $packageId = TypeCoerce::toString($pkg['IdCont'] ?? '');
@@ -281,14 +279,6 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
                 $now
             );
 
-            // Compute min_price using canonical method for immediate product price update
-            if (!empty($priceData)) {
-                $mp = \Tygh\Addons\NovotonHolidays\Cron\Commands\PriceComputeCommand::extractMinPrice(TypeCoerce::toStringMap($priceData), date('Y-m-d'));
-                if ($mp !== null && ($lowestPrice === null || $mp < $lowestPrice)) {
-                    $lowestPrice = $mp;
-                }
-            }
-
             $packagesUpdated++;
         }
 
@@ -298,13 +288,9 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
         ];
         db_query("UPDATE ?:novoton_hotels SET ?u WHERE hotel_id = ?s", $update_data, $hotel_id);
 
-        // Update CS-Cart product price immediately (don't wait for compute_prices cron)
-        if ($lowestPrice !== null && $lowestPrice > 0) {
-            $commission = ConfigProvider::getCommission();
-            $withComm = $lowestPrice * (1 + ($commission / 100));
-            $withComm = ConfigProvider::isRoundPrices() ? round($withComm) : round($withComm, 2);
-            \Tygh\Addons\NovotonHolidays\Cron\Commands\PriceComputeCommand::writeBasePrice(TypeCoerce::toInt($product_id), $withComm);
-        }
+        // The catalog price right away (don't wait for the compute_prices
+        // cron): the indicative nightly price, as at every supplier (board 15).
+        \Tygh\Addons\NovotonHolidays\Cron\Commands\PriceComputeCommand::updateProductPrice((string) $hotel_id);
 
         return $packagesUpdated > 0 ? true : 'no_data';
 

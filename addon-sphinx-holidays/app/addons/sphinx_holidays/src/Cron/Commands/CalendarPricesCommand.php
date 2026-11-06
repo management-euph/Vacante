@@ -9,6 +9,7 @@ use Tygh\Addons\SphinxHolidays\Services\CalendarPriceBuilder;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Services\CatalogPrice;
 
 /**
  * Cron command: build per-date calendar from-prices for sphinx hotels.
@@ -67,6 +68,8 @@ class CalendarPricesCommand extends AbstractSyncCommand
         $hotelRepo = Container::getHotelRepository();
 
         $hotelsUpdated = 0;
+        /** @var list<string> $pricedHotels */
+        $pricedHotels = [];
         $destinationsProbed = 0;
         $errors = 0;
 
@@ -87,6 +90,7 @@ class CalendarPricesCommand extends AbstractSyncCommand
             $destinationsProbed++;
             foreach ($byHotel as $hotelId => $datePrices) {
                 $hotelRepo->saveCalendarPrices((string) $hotelId, $datePrices);
+                $pricedHotels[] = (string) $hotelId;
                 $hotelsUpdated++;
             }
 
@@ -102,6 +106,19 @@ class CalendarPricesCommand extends AbstractSyncCommand
         // (SphinxIndicativePrice).
         if ($hotelsUpdated > 0 && function_exists('fn_set_storage_data')) {
             fn_set_storage_data(SphinxIndicativePrice::NIGHTS_STORAGE_KEY, (string) $nights);
+        }
+
+        // The catalog price of each priced hotel's product: its indicative
+        // nightly price (Travel Core's CatalogPrice, the same basis at every
+        // supplier, so CS-Cart's sort by price compares like with like;
+        // board 15) — after the nights above, which it divides by.
+        $catalog = new CatalogPrice();
+        $catalogPriced = 0;
+        foreach ($pricedHotels as $hotelId) {
+            $catalogPriced += ($catalog->syncHotel('sphinx', $hotelId) ?? 0.0) > 0 ? 1 : 0;
+        }
+        if ($pricedHotels !== []) {
+            $this->output(sprintf('Catalog prices: %d product(s) priced', $catalogPriced));
         }
 
         $this->output('');

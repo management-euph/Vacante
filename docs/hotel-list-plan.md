@@ -56,5 +56,12 @@ family). Decisions of 6 Nov 2026 are in 15.7; this file tracks the build.
       script — wired against the store's own list templates, which
       `docker/fullstore/export-theme.sh` now packs (list views, sorting,
       pagination, filters, the busiest category page as a visitor gets it).
-- [ ] Product price = indicative price at each supplier's sync.
+- [x] Product price = indicative price at every supplier
+      (`Services\CatalogPrice`, one rule): Novoton's compute_prices and its
+      manual price update (no longer a night per person), Eurosite's product
+      create / update (no longer the 7-night stay), Sphinx's calendar_prices
+      run (it wrote nothing). Travel Core reprices every hotel product on the
+      daily exchange_rates line (a new rate moves the prices), and on demand
+      with `cron_mode=catalog_prices`. No price → 0, and the card says the
+      price comes with the dates. Circuits (SPXC…) keep their price for now.
 - [ ] City shortcuts and the "Oraș" filter.
