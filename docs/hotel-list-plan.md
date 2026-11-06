@@ -75,4 +75,24 @@ family). Decisions of 6 Nov 2026 are in 15.7; this file tracks the build.
       daily exchange_rates line (a new rate moves the prices), and on demand
       with `cron_mode=catalog_prices`. No price → 0, and the card says the
       price comes with the dates. Circuits (SPXC…) keep their price for now.
-- [ ] City shortcuts and the "Oraș" filter.
+- [x] The card's facts from the CS-Cart features Travel Core's feature
+      mapping fills at every supplier (`Services\ListCardFacts`, one query
+      a page): the meal plans ("Mic dejun · Demipensiune", feature type
+      `board`) and three facilities (`hotel_facility`), pool, spa, beach,
+      parking, Wi-Fi first. The grid tile keeps the meals only.
+- [x] Destination chips above the list (`ViewModels\ListDestinations`,
+      `hooks/categories/view_subcategories.override.tpl`) in place of
+      CS-Cart's subcategory links, only where the hotel list shows: the 8
+      busiest with their hotel count, the rest behind "Toate destinațiile
+      (N)" (a checkbox, no script); one scrolling row on the phone.
+- [ ] **Admin, for the filters (no code):** Products → Filters → add
+      filters on the features "Oraș", "Stele", "Facilități" and "Tipul
+      proprietății" (the store has none yet); the category page's layout
+      needs the "Product filters" block in its sidebar. General settings:
+      "Show products from subcategories" on, so a country page lists its
+      cities' hotels.
+- [ ] "Regim de Masă" has no values yet (export of 6 Nov): the suppliers'
+      board mapping does not reach the feature, so the card's meals line
+      stays empty until it does (Travel Core → Feature mappings → Board).
+- [ ] City names with diacritics (the Eurosite categories: "Brasov",
+      "baile olanesti").

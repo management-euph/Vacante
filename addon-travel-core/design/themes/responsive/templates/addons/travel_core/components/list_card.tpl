@@ -3,7 +3,7 @@
     drawn by the Travel Core list view (blocks/product_list_templates/travelcore_cards_list.tpl, _grid.tpl).
     Params:
       product  the CS-Cart product row (product_id, product, main_pair)
-      card     its ListCardFactory card: kind, stars, place, from_price, cta;
+      card     its ListCardFactory card: kind, stars, place, meals, highlights, from_price, cta;
                kind "product" for a product no supplier owns (its CS-Cart price)
     No "Add to cart": a hotel is booked on its page, once dates, room and
     turiști are chosen; the button opens that page.
@@ -27,6 +27,16 @@
         </h3>
         {if $card.place}
             <p class="travel-lc__loc">{include file="addons/travel_core/components/design_a_icon.tpl" icon="pin" size=15}<span>{$card.place}</span></p>
+        {/if}
+        {if $card.meals|default:""}
+            <p class="travel-lc__fact">{include file="addons/travel_core/components/design_a_icon.tpl" icon="meal" size=15}<span>{$card.meals}</span></p>
+        {/if}
+        {if $card.highlights|default:[]}
+            <ul class="travel-lc__hl" aria-label="{__("travel_core.list_facilities")|escape:html}">
+                {foreach $card.highlights as $travel_lc_hl}
+                    <li>{include file="addons/travel_core/components/design_a_icon.tpl" icon="check" size=14}<span>{$travel_lc_hl}</span></li>
+                {/foreach}
+            </ul>
         {/if}
     </div>
     <div class="travel-lc__price">

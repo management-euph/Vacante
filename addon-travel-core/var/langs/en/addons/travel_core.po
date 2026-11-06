@@ -4161,3 +4161,15 @@ msgstr "Load [count] more"
 msgctxt "Languages::travel_core.list_footnote"
 msgid "Indicative prices for one night and 2 adults, from the latest prices we know; you see the final price once you pick dates."
 msgstr "Indicative prices for one night and 2 adults, from the latest prices we know; you see the final price once you pick dates."
+
+msgctxt "Languages::travel_core.list_facilities"
+msgid "Facilities"
+msgstr "Facilities"
+
+msgctxt "Languages::travel_core.list_all_destinations"
+msgid "All destinations ([n])"
+msgstr "All destinations ([n])"
+
+msgctxt "Languages::travel_core.list_fewer_destinations"
+msgid "Fewer destinations"
+msgstr "Fewer destinations"

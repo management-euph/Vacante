@@ -95,6 +95,42 @@
     color: #6b7280;
 }
 
+.travel-list .travel-lc__fact {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+}
+.travel-list .travel-lc__fact svg {
+    flex: none;
+    color: var(--travel-list-navy);
+}
+.travel-list .travel-lc__hl {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    margin: 2px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 13px;
+    color: #374151;
+}
+.travel-list .travel-lc__hl li {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.4;
+}
+.travel-list .travel-lc__hl svg {
+    flex: none;
+    color: #15803d;
+}
+
 .travel-list .travel-lc__price {
     display: grid;
     align-content: space-between;
@@ -187,6 +223,10 @@
 .travel-list--grid .travel-lc__t {
     font-size: 16px;
 }
+/* The tile keeps the essentials: the facilities are the row's. */
+.travel-list--grid .travel-lc__hl {
+    display: none;
+}
 .travel-list--grid .travel-lc__price {
     gap: 10px;
     padding: 10px 14px 14px;
@@ -263,6 +303,90 @@
     }
 }
 
+/* Destination chips above the list (hooks/categories/view_subcategories.override.tpl),
+   inside CS-Cart's <ul class="subcategories">: the busiest first, the rest
+   behind "All destinations (N)" — a checkbox, no script. */
+.subcategories:has(> .travel-dest) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 18px;
+    padding: 0;
+    list-style: none;
+}
+.subcategories:has(> .travel-dest)::before,
+.subcategories:has(> .travel-dest)::after {
+    content: none;
+}
+.travel-dest {
+    float: none;
+    width: auto;
+    margin: 0;
+    padding: 0;
+}
+.travel-dest--more {
+    display: none;
+}
+/* Holds its visually hidden checkbox inside the (scrolling) row. */
+.travel-dest--all {
+    position: relative;
+}
+.subcategories:has(.travel-dest__toggle:checked) .travel-dest--more {
+    display: block;
+}
+.travel-dest__chip,
+.travel-dest__all {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid #d6dde6;
+    border-radius: 18px;
+    background: #fff;
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+}
+.travel-dest__chip:hover,
+.travel-dest__chip:focus-visible,
+.travel-dest__all:hover {
+    border-color: #003580;
+    color: #003580;
+    text-decoration: none;
+}
+.travel-dest__n {
+    font-size: 12px;
+    font-weight: 600;
+    color: #4b5563;
+}
+.travel-dest__all {
+    border-style: dashed;
+    color: #003580;
+}
+.travel-dest__toggle {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+.travel-dest__toggle:focus-visible + .travel-dest__all {
+    outline: 2px solid #006ce4;
+    outline-offset: 2px;
+}
+.travel-dest__close,
+.travel-dest__toggle:checked + .travel-dest__all .travel-dest__open {
+    display: none;
+}
+.travel-dest__toggle:checked + .travel-dest__all .travel-dest__close {
+    display: inline;
+}
+
 /* CS-Cart's view switch (views/products/components/sorting.tpl) draws each
    view's icon as .ty-icon-<view name>: the Travel Core views take the
    glyphs of CS-Cart's own list and grid. */
@@ -337,6 +461,19 @@
     }
     .travel-list-more__btn {
         width: 100%;
+    }
+    /* The destination chips scroll in one row; "All destinations" wraps them. */
+    .subcategories:has(> .travel-dest) {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    .subcategories:has(.travel-dest__toggle:checked) {
+        flex-wrap: wrap;
+        overflow-x: visible;
+    }
+    .travel-dest {
+        flex: none;
     }
     /* One column on the phone, so no grid / list switch (decision 1). */
     .cm-pagination-container:has(.travel-list) .ty-sort-container__views-icons {

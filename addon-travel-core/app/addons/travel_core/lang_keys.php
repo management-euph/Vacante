@@ -3313,6 +3313,18 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Travel Core: hotel cards, grid',
         'ro' => 'Travel Core: carduri de hotel, grilă',
     ],
+    'travel_core.list_facilities' => [
+        'en' => 'Facilities',
+        'ro' => 'Dotări',
+    ],
+    'travel_core.list_all_destinations' => [
+        'en' => 'All destinations ([n])',
+        'ro' => 'Toate destinațiile ([n])',
+    ],
+    'travel_core.list_fewer_destinations' => [
+        'en' => 'Fewer destinations',
+        'ro' => 'Mai puține destinații',
+    ],
     'travel_core.list_cta_product' => [
         'en' => 'See details',
         'ro' => 'Vezi detalii',

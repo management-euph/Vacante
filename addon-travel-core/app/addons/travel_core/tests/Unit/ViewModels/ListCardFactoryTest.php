@@ -22,6 +22,9 @@ final class ListCardFactoryTest extends TestCase
     /** @var list<string> */
     private array $priced = [];
 
+    /** @var list<list<int>> */
+    private array $facts = [];
+
     /** @param array<int, HotelSeoData> $hotels product id => owner */
     private function factory(array $hotels, ?float $nightly = 64.4): ListCardFactory
     {
@@ -33,6 +36,11 @@ final class ListCardFactoryTest extends TestCase
                 return $nightly;
             },
             static fn (float $price): string => number_format($price, 0) . ' €',
+            function (array $productIds): array {
+                $this->facts[] = $productIds;
+
+                return [11 => ['meals' => 'Mic dejun · Demipensiune', 'highlights' => ['Piscină', 'Parcare']]];
+            },
         );
     }
 
@@ -49,7 +57,11 @@ final class ListCardFactoryTest extends TestCase
         ]);
 
         self::assertSame([11, 12, 13], array_keys($cards));
-        self::assertSame(['kind' => 'hotel', 'stars' => 4, 'place' => 'Mamaia, Constanța · România', 'from_price' => '64 €', 'cta' => 'travel_core.list_cta_hotel'], $cards[11]);
+        self::assertSame(['kind' => 'hotel', 'stars' => 4, 'place' => 'Mamaia, Constanța · România', 'meals' => 'Mic dejun · Demipensiune', 'highlights' => ['Piscină', 'Parcare'], 'from_price' => '64 €', 'cta' => 'travel_core.list_cta_hotel'], $cards[11]);
+        self::assertSame('', $cards[12]['meals']);
+        self::assertSame([], $cards[12]['highlights']);
+        // The facts are read once, for the page's hotels only.
+        self::assertSame([[11, 12, 13]], $this->facts);
         self::assertSame('Antalya City, Antalya · Turkey', $cards[12]['place']);
         self::assertSame('Praid · Romania', $cards[13]['place']);
         self::assertSame(3, $cards[13]['stars']);
@@ -79,6 +91,7 @@ final class ListCardFactoryTest extends TestCase
 
         self::assertSame([7], array_keys($cards));
         self::assertCount(1, $this->priced);
+        self::assertSame([[7]], $this->facts);
     }
 
     public function testPlaceIsCasedDeduplicatedAndNeverShowsTheStreet(): void
@@ -86,5 +99,11 @@ final class ListCardFactoryTest extends TestCase
         self::assertSame('Golem · Albania', ListCardFactory::place(new HotelSeoData(hotelId: '1', providerName: 'novoton', name: 'x', city: 'GOLEM', region: 'golem', country: 'ALBANIA', address: 'Rruga e Plazhit')));
         self::assertSame('Baile Olanesti, Valcea', ListCardFactory::place(new HotelSeoData(hotelId: '2', providerName: 'eurosite', name: 'x', city: 'baile olanesti', region: 'Valcea')));
         self::assertSame('Bulgaria', ListCardFactory::place(new HotelSeoData(hotelId: '3', providerName: 'novoton', name: 'x', city: 'Bulgaria', country: 'Bulgaria')));
+    }
+
+    public function testAPageWithoutHotelsAsksForNoFacts(): void
+    {
+        self::assertSame([], $this->factory([])->forProducts([['product_id' => 3, 'product_code' => 'GIFT']]));
+        self::assertSame([], $this->facts);
     }
 }

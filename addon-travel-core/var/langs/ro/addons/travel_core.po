@@ -4161,3 +4161,15 @@ msgstr "Încarcă încă [count]"
 msgctxt "Languages::travel_core.list_footnote"
 msgid "Indicative prices for one night and 2 adults, from the latest prices we know; you see the final price once you pick dates."
 msgstr "Prețuri orientative pentru o noapte și 2 adulți, din ultimele prețuri cunoscute; prețul final îl vezi după ce alegi datele."
+
+msgctxt "Languages::travel_core.list_facilities"
+msgid "Facilities"
+msgstr "Dotări"
+
+msgctxt "Languages::travel_core.list_all_destinations"
+msgid "All destinations ([n])"
+msgstr "Toate destinațiile ([n])"
+
+msgctxt "Languages::travel_core.list_fewer_destinations"
+msgid "Fewer destinations"
+msgstr "Mai puține destinații"
