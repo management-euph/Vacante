@@ -4118,9 +4118,17 @@ msgctxt "Languages::travel_core.same_surname"
 msgid "Same last name as Adult 1 for every guest"
 msgstr "Același nume de familie ca Adult 1 pentru toți turiștii"
 
-msgctxt "Languages::travel_core.list_view_cards"
-msgid "Travel Core: hotel cards"
-msgstr "Travel Core: carduri de hotel"
+msgctxt "Languages::travel_core.list_view_list"
+msgid "Travel Core: hotel cards, list"
+msgstr "Travel Core: carduri de hotel, listă"
+
+msgctxt "Languages::travel_core.list_view_grid"
+msgid "Travel Core: hotel cards, grid"
+msgstr "Travel Core: carduri de hotel, grilă"
+
+msgctxt "Languages::travel_core.list_cta_product"
+msgid "See details"
+msgstr "Vezi detalii"
 
 msgctxt "Languages::travel_core.list_cta_hotel"
 msgid "See availability"

@@ -51,11 +51,22 @@ family). Decisions of 6 Nov 2026 are in 15.7; this file tracks the build.
       `$travel_list_more`.
 - [x] `components/list_card.tpl` and `css/addons/travel_core/list.css`
       (row, grid tiles, one column on the phone), the texts (en / ro).
-- [ ] The Travel Core list view (`blocks/product_list_templates/`) inside
-      CS-Cart's sorting, paging and view switch, and the "Load N more"
-      script — wired against the store's own list templates, which
-      `docker/fullstore/export-theme.sh` now packs (list views, sorting,
-      pagination, filters, the busiest category page as a visitor gets it).
+- [x] Two Travel Core list views, `travelcore_cards_list` (rows) and
+      `travelcore_cards_grid` (tiles), body `components/list_view.tpl`, built
+      against the store's own core templates (theme export, CS-Cart 4.21.2):
+      CS-Cart's `fn_get_products_views()` finds them in the add-on's
+      `blocks/product_list_templates/`; the body sits in the
+      `common/pagination.tpl` pair (`#pagination_contents`, the target of the
+      sorting, view and page links) under CS-Cart's sorting bar; the view
+      switch draws `.ty-icon-travelcore-cards-*` with the glyphs of CS-Cart's
+      list and grid, and hides on the phone. A product no supplier owns gets
+      the same card with its CS-Cart price and "Vezi detalii". "Load N more"
+      (`list-load-more.js`) appends the next page. Checked in Chromium at
+      1440 / 1024 / 900 / 390 px with the store's compiled theme CSS.
+- [ ] **To switch it on (admin):** Settings → Appearance → "Available product
+      list views": tick "Travel Core: carduri de hotel, listă" and "…, grilă",
+      untick CS-Cart's grid and list; "Default product list view": the list
+      one (or per category, on the category's page).
 - [x] Product price = indicative price at every supplier
       (`Services\CatalogPrice`, one rule): Novoton's compute_prices and its
       manual price update (no longer a night per person), Eurosite's product

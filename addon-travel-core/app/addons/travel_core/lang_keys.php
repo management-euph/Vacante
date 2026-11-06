@@ -3304,10 +3304,18 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'ro' => 'Același nume de familie ca Adult 1 pentru toți turiștii',
     ],
     // Hotel list card (board 15): ViewModels\ListCardFactory, components/list_card.tpl,
-    // blocks/product_list_templates/travelcore_cards.tpl.
-    'travel_core.list_view_cards' => [
-        'en' => 'Travel Core: hotel cards',
-        'ro' => 'Travel Core: carduri de hotel',
+    // components/list_view.tpl and the two list views in blocks/product_list_templates/.
+    'travel_core.list_view_list' => [
+        'en' => 'Travel Core: hotel cards, list',
+        'ro' => 'Travel Core: carduri de hotel, listă',
+    ],
+    'travel_core.list_view_grid' => [
+        'en' => 'Travel Core: hotel cards, grid',
+        'ro' => 'Travel Core: carduri de hotel, grilă',
+    ],
+    'travel_core.list_cta_product' => [
+        'en' => 'See details',
+        'ro' => 'Vezi detalii',
     ],
     'travel_core.list_cta_hotel' => [
         'en' => 'See availability',

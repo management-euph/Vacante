@@ -1,9 +1,10 @@
 {*
     One hotel card of the list (board 15): the same card for every supplier,
-    drawn by the Travel Core list view (blocks/product_list_templates/travelcore_cards.tpl).
+    drawn by the Travel Core list view (blocks/product_list_templates/travelcore_cards_list.tpl, _grid.tpl).
     Params:
       product  the CS-Cart product row (product_id, product, main_pair)
-      card     its ListCardFactory card: kind, stars, place, from_price, cta
+      card     its ListCardFactory card: kind, stars, place, from_price, cta;
+               kind "product" for a product no supplier owns (its CS-Cart price)
     No "Add to cart": a hotel is booked on its page, once dates, room and
     turiști are chosen; the button opens that page.
 *}
@@ -13,9 +14,9 @@
         {include file="common/image.tpl"
             obj_id="travel_lc_`$product.product_id`"
             images=$product.main_pair
-            image_width=$settings.Thumbnails.product_lists_thumbnail_width
-            image_height=$settings.Thumbnails.product_lists_thumbnail_height
-            lazy_load=true}
+            image_width=480
+            image_height=320
+            image_additional_attrs=["loading" => "lazy"]}
     </a>
     <div class="travel-lc__body">
         <h3 class="travel-lc__t">
@@ -29,7 +30,11 @@
         {/if}
     </div>
     <div class="travel-lc__price">
-        {if $card.from_price}
+        {if $card.kind == "product"}
+            {if $product.price > 0}
+                <p class="travel-lc__p"><span class="travel-lc__v">{include file="common/price.tpl" value=$product.price}</span></p>
+            {/if}
+        {elseif $card.from_price}
             <p class="travel-lc__p">
                 <span class="travel-lc__l">{__("travel_core.list_from")}</span>
                 <span class="travel-lc__v">{$card.from_price}</span>
@@ -39,6 +44,6 @@
         {else}
             <p class="travel-lc__p travel-lc__p--none">{__("travel_core.list_price_with_dates")}</p>
         {/if}
-        <a class="travel-lc__cta{if !$card.from_price} travel-lc__cta--sec{/if}" href="{$travel_lc_url}">{__($card.cta)}</a>
+        <a class="travel-lc__cta{if !$card.from_price && $card.kind != "product"} travel-lc__cta--sec{/if}" href="{$travel_lc_url}">{__($card.cta)}</a>
     </div>
 </li>

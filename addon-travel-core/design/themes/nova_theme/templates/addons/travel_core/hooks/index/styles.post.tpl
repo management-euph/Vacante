@@ -32,6 +32,6 @@
 {style src="addons/travel_core/design-a.css"}
 
 {* The hotel list card (board 15) on category and product-search pages
-   (blocks/product_list_templates/travelcore_cards.tpl); every rule is
+   (blocks/product_list_templates/travelcore_cards_list.tpl, _grid.tpl); every rule is
    scoped under .travel-list *}
 {style src="addons/travel_core/list.css"}

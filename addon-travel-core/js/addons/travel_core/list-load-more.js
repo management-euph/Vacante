@@ -1,6 +1,6 @@
 /**
  * Travel Core — "Load N more" under the hotel list (board 15,
- * blocks/product_list_templates/travelcore_cards.tpl).
+ * blocks/product_list_templates/travelcore_cards_list.tpl, _grid.tpl).
  *
  * The button is a plain link to the next page, so it works without this
  * script and search engines follow it. With the script, a click fetches that

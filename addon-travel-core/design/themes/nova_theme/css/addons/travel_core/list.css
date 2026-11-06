@@ -1,7 +1,7 @@
 /**
  * Travel Core — the hotel list card (board 15, docs/hotel-list-plan.md):
  * components/list_card.tpl inside the Travel Core list view
- * (blocks/product_list_templates/travelcore_cards.tpl).
+ * (blocks/product_list_templates/travelcore_cards_list.tpl, _grid.tpl).
  *
  * Every rule is scoped under .travel-list, the view's list, so CS-Cart's own
  * list views and every other page are untouched. One card for every
@@ -26,7 +26,7 @@
 
 .travel-list .travel-lc {
     display: grid;
-    grid-template-columns: 240px minmax(0, 1fr) 216px;
+    grid-template-columns: 240px minmax(0, 1fr) 236px;
     overflow: hidden;
     margin: 0;
     border: 1px solid var(--travel-list-line);
@@ -249,7 +249,11 @@
 
 @media (max-width: 1100px) {
     .travel-list .travel-lc {
-        grid-template-columns: 200px minmax(0, 1fr) 190px;
+        grid-template-columns: 200px minmax(0, 1fr) 220px;
+    }
+    .travel-list .travel-lc__cta {
+        padding: 0 12px;
+        font-size: 14px;
     }
     .travel-list--grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -257,6 +261,26 @@
     .travel-list--grid .travel-lc {
         grid-template-columns: minmax(0, 1fr);
     }
+}
+
+/* CS-Cart's view switch (views/products/components/sorting.tpl) draws each
+   view's icon as .ty-icon-<view name>: the Travel Core views take the
+   glyphs of CS-Cart's own list and grid. */
+.ty-icon-travelcore-cards-list,
+.ty-icon-travelcore-cards-grid {
+    font-family: glyphs;
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    line-height: 1;
+    text-transform: none;
+    -webkit-font-smoothing: antialiased;
+}
+.ty-icon-travelcore-cards-list::before {
+    content: "\e8e9";
+}
+.ty-icon-travelcore-cards-grid::before {
+    content: "\e9b0";
 }
 
 /* Phone: one column whatever the view; the price and the button share the foot. */
@@ -313,5 +337,9 @@
     }
     .travel-list-more__btn {
         width: 100%;
+    }
+    /* One column on the phone, so no grid / list switch (decision 1). */
+    .cm-pagination-container:has(.travel-list) .ty-sort-container__views-icons {
+        display: none;
     }
 }

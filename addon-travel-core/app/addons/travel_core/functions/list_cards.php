@@ -7,7 +7,8 @@ declare(strict_types=1);
  *
  * A category page and the store's product search draw their products with
  * CS-Cart's list views; for every product a supplier owns, the Travel Core
- * list view (blocks/product_list_templates/travelcore_cards.tpl) draws the
+ * list views (blocks/product_list_templates/travelcore_cards_list.tpl and
+ * travelcore_cards_grid.tpl, body components/list_view.tpl) draw the
  * card instead, from $travel_list_cards (product id => card, see
  * ViewModels\ListCardFactory) and, under it, "Load N more" from
  * $travel_list_more (ViewModels\ListLoadMore). Stored data only: no
