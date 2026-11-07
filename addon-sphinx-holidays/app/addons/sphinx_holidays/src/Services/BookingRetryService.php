@@ -13,8 +13,11 @@ use Tygh\Addons\TravelCore\TravelConstants;
 /**
  * Retries a failed Sphinx hotel booking.
  *
- * Re-verifies the offer with the API, then re-attempts the booking.
- * Status flow: failed → pending → confirmed/failed.
+ * Re-verifies the offer with the API, checks that Sphinx has no booking for
+ * the order already (a failed row may still have been booked: an answer
+ * lost to a timeout, before the store knew to keep such rows pending), then
+ * re-attempts the booking, sent once.
+ * Status flow: failed → pending → confirmed / pending (no clear answer) / failed.
  *
  * @package SphinxHolidays
  * @since   1.2.0
@@ -85,6 +88,20 @@ class BookingRetryService implements BookingRetryServiceInterface
             }
         }
 
+        // Never book twice: what Sphinx already holds for this order.
+        $orderId = TypeCoerce::toInt($booking['order_id'] ?? 0);
+        if ($orderId > 0) {
+            $atSphinx = $this->bookingsAtSphinx($orderId);
+            if ($atSphinx === null) {
+                return ['success' => false, 'message' => "Cannot check Sphinx for a booking of order #{$orderId} already: not resent. Try again later.", 'booking_ref' => null];
+            }
+            if ($atSphinx > $this->otherBookingsMade($orderId, $bookingId)) {
+                $this->repo->update($bookingId, ['status' => TravelConstants::STATUS_PENDING]);
+
+                return ['success' => false, 'message' => "Sphinx already has a booking for order #{$orderId}: not resent. It is pending now, and the status sync updates it from Sphinx.", 'booking_ref' => null];
+            }
+        }
+
         // Mark as pending before retry
         $this->repo->update($bookingId, ['status' => TravelConstants::STATUS_PENDING]);
 
@@ -100,23 +117,39 @@ class BookingRetryService implements BookingRetryServiceInterface
 
             $bookResult = $this->submitBooking($bookingType, $offerId, $booking, $guestsData);
 
+            // Confirmed only when Sphinx says so (BookOutcome): no answer used
+            // to read as a success, a refusal included.
+            $outcome = $bookResult !== null
+                ? BookOutcome::of($bookResult, false, '')
+                : BookOutcome::of(null, $this->api->lastMaybeProcessed(), $this->api->lastError());
+            $answer = (string) json_encode($bookResult ?? ['error' => $outcome->reason], JSON_UNESCAPED_UNICODE);
             // Real book responses carry booking_confirmation_number (the
             // voucher code) — booking_reference never existed in the API and
             // is kept only as a tolerance fallback.
-            $bookingRef = TypeCoerce::toString(
-                $bookResult['booking_confirmation_number'] ?? $bookResult['booking_reference'] ?? '',
-            );
+            $bookingRef = $outcome->voucher;
             if ($bookingRef !== '') {
-                $this->repo->updateApiResponse(
-                    $bookingId,
-                    $bookingRef,
-                    (string) json_encode($bookResult),
-                );
+                $this->repo->updateApiResponse($bookingId, $bookingRef, $answer);
+            } else {
+                $this->repo->update($bookingId, ['api_response' => $answer]);
             }
 
             $this->repo->update($bookingId, [
-                'status' => TravelConstants::STATUS_CONFIRMED,
+                'status' => $outcome->status,
             ]);
+
+            if (!$outcome->isConfirmed()) {
+                fn_log_event('general', 'runtime', [
+                    'message' => "Sphinx booking #{$bookingId} retry not confirmed ({$outcome->status}): {$outcome->reason}",
+                ]);
+
+                return [
+                    'success' => false,
+                    'message' => $outcome->status === TravelConstants::STATUS_FAILED
+                        ? 'Retry refused by Sphinx: ' . $outcome->reason
+                        : 'No clear answer from Sphinx (' . $outcome->reason . '). The booking stays pending: check it in Sphinx before booking it again.',
+                    'booking_ref' => $bookingRef !== '' ? $bookingRef : null,
+                ];
+            }
 
             fn_log_event('general', 'runtime', [
                 'message' => "Sphinx booking #{$bookingId} retry succeeded",
@@ -153,9 +186,9 @@ class BookingRetryService implements BookingRetryServiceInterface
      *
      * @param array<string, mixed> $booking
      * @param array<string, mixed> $guestsData
-     * @return array<string, mixed>
+     * @return array<string, mixed>|null the answer; null when none came (see SphinxApi::lastError())
      */
-    private function submitBooking(string $type, string $offerId, array $booking, array $guestsData): array
+    private function submitBooking(string $type, string $offerId, array $booking, array $guestsData): ?array
     {
         // Contact: the booking row is backfilled from the order at placement;
         // older failed bookings may predate that — fall back to the order.
@@ -173,13 +206,55 @@ class BookingRetryService implements BookingRetryServiceInterface
 
         $payload = BookingPayloadFactory::build($offerId, $guestsData, $contact, $orderId);
 
-        $result = match ($type) {
+        return match ($type) {
             'circuit' => $this->api->bookCircuit($payload),
             'package' => $this->api->bookPackage($payload),
             'experience' => $this->api->bookExperience($payload),
             default => $this->api->bookHotel($payload),
         };
+    }
 
-        return $result ?: [];
+    /**
+     * How many bookings stand at Sphinx for the order (its reference_code is
+     * the order id): an errored, unconfirmed or canceled one does not count.
+     * Null when Sphinx cannot be asked.
+     */
+    private function bookingsAtSphinx(int $orderId): ?int
+    {
+        try {
+            $answer = $this->api->getOrders(1, 10, ['reference_code' => (string) $orderId]);
+        } catch (\Throwable) {
+            return null;
+        }
+        if ($answer === null) {
+            return null;
+        }
+        $count = 0;
+        foreach (TypeCoerce::toList($answer['results'] ?? []) as $order) {
+            foreach (TypeCoerce::toList(TypeCoerce::toStringMap($order)['bookings'] ?? []) as $booking) {
+                if (!BookOutcome::isNoBooking(TypeCoerce::toString(TypeCoerce::toStringMap($booking)['status'] ?? ''))) {
+                    $count++;
+                }
+            }
+        }
+
+        return $count;
+    }
+
+    /**
+     * The order's other Sphinx bookings that went through (confirmed, or
+     * pending at Sphinx): what Sphinx's count must leave room for.
+     */
+    private function otherBookingsMade(int $orderId, int $bookingId): int
+    {
+        $made = 0;
+        foreach ($this->repo->findByOrderId($orderId) as $row) {
+            if (TypeCoerce::toInt($row['booking_id'] ?? 0) !== $bookingId
+                && in_array(TypeCoerce::toString($row['status'] ?? ''), [TravelConstants::STATUS_CONFIRMED, TravelConstants::STATUS_PENDING], true)) {
+                $made++;
+            }
+        }
+
+        return $made;
     }
 }

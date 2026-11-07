@@ -196,7 +196,7 @@ class SphinxApi
      */
     public function bookCircuit(array $bookingData): ?array
     {
-        return $this->client->post('/api/v1/circuits/book', $bookingData);
+        return $this->client->postOnce('/api/v1/circuits/book', $bookingData);
     }
 
     /**
@@ -229,7 +229,7 @@ class SphinxApi
      */
     public function bookExperience(array $bookingData): ?array
     {
-        return $this->client->post('/api/v1/experiences/book', $bookingData);
+        return $this->client->postOnce('/api/v1/experiences/book', $bookingData);
     }
 
     // ── Hotel Search & Booking ──
@@ -332,7 +332,7 @@ class SphinxApi
      */
     public function bookHotel(array $bookingData): ?array
     {
-        return $this->client->post('/api/v1/hotels/book', $bookingData);
+        return $this->client->postOnce('/api/v1/hotels/book', $bookingData);
     }
 
     // ── Package Search & Booking ──
@@ -391,7 +391,7 @@ class SphinxApi
      */
     public function bookPackage(array $bookingData): ?array
     {
-        return $this->client->post('/api/v1/packages/book', $bookingData);
+        return $this->client->postOnce('/api/v1/packages/book', $bookingData);
     }
 
     // ── Orders ──
@@ -447,5 +447,20 @@ class SphinxApi
     public function getHttpClient(): SphinxHttpClient
     {
         return $this->client;
+    }
+
+    /** Why the last call answered null: the client's error, '' when none. */
+    public function lastError(): string
+    {
+        return $this->client->getLastError();
+    }
+
+    /**
+     * Whether the last call, which answered null, may still have been
+     * processed (an HTTP 5xx, a timeout): a booking may then exist at Sphinx.
+     */
+    public function lastMaybeProcessed(): bool
+    {
+        return $this->client->maybeProcessed();
     }
 }

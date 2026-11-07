@@ -1527,3 +1527,15 @@ msgstr "[n] {destinație nouă|destinații noi|de destinații noi} din [country]
 msgctxt "Languages::sphinx_holidays.dest_alert_outside"
 msgid "[n] live {product is|products are} outside the destination whitelist."
 msgstr "[n] {produs activ este|produse active sunt|de produse active sunt} în afara listei de destinații."
+
+msgctxt "Languages::sphinx_holidays.book_alert_subject"
+msgid "Sphinx booking #[booking_id] not confirmed (order #[order_id])"
+msgstr "Rezervarea Sphinx #[booking_id] nu e confirmată (comanda #[order_id])"
+
+msgctxt "Languages::sphinx_holidays.book_alert_failed"
+msgid "Sphinx did not make booking #[booking_id] ([what]) of order #[order_id]: [reason]. It is marked failed: once the cause is fixed, retry it under Travel → Bookings."
+msgstr "Sphinx nu a făcut rezervarea #[booking_id] ([what]) din comanda #[order_id]: [reason]. E marcată eșuată: după ce cauza e rezolvată, o puteți reîncerca din Turism → Rezervări."
+
+msgctxt "Languages::sphinx_holidays.book_alert_pending"
+msgid "Sphinx gave no clear answer for booking #[booking_id] ([what]) of order #[order_id]: [reason]. It may exist at Sphinx: it stays pending, and the status sync looks it up by the order number. Do not book it again before checking it in Sphinx."
+msgstr "Sphinx nu a dat un răspuns clar pentru rezervarea #[booking_id] ([what]) din comanda #[order_id]: [reason]. Poate exista deja la Sphinx: rămâne în așteptare, iar sincronizarea stărilor o caută după numărul comenzii. Nu o rezervați din nou înainte de a o verifica în Sphinx."

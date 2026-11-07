@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Hooks;
 
 use Tygh\Addons\SphinxHolidays\Services\BookingPayloadFactory;
+use Tygh\Addons\SphinxHolidays\Services\BookOutcome;
 use Tygh\Addons\SphinxHolidays\Services\CheckoutBookingBinder;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Helpers\SessionAccessor;
@@ -363,33 +364,39 @@ final class OrderHooks
                         default => $api->bookHotel($payload),
                     };
 
-                    // The documented book response carries the voucher code as
-                    // booking_confirmation_number (order_id/contract_id/
-                    // reference_code/status alongside) — there is NO
-                    // booking_reference field. Reading the wrong key meant
-                    // api_booking_ref was never stored and the admin grid's
-                    // confirmation column stayed "-" for every sphinx booking.
-                    $confirmationNumber = TypeCoerce::toString(
-                        $bookResult['booking_confirmation_number'] ?? $bookResult['booking_reference'] ?? '',
-                    );
-                    if ($confirmationNumber !== '') {
-                        $repo->updateApiResponse(
-                            $booking_id,
-                            $confirmationNumber,
-                            (string) json_encode($bookResult),
-                        );
+                    // What the answer means (Services\BookOutcome): confirmed
+                    // only when Sphinx says so. No answer used to read as a
+                    // confirmation too, a refusal (HTTP 4xx) included; an
+                    // answer that may hide a booking (a 5xx, a timeout,
+                    // on_request, processing) stays pending for the status
+                    // sync, never failed — a failed row can be retried, and
+                    // a retry would book it twice.
+                    $outcome = $bookResult !== null
+                        ? BookOutcome::of($bookResult, false, '')
+                        : BookOutcome::of(null, $api->lastMaybeProcessed(), $api->lastError());
+                    $answer = (string) json_encode($bookResult ?? ['error' => $outcome->reason], JSON_UNESCAPED_UNICODE);
+                    // The voucher code is booking_confirmation_number (there
+                    // is no booking_reference): the admin grid's confirmation column.
+                    if ($outcome->voucher !== '') {
+                        $repo->updateApiResponse($booking_id, $outcome->voucher, $answer);
                     } else {
+                        $repo->update($booking_id, ['api_response' => $answer]);
+                    }
+                    $repo->update($booking_id, ['status' => $outcome->status]);
+
+                    if (!$outcome->isConfirmed()) {
                         fn_log_event('general', 'runtime', [
-                            'message' => 'Sphinx: booking confirmed but no confirmation number returned',
+                            'message' => 'Sphinx book: not confirmed (' . $outcome->status . '): ' . $outcome->reason,
                             'booking_id' => $booking_id,
                             'order_id' => $resolved_order_id,
                         ]);
+                        Container::getBookingAlert()->send(
+                            $outcome,
+                            $booking_id,
+                            $resolved_order_id,
+                            self::bookedWhat($existing, $booking_type),
+                        );
                     }
-
-                    // API call succeeded — now set confirmed status
-                    $repo->update($booking_id, [
-                        'status' => TravelConstants::STATUS_CONFIRMED,
-                    ]);
                 } catch (\Throwable $e) {
                     // Mark booking as failed in both sphinx_bookings and travel_bookings,
                     // keeping the supplier's answer for the admin order page.
@@ -414,6 +421,22 @@ final class OrderHooks
         // always run it after submission (novoton parity). Never for a row
         // refused above: it is not this order's to carry.
         self::linkOrderBookings($resolved_order_id, $refused);
+    }
+
+    /**
+     * What a booking row books, for the store's alert: the hotel's name, else
+     * the offer type.
+     *
+     * @param array<string, mixed> $row the sphinx_bookings row
+     * @param string $type its booking type (hotel, package, circuit, experience)
+     *
+     * @return string the hotel's name, or the type
+     */
+    private static function bookedWhat(array $row, string $type): string
+    {
+        $name = trim(TypeCoerce::toString($row['hotel_name'] ?? ''));
+
+        return $name !== '' ? $name : $type;
     }
 
     /**

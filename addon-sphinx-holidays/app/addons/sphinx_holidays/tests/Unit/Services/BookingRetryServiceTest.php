@@ -46,6 +46,9 @@ final class BookingRetryServiceTest extends TestCase
         $api = $this->createMock(SphinxApi::class);
 
         $repo->method('findById')->with(7)->willReturn($this->failedBookingRow());
+        // Sphinx holds no booking for order 85 yet.
+        $api->method('getOrders')->with(1, 10, ['reference_code' => '85'])->willReturn(['results' => []]);
+        $repo->method('findByOrderId')->with(85)->willReturn([$this->failedBookingRow()]);
 
         // Verify step: decoded payload with offer signals → available.
         $api->method('verifyHotelOffer')->with('OFF-77')->willReturn([
@@ -123,5 +126,121 @@ final class BookingRetryServiceTest extends TestCase
 
         self::assertFalse($result['success']);
         self::assertSame('Offer no longer available', $result['message']);
+    }
+
+    /**
+     * @param array<string, mixed>|null $answer what bookHotel() answers
+     * @param list<string> $statuses the statuses written, in order (filled)
+     */
+    private function retryWith(?array $answer, string $error, bool $maybeProcessed, array &$statuses, ?array $atSphinx = ['results' => []]): array
+    {
+        $repo = $this->createMock(SphinxBookingRepository::class);
+        $api = $this->createMock(SphinxApi::class);
+        $repo->method('findById')->willReturn($this->failedBookingRow());
+        $repo->method('findByOrderId')->willReturn([$this->failedBookingRow()]);
+        $api->method('verifyHotelOffer')->willReturn(['available' => true, 'selling_price' => 725.0]);
+        $api->method('getOrders')->willReturn($atSphinx);
+        $api->method('bookHotel')->willReturn($answer);
+        $api->method('lastError')->willReturn($error);
+        $api->method('lastMaybeProcessed')->willReturn($maybeProcessed);
+        $repo->method('update')->willReturnCallback(static function (int $id, array $data) use (&$statuses): bool {
+            if (isset($data['status'])) {
+                $statuses[] = $data['status'];
+            }
+
+            return true;
+        });
+
+        return (new BookingRetryService($api, $repo))->retry(7);
+    }
+
+    /** A refused retry used to report success and mark the booking confirmed. */
+    public function testARefusedRetryStaysFailed(): void
+    {
+        $statuses = [];
+        $result = $this->retryWith(null, 'Client error HTTP 422: {"message":"Offer expired"}', false, $statuses);
+
+        self::assertFalse($result['success']);
+        self::assertStringContainsString('Offer expired', $result['message']);
+        self::assertSame([TravelConstants::STATUS_PENDING, TravelConstants::STATUS_FAILED], $statuses);
+    }
+
+    public function testARetryWithoutAClearAnswerStaysPending(): void
+    {
+        $statuses = [];
+        $result = $this->retryWith(null, 'Server error HTTP 504 (not resent: the request may have reached Sphinx)', true, $statuses);
+
+        self::assertFalse($result['success']);
+        self::assertStringContainsString('check it in Sphinx', $result['message']);
+        self::assertSame([TravelConstants::STATUS_PENDING, TravelConstants::STATUS_PENDING], $statuses);
+    }
+
+    /** A failed row may still have been booked (an answer lost to a timeout): it is not booked twice. */
+    public function testABookingSphinxAlreadyHoldsIsNotResent(): void
+    {
+        $repo = $this->createMock(SphinxBookingRepository::class);
+        $api = $this->createMock(SphinxApi::class);
+        $repo->method('findById')->willReturn($this->failedBookingRow());
+        $repo->method('findByOrderId')->willReturn([$this->failedBookingRow()]);
+        $api->method('verifyHotelOffer')->willReturn(['available' => true, 'selling_price' => 725.0]);
+        $api->method('getOrders')->willReturn(['results' => [['id' => 9, 'reference_code' => '85', 'bookings' => [['status' => 'confirmed']]]]]);
+        $api->expects(self::never())->method('bookHotel');
+        $repo->expects(self::once())->method('update')->with(7, ['status' => TravelConstants::STATUS_PENDING]);
+
+        $result = (new BookingRetryService($api, $repo))->retry(7);
+
+        self::assertFalse($result['success']);
+        self::assertStringContainsString('already has a booking', $result['message']);
+    }
+
+    public function testNoRetryWhenSphinxCannotBeAsked(): void
+    {
+        $repo = $this->createMock(SphinxBookingRepository::class);
+        $api = $this->createMock(SphinxApi::class);
+        $repo->method('findById')->willReturn($this->failedBookingRow());
+        $api->method('verifyHotelOffer')->willReturn(['available' => true, 'selling_price' => 725.0]);
+        $api->method('getOrders')->willReturn(null);
+        $api->expects(self::never())->method('bookHotel');
+        $repo->expects(self::never())->method('update');
+
+        $result = (new BookingRetryService($api, $repo))->retry(7);
+
+        self::assertFalse($result['success']);
+        self::assertStringContainsString('not resent', $result['message']);
+    }
+
+    /** The first attempt's errored booking at Sphinx is no booking: it does not block the retry. */
+    public function testAnErroredBookingAtSphinxDoesNotBlockTheRetry(): void
+    {
+        $statuses = [];
+        $result = $this->retryWith(
+            ['booking_confirmation_number' => 'SPX-3', 'status' => 'confirmed'],
+            '',
+            false,
+            $statuses,
+            ['results' => [['bookings' => [['status' => 'errored']]]]],
+        );
+
+        self::assertTrue($result['success']);
+        self::assertSame([TravelConstants::STATUS_PENDING, TravelConstants::STATUS_CONFIRMED], $statuses);
+    }
+
+    /** An order's second booking is retried when Sphinx holds only the first. */
+    public function testAnotherBookingOfTheOrderDoesNotBlockTheRetry(): void
+    {
+        $repo = $this->createMock(SphinxBookingRepository::class);
+        $api = $this->createMock(SphinxApi::class);
+        $other = ['booking_id' => 6, 'status' => TravelConstants::STATUS_CONFIRMED, 'order_id' => 85];
+        $repo->method('findById')->willReturn($this->failedBookingRow());
+        $repo->method('findByOrderId')->willReturn([$other, $this->failedBookingRow()]);
+        $api->method('verifyHotelOffer')->willReturn(['available' => true, 'selling_price' => 725.0]);
+        $api->method('getOrders')->willReturn(['results' => [['bookings' => [['status' => 'confirmed']]]]]);
+        $api->expects(self::once())->method('bookHotel')->willReturn(['booking_confirmation_number' => 'SPX-2', 'status' => 'confirmed']);
+        $repo->method('update')->willReturn(true);
+
+        $result = (new BookingRetryService($api, $repo))->retry(7);
+
+        self::assertTrue($result['success']);
+        self::assertSame('SPX-2', $result['booking_ref']);
     }
 }

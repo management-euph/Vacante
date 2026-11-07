@@ -1088,4 +1088,18 @@ return [
         'en' => '[n] live {product is|products are} outside the destination whitelist.',
         'ro' => '[n] {produs activ este|produse active sunt|de produse active sunt} în afara listei de destinații.',
     ],
+    // The email to the orders department when Sphinx does not confirm a
+    // booking (Services\BookingAlert).
+    'sphinx_holidays.book_alert_subject' => [
+        'en' => 'Sphinx booking #[booking_id] not confirmed (order #[order_id])',
+        'ro' => 'Rezervarea Sphinx #[booking_id] nu e confirmată (comanda #[order_id])',
+    ],
+    'sphinx_holidays.book_alert_failed' => [
+        'en' => 'Sphinx did not make booking #[booking_id] ([what]) of order #[order_id]: [reason]. It is marked failed: once the cause is fixed, retry it under Travel → Bookings.',
+        'ro' => 'Sphinx nu a făcut rezervarea #[booking_id] ([what]) din comanda #[order_id]: [reason]. E marcată eșuată: după ce cauza e rezolvată, o puteți reîncerca din Turism → Rezervări.',
+    ],
+    'sphinx_holidays.book_alert_pending' => [
+        'en' => 'Sphinx gave no clear answer for booking #[booking_id] ([what]) of order #[order_id]: [reason]. It may exist at Sphinx: it stays pending, and the status sync looks it up by the order number. Do not book it again before checking it in Sphinx.',
+        'ro' => 'Sphinx nu a dat un răspuns clar pentru rezervarea #[booking_id] ([what]) din comanda #[order_id]: [reason]. Poate exista deja la Sphinx: rămâne în așteptare, iar sincronizarea stărilor o caută după numărul comenzii. Nu o rezervați din nou înainte de a o verifica în Sphinx.',
+    ],
 ];
