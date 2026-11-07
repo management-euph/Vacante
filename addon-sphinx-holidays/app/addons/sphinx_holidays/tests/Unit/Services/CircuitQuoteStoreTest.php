@@ -25,7 +25,7 @@ final class CircuitQuoteStoreTest extends TestCase
         $store->remember('offer-1', 7, 850.0, 'EUR', '2026-11-02', 1000);
 
         self::assertSame(
-            ['circuit_id' => 7, 'selling_price' => 850.0, 'currency' => 'EUR', 'departure_date' => '2026-11-02', 'meal_type' => '', 'departure_name' => '', 'pricing' => [], 'rooms' => []],
+            ['circuit_id' => 7, 'selling_price' => 850.0, 'currency' => 'EUR', 'departure_date' => '2026-11-02', 'meal_type' => '', 'departure_name' => '', 'pricing' => [], 'rooms' => [], 'payment_terms' => [], 'cancellation_fees' => []],
             $store->get('offer-1', 7, 1000 + 60),
         );
     }
@@ -86,6 +86,19 @@ final class CircuitQuoteStoreTest extends TestCase
         $_SESSION = [];
         self::assertNull(CircuitRoomOffersTest::store()->quote('offer-9', 17, 1000), "another visitor's session keeps no such offer");
         self::assertNull($store->quote('offer-9', 18, 1000), 'nor another circuit');
+    }
+
+    /** The cart line keeps the quote's terms (the cart, checkout and order cards show them): the store keeps them for it. */
+    public function testAKeptOfferKeepsItsTerms(): void
+    {
+        $quote = CircuitRoomOffersTest::quote('offer-11', 927.0);
+        $store = CircuitRoomOffersTest::store();
+        $store->rememberQuotes([$quote], 17, '2027-07-05', 1000);
+
+        $kept = $store->get('offer-11', 17, 1000);
+        self::assertNotNull($kept);
+        self::assertSame($quote['payment_terms'], $kept['payment_terms']);
+        self::assertSame($quote['cancellation_fees'], $kept['cancellation_fees']);
     }
 
     /** The booking form checks the offer against its date: the date it was quoted for, even when Sphinx does not repeat it. */

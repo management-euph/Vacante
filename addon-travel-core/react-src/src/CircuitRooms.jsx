@@ -11,7 +11,7 @@
  * The text without React lives in circuitRooms.js.
  */
 
-import { MealIcon } from './icons';
+import { MealIcon, InfoIcon } from './icons';
 import { t, tPlural } from './utils';
 import { chipDate, formatPrice, partySummary } from './circuitFormat';
 import { roomsLabel, starsText, commonMeal, perPerson, place, daysLater } from './circuitRooms';
@@ -93,10 +93,19 @@ export default function CircuitRooms({ quote, hotelStars, bookHref }) {
                                         const each = perPerson(offer.price, persons);
                                         return (
                                             <li className="travel-circuit-offer" key={offer.offer_id}>
-                                                <p className="travel-circuit-offer__name">
-                                                    <MealIcon />
-                                                    <span>{[roomsLabel(offer.rooms), offer.meal].filter(Boolean).join(' · ')}</span>
-                                                </p>
+                                                <div className="travel-circuit-offer__main">
+                                                    <p className="travel-circuit-offer__name">
+                                                        <MealIcon />
+                                                        <span>{[roomsLabel(offer.rooms), offer.meal].filter(Boolean).join(' · ')}</span>
+                                                    </p>
+                                                    {/* The booking form shows the terms (board 16.3: once, on the first room). */}
+                                                    {b === 0 && o === 0 && (
+                                                        <p className="travel-circuit-offer__note">
+                                                            <InfoIcon />
+                                                            <span>{t('circuitTermsAtBooking', 'You see the cancellation and payment terms when you book.')}</span>
+                                                        </p>
+                                                    )}
+                                                </div>
                                                 <p className="travel-circuit-offer__price">
                                                     <strong className="travel-circuit-offer__total">{formatPrice(offer.price, offer.currency)}</strong>
                                                     {persons === 1 && <span className="travel-circuit-offer__each">{t('circuitForOneAdult', 'for 1 adult')}</span>}

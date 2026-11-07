@@ -1372,6 +1372,17 @@ button.nvt-field-input:active {
     flex: 0 0 auto;
     color: #003580;
 }
+.travel-circuit-offer__note {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: var(--nvt-text-light, #4b5563);
+}
+.travel-circuit-offer__note svg {
+    flex: 0 0 auto;
+}
 .travel-circuit-offer__price {
     display: flex;
     flex-direction: column;
@@ -1450,7 +1461,7 @@ button.nvt-field-input:active {
         grid-template-columns: minmax(0, 1fr) 128px;
         padding: 12px 14px;
     }
-    .travel-circuit-offer__name {
+    .travel-circuit-offer__main {
         grid-column: 1 / -1;
     }
     .travel-circuit-offer__price {

@@ -58,7 +58,9 @@ final class BookBasisTest extends TestCase
     public function testTheCircuitPriceAndRoomsAreTheStoredQuotes(): void
     {
         $form = self::read('controllers/frontend/sphinx_booking/circuit_booking_form.php');
-        self::assertMatchesRegularExpression('/->remember\([^;]*\$quotePricing,\s*\$rooms,\s*\);/s', $form);
+        // The quote as Sphinx sent it: its pricing, rooms and terms (CircuitQuoteStore::rememberQuotes()).
+        self::assertStringContainsString('$quoteStore->rememberQuotes([$quote], $circuit_id, $departure_date, time());', $form);
+        self::assertStringContainsString("TypeCoerce::toStringMap(\$quote['payment_terms'] ?? null),", self::read('src/Services/CircuitQuoteStore.php'));
 
         $cart = self::read('controllers/frontend/sphinx_booking/circuit_add_to_cart.php');
         self::assertStringContainsString("\$storedQuote['pricing']", $cart);

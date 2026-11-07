@@ -106,7 +106,7 @@ final class CircuitBarWiringTest extends TestCase
             'circuit_modify', 'circuit_rooms_title', 'circuit_rooms_departure', 'circuit_outbound', 'circuit_inbound',
             'circuit_hotels_stars', 'circuit_hotels', 'circuit_nights_one', 'circuit_nights_few', 'circuit_nights_many',
             'circuit_per_person', 'circuit_for_one_adult', 'circuit_book', 'circuit_loading_rooms', 'circuit_rooms_error',
-            'circuit_no_rooms', 'circuit_rooms_ages',
+            'circuit_no_rooms', 'circuit_rooms_ages', 'circuit_terms_at_booking',
         ];
         foreach ($keys as $key) {
             self::assertStringContainsString("'{$key}'", $config, 'the rooms text ' . $key . ' is sent');
@@ -127,8 +127,12 @@ final class CircuitBarWiringTest extends TestCase
         self::assertStringContainsString("fetch(quoteUrl(base, quoteDispatch, choice)", $bar);
         self::assertStringContainsString("{asked ? t('circuitModify', 'Change') : t('circuitSeePrice', 'See the price')}", $bar);
         self::assertStringNotContainsString('window.location.href = quoteUrl(', $bar);
-        // Each room's "Rezervă" opens the booking form on its own offer.
-        self::assertStringContainsString('href={bookHref(offer)}', self::engine('CircuitRooms.jsx'));
+        // Each room's "Rezervă" opens the booking form on its own offer, where
+        // the terms are shown (board 16.3: the note, once, on the first room).
+        $rooms = self::engine('CircuitRooms.jsx');
+        self::assertStringContainsString('href={bookHref(offer)}', $rooms);
+        self::assertStringContainsString("{b === 0 && o === 0 && (", $rooms);
+        self::assertStringContainsString("t('circuitTermsAtBooking',", $rooms);
     }
 
     public function testTheEngineRendersTheCircuitBarForACircuit(): void

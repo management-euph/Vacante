@@ -3559,6 +3559,10 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Choose each child\'s age to see the price.',
         'ro' => 'Alege vârsta fiecărui copil ca să vezi prețul.',
     ],
+    'travel_core.circuit_terms_at_booking' => [
+        'en' => 'You see the cancellation and payment terms when you book.',
+        'ro' => 'Condițiile de anulare și de plată le vezi la rezervare.',
+    ],
     // Under its rooms: the program, hotels, things to know, inclusions (board 16.3,
     // components/circuit_details.tpl).
     'travel_core.circuit_menu_label' => [

@@ -230,6 +230,22 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
     // the services chosen: what circuits/book sends, on a retry too.
     $booking_record['pricing_json'] = json_encode($bookPricing + ['chosen_services' => $selected_services], JSON_UNESCAPED_UNICODE);
 
+    // The cancellation and payment terms of what is booked: the customized
+    // offer's when services were chosen (they follow its new price), else
+    // the stored quote's. Raw on the booking row and, raw and as lines, on the cart
+    // line, as for hotels: the cart, checkout and order cards show the
+    // timeline from them (SphinxBookingSidebarBuilder::cartTerms()).
+    $payment_terms_raw = TypeCoerce::toStringMap($customizedMap['payment_terms'] ?? null);
+    $payment_terms_raw = $payment_terms_raw !== [] ? $payment_terms_raw : $storedQuote['payment_terms'];
+    $cancellation_fees_raw = TypeCoerce::toStringMap($customizedMap['cancellation_fees'] ?? null);
+    $cancellation_fees_raw = $cancellation_fees_raw !== [] ? $cancellation_fees_raw : $storedQuote['cancellation_fees'];
+    if ($payment_terms_raw !== []) {
+        $booking_record['payment_terms_json'] = json_encode($payment_terms_raw, JSON_UNESCAPED_UNICODE);
+    }
+    if ($cancellation_fees_raw !== []) {
+        $booking_record['cancellation_fees_json'] = json_encode($cancellation_fees_raw, JSON_UNESCAPED_UNICODE);
+    }
+
     $booking_id = $cartService->upsertBooking(
         $booking_record, (string) $circuit_id, $departure_date, $check_out, TypeCoerce::toString($parsed_guests['holder_name'])
     );
@@ -257,6 +273,9 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         'guests_data' => json_encode($parsed_guests['guests_data'], JSON_UNESCAPED_UNICODE),
         'contact_email' => TypeCoerce::toString($contact['email'] ?? ''), 'contact_phone' => TypeCoerce::toString($contact['phone'] ?? ''),
         'total_price' => $total_price, 'currency' => $priceCurrency,
+        'payment_terms' => \Tygh\Addons\SphinxHolidays\Services\TermsFormatter::lines($payment_terms_raw),
+        'cancellation_fees' => \Tygh\Addons\SphinxHolidays\Services\TermsFormatter::lines($cancellation_fees_raw),
+        'terms_raw' => (string) json_encode(['payment' => $payment_terms_raw, 'cancellation' => $cancellation_fees_raw], JSON_UNESCAPED_UNICODE),
     ];
 
     return $cartService->addToCartAndRedirect(

@@ -143,6 +143,16 @@
         </div>
     {/if}
 
+    {* Cancellation and payment: the same timeline as a hotel's booking page
+       (travel_core booking_terms_timeline.tpl), from this offer's own terms
+       (SphinxBookingSidebarBuilder::tripTerms()). *}
+    {if $sphinx_trip_terms.cancel_steps || $sphinx_trip_terms.payment_steps || $sphinx_trip_terms.cancel_lines || $sphinx_trip_terms.payment_lines}
+        <div class="travel-info-card sphinx-trip-terms">
+            <h3 class="travel-section-title">{__("travel_core.cancel_payment_title")}</h3>
+            {include file="addons/travel_core/components/booking_terms_timeline.tpl" tt=$sphinx_trip_terms}
+        </div>
+    {/if}
+
     {* Guest entry form *}
     <form action="{"sphinx_booking.package_add_to_cart"|fn_url}" method="post" id="sphinx-package-booking-form">
         <input type="hidden" name="offer_id" value="{$sphinx_package_booking.offer_id}">

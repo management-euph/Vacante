@@ -68,6 +68,6 @@ final class AddToCartTrustTest extends TestCase
         );
         $form = self::read('controllers/frontend/sphinx_booking/circuit_booking_form.php');
         self::assertStringContainsString('$quoteStore = new CircuitQuoteStore();', $form);
-        self::assertStringContainsString('$quoteStore->remember(', $form);
+        self::assertStringContainsString('$quoteStore->rememberQuotes([$quote], $circuit_id, $departure_date, time());', $form);
     }
 }

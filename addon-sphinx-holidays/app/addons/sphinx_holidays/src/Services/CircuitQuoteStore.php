@@ -16,7 +16,8 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  * `selling_price` is the provider's own figure, BEFORE commission: the cart
  * applies commission exactly once. The quote's whole `pricing` and its
  * `rooms` (their codes) are kept too: circuits/book sends that price and
- * those room codes for the offer, never the form's copies.
+ * those room codes for the offer, never the form's copies. So are its
+ * payment and cancellation terms, which the cart line keeps.
  *
  * The rooms on the circuit's page (CircuitRoomOffers) keep each offer they
  * show, and also what the booking form shows of it (title, flight,
@@ -84,6 +85,8 @@ final class CircuitQuoteStore
                 TypeCoerce::toString(TypeCoerce::toStringMap($quote['departure'] ?? null)['name'] ?? ''),
                 $pricing,
                 TypeCoerce::toRowList($quote['rooms'] ?? []),
+                TypeCoerce::toStringMap($quote['payment_terms'] ?? null),
+                TypeCoerce::toStringMap($quote['cancellation_fees'] ?? null),
             );
             $encoded = json_encode(array_intersect_key($quote, array_flip(self::DETAIL_FIELDS)), JSON_UNESCAPED_UNICODE);
             if ($encoded !== false) {
@@ -132,6 +135,8 @@ final class CircuitQuoteStore
      * @param string $departureName where the trip starts ("Bucharest"), for the order
      * @param array<string, mixed> $pricing the quote's pricing (selling_price, supplier_price, ...)
      * @param list<array<string, mixed>> $rooms the quote's rooms (code, name, adults, children_ages)
+     * @param array<string, mixed> $paymentTerms the quote's payment_terms, as Sphinx sent them
+     * @param array<string, mixed> $cancellationFees the quote's cancellation_fees, as Sphinx sent them
      */
     public function remember(
         string $offerId,
@@ -144,6 +149,8 @@ final class CircuitQuoteStore
         string $departureName = '',
         array $pricing = [],
         array $rooms = [],
+        array $paymentTerms = [],
+        array $cancellationFees = [],
     ): void {
         if ($offerId === '' || $circuitId <= 0 || $sellingPrice <= 0) {
             return;
@@ -158,6 +165,10 @@ final class CircuitQuoteStore
             'departure_name' => $departureName,
             'pricing' => $pricing,
             'rooms' => $rooms,
+            // The cart line keeps them: its card, the checkout's and the
+            // order's show the cancellation and payment timeline.
+            'payment_terms' => $paymentTerms,
+            'cancellation_fees' => $cancellationFees,
             'stored_at' => $now,
         ];
         $this->session->set(self::SESSION_KEY, array_slice($quotes, -self::MAX_QUOTES, null, true));
@@ -171,7 +182,7 @@ final class CircuitQuoteStore
      * @param int $circuitId the circuit it must be a quote of
      * @param int $now the current time
      *
-     * @return array{circuit_id: int, selling_price: float, currency: string, departure_date: string, meal_type: string, departure_name: string, pricing: array<string, mixed>, rooms: list<array<string, mixed>>}|null
+     * @return array{circuit_id: int, selling_price: float, currency: string, departure_date: string, meal_type: string, departure_name: string, pricing: array<string, mixed>, rooms: list<array<string, mixed>>, payment_terms: array<string, mixed>, cancellation_fees: array<string, mixed>}|null
      */
     public function get(string $offerId, int $circuitId, int $now): ?array
     {
@@ -197,6 +208,8 @@ final class CircuitQuoteStore
             'departure_name' => TypeCoerce::toString($quote['departure_name'] ?? ''),
             'pricing' => TypeCoerce::toStringMap($quote['pricing'] ?? null),
             'rooms' => TypeCoerce::toRowList($quote['rooms'] ?? []),
+            'payment_terms' => TypeCoerce::toStringMap($quote['payment_terms'] ?? null),
+            'cancellation_fees' => TypeCoerce::toStringMap($quote['cancellation_fees'] ?? null),
         ];
     }
 }

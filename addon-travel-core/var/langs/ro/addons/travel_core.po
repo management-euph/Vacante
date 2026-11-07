@@ -4525,3 +4525,7 @@ msgstr "Grup de maximum [n] persoane"
 msgctxt "Languages::travel_core.circuit_group_up_to_many"
 msgid "Group of up to [n] people"
 msgstr "Grup de maximum [n] de persoane"
+
+msgctxt "Languages::travel_core.circuit_terms_at_booking"
+msgid "You see the cancellation and payment terms when you book."
+msgstr "Condițiile de anulare și de plată le vezi la rezervare."

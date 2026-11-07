@@ -159,6 +159,7 @@ if ($mode === 'booking_config') {
                 'circuit_nights_one', 'circuit_nights_few', 'circuit_nights_many',
                 'circuit_per_person', 'circuit_for_one_adult', 'circuit_book',
                 'circuit_loading_rooms', 'circuit_rooms_error', 'circuit_no_rooms', 'circuit_rooms_ages',
+                'circuit_terms_at_booking',
             ];
             $translations = [];
             foreach ($translationKeys as $key) {

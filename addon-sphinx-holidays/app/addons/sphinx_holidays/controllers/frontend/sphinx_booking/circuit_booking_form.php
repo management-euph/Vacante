@@ -121,23 +121,14 @@ try {
     $basePrice = $sellingPrice;
     $sellingPrice = Container::getCartService()->applyCommission($sellingPrice);
     // The quote stays on the server: add-to-cart prices from it, never from
-    // the form. (An offer chosen on the page is kept already.)
+    // the form — its price, rooms, meal plan, departure city and terms
+    // (CircuitQuoteStore::rememberQuotes()). An offer chosen on the page is
+    // kept already.
     if ($fresh) {
-        $quoteStore->remember(
-            $offer_id,
-            $circuit_id,
-            $basePrice,
-            TypeCoerce::toString($quotePricing['currency'] ?? ConfigProvider::getDefaultCurrency()),
-            $departure_date,
-            time(),
-            // What the order shows: the meal plan and where the trip starts.
-            TypeCoerce::toString($quote['meal_type_name'] ?? ''),
-            TypeCoerce::toString($quoteDeparture['name'] ?? ''),
-            // What circuits/book sends for this offer: its price and its rooms.
-            $quotePricing,
-            $rooms,
-        );
+        $quoteStore->rememberQuotes([$quote], $circuit_id, $departure_date, time());
     }
+    $quoteCurrency = TypeCoerce::toString($quotePricing['currency'] ?? '');
+    $quoteCurrency = $quoteCurrency !== '' ? $quoteCurrency : ConfigProvider::getDefaultCurrency();
 
 
     // Parse additional services (optional/mandatory)
@@ -174,13 +165,25 @@ try {
         )),
         'total_price' => $sellingPrice,
         'base_price' => $basePrice,
-        'currency' => TypeCoerce::toString($quotePricing['currency'] ?? ConfigProvider::getDefaultCurrency()),
+        'currency' => $quoteCurrency,
         'additional_services' => $additionalServices,
-        'payment_terms' => TypeCoerce::toList($quote['payment_terms'] ?? []),
-        'cancellation_fees' => TypeCoerce::toList($quote['cancellation_fees'] ?? []),
         'flight' => $quote['flight'] ?? null,
         'verified' => true,
     ]);
+
+    // Cancellation and payment, as a hotel's booking page shows them
+    // (travel_core booking_terms_timeline.tpl): the quote's own terms, the
+    // commissioned price on the cart line's scale (API currency → the store's
+    // primary, as CartService stores the line), in the shopper's currency.
+    $view->assign('sphinx_trip_terms', \Tygh\Addons\SphinxHolidays\ViewModels\SphinxBookingSidebarBuilder::tripTerms(
+        $quote['cancellation_fees'] ?? null,
+        $quote['payment_terms'] ?? null,
+        (new \Tygh\Addons\TravelCore\Services\CurrencyService($quoteCurrency))
+            ->convertFromApiCurrency($sellingPrice, defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : $quoteCurrency),
+        \Tygh\Addons\TravelCore\Services\MoneyFormatter::forStore(),
+        date('Y-m-d'),
+        \Tygh\Addons\TravelCore\Services\TravelCoreConfig::getDateFormat(),
+    ));
 
     $view->assign('sphinx_provider', 'sphinx');
     // circuits/book wants every traveller's gender (m or f), children too.

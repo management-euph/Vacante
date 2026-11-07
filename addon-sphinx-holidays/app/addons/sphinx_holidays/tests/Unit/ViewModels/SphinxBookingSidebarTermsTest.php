@@ -6,6 +6,7 @@ namespace Tygh\Addons\SphinxHolidays\Tests\Unit\ViewModels;
 
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\SphinxHolidays\ViewModels\SphinxBookingSidebarBuilder;
+use Tygh\Addons\TravelCore\Services\MoneyFormatter;
 
 /**
  * Sphinx's own API data feeding the shared booking sidebar: the badge from
@@ -48,6 +49,47 @@ final class SphinxBookingSidebarTermsTest extends TestCase
         ], $installments);
     }
 
+    /**
+     * A package's or circuit's booking form showed no terms at all. It now
+     * shows a hotel page's timeline: Sphinx's cumulative amounts (the
+     * supplier's scale) as shares of the store's price, commission included.
+     */
+    public function testATripsTermsAreAHotelsTimelineAtTheStorePrice(): void
+    {
+        $money = new MoneyFormatter(['symbol' => '€', 'after' => 'Y', 'decimals' => 0, 'decimals_separator' => ',', 'thousands_separator' => '.']);
+        $terms = SphinxBookingSidebarBuilder::tripTerms(
+            ['is_loaded' => true, 'is_free' => false, 'text' => null, 'rules' => [
+                ['since' => '2027-06-01', 'value' => 185.4],
+                ['since' => '2027-07-01', 'value' => 927],
+            ]],
+            ['is_loaded' => true, 'text' => null, 'rules' => [
+                ['until' => '2027-06-01', 'value' => 185.4],
+                ['until' => '2027-07-01', 'value' => 927],
+            ]],
+            1100.0,
+            $money,
+            '2027-05-10',
+            '%d.%m.%Y',
+        );
+
+        self::assertNotSame([], $terms['cancel_steps']);
+        self::assertSame('free', $terms['cancel_steps'][0]['kind'] ?? null, 'free until the first penalty');
+        self::assertNotSame('', $terms['cancel_free_until']);
+        self::assertSame('', $terms['cancel_full_amount'], 'nothing is lost by cancelling today');
+        $amounts = array_column($terms['payment_steps'], 'amount_label');
+        self::assertSame(['220 €', '880 €'], $amounts, '20 % then 80 % of the store price, never 185,4 or 927 (the supplier scale)');
+        $json = (string) json_encode($terms['cancel_steps']);
+        self::assertStringNotContainsString('927', $json);
+        self::assertStringNotContainsString('185', $json);
+    }
+
+    public function testATripWithoutAPriceKeepsOnlyItsLines(): void
+    {
+        $terms = SphinxBookingSidebarBuilder::tripTerms(['text' => 'Nerambursabil'], null, 0.0, new MoneyFormatter(['symbol' => '€']), '2027-05-10', '%d.%m.%Y');
+
+        self::assertSame([[], [], ['Nerambursabil']], [$terms['cancel_steps'], $terms['payment_steps'], $terms['cancel_lines']]);
+    }
+
     public function testProseOrLegacyTermsGiveNoTimeline(): void
     {
         self::assertSame([[], []], SphinxBookingSidebarBuilder::terms(['text' => 'Non-refundable'], ['20% on booking']));
@@ -56,7 +98,7 @@ final class SphinxBookingSidebarTermsTest extends TestCase
 
     /**
      * The cart booking card reads the raw API terms the cart line keeps in
-     * terms_raw; circuit / package lines keep none.
+     * terms_raw — a hotel's, a package's or a circuit's line alike.
      */
     public function testCartLineTermsComeFromTermsRaw(): void
     {

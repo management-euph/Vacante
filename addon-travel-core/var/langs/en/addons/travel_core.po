@@ -4525,3 +4525,7 @@ msgstr "Group of up to [n] people"
 msgctxt "Languages::travel_core.circuit_group_up_to_many"
 msgid "Group of up to [n] people"
 msgstr "Group of up to [n] people"
+
+msgctxt "Languages::travel_core.circuit_terms_at_booking"
+msgid "You see the cancellation and payment terms when you book."
+msgstr "You see the cancellation and payment terms when you book."

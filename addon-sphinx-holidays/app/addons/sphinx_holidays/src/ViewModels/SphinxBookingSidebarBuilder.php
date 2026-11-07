@@ -203,11 +203,54 @@ final class SphinxBookingSidebarBuilder
     }
 
     /**
+     * A package's or a circuit's cancellation and payment timeline, for its
+     * booking form ("Anulare și plată"), as booking_terms_timeline.tpl takes
+     * it: the same timeline a hotel's booking page shows (terms()), its
+     * amounts in the shopper's currency, commission included, from the
+     * offer's own terms (verify, quote or customize).
+     *
+     * @param mixed $cancellationFees the offer's raw cancellation_fees
+     * @param mixed $paymentTerms the offer's raw payment_terms
+     * @param float $primaryTotal its commissioned total, store primary currency
+     * @param MoneyFormatter $money the storefront formatter (shopper's currency)
+     * @param string $today Y-m-d
+     * @param string $dateFormat the store's date format
+     *
+     * @return array{cancel_steps: list<array<string, mixed>>, payment_steps: list<array<string, mixed>>, cancel_free_until: string, cancel_full_amount: string, cancel_lines: list<string>, payment_lines: list<string>}
+     */
+    public static function tripTerms(
+        mixed $cancellationFees,
+        mixed $paymentTerms,
+        float $primaryTotal,
+        MoneyFormatter $money,
+        string $today,
+        string $dateFormat,
+    ): array {
+        $cancelLines = TermsFormatter::lines($cancellationFees);
+        $paymentLines = TermsFormatter::lines($paymentTerms);
+        if ($primaryTotal <= 0) {
+            return ['cancel_steps' => [], 'payment_steps' => [], 'cancel_free_until' => '', 'cancel_full_amount' => '', 'cancel_lines' => $cancelLines, 'payment_lines' => $paymentLines];
+        }
+        [$windows, $installments] = self::terms($cancellationFees, $paymentTerms);
+        $factory = new TermsTimelineFactory($money, $today, $dateFormat);
+        $timeline = $factory->cancellation($windows, $primaryTotal);
+
+        return [
+            'cancel_steps' => $timeline['steps'],
+            'payment_steps' => $factory->payment($installments, $primaryTotal),
+            'cancel_free_until' => $timeline['free_until'],
+            'cancel_full_amount' => $timeline['steps'] !== [] && $timeline['full_charge_now'] ? $money->format($primaryTotal) : '',
+            'cancel_lines' => $cancelLines,
+            'payment_lines' => $paymentLines,
+        ];
+    }
+
+    /**
      * A sphinx cart line's terms for travel_core's cart / checkout booking
      * card (hook travel_core_cart_booking_card): the raw API terms the line
      * keeps in terms_raw, normalised as for the booking page, plus the
-     * formatted lines as the prose fallback. Circuit and package lines keep
-     * no terms and get none.
+     * formatted lines as the prose fallback. Hotel, package and circuit lines
+     * all keep them (add_to_cart, package_add_to_cart, circuit_add_to_cart).
      *
      * @param array<string, mixed> $extra
      * @return array{cancel_windows: list<array<string, mixed>>, payment_rows: list<array<string, mixed>>, cancel_lines: list<string>, payment_lines: list<string>}
