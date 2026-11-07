@@ -22,6 +22,8 @@ use Tygh\Addons\TravelCore\Services\DateHelper;
  *  - the meal plan(s) the hotel's text names, in the store's language,
  *    the text in brackets ("Mic dejun (BB)", MealPlanNames), ranked by the
  *    same words (MealRank);
+ *  - the rate's own name (GrilaName: "Cazare cu mic dejun - flexibil"), and
+ *    the "Nerambursabil" pill when that name says so;
  *    an offer without one is room only;
  *  - the price on the cart line's scale (the offer's currency through the
  *    store's coefficient, as add_to_cart charges it), the price before the
@@ -144,8 +146,10 @@ final class DesignARates
                 'return_product_id' => $this->returnProductId,
             ])),
             mealRank: $ranks !== [] ? max($ranks) : RateOffer::MEAL_OTHER,
+            rateName: self::rateName($offer->grila),
             standardPrice: $old > 0 ? EurositeProductFactory::toStorePrice($old, $coefficient) : 0.0,
             discountLabel: $old > 0 ? $offer->offerDescription : '',
+            nonRefundable: self::nonRefundable($offer->grila),
             onRequest: $onRequest,
             termsUrl: ($this->url)('eurosite_booking.offer_terms?' . http_build_query([
                 'offer_key' => $key,
@@ -153,6 +157,26 @@ final class DesignARates
             ])),
             paymentText: $this->paymentText,
         );
+    }
+
+    /**
+     * The rate's own name, as Eurosite sends it (GrilaName): one room is
+     * often sold at two rates, "Cazare cu mic dejun - nerambursabil" (334)
+     * and "Cazare cu mic dejun - flexibil" (371) at Casa Georgius Krauss on
+     * 2 Nov 2026, and its card has to tell them apart. A bare "Standard"
+     * names nothing.
+     */
+    public static function rateName(string $grila): string
+    {
+        $grila = trim($grila);
+
+        return in_array(mb_strtolower($grila), ['', 'standard'], true) ? '' : $grila;
+    }
+
+    /** The rate's name says it is non-refundable: the card's "Nerambursabil" pill. */
+    public static function nonRefundable(string $grila): bool
+    {
+        return preg_match('/nerambursabil|non[\s-]*refundable|f[aă]r[aă]\s+rambursare/iu', $grila) === 1;
     }
 
     /**
