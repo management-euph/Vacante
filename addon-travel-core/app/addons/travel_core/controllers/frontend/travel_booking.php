@@ -153,6 +153,13 @@ if ($mode === 'booking_config') {
                 'departure_from', 'departure_date', 'departures_from',
                 'circuit_prices_note', 'no_departures', 'loading_departures',
                 'departures_error', 'choose_departure_date', 'circuit_see_price',
+                // Its rooms ("Camera pentru tot circuitul", board 16.3)
+                'circuit_modify', 'circuit_rooms_title', 'circuit_rooms_departure',
+                'circuit_outbound', 'circuit_inbound', 'circuit_hotels_stars', 'circuit_hotels',
+                'circuit_nights_one', 'circuit_nights_few', 'circuit_nights_many',
+                'circuit_per_person', 'circuit_for_one_adult', 'circuit_book',
+                'circuit_loading_rooms', 'circuit_rooms_error', 'circuit_no_rooms', 'circuit_rooms_ages',
+                'circuit_terms_at_booking',
             ];
             $translations = [];
             foreach ($translationKeys as $key) {
@@ -178,7 +185,9 @@ if ($mode === 'booking_config') {
                     'departures' => $circuit->departures,
                     'departureId' => $circuit->defaultDepartureId(),
                     'datesDispatch' => $providerName . '_booking.circuit_dates',
+                    'quoteDispatch' => $providerName . '_booking.circuit_quote',
                     'bookingDispatch' => $providerName . '_booking.circuit_booking_form',
+                    'hotelStars' => $circuit->hotelStars(),
                     'maxRooms' => ProviderRoomLimit::maxRooms($providerName),
                     'design' => DesignA::requested($_REQUEST) ? DesignA::VALUE : '',
                     'colors' => $colors,

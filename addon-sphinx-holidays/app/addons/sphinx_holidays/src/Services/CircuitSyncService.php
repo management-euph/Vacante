@@ -195,12 +195,53 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
             'departure_names' => !empty($depNames) ? implode(', ', $depNames) : null,
             'image_url' => TypeCoerce::toString($raw['image'] ?? $raw['image_url'] ?? ''),
             'itinerary_json' => !empty($raw['itinerary']) ? json_encode($raw['itinerary']) : null,
+            'details_json' => self::details($raw),
             'tags_json' => !empty($raw['tags']) ? json_encode($raw['tags']) : null,
             'min_price' => isset($pricing['selling_price']) ? TypeCoerce::toFloat($pricing['selling_price']) : null,
             'currency' => TypeCoerce::toString($pricing['currency'] ?? 'EUR'),
             'sync_status' => 'active',
             'last_synced_at' => date('Y-m-d H:i:s'),
         ];
+    }
+
+    /**
+     * What a circuit's page shows besides its itinerary (board 16.3): what
+     * the price includes and does not, the things to know, the group's size
+     * and the travellers' age when the circuit asks one; null when the API
+     * says none of it. Only these fields are kept.
+     *
+     * @param array<string, mixed> $raw one circuit of static/circuits
+     */
+    public static function details(array $raw): ?string
+    {
+        $items = static function (mixed $list): array {
+            $out = [];
+            foreach (TypeCoerce::toRowList($list) as $item) {
+                $title = trim(TypeCoerce::toString($item['title'] ?? ''));
+                $description = trim(TypeCoerce::toString($item['description'] ?? ''));
+                if ($title !== '' || $description !== '') {
+                    $out[] = ['title' => $title, 'description' => $description];
+                }
+            }
+
+            return $out;
+        };
+        $range = static fn (array $limits): array => array_filter(
+            ['min' => max(0, TypeCoerce::toInt($limits['min'] ?? 0)), 'max' => max(0, TypeCoerce::toInt($limits['max'] ?? 0))],
+            static fn (int $value): bool => $value > 0,
+        );
+        // The API spells it "age_requirments".
+        $age = TypeCoerce::toStringMap($raw['age_requirments'] ?? $raw['age_requirements'] ?? null);
+
+        $details = array_filter([
+            'included' => $items($raw['included'] ?? []),
+            'not_included' => $items($raw['not_included'] ?? []),
+            'additional_info' => $items($raw['additional_info'] ?? []),
+            'group_size' => $range(TypeCoerce::toStringMap($raw['group_size'] ?? null)),
+            'age' => ($age['is_required'] ?? false) === true ? $range($age) : [],
+        ]);
+
+        return $details === [] ? null : (string) json_encode($details, JSON_UNESCAPED_UNICODE);
     }
 
     /**

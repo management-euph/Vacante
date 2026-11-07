@@ -2527,3 +2527,260 @@
 .travel-pdpa-sheet-open body {
     overflow: hidden;
 }
+
+/* ── #11 A circuit's facts under its title (board 16.3) ──────────────────
+   The route in the location line (with its icon), then its length,
+   transport and group as quiet labels (components/circuit_facts.tpl). */
+.travel-pdpa .travel-pdpa-location__route {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.travel-pdpa .travel-pdpa-location__route .travel-pdpa-ico {
+    flex: 0 0 auto;
+}
+.travel-pdpa .travel-pdpa-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0 0;
+    padding: 0;
+    list-style: none;
+}
+.travel-pdpa .travel-pdpa-fact {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: #f1f3f6;
+    font-size: 13px;
+    line-height: 1.4;
+    color: #374151;
+}
+.travel-pdpa .travel-pdpa-fact .travel-pdpa-ico {
+    flex: 0 0 auto;
+    color: var(--travel-pdpa-navy);
+}
+
+/* ── #45 A circuit's program (components/circuit_details.tpl, board 16.3) ─
+   Under its rooms: a menu of its sections (links, no tabs: every section
+   stays on the page), the program day by day beside the hotels on the route
+   and the things to know, then what the price includes and does not. */
+.travel-pdpa .travel-circuit-details {
+    margin: 36px 0 8px;
+    color: var(--travel-pdpa-text);
+}
+.travel-pdpa .travel-circuit-menu {
+    margin: 0 0 24px;
+    border-bottom: 1px solid #e3e8ef;
+}
+.travel-pdpa .travel-circuit-menu__list {
+    display: flex;
+    gap: 28px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    overflow-x: auto;
+}
+.travel-pdpa .travel-circuit-menu__link {
+    display: block;
+    padding: 10px 0 12px;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--travel-pdpa-text);
+    text-decoration: none;
+    white-space: nowrap;
+}
+.travel-pdpa .travel-circuit-menu__link:hover,
+.travel-pdpa .travel-circuit-menu__link:focus-visible {
+    border-bottom-color: var(--travel-pdpa-navy);
+    color: var(--travel-pdpa-navy);
+}
+.travel-pdpa .travel-circuit-details__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 440px);
+    gap: 24px 40px;
+    align-items: start;
+}
+.travel-pdpa .travel-circuit-program,
+.travel-pdpa .travel-circuit-card,
+.travel-pdpa .travel-circuit-include {
+    scroll-margin-top: 16px;
+}
+/* The program: each day's number on a line down the days. */
+.travel-pdpa .travel-circuit-days {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.travel-pdpa .travel-circuit-day {
+    position: relative;
+    padding: 0 0 26px 52px;
+}
+.travel-pdpa .travel-circuit-day::before {
+    content: "";
+    position: absolute;
+    top: 34px;
+    bottom: 0;
+    left: 16px;
+    width: 2px;
+    background: #e3e8ef;
+}
+.travel-pdpa .travel-circuit-day:last-child {
+    padding-bottom: 0;
+}
+.travel-pdpa .travel-circuit-day:last-child::before {
+    display: none;
+}
+.travel-pdpa .travel-circuit-day__n {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--travel-pdpa-navy);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+}
+.travel-pdpa .travel-circuit-day__title {
+    margin: 4px 0 6px;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+.travel-pdpa .travel-circuit-day__text {
+    margin: 0 0 6px;
+    font-size: 15px;
+    line-height: 1.55;
+    color: #374151;
+}
+.travel-pdpa .travel-circuit-day__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 18px;
+    margin: 6px 0 0;
+    font-size: 14px;
+    color: var(--travel-pdpa-muted);
+}
+.travel-pdpa .travel-circuit-day__facts > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+/* The side: the hotels on the route and the things to know. */
+.travel-pdpa .travel-circuit-details__side {
+    display: grid;
+    gap: 16px;
+}
+.travel-pdpa .travel-circuit-card {
+    padding: 16px 18px;
+    border: 1px solid #e3e8ef;
+    border-radius: 10px;
+    background: #ffffff;
+}
+.travel-pdpa .travel-circuit-card__title {
+    margin: 0 0 12px;
+    font-size: 16px;
+    font-weight: 700;
+}
+.travel-pdpa .travel-circuit-card__subtitle {
+    margin: 12px 0 4px;
+    font-size: 14px;
+    font-weight: 700;
+}
+.travel-pdpa .travel-circuit-card__text {
+    margin: 0 0 8px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #4b5563;
+}
+.travel-pdpa .travel-circuit-card__text:last-child {
+    margin-bottom: 0;
+}
+.travel-pdpa .travel-circuit-stays {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+/* A night (or nights) on the route: not .travel-circuit-stay, the hotels
+   box of the circuit's rooms (CircuitRooms.jsx, booking-engine.css). */
+.travel-pdpa .travel-circuit-night {
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 4px 12px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    background: #f5f7fa;
+    font-size: 14px;
+}
+.travel-pdpa .travel-circuit-night__when {
+    font-weight: 700;
+}
+/* What the price includes and does not. */
+.travel-pdpa .travel-circuit-include {
+    margin: 32px 0 0;
+}
+.travel-pdpa .travel-circuit-include__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px 32px;
+}
+.travel-pdpa .travel-circuit-include__head {
+    margin: 0 0 10px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--travel-pdpa-muted);
+}
+.travel-pdpa .travel-circuit-include__list {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 15px;
+}
+.travel-pdpa .travel-circuit-include__list > li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+.travel-pdpa .travel-circuit-include__list .travel-pdpa-ico {
+    flex: 0 0 auto;
+    margin-top: 3px;
+}
+.travel-pdpa .travel-circuit-include__list--yes .travel-pdpa-ico {
+    color: #1f7a3a;
+}
+.travel-pdpa .travel-circuit-include__list--no .travel-pdpa-ico {
+    color: #6b7280;
+}
+@media (max-width: 767px) {
+    .travel-pdpa .travel-circuit-details {
+        margin-top: 28px;
+    }
+    .travel-pdpa .travel-circuit-details__grid,
+    .travel-pdpa .travel-circuit-include__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .travel-pdpa .travel-circuit-menu__list {
+        gap: 20px;
+    }
+    .travel-pdpa .travel-circuit-day {
+        padding-left: 46px;
+    }
+    .travel-pdpa .travel-circuit-night {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

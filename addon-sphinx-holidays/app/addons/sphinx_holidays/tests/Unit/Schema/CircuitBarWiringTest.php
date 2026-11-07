@@ -36,6 +36,66 @@ final class CircuitBarWiringTest extends TestCase
         self::assertStringContainsString("header('Content-Type: application/json; charset=utf-8');", $dates);
     }
 
+    /** The rooms of a departure (board 16.3): only for the store's active circuits, a date to come and rooms the picker allows. */
+    public function testTheRoomsEndpointOnlyRelaysWhatTheBarMayAsk(): void
+    {
+        $quote = self::read('controllers/frontend/sphinx_booking/circuit_quote.php');
+
+        self::assertStringContainsString("FROM ?:sphinx_circuits WHERE circuit_id = ?i AND sync_status = 'active'", $quote);
+        self::assertStringContainsString("&& \$departureDate >= date('Y-m-d')", $quote);
+        self::assertStringContainsString("CircuitRoomOffers::validOccupancy(\$occupancy, ProviderRoomLimit::maxRooms('sphinx'))", $quote);
+        self::assertStringContainsString('->forDeparture($circuitId, $departureId, $departureDate, $occupancy, time())', $quote);
+        self::assertStringContainsString("header('Content-Type: application/json; charset=utf-8');", $quote);
+        self::assertStringContainsString("    'circuit_quote',\n", self::read('controllers/frontend/sphinx_booking.php'));
+    }
+
+    /** "Rezervă" on a room: the form shows that offer as quoted on the page, or the same room in a new quote, never another. */
+    public function testTheBookingFormOpensOnTheRoomChosenOnThePage(): void
+    {
+        $form = self::read('controllers/frontend/sphinx_booking/circuit_booking_form.php');
+
+        self::assertStringContainsString('$quote = $chosen_offer !== \'\' ? $quoteStore->quote($chosen_offer, $circuit_id, time()) : null;', $form);
+        self::assertStringContainsString('$quotedOccupancy = CircuitRoomOffers::occupancyOf($quote);', $form);
+        self::assertStringContainsString('$quote = $chosen_key !== \'\' ? CircuitRoomOffers::withKey($quotes, $chosen_key) : $quotes[0];', $form);
+        // A fresh quote is kept as before; the page's offer is kept already.
+        self::assertStringContainsString("if (\$fresh) {\n        \$quoteStore->rememberQuotes([\$quote], \$circuit_id, \$departure_date, time());", $form);
+    }
+
+    /** details_json reaches fresh installs, upgrades and the installs SchemaMigrator converges. */
+    public function testTheCircuitDetailsColumnReachesEveryInstall(): void
+    {
+        $xml = self::read('addon.xml');
+        $definition = "JSON DEFAULT NULL COMMENT 'Included, not included, things to know, group size and age (static API)'";
+
+        self::assertStringContainsString("`details_json`      {$definition},", $xml, 'the CREATE TABLE');
+        self::assertStringContainsString("ALTER TABLE `?:sphinx_circuits`\n                ADD COLUMN `details_json` JSON DEFAULT NULL", $xml, 'the upgrade item');
+        self::assertStringContainsString("'details_json' => \"ADD COLUMN `details_json` {$definition} AFTER `itinerary_json`\"", self::read('src/Install/SchemaMigrator.php'));
+        self::assertStringContainsString("'details_json' => self::details(\$raw),", self::read('src/Services/CircuitSyncService.php'));
+    }
+
+    /**
+     * A package's or circuit's terms: its booking form shows a hotel page's
+     * timeline, and its cart line keeps them (raw and as lines) with the
+     * booking row, so the cart, checkout and order cards show them too. They
+     * kept none before. With services chosen, the customized offer's terms.
+     */
+    public function testATripsTermsAreShownAndKept(): void
+    {
+        foreach (['circuit' => 'circuit_booking_form', 'package' => 'package_booking_form'] as $kind => $mode) {
+            self::assertStringContainsString("\$view->assign('sphinx_trip_terms', \\Tygh\\Addons\\SphinxHolidays\\ViewModels\\SphinxBookingSidebarBuilder::tripTerms(", self::read("controllers/frontend/sphinx_booking/{$mode}.php"), $kind);
+            $template = (string) file_get_contents(dirname(__DIR__, 6) . "/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/{$mode}.tpl");
+            self::assertStringContainsString('{include file="addons/travel_core/components/booking_terms_timeline.tpl" tt=$sphinx_trip_terms}', $template, $kind);
+
+            $cart = self::read("controllers/frontend/sphinx_booking/{$kind}_add_to_cart.php");
+            self::assertStringContainsString("\$payment_terms_raw = TypeCoerce::toStringMap(\$customizedMap['payment_terms'] ?? null);", $cart, $kind);
+            self::assertStringContainsString("\$booking_record['cancellation_fees_json'] = json_encode(\$cancellation_fees_raw, JSON_UNESCAPED_UNICODE);", $cart, $kind);
+            self::assertStringContainsString("'terms_raw' => (string) json_encode(['payment' => \$payment_terms_raw, 'cancellation' => \$cancellation_fees_raw], JSON_UNESCAPED_UNICODE),", $cart, $kind);
+            self::assertLessThan(strpos($cart, '$booking_id = $cartService->upsertBooking('), strpos($cart, "\$booking_record['payment_terms_json']"), $kind . ': before the booking row is written');
+        }
+        self::assertStringContainsString(": \$storedQuote['payment_terms'];", self::read('controllers/frontend/sphinx_booking/circuit_add_to_cart.php'));
+        self::assertStringContainsString(": TypeCoerce::toStringMap(\$verified['payment_terms'] ?? null);", self::read('controllers/frontend/sphinx_booking/package_add_to_cart.php'));
+    }
+
     public function testTheQuoteStepQuotesEachRoom(): void
     {
         $form = self::read('controllers/frontend/sphinx_booking/circuit_booking_form.php');

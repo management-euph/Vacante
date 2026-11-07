@@ -115,6 +115,23 @@ try {
         'verified' => true,
     ]);
 
+    // Cancellation and payment, as a hotel's booking page shows them
+    // (travel_core booking_terms_timeline.tpl): the verified offer's own
+    // terms, the commissioned price on the cart line's scale (API currency →
+    // the store's primary, as CartService stores the line), in the shopper's
+    // currency.
+    $packageCurrency = TypeCoerce::toString($pricing['currency'] ?? '');
+    $packageCurrency = $packageCurrency !== '' ? $packageCurrency : ConfigProvider::getDefaultCurrency();
+    $view->assign('sphinx_trip_terms', \Tygh\Addons\SphinxHolidays\ViewModels\SphinxBookingSidebarBuilder::tripTerms(
+        $offer['cancellation_fees'] ?? null,
+        $offer['payment_terms'] ?? null,
+        (new \Tygh\Addons\TravelCore\Services\CurrencyService($packageCurrency))
+            ->convertFromApiCurrency($sellingPrice, defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : $packageCurrency),
+        \Tygh\Addons\TravelCore\Services\MoneyFormatter::forStore(),
+        date('Y-m-d'),
+        \Tygh\Addons\TravelCore\Services\TravelCoreConfig::getDateFormat(),
+    ));
+
     $view->assign('sphinx_provider', 'sphinx');
     // packages/book wants every traveller's gender (m or f), children too.
     $view->assign('sphinx_gender_options', [
