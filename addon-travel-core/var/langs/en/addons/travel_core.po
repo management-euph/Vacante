@@ -4453,3 +4453,75 @@ msgstr "Travellers must be at most [n] years old."
 msgctxt "Languages::travel_core.circuit_age_max_many"
 msgid "Travellers must be at most [n] years old."
 msgstr "Travellers must be at most [n] years old."
+
+msgctxt "Languages::travel_core.circuit_route"
+msgid "Route"
+msgstr "Route"
+
+msgctxt "Languages::travel_core.circuit_days_one"
+msgid "[n] day"
+msgstr "[n] day"
+
+msgctxt "Languages::travel_core.circuit_days_few"
+msgid "[n] days"
+msgstr "[n] days"
+
+msgctxt "Languages::travel_core.circuit_days_many"
+msgid "[n] days"
+msgstr "[n] days"
+
+msgctxt "Languages::travel_core.circuit_flight"
+msgid "Flight"
+msgstr "Flight"
+
+msgctxt "Languages::travel_core.circuit_flight_from"
+msgid "Flight from [city]"
+msgstr "Flight from [city]"
+
+msgctxt "Languages::travel_core.circuit_bus"
+msgid "Coach"
+msgstr "Coach"
+
+msgctxt "Languages::travel_core.circuit_bus_from"
+msgid "Coach from [city]"
+msgstr "Coach from [city]"
+
+msgctxt "Languages::travel_core.circuit_departs_from"
+msgid "Departure from [city]"
+msgstr "Departure from [city]"
+
+msgctxt "Languages::travel_core.circuit_group_range_one"
+msgid "Group of [min]–[max] person"
+msgstr "Group of [min]–[max] person"
+
+msgctxt "Languages::travel_core.circuit_group_range_few"
+msgid "Group of [min]–[max] people"
+msgstr "Group of [min]–[max] people"
+
+msgctxt "Languages::travel_core.circuit_group_range_many"
+msgid "Group of [min]–[max] people"
+msgstr "Group of [min]–[max] people"
+
+msgctxt "Languages::travel_core.circuit_group_from_one"
+msgid "Group of at least [n] person"
+msgstr "Group of at least [n] person"
+
+msgctxt "Languages::travel_core.circuit_group_from_few"
+msgid "Group of at least [n] people"
+msgstr "Group of at least [n] people"
+
+msgctxt "Languages::travel_core.circuit_group_from_many"
+msgid "Group of at least [n] people"
+msgstr "Group of at least [n] people"
+
+msgctxt "Languages::travel_core.circuit_group_up_to_one"
+msgid "Group of up to [n] person"
+msgstr "Group of up to [n] person"
+
+msgctxt "Languages::travel_core.circuit_group_up_to_few"
+msgid "Group of up to [n] people"
+msgstr "Group of up to [n] people"
+
+msgctxt "Languages::travel_core.circuit_group_up_to_many"
+msgid "Group of up to [n] people"
+msgstr "Group of up to [n] people"

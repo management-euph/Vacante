@@ -15,8 +15,9 @@
     ---
     #10. Title row: hotel name and stars inside the products:main_info_title
          hook (as on every product template), the location line with
-         "Vezi pe hartă", then wishlist/compare buttons, the indicative
-         "from" price when known and "Alege datele"
+         "Vezi pe hartă" (a circuit: its route, then its length, transport
+         and group, components/circuit_facts.tpl), then wishlist/compare
+         buttons, the indicative "from" price when known and "Alege datele"
     #20. Photo mosaic: one large photo and up to four smaller ones, each
          filling its tile; one too small or too tall for its tile shows
          whole over a blurred copy of itself (pdp-design-a.js)
@@ -120,10 +121,13 @@
                            above leaves out on this page; between them the
                            hotel's code, the product code ("COD: NVT476"),
                            in the location's own colour and font. *}
-                        {if $travel_hotel_location_line || $product.product_code || $travel_hotel_map_url}
+                        {if $travel_hotel_location_line || $product.product_code || $travel_hotel_map_url || $travel_circuit_facts.route_line}
                             <p class="travel-pdpa-location">
                                 {if $travel_hotel_location_line}
                                     <span class="travel-pdpa-location__line">{$travel_hotel_location_line|escape:html}</span>
+                                {elseif $travel_circuit_facts.route_line}
+                                    {* A circuit's route, where a hotel has its place (board 16.3) *}
+                                    <span class="travel-pdpa-location__line travel-pdpa-location__route">{include file="addons/travel_core/components/design_a_icon.tpl" icon="route"}<span class="travel-pdpa-sr">{__("travel_core.circuit_route")}: </span>{$travel_circuit_facts.route_line|escape:html}</span>
                                 {/if}
                                 {if $product.product_code}
                                     <span class="travel-pdpa-location__code">{__("travel_core.pdpa_code", ["[code]" => $product.product_code|escape:html])}</span>
@@ -132,6 +136,11 @@
                                     <a href="{$travel_hotel_map_url|escape:html}" target="_blank" rel="noopener" class="travel-pdpa-location__map travel-hotel-map-link">{__("travel_core.pdpa_show_map")}</a>
                                 {/if}
                             </p>
+                        {/if}
+
+                        {* A circuit's length, transport and group (board 16.3) *}
+                        {if $travel_circuit_facts}
+                            {include file="addons/travel_core/components/circuit_facts.tpl" travel_circuit_facts=$travel_circuit_facts}
                         {/if}
                     </div>
 
@@ -159,7 +168,7 @@
                             </p>
                         {/if}
 
-                        <a href="#travel-booking-root" class="ty-btn travel-pdpa-head__dates" data-travel-open-dates>{__("travel_core.pdpa_choose_dates")}</a>
+                        <a href="#travel-booking-root" class="ty-btn travel-pdpa-head__dates" data-travel-open-dates>{if $travel_circuit_facts}{__("travel_core.choose_departure_date")}{else}{__("travel_core.pdpa_choose_dates")}{/if}</a>
                     </div>
                 </div>
                 {* /Title row *}

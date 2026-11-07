@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\TravelCore\ViewModels;
 
 use Tygh\Addons\TravelCore\Dto\Circuit\CircuitDetails;
+use Tygh\Addons\TravelCore\Dto\Circuit\CircuitPage;
 use Tygh\Addons\TravelCore\Helpers\PlainText;
 use Tygh\Addons\TravelCore\Results\RoomResultsBuilder;
 
@@ -83,6 +84,50 @@ final class CircuitDetailsViewFactory
             'age_max_form' => RoomResultsBuilder::form($details->ageMax),
             'notes' => $notes,
             'notes_shown' => in_array('notes', $menu, true),
+        ];
+    }
+
+    /**
+     * The facts under a circuit's title (board 16.3): its route ("Heraklion ·
+     * Rethymno · Chania"), its length, how it travels and from where (the
+     * city the bar starts on), and the group a departure takes. Each count
+     * comes with its plural form; what the supplier does not say is 0 or ''.
+     *
+     * @return array{
+     *     route_line: string,
+     *     days: int,
+     *     days_form: string,
+     *     nights: int,
+     *     nights_form: string,
+     *     transport: string,
+     *     from_city: string,
+     *     group_min: int,
+     *     group_max: int,
+     *     group_form: string
+     * }
+     */
+    public function facts(CircuitPage $page, ?CircuitDetails $details): array
+    {
+        $groupMin = max(0, $details->groupMin ?? 0);
+        $groupMax = max(0, $details->groupMax ?? 0);
+        if ($groupMax < $groupMin) {
+            $groupMax = 0; // a largest group under the smallest says nothing
+        }
+        $days = max(0, $page->durationDays);
+        $nights = max(0, $page->durationNights);
+
+        return [
+            'route_line' => implode(' · ', $page->route),
+            'days' => $days,
+            'days_form' => RoomResultsBuilder::form($days),
+            'nights' => $nights,
+            'nights_form' => RoomResultsBuilder::form($nights),
+            'transport' => $page->transport,
+            'from_city' => $page->defaultDepartureName(),
+            'group_min' => $groupMin,
+            'group_max' => $groupMax,
+            // The noun follows the last number: "18–40 de persoane".
+            'group_form' => RoomResultsBuilder::form($groupMax > 0 ? $groupMax : $groupMin),
         ];
     }
 

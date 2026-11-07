@@ -3645,4 +3645,78 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Travellers must be at most [n] years old.',
         'ro' => 'Turiștii trebuie să aibă cel mult [n] de ani.',
     ],
+    // Under its title: the route, the length, the transport and the group (board 16.3,
+    // components/circuit_facts.tpl).
+    'travel_core.circuit_route' => [
+        'en' => 'Route',
+        'ro' => 'Traseu',
+    ],
+    'travel_core.circuit_days_one' => [
+        'en' => '[n] day',
+        'ro' => '[n] zi',
+    ],
+    'travel_core.circuit_days_few' => [
+        'en' => '[n] days',
+        'ro' => '[n] zile',
+    ],
+    'travel_core.circuit_days_many' => [
+        'en' => '[n] days',
+        'ro' => '[n] de zile',
+    ],
+    'travel_core.circuit_flight' => [
+        'en' => 'Flight',
+        'ro' => 'Avion',
+    ],
+    'travel_core.circuit_flight_from' => [
+        'en' => 'Flight from [city]',
+        'ro' => 'Avion din [city]',
+    ],
+    'travel_core.circuit_bus' => [
+        'en' => 'Coach',
+        'ro' => 'Autocar',
+    ],
+    'travel_core.circuit_bus_from' => [
+        'en' => 'Coach from [city]',
+        'ro' => 'Autocar din [city]',
+    ],
+    'travel_core.circuit_departs_from' => [
+        'en' => 'Departure from [city]',
+        'ro' => 'Plecare din [city]',
+    ],
+    'travel_core.circuit_group_range_one' => [
+        'en' => 'Group of [min]–[max] person',
+        'ro' => 'Grup [min]–[max] persoană',
+    ],
+    'travel_core.circuit_group_range_few' => [
+        'en' => 'Group of [min]–[max] people',
+        'ro' => 'Grup [min]–[max] persoane',
+    ],
+    'travel_core.circuit_group_range_many' => [
+        'en' => 'Group of [min]–[max] people',
+        'ro' => 'Grup [min]–[max] de persoane',
+    ],
+    'travel_core.circuit_group_from_one' => [
+        'en' => 'Group of at least [n] person',
+        'ro' => 'Grup de minimum [n] persoană',
+    ],
+    'travel_core.circuit_group_from_few' => [
+        'en' => 'Group of at least [n] people',
+        'ro' => 'Grup de minimum [n] persoane',
+    ],
+    'travel_core.circuit_group_from_many' => [
+        'en' => 'Group of at least [n] people',
+        'ro' => 'Grup de minimum [n] de persoane',
+    ],
+    'travel_core.circuit_group_up_to_one' => [
+        'en' => 'Group of up to [n] person',
+        'ro' => 'Grup de maximum [n] persoană',
+    ],
+    'travel_core.circuit_group_up_to_few' => [
+        'en' => 'Group of up to [n] people',
+        'ro' => 'Grup de maximum [n] persoane',
+    ],
+    'travel_core.circuit_group_up_to_many' => [
+        'en' => 'Group of up to [n] people',
+        'ro' => 'Grup de maximum [n] de persoane',
+    ],
 ];

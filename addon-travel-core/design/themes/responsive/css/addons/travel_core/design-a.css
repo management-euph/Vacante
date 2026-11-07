@@ -2528,6 +2528,41 @@
     overflow: hidden;
 }
 
+/* ── #11 A circuit's facts under its title (board 16.3) ──────────────────
+   The route in the location line (with its icon), then its length,
+   transport and group as quiet labels (components/circuit_facts.tpl). */
+.travel-pdpa .travel-pdpa-location__route {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.travel-pdpa .travel-pdpa-location__route .travel-pdpa-ico {
+    flex: 0 0 auto;
+}
+.travel-pdpa .travel-pdpa-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0 0;
+    padding: 0;
+    list-style: none;
+}
+.travel-pdpa .travel-pdpa-fact {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: #f1f3f6;
+    font-size: 13px;
+    line-height: 1.4;
+    color: #374151;
+}
+.travel-pdpa .travel-pdpa-fact .travel-pdpa-ico {
+    flex: 0 0 auto;
+    color: var(--travel-pdpa-navy);
+}
+
 /* ── #45 A circuit's program (components/circuit_details.tpl, board 16.3) ─
    Under its rooms: a menu of its sections (links, no tabs: every section
    stays on the page), the program day by day beside the hotels on the route

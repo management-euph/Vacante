@@ -4453,3 +4453,75 @@ msgstr "Turiștii trebuie să aibă cel mult [n] ani."
 msgctxt "Languages::travel_core.circuit_age_max_many"
 msgid "Travellers must be at most [n] years old."
 msgstr "Turiștii trebuie să aibă cel mult [n] de ani."
+
+msgctxt "Languages::travel_core.circuit_route"
+msgid "Route"
+msgstr "Traseu"
+
+msgctxt "Languages::travel_core.circuit_days_one"
+msgid "[n] day"
+msgstr "[n] zi"
+
+msgctxt "Languages::travel_core.circuit_days_few"
+msgid "[n] days"
+msgstr "[n] zile"
+
+msgctxt "Languages::travel_core.circuit_days_many"
+msgid "[n] days"
+msgstr "[n] de zile"
+
+msgctxt "Languages::travel_core.circuit_flight"
+msgid "Flight"
+msgstr "Avion"
+
+msgctxt "Languages::travel_core.circuit_flight_from"
+msgid "Flight from [city]"
+msgstr "Avion din [city]"
+
+msgctxt "Languages::travel_core.circuit_bus"
+msgid "Coach"
+msgstr "Autocar"
+
+msgctxt "Languages::travel_core.circuit_bus_from"
+msgid "Coach from [city]"
+msgstr "Autocar din [city]"
+
+msgctxt "Languages::travel_core.circuit_departs_from"
+msgid "Departure from [city]"
+msgstr "Plecare din [city]"
+
+msgctxt "Languages::travel_core.circuit_group_range_one"
+msgid "Group of [min]–[max] person"
+msgstr "Grup [min]–[max] persoană"
+
+msgctxt "Languages::travel_core.circuit_group_range_few"
+msgid "Group of [min]–[max] people"
+msgstr "Grup [min]–[max] persoane"
+
+msgctxt "Languages::travel_core.circuit_group_range_many"
+msgid "Group of [min]–[max] people"
+msgstr "Grup [min]–[max] de persoane"
+
+msgctxt "Languages::travel_core.circuit_group_from_one"
+msgid "Group of at least [n] person"
+msgstr "Grup de minimum [n] persoană"
+
+msgctxt "Languages::travel_core.circuit_group_from_few"
+msgid "Group of at least [n] people"
+msgstr "Grup de minimum [n] persoane"
+
+msgctxt "Languages::travel_core.circuit_group_from_many"
+msgid "Group of at least [n] people"
+msgstr "Grup de minimum [n] de persoane"
+
+msgctxt "Languages::travel_core.circuit_group_up_to_one"
+msgid "Group of up to [n] person"
+msgstr "Grup de maximum [n] persoană"
+
+msgctxt "Languages::travel_core.circuit_group_up_to_few"
+msgid "Group of up to [n] people"
+msgstr "Grup de maximum [n] persoane"
+
+msgctxt "Languages::travel_core.circuit_group_up_to_many"
+msgid "Group of up to [n] people"
+msgstr "Grup de maximum [n] de persoane"

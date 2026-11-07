@@ -18,7 +18,8 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  * and the names (", "-joined), in the same order; its hotels' stars from
  * the itinerary the sync keeps (each day's accommodation category). Its
  * page's program, inclusions and things to know come from the itinerary
- * and the details the sync keeps (itinerary_json, details_json).
+ * and the details the sync keeps (itinerary_json, details_json); the facts
+ * under its title from its transport and its destinations.
  */
 final class SphinxCircuitProductProvider implements CircuitProductProviderInterface
 {
@@ -29,7 +30,8 @@ final class SphinxCircuitProductProvider implements CircuitProductProviderInterf
             return null;
         }
         $row = TypeCoerce::toStringMap(db_get_row(
-            "SELECT circuit_id, name, departure_ids, departure_names, duration_days, duration_nights, itinerary_json
+            "SELECT circuit_id, name, departure_ids, departure_names, duration_days, duration_nights, itinerary_json,
+                    transport_type, destination_names
              FROM ?:sphinx_circuits WHERE product_id = ?i AND sync_status = 'active' LIMIT 1",
             $productId,
         ));
@@ -49,7 +51,38 @@ final class SphinxCircuitProductProvider implements CircuitProductProviderInterf
             TypeCoerce::toInt($row['duration_nights'] ?? 0),
             $starsMin,
             $starsMax,
+            self::transport(TypeCoerce::toString($row['transport_type'] ?? '')),
+            self::route(TypeCoerce::toString($row['destination_names'] ?? '')),
         );
+    }
+
+    /** Sphinx's transport_type ("flight", "bus") as CircuitPage's; '' for anything else. */
+    private static function transport(string $type): string
+    {
+        return match (strtolower(trim($type))) {
+            'flight', 'plane' => CircuitPage::FLIGHT,
+            'bus', 'coach' => CircuitPage::BUS,
+            default => '',
+        };
+    }
+
+    /**
+     * The places on the route, from destination_names (", "-joined by the
+     * circuits sync), each once, in order.
+     *
+     * @return list<string>
+     */
+    public static function route(string $names): array
+    {
+        $route = [];
+        foreach (explode(', ', $names) as $name) {
+            $name = trim($name);
+            if ($name !== '' && !in_array($name, $route, true)) {
+                $route[] = $name;
+            }
+        }
+
+        return $route;
     }
 
     #[\Override]

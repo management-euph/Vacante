@@ -198,9 +198,9 @@ function fn_travel_core_dispatch_before_display(): void
             }
         }
 
-        // A circuit's program, what it includes and the things to know, under
-        // its rooms (board 16.3): page content, shown with or without the
-        // booking form.
+        // A circuit's facts under its title, and its program, what it
+        // includes and the things to know under its rooms (board 16.3): page
+        // content, shown with or without the booking form.
         if ($circuit !== null) {
             try {
                 $circuitDetails = TravelProviderRegistry::circuitDetails($circuit);
@@ -210,8 +210,13 @@ function fn_travel_core_dispatch_before_display(): void
                 fn_log_event('general', 'runtime', ['message' => 'Circuit details failed: ' . $e->getMessage()]);
             }
             $view = \Tygh\Tygh::$app['view'];
-            if ($circuitDetails !== null && is_object($view) && method_exists($view, 'assign')) {
-                $view->assign('travel_circuit', (new CircuitDetailsViewFactory())->view($circuitDetails));
+            if (is_object($view) && method_exists($view, 'assign')) {
+                $circuitView = new CircuitDetailsViewFactory();
+                // Its route, length, transport and group, under its title.
+                $view->assign('travel_circuit_facts', $circuitView->facts($circuit, $circuitDetails));
+                if ($circuitDetails !== null) {
+                    $view->assign('travel_circuit', $circuitView->view($circuitDetails));
+                }
             }
         }
 

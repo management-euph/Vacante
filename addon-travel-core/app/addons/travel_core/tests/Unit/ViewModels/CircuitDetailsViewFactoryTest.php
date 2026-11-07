@@ -8,6 +8,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\TravelCore\Dto\Circuit\CircuitDay;
 use Tygh\Addons\TravelCore\Dto\Circuit\CircuitDetails;
+use Tygh\Addons\TravelCore\Dto\Circuit\CircuitPage;
 use Tygh\Addons\TravelCore\Helpers\PlainText;
 use Tygh\Addons\TravelCore\ViewModels\CircuitDetailsViewFactory;
 
@@ -84,6 +85,46 @@ final class CircuitDetailsViewFactoryTest extends TestCase
         self::assertSame([18, 40], [$view['group_min'], $view['group_max']]);
         self::assertSame([['title' => 'Documente', 'paragraphs' => ['Carte de identitate valabilă.', 'Pașaport pentru copii.']]], $view['notes']);
         self::assertSame(['Intrările la obiective'], $view['not_included']);
+    }
+
+    /** Under the title (board 16.3): the route, "5 zile / 4 nopți", "Avion din București", "Grup 18–40 de persoane". */
+    public function testTheFactsUnderTheTitle(): void
+    {
+        $page = new CircuitPage(
+            'sphinx',
+            '17',
+            'Creta clasică',
+            [['id' => '111', 'name' => 'Cluj-Napoca'], ['id' => '222', 'name' => 'București']],
+            5,
+            4,
+            4,
+            4,
+            CircuitPage::FLIGHT,
+            ['Heraklion', 'Rethymno', 'Chania', 'Grecia'],
+        );
+
+        self::assertSame([
+            'route_line' => 'Heraklion · Rethymno · Chania · Grecia',
+            'days' => 5,
+            'days_form' => 'few',
+            'nights' => 4,
+            'nights_form' => 'few',
+            'transport' => 'flight',
+            'from_city' => 'București',
+            'group_min' => 18,
+            'group_max' => 40,
+            'group_form' => 'many',
+        ], (new CircuitDetailsViewFactory())->facts($page, self::creta()), 'the city the bar starts on; the noun follows the last number');
+    }
+
+    public function testFactsTheSupplierDoesNotGiveAreLeftEmpty(): void
+    {
+        $facts = (new CircuitDetailsViewFactory())->facts(new CircuitPage('sphinx', '17', 'Creta', [], 1, 0), null);
+
+        self::assertSame(['', 1, 'one', 0, '', '', 0, 0], [$facts['route_line'], $facts['days'], $facts['days_form'], $facts['nights'], $facts['transport'], $facts['from_city'], $facts['group_min'], $facts['group_max']]);
+
+        $odd = (new CircuitDetailsViewFactory())->facts(new CircuitPage('sphinx', '17', 'Creta', [], 5, 4), new CircuitDetails(groupMin: 18, groupMax: 10));
+        self::assertSame([18, 0, 'few'], [$odd['group_min'], $odd['group_max'], $odd['group_form']], 'a largest group under the smallest says nothing');
     }
 
     /** Suppliers send HTML: the page gets plain text (it escapes it), its paragraphs and line breaks kept. */

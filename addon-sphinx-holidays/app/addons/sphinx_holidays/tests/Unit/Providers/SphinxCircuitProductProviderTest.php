@@ -8,6 +8,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\SphinxHolidays\Providers\SphinxCircuitProductProvider;
 use Tygh\Addons\SphinxHolidays\Tests\Support\DbStub;
+use Tygh\Addons\TravelCore\Dto\Circuit\CircuitPage;
 
 /**
  * A product is a Sphinx circuit when a sold row of ?:sphinx_circuits is
@@ -46,6 +47,7 @@ final class SphinxCircuitProductProviderTest extends TestCase
         self::answer([
             'circuit_id' => '17', 'name' => 'Creta clasică', 'duration_days' => '5', 'duration_nights' => '4',
             'departure_ids' => '[111,222,333]', 'departure_names' => 'Cluj-Napoca, București, Iași',
+            'transport_type' => 'flight', 'destination_names' => 'Heraklion, Rethymno, Chania, Heraklion',
         ]);
 
         $circuit = (new SphinxCircuitProductProvider())->resolveCircuit(110, 'SPXC17');
@@ -60,8 +62,23 @@ final class SphinxCircuitProductProviderTest extends TestCase
             ['id' => '333', 'name' => 'Iași'],
         ], $circuit->departures);
         self::assertSame('222', $circuit->defaultDepartureId());
+        self::assertSame('București', $circuit->defaultDepartureName());
+        // Under its title: its transport and route, each place once (board 16.3).
+        self::assertSame(CircuitPage::FLIGHT, $circuit->transport);
+        self::assertSame(['Heraklion', 'Rethymno', 'Chania'], $circuit->route);
         self::assertStringContainsString("sync_status = 'active'", self::$queries[0][0], 'a circuit no longer sold is not claimed');
         self::assertSame([110], self::$queries[0][1]);
+    }
+
+    public function testATransportSphinxDoesNotNameIsNotGuessed(): void
+    {
+        self::answer(['circuit_id' => '17', 'name' => 'Creta', 'transport_type' => 'BUS', 'destination_names' => '']);
+        $bus = (new SphinxCircuitProductProvider())->resolveCircuit(110, 'SPXC17');
+        self::answer(['circuit_id' => '17', 'name' => 'Creta', 'transport_type' => 'train']);
+        $train = (new SphinxCircuitProductProvider())->resolveCircuit(110, 'SPXC17');
+
+        self::assertSame([CircuitPage::BUS, []], [$bus?->transport, $bus?->route]);
+        self::assertSame('', $train?->transport);
     }
 
     public function testAProductThatIsNoCircuitIsNotClaimed(): void
