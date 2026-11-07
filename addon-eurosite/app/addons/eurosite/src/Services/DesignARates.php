@@ -147,9 +147,9 @@ final class DesignARates
             ])),
             mealRank: $ranks !== [] ? max($ranks) : RateOffer::MEAL_OTHER,
             rateName: self::rateName($offer->grila),
-            nonRefundable: self::nonRefundable($offer->grila),
             standardPrice: $old > 0 ? EurositeProductFactory::toStorePrice($old, $coefficient) : 0.0,
             discountLabel: $old > 0 ? $offer->offerDescription : '',
+            nonRefundable: self::nonRefundable($offer->grila),
             onRequest: $onRequest,
             termsUrl: ($this->url)('eurosite_booking.offer_terms?' . http_build_query([
                 'offer_key' => $key,
