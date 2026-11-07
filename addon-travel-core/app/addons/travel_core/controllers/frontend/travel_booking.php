@@ -91,10 +91,16 @@ if ($mode === 'booking_config') {
         // No provider-specific SQL lives here — deactivated providers are not
         // registered, so their tables are never queried.
         $owner = TravelProviderRegistry::resolveProductOwner(TypeCoerce::toInt($product_id), $productCode);
+        // Not a hotel: perhaps a circuit (board 16.3), whose page gets the
+        // circuit bar: departure city, departure date, turiști.
+        $circuit = null;
         if ($owner !== null) {
             $providerName = $owner->providerName;
             $hotelId = $owner->hotelId;
             $searchDispatch = $providerName . '_booking.search';
+        } elseif ($productCode !== '') {
+            $circuit = TravelProviderRegistry::resolveCircuit(TypeCoerce::toInt($product_id), $productCode);
+            $providerName = $circuit !== null ? $circuit->providerName : '';
         }
 
         if ($providerName !== '') {
@@ -143,6 +149,10 @@ if ($mode === 'booking_config') {
                 'change_guests', 'lowest_prices', 'nightly_prices_note',
                 // The calendar's published-price window (priceWindow below)
                 'price_window_note', 'outside_price_window',
+                // The circuit bar (board 16.3)
+                'departure_from', 'departure_date', 'departures_from',
+                'circuit_prices_note', 'no_departures', 'loading_departures',
+                'departures_error', 'choose_departure_date', 'circuit_see_price',
             ];
             $translations = [];
             foreach ($translationKeys as $key) {
@@ -155,44 +165,65 @@ if ($mode === 'booking_config') {
             // map in functions/hotels.php, which already emits 'childrenAges').
             $translations['childrenAges'] = __('travel_core.childrens_ages');
 
-            $config = [
-                'isHotel' => true,
-                'provider' => $providerName,
-                'hotelId' => $hotelId,
-                'productId' => TypeCoerce::toInt($product_id),
-                'searchDispatch' => $searchDispatch,
-                'mode' => 'product',
-                // Search results render inline on the product page: the engine
-                // AJAX-swaps them into the mount's .travel-search-results-page
-                // shell instead of navigating to the standalone results page.
-                'inlineResults' => true,
-                // Rooms the guest picker offers (Eurosite books one room).
-                'maxRooms' => ProviderRoomLimit::maxRooms($providerName),
-                'colors' => $colors,
-                'translations' => $translations,
-            ];
+            if ($circuit !== null) {
+                // The circuit bar: the supplier's departures (its dates and
+                // prices come from datesDispatch), the same guest picker as
+                // a hotel's, and the quote step it opens.
+                $config = [
+                    'isHotel' => false,
+                    'kind' => 'circuit',
+                    'provider' => $providerName,
+                    'productId' => TypeCoerce::toInt($product_id),
+                    'circuitId' => $circuit->circuitId,
+                    'departures' => $circuit->departures,
+                    'departureId' => $circuit->defaultDepartureId(),
+                    'datesDispatch' => $providerName . '_booking.circuit_dates',
+                    'bookingDispatch' => $providerName . '_booking.circuit_booking_form',
+                    'maxRooms' => ProviderRoomLimit::maxRooms($providerName),
+                    'design' => DesignA::requested($_REQUEST) ? DesignA::VALUE : '',
+                    'colors' => $colors,
+                    'translations' => $translations,
+                ];
+            } else {
+                $config = [
+                    'isHotel' => true,
+                    'provider' => $providerName,
+                    'hotelId' => $hotelId,
+                    'productId' => TypeCoerce::toInt($product_id),
+                    'searchDispatch' => $searchDispatch,
+                    'mode' => 'product',
+                    // Search results render inline on the product page: the engine
+                    // AJAX-swaps them into the mount's .travel-search-results-page
+                    // shell instead of navigating to the standalone results page.
+                    'inlineResults' => true,
+                    // Rooms the guest picker offers (Eurosite books one room).
+                    'maxRooms' => ProviderRoomLimit::maxRooms($providerName),
+                    'colors' => $colors,
+                    'translations' => $translations,
+                ];
 
-            // The stay dates with published prices (availability plan §7.1):
-            // the calendar opens on the first and marks the dates outside
-            // them. Only while the availability panels are switched on.
-            $priceWindow = (new CalendarPriceWindow())->forHotel($providerName, $hotelId, new \DateTimeImmutable());
-            if ($priceWindow !== null) {
-                $config['priceWindow'] = $priceWindow;
-            }
-
-            // Design A hotel page (the engine asks with design=a): its bar,
-            // and per-night prices for two adults in the calendar, from the
-            // owning supplier's stored data, in the shopper's currency.
-            if (DesignA::requested($_REQUEST)) {
-                $config['design'] = DesignA::VALUE;
-                $money = \Tygh\Addons\TravelCore\Services\MoneyFormatter::forStore(true);
-                $calendar = [];
-                foreach (TravelProviderRegistry::indicativeNightlyCalendar($providerName, $hotelId) as $day => $nightly) {
-                    $calendar[$day] = round($money->toDisplay($nightly));
+                // The stay dates with published prices (availability plan §7.1):
+                // the calendar opens on the first and marks the dates outside
+                // them. Only while the availability panels are switched on.
+                $priceWindow = (new CalendarPriceWindow())->forHotel($providerName, $hotelId, new \DateTimeImmutable());
+                if ($priceWindow !== null) {
+                    $config['priceWindow'] = $priceWindow;
                 }
-                if ($calendar !== []) {
-                    $config['calendarPrices'] = $calendar;
-                    $config['calendarPricesCurrency'] = \Tygh\Addons\TravelCore\Services\CurrencyService::getDisplayCurrency();
+
+                // Design A hotel page (the engine asks with design=a): its bar,
+                // and per-night prices for two adults in the calendar, from the
+                // owning supplier's stored data, in the shopper's currency.
+                if (DesignA::requested($_REQUEST)) {
+                    $config['design'] = DesignA::VALUE;
+                    $money = \Tygh\Addons\TravelCore\Services\MoneyFormatter::forStore(true);
+                    $calendar = [];
+                    foreach (TravelProviderRegistry::indicativeNightlyCalendar($providerName, $hotelId) as $day => $nightly) {
+                        $calendar[$day] = round($money->toDisplay($nightly));
+                    }
+                    if ($calendar !== []) {
+                        $config['calendarPrices'] = $calendar;
+                        $config['calendarPricesCurrency'] = \Tygh\Addons\TravelCore\Services\CurrencyService::getDisplayCurrency();
+                    }
                 }
             }
         }

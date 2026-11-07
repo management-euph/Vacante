@@ -4265,3 +4265,39 @@ msgstr "All destinations ([n])"
 msgctxt "Languages::travel_core.list_fewer_destinations"
 msgid "Fewer destinations"
 msgstr "Fewer destinations"
+
+msgctxt "Languages::travel_core.departure_from"
+msgid "Departure from"
+msgstr "Departure from"
+
+msgctxt "Languages::travel_core.departure_date"
+msgid "Departure date"
+msgstr "Departure date"
+
+msgctxt "Languages::travel_core.departures_from"
+msgid "Departures from [city], [month]:"
+msgstr "Departures from [city], [month]:"
+
+msgctxt "Languages::travel_core.circuit_prices_note"
+msgid "Total prices for 2 adults, with the transport and the accommodation; the price for your group comes at the next step."
+msgstr "Total prices for 2 adults, with the transport and the accommodation; the price for your group comes at the next step."
+
+msgctxt "Languages::travel_core.no_departures"
+msgid "No departures from [city] in the coming months."
+msgstr "No departures from [city] in the coming months."
+
+msgctxt "Languages::travel_core.loading_departures"
+msgid "Loading the departures…"
+msgstr "Loading the departures…"
+
+msgctxt "Languages::travel_core.departures_error"
+msgid "The departures cannot be loaded right now. Please try again."
+msgstr "The departures cannot be loaded right now. Please try again."
+
+msgctxt "Languages::travel_core.choose_departure_date"
+msgid "Choose a departure date"
+msgstr "Choose a departure date"
+
+msgctxt "Languages::travel_core.circuit_see_price"
+msgid "See the price"
+msgstr "See the price"

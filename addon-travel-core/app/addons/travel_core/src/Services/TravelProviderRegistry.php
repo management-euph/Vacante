@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Tygh\Addons\TravelCore\Services;
 
 use Tygh\Addons\TravelCore\Contracts\BookingAdminProviderInterface;
+use Tygh\Addons\TravelCore\Contracts\CircuitProductProviderInterface;
 use Tygh\Addons\TravelCore\Contracts\CronDispatcherInterface;
 use Tygh\Addons\TravelCore\Contracts\HotelAvailabilitySourceInterface;
 use Tygh\Addons\TravelCore\Contracts\HotelProductProviderInterface;
 use Tygh\Addons\TravelCore\Contracts\IndicativePriceSourceInterface;
 use Tygh\Addons\TravelCore\Contracts\ProviderNormalizerInterface;
+use Tygh\Addons\TravelCore\Dto\Circuit\CircuitPage;
 use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
 
 /**
@@ -44,6 +46,9 @@ class TravelProviderRegistry
 
     /** @var array<string, IndicativePriceSourceInterface> provider name => indicative nightly price source */
     private static array $indicativePrices = [];
+
+    /** @var array<string, CircuitProductProviderInterface> provider name => circuit-product resolver */
+    private static array $circuits = [];
 
     /**
      * Register a travel provider.
@@ -149,6 +154,40 @@ class TravelProviderRegistry
         if (isset(self::$providers[$name])) {
             self::$providers[$name]['hotel_product_provider'] = $provider;
         }
+    }
+
+    /**
+     * Register the circuit-product resolver for a provider (board 16: a
+     * circuit's product page gets the circuit bar). Ignored unless
+     * register() ran first.
+     */
+    public static function setCircuitProductProvider(string $name, CircuitProductProviderInterface $provider): void
+    {
+        if (isset(self::$providers[$name])) {
+            self::$circuits[$name] = $provider;
+        }
+    }
+
+    /**
+     * The circuit a product is, from the first registered provider that
+     * claims it; null when none does (not a circuit, or no provider sells
+     * circuits). Asked only for a product no provider claims as a hotel.
+     *
+     * @param int $productId CS-Cart product_id
+     * @param string $productCode CS-Cart product_code (may be empty)
+     *
+     * @return CircuitPage|null the circuit, or null when no provider claims the product
+     */
+    public static function resolveCircuit(int $productId, string $productCode): ?CircuitPage
+    {
+        foreach (array_intersect_key(self::$circuits, self::$providers) as $provider) {
+            $circuit = $provider->resolveCircuit($productId, $productCode);
+            if ($circuit !== null) {
+                return $circuit;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -481,5 +520,6 @@ class TravelProviderRegistry
         self::$orderCardFacts = [];
         self::$availability = [];
         self::$indicativePrices = [];
+        self::$circuits = [];
     }
 }

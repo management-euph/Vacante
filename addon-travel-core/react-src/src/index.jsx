@@ -12,6 +12,7 @@
 import { createRoot } from 'react-dom/client';
 import { Component } from 'react';
 import BookingEngine from './BookingEngine';
+import CircuitBar from './CircuitBar';
 import Calendar from './Calendar';
 import GuestPicker from './GuestPicker';
 import { getLocale, parseDate, toDateString, t } from './utils';
@@ -248,6 +249,33 @@ function init() {
             dbg('→ AJAX mode, fetching config for product_id=' + pid + (design ? ' (design ' + design + ')' : ''));
             fetchConfig(pid, design).then(serverConfig => {
                 dbg('fetchConfig response:', serverConfig);
+
+                // A circuit's page (board 16.3): the circuit bar instead.
+                if (serverConfig && serverConfig.kind === 'circuit') {
+                    applyColorsFromObject(serverConfig.colors);
+                    window.TravelTranslations = Object.assign(
+                        window.TravelTranslations || {},
+                        serverConfig.translations || {}
+                    );
+                    const url = new URLSearchParams(window.location.search);
+                    const circuitConfig = {
+                        provider:           serverConfig.provider,
+                        productId:          String(serverConfig.productId),
+                        circuitId:          String(serverConfig.circuitId),
+                        departures:         Array.isArray(serverConfig.departures) ? serverConfig.departures : [],
+                        departureId:        String(serverConfig.departureId || ''),
+                        initialDepartureId: url.get('departure_id') || '',
+                        initialDate:        url.get('departure_date') || '',
+                        roomsData:          url.get('rooms_data') || '',
+                        datesDispatch:      serverConfig.datesDispatch,
+                        bookingDispatch:    serverConfig.bookingDispatch,
+                        maxRooms:           parseInt(serverConfig.maxRooms, 10) || 12,
+                        design:             serverConfig.design || '',
+                    };
+                    dbg('Rendering the circuit bar with config:', circuitConfig);
+                    createRoot(el).render(<ErrorBoundary><CircuitBar config={circuitConfig} /></ErrorBoundary>);
+                    return;
+                }
 
                 if (!serverConfig || !serverConfig.isHotel) {
                     dbg('Not a hotel product or fetch failed — clearing mount. Response:', JSON.stringify(serverConfig));

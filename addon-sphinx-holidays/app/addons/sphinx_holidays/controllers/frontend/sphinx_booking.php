@@ -67,6 +67,7 @@ $_sphinx_modes = [
     'circuit_search',
     'circuit_booking_form',
     'circuit_add_to_cart',
+    'circuit_dates',
     // Experiences are deliberately UNROUTED: the provider does not support
     // them yet, so the half-shipped pages must not be publicly reachable.
     // The sync pipeline (ExperienceSyncCommand, sphinx_experiences) stays

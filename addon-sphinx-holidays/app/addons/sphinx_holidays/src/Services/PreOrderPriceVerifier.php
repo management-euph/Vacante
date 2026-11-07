@@ -46,6 +46,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability;
+use Tygh\Addons\SphinxHolidays\Helpers\SearchOccupancyResolver;
 use Tygh\Addons\TravelCore\Contracts\PreOrderPriceVerifierInterface;
 use Tygh\Addons\TravelCore\Enums\PriceComparisonOutcome;
 use Tygh\Addons\TravelCore\Helpers\SessionAccessor;
@@ -377,8 +378,48 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
         if (array_key_exists('children_ages', $row)) {
             $extra['children_ages'] = TypeCoerce::toString($row['children_ages']);
         }
+        // The rooms as booked: a circuit is re-quoted room by room.
+        if (array_key_exists('rooms_data', $row)) {
+            $extra['rooms_data'] = $row['rooms_data'];
+        }
 
         return $extra;
+    }
+
+    /**
+     * The booked rooms as a circuit quote wants them: one occupancy entry
+     * per room of the row's rooms_data when they hold every child age the
+     * booking has, else one room with the totals (a booking of one room,
+     * or stored before several were possible).
+     *
+     * @param array<string, mixed> $extra the line's extra with the trip as booked
+     *
+     * @return list<array{adults: int, children_ages: list<int>}>
+     */
+    private static function bookedOccupancy(array $extra): array
+    {
+        $adults = max(1, TypeCoerce::toInt($extra['adults'] ?? 2));
+        $ages = TypeCoerce::toString($extra['children_ages'] ?? '');
+        $oneRoom = SearchOccupancyResolver::resolve('', $adults, 1, $ages);
+        $rooms = $extra['rooms_data'] ?? '';
+        $perRoom = SearchOccupancyResolver::resolve(is_string($rooms) ? $rooms : (string) json_encode($rooms), $adults, 1, $ages);
+
+        return count($perRoom) > 1 && self::childCount($perRoom) === self::childCount($oneRoom) ? $perRoom : $oneRoom;
+    }
+
+    /**
+     * @param list<array{adults: int, children_ages: list<int>}> $occupancy
+     *
+     * @return int the children it holds, every room together
+     */
+    private static function childCount(array $occupancy): int
+    {
+        $count = 0;
+        foreach ($occupancy as $room) {
+            $count += count($room['children_ages']);
+        }
+
+        return $count;
     }
 
     /**
@@ -454,13 +495,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
         $params = [
             'circuit_id' => TypeCoerce::toInt($extra['hotel_id'] ?? 0),
             'departure_date' => TypeCoerce::toString($extra['check_in'] ?? ''),
-            'occupancy' => [[
-                'adults' => max(1, TypeCoerce::toInt($extra['adults'] ?? 2)),
-                'children_ages' => TypeCoerce::toIntList(array_filter(
-                    explode(',', TypeCoerce::toString($extra['children_ages'] ?? '')),
-                    static fn (string $age): bool => $age !== '',
-                )),
-            ]],
+            'occupancy' => self::bookedOccupancy($extra),
         ];
         $departureId = TypeCoerce::toInt($extra['departure_id'] ?? 0);
         if ($departureId > 0) {

@@ -39,6 +39,7 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         'adults' => RequestCoerce::int($_REQUEST, 'adults', 2),
         'children' => RequestCoerce::int($_REQUEST, 'children'),
         'children_ages' => RequestCoerce::string($_REQUEST, 'children_ages'),
+        'rooms_data' => RequestCoerce::string($_REQUEST, 'rooms_data'),
     ]);
 
     if (empty($offer_id) || empty($circuit_id)) {
