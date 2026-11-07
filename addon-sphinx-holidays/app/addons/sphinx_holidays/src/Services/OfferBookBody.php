@@ -18,10 +18,11 @@ use Tygh\Addons\TravelCore\Services\GuestDataService;
  * guest's age (birth date) against the ages it priced: any mismatch fails
  * the booking. So the price and the rooms come from the offer as Sphinx
  * prices it now, when the caller could ask (PackageBookRequest,
- * CircuitBookRequest). Otherwise they come from what add-to-cart stored:
- * pricing_json (the pre-commission selling price, its currency and the
- * chosen services), else base_price and the row's currency, and
- * rooms_data.
+ * CircuitBookRequest). Otherwise they come from the row: base_price, the
+ * offer's pre-commission selling price as add-to-cart stored it and the
+ * checkout re-check keeps it (PreOrderPriceVerifier live_prices), else
+ * pricing_json's (what add-to-cart priced, with its currency and the
+ * chosen services), the row's currency, and rooms_data.
  */
 final class OfferBookBody
 {
@@ -42,10 +43,10 @@ final class OfferBookBody
 
         $price = TypeCoerce::toFloat($quotedPricing['selling_price'] ?? 0);
         if ($price <= 0) {
-            $price = TypeCoerce::toFloat($stored['selling_price'] ?? 0);
+            $price = TypeCoerce::toFloat($row['base_price'] ?? 0);
         }
         if ($price <= 0) {
-            $price = TypeCoerce::toFloat($row['base_price'] ?? 0);
+            $price = TypeCoerce::toFloat($stored['selling_price'] ?? 0);
         }
         $currency = TypeCoerce::toString($quotedPricing['currency'] ?? '');
         if ($currency === '') {

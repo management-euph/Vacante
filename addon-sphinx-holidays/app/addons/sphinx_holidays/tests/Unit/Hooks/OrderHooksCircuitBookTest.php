@@ -207,10 +207,11 @@ namespace Tygh\Addons\SphinxHolidays\Tests\Unit\Hooks {
             self::assertSame([TravelConstants::STATUS_PENDING, TravelConstants::STATUS_CONFIRMED], self::statuses());
         }
 
-        /** No services: the quote's price, stored at add-to-cart, is this offer's; nothing is asked. */
+        /** No services: the offer's own price the row holds is sent; nothing is asked. */
         public function testWithoutServicesTheQuotedPriceIsSent(): void
         {
             self::$row['pricing_json'] = json_encode(['selling_price' => 927.0, 'currency' => 'EUR', 'chosen_services' => []]);
+            self::$row['base_price'] = 927.0;
 
             self::placeTheOrder();
 

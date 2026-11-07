@@ -198,7 +198,7 @@ namespace Tygh\Addons\SphinxHolidays\Tests\Unit\Hooks {
                 public function verify(array $cart): array
                 {
                     return [
-                        'allow' => true, 'corrections' => [], 'notifications' => [], 'rejected' => [], 'reconfirm' => false,
+                        'allow' => true, 'corrections' => [], 'notifications' => [], 'rejected' => [], 'reconfirm' => false, 'live_prices' => [],
                         'unavailable' => [
                             7 => ['offer_id' => 'offer-luxury', 'hotel_name' => 'A', 'booking_id' => 10],
                             8 => ['offer_id' => 'offer-luxury', 'hotel_name' => 'B', 'booking_id' => 30],
@@ -317,6 +317,34 @@ namespace Tygh\Addons\SphinxHolidays\Tests\Unit\Hooks {
 
             self::assertFalse($allow);
             self::assertSame([['update:10', ['total_price' => 1800.0, 'base_price' => 1800.0]]], self::$log);
+        }
+
+        /**
+         * The re-check priced the booked offer a little lower: the line keeps
+         * charging its price (no correction), and the row keeps what the
+         * provider charges now, which the book call sends.
+         */
+        public function testALivePriceThatNeedsNoCorrectionIsKeptOnTheRow(): void
+        {
+            $_SESSION['sphinx_price_cache'] = [];
+            Container::override('api', static fn (): SphinxApi => new class extends SphinxApi {
+                public function __construct()
+                {
+                }
+
+                public function verifyHotelOffer(string $offerId): ?array
+                {
+                    return ['offer_id' => $offerId, 'available' => true, 'price' => 1450.0];
+                }
+            });
+            $cart = ['products' => [7 => self::line(10, 'offer-luxury', 1500.0)]];
+            $allow = true;
+
+            OrderHooks::prePlaceOrder($cart, $allow);
+
+            self::assertTrue($allow);
+            self::assertSame(1500.0, $cart['products'][7]['price'] ?? null, 'the line is not corrected');
+            self::assertSame([['update:10', ['base_price' => 1450.0]]], self::$log);
         }
 
         public function testPlaceOrderPostBooksNothingForAForgedBookingId(): void

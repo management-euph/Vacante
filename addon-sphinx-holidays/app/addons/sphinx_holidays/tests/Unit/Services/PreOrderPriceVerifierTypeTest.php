@@ -181,6 +181,43 @@ final class PreOrderPriceVerifierTypeTest extends TestCase
         self::assertSame([], $result['unavailable']);
     }
 
+    /**
+     * A fresh circuit quote is usually a new offer: its price is not the
+     * booked offer's, which circuits/book sends. It is neither compared nor
+     * kept; the line keeps its booking's price. It used to be compared (the
+     * first quote), so the cart could charge one offer's price while the
+     * other was booked.
+     */
+    public function testAFreshQuoteForAnotherCircuitOfferIsNotCompared(): void
+    {
+        self::$answers['getCircuitQuote'] = [['offer_id' => 'other', 'pricing' => ['selling_price' => 150.0]]];
+
+        $result = self::verifier(100.0, 'circuit')->verify(self::cart('circuit', 100.0));
+
+        self::assertSame(['getCircuitQuote'], self::$calls);
+        self::assertSame([], $result['corrections'], 'another offer is not this one');
+        self::assertSame([], $result['unavailable'], 'the departure is still sold');
+        self::assertSame([], $result['live_prices']);
+    }
+
+    /** The booked offer's live price is reported for its row (base_price), the price the book call sends. */
+    public function testTheBookedOffersLivePriceIsReportedForItsRow(): void
+    {
+        // A little lower: the line keeps charging its price, the row learns the new one.
+        self::$answers['verifyHotelOffer'] = ['offer_id' => 'offer-1', 'price' => 95.0];
+        $lower = self::verifier(100.0, 'hotel')->verify(self::cart('hotel', 100.0));
+
+        self::assertSame([], $lower['corrections']);
+        self::assertSame([1 => 95.0], $lower['live_prices']);
+
+        // Higher, with services: the line is corrected, and the row takes the same figure.
+        self::$answers['customizeCircuit'] = ['pricing' => ['selling_price' => 130.0]];
+        $higher = self::verifier(100.0, 'circuit')->verify(self::cart('circuit', 100.0, ['service_codes' => ['X']]));
+
+        self::assertSame(130.0, $higher['corrections'][7]['api_price'] ?? null);
+        self::assertSame([1 => 130.0], $higher['live_prices']);
+    }
+
     public function testACircuitDepartureWithNoQuoteIsRemoved(): void
     {
         $result = self::verifier(100.0, 'circuit')->verify(self::cart('circuit', 100.0));

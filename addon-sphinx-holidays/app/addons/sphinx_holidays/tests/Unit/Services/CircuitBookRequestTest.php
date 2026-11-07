@@ -101,6 +101,14 @@ final class CircuitBookRequestTest extends TestCase
         ]]], $body['occupancy']);
     }
 
+    /** The checkout re-check keeps the offer's live price on the row (base_price): it wins over the add-to-cart one. */
+    public function testThePriceTheCheckoutKeptWinsOverTheAddToCartOne(): void
+    {
+        $row = ['base_price' => 1040.0] + self::row();
+
+        self::assertSame(1040.0, CircuitBookRequest::build($row, null, 601)['price']);
+    }
+
     public function testTheChosenServicesAreTheStoredOnes(): void
     {
         self::assertSame(['456'], CircuitBookRequest::chosenServices(self::row()));

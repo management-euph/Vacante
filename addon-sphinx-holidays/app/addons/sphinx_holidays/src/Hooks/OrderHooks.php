@@ -158,6 +158,14 @@ final class OrderHooks
             return;
         }
 
+        // What the provider charges now for each booked offer the re-check
+        // priced: the row keeps it (base_price), the price the book call
+        // sends, whether or not its line is corrected below. A correction
+        // that updates its row writes the same figure.
+        foreach ($result['live_prices'] as $liveBookingId => $liveRaw) {
+            Container::getBookingRepository()->update($liveBookingId, ['base_price' => $liveRaw]);
+        }
+
         $corrections = $result['corrections'];
         if ($corrections !== []) {
             foreach ($corrections as $cartId => $correction) {
