@@ -26,6 +26,7 @@
  *   CLI: docker compose exec app php /var/www/html/dev/tools/eurosite-sample.php [cities=RO0218,RO2M]
  */
 
+use Tygh\Addons\Eurosite\Services\ConfigProvider;
 use Tygh\Addons\Eurosite\Services\Container;
 
 $es_is_cli = PHP_SAPI === 'cli';
@@ -110,6 +111,9 @@ foreach (db_get_array('SELECT tourop_code, product_code, pictures_json FROM ?:eu
 }
 
 $es_api = Container::getApi();
+$es_url = ConfigProvider::getApiUrl();
+$es_host = parse_url($es_url, PHP_URL_HOST);
+$es_secrets = array_filter([$es_url, is_string($es_host) ? $es_host : '', ConfigProvider::getApiUser(), ConfigProvider::getApiPassword()], static fn (string $s): bool => strlen(trim($s)) >= 3);
 $es_hotel_repo = Container::hotels();
 $es_rank = ['IM' => 3, 'OR' => 2, 'ST' => 1, '' => 0];
 
@@ -172,7 +176,8 @@ foreach ($es_wanted as $es_code) {
                 'rooms' => [['code' => 'DB', 'adults' => 2, 'children' => []]],
             ]);
         } catch (\Throwable $e) {
-            $es_out['errors'][] = "{$es_code}/{$es_to}: " . $e->getMessage();
+            // Without the API address and the account: this file gets shared.
+            $es_out['errors'][] = "{$es_code}/{$es_to}: " . str_ireplace($es_secrets, '<hidden>', $e->getMessage());
             continue;
         }
         foreach ($es_offers as $es_o) {
