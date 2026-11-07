@@ -3453,4 +3453,41 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Indicative prices for one night and 2 adults, from the latest prices we know; you see the final price once you pick dates.',
         'ro' => 'Prețuri orientative pentru o noapte și 2 adulți, din ultimele prețuri cunoscute; prețul final îl vezi după ce alegi datele.',
     ],
+    // The circuit bar on a circuit's product page (board 16.3, CircuitBar.jsx).
+    'travel_core.departure_from' => [
+        'en' => 'Departure from',
+        'ro' => 'Plecare din',
+    ],
+    'travel_core.departure_date' => [
+        'en' => 'Departure date',
+        'ro' => 'Data plecării',
+    ],
+    'travel_core.departures_from' => [
+        'en' => 'Departures from [city], [month]:',
+        'ro' => 'Plecări din [city], [month]:',
+    ],
+    'travel_core.circuit_prices_note' => [
+        'en' => 'Total prices for 2 adults, with the transport and the accommodation; the price for your group comes at the next step.',
+        'ro' => 'Prețuri totale pentru 2 adulți, cu transportul și cazarea; prețul pentru grupul tău îl vezi la pasul următor.',
+    ],
+    'travel_core.no_departures' => [
+        'en' => 'No departures from [city] in the coming months.',
+        'ro' => 'Nicio plecare din [city] în lunile următoare.',
+    ],
+    'travel_core.loading_departures' => [
+        'en' => 'Loading the departures…',
+        'ro' => 'Se încarcă plecările…',
+    ],
+    'travel_core.departures_error' => [
+        'en' => 'The departures cannot be loaded right now. Please try again.',
+        'ro' => 'Plecările nu se pot încărca acum. Încearcă din nou.',
+    ],
+    'travel_core.choose_departure_date' => [
+        'en' => 'Choose a departure date',
+        'ro' => 'Alege data plecării',
+    ],
+    'travel_core.circuit_see_price' => [
+        'en' => 'See the price',
+        'ro' => 'Vezi prețul',
+    ],
 ];

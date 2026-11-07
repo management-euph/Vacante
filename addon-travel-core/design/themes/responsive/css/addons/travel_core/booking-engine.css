@@ -1120,6 +1120,127 @@ button.nvt-field-input:active {
 
 /* ---------- Print ---------- */
 
+/* ── The circuit bar (board 16.3, CircuitBar.jsx) ─────────────────────── */
+
+.nvt-field--departure {
+    flex: 1.15;
+}
+/* "Plecare din": the native select lies over the field, invisible, so the
+   phone opens its own picker and the field keeps the bar's look. */
+.nvt-field-input--select {
+    position: relative;
+    box-sizing: border-box; /* a label, not a button: its padding stays inside */
+    cursor: pointer;
+}
+.nvt-circuit-select {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    font-size: 16px;
+}
+.nvt-circuit-select:disabled {
+    cursor: default;
+}
+.nvt-field-input--select:focus-within {
+    outline: 2px solid var(--nvt-primary, #0071c2);
+    outline-offset: -2px;
+    border-radius: 6px;
+}
+.travel-circuit-note {
+    margin: 8px 0 0;
+    font-size: 13px;
+    color: var(--nvt-text-light, #4b5563);
+}
+.travel-circuit-dates {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    margin: 12px 0 0;
+}
+.travel-circuit-dates__title {
+    font-size: 14px;
+    color: var(--nvt-text, #1a1a1a);
+}
+.travel-circuit-dates__state {
+    margin: 0;
+    font-size: 14px;
+    color: var(--nvt-text-light, #4b5563);
+}
+.travel-circuit-dates__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+/* A departure: its date and its price. The chosen one is filled, never
+   ringed (the owner's rule: no selection rings, no coloured edges). */
+.travel-circuit-date {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 88px;
+    padding: 6px 12px;
+    border: 1px solid #d9dee7;
+    border-radius: 6px;
+    background: #ffffff;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.travel-circuit-date:hover {
+    background: #f5f8fc;
+}
+.travel-circuit-date--selected,
+.travel-circuit-date--selected:hover {
+    background: #ebf3ff;
+    border-color: #ebf3ff;
+}
+.travel-circuit-date__day,
+.travel-circuit-date__price {
+    white-space: nowrap;
+}
+.travel-circuit-date__day {
+    font-size: 13px;
+    color: var(--nvt-text, #1a1a1a);
+}
+.travel-circuit-date__price {
+    font-size: 14px;
+    font-weight: 700;
+    color: #003580;
+}
+.travel-circuit-dates__nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 4px 0;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--nvt-primary, #0071c2);
+    cursor: pointer;
+}
+/* The phone: the departures scroll sideways (board 16.4). */
+@media (max-width: 767px) {
+    .travel-circuit-dates__list {
+        flex-wrap: nowrap;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 4px;
+    }
+    .travel-circuit-dates__list > li {
+        flex: 0 0 auto;
+    }
+}
+
 @media print {
     .nvt-booking-engine {
         display: none !important;

@@ -4265,3 +4265,39 @@ msgstr "Toate destinațiile ([n])"
 msgctxt "Languages::travel_core.list_fewer_destinations"
 msgid "Fewer destinations"
 msgstr "Mai puține destinații"
+
+msgctxt "Languages::travel_core.departure_from"
+msgid "Departure from"
+msgstr "Plecare din"
+
+msgctxt "Languages::travel_core.departure_date"
+msgid "Departure date"
+msgstr "Data plecării"
+
+msgctxt "Languages::travel_core.departures_from"
+msgid "Departures from [city], [month]:"
+msgstr "Plecări din [city], [month]:"
+
+msgctxt "Languages::travel_core.circuit_prices_note"
+msgid "Total prices for 2 adults, with the transport and the accommodation; the price for your group comes at the next step."
+msgstr "Prețuri totale pentru 2 adulți, cu transportul și cazarea; prețul pentru grupul tău îl vezi la pasul următor."
+
+msgctxt "Languages::travel_core.no_departures"
+msgid "No departures from [city] in the coming months."
+msgstr "Nicio plecare din [city] în lunile următoare."
+
+msgctxt "Languages::travel_core.loading_departures"
+msgid "Loading the departures…"
+msgstr "Se încarcă plecările…"
+
+msgctxt "Languages::travel_core.departures_error"
+msgid "The departures cannot be loaded right now. Please try again."
+msgstr "Plecările nu se pot încărca acum. Încearcă din nou."
+
+msgctxt "Languages::travel_core.choose_departure_date"
+msgid "Choose a departure date"
+msgstr "Alege data plecării"
+
+msgctxt "Languages::travel_core.circuit_see_price"
+msgid "See the price"
+msgstr "Vezi prețul"

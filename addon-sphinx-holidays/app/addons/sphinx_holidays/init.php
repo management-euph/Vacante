@@ -63,6 +63,11 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
         'sphinx',
         new \Tygh\Addons\SphinxHolidays\Providers\SphinxHotelProductProvider()
     );
+    // The circuits (SPXC… products): their page gets the circuit bar (board 16.3).
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setCircuitProductProvider(
+        'sphinx',
+        new \Tygh\Addons\SphinxHolidays\Providers\SphinxCircuitProductProvider(),
+    );
     // What Sphinx records for Travel Core's hotel availability rules.
     \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setAvailabilitySource(
         'sphinx',

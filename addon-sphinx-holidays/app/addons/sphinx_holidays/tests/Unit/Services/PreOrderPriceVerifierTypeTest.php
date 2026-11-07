@@ -32,11 +32,15 @@ final class PreOrderPriceVerifierTypeTest extends TestCase
     /** @var array<string, mixed> */
     private static array $answers = [];
 
+    /** @var list<array<string, mixed>> the circuit quote params asked */
+    public static array $quoteParams = [];
+
     protected function setUp(): void
     {
         $_SESSION = [];
         self::$calls = [];
         self::$answers = [];
+        self::$quoteParams = [];
         Registry::set('addons.sphinx_holidays', null);
         ConfigProvider::resetSettingsCache();
         Container::reset();
@@ -62,6 +66,8 @@ final class PreOrderPriceVerifierTypeTest extends TestCase
 
             public function getCircuitQuote(array $params): array
             {
+                PreOrderPriceVerifierTypeTest::$quoteParams[] = $params;
+
                 return PreOrderPriceVerifierTypeTest::answer('getCircuitQuote') ?? [];
             }
 
@@ -118,10 +124,12 @@ final class PreOrderPriceVerifierTypeTest extends TestCase
     /**
      * The verifier with line 7 bound to its pending booking row at $price,
      * booked as $type (room_type: 'circuit' / 'package', the room name for a hotel).
+     *
+     * @param array<string, mixed> $row fields of the row that differ (rooms_data, adults, ...)
      */
-    private static function verifier(float $price, string $type = 'hotel'): PreOrderPriceVerifier
+    private static function verifier(float $price, string $type = 'hotel', array $row = []): PreOrderPriceVerifier
     {
-        $row = [
+        $row += [
             'booking_id' => 1, 'order_id' => 0, 'user_id' => 5, 'session_id' => '',
             'product_id' => 100, 'offer_id' => 'offer-1', 'status' => 'pending',
             'room_type' => $type === 'hotel' ? 'Double Room' : $type,
@@ -216,6 +224,31 @@ final class PreOrderPriceVerifierTypeTest extends TestCase
 
         self::assertSame(130.0, $higher['corrections'][7]['api_price'] ?? null);
         self::assertSame([1 => 130.0], $higher['live_prices']);
+    }
+
+    /** A circuit booked in two rooms is re-quoted room by room, as it was quoted (board 16.3 bar). */
+    public function testACircuitOfSeveralRoomsIsReQuotedRoomByRoom(): void
+    {
+        self::$answers['getCircuitQuote'] = [['offer_id' => 'offer-1', 'pricing' => ['selling_price' => 100.0]]];
+        $rooms = (string) json_encode([
+            ['room_id' => 'standard-double', 'adults' => 2, 'children' => 1, 'childrenAges' => [7]],
+            ['room_id' => 'standard-single', 'adults' => 1, 'children' => 0, 'childrenAges' => []],
+        ]);
+
+        self::verifier(100.0, 'circuit', ['adults' => 3, 'children_ages' => '7', 'rooms_data' => $rooms])->verify(self::cart('circuit', 100.0));
+
+        self::assertSame([['adults' => 2, 'children_ages' => [7]], ['adults' => 1, 'children_ages' => []]], self::$quoteParams[0]['occupancy'] ?? null);
+    }
+
+    /** One room, or rooms that do not hold the booking's children (stored before), are the totals in one room. */
+    public function testACircuitOfOneRoomIsReQuotedWithItsTotals(): void
+    {
+        self::$answers['getCircuitQuote'] = [['offer_id' => 'offer-1', 'pricing' => ['selling_price' => 100.0]]];
+        $legacy = (string) json_encode([['room_id' => '', 'room_name' => 'Standard', 'adults' => 2, 'children' => 1], ['room_id' => '', 'adults' => 1]]);
+
+        self::verifier(100.0, 'circuit', ['adults' => 3, 'children_ages' => '7', 'rooms_data' => $legacy])->verify(self::cart('circuit', 100.0));
+
+        self::assertSame([['adults' => 3, 'children_ages' => [7]]], self::$quoteParams[0]['occupancy'] ?? null);
     }
 
     public function testACircuitDepartureWithNoQuoteIsRemoved(): void

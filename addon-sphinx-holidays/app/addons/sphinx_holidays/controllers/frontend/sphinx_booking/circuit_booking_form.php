@@ -28,16 +28,27 @@ $departure_id = RequestCoerce::int($_REQUEST, 'departure_id');
 $adults = max(1, RequestCoerce::int($_REQUEST, 'adults', 2));
 $children = max(0, RequestCoerce::int($_REQUEST, 'children'));
 $children_ages_str = RequestCoerce::string($_REQUEST, 'children_ages');
+// The circuit bar (board 16.3) sends each room as the hotel picker does
+// (rooms_data); flat totals are one room, as before.
+$rooms_data_json = RequestCoerce::string($_REQUEST, 'rooms_data');
 
 if (empty($circuit_id) || empty($departure_date)) {
     fn_set_notification('E', __('error'), __('sphinx_holidays.invalid_circuit', ['[default]' => 'Invalid circuit selection.']));
     return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.circuit_search'];
 }
 
-$children_ages = [];
-if (!empty($children_ages_str)) {
-    $children_ages = array_map('intval', array_filter(explode(',', $children_ages_str), function($v) { return $v !== ''; }));
-}
+// One occupancy entry per room (the shared resolver the hotel and package
+// searches use); the totals the form carries follow from it.
+$occupancy = \Tygh\Addons\SphinxHolidays\Helpers\SearchOccupancyResolver::resolve(
+    $rooms_data_json,
+    $adults,
+    max(1, RequestCoerce::int($_REQUEST, 'rooms', 1)),
+    $children_ages_str,
+);
+$all_ages = array_merge(...array_column($occupancy, 'children_ages'));
+$adults = array_sum(array_column($occupancy, 'adults'));
+$children = count($all_ages);
+$children_ages_str = implode(',', $all_ages);
 
 try {
     $api = Container::getApi();
@@ -45,7 +56,7 @@ try {
     $quoteParams = [
         'circuit_id' => $circuit_id,
         'departure_date' => $departure_date,
-        'occupancy' => [['adults' => $adults, 'children_ages' => $children_ages]],
+        'occupancy' => $occupancy,
     ];
     if ($departure_id > 0) {
         $quoteParams['departure_id'] = $departure_id;
@@ -117,6 +128,11 @@ try {
         'adults' => $adults,
         'children' => $children,
         'children_ages' => $children_ages_str,
+        // The rooms as the bar sent them, for a way back to this step.
+        'occupancy_json' => (string) json_encode(array_map(
+            static fn (array $room): array => ['adults' => $room['adults'], 'children' => count($room['children_ages']), 'childrenAges' => $room['children_ages']],
+            $occupancy,
+        )),
         'total_price' => $sellingPrice,
         'base_price' => $basePrice,
         'currency' => TypeCoerce::toString($quotePricing['currency'] ?? ConfigProvider::getDefaultCurrency()),

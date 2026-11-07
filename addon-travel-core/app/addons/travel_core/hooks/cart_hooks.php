@@ -160,13 +160,19 @@ function fn_travel_core_dispatch_before_display(): void
         ));
 
         $hotelSeoData = TravelProviderRegistry::resolveProductOwner($productId, $productCode);
+        // A product no supplier claims as a hotel may be a circuit (board
+        // 16.3): the same mount, where the engine renders the circuit bar
+        // (travel_booking.booking_config answers kind "circuit").
+        $isCircuit = $hotelSeoData === null && $productCode !== ''
+            && TravelProviderRegistry::resolveCircuit($productId, $productCode) !== null;
         // Shared display switch (travel_core setting, all providers): when off,
         // no mount div and no React bundles — SEO data below stays unaffected.
-        if ($productCode !== '' && $hotelSeoData !== null && TravelCoreConfig::isShowBookingForm()) {
+        if ($productCode !== '' && ($hotelSeoData !== null || $isCircuit) && TravelCoreConfig::isShowBookingForm()) {
             $view = \Tygh\Tygh::$app['view'];
             if (is_object($view) && method_exists($view, 'assign')) {
                 $view->assign('travel_booking_product_id', $productId);
                 $view->assign('travel_booking_product_code', $productCode);
+                $view->assign('travel_product_kind', $isCircuit ? 'circuit' : 'hotel');
 
                 // Booking-form colors for the PDP block: booking_engine.tpl
                 // prefers $_addons_travel_core over the $addons Smarty global,

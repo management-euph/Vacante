@@ -84,6 +84,7 @@
         <input type="hidden" name="adults" value="{$sphinx_circuit_booking.adults}">
         <input type="hidden" name="children" value="{$sphinx_circuit_booking.children}">
         <input type="hidden" name="children_ages" value="{$sphinx_circuit_booking.children_ages}">
+        <input type="hidden" name="rooms_data" value="{$sphinx_circuit_booking.occupancy_json|escape:html}">
         <input type="hidden" name="total_price" value="{$sphinx_circuit_booking.total_price}">
         <input type="hidden" name="base_price" value="{$sphinx_circuit_booking.base_price}">
         <input type="hidden" name="currency" value="{$sphinx_circuit_booking.currency}">
