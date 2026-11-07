@@ -2862,6 +2862,98 @@ msgctxt "Languages::travel_core.availability_override_report"
 msgid "It applies once this supplier is in Automatic mode."
 msgstr "It applies once this supplier is in Automatic mode."
 
+msgctxt "Languages::travel_core.availability_gate_propose_closed"
+msgid "Proposed to close"
+msgstr "Proposed to close"
+
+msgctxt "Languages::travel_core.availability_tile_propose_closed"
+msgid "Proposed to close: [n]"
+msgstr "Proposed to close: [n]"
+
+msgctxt "Languages::travel_core.availability_propose_closed"
+msgid "Gone from the supplier's list for [months] months: proposed to close."
+msgstr "Gone from the supplier's list for [months] months: proposed to close."
+
+msgctxt "Languages::travel_core.availability_mail_propose_closed"
+msgid "Gone from the supplier's list for 6 months, proposed to close: [n]"
+msgstr "Gone from the supplier's list for 6 months, proposed to close: [n]"
+
+msgctxt "Languages::travel_core.availability_redirect_resort"
+msgid "its resort page"
+msgstr "its resort page"
+
+msgctxt "Languages::travel_core.availability_redirect_active"
+msgid "Its page redirects (301) to [target]."
+msgstr "Its page redirects (301) to [target]."
+
+msgctxt "Languages::travel_core.availability_redirect_scheduled"
+msgid "Its page redirects (301) to [target] from [date]."
+msgstr "Its page redirects (301) to [target] from [date]."
+
+msgctxt "Languages::travel_core.availability_redirect_report"
+msgid "Its page redirects to [target] from [date], once this supplier is in Automatic mode."
+msgstr "Its page redirects to [target] from [date], once this supplier is in Automatic mode."
+
+msgctxt "Languages::travel_core.availability_redirect_waits_not_hidden"
+msgid "The redirect waits: the product is not hidden."
+msgstr "The redirect waits: the product is not hidden."
+
+msgctxt "Languages::travel_core.availability_redirect_waits_bookings"
+msgid "The redirect waits: a stay booked there is not over yet."
+msgstr "The redirect waits: a stay booked there is not over yet."
+
+msgctxt "Languages::travel_core.availability_redirect_waits_balance"
+msgid "The redirect waits: a balance for it is still to be paid."
+msgstr "The redirect waits: a balance for it is still to be paid."
+
+msgctxt "Languages::travel_core.availability_redirect_waits_no_target"
+msgid "The redirect waits: there is no active page to send it to (resort page or product)."
+msgstr "The redirect waits: there is no active page to send it to (resort page or product)."
+
+msgctxt "Languages::travel_core.availability_redirect_target"
+msgid "Product code (empty: the resort page)"
+msgstr "Product code (empty: the resort page)"
+
+msgctxt "Languages::travel_core.availability_redirect_from_label"
+msgid "Redirect from"
+msgstr "Redirect from"
+
+msgctxt "Languages::travel_core.availability_redirect_saved"
+msgid "The redirect for [hotel] is saved."
+msgstr "The redirect for [hotel] is saved."
+
+msgctxt "Languages::travel_core.availability_redirect_unknown"
+msgid "The hotel was not found."
+msgstr "The hotel was not found."
+
+msgctxt "Languages::travel_core.availability_redirect_not_closed"
+msgid "Mark the hotel closed first."
+msgstr "Mark the hotel closed first."
+
+msgctxt "Languages::travel_core.availability_redirect_bad_target"
+msgid "No product has that code, or it is this hotel or another closed one."
+msgstr "No product has that code, or it is this hotel or another closed one."
+
+msgctxt "Languages::travel_core.availability_redirect_bad_date"
+msgid "The date is not valid."
+msgstr "The date is not valid."
+
+msgctxt "Languages::travel_core.availability_sort_demand"
+msgid "Most wanted"
+msgstr "Most wanted"
+
+msgctxt "Languages::travel_core.availability_demand"
+msgid "Page views: [views] · waiting to be notified: [waiting] · requests in 12 months: [requests]"
+msgstr "Page views: [views] · waiting to be notified: [waiting] · requests in 12 months: [requests]"
+
+msgctxt "Languages::travel_core.availability_purchasing_list"
+msgid "Purchasing list (CSV)"
+msgstr "Purchasing list (CSV)"
+
+msgctxt "Languages::travel_core.availability_purchasing_list_hint"
+msgid "The hotels this supplier does not offer while their resort sells, most wanted first: for the account manager, to ask for allotment or a contract."
+msgstr "The hotels this supplier does not offer while their resort sells, most wanted first: for the account manager, to ask for allotment or a contract."
+
 msgctxt "Languages::travel_core.availability_override_failed"
 msgid "The decision could not be saved: the hotel was not found."
 msgstr "The decision could not be saved: the hotel was not found."

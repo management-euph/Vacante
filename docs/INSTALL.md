@@ -200,8 +200,9 @@ Calling a cron endpoint **without a mode prints its list of available modes**
      output genuinely has no name yet — re-run `hotel_list` once the API
      returns one. (Run `hotel_list` before `hotel_facilities_batched`.)
 
-Schedule the recurring jobs (typical: exchange rates + price refresh daily,
-hotel sync weekly, `cleanup` daily) via real cron on the server.
+Schedule the recurring jobs with real cron on the server: every line, its
+time and why are in
+[`Documentation/Production_Cron_Plan.md`](../Documentation/Production_Cron_Plan.md).
 
 ## 6. Storefront checks after install
 

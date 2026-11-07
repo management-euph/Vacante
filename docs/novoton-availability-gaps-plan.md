@@ -356,7 +356,9 @@ waited for Novoton's answer on the request volume.
 Decided 2026-10-22: availability is checked **weekly**, with the crons that
 already run. Nothing is urgent about it: the rules count weeks and months, and
 the hotel page always searches live. No new crontab line is needed. The only
-job that changes is Novoton's `room_price`, on its existing line.
+job that changes is Novoton's `room_price`, on its existing line. Every line
+of the four add-ons, with its time and why, is in
+`Documentation/Production_Cron_Plan.md`.
 
 | Job (existing line) | What it records for this plan | Extra API calls |
 |---|---|---|
@@ -367,7 +369,7 @@ job that changes is Novoton's `room_price`, on its existing line.
 | Eurosite `hotels` (`0 3 * * 0`, weekly since §16.7, or inside `full`) and `availability` (`15 4 * * *`) | Seen in the list; the per-city answers its gate already fetches (phase 1b, done §16.4) | None |
 | Sphinx `hotels` (daily; 02:00 on its settings tab, 03:00 on its dashboard, §14 item 14) | List completeness; the destination answers its gate searches already fetch (phase 1b, done §16.4). Only if needed: a season-date search for one seventh of the destinations with products each night (§15.3, point 9) | None, or that search |
 | Hotel-page searches (customers, no cron) | Offers seen (§4.2) | None |
-| Travel Core's daily cron (the `exchange_rates` line) | Every day: shows again the hotels the gate hid that have an offer (Automatic mode only). Once a week: bookings read back, the classification (§5), the report and the weekly email; in Automatic mode, hiding (§10) | None: stored records only |
+| Travel Core's daily cron (the `exchange_rates` line) | Every day: the "notify me" emails (§16.6), the closed hotels' redirect list (§16.10), and in Automatic mode shows again the hotels the gate hid that have an offer. Once a week: bookings read back, the classification (§5), each hotel's demand (§16.11), the report and the weekly email; in Automatic mode, hiding (§10) | None: stored records only |
 
 Rules, so that the jobs never overlap:
 
@@ -715,8 +717,8 @@ cover:
 | 1b | Eurosite and Sphinx: record what their existing checks and hotel-page searches already fetch, hotel-list completeness, bookings read back, dashboard cards; Sphinx stores `giata_id` (§15.3); Eurosite's `full` takes its steps' run locks (§4.5) — **done 2026-10-23 (§16.4)** | No | M |
 | 2 | Hotel-page panels; "notify me" and "prices are out" emails; similar hotels; date-picker window; language keys. All suppliers; Eurosite first needs a request flow. **Back end done 2026-10-27 (§16.6); the panels on both hotel page templates and the date-picker window done 2026-10-30 (§16.8)**, behind a switch that is off; listing labels moved to phase 6 | Yes | M |
 | 3 | Automatic mode, per supplier: dormant / left the list → Hidden, and back to Active; brake; overrides; `gateHidden` for bookings. Novoton first (Feb–Mar 2027). **Built for Novoton 2026-10-30 (§16.9)**: offered in its settings, switched on by the admin after the Feb–Mar 2027 review | Yes | M |
-| 4 | Closed hotels: mark closed, redirect target, 301 controller, grace checks | Yes | S |
-| 5 | Purchasing list of not-offered hotels with their demand | Staff only | S |
+| 4 | Closed hotels: mark closed, redirect target, 301 controller, grace checks — **built 2026-11-02 (§16.10)**; redirects only in Automatic mode | Yes | S |
+| 5 | Purchasing list of not-offered hotels with their demand — **built 2026-11-03 (§16.11)** | Staff only | S |
 | 6 | Eurosite and Sphinx switch to Automatic once their records cover a season (about autumn 2027), and their old gates are removed; listing labels and sorting | Yes | M |
 
 **Repo rules every phase must pass:**
@@ -1317,10 +1319,12 @@ listing labels moved to phase 6.
 ### 16.7 The suppliers' answers, applied (2026-10-28)
 
 The three suppliers answered the Production Cron Plan's questions on
-28 Oct 2026. The plan (a Claude doc) now carries their answers, the new
-schedule and the replies still to send; the code follows it. PHPStan level
-10, both CS Fixer configs, Rector and the suites pass (Novoton 1065, Eurosite
-332, Travel Core 924); the new SQL was run on MariaDB 10.11.
+28 Oct 2026. The plan (a Claude doc then,
+`Documentation/Production_Cron_Plan.md` since 2026-11-04) carries their
+answers, the new schedule and what is still open; the code follows it.
+PHPStan level 10, both CS Fixer configs, Rector and the suites pass
+(Novoton 1065, Eurosite 332, Travel Core 924); the new SQL was run on
+MariaDB 10.11.
 
 | Supplier | What they asked for | What changed |
 |---|---|---|
@@ -1445,17 +1449,82 @@ page rendered with Smarty 5.
 Left for later, when there is real data to look at: page views, notify-me
 and suggested-action columns, bulk actions, a "has bookings" filter, an
 attention line on the CS-Cart dashboard, and taking hotels that left the
-list out of the per-hotel syncs (§7.4). To check on the store once
-Automatic runs: that CS-Cart 4.21.2 leaves Hidden products out of the
+list out of the per-hotel syncs (§7.4). Page views and notify-me came with
+phase 5 (§16.11); §16.13 says when to build the rest. To check on the store
+once Automatic runs: that CS-Cart 4.21.2 leaves Hidden products out of the
 sitemap (§9).
 
-### 16.10 Next
+### 16.10 Phase 4, closed hotels (built 2026-11-02)
+
+Like phase 3, nothing changes for customers until a supplier is in
+Automatic mode: a closed hotel is hidden by the gate, and its page redirects
+only then. The suites pass (Travel Core 1047, Novoton 1232, Eurosite 360,
+Sphinx 627) with PHPStan level 10, both CS Fixer configs and Rector; the
+redirect's queries and the proposal were run on MariaDB 10.11, the page
+rendered with Smarty 5.
+
+| Piece | Where (travel_core) | Notes |
+|---|---|---|
+| Proposed to close | `Repository\HotelAvailabilityListing::proposeClosed()`, the review's `proposed` count | Gone from the supplier's list for 6 months (rule 3) and no decision yet: a badge, a "Proposed to close" filter, a count on the supplier's tile, a CSV column, a line in the weekly email |
+| Closing | the "Closed" decision (`Services\AvailabilityOverride`) | Schedules the page's redirect for the closing day plus 6 months (`AvailabilityThresholds::$closedRedirectMonths`, new column `redirect_from`, healed), to the resort page; closing again keeps it as set; any other decision removes it, and the page comes back under its old address |
+| Where and when | the closed hotel's row; `Services\ClosedHotelRedirects::configure()` | Another product by its code (the same hotel at another supplier, or a similar hotel) or empty for the resort page; a day, today for at once. Never to the hotel itself or to another closed one, so redirects cannot loop. The row says where it goes and from when, or why it waits |
+| Who redirects | `ClosedHotelRedirects::refresh()`, daily (Travel Core's daily run) and after each change | The supplier is in Automatic mode, the product is Hidden (an admin who shows it again wants it seen), the day is reached, no stay booked there is still to come (`travel_bookings`, not cancelled or failed), no balance is open (`travel_balances`), and there is an active page to go to: the chosen product, else the product's main category, else it waits. A failed refresh keeps the last list and is logged |
+| The 301 | `controllers/frontend/products.pre.php` | Reads only the stored list (storage_data), so any other product page costs one small query; `fn_redirect($url, false, true)`: permanent, never to another site. The product stays Hidden, never disabled or deleted; never a 404 or 410 |
+
+To check on the store: that `fn_redirect()`'s third argument sends a 301 on
+CS-Cart 4.21.2 (§7.4), and that switching a supplier back to Report only
+stops its redirects at the next daily run.
+
+### 16.11 Phase 5, the purchasing list (built 2026-11-03)
+
+For staff only, in every mode. The suites pass (Travel Core 1051, Novoton
+1232, Eurosite 360, Sphinx 627) with PHPStan level 10, both CS Fixer
+configs and Rector; the queries were run on MariaDB 10.11, the page
+rendered with Smarty 5.
+
+| Piece | Where (travel_core) | Notes |
+|---|---|---|
+| Demand per hotel | `Services\HotelDemand`, run by the weekly review | Kept on each record (new columns `demand_views`, `demand_waiting`, `demand_requests`, healed): the product page's views from CS-Cart's own count (`?:product_popularity.viewed`, once per visit, all time; a store without that table counts none), the "notify me" requests still waiting, the alternatives requests of the last 12 months. Read per supplier and matched in PHP, so tables created with different collations never meet in one query; only changed records are written |
+| On the page | `views/travel_hotel_availability/manage.tpl` | A hotel's demand under its name, a "Most wanted" sort, the demand in the CSV |
+| The purchasing list | each supplier's tile: "Purchasing list (CSV)" | The CSV of the hotels the supplier does not offer while their resort sells (not offered), most wanted first, for the account manager to ask for allotment or a contract (§7.2) |
+
+Page views are all-time totals, so a hotel listed for years weighs more than
+a new one; if that misleads, a later step can keep weekly snapshots and
+count views per period (§16.13).
+
+### 16.12 Next
 
 6. Calibration on the live store (§14) once the suppliers have recorded for a
    few weeks; then set the privacy policy page and switch the panels on.
+   Check then the trigger for taking hotels that left the list out of the
+   per-hotel syncs (§16.13).
 7. Feb–Mar 2027, when the 2027 early-booking prices are loaded: review the
    "Would be hidden" list for Novoton on the Hotel availability page, set
    decisions where needed (keep visible, closed), then switch Novoton to
-   Automatic.
-8. Phase 4 (closed hotels: the 301 after 6 months) and phase 5 (the
-   purchasing list) need no season of data and can come before or after.
+   Automatic. More than about 30 hotels to decide one by one is the trigger
+   for bulk decisions (§16.13).
+8. Phase 6 (about autumn 2027): Eurosite and Sphinx to the shared rules once
+   their records cover a season, their own gates retired; listing labels and
+   bookable hotels first in listings (they need the store's category list
+   templates).
+
+### 16.13 Optional extras: when to build them (decided 2026-11-04)
+
+None of these is built, on purpose. On 2026-11-04 nothing in this feature
+had acted on the store: no review had run on live data and Automatic mode
+was off, so each extra would have been code, tests and screen space built on
+guesses about the data. Each one has a trigger instead. Two are checked at
+set moments (§16.12, items 6 and 7); the others whenever the page, the
+weekly email or the purchasing list falls short.
+
+| Extra | Call | Build it when | Until then |
+|---|---|---|---|
+| Bulk decisions (§6) | Wait | The first "Would be hidden" list for Novoton (Feb–Mar 2027, §16.12 item 7) has more than about 30 hotels to decide one by one | "Hide these N hotels now" accepts the whole list; any other decision is set on the hotel's row |
+| Taking hotels that left the list out of the per-hotel syncs (§7.4) | Wait | Calibration (§14, SQL 7) or the "Left the supplier's list" count on Novoton's tile shows 5% or more of the hotels the syncs cover, or Novoton asks for fewer calls | The only extra with a measurable gain, and a small one: hotel details refresh every 3–7 days, prices only for the packages `offers_update` names (§16.7) |
+| Suggested action per hotel (§6) | Skip | Staff can't tell from the page what to do with a hotel | The badges say it: "would be hidden", "proposed to close", where a redirect goes or why it waits |
+| "Has bookings" filter (§6) | Skip | A decision has to be checked against bookings by hand | The redirect waits on its own for stays still to come and open balances (§16.10) |
+| Attention line on the CS-Cart dashboard (§6) | Skip | The weekly email is being missed: the same hotels wait 4 weeks or more for a decision | The weekly email, and the counts on each supplier's tile |
+| Page views per period (§16.11) | Wait | The purchasing list ranks hotels listed for years above newer ones that customers ask for more | All-time views, beside the waiting "notify me" requests and the alternatives requests |
+
+When a trigger fires, the extra becomes a step in §16.12, with its own tests
+like any phase.

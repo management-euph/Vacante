@@ -26,6 +26,7 @@ final readonly class AvailabilityThresholds
         public int $notOfferedDays = 14,
         public int $soldOutDays = 30,
         public int $closedProposalMonths = 6,
+        public int $closedRedirectMonths = 6,
     ) {
     }
 

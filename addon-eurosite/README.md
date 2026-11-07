@@ -222,7 +222,7 @@ network. The code is PHPStan level-10 clean and PSR-12 formatted.
    answer live; `dev/eurosite/` probes cover each one).
 2. ~~Persistence + cron~~ — done: 8 tables, 9 cron modes (CLI `cron.php` +
    `eurosite_cron.run`), sync log, dashboard quick actions
-   (`Documentation/CRON_JOBS.txt` has the schedule).
+   (`Documentation/Production_Cron_Plan.md` has the schedule).
 3. ~~Whitelist, admin, bookings grid, storefront search + booking pipeline~~ —
    done (see Status above).
 4. **Live search/booking smoke test** — search + getItemFees verified live

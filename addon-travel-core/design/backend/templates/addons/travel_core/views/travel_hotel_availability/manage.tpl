@@ -4,7 +4,9 @@
     and what the availability gate did or would do, with filters and a CSV
     of what they match. A decision on a hotel (keep visible, keep hidden,
     closed) is saved from its row and applied at once in Automatic mode; a
-    run the gate's brake held is confirmed from the supplier's tile. **}
+    run the gate's brake held is confirmed from the supplier's tile. A
+    closed hotel's row says where and from when its page redirects (301),
+    and changes both (§7.4). **}
 
 {capture name="sidebar"}
 <div class="sidebar-row">
@@ -64,6 +66,7 @@
                 <option value="hotel" {if $search.sort_by == "hotel"}selected{/if}>{__("travel_core.availability_sort_hotel")}</option>
                 <option value="offer" {if $search.sort_by == "offer"}selected{/if}>{__("travel_core.availability_sort_offer")}</option>
                 <option value="changed" {if $search.sort_by == "changed"}selected{/if}>{__("travel_core.availability_sort_changed")}</option>
+                <option value="demand" {if $search.sort_by == "demand"}selected{/if}>{__("travel_core.availability_sort_demand")}</option>
             </select>
         </div>
 
@@ -115,7 +118,14 @@
                     {/if}
                     {if $gc.released > 0} · <a href="{"travel_hotel_availability.manage?provider=`$provider`&gate=released"|fn_url}">{__("travel_core.availability_tile_released", ["[n]" => $gc.released])}</a>{/if}
                     {if $gc.override > 0} · <a href="{"travel_hotel_availability.manage?provider=`$provider`&gate=override"|fn_url}">{__("travel_core.availability_tile_override", ["[n]" => $gc.override])}</a>{/if}
+                    {if $gc.propose_closed > 0} · <a href="{"travel_hotel_availability.manage?provider=`$provider`&gate=propose_closed"|fn_url}">{__("travel_core.availability_tile_propose_closed", ["[n]" => $gc.propose_closed])}</a>{/if}
                 </div>
+                {* The purchasing list (§7.2): hotels the supplier does not offer while their resort sells, most wanted first *}
+                {if $availability_counts.$provider.not_offered > 0}
+                    <div class="travel-cron-tile__note">
+                        <a href="{"travel_hotel_availability.export?provider=`$provider`&state=not_offered&sort_by=demand"|fn_url}" title="{__("travel_core.availability_purchasing_list_hint")|escape:html}">{__("travel_core.availability_purchasing_list")}</a>
+                    </div>
+                {/if}
                 {* The brake held the last review's hiding: the admin checks the list, then confirms *}
                 {assign var="braked" value=$availability_summary.providers.$provider.gate.braked|default:0}
                 {if $availability_automatic.$provider && $braked > 0 && $gc.would_hide > 0}
@@ -223,12 +233,16 @@
                 <div class="muted travel-avail-sub">
                     {$row.hotel_id|escape:html}{if $row.destination_key} · {$row.destination_key|escape:html}{/if}{if !$row.product_id} · {__("travel_core.availability_no_product")}{/if}
                 </div>
+                {if $row.demand_views > 0 || $row.demand_waiting > 0 || $row.demand_requests > 0}
+                    <div class="travel-avail-sub">{__("travel_core.availability_demand", ["[views]" => $row.demand_views|default:0, "[waiting]" => $row.demand_waiting|default:0, "[requests]" => $row.demand_requests|default:0])}</div>
+                {/if}
             </td>
             <td>{$availability_labels.$provider|default:$provider|escape:html}</td>
             <td>
                 <span class="travel-cron-pill travel-cron-pill--{$availability_pills.$state|default:"none"}">{__("travel_core.availability_state_`$state`")}</span>
                 {if $row.state_since}<div class="muted travel-avail-sub">{__("travel_core.availability_since", ["[date]" => $row.state_since|date_format:"%d.%m.%Y"])}</div>{/if}
                 {if $row.season_published == "Y"}<div class="travel-avail-sub">{__("travel_core.availability_next_season")}</div>{/if}
+                {if $row.propose_closed}<div class="travel-cron-hint travel-cron-hint--warn">{__("travel_core.availability_propose_closed", ["[months]" => $availability_propose_months])}</div>{/if}
             </td>
             <td>
                 {if $row.product_id}
@@ -253,6 +267,34 @@
                         <input type="text" name="override_note" value="{$row.override_note|escape:html}" maxlength="255" placeholder="{__("travel_core.availability_override_note")|escape:html}" aria-label="{__("travel_core.availability_override_note")|escape:html}" />
                         <button type="submit" class="btn btn-small">{__("save")}</button>
                     </form>
+                    {* Closed: where and from when the page redirects (301), or why it waits *}
+                    {assign var="pid" value=$row.product_id}
+                    {if $availability_redirects.$pid}
+                        {assign var="rd" value=$availability_redirects.$pid}
+                        {if $rd.target}{assign var="rd_target" value=$rd.target}{else}{assign var="rd_target" value=__("travel_core.availability_redirect_resort")}{/if}
+                        <div class="travel-avail-redirect">
+                            {if $rd.status == "active"}
+                                <div class="travel-avail-sub">{__("travel_core.availability_redirect_active", ["[target]" => $rd_target])}</div>
+                            {elseif $rd.status == "waiting"}
+                                <div class="travel-cron-hint travel-cron-hint--warn">{__("travel_core.availability_redirect_waits_`$rd.why`")}</div>
+                            {elseif $rd.status == "report"}
+                                <div class="travel-avail-sub muted">{__("travel_core.availability_redirect_report", ["[target]" => $rd_target, "[date]" => $rd.from|date_format:"%d.%m.%Y"])}</div>
+                            {else}
+                                <div class="travel-avail-sub">{__("travel_core.availability_redirect_scheduled", ["[target]" => $rd_target, "[date]" => $rd.from|date_format:"%d.%m.%Y"])}</div>
+                            {/if}
+                            <form method="post" action="{""|fn_url}" class="travel-avail-override">
+                                <input type="hidden" name="dispatch" value="travel_hotel_availability.redirect" />
+                                <input type="hidden" name="security_hash" value="{$security_hash}" />
+                                <input type="hidden" name="provider" value="{$row.provider|escape:html}" />
+                                <input type="hidden" name="hotel_id" value="{$row.hotel_id|escape:html}" />
+                                <input type="hidden" name="hotel_name" value="{$row.hotel_name|escape:html}" />
+                                <input type="hidden" name="return_query" value="{$availability_return_query|escape:html}" />
+                                <input type="text" name="redirect_target" value="{$rd.code|escape:html}" maxlength="64" placeholder="{__("travel_core.availability_redirect_target")|escape:html}" aria-label="{__("travel_core.availability_redirect_target")|escape:html}" />
+                                <input type="date" name="redirect_from" value="{$rd.from|escape:html}" required aria-label="{__("travel_core.availability_redirect_from_label")|escape:html}" />
+                                <button type="submit" class="btn btn-small">{__("save")}</button>
+                            </form>
+                        </div>
+                    {/if}
                 {else}
                     <span class="muted">{__("travel_core.availability_no_product")}</span>
                 {/if}

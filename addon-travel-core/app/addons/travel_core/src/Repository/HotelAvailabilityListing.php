@@ -7,6 +7,7 @@ namespace Tygh\Addons\TravelCore\Repository;
 use Tygh\Addons\TravelCore\Enums\HotelAvailabilityState;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\AvailabilityGate;
+use Tygh\Addons\TravelCore\ValueObjects\AvailabilityThresholds;
 
 /**
  * Reads ?:travel_hotel_availability for the Hotel availability page and its
@@ -20,10 +21,11 @@ final class HotelAvailabilityListing
     public const array OFFER_MONTHS = [3, 6, 12, 18, 24];
 
     /**
-     * The product filter: what the availability gate did or would do, and
-     * the admin's decisions.
+     * The product filter: what the availability gate did or would do, the
+     * admin's decisions, and the hotels proposed to close (gone from the
+     * supplier's list for months, no decision yet; plan §5 rule 3).
      */
-    public const array GATE_FILTERS = ['would_hide', 'hidden', 'released', 'override'];
+    public const array GATE_FILTERS = ['would_hide', 'hidden', 'released', 'override', 'propose_closed'];
 
     /** Sort orders: name => ORDER BY. */
     private const array SORTS = [
@@ -31,6 +33,8 @@ final class HotelAvailabilityListing
         // Longest without an offer first; never offered before everything.
         'offer' => 'a.offer_seen_at IS NOT NULL, a.offer_seen_at, a.hotel_name',
         'changed' => 'a.state_since IS NULL, a.state_since DESC, a.hotel_name',
+        // Most wanted first: the purchasing list (§7.2).
+        'demand' => 'a.demand_waiting DESC, a.demand_requests DESC, a.demand_views DESC, a.hotel_name',
     ];
 
     /** Most rows one CSV holds. */
@@ -61,13 +65,18 @@ final class HotelAvailabilityListing
         'hidden_by_the_rules' => 'gate_hidden',
         'left_as_set_by_hand' => 'gate_released',
         'decision' => 'override',
+        'proposed_to_close' => 'propose_closed',
+        'redirect_from' => 'redirect_from',
+        'page_views' => 'demand_views',
+        'notify_me_waiting' => 'demand_waiting',
+        'alternatives_requests_12_months' => 'demand_requests',
     ];
 
     /** The records with their product's status, as every read here wants them. */
     private const string FROM = '?:travel_hotel_availability a LEFT JOIN ?:products p ON p.product_id = a.product_id';
 
-    /** A record, its product's status ('' without one) and whether the gate would hide it now. */
-    private const string COLUMNS = "a.*, COALESCE(p.status, '') AS product_status, ?p AS would_hide";
+    /** A record, its product's status ('' without one), whether the gate would hide it now and whether it is proposed to close. */
+    private const string COLUMNS = "a.*, COALESCE(p.status, '') AS product_status, ?p AS would_hide, ?p AS propose_closed";
 
     /**
      * The page's filters, cleaned: unknown states and month counts are dropped.
@@ -118,6 +127,7 @@ final class HotelAvailabilityListing
             'hidden' => " AND a.gate_hidden = 'Y'",
             'released' => " AND a.gate_released = 'Y'",
             'override' => " AND a.override <> ''",
+            'propose_closed' => ' AND ' . self::proposeClosed($now),
             default => '',
         };
         if ($filters['q'] !== '') {
@@ -154,6 +164,7 @@ final class HotelAvailabilityListing
         $rows = TypeCoerce::toRowList(db_get_array(
             'SELECT ' . self::COLUMNS . ' FROM ' . self::FROM . ' WHERE 1 ?p ORDER BY ?p LIMIT ?i, ?i',
             self::wouldHide(),
+            self::proposeClosed($now),
             $condition,
             self::SORTS[$search['sort_by']],
             ($search['page'] - 1) * $search['items_per_page'],
@@ -167,9 +178,9 @@ final class HotelAvailabilityListing
      * Per supplier, what the gate did and would do, and the admin's
      * decisions, for the page's tiles.
      *
-     * @return array<string, array{would_hide: int, hidden: int, released: int, override: int}>
+     * @return array<string, array{would_hide: int, hidden: int, released: int, override: int, propose_closed: int}>
      */
-    public function gateCounts(): array
+    public function gateCounts(\DateTimeImmutable $now): array
     {
         HotelAvailabilityRepository::ensureTables();
         $counts = [];
@@ -178,19 +189,35 @@ final class HotelAvailabilityListing
                     SUM(?p) AS would_hide,
                     SUM(a.gate_hidden = 'Y') AS hidden,
                     SUM(a.gate_released = 'Y') AS released,
-                    SUM(a.override <> '') AS override
+                    SUM(a.override <> '') AS override,
+                    SUM(?p) AS propose_closed
              FROM " . self::FROM . ' GROUP BY a.provider',
             self::wouldHide(),
+            self::proposeClosed($now),
         )) as $row) {
             $counts[TypeCoerce::toString($row['provider'] ?? '')] = [
                 'would_hide' => TypeCoerce::toInt($row['would_hide'] ?? 0),
                 'hidden' => TypeCoerce::toInt($row['hidden'] ?? 0),
                 'released' => TypeCoerce::toInt($row['released'] ?? 0),
                 'override' => TypeCoerce::toInt($row['override'] ?? 0),
+                'propose_closed' => TypeCoerce::toInt($row['propose_closed'] ?? 0),
             ];
         }
 
         return $counts;
+    }
+
+    /**
+     * SQL: the hotel has been gone from its supplier's list for the
+     * proposal's months (6) and nobody has decided about it yet: propose to
+     * close it (AvailabilityPolicy's proposeClosed, rule 3).
+     */
+    public static function proposeClosed(\DateTimeImmutable $now): string
+    {
+        return db_quote(
+            "(a.state = 'left_feed' AND a.override = '' AND a.state_since IS NOT NULL AND a.state_since <= ?s)",
+            $now->modify('-' . (new AvailabilityThresholds())->closedProposalMonths . ' months')->format('Y-m-d H:i:s'),
+        );
     }
 
     /**
@@ -243,6 +270,7 @@ final class HotelAvailabilityListing
         return TypeCoerce::toRowList(db_get_array(
             'SELECT ' . self::COLUMNS . ' FROM ' . self::FROM . ' WHERE 1 ?p ORDER BY ?p LIMIT ?i',
             self::wouldHide(),
+            self::proposeClosed($now),
             self::condition($filters, $now),
             self::SORTS[$filters['sort_by']],
             self::EXPORT_LIMIT,

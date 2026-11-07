@@ -2006,6 +2006,98 @@ Dacă ați plătit deja, vă rugăm să ignorați acest email.',
         'en' => 'It applies once this supplier is in Automatic mode.',
         'ro' => 'Se aplică după ce acest furnizor trece în modul Automat.',
     ],
+    'travel_core.availability_gate_propose_closed' => [
+        'en' => 'Proposed to close',
+        'ro' => 'Propuse pentru închidere',
+    ],
+    'travel_core.availability_tile_propose_closed' => [
+        'en' => 'Proposed to close: [n]',
+        'ro' => 'Propuse pentru închidere: [n]',
+    ],
+    'travel_core.availability_propose_closed' => [
+        'en' => 'Gone from the supplier\'s list for [months] months: proposed to close.',
+        'ro' => 'Lipsește din lista furnizorului de [months] luni: propus pentru închidere.',
+    ],
+    'travel_core.availability_mail_propose_closed' => [
+        'en' => 'Gone from the supplier\'s list for 6 months, proposed to close: [n]',
+        'ro' => 'Lipsesc din lista furnizorului de 6 luni, propuse pentru închidere: [n]',
+    ],
+    'travel_core.availability_redirect_resort' => [
+        'en' => 'its resort page',
+        'ro' => 'pagina stațiunii',
+    ],
+    'travel_core.availability_redirect_active' => [
+        'en' => 'Its page redirects (301) to [target].',
+        'ro' => 'Pagina lui redirecționează (301) către [target].',
+    ],
+    'travel_core.availability_redirect_scheduled' => [
+        'en' => 'Its page redirects (301) to [target] from [date].',
+        'ro' => 'Pagina lui redirecționează (301) către [target] din [date].',
+    ],
+    'travel_core.availability_redirect_report' => [
+        'en' => 'Its page redirects to [target] from [date], once this supplier is in Automatic mode.',
+        'ro' => 'Pagina lui redirecționează către [target] din [date], după ce acest furnizor trece în modul Automat.',
+    ],
+    'travel_core.availability_redirect_waits_not_hidden' => [
+        'en' => 'The redirect waits: the product is not hidden.',
+        'ro' => 'Redirecționarea așteaptă: produsul nu este ascuns.',
+    ],
+    'travel_core.availability_redirect_waits_bookings' => [
+        'en' => 'The redirect waits: a stay booked there is not over yet.',
+        'ro' => 'Redirecționarea așteaptă: un sejur rezervat acolo nu s-a încheiat încă.',
+    ],
+    'travel_core.availability_redirect_waits_balance' => [
+        'en' => 'The redirect waits: a balance for it is still to be paid.',
+        'ro' => 'Redirecționarea așteaptă: un rest de plată pentru el nu este achitat încă.',
+    ],
+    'travel_core.availability_redirect_waits_no_target' => [
+        'en' => 'The redirect waits: there is no active page to send it to (resort page or product).',
+        'ro' => 'Redirecționarea așteaptă: nu există o pagină activă spre care să trimită (pagina stațiunii sau un produs).',
+    ],
+    'travel_core.availability_redirect_target' => [
+        'en' => 'Product code (empty: the resort page)',
+        'ro' => 'Cod produs (gol: pagina stațiunii)',
+    ],
+    'travel_core.availability_redirect_from_label' => [
+        'en' => 'Redirect from',
+        'ro' => 'Redirecționează din',
+    ],
+    'travel_core.availability_redirect_saved' => [
+        'en' => 'The redirect for [hotel] is saved.',
+        'ro' => 'Redirecționarea pentru [hotel] a fost salvată.',
+    ],
+    'travel_core.availability_redirect_unknown' => [
+        'en' => 'The hotel was not found.',
+        'ro' => 'Hotelul nu a fost găsit.',
+    ],
+    'travel_core.availability_redirect_not_closed' => [
+        'en' => 'Mark the hotel closed first.',
+        'ro' => 'Marcați mai întâi hotelul ca închis.',
+    ],
+    'travel_core.availability_redirect_bad_target' => [
+        'en' => 'No product has that code, or it is this hotel or another closed one.',
+        'ro' => 'Niciun produs nu are acest cod, sau este chiar acest hotel ori alt hotel închis.',
+    ],
+    'travel_core.availability_redirect_bad_date' => [
+        'en' => 'The date is not valid.',
+        'ro' => 'Data nu este validă.',
+    ],
+    'travel_core.availability_sort_demand' => [
+        'en' => 'Most wanted',
+        'ro' => 'Cele mai căutate',
+    ],
+    'travel_core.availability_demand' => [
+        'en' => 'Page views: [views] · waiting to be notified: [waiting] · requests in 12 months: [requests]',
+        'ro' => 'Vizualizări: [views] · așteaptă anunțul: [waiting] · cereri în 12 luni: [requests]',
+    ],
+    'travel_core.availability_purchasing_list' => [
+        'en' => 'Purchasing list (CSV)',
+        'ro' => 'Listă de achiziții (CSV)',
+    ],
+    'travel_core.availability_purchasing_list_hint' => [
+        'en' => 'The hotels this supplier does not offer while their resort sells, most wanted first: for the account manager, to ask for allotment or a contract.',
+        'ro' => 'Hotelurile pe care acest furnizor nu le oferă deși stațiunea lor se vinde, cele mai căutate primele: pentru managerul de cont, ca să ceară alocare sau contract.',
+    ],
     'travel_core.availability_override_failed' => [
         'en' => 'The decision could not be saved: the hotel was not found.',
         'ro' => 'Decizia nu a putut fi salvată: hotelul nu a fost găsit.',

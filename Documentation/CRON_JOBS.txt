@@ -1,3 +1,10 @@
+NOTE, 4 November 2026: this file is out of date. The cron lines to install,
+with their times, are in Production_Cron_Plan.md in this folder: every travel
+add-on, run with the PHP command line, at the times agreed with the suppliers
+on 28 October 2026. The schedule and much of the mode detail below date from
+March 2026; where they differ, Production_Cron_Plan.md and the add-on
+dashboards are right.
+
 ================================================================================
 NOVOTON HOLIDAYS ADDON - CRON JOBS & MODES REFERENCE
 ================================================================================

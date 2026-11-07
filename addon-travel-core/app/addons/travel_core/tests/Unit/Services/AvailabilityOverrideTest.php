@@ -132,6 +132,22 @@ final class AvailabilityOverrideTest extends TestCase
         self::assertSame([], $this->sql);
     }
 
+    /** Closing schedules the page's redirect for 6 months later (plan §7.4); any other decision removes it. */
+    public function testClosingSchedulesTheRedirectAndAnythingElseRemovesIt(): void
+    {
+        self::override(AvailabilityMode::Report)->set('novoton', '476', 'closed', '', 7, self::now());
+        self::assertStringContainsString(", redirect_to = '', redirect_from = '2027-08-15'", implode("\n", $this->sql));
+
+        $this->sql = [];
+        DbStub::$getRow = static fn (): array => ['product_id' => '15', 'state' => 'closed', 'override' => 'closed'];
+        self::override(AvailabilityMode::Report)->set('novoton', '476', 'closed', 'Confirmed by Novoton', 7, self::now());
+        self::assertStringNotContainsString('redirect_', implode("\n", $this->sql), 'closed again: its redirect stays as set');
+
+        $this->sql = [];
+        self::override(AvailabilityMode::Report)->set('novoton', '476', 'keep_visible', '', 7, self::now());
+        self::assertStringContainsString(", redirect_to = '', redirect_from = NULL", implode("\n", $this->sql), 'reopened: no redirect');
+    }
+
     public function testConfirmingTheHeldHidingNeedsAutomaticMode(): void
     {
         self::assertNull(self::override(AvailabilityMode::Report)->confirmHiding('novoton', 7, self::now()));

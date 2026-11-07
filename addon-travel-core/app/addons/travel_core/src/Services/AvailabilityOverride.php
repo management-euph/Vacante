@@ -18,6 +18,10 @@ use Tygh\Addons\TravelCore\Repository\HotelAvailabilityRepository;
  * Stored on the hotel's record with who and when, logged, and applied at
  * once when the supplier is in Automatic mode (AvailabilityGate, this one
  * product: no brake); in Report only it waits for that mode.
+ *
+ * Closing a hotel also schedules its page's redirect (301, plan §7.4) for
+ * the closing day plus 6 months, to its resort page; ClosedHotelRedirects
+ * lets the admin change both. Any other decision removes the redirect.
  */
 final class AvailabilityOverride
 {
@@ -35,6 +39,7 @@ final class AvailabilityOverride
         private readonly AvailabilityGate $gate = new AvailabilityGate(),
         ?\Closure $mode = null,
         private readonly ?array $sources = null,
+        private readonly ClosedHotelRedirects $redirects = new ClosedHotelRedirects(),
     ) {
         $this->mode = $mode ?? static fn (string $provider): AvailabilityMode => TravelCoreConfig::getAvailabilityMode($provider);
     }
@@ -61,14 +66,25 @@ final class AvailabilityOverride
         }
         $productId = TypeCoerce::toInt($record['product_id'] ?? 0);
         $stamp = $now->format('Y-m-d H:i:s');
+        // Closed: the redirect starts after the grace, to the resort page,
+        // unless the hotel was closed already (its redirect stays as set).
+        $redirect = match (true) {
+            $override !== AvailabilityGate::CLOSED => ", redirect_to = '', redirect_from = NULL",
+            TypeCoerce::toString($record['override'] ?? '') === AvailabilityGate::CLOSED => '',
+            default => db_quote(
+                ", redirect_to = '', redirect_from = ?s",
+                $now->modify('+' . TravelCoreConfig::getAvailabilityThresholds()->closedRedirectMonths . ' months')->format('Y-m-d'),
+            ),
+        };
 
         db_query(
-            'UPDATE ?:travel_hotel_availability SET override = ?s, override_note = ?s, override_by = ?i, override_at = ?p
+            'UPDATE ?:travel_hotel_availability SET override = ?s, override_note = ?s, override_by = ?i, override_at = ?p?p
              WHERE provider = ?s AND hotel_id = ?s',
             $override,
             mb_substr(trim($note), 0, self::NOTE_MAX),
             $override === '' ? 0 : $userId,
             $override === '' ? 'NULL' : db_quote('?s', $stamp),
+            $redirect,
             $provider,
             $hotelId,
         );
@@ -92,6 +108,10 @@ final class AvailabilityOverride
             $gate = $this->gate->apply($provider, $stamp, true, true, $productId, $userId);
             $result['hidden'] = $gate['hidden'];
             $result['shown'] = $gate['shown'];
+        }
+        // Closed, or no longer: the redirects follow at once.
+        if (in_array(AvailabilityGate::CLOSED, [$override, TypeCoerce::toString($record['override'] ?? '')], true)) {
+            $this->redirects->refresh($now);
         }
 
         return $result;

@@ -74,8 +74,20 @@ final class HotelAvailabilityAdminTest extends TestCase
         self::assertStringContainsString('<input type="hidden" name="dispatch" value="travel_hotel_availability.override" />', $tpl);
         self::assertStringContainsString('"travel_hotel_availability.apply_gate"|fn_url', $tpl);
         self::assertStringContainsString('class="btn btn-primary cm-confirm"', $tpl, 'the held hiding asks before it runs');
-        self::assertSame(3, substr_count($tpl, 'name="security_hash" value="{$security_hash}"'), 'review, decision, confirmation');
+        self::assertSame(4, substr_count($tpl, 'name="security_hash" value="{$security_hash}"'), 'review, decision, redirect, confirmation');
+        self::assertStringContainsString('<input type="hidden" name="dispatch" value="travel_hotel_availability.redirect" />', $tpl);
+        self::assertStringContainsString("\$_SERVER['REQUEST_METHOD'] === 'POST' && \$mode === 'redirect'", $controller);
         self::assertStringContainsString('{foreach from=$availability_gate_filters item=gate}', $tpl);
+    }
+
+    /** The purchasing list is a CSV per supplier of the hotels it does not offer, most wanted first (plan §7.2). */
+    public function testEachSupplierHasItsPurchasingList(): void
+    {
+        $tpl = self::template('travel_hotel_availability/manage.tpl');
+
+        self::assertStringContainsString('{"travel_hotel_availability.export?provider=`$provider`&state=not_offered&sort_by=demand"|fn_url}', $tpl);
+        self::assertStringContainsString('<option value="demand"', $tpl);
+        self::assertStringContainsString('travel_core.availability_demand', $tpl);
     }
 
     public function testThePageIsInTheMenusAndAllowed(): void
