@@ -50,6 +50,10 @@
  *   gb_child_gender        (string, default '') when set, a hidden
  *                          guests[...][gender] with this value per child
  *                          (eurosite: C).
+ *   gb_child_gender_options (map, default []) value => label; when set, each
+ *                          child gets REQUIRED guests[...][gender] radios,
+ *                          like an adult's (sphinx packages: m/f for every
+ *                          traveller). Wins over gb_child_gender.
  *
  * @package TravelCore
  *}
@@ -67,6 +71,7 @@
 {$_adult_sublabel = $gb_adult_sublabel|default:''}
 {$_gender_options = $gb_gender_options|default:[]}
 {$_child_gender = $gb_child_gender|default:''}
+{$_child_gender_options = $gb_child_gender_options|default:[]}
 {* Field-name prefix: '' in roomless (participant) mode, room{N}_ otherwise *}
 {if $_roomless}{$_npfx = ''}{else}{$_npfx = "room`$_room_num`_"}{/if}
 
@@ -167,7 +172,7 @@
                            class="ty-input-text" required aria-required="true" pattern=".*\S.*" autocomplete="off">
                     <input type="hidden" name="guests[{$_npfx}child_{$_i}][type]" id="child_type_r{$_room_num}_c{$_i}" value="child">
                     <input type="hidden" name="guests[{$_npfx}child_{$_i}][age]" id="child_age_r{$_room_num}_c{$_i}" value="{$child_age}">
-                    {if $_child_gender != ''}
+                    {if $_child_gender != '' && !$_child_gender_options}
                     <input type="hidden" name="guests[{$_npfx}child_{$_i}][gender]" value="{$_child_gender|escape:html}">
                     {/if}
                     {if !$_roomless}
@@ -181,6 +186,16 @@
                            value="{$_prefill.$_pf_key.first_name|default:''|escape:html}"
                            class="ty-input-text" required aria-required="true" pattern=".*\S.*" autocomplete="off">
                 </div>
+                {if $_child_gender_options}
+                <div class="travel-guest-field travel-guest-field--gender">
+                    <span class="travel-guest-field-label" id="guest_r{$_room_num}_c{$_i}_gender">{__("`$_gp`.gender")|default:"Gender"}<span class="travel-guest-required" aria-hidden="true">*</span></span>
+                    <div class="travel-guest-radios" role="radiogroup" aria-labelledby="guest_r{$_room_num}_c{$_i}_gender">
+                        {foreach $_child_gender_options as $_g_val => $_g_label}
+                            <label class="travel-guest-radio"><input type="radio" name="guests[{$_npfx}child_{$_i}][gender]" value="{$_g_val|escape:html}" required{if $_prefill.$_pf_key.gender|default:'' == $_g_val} checked{/if}> {$_g_label|escape:html}</label>
+                        {/foreach}
+                    </div>
+                </div>
+                {/if}
                 <div class="travel-guest-field travel-guest-field--dob">
                     <label for="dob_r{$_room_num}_c{$_i}">{__("`$_gp`.date_of_birth")|default:"Date of Birth"}{if $_child_dob_required}<span class="travel-guest-required" aria-hidden="true">*</span>{/if}</label>
                     {* data-expected-age arms the shared JS + server guard: the DOB

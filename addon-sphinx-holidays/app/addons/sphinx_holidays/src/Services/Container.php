@@ -192,6 +192,13 @@ class Container
         return self::resolve('preOrderPriceVerifier', static fn (): \Tygh\Addons\SphinxHolidays\Services\PreOrderPriceVerifier => new PreOrderPriceVerifier());
     }
 
+    /** The email to the orders department when Sphinx does not confirm a booking. */
+    public static function getBookingAlert(): BookingAlert
+    {
+        /** @var BookingAlert */
+        return self::resolve('bookingAlert', static fn (): BookingAlert => new BookingAlert());
+    }
+
     // ═══════════════════════════════════════════════════════════════════
     // LIFECYCLE
     // ═══════════════════════════════════════════════════════════════════

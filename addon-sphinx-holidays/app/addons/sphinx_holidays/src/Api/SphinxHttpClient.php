@@ -12,6 +12,11 @@ use Tygh\Addons\TravelCore\Http\ResiliencePolicy;
  *
  * Handles Bearer token authentication, rate limiting, retry logic with
  * exponential backoff, and circuit breaker pattern.
+ *
+ * A booking must never be sent twice: postOnce() resends it only when it
+ * surely never left (no connection, a rate-limit refusal). After an HTTP
+ * 5xx or a timeout the booking may exist at Sphinx — maybeProcessed() says
+ * so, and the caller checks before booking again.
  */
 class SphinxHttpClient
 {
@@ -20,6 +25,9 @@ class SphinxHttpClient
     private const int RATE_LIMIT_PAUSE_DEFAULT = 5;
     private const int RATE_LIMIT_MAX_WAIT = 120;
     private const int RATE_LIMIT_FALLBACK_WAIT = 60;
+
+    /** cURL errors that prove the request never reached the server: no proxy, no host, no connection, no TLS. */
+    private const array NOT_SENT_ERRNOS = [5, 6, 7, 35];
 
     private string $baseUrl;
     private string $apiKey;
@@ -41,6 +49,24 @@ class SphinxHttpClient
     private ?int $retryAfter = null;
     private int $rateLimitHitCount = 0;
 
+    /** The last request got no answer, but may have been processed (an HTTP 5xx, a timeout). */
+    private bool $maybeProcessed = false;
+
+    /** @var (\Closure(string, string, list<string>, ?string): array{body: string|false, code: int, errno?: int, error?: string, headers?: list<string>})|null */
+    private ?\Closure $exec;
+
+    /**
+     * @param string $baseUrl the API's base URL
+     * @param string $apiKey the Bearer token
+     * @param int $maxRetries retries of a repeatable request
+     * @param int $retryDelayMs the first retry's delay
+     * @param float $retryMultiplier each next delay's factor
+     * @param int $cbThreshold failures that open the circuit
+     * @param int $cbTimeout seconds the circuit stays open
+     * @param bool $debugLogging log rate limits and pauses
+     * @param ResiliencePolicy|null $resilience the backoff and circuit state (built from the above when null)
+     * @param (\Closure(string, string, list<string>, ?string): array{body: string|false, code: int, errno?: int, error?: string, headers?: list<string>})|null $exec test seam: one HTTP exchange (method, url, headers, body) instead of cURL
+     */
     public function __construct(
         string $baseUrl,
         string $apiKey,
@@ -51,7 +77,9 @@ class SphinxHttpClient
         int $cbTimeout = 60,
         bool $debugLogging = false,
         ?ResiliencePolicy $resilience = null,
+        ?\Closure $exec = null,
     ) {
+        $this->exec = $exec;
         $this->baseUrl = rtrim($baseUrl, '/');
         $this->apiKey = $apiKey;
         $this->maxRetries = $maxRetries;
@@ -97,12 +125,41 @@ class SphinxHttpClient
     }
 
     /**
+     * Send a POST that must not be sent twice (a booking): resent only when
+     * it surely never reached Sphinx. On an HTTP 5xx or a timeout it is not
+     * resent, and maybeProcessed() is true.
+     *
+     * @param string $endpoint API endpoint
+     * @param array<string, mixed> $data Request body (will be JSON-encoded)
+     * @return array<string, mixed>|null Decoded JSON response or null on failure
+     */
+    public function postOnce(string $endpoint, array $data = []): ?array
+    {
+        return $this->request('POST', $this->baseUrl . $endpoint, $data, false);
+    }
+
+    /**
+     * Whether the last request, which got no answer, may still have been
+     * processed (an HTTP 5xx, a timeout) — false for a refusal (4xx) or a
+     * request that never left (circuit open, no connection).
+     */
+    public function maybeProcessed(): bool
+    {
+        return $this->maybeProcessed;
+    }
+
+    /**
      * Execute an HTTP request with retry and circuit breaker logic.
+     * @param string $method GET or POST
+     * @param string $url the full URL
      * @param array<string, mixed> $body
+     * @param bool $resend false: never resend once the request may have reached the server
      * @return array<string, mixed>|null
      */
-    private function request(string $method, string $url, ?array $body = null): ?array
+    private function request(string $method, string $url, ?array $body = null, bool $resend = true): ?array
     {
+        $this->maybeProcessed = false;
+
         // Circuit breaker check
         if ($this->isCircuitOpen()) {
             $this->lastError = 'Circuit breaker is open — API calls suspended for ' . $this->cbTimeout . 's';
@@ -128,37 +185,14 @@ class SphinxHttpClient
             $this->rateLimitReset = null;
             $this->retryAfter = null;
 
-            $ch = curl_init($url);
-
             $headers = [
                 'Authorization: Bearer ' . $this->apiKey,
                 'Accept: application/json',
                 'Content-Type: application/json',
             ];
+            $payload = $method === 'POST' && $body !== null ? (string) json_encode($body) : null;
 
-            $opts = [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_HTTPHEADER => $headers,
-                CURLOPT_TIMEOUT => self::CURL_TIMEOUT,
-                CURLOPT_CONNECTTIMEOUT => self::CURL_CONNECT_TIMEOUT,
-                CURLOPT_SSL_VERIFYPEER => true,
-                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                CURLOPT_HEADERFUNCTION => [$this, 'parseResponseHeaders'],
-            ];
-
-            if ($method === 'POST') {
-                $opts[CURLOPT_POST] = true;
-                if ($body !== null) {
-                    $opts[CURLOPT_POSTFIELDS] = json_encode($body);
-                }
-            }
-
-            curl_setopt_array($ch, $opts);
-
-            $response = curl_exec($ch);
-            $this->lastHttpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $curlError = curl_error($ch);
-            curl_close($ch);
+            [$response, $this->lastHttpCode, $curlErrno, $curlError] = $this->send($method, $url, $headers, $payload);
 
             $this->lastResponseRaw = is_string($response) ? $response : null;
 
@@ -166,6 +200,15 @@ class SphinxHttpClient
             if ($response === false) {
                 $this->lastError = "cURL error: {$curlError}";
                 $this->recordFailure();
+                if (!in_array($curlErrno, self::NOT_SENT_ERRNOS, true)) {
+                    // A timeout or a cut connection: the request may have reached Sphinx.
+                    $this->maybeProcessed = true;
+                    if (!$resend) {
+                        $this->lastError .= ' (not resent: the request may have reached Sphinx)';
+
+                        return null;
+                    }
+                }
                 $attempt++;
                 if ($attempt <= $this->maxRetries) {
                     usleep($this->resilience->delayMsForRetry(++$delaysTaken) * 1000);
@@ -199,10 +242,16 @@ class SphinxHttpClient
                 continue;
             }
 
-            // Server error — retry
+            // Server error — retry (never a request that must not be sent twice)
             if ($this->lastHttpCode >= 500) {
                 $this->lastError = "Server error HTTP {$this->lastHttpCode}";
                 $this->recordFailure();
+                $this->maybeProcessed = true;
+                if (!$resend) {
+                    $this->lastError .= ' (not resent: the request may have reached Sphinx)';
+
+                    return null;
+                }
                 $attempt++;
                 if ($attempt <= $this->maxRetries) {
                     usleep($this->resilience->delayMsForRetry(++$delaysTaken) * 1000);
@@ -242,6 +291,54 @@ class SphinxHttpClient
     }
 
     /**
+     * One HTTP exchange: through the test seam when one was given, else cURL.
+     *
+     * @param string $method GET or POST
+     * @param string $url the full URL
+     * @param list<string> $headers request headers
+     * @param string|null $payload the JSON body of a POST
+     *
+     * @return array{0: string|false, 1: int, 2: int, 3: string} the body (false on a transport error), HTTP code, cURL errno, cURL error
+     */
+    private function send(string $method, string $url, array $headers, ?string $payload): array
+    {
+        if ($this->exec !== null) {
+            $result = ($this->exec)($method, $url, $headers, $payload);
+            foreach ($result['headers'] ?? [] as $line) {
+                $this->parseHeaderLine($line);
+            }
+
+            return [$result['body'], $result['code'], $result['errno'] ?? 0, $result['error'] ?? ''];
+        }
+
+        $ch = curl_init($url);
+        $opts = [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_TIMEOUT => self::CURL_TIMEOUT,
+            CURLOPT_CONNECTTIMEOUT => self::CURL_CONNECT_TIMEOUT,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_HEADERFUNCTION => [$this, 'parseResponseHeaders'],
+        ];
+        if ($method === 'POST') {
+            $opts[CURLOPT_POST] = true;
+            if ($payload !== null) {
+                $opts[CURLOPT_POSTFIELDS] = $payload;
+            }
+        }
+        curl_setopt_array($ch, $opts);
+
+        $response = curl_exec($ch);
+        $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $errno = curl_errno($ch);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        return [is_string($response) ? $response : false, $code, $errno, $error];
+    }
+
+    /**
      * Parse rate limit headers from response.
      *
      * Note: called via `CURLOPT_HEADERFUNCTION => [$this, 'parseResponseHeaders']`,
@@ -249,7 +346,14 @@ class SphinxHttpClient
      */
     private function parseResponseHeaders(\CurlHandle $ch, string $header): int
     {
-        $len = strlen($header);
+        $this->parseHeaderLine($header);
+
+        return strlen($header);
+    }
+
+    /** One response header line: the rate-limit ones are kept. */
+    private function parseHeaderLine(string $header): void
+    {
         $parts = explode(':', $header, 2);
         if (count($parts) === 2) {
             $name = strtolower(trim($parts[0]));
@@ -265,7 +369,6 @@ class SphinxHttpClient
                 $this->retryAfter = (int) $value;
             }
         }
-        return $len;
     }
 
     public function isCircuitOpen(): bool

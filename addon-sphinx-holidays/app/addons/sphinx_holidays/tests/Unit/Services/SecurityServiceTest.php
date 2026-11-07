@@ -131,4 +131,36 @@ class SecurityServiceTest extends TestCase
 
         $this->assertSame([], $sanitized);
     }
+
+    /** The guest cards post the date of birth as DD/MM/YYYY (or YYYY-MM-DD): it reaches the booking. */
+    public function testKeepsAWellFormedDateOfBirth(): void
+    {
+        $sanitized = $this->security->sanitizeGuestData([
+            'a' => ['name' => 'Ana', 'dob' => ' 04/03/1990 '],
+            'b' => ['name' => 'Ion', 'dob' => '1988-01-01'],
+            'c' => ['name' => 'Mia', 'dob' => '4/3/2019<script>'],
+            'd' => ['name' => 'Eva'],
+        ]);
+
+        $this->assertSame('04/03/1990', $sanitized['a']['dob']);
+        $this->assertSame('1988-01-01', $sanitized['b']['dob']);
+        $this->assertArrayNotHasKey('dob', $sanitized['c']);
+        $this->assertArrayNotHasKey('dob', $sanitized['d']);
+    }
+
+    /** Sphinx's book calls take m or f: those are kept (any case), nothing else. */
+    public function testKeepsOnlyAKnownGender(): void
+    {
+        $sanitized = $this->security->sanitizeGuestData([
+            'a' => ['name' => 'Ana', 'gender' => 'F'],
+            'b' => ['name' => 'Ion', 'gender' => 'm'],
+            'c' => ['name' => 'Mia', 'gender' => 'x'],
+            'd' => ['name' => 'Eva', 'gender' => ['f']],
+        ]);
+
+        $this->assertSame('f', $sanitized['a']['gender']);
+        $this->assertSame('m', $sanitized['b']['gender']);
+        $this->assertArrayNotHasKey('gender', $sanitized['c']);
+        $this->assertArrayNotHasKey('gender', $sanitized['d']);
+    }
 }

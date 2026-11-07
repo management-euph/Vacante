@@ -1527,3 +1527,19 @@ msgstr "[n] new {destination|destinations} in [country] {waits|wait} for review.
 msgctxt "Languages::sphinx_holidays.dest_alert_outside"
 msgid "[n] live {product is|products are} outside the destination whitelist."
 msgstr "[n] live {product is|products are} outside the destination whitelist."
+
+msgctxt "Languages::sphinx_holidays.book_alert_subject"
+msgid "Sphinx booking #[booking_id] not confirmed (order #[order_id])"
+msgstr "Sphinx booking #[booking_id] not confirmed (order #[order_id])"
+
+msgctxt "Languages::sphinx_holidays.book_alert_failed"
+msgid "Sphinx did not make booking #[booking_id] ([what]) of order #[order_id]: [reason]. It is marked failed: once the cause is fixed, retry it under Travel → Bookings."
+msgstr "Sphinx did not make booking #[booking_id] ([what]) of order #[order_id]: [reason]. It is marked failed: once the cause is fixed, retry it under Travel → Bookings."
+
+msgctxt "Languages::sphinx_holidays.book_alert_pending"
+msgid "Sphinx gave no clear answer for booking #[booking_id] ([what]) of order #[order_id]: [reason]. It may exist at Sphinx: it stays pending, and the status sync looks it up by the order number. Do not book it again before checking it in Sphinx."
+msgstr "Sphinx gave no clear answer for booking #[booking_id] ([what]) of order #[order_id]: [reason]. It may exist at Sphinx: it stays pending, and the status sync looks it up by the order number. Do not book it again before checking it in Sphinx."
+
+msgctxt "Languages::sphinx_holidays.traveller_details_required"
+msgid "Please choose each traveller's gender, and fill in each child's date of birth."
+msgstr "Please choose each traveller's gender, and fill in each child's date of birth."

@@ -499,6 +499,10 @@ class GuestDataService implements GuestDataServiceInterface
             $firstName = trim(TypeCoerce::toString($guest['first_name'] ?? ''));
             $lastName = trim(TypeCoerce::toString($guest['last_name'] ?? ''));
             $name = trim(TypeCoerce::toString($guest['name'] ?? ''));
+            // Kept only when the form asks it (Sphinx packages: m/f, each
+            // provider's sanitizer decides which values pass).
+            $gender = trim(TypeCoerce::toString($guest['gender'] ?? ''));
+            $genderField = $gender !== '' ? ['gender' => $gender] : [];
 
             // The age the form DECLARED for this guest (for children this is the
             // age the offer was searched/priced for — the hidden [age] field).
@@ -590,7 +594,7 @@ class GuestDataService implements GuestDataServiceInterface
                     'dob' => !empty($birthday) ? date('d/m/Y', (int) strtotime($birthday)) : '',
                     'room' => TypeCoerce::toInt($guest['room'] ?? 1),
                     'is_holder' => !empty($guest['is_holder']) ? 1 : 0,
-                ];
+                ] + $genderField;
             } elseif (!empty($name)) {
                 $guestNames[] = $name;
 
@@ -609,7 +613,7 @@ class GuestDataService implements GuestDataServiceInterface
                     'dob' => !empty($birthday) ? date('d/m/Y', (int) strtotime($birthday)) : '',
                     'room' => TypeCoerce::toInt($guest['room'] ?? 1),
                     'is_holder' => !empty($guest['is_holder']) ? 1 : 0,
-                ];
+                ] + $genderField;
             }
         }
 

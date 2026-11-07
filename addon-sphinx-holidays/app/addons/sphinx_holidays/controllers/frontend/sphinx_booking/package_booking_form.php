@@ -116,6 +116,11 @@ try {
     ]);
 
     $view->assign('sphinx_provider', 'sphinx');
+    // packages/book wants every traveller's gender (m or f), children too.
+    $view->assign('sphinx_gender_options', [
+        'm' => TypeCoerce::toString(__('travel_core.gender_male')),
+        'f' => TypeCoerce::toString(__('travel_core.gender_female')),
+    ]);
 
 } catch (\Throwable $e) {
     fn_log_event('general', 'runtime', [

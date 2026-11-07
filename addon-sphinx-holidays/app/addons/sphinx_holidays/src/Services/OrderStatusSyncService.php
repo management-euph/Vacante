@@ -25,10 +25,20 @@ class OrderStatusSyncService implements OrderStatusSyncServiceInterface
     private ?\Closure $outputCallback = null;
 
     /** Map Sphinx API booking statuses to our internal TravelConstants statuses */
+    /**
+     * A booking's Sphinx status => the store's. The book call's statuses
+     * too: a booking left pending without a clear answer (BookOutcome) is
+     * settled here — errored or unconfirmed means no booking was made, and
+     * the row can then be retried. The doc writes "canceled".
+     */
     private const array STATUS_MAP = [
         'confirmed' => TravelConstants::STATUS_CONFIRMED,
         'on_request' => TravelConstants::STATUS_PENDING,
+        'processing' => TravelConstants::STATUS_PENDING,
         'cancelled' => TravelConstants::STATUS_CANCELLED,
+        'canceled' => TravelConstants::STATUS_CANCELLED,
+        'errored' => TravelConstants::STATUS_FAILED,
+        'unconfirmed' => TravelConstants::STATUS_FAILED,
     ];
 
     public function __construct(

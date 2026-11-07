@@ -194,6 +194,19 @@ class SecurityService implements SecurityServiceInterface
             if (!empty($guest['birthday']) && $this->isValidDate(ValidationHelpers::toString($guest['birthday']))) {
                 $sanitized[$key]['birthday'] = $guest['birthday'];
             }
+            // The date of birth the guest cards post (DD/MM/YYYY, or
+            // YYYY-MM-DD): it was dropped here, so no Sphinx booking kept a
+            // birth date, and the child age guard never saw one.
+            // GuestDataService::parseDob() checks the date itself.
+            $dob = trim(ValidationHelpers::toString($guest['dob'] ?? ''));
+            if (preg_match('#^(\d{2}/\d{2}/\d{4}|\d{4}-\d{2}-\d{2})$#', $dob) === 1) {
+                $sanitized[$key]['dob'] = $dob;
+            }
+            // Sphinx's book calls want each guest's gender: m or f.
+            $gender = strtolower(trim(ValidationHelpers::toString($guest['gender'] ?? '')));
+            if (in_array($gender, ['m', 'f'], true)) {
+                $sanitized[$key]['gender'] = $gender;
+            }
         }
 
         return $sanitized;
