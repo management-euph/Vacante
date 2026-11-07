@@ -2712,7 +2712,9 @@
     padding: 0;
     list-style: none;
 }
-.travel-pdpa .travel-circuit-stay {
+/* A night (or nights) on the route: not .travel-circuit-stay, the hotels
+   box of the circuit's rooms (CircuitRooms.jsx, booking-engine.css). */
+.travel-pdpa .travel-circuit-night {
     display: grid;
     grid-template-columns: 96px minmax(0, 1fr);
     gap: 4px 12px;
@@ -2721,7 +2723,7 @@
     background: #f5f7fa;
     font-size: 14px;
 }
-.travel-pdpa .travel-circuit-stay__nights {
+.travel-pdpa .travel-circuit-night__when {
     font-weight: 700;
 }
 /* What the price includes and does not. */
@@ -2778,7 +2780,7 @@
     .travel-pdpa .travel-circuit-day {
         padding-left: 46px;
     }
-    .travel-pdpa .travel-circuit-stay {
+    .travel-pdpa .travel-circuit-night {
         grid-template-columns: minmax(0, 1fr);
     }
 }

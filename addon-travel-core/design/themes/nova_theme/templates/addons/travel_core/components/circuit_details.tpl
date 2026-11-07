@@ -58,15 +58,15 @@
                 <h2 class="travel-circuit-card__title" id="travel-circuit-stays-title">{__("travel_core.circuit_hotels")}</h2>
                 <ul class="travel-circuit-stays">
                     {foreach $travel_circuit.stays as $travel_circuit_stay}
-                        <li class="travel-circuit-stay">
-                            <span class="travel-circuit-stay__nights">
+                        <li class="travel-circuit-night">
+                            <span class="travel-circuit-night__when">
                                 {if $travel_circuit_stay.from == $travel_circuit_stay.to}
                                     {__("travel_core.circuit_night", ["[n]" => $travel_circuit_stay.from])}
                                 {else}
                                     {__("travel_core.circuit_nights_range", ["[from]" => $travel_circuit_stay.from, "[to]" => $travel_circuit_stay.to])}
                                 {/if}
                             </span>
-                            <span class="travel-circuit-stay__hotel">
+                            <span class="travel-circuit-night__hotel">
                                 {if $travel_circuit_stay.hotel}{$travel_circuit_stay.hotel|escape:html}{else}{__("travel_core.circuit_hotel")}{/if}{if $travel_circuit_stay.stars > 0} {$travel_circuit_stay.stars}★{/if} {__("travel_core.circuit_or_similar")}
                             </span>
                         </li>
