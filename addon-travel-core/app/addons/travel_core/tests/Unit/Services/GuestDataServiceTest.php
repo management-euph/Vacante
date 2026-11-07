@@ -172,4 +172,19 @@ class GuestDataServiceTest extends TestCase
         $this->assertIsArray($adult);
         $this->assertNull(GuestDataService::findChildAgeMismatch($adult['guests_data']));
     }
+
+    /** The gender a form asks (Sphinx packages) is kept; a form that does not ask it adds none. */
+    public function testParseAndValidateGuestsKeepsAPostedGender(): void
+    {
+        $parsed = GuestDataService::parseAndValidateGuests([
+            'room1_adult_1' => ['first_name' => 'Ana', 'last_name' => 'Pop', 'type' => 'adult', 'gender' => 'f'],
+            'room1_adult_2' => ['name' => 'Ion Pop', 'type' => 'adult', 'gender' => ' m '],
+            'room1_child_1' => ['first_name' => 'Mia', 'last_name' => 'Pop', 'type' => 'child', 'dob' => '24/07/2019'],
+        ], '2026-07-24', 'sphinx');
+
+        $this->assertIsArray($parsed);
+        $this->assertSame('f', $parsed['guests_data']['room1_adult_1']['gender']);
+        $this->assertSame('m', $parsed['guests_data']['room1_adult_2']['gender']);
+        $this->assertArrayNotHasKey('gender', $parsed['guests_data']['room1_child_1']);
+    }
 }

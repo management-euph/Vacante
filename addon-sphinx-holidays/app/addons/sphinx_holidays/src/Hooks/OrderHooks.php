@@ -8,6 +8,7 @@ use Tygh\Addons\SphinxHolidays\Services\BookingPayloadFactory;
 use Tygh\Addons\SphinxHolidays\Services\BookOutcome;
 use Tygh\Addons\SphinxHolidays\Services\CheckoutBookingBinder;
 use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\SphinxHolidays\Services\PackageBookRequest;
 use Tygh\Addons\TravelCore\Helpers\SessionAccessor;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\DepositCartLine;
@@ -346,17 +347,26 @@ final class OrderHooks
                         $guests_data = json_decode($guests_data, true);
                     }
 
-                    $payload = BookingPayloadFactory::build(
-                        $offer_id,
-                        TypeCoerce::toStringMap($guests_data),
-                        $contact,
-                        $resolved_order_id,
-                    );
-
                     // Dispatch by booking type — packages/circuits/experiences have
                     // their own book endpoints (previously EVERY sphinx product was
                     // sent to bookHotel, so non-hotel bookings hit the wrong one).
+                    // A package sends the documented body (PackageBookRequest:
+                    // price, currency, rooms, each guest's birth date and
+                    // gender), priced as Sphinx quotes it now; the others
+                    // keep the body their live bookings use.
                     $booking_type = CheckoutBookingBinder::bookingTypeOf($existing);
+                    $payload = $booking_type === 'package'
+                        ? PackageBookRequest::build(
+                            $existing,
+                            PackageBookRequest::quote($api, $offer_id, PackageBookRequest::chosenServices($existing)),
+                            $resolved_order_id,
+                        )
+                        : BookingPayloadFactory::build(
+                            $offer_id,
+                            TypeCoerce::toStringMap($guests_data),
+                            $contact,
+                            $resolved_order_id,
+                        );
                     $bookResult = match ($booking_type) {
                         'circuit' => $api->bookCircuit($payload),
                         'package' => $api->bookPackage($payload),

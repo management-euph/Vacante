@@ -1102,4 +1102,10 @@ return [
         'en' => 'Sphinx gave no clear answer for booking #[booking_id] ([what]) of order #[order_id]: [reason]. It may exist at Sphinx: it stays pending, and the status sync looks it up by the order number. Do not book it again before checking it in Sphinx.',
         'ro' => 'Sphinx nu a dat un răspuns clar pentru rezervarea #[booking_id] ([what]) din comanda #[order_id]: [reason]. Poate exista deja la Sphinx: rămâne în așteptare, iar sincronizarea stărilor o caută după numărul comenzii. Nu o rezervați din nou înainte de a o verifica în Sphinx.',
     ],
+    // Package add-to-cart: packages/book wants each traveller's gender and
+    // each child's birth date.
+    'sphinx_holidays.traveller_details_required' => [
+        'en' => 'Please choose each traveller\'s gender, and fill in each child\'s date of birth.',
+        'ro' => 'Alegeți genul fiecărui turist și completați data nașterii fiecărui copil.',
+    ],
 ];

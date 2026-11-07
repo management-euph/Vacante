@@ -203,7 +203,8 @@
                normalizeRoomsForDisplay), incl. the one-room fallback the old
                duplicated {else} branch existed for. Adult DOB stays REQUIRED
                (package manifests need it); the age guard arms the client-side
-               DOB-vs-priced-age check to match the server gate. *}
+               DOB-vs-priced-age check to match the server gate. The
+               booking wants every traveller's gender (m/f), children too. *}
             {include file="addons/travel_core/components/booking_guest_cards.tpl"
                      guest_rooms=$sphinx_package_booking.rooms_data
                      guest_num_rooms=$sphinx_package_booking.rooms_data|count
@@ -212,7 +213,9 @@
                      show_adult_dob=true
                      adult_dob_required=true
                      child_dob_required=true
-                     guard_expected_ages=true}
+                     guard_expected_ages=true
+                     guest_gender_options=$sphinx_gender_options
+                     guest_child_gender_options=$sphinx_gender_options}
         </div>
 
         {* Contact (email/phone) is NOT collected here: CS-Cart checkout already

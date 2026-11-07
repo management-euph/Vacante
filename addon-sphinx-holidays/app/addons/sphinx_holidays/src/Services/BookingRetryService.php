@@ -204,7 +204,15 @@ class BookingRetryService implements BookingRetryServiceInterface
             );
         }
 
-        $payload = BookingPayloadFactory::build($offerId, $guestsData, $contact, $orderId);
+        // A package sends the documented body, priced as Sphinx quotes it now
+        // (PackageBookRequest); the others keep their live bookings' body.
+        $payload = $type === 'package'
+            ? PackageBookRequest::build(
+                $booking,
+                PackageBookRequest::quote($this->api, $offerId, PackageBookRequest::chosenServices($booking)),
+                $orderId,
+            )
+            : BookingPayloadFactory::build($offerId, $guestsData, $contact, $orderId);
 
         return match ($type) {
             'circuit' => $this->api->bookCircuit($payload),

@@ -243,4 +243,53 @@ final class BookingRetryServiceTest extends TestCase
         self::assertTrue($result['success']);
         self::assertSame('SPX-2', $result['booking_ref']);
     }
+
+    /** A package retry sends the documented packages/book body, priced as Sphinx quotes it now. */
+    public function testAPackageRetrySendsTheDocumentedBody(): void
+    {
+        $row = [
+            'booking_id' => 7,
+            'status' => TravelConstants::STATUS_FAILED,
+            'offer_id' => 'PKG-7',
+            'room_type' => 'package',
+            'order_id' => 85,
+            'check_in' => '2027-07-22',
+            'base_price' => 1000.0,
+            'total_price' => 1050.0,
+            'currency' => 'EUR',
+            'pricing_json' => json_encode(['selling_price' => 1000.0, 'currency' => 'EUR', 'chosen_services' => ['TRF']]),
+            'rooms_data' => json_encode([['code' => '75', 'adults' => 1, 'children_ages' => []]]),
+            'guests_data' => json_encode([
+                'room1_adult_1' => ['first_name' => 'Ana', 'last_name' => 'Pop', 'type' => 'adult', 'birthday' => '1990-03-04', 'room' => 1, 'gender' => 'f', 'is_holder' => 1],
+            ]),
+        ];
+        $repo = $this->createMock(SphinxBookingRepository::class);
+        $api = $this->createMock(SphinxApi::class);
+        $repo->method('findById')->willReturn($row);
+        $repo->method('findByOrderId')->willReturn([$row]);
+        $repo->method('update')->willReturn(true);
+        $api->method('getOrders')->willReturn(['results' => []]);
+        $api->method('verifyPackageOffer')->with('PKG-7')->willReturn(['pricing' => ['selling_price' => 1000.0, 'currency' => 'EUR']]);
+        $api->expects(self::once())->method('customizePackage')
+            ->with(['offer_id' => 'PKG-7', 'service_codes' => ['TRF']])
+            ->willReturn(['pricing' => ['selling_price' => 1040.0, 'currency' => 'EUR'], 'hotel' => ['rooms' => [['code' => '75', 'adults' => 1, 'children_ages' => []]]]]);
+        $api->expects(self::never())->method('bookHotel');
+        $api->expects(self::once())->method('bookPackage')
+            ->with([
+                'offer_id' => 'PKG-7',
+                'reference_code' => '85',
+                'price' => 1040.0,
+                'currency' => 'EUR',
+                'occupancy' => [['room_code' => '75', 'guests' => [
+                    ['first_name' => 'Ana', 'last_name' => 'Pop', 'birth_date' => '1990-03-04', 'gender' => 'f'],
+                ]]],
+                'additional_services' => ['TRF'],
+            ])
+            ->willReturn(['booking_confirmation_number' => 'PK-85', 'status' => 'confirmed']);
+
+        $result = (new BookingRetryService($api, $repo))->retry(7);
+
+        self::assertTrue($result['success']);
+        self::assertSame('PK-85', $result['booking_ref']);
+    }
 }

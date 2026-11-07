@@ -34,6 +34,10 @@
  *                                        Room headers never render.
  *   guest_prefill     (map,    default []) name/DOB prefill keyed like the
  *                                        input names (edit mode only).
+ *   guest_gender_options       (map, default []) value => label: REQUIRED
+ *                                        gender radios for each adult.
+ *   guest_child_gender_options (map, default []) the same for each child
+ *                                        (sphinx packages: m/f, every traveller).
  *
  * @package TravelCore
  *}
@@ -71,5 +75,7 @@
         gb_adult_dob_required=$adult_dob_required|default:false
         gb_child_dob_required=$_child_dob_required
         gb_guard_expected_ages=$guard_expected_ages|default:false
+        gb_gender_options=$guest_gender_options|default:[]
+        gb_child_gender_options=$guest_child_gender_options|default:[]
         gb_extra_class=$_extra_class}
 {/foreach}

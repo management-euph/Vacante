@@ -3,8 +3,11 @@ declare(strict_types=1);
 /**
  * Sphinx Booking Controller — Package Add to Cart Mode
  *
- * Optionally customizes the package (adds optional services),
- * then creates booking records and adds to CS-Cart cart.
+ * Verifies the package, customizes it with the optional services chosen
+ * (when any), then creates the booking record and adds it to the cart.
+ * The record keeps what packages/book needs (PackageBookRequest): the
+ * pre-commission selling price and its currency, the chosen services, the
+ * offer's rooms, and each guest's birth date and gender.
  *
  * Flow: verify → customize (optional) → add to cart → book at order placement
  *
@@ -25,7 +28,6 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         return $rateLimited;
     }
 
-    $bookingData = TypeCoerce::toStringMap($_REQUEST);
     $offer_id = RequestCoerce::string($_REQUEST, 'offer_id');
     $hotel_id = RequestCoerce::string($_REQUEST, 'hotel_id');
 
@@ -39,10 +41,30 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         return $duplicate;
     }
 
-    // Optional: customize package with selected services
-    $selected_services = RequestCoerce::list($_REQUEST, 'services');
+    // The package as the provider prices it NOW (the booking form's same
+    // verify): price, currency, hotel and dates never come from the form.
+    try {
+        $verified = TypeCoerce::toStringMap(Container::getApi()->verifyPackageOffer($offer_id));
+    } catch (\Throwable $e) {
+        fn_log_event('general', 'runtime', ['message' => 'Sphinx package add_to_cart verify failed: ' . $e->getMessage()]);
+        $verified = [];
+    }
+
+    // Then the optional services chosen, customized onto the verified offer
+    // (the doc's order). Only the offer's own optional services count: a
+    // mandatory one is in the price already, an unknown code is the form's.
+    $optionalCodes = [];
+    foreach (TypeCoerce::toRowList($verified['additional_services'] ?? []) as $service) {
+        if (TypeCoerce::toString($service['type'] ?? '') !== 'mandatory') {
+            $optionalCodes[] = TypeCoerce::toString($service['code'] ?? '');
+        }
+    }
+    $selected_services = array_values(array_intersect(
+        array_map(static fn ($code): string => TypeCoerce::toString($code), RequestCoerce::list($_REQUEST, 'services')),
+        $optionalCodes,
+    ));
     $customized = null;
-    if (!empty($selected_services)) {
+    if ($selected_services !== [] && $verified !== []) {
         try {
             $customized = Container::getApi()->customizePackage([
                 'offer_id' => $offer_id,
@@ -53,14 +75,6 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         }
     }
 
-    // The package as the provider prices it NOW (the booking form's same
-    // verify): price, currency, hotel and dates never come from the form.
-    try {
-        $verified = TypeCoerce::toStringMap(Container::getApi()->verifyPackageOffer($offer_id));
-    } catch (\Throwable $e) {
-        fn_log_event('general', 'runtime', ['message' => 'Sphinx package add_to_cart verify failed: ' . $e->getMessage()]);
-        $verified = [];
-    }
     $verifiedPricing = TypeCoerce::toStringMap($verified['pricing'] ?? null);
     $verifiedHotel = TypeCoerce::toStringMap($verified['hotel'] ?? null);
     $customizedMap = TypeCoerce::toStringMap($customized);
@@ -82,9 +96,13 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
     // Pricing: the provider's figure (customized with the chosen services,
     // else verified), commission applied exactly once. The form's
     // total_price already carried commission, which used to be added again.
-    $total_price   = TypeCoerce::toFloat($customizedPricing['selling_price'] ?? $verifiedPricing['selling_price'] ?? 0);
-    $basePrice     = TypeCoerce::toFloat($customizedPricing['supplier_price'] ?? $verifiedPricing['supplier_price'] ?? $total_price);
-    $priceCurrency = TypeCoerce::toString($customizedPricing['currency'] ?? $verifiedPricing['currency'] ?? ConfigProvider::getDefaultCurrency());
+    // base_price is that pre-commission selling price, as for hotels: the
+    // checkout re-check reads and corrects it, and packages/book must send
+    // it (it was supplier_price, which Sphinx does not take).
+    $bookPricing   = $customizedPricing !== [] ? $customizedPricing : $verifiedPricing;
+    $total_price   = TypeCoerce::toFloat($bookPricing['selling_price'] ?? 0);
+    $basePrice     = $total_price;
+    $priceCurrency = TypeCoerce::toString($bookPricing['currency'] ?? ConfigProvider::getDefaultCurrency());
     // The raw price for the checkout re-check (PreOrderPriceVerifier).
     $cartService->rememberVerifiedPrice($offer_id, $total_price);
     $total_price   = $cartService->applyCommission($total_price);
@@ -113,6 +131,23 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.package_booking_form?' . http_build_query([
             'offer_id' => $offer_id,
         ])];
+    }
+    // packages/book wants each traveller's gender (m/f) and each child's
+    // real birth date (Sphinx checks it against the priced age); the form
+    // asks both, and a request without them is refused here, not at Sphinx
+    // after payment.
+    foreach (TypeCoerce::toRowList(array_values(TypeCoerce::toStringMap($parsed_guests['guests_data'] ?? []))) as $guest) {
+        $missingGender = !in_array(TypeCoerce::toString($guest['gender'] ?? ''), ['m', 'f'], true);
+        $missingChildBirth = TypeCoerce::toString($guest['type'] ?? '') === 'child' && TypeCoerce::toString($guest['birthday'] ?? '') === '';
+        if ($missingGender || $missingChildBirth) {
+            fn_set_notification('E', __('error'), __('sphinx_holidays.traveller_details_required', [
+                '[default]' => "Please choose each traveller's gender, and fill in each child's date of birth.",
+            ]));
+
+            return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.package_booking_form?' . http_build_query([
+                'offer_id' => $offer_id,
+            ])];
+        }
     }
 
     // Price guard: the package offer is priced for the ages the search ran
@@ -152,26 +187,32 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         }
     }
 
+    // The offer's own rooms, as Sphinx verified them: their codes are what
+    // packages/book names (room_code), never the form's copy.
     $rooms_data = [];
-    $roomsJsonStr = RequestCoerce::string($_REQUEST, 'rooms_json');
-    if (!empty($roomsJsonStr)) {
-        $roomsJsonRaw = json_decode($roomsJsonStr, true);
-        $rooms_data = is_array($roomsJsonRaw) ? TypeCoerce::toRowList($roomsJsonRaw) : [];
+    foreach (TypeCoerce::toRowList($verifiedHotel['rooms'] ?? []) as $room) {
+        $code = TypeCoerce::toString($room['code'] ?? '');
+        $childAges = TypeCoerce::toIntList($room['children_ages'] ?? []);
+        $rooms_data[] = $room + [
+            'room_id' => $code,
+            'room_code' => $code,
+            'room_name' => TypeCoerce::toString($room['name'] ?? ''),
+            'children' => count($childAges),
+        ];
     }
-    if (empty($rooms_data)) {
+    if ($rooms_data === []) {
         $rooms_data = [['room_id' => '', 'room_name' => $roomName, 'adults' => $adults, 'children' => $children]];
     }
 
-    $service_codes = [];
-    if (!empty($selected_services)) {
-        $service_codes = $selected_services;
-    }
+    $service_codes = $selected_services;
 
-    // Build + persist booking record
+    // Build + persist booking record. Its offer snapshot is Sphinx's answer
+    // (customized, else verified) — it was the form's request when nothing
+    // was customized.
     $booking_record = $cartService->buildBaseBookingRecord(
         $product_id, $hotel_id, $offer_id, $hotelName,
         $parsed_guests, $contact, $basePrice, $total_price, $priceCurrency,
-        is_array($customized) ? TypeCoerce::toStringMap($customized) : $bookingData
+        $customizedMap !== [] ? $customizedMap : $verified
     );
     $firstRoom = TypeCoerce::toStringMap($rooms_data[0]);
     $booking_record += [
@@ -189,10 +230,9 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
     ];
 
     // Durable pricing breakdown for the admin booking view (same capture as
-    // the hotel flow; api_response gets overwritten at confirmation).
-    if ($customizedPricing !== []) {
-        $booking_record['pricing_json'] = json_encode($customizedPricing, JSON_UNESCAPED_UNICODE);
-    }
+    // the hotel flow; api_response gets overwritten at confirmation), with
+    // the services chosen: what packages/book sends, on a retry too.
+    $booking_record['pricing_json'] = json_encode($bookPricing + ['chosen_services' => $service_codes], JSON_UNESCAPED_UNICODE);
 
     $booking_id = $cartService->upsertBooking(
         $booking_record, $hotel_id, $check_in, $check_out, TypeCoerce::toString($parsed_guests['holder_name'])

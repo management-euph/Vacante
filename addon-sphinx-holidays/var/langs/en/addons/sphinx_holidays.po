@@ -1539,3 +1539,7 @@ msgstr "Sphinx did not make booking #[booking_id] ([what]) of order #[order_id]:
 msgctxt "Languages::sphinx_holidays.book_alert_pending"
 msgid "Sphinx gave no clear answer for booking #[booking_id] ([what]) of order #[order_id]: [reason]. It may exist at Sphinx: it stays pending, and the status sync looks it up by the order number. Do not book it again before checking it in Sphinx."
 msgstr "Sphinx gave no clear answer for booking #[booking_id] ([what]) of order #[order_id]: [reason]. It may exist at Sphinx: it stays pending, and the status sync looks it up by the order number. Do not book it again before checking it in Sphinx."
+
+msgctxt "Languages::sphinx_holidays.traveller_details_required"
+msgid "Please choose each traveller's gender, and fill in each child's date of birth."
+msgstr "Please choose each traveller's gender, and fill in each child's date of birth."
