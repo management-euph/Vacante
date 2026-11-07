@@ -68,6 +68,37 @@ final class CircuitQuoteStoreTest extends TestCase
         self::assertNull($store->get('', 7, 1000));
     }
 
+    /**
+     * The rooms on the circuit's page keep each offer: its price and rooms
+     * in this session, what the booking form shows in the cache table. The
+     * cache copy is only read for an offer this session keeps.
+     */
+    public function testThePagesOffersAreKeptForThisVisitorOnly(): void
+    {
+        $store = CircuitRoomOffersTest::store();
+        $store->rememberQuotes([CircuitRoomOffersTest::quote('offer-9', 927.0)], 17, '2027-07-05', 1000);
+
+        $kept = $store->get('offer-9', 17, 1000);
+        self::assertNotNull($kept);
+        self::assertSame([927.0, 'EUR', '2027-07-05', 'Mic Dejun', 'București'], [$kept['selling_price'], $kept['currency'], $kept['departure_date'], $kept['meal_type'], $kept['departure_name']]);
+        self::assertSame('Creta clasică', $store->quote('offer-9', 17, 1000)['title'] ?? null);
+
+        $_SESSION = [];
+        self::assertNull(CircuitRoomOffersTest::store()->quote('offer-9', 17, 1000), "another visitor's session keeps no such offer");
+        self::assertNull($store->quote('offer-9', 18, 1000), 'nor another circuit');
+    }
+
+    /** The booking form checks the offer against its date: the date it was quoted for, even when Sphinx does not repeat it. */
+    public function testAKeptOfferCarriesTheDateItWasQuotedFor(): void
+    {
+        $quote = CircuitRoomOffersTest::quote('offer-10', 927.0);
+        unset($quote['departure_date']);
+        $store = CircuitRoomOffersTest::store();
+        $store->rememberQuotes([$quote], 17, '2027-07-12', 1000);
+
+        self::assertSame('2027-07-12', $store->quote('offer-10', 17, 1000)['departure_date'] ?? null);
+    }
+
     public function testNothingIsStoredWithoutAPrice(): void
     {
         $store = new CircuitQuoteStore();

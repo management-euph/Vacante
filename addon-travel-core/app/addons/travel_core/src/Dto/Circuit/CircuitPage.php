@@ -18,6 +18,8 @@ final readonly class CircuitPage
      * @param list<array{id: string, name: string}> $departures the cities it leaves from, in the supplier's order
      * @param int $durationDays days, the supplier's own (0 when unknown)
      * @param int $durationNights nights, the supplier's own (0 when unknown)
+     * @param int $hotelStarsMin the fewest stars of its hotels on the route (0 when unknown)
+     * @param int $hotelStarsMax the most stars of its hotels on the route (0 when unknown)
      */
     public function __construct(
         public string $providerName,
@@ -26,7 +28,20 @@ final readonly class CircuitPage
         public array $departures,
         public int $durationDays,
         public int $durationNights,
+        public int $hotelStarsMin = 0,
+        public int $hotelStarsMax = 0,
     ) {
+    }
+
+    /**
+     * The stars of its hotels, for "Hoteluri de 4★ pe traseu" (board 16.3);
+     * null when the supplier does not say.
+     *
+     * @return array{min: int, max: int}|null
+     */
+    public function hotelStars(): ?array
+    {
+        return $this->hotelStarsMin > 0 ? ['min' => $this->hotelStarsMin, 'max' => max($this->hotelStarsMin, $this->hotelStarsMax)] : null;
     }
 
     /**

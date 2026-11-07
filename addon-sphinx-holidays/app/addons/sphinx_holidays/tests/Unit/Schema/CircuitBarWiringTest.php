@@ -36,6 +36,43 @@ final class CircuitBarWiringTest extends TestCase
         self::assertStringContainsString("header('Content-Type: application/json; charset=utf-8');", $dates);
     }
 
+    /** The rooms of a departure (board 16.3): only for the store's active circuits, a date to come and rooms the picker allows. */
+    public function testTheRoomsEndpointOnlyRelaysWhatTheBarMayAsk(): void
+    {
+        $quote = self::read('controllers/frontend/sphinx_booking/circuit_quote.php');
+
+        self::assertStringContainsString("FROM ?:sphinx_circuits WHERE circuit_id = ?i AND sync_status = 'active'", $quote);
+        self::assertStringContainsString("&& \$departureDate >= date('Y-m-d')", $quote);
+        self::assertStringContainsString("CircuitRoomOffers::validOccupancy(\$occupancy, ProviderRoomLimit::maxRooms('sphinx'))", $quote);
+        self::assertStringContainsString('->forDeparture($circuitId, $departureId, $departureDate, $occupancy, time())', $quote);
+        self::assertStringContainsString("header('Content-Type: application/json; charset=utf-8');", $quote);
+        self::assertStringContainsString("    'circuit_quote',\n", self::read('controllers/frontend/sphinx_booking.php'));
+    }
+
+    /** "Rezervă" on a room: the form shows that offer as quoted on the page, or the same room in a new quote, never another. */
+    public function testTheBookingFormOpensOnTheRoomChosenOnThePage(): void
+    {
+        $form = self::read('controllers/frontend/sphinx_booking/circuit_booking_form.php');
+
+        self::assertStringContainsString('$quote = $chosen_offer !== \'\' ? $quoteStore->quote($chosen_offer, $circuit_id, time()) : null;', $form);
+        self::assertStringContainsString('$quotedOccupancy = CircuitRoomOffers::occupancyOf($quote);', $form);
+        self::assertStringContainsString('$quote = $chosen_key !== \'\' ? CircuitRoomOffers::withKey($quotes, $chosen_key) : $quotes[0];', $form);
+        // A fresh quote is kept as before; the page's offer is kept already.
+        self::assertStringContainsString("if (\$fresh) {\n        \$quoteStore->remember(", $form);
+    }
+
+    /** details_json reaches fresh installs, upgrades and the installs SchemaMigrator converges. */
+    public function testTheCircuitDetailsColumnReachesEveryInstall(): void
+    {
+        $xml = self::read('addon.xml');
+        $definition = "JSON DEFAULT NULL COMMENT 'Included, not included, things to know, group size and age (static API)'";
+
+        self::assertStringContainsString("`details_json`      {$definition},", $xml, 'the CREATE TABLE');
+        self::assertStringContainsString("ALTER TABLE `?:sphinx_circuits`\n                ADD COLUMN `details_json` JSON DEFAULT NULL", $xml, 'the upgrade item');
+        self::assertStringContainsString("'details_json' => \"ADD COLUMN `details_json` {$definition} AFTER `itinerary_json`\"", self::read('src/Install/SchemaMigrator.php'));
+        self::assertStringContainsString("'details_json' => self::details(\$raw),", self::read('src/Services/CircuitSyncService.php'));
+    }
+
     public function testTheQuoteStepQuotesEachRoom(): void
     {
         $form = self::read('controllers/frontend/sphinx_booking/circuit_booking_form.php');

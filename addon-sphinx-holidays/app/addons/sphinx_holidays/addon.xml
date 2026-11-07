@@ -369,6 +369,7 @@
                 `departure_names`   VARCHAR(1000) DEFAULT NULL,
                 `image_url`         VARCHAR(500) DEFAULT NULL,
                 `itinerary_json`    JSON DEFAULT NULL COMMENT 'Full itinerary from API',
+                `details_json`      JSON DEFAULT NULL COMMENT 'Included, not included, things to know, group size and age (static API)',
                 `tags_json`         JSON DEFAULT NULL,
                 `min_price`         DECIMAL(10,2) DEFAULT NULL,
                 `currency`          VARCHAR(3) DEFAULT 'EUR',
@@ -728,6 +729,15 @@
                 COMMENT 'GIATA id (external_ids): the same hotel at another supplier'
                 AFTER `name`,
                 ADD KEY `idx_giata` (`giata_id`);
+        </item>
+
+        <!-- What a circuit's page shows besides its itinerary (board 16.3):
+             included, not included, things to know, group size and age. -->
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_circuits`
+                ADD COLUMN `details_json` JSON DEFAULT NULL
+                COMMENT 'Included, not included, things to know, group size and age (static API)'
+                AFTER `itinerary_json`;
         </item>
 
         <!-- Uninstall SQL fallback: guarantees teardown of Sphinx-owned data

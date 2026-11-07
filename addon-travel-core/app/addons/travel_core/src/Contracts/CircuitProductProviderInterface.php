@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Contracts;
 
+use Tygh\Addons\TravelCore\Dto\Circuit\CircuitDetails;
 use Tygh\Addons\TravelCore\Dto\Circuit\CircuitPage;
 
 /**
@@ -28,4 +29,16 @@ interface CircuitProductProviderInterface
      * @return CircuitPage|null null when this provider does not own the product
      */
     public function resolveCircuit(int $productId, string $productCode): ?CircuitPage;
+
+    /**
+     * What the circuit's page shows under its rooms (board 16.3): its
+     * program day by day, what the price includes and does not, the things
+     * to know.
+     *
+     * Must return null (not throw) when the circuit is not one of this
+     * provider's, or no longer sold.
+     *
+     * @param string $circuitId the provider's circuit id (CircuitPage::$circuitId)
+     */
+    public function circuitDetails(string $circuitId): ?CircuitDetails;
 }

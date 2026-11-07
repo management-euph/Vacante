@@ -20,6 +20,7 @@ use Tygh\Addons\TravelCore\Services\BookingDisplayService;
 use Tygh\Addons\TravelCore\Services\RequestExtraGuard;
 use Tygh\Addons\TravelCore\Services\TravelCoreConfig;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
+use Tygh\Addons\TravelCore\ViewModels\CircuitDetailsViewFactory;
 use Tygh\Registry;
 
 if (!defined('BOOTSTRAP')) {
@@ -163,8 +164,10 @@ function fn_travel_core_dispatch_before_display(): void
         // A product no supplier claims as a hotel may be a circuit (board
         // 16.3): the same mount, where the engine renders the circuit bar
         // (travel_booking.booking_config answers kind "circuit").
-        $isCircuit = $hotelSeoData === null && $productCode !== ''
-            && TravelProviderRegistry::resolveCircuit($productId, $productCode) !== null;
+        $circuit = $hotelSeoData === null && $productCode !== ''
+            ? TravelProviderRegistry::resolveCircuit($productId, $productCode)
+            : null;
+        $isCircuit = $circuit !== null;
         // Shared display switch (travel_core setting, all providers): when off,
         // no mount div and no React bundles — SEO data below stays unaffected.
         if ($productCode !== '' && ($hotelSeoData !== null || $isCircuit) && TravelCoreConfig::isShowBookingForm()) {
@@ -192,6 +195,23 @@ function fn_travel_core_dispatch_before_display(): void
                     $baseUrl . '/js/addons/travel_core/react-vendor.js?v=' . $cacheVer,
                     $baseUrl . '/js/addons/travel_core/react19-bundle.js?v=' . $cacheVer,
                 ]);
+            }
+        }
+
+        // A circuit's program, what it includes and the things to know, under
+        // its rooms (board 16.3): page content, shown with or without the
+        // booking form.
+        if ($circuit !== null) {
+            try {
+                $circuitDetails = TravelProviderRegistry::circuitDetails($circuit);
+            } catch (\Throwable $e) {
+                // Never the page's undoing: it shows without the section.
+                $circuitDetails = null;
+                fn_log_event('general', 'runtime', ['message' => 'Circuit details failed: ' . $e->getMessage()]);
+            }
+            $view = \Tygh\Tygh::$app['view'];
+            if ($circuitDetails !== null && is_object($view) && method_exists($view, 'assign')) {
+                $view->assign('travel_circuit', (new CircuitDetailsViewFactory())->view($circuitDetails));
             }
         }
 

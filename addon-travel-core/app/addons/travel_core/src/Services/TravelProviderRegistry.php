@@ -11,6 +11,7 @@ use Tygh\Addons\TravelCore\Contracts\HotelAvailabilitySourceInterface;
 use Tygh\Addons\TravelCore\Contracts\HotelProductProviderInterface;
 use Tygh\Addons\TravelCore\Contracts\IndicativePriceSourceInterface;
 use Tygh\Addons\TravelCore\Contracts\ProviderNormalizerInterface;
+use Tygh\Addons\TravelCore\Dto\Circuit\CircuitDetails;
 use Tygh\Addons\TravelCore\Dto\Circuit\CircuitPage;
 use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
 
@@ -188,6 +189,20 @@ class TravelProviderRegistry
         }
 
         return null;
+    }
+
+    /**
+     * What a circuit's page shows under its rooms (board 16.3), from the
+     * provider that sells it; null when it knows none of it.
+     *
+     * @param CircuitPage $circuit the circuit (resolveCircuit())
+     */
+    public static function circuitDetails(CircuitPage $circuit): ?CircuitDetails
+    {
+        $provider = isset(self::$providers[$circuit->providerName]) ? (self::$circuits[$circuit->providerName] ?? null) : null;
+        $details = $provider?->circuitDetails($circuit->circuitId);
+
+        return $details !== null && !$details->isEmpty() ? $details : null;
     }
 
     /**
