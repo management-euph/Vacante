@@ -179,11 +179,14 @@ class BookingRetryService implements BookingRetryServiceInterface
      * Dispatch booking to the correct API method based on type.
      *
      * Uses the SAME payload the order-placement hook submits
-     * (BookingPayloadFactory) — the previous version built an "occupancy"
-     * via fn_sphinx_holidays_build_*_occupancy helpers that were never
-     * defined anywhere, so every retry fataled into the caller's catch
-     * block and re-marked the booking failed.
+     * (PackageBookRequest, CircuitBookRequest, else BookingPayloadFactory)
+     * — the previous version built an "occupancy" via
+     * fn_sphinx_holidays_build_*_occupancy helpers that were never defined
+     * anywhere, so every retry fataled into the caller's catch block and
+     * re-marked the booking failed.
      *
+     * @param string $type the booking type (hotel, package, circuit, experience)
+     * @param string $offerId the booked offer
      * @param array<string, mixed> $booking
      * @param array<string, mixed> $guestsData
      * @return array<string, mixed>|null the answer; null when none came (see SphinxApi::lastError())
@@ -204,15 +207,22 @@ class BookingRetryService implements BookingRetryServiceInterface
             );
         }
 
-        // A package sends the documented body, priced as Sphinx quotes it now
-        // (PackageBookRequest); the others keep their live bookings' body.
-        $payload = $type === 'package'
-            ? PackageBookRequest::build(
+        // A package or a circuit sends the documented body, priced as Sphinx
+        // gives the offer now (PackageBookRequest, CircuitBookRequest); hotels
+        // and experiences keep their live bookings' body.
+        $payload = match ($type) {
+            'package' => PackageBookRequest::build(
                 $booking,
                 PackageBookRequest::quote($this->api, $offerId, PackageBookRequest::chosenServices($booking)),
                 $orderId,
-            )
-            : BookingPayloadFactory::build($offerId, $guestsData, $contact, $orderId);
+            ),
+            'circuit' => CircuitBookRequest::build(
+                $booking,
+                CircuitBookRequest::quote($this->api, $offerId, CircuitBookRequest::chosenServices($booking)),
+                $orderId,
+            ),
+            default => BookingPayloadFactory::build($offerId, $guestsData, $contact, $orderId),
+        };
 
         return match ($type) {
             'circuit' => $this->api->bookCircuit($payload),

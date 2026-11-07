@@ -292,4 +292,50 @@ final class BookingRetryServiceTest extends TestCase
         self::assertTrue($result['success']);
         self::assertSame('PK-85', $result['booking_ref']);
     }
+
+    /** A circuit retry sends the documented circuits/book body: the offer's own price, never a new quote. */
+    public function testACircuitRetrySendsTheDocumentedBody(): void
+    {
+        $row = [
+            'booking_id' => 7,
+            'status' => TravelConstants::STATUS_FAILED,
+            'offer_id' => 'CIR-7',
+            'room_type' => 'circuit',
+            'order_id' => 85,
+            'check_in' => '2027-07-05',
+            'base_price' => 927.0,
+            'total_price' => 980.0,
+            'currency' => 'EUR',
+            'pricing_json' => json_encode(['selling_price' => 927.0, 'currency' => 'EUR', 'chosen_services' => []]),
+            'rooms_data' => json_encode([['room_id' => 'standard-double', 'room_name' => 'Standard - Double', 'adults' => 1]]),
+            'guests_data' => json_encode([
+                'room1_adult_1' => ['first_name' => 'Ana', 'last_name' => 'Pop', 'type' => 'adult', 'birthday' => '1990-03-04', 'room' => 1, 'gender' => 'f', 'is_holder' => 1],
+            ]),
+        ];
+        $repo = $this->createMock(SphinxBookingRepository::class);
+        $api = $this->createMock(SphinxApi::class);
+        $repo->method('findById')->willReturn($row);
+        $repo->method('findByOrderId')->willReturn([$row]);
+        $repo->method('update')->willReturn(true);
+        $api->method('getOrders')->willReturn(['results' => []]);
+        $api->expects(self::never())->method('getCircuitQuote');
+        $api->expects(self::never())->method('customizeCircuit');
+        $api->expects(self::never())->method('bookHotel');
+        $api->expects(self::once())->method('bookCircuit')
+            ->with([
+                'offer_id' => 'CIR-7',
+                'reference_code' => '85',
+                'price' => 927.0,
+                'currency' => 'EUR',
+                'occupancy' => [['room_code' => 'standard-double', 'guests' => [
+                    ['first_name' => 'Ana', 'last_name' => 'Pop', 'birth_date' => '1990-03-04', 'gender' => 'f'],
+                ]]],
+            ])
+            ->willReturn(['booking_confirmation_number' => 'CR-85', 'status' => 'confirmed']);
+
+        $result = (new BookingRetryService($api, $repo))->retry(7);
+
+        self::assertTrue($result['success']);
+        self::assertSame('CR-85', $result['booking_ref']);
+    }
 }

@@ -68,6 +68,8 @@ try {
 
     // Apply commission
     $quotePricing = TypeCoerce::toStringMap($quote['pricing'] ?? null);
+    // The quote's rooms: their codes are what circuits/book names (room_code).
+    $rooms = TypeCoerce::toRowList($quote['rooms'] ?? []);
     $sellingPrice = TypeCoerce::toFloat($quotePricing['selling_price'] ?? 0);
     $basePrice = $sellingPrice;
     $sellingPrice = Container::getCartService()->applyCommission($sellingPrice);
@@ -82,10 +84,11 @@ try {
         // What the order shows: the meal plan and where the trip starts.
         TypeCoerce::toString($quote['meal_type_name'] ?? ''),
         TypeCoerce::toString($quoteDeparture['name'] ?? ''),
+        // What circuits/book sends for this offer: its price and its rooms.
+        $quotePricing,
+        $rooms,
     );
 
-    // Parse rooms from quote
-    $rooms = TypeCoerce::toRowList($quote['rooms'] ?? []);
 
     // Parse additional services (optional/mandatory)
     $additionalServices = TypeCoerce::toList($quote['additional_services'] ?? []);
@@ -125,6 +128,11 @@ try {
     ]);
 
     $view->assign('sphinx_provider', 'sphinx');
+    // circuits/book wants every traveller's gender (m or f), children too.
+    $view->assign('sphinx_gender_options', [
+        'm' => TypeCoerce::toString(__('travel_core.gender_male')),
+        'f' => TypeCoerce::toString(__('travel_core.gender_female')),
+    ]);
 
 } catch (\Throwable $e) {
     fn_log_event('general', 'runtime', [

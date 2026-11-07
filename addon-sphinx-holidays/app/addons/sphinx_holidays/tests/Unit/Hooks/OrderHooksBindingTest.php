@@ -349,13 +349,17 @@ namespace Tygh\Addons\SphinxHolidays\Tests\Unit\Hooks {
         public function testPlaceOrderPostSendsTheRowsTravellersToTheRowsEndpoint(): void
         {
             self::$rows[10]['room_type'] = 'circuit';
-            $line = self::line(10, 'offer-luxury', 1500.0, ['booking_type' => 'hotel', 'guests_data' => '{"holder":"Forged Name"}']);
+            self::$rows[10]['guests_data'] = '{"room1_adult_1":{"first_name":"Ana","last_name":"Pop","type":"adult","gender":"f"}}';
+            $line = self::line(10, 'offer-luxury', 1500.0, ['booking_type' => 'hotel', 'guests_data' => '{"room1_adult_1":{"first_name":"Forged","last_name":"Name"}}']);
 
             OrderHooks::placeOrderPost(501, ['products' => [7 => $line]]);
 
             self::assertContains(['bookCircuit', 'offer-luxury'], self::$log);
             self::assertNotContains(['bookHotel', 'offer-luxury'], self::$log);
-            self::assertSame(['holder' => 'Ana Pop'], self::$payloads[0]['guests'] ?? null);
+            // A circuit's travellers travel in the documented occupancy.
+            $guests = self::$payloads[0]['occupancy'][0]['guests'] ?? null;
+            self::assertIsArray($guests);
+            self::assertSame(['Ana Pop'], array_map(static fn (array $guest): string => $guest['first_name'] . ' ' . $guest['last_name'], $guests));
         }
 
         /**
