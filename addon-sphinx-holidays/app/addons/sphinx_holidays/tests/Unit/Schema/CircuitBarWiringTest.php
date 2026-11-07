@@ -96,6 +96,34 @@ final class CircuitBarWiringTest extends TestCase
         self::assertStringContainsString(": TypeCoerce::toStringMap(\$verified['payment_terms'] ?? null);", self::read('controllers/frontend/sphinx_booking/package_add_to_cart.php'));
     }
 
+    /**
+     * Paying a deposit, as for a hotel: a package's or circuit's booking form
+     * offers the choice where the store offers deposits and the offer's
+     * terms allow one, and its add-to-cart charges the deposit those terms
+     * give (CartService::chosenDeposit(), the hotel's too). Both paid in
+     * full before, whatever the terms.
+     */
+    public function testATripMayBePaidWithADeposit(): void
+    {
+        $chosen = '$deposit_plan = CartService::chosenDeposit(TypeCoerce::toStringMap($_REQUEST), $cancellation_fees_raw, $payment_terms_raw);';
+        foreach (['circuit' => 'circuit_booking_form', 'package' => 'package_booking_form'] as $kind => $mode) {
+            $template = (string) file_get_contents(dirname(__DIR__, 6) . "/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/{$mode}.tpl");
+            self::assertStringContainsString('{if $sphinx_trip_terms.payment_split && fn_travel_core_deposit_offered("sphinx_holidays")}', $template, $kind);
+            self::assertStringContainsString(
+                "{include file=\"addons/travel_core/components/booking_payment_split.tpl\" ps=\$sphinx_trip_terms.payment_split ps_form=\"sphinx-{$kind}-booking-form\"}",
+                $template,
+                $kind,
+            );
+            self::assertStringContainsString("id=\"sphinx-{$kind}-booking-form\"", $template, $kind . ': the form the radios post with');
+
+            $cart = self::read("controllers/frontend/sphinx_booking/{$kind}_add_to_cart.php");
+            self::assertStringContainsString($chosen, $cart, $kind);
+            self::assertStringContainsString("        null,\n        \$deposit_plan,\n    );", $cart, $kind);
+            self::assertLessThan(strpos($cart, $chosen), strpos($cart, '$cancellation_fees_raw = $cancellation_fees_raw !== []'), $kind . ': the terms of what is booked');
+        }
+        self::assertStringContainsString($chosen, self::read('controllers/frontend/sphinx_booking/add_to_cart.php'), 'a hotel the same way');
+    }
+
     public function testTheQuoteStepQuotesEachRoom(): void
     {
         $form = self::read('controllers/frontend/sphinx_booking/circuit_booking_form.php');

@@ -127,8 +127,9 @@ final class BalanceReminder
             'body' => "The balance of a booking paid with a deposit is overdue.\n\n"
                 . "Order: #{$orderId}\n"
                 . 'Guest: ' . $guest . ' <' . TypeCoerce::toString($row['email'] ?? '') . ">\n"
-                . 'Hotel: ' . TypeCoerce::toString($row['hotel_name'] ?? '')
-                . ' (check-in ' . TypeCoerce::toString($row['check_in'] ?? '') . ")\n"
+                // A hotel, a package or a circuit (its name and first day).
+                . 'Booking: ' . TypeCoerce::toString($row['hotel_name'] ?? '')
+                . ' (from ' . TypeCoerce::toString($row['check_in'] ?? '') . ")\n"
                 . 'Total: ' . $this->amount($row['full_amount'] ?? 0)
                 . ' · Deposit paid: ' . $this->amount($row['deposit_amount'] ?? 0)
                 . ' · Balance: ' . $this->amount($row['amount'] ?? 0)

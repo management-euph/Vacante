@@ -83,11 +83,37 @@ final class SphinxBookingSidebarTermsTest extends TestCase
         self::assertStringNotContainsString('185', $json);
     }
 
+    /**
+     * Where the offer's terms ask part now and the rest later, its booking
+     * form offers "Pay a deposit" (booking_payment_split.tpl), as a hotel
+     * page does: the deposit and the balance at the store's price, the
+     * balance due by the last date. No split to offer when all is due now
+     * or nothing is.
+     */
+    public function testATripsPaymentTermsGiveItsDepositSplit(): void
+    {
+        $money = new MoneyFormatter(['symbol' => '€', 'after' => 'Y', 'decimals' => 0, 'decimals_separator' => ',', 'thousands_separator' => '.']);
+        $split = static fn (array $rules): array => SphinxBookingSidebarBuilder::tripTerms(
+            null,
+            ['is_loaded' => true, 'rules' => $rules],
+            1100.0,
+            $money,
+            '2027-05-10',
+            '%d.%m.%Y',
+        )['payment_split'];
+
+        $deposit = $split([['until' => '2027-05-10', 'value' => 185.4], ['until' => '2027-07-01', 'value' => 927]]);
+        self::assertSame(['220 €', '880 €'], [$deposit['deposit'] ?? null, $deposit['balance'] ?? null], '20 % now, never 185,4 (the supplier scale)');
+        self::assertStringContainsString('2027', $deposit['balance_due'] ?? '');
+        self::assertSame([], $split([['until' => '2027-05-10', 'value' => 927]]), 'all due on booking');
+        self::assertSame([], $split([['until' => '2027-05-20', 'value' => 185.4], ['until' => '2027-07-01', 'value' => 927]]), 'nothing due on booking');
+    }
+
     public function testATripWithoutAPriceKeepsOnlyItsLines(): void
     {
         $terms = SphinxBookingSidebarBuilder::tripTerms(['text' => 'Nerambursabil'], null, 0.0, new MoneyFormatter(['symbol' => '€']), '2027-05-10', '%d.%m.%Y');
 
-        self::assertSame([[], [], ['Nerambursabil']], [$terms['cancel_steps'], $terms['payment_steps'], $terms['cancel_lines']]);
+        self::assertSame([[], [], [], ['Nerambursabil']], [$terms['cancel_steps'], $terms['payment_steps'], $terms['payment_split'], $terms['cancel_lines']]);
     }
 
     public function testProseOrLegacyTermsGiveNoTimeline(): void

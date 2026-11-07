@@ -278,7 +278,14 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         'terms_raw' => (string) json_encode(['payment' => $payment_terms_raw, 'cancellation' => $cancellation_fees_raw], JSON_UNESCAPED_UNICODE),
     ];
 
+    // Pay a deposit, as for hotels (travel_core DepositPolicy): the form
+    // posts only the choice; the deposit comes from the payment terms of
+    // what is booked (above), never from the form.
+    $deposit_plan = CartService::chosenDeposit(TypeCoerce::toStringMap($_REQUEST), $cancellation_fees_raw, $payment_terms_raw);
+
     return $cartService->addToCartAndRedirect(
         $product_id, $total_price, $priceCurrency, $product_extra,
-        TypeCoerce::toString(__('sphinx_holidays.circuit_added_to_cart', ['[default]' => 'Circuit booking added to cart.']))
+        TypeCoerce::toString(__('sphinx_holidays.circuit_added_to_cart', ['[default]' => 'Circuit booking added to cart.'])),
+        null,
+        $deposit_plan,
     );

@@ -229,7 +229,7 @@ final class CheckoutBookingBinderTest extends TestCase
         self::assertSame($mismatch, $binder->rejection(self::depositLine(0.01, '2099-01-01'), $row));
         self::assertSame($mismatch, $binder->rejection(self::depositLine(0.01), $row), 'the ratio');
         self::assertSame($mismatch, $binder->rejection(self::depositLine(0.3, '2026-10-20'), $row), 'the balance date');
-        self::assertSame($mismatch, $binder->rejection(self::depositLine(0.3), self::row()), 'a row without a payment schedule');
+        self::assertSame('deposit on a booking without a payment schedule', $binder->rejection(self::depositLine(0.3), self::row()), 'a row without a payment schedule');
         self::assertSame(
             $mismatch,
             $binder->rejection(self::depositLine(0.01), self::row(['payment_terms_json' => self::TERMS_30_70, 'order_id' => 77, 'status' => 'confirmed']), [77]),
@@ -255,14 +255,24 @@ final class CheckoutBookingBinderTest extends TestCase
             'deposits are not offered',
             $off->rejection(self::depositLine(0.3), ['order_id' => 77, 'status' => 'confirmed'] + $hotel, [77]),
         );
+        // Circuits and packages keep the terms of what they book on the row,
+        // as hotels do (circuit_add_to_cart, package_add_to_cart): the plan
+        // those terms give binds, another does not.
         foreach (['circuit', 'package'] as $type) {
             $row = ['room_type' => $type] + $hotel;
+            self::assertNull($this->binder($row)->rejection(self::depositLine(0.3), $row), $type);
             self::assertSame(
-                'deposit on a booking without a payment schedule',
-                $this->binder($row)->rejection(self::depositLine(0.3), $row),
+                "deposit does not match the booking's payment terms",
+                $this->binder($row)->rejection(self::depositLine(0.5), $row),
                 $type,
             );
         }
+        // An experience keeps no payment schedule: there is no deposit to give.
+        $experience = ['room_type' => 'experience'] + self::row();
+        self::assertSame(
+            'deposit on a booking without a payment schedule',
+            $this->binder($experience)->rejection(self::depositLine(0.3), $experience),
+        );
     }
 
     /**
