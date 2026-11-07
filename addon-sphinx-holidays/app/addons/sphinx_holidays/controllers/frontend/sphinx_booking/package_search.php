@@ -13,6 +13,7 @@ declare(strict_types=1);
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 use Tygh\Tygh;
+use Tygh\Addons\SphinxHolidays\Helpers\ResultPricing;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\CacheService;
@@ -128,15 +129,17 @@ try {
         }
     }
 
-    // Apply commission to pricing.selling_price
+    // Only the packages the store can sell: one whose hotel has no buyable
+    // product was refused at add-to-cart, once the guests were filled in.
     $cartService = Container::getCartService();
+    $allResults = $cartService->sellablePackages($allResults);
+
+    // The store's prices, as the hotel search shows them: the price and the
+    // struck "before" price both with commission, never the supplier's own
+    // figures (ResultPricing).
+    $withCommission = $cartService->applyCommission(...);
     foreach ($allResults as &$result) {
-        $resultPricing = TypeCoerce::toStringMap($result['pricing'] ?? null);
-        if (isset($resultPricing['selling_price'])) {
-            $resultPricing['original_selling_price'] = $resultPricing['selling_price'];
-            $resultPricing['selling_price'] = $cartService->applyCommission(TypeCoerce::toFloat($resultPricing['selling_price']));
-            $result['pricing'] = $resultPricing;
-        }
+        $result['pricing'] = ResultPricing::forShopper(TypeCoerce::toStringMap($result['pricing'] ?? null), $withCommission);
     }
     unset($result);
 
