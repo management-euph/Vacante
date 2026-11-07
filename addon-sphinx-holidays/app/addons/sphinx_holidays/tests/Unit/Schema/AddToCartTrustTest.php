@@ -66,9 +66,8 @@ final class AddToCartTrustTest extends TestCase
             '(new \Tygh\Addons\SphinxHolidays\Services\CircuitQuoteStore())->get($offer_id, $circuit_id, time())',
             self::read('controllers/frontend/sphinx_booking/circuit_add_to_cart.php'),
         );
-        self::assertStringContainsString(
-            '(new \Tygh\Addons\SphinxHolidays\Services\CircuitQuoteStore())->remember(',
-            self::read('controllers/frontend/sphinx_booking/circuit_booking_form.php'),
-        );
+        $form = self::read('controllers/frontend/sphinx_booking/circuit_booking_form.php');
+        self::assertStringContainsString('$quoteStore = new CircuitQuoteStore();', $form);
+        self::assertStringContainsString('$quoteStore->remember(', $form);
     }
 }

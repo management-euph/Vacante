@@ -178,6 +178,20 @@ class SphinxApi
     }
 
     /**
+     * The quotes for a circuit departure, or null when Sphinx gave no answer:
+     * a failure, which getCircuitQuote() cannot tell from "no rooms left".
+     *
+     * @param array<string, mixed> $params {circuit_id, departure_date, occupancy, departure_id?}
+     * @return list<array<string, mixed>>|null
+     */
+    public function findCircuitQuotes(array $params): ?array
+    {
+        $response = $this->client->post('/api/v1/circuits/quote', $params);
+
+        return $response === null ? null : $this->decoder->list($response);
+    }
+
+    /**
      * Customize a circuit (add optional services before booking).
      *
      * @param array<string, mixed> $data {offer_id, service_codes}

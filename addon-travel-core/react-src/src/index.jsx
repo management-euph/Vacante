@@ -268,7 +268,9 @@ function init() {
                         initialDate:        url.get('departure_date') || '',
                         roomsData:          url.get('rooms_data') || '',
                         datesDispatch:      serverConfig.datesDispatch,
+                        quoteDispatch:      serverConfig.quoteDispatch || '',
                         bookingDispatch:    serverConfig.bookingDispatch,
+                        hotelStars:         serverConfig.hotelStars || null,
                         maxRooms:           parseInt(serverConfig.maxRooms, 10) || 12,
                         design:             serverConfig.design || '',
                     };

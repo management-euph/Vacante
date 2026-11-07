@@ -5,20 +5,27 @@
  * circuit's fields: "Plecare din" (the cities the circuit leaves from),
  * "Data plecării" (its departures from that city, each with its price for
  * 2 adults, chosen in the chips under the bar), "Turiști" (the hotel bar's
- * own guest picker: rooms, adults, children's ages). The button opens the
- * provider's quote step with that choice.
+ * own guest picker: rooms, adults, children's ages). "Vezi prețul" shows the
+ * rooms of that departure for that group under the bar ("Camera pentru tot
+ * circuitul", CircuitRooms.jsx); from then on the rooms follow the bar (a
+ * date, a city, the guests once the picker closes) and the button,
+ * "Modifică", is the secondary one, so each room's "Rezervă" stands out.
  *
  * The dates come from config.datesDispatch (sphinx_booking.circuit_dates):
- * {departures: [{date, price, currency}], error}. The logic without React
- * lives in circuitDates.js.
+ * {departures: [{date, price, currency}], error}; the rooms from
+ * config.quoteDispatch (sphinx_booking.circuit_quote). The logic without
+ * React lives in circuitDates.js and circuitRooms.js.
  */
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import GuestPicker from './GuestPicker';
+import CircuitRooms from './CircuitRooms';
 import { CalendarIcon, GuestIcon, ChevronDown, ChevronLeft, ChevronRight, PinIcon } from './icons';
-import { parseDate, formatDateField, formatDateShort, getLocale, t } from './utils';
+import { parseDate, formatDateField, getLocale, t } from './utils';
 import { injectStyles } from './styles';
 import { groupByMonth, pickDate, monthIndexOf, missingAges, quoteUrl } from './circuitDates';
+import { chipDate, formatPrice, partySummary } from './circuitFormat';
+import { roomsKey, bookUrl } from './circuitRooms';
 
 const MONTH_KEYS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
 
@@ -28,18 +35,6 @@ function monthLabel(month) {
     const key = MONTH_KEYS[m - 1] || '';
     const name = t(key, key.charAt(0).toUpperCase() + key.slice(1));
     return `${getLocale() === 'ro' ? name.toLowerCase() : name} ${year}`;
-}
-
-/** "lun. 5 iul." / "Mon. 5 Jul." for a chip. */
-function chipDate(date) {
-    const text = formatDateShort(parseDate(date));
-    return getLocale() === 'ro' ? text.toLowerCase() : text;
-}
-
-/** "1.092 €" (ro) / "1,092 €" (en): whole units, as the board shows. */
-function formatPrice(price, currency) {
-    const amount = new Intl.NumberFormat(getLocale() === 'ro' ? 'ro-RO' : 'en-GB', { maximumFractionDigits: 0 }).format(price);
-    return `${amount} ${currency === 'EUR' ? '€' : currency}`;
 }
 
 /** The rooms to start with: the ones in the URL (a way back), else 2 adults. */
@@ -66,7 +61,9 @@ export default function CircuitBar({ config }) {
         circuitId = '',
         departures = [],
         datesDispatch = '',
+        quoteDispatch = '',
         bookingDispatch = '',
+        hotelStars = null,
         maxRooms = 12,
         maxAdults = 9,
         maxChildren = 4,
@@ -84,8 +81,16 @@ export default function CircuitBar({ config }) {
     const [showGuests, setShowGuests] = useState(false);
     const [ageErrors, setAgeErrors] = useState([]);
     const [message, setMessage] = useState('');
+    // The rooms of the departure: asked once by the button, then following the bar.
+    const [asked, setAsked] = useState(false);
+    const [askCount, setAskCount] = useState(0);
+    const [quote, setQuote] = useState({ status: 'idle', data: null, choice: null });
+    // The guests the rooms are for: the picker's, once it is closed.
+    const [settledRooms, setSettledRooms] = useState(rooms);
     const guestTriggerRef = useRef(null);
     const datesRef = useRef(null);
+    const roomsRef = useRef(null);
+    const scrollToRoomsRef = useRef(false);
 
     // The departures from the chosen city (asked again when it changes).
     useEffect(() => {
@@ -120,16 +125,56 @@ export default function CircuitBar({ config }) {
 
     const totalAdults = rooms.reduce((sum, room) => sum + (room.adults || 0), 0);
     const totalChildren = rooms.reduce((sum, room) => sum + (room.children || 0), 0);
-    const guestSummary = useMemo(() => {
-        const parts = [`${totalAdults} ${(totalAdults === 1 ? t('adult', 'adult') : t('adults', 'adults')).toLowerCase()}`];
-        if (totalChildren > 0) {
-            parts.push(`${totalChildren} ${(totalChildren === 1 ? t('child', 'child') : t('children', 'children')).toLowerCase()}`);
+    const guestSummary = partySummary(totalAdults, totalChildren, rooms.length);
+
+    // The picker's guests count once it closes (not at each + or −).
+    useEffect(() => { if (!showGuests) setSettledRooms(rooms); }, [showGuests, rooms]);
+    const settledKey = roomsKey(settledRooms);
+
+    // The rooms of the chosen departure for the settled guests: once asked,
+    // again whenever the departure or the guests change (the answer of an
+    // older choice is dropped).
+    const datesReady = dates.status === 'ready' && dates.list.some((d) => d.date === date);
+    useEffect(() => {
+        if (!asked) return undefined;
+        if (!datesReady) {
+            // The city's dates are loading (the rooms come with its date),
+            // failed, or it has none (the dates say so).
+            const waiting = { loading: 'loading', error: 'error' }[dates.status] || 'idle';
+            setQuote({ status: waiting, data: null, choice: null });
+            return undefined;
         }
-        if (rooms.length > 1) {
-            parts.push(`${rooms.length} ${t('rooms', 'rooms').toLowerCase()}`);
+        if (missingAges(settledRooms).length > 0) {
+            setQuote({ status: 'ages', data: null, choice: null });
+            return undefined;
         }
-        return parts.join(' · ');
-    }, [totalAdults, totalChildren, rooms.length]);
+        let cancelled = false;
+        const choice = { circuitId, departureId, date, rooms: settledRooms };
+        setQuote({ status: 'loading', data: null, choice });
+        fetch(quoteUrl(base, quoteDispatch, choice), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then((response) => (response.ok ? response.json() : null))
+            .then((answer) => {
+                if (cancelled) return;
+                if (!answer || answer.error || !Array.isArray(answer.blocks)) {
+                    setQuote({ status: 'error', data: null, choice });
+                    return;
+                }
+                setQuote({ status: 'ready', data: answer, choice });
+            })
+            .catch(() => { if (!cancelled) setQuote({ status: 'error', data: null, choice }); });
+        return () => { cancelled = true; };
+        // settledKey stands for settledRooms; askCount asks again on the button.
+    }, [asked, askCount, datesReady, dates.status, base, quoteDispatch, circuitId, departureId, date, settledKey]);
+
+    // After the button, the rooms come into view (once, when they arrive).
+    useEffect(() => {
+        if (quote.status !== 'ready' || !scrollToRoomsRef.current || !roomsRef.current) return;
+        scrollToRoomsRef.current = false;
+        const top = roomsRef.current.getBoundingClientRect().top;
+        if (top < 0 || top > window.innerHeight * 0.6) {
+            roomsRef.current.scrollIntoView({ block: 'start', behavior: 'smooth' });
+        }
+    }, [quote.status]);
 
     const handleRoomsUpdate = useCallback((newRooms) => {
         setRooms(newRooms);
@@ -157,8 +202,14 @@ export default function CircuitBar({ config }) {
             setShowGuests(true);
             return;
         }
-        window.location.href = quoteUrl(base, bookingDispatch, { circuitId, departureId, date, rooms });
+        setShowGuests(false);
+        setSettledRooms(rooms);
+        setAsked(true);
+        setAskCount((count) => count + 1);
+        scrollToRoomsRef.current = true;
     };
+
+    const bookHref = (offer) => bookUrl(base, bookingDispatch, quote.choice || { circuitId, departureId, date, rooms: settledRooms }, offer);
 
     const group = groups[monthIndex] || null;
 
@@ -234,15 +285,15 @@ export default function CircuitBar({ config }) {
                 </div>
 
                 <div className="nvt-field nvt-field--btn">
-                    <button type="button" className="nvt-btn-search" onClick={handleSubmit}>
-                        {t('circuitSeePrice', 'See the price')}
+                    <button type="button" className={`nvt-btn-search${asked ? ' nvt-btn-search--secondary' : ''}`} onClick={handleSubmit}>
+                        {asked ? t('circuitModify', 'Change') : t('circuitSeePrice', 'See the price')}
                     </button>
                 </div>
             </div>
 
             {message && <div className="nvt-validation-message" role="alert">{message}</div>}
 
-            <p className="travel-circuit-note">{t('circuitPricesNote', 'Total prices for 2 adults, with the transport and the accommodation; the price for your group comes at the next step.')}</p>
+            <p className="travel-circuit-note">{t('circuitPricesNote', "Total prices for 2 adults, with the transport and the accommodation; your group's price comes with the rooms.")}</p>
 
             <div className="travel-circuit-dates" ref={datesRef} aria-live="polite">
                 {dates.status === 'loading' && (
@@ -287,6 +338,12 @@ export default function CircuitBar({ config }) {
                     </>
                 )}
             </div>
+
+            {asked && quote.status !== 'idle' && (
+                <div ref={roomsRef}>
+                    <CircuitRooms quote={quote} hotelStars={hotelStars} bookHref={bookHref} />
+                </div>
+            )}
         </div>
     );
 }

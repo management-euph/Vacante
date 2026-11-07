@@ -36,6 +36,31 @@ final class CircuitBarWiringTest extends TestCase
         self::assertStringContainsString("header('Content-Type: application/json; charset=utf-8');", $dates);
     }
 
+    /** The rooms of a departure (board 16.3): only for the store's active circuits, a date to come and rooms the picker allows. */
+    public function testTheRoomsEndpointOnlyRelaysWhatTheBarMayAsk(): void
+    {
+        $quote = self::read('controllers/frontend/sphinx_booking/circuit_quote.php');
+
+        self::assertStringContainsString("FROM ?:sphinx_circuits WHERE circuit_id = ?i AND sync_status = 'active'", $quote);
+        self::assertStringContainsString("&& \$departureDate >= date('Y-m-d')", $quote);
+        self::assertStringContainsString("CircuitRoomOffers::validOccupancy(\$occupancy, ProviderRoomLimit::maxRooms('sphinx'))", $quote);
+        self::assertStringContainsString('->forDeparture($circuitId, $departureId, $departureDate, $occupancy, time())', $quote);
+        self::assertStringContainsString("header('Content-Type: application/json; charset=utf-8');", $quote);
+        self::assertStringContainsString("    'circuit_quote',\n", self::read('controllers/frontend/sphinx_booking.php'));
+    }
+
+    /** "Rezervă" on a room: the form shows that offer as quoted on the page, or the same room in a new quote, never another. */
+    public function testTheBookingFormOpensOnTheRoomChosenOnThePage(): void
+    {
+        $form = self::read('controllers/frontend/sphinx_booking/circuit_booking_form.php');
+
+        self::assertStringContainsString('$quote = $chosen_offer !== \'\' ? $quoteStore->quote($chosen_offer, $circuit_id, time()) : null;', $form);
+        self::assertStringContainsString('$quotedOccupancy = CircuitRoomOffers::occupancyOf($quote);', $form);
+        self::assertStringContainsString('$quote = $chosen_key !== \'\' ? CircuitRoomOffers::withKey($quotes, $chosen_key) : $quotes[0];', $form);
+        // A fresh quote is kept as before; the page's offer is kept already.
+        self::assertStringContainsString("if (\$fresh) {\n        \$quoteStore->remember(", $form);
+    }
+
     public function testTheQuoteStepQuotesEachRoom(): void
     {
         $form = self::read('controllers/frontend/sphinx_booking/circuit_booking_form.php');

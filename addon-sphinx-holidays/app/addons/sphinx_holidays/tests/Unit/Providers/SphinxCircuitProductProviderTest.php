@@ -73,6 +73,30 @@ final class SphinxCircuitProductProviderTest extends TestCase
         self::assertCount(1, self::$queries);
     }
 
+    /** "Hoteluri de 4★ pe traseu": the stars of each day's hotel, as the circuits sync keeps the itinerary. */
+    public function testTheHotelsStarsComeFromTheItinerary(): void
+    {
+        self::answer([
+            'circuit_id' => '17', 'name' => 'Creta clasică', 'duration_days' => '5', 'duration_nights' => '4',
+            'departure_ids' => '[111]', 'departure_names' => 'București',
+            'itinerary_json' => '[{"label":"Day 1","accommodation":{"hotel":"Atrion","category":"4"}},{"label":"Day 3","accommodation":{"hotel":"Fortezza","category":"3"}},{"label":"Day 5","accommodation":null}]',
+        ]);
+
+        $circuit = (new SphinxCircuitProductProvider())->resolveCircuit(110, 'SPXC17');
+
+        self::assertNotNull($circuit);
+        self::assertSame(['min' => 3, 'max' => 4], $circuit->hotelStars());
+        self::assertStringContainsString('itinerary_json', self::$queries[0][0]);
+    }
+
+    public function testStarsTheItineraryDoesNotSayAreNotGuessed(): void
+    {
+        self::assertSame([4, 4], SphinxCircuitProductProvider::hotelStars('[{"accommodation":{"category":"4*"}}]'));
+        self::assertSame([0, 0], SphinxCircuitProductProvider::hotelStars('[{"accommodation":{"category":"10"}},{"accommodation":{"category":"4.5"}},{"accommodation":{"category":"lux"}}]'));
+        self::assertSame([0, 0], SphinxCircuitProductProvider::hotelStars(null));
+        self::assertSame([0, 0], SphinxCircuitProductProvider::hotelStars('not json'));
+    }
+
     /** A name with ", " in it breaks the pairing: a lone id keeps the whole text, several get none. */
     public function testNamesThatDoNotPairAreNotGuessed(): void
     {

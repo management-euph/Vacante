@@ -6,7 +6,11 @@ declare(strict_types=1);
  * Gets a quote for a specific circuit + departure date + occupancy,
  * then displays the guest entry form with optional services.
  *
- * Flow: user selects circuit from rates → this controller gets quote → shows form
+ * Flow: user selects circuit from rates → this controller gets quote → shows form.
+ * From a circuit's page (board 16.3), "Rezervă" on a room brings its offer
+ * (offer_id): the form shows that offer as it was quoted there, without
+ * quoting again; when it is no longer kept, the same room (offer_key) in a
+ * new quote.
  *
  * @package SphinxHolidays
  * @since   1.1.0
@@ -16,6 +20,8 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 use Tygh\Tygh;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
+use Tygh\Addons\SphinxHolidays\Services\CircuitQuoteStore;
+use Tygh\Addons\SphinxHolidays\Services\CircuitRoomOffers;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
@@ -45,35 +51,65 @@ $occupancy = \Tygh\Addons\SphinxHolidays\Helpers\SearchOccupancyResolver::resolv
     max(1, RequestCoerce::int($_REQUEST, 'rooms', 1)),
     $children_ages_str,
 );
-$all_ages = array_merge(...array_column($occupancy, 'children_ages'));
-$adults = array_sum(array_column($occupancy, 'adults'));
-$children = count($all_ages);
-$children_ages_str = implode(',', $all_ages);
+
+// The room chosen on the circuit's page (board 16.3, "Rezervă"): its offer
+// as quoted there, and what it is (rooms and meal) should that offer be
+// gone (CircuitRoomOffers::key()).
+$chosen_offer = RequestCoerce::string($_REQUEST, 'offer_id');
+$chosen_key = RequestCoerce::string($_REQUEST, 'offer_key');
 
 try {
-    $api = Container::getApi();
+    $quoteStore = new CircuitQuoteStore();
+    $quote = $chosen_offer !== '' ? $quoteStore->quote($chosen_offer, $circuit_id, time()) : null;
+    if ($quote !== null && TypeCoerce::toString($quote['departure_date'] ?? '') !== $departure_date) {
+        $quote = null;
+    }
+    $fresh = $quote === null;
 
-    $quoteParams = [
-        'circuit_id' => $circuit_id,
-        'departure_date' => $departure_date,
-        'occupancy' => $occupancy,
-    ];
-    if ($departure_id > 0) {
-        $quoteParams['departure_id'] = $departure_id;
+    if ($quote !== null) {
+        // The offer is priced for its own rooms: those, whatever the link says.
+        $quotedOccupancy = CircuitRoomOffers::occupancyOf($quote);
+        if ($quotedOccupancy !== []) {
+            $occupancy = $quotedOccupancy;
+        }
+    } else {
+        $api = Container::getApi();
+
+        $quoteParams = [
+            'circuit_id' => $circuit_id,
+            'departure_date' => $departure_date,
+            'occupancy' => $occupancy,
+        ];
+        if ($departure_id > 0) {
+            $quoteParams['departure_id'] = $departure_id;
+        }
+
+        $quoteResponse = $api->getCircuitQuote($quoteParams);
+        // SphinxApi returns the decoded list of quotes directly.
+        $quotes = TypeCoerce::toRowList($quoteResponse);
+
+        if (empty($quotes)) {
+            fn_set_notification('W', __('warning'),
+                __('sphinx_holidays.no_circuit_quotes', ['[default]' => 'No quotes available for this circuit. Please try different dates.']));
+            return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.circuit_search'];
+        }
+
+        // The room chosen on the page, in this new quote; without a choice, the first.
+        $quote = $chosen_key !== '' ? CircuitRoomOffers::withKey($quotes, $chosen_key) : $quotes[0];
+        if ($quote === null) {
+            // That room is no longer offered: back to the circuit's rooms.
+            fn_set_notification('W', __('warning'),
+                __('sphinx_holidays.offer_unavailable', ['[default]' => 'This offer is no longer available.']));
+            $circuit_product_id = Container::getCartService()->resolveCircuitProductId($circuit_id, 0);
+            return [CONTROLLER_STATUS_REDIRECT, $circuit_product_id > 0 ? 'products.view?product_id=' . $circuit_product_id : 'sphinx_booking.circuit_search'];
+        }
     }
 
-    $quoteResponse = $api->getCircuitQuote($quoteParams);
-    // SphinxApi returns the decoded list of quotes directly.
-    $quotes = TypeCoerce::toRowList($quoteResponse);
+    $all_ages = array_merge(...array_column($occupancy, 'children_ages'));
+    $adults = array_sum(array_column($occupancy, 'adults'));
+    $children = count($all_ages);
+    $children_ages_str = implode(',', $all_ages);
 
-    if (empty($quotes)) {
-        fn_set_notification('W', __('warning'),
-            __('sphinx_holidays.no_circuit_quotes', ['[default]' => 'No quotes available for this circuit. Please try different dates.']));
-        return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.circuit_search'];
-    }
-
-    // Take the first quote (or let user select if multiple)
-    $quote = $quotes[0];
     $offer_id = TypeCoerce::toString($quote['offer_id'] ?? '');
     $quoteDeparture = TypeCoerce::toStringMap($quote['departure'] ?? null);
 
@@ -84,21 +120,24 @@ try {
     $sellingPrice = TypeCoerce::toFloat($quotePricing['selling_price'] ?? 0);
     $basePrice = $sellingPrice;
     $sellingPrice = Container::getCartService()->applyCommission($sellingPrice);
-    // The quote stays on the server: add-to-cart prices from it, never from the form.
-    (new \Tygh\Addons\SphinxHolidays\Services\CircuitQuoteStore())->remember(
-        $offer_id,
-        $circuit_id,
-        $basePrice,
-        TypeCoerce::toString($quotePricing['currency'] ?? ConfigProvider::getDefaultCurrency()),
-        $departure_date,
-        time(),
-        // What the order shows: the meal plan and where the trip starts.
-        TypeCoerce::toString($quote['meal_type_name'] ?? ''),
-        TypeCoerce::toString($quoteDeparture['name'] ?? ''),
-        // What circuits/book sends for this offer: its price and its rooms.
-        $quotePricing,
-        $rooms,
-    );
+    // The quote stays on the server: add-to-cart prices from it, never from
+    // the form. (An offer chosen on the page is kept already.)
+    if ($fresh) {
+        $quoteStore->remember(
+            $offer_id,
+            $circuit_id,
+            $basePrice,
+            TypeCoerce::toString($quotePricing['currency'] ?? ConfigProvider::getDefaultCurrency()),
+            $departure_date,
+            time(),
+            // What the order shows: the meal plan and where the trip starts.
+            TypeCoerce::toString($quote['meal_type_name'] ?? ''),
+            TypeCoerce::toString($quoteDeparture['name'] ?? ''),
+            // What circuits/book sends for this offer: its price and its rooms.
+            $quotePricing,
+            $rooms,
+        );
+    }
 
 
     // Parse additional services (optional/mandatory)

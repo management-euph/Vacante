@@ -87,4 +87,12 @@ final class TravelProviderRegistryCircuitTest extends TestCase
         self::assertSame('7', self::circuit('1', [['id' => '7', 'name' => 'Cluj-Napoca']])->defaultDepartureId(), 'else the first');
         self::assertSame('', self::circuit('1')->defaultDepartureId(), 'no departure known');
     }
+
+    /** "Hoteluri de 4★ pe traseu" (board 16.3): the hotels' stars, a range, or nothing when unknown. */
+    public function testTheHotelsStarsAreSaidOnlyWhenKnown(): void
+    {
+        self::assertSame(['min' => 4, 'max' => 4], (new CircuitPage('sphinx', '1', 'Creta', [], 5, 4, 4, 4))->hotelStars());
+        self::assertSame(['min' => 3, 'max' => 4], (new CircuitPage('sphinx', '1', 'Creta', [], 5, 4, 3, 4))->hotelStars());
+        self::assertNull(self::circuit('1')->hotelStars());
+    }
 }
