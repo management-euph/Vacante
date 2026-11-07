@@ -154,6 +154,18 @@
         {* Contact (email/phone) is NOT collected here: CS-Cart checkout already
            collects it, and the booking submission reads it from the order. *}
 
+        {* Pay in full or a deposit, as on a hotel's booking page, where the
+           store offers deposits (travel_core DepositPolicy) and the offer's
+           payment terms allow one (payment_split): the radios post only
+           pay_mode; add-to-cart works the deposit out again from the terms
+           of what is booked. *}
+        {if $sphinx_trip_terms.payment_split && fn_travel_core_deposit_offered("sphinx_holidays")}
+            <div class="travel-info-card sphinx-pay-mode">
+                <h3 class="travel-section-title">{__("travel_core.pay_mode_legend")}</h3>
+                {include file="addons/travel_core/components/booking_payment_split.tpl" ps=$sphinx_trip_terms.payment_split ps_form="sphinx-circuit-booking-form"}
+            </div>
+        {/if}
+
         {* Submit *}
         <div class="travel-booking-submit sphinx-booking-submit">
             <button type="submit" class="travel-offer-book-btn sphinx-offer-book-btn">

@@ -32,15 +32,16 @@ use Tygh\Addons\TravelCore\TravelConstants;
  * and the line charges the row's price: total_price converted to the primary
  * currency (the deposit of it on a deposit line), equal to price x amount
  * within a cent. A deposit plan on the line (extra.travel_deposit) counts
- * only when deposits are offered for sphinx, the row is a hotel booking and
- * the plan is the one the row's own payment terms give (what add_to_cart
- * worked out) — on a row of the cart's own placed order, the plan that
- * order's item was placed with: a line could otherwise charge any fraction
- * of its booking. The amounts the plan saves on the line (full, deposit,
- * balance: travel_core records the balance still owed from them) must be
- * the row price's too (canonicalLine / savesDepositOf). A genuine plan left
- * from before deposits were switched off is not refused: the line is to
- * charge the full price instead.
+ * only when deposits are offered for sphinx, the row keeps a payment
+ * schedule (hotels, circuits and packages do) and the plan is the one the
+ * row's own payment terms give (what add-to-cart worked out) — on a row of
+ * the cart's own placed order, the plan that order's item was placed with:
+ * a line could otherwise charge any fraction of its booking. The amounts
+ * the plan saves on the line (full, deposit, balance: travel_core records
+ * the balance still owed from them) must be the row price's too
+ * (canonicalLine / savesDepositOf). A genuine plan left from before
+ * deposits were switched off is not refused: the line is to charge the
+ * full price instead.
  *
  * Pure apart from the default wiring (fromSession): the row lookup, the
  * placed order item and the currency conversion come in as closures.
@@ -416,11 +417,13 @@ final class CheckoutBookingBinder
             // to vouch for it, it is not one to trust.
             return $orderId > 0 ? 'deposits are not offered' : null;
         }
-        if (self::bookingTypeOf($row) !== 'hotel') {
+        // Hotel, circuit and package rows keep the terms of what they book
+        // (add_to_cart, circuit_add_to_cart, package_add_to_cart); a row
+        // with no payment schedule (an experience) has no deposit to give.
+        [, $installments] = SphinxBookingSidebarBuilder::terms($row['cancellation_fees_json'] ?? null, $row['payment_terms_json'] ?? null);
+        if ($installments === []) {
             return 'deposit on a booking without a payment schedule';
         }
-
-        [, $installments] = SphinxBookingSidebarBuilder::terms($row['cancellation_fees_json'] ?? null, $row['payment_terms_json'] ?? null);
         $days = [$this->today !== '' ? $this->today : date('Y-m-d')];
         foreach (['created_at', 'updated_at'] as $column) {
             $day = substr(TypeCoerce::toString($row[$column] ?? ''), 0, 10);

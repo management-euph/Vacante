@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\SphinxHolidays\Contracts\CartServiceInterface;
+use Tygh\Addons\SphinxHolidays\ViewModels\SphinxBookingSidebarBuilder;
 use Tygh\Addons\TravelCore\Helpers\SessionAccessor;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\CartSkipPolicy;
@@ -12,6 +13,7 @@ use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
 use Tygh\Addons\TravelCore\Services\DepositCartLine;
 use Tygh\Addons\TravelCore\Services\DepositPlan;
+use Tygh\Addons\TravelCore\Services\DepositPolicy;
 use Tygh\Addons\TravelCore\Services\GuestDataService;
 use Tygh\Addons\TravelCore\Services\ProviderCartProduct;
 use Tygh\Addons\TravelCore\TravelConstants;
@@ -302,6 +304,46 @@ final class CartService implements CartServiceInterface
         fn_set_notification('N', __('notice'), $successMessage);
 
         return [CONTROLLER_STATUS_REDIRECT, $redirectUrl ?? self::afterCartUrl()];
+    }
+
+    /**
+     * The deposit plan a booking form's post asks for (pay_mode=deposit,
+     * travel_core DepositPolicy), for addToCartAndRedirect(): worked out
+     * again from the booked offer's own payment terms, never an amount from
+     * the request; null for the full price. Asked for when the terms no
+     * longer give one (they changed, or the balance would now fall due too
+     * soon): the guest is told the full price applies. Hotels, circuits and
+     * packages pay a deposit alike.
+     *
+     * @param array<string, mixed> $request the posted booking form
+     * @param mixed $cancellationFees the offer's raw cancellation_fees, as booked
+     * @param mixed $paymentTerms the offer's raw payment_terms, as booked
+     * @param DepositPolicy|null $policy null: the store's (DepositPolicy::current())
+     * @param string $today Y-m-d ('' = the current date)
+     */
+    public static function chosenDeposit(
+        array $request,
+        mixed $cancellationFees,
+        mixed $paymentTerms,
+        ?DepositPolicy $policy = null,
+        string $today = '',
+    ): ?DepositPlan {
+        $policy ??= DepositPolicy::current();
+        if (!$policy->offers('sphinx_holidays')
+            || TypeCoerce::toString($request[DepositPolicy::FIELD] ?? '') !== DepositPolicy::MODE_DEPOSIT) {
+            return null;
+        }
+        [, $installments] = SphinxBookingSidebarBuilder::terms($cancellationFees, $paymentTerms);
+        $plan = $policy->chosen(
+            'sphinx_holidays',
+            $request,
+            DepositPlan::fromInstallments($installments, $today !== '' ? $today : date('Y-m-d')),
+        );
+        if ($plan === null) {
+            fn_set_notification('W', __('notice'), __('travel_core.deposit_unavailable'));
+        }
+
+        return $plan;
     }
 
     /**

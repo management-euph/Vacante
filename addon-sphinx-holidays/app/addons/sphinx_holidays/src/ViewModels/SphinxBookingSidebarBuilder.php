@@ -207,7 +207,10 @@ final class SphinxBookingSidebarBuilder
      * booking form ("Anulare și plată"), as booking_terms_timeline.tpl takes
      * it: the same timeline a hotel's booking page shows (terms()), its
      * amounts in the shopper's currency, commission included, from the
-     * offer's own terms (verify, quote or customize).
+     * offer's own terms (verify, quote or customize). payment_split is the
+     * deposit and balance those terms allow (TermsTimelineFactory::split(),
+     * the hotel page's): the form offers "Pay a deposit" from it
+     * (booking_payment_split.tpl); [] when they allow none.
      *
      * @param mixed $cancellationFees the offer's raw cancellation_fees
      * @param mixed $paymentTerms the offer's raw payment_terms
@@ -216,7 +219,7 @@ final class SphinxBookingSidebarBuilder
      * @param string $today Y-m-d
      * @param string $dateFormat the store's date format
      *
-     * @return array{cancel_steps: list<array<string, mixed>>, payment_steps: list<array<string, mixed>>, cancel_free_until: string, cancel_full_amount: string, cancel_lines: list<string>, payment_lines: list<string>}
+     * @return array{cancel_steps: list<array<string, mixed>>, payment_steps: list<array<string, mixed>>, payment_split: array{full: string, deposit: string, balance: string, balance_due: string}|array{}, cancel_free_until: string, cancel_full_amount: string, cancel_lines: list<string>, payment_lines: list<string>}
      */
     public static function tripTerms(
         mixed $cancellationFees,
@@ -229,7 +232,7 @@ final class SphinxBookingSidebarBuilder
         $cancelLines = TermsFormatter::lines($cancellationFees);
         $paymentLines = TermsFormatter::lines($paymentTerms);
         if ($primaryTotal <= 0) {
-            return ['cancel_steps' => [], 'payment_steps' => [], 'cancel_free_until' => '', 'cancel_full_amount' => '', 'cancel_lines' => $cancelLines, 'payment_lines' => $paymentLines];
+            return ['cancel_steps' => [], 'payment_steps' => [], 'payment_split' => [], 'cancel_free_until' => '', 'cancel_full_amount' => '', 'cancel_lines' => $cancelLines, 'payment_lines' => $paymentLines];
         }
         [$windows, $installments] = self::terms($cancellationFees, $paymentTerms);
         $factory = new TermsTimelineFactory($money, $today, $dateFormat);
@@ -238,6 +241,7 @@ final class SphinxBookingSidebarBuilder
         return [
             'cancel_steps' => $timeline['steps'],
             'payment_steps' => $factory->payment($installments, $primaryTotal),
+            'payment_split' => $factory->split($installments, $primaryTotal),
             'cancel_free_until' => $timeline['free_until'],
             'cancel_full_amount' => $timeline['steps'] !== [] && $timeline['full_charge_now'] ? $money->format($primaryTotal) : '',
             'cancel_lines' => $cancelLines,
