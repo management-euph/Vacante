@@ -61,6 +61,18 @@ final class CircuitBarWiringTest extends TestCase
         self::assertStringContainsString("if (\$fresh) {\n        \$quoteStore->remember(", $form);
     }
 
+    /** details_json reaches fresh installs, upgrades and the installs SchemaMigrator converges. */
+    public function testTheCircuitDetailsColumnReachesEveryInstall(): void
+    {
+        $xml = self::read('addon.xml');
+        $definition = "JSON DEFAULT NULL COMMENT 'Included, not included, things to know, group size and age (static API)'";
+
+        self::assertStringContainsString("`details_json`      {$definition},", $xml, 'the CREATE TABLE');
+        self::assertStringContainsString("ALTER TABLE `?:sphinx_circuits`\n                ADD COLUMN `details_json` JSON DEFAULT NULL", $xml, 'the upgrade item');
+        self::assertStringContainsString("'details_json' => \"ADD COLUMN `details_json` {$definition} AFTER `itinerary_json`\"", self::read('src/Install/SchemaMigrator.php'));
+        self::assertStringContainsString("'details_json' => self::details(\$raw),", self::read('src/Services/CircuitSyncService.php'));
+    }
+
     public function testTheQuoteStepQuotesEachRoom(): void
     {
         $form = self::read('controllers/frontend/sphinx_booking/circuit_booking_form.php');

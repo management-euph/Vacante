@@ -4369,3 +4369,87 @@ msgstr "Nu mai sunt camere pentru această plecare. Alege altă dată."
 msgctxt "Languages::travel_core.circuit_rooms_ages"
 msgid "Choose each child's age to see the price."
 msgstr "Alege vârsta fiecărui copil ca să vezi prețul."
+
+msgctxt "Languages::travel_core.circuit_menu_label"
+msgid "About the circuit"
+msgstr "Despre circuit"
+
+msgctxt "Languages::travel_core.circuit_menu_program"
+msgid "Day by day"
+msgstr "Program pe zile"
+
+msgctxt "Languages::travel_core.circuit_menu_include"
+msgid "What's included"
+msgstr "Ce include"
+
+msgctxt "Languages::travel_core.circuit_menu_stays"
+msgid "Accommodation"
+msgstr "Cazare"
+
+msgctxt "Languages::travel_core.circuit_menu_notes"
+msgid "Good to know"
+msgstr "De știut"
+
+msgctxt "Languages::travel_core.circuit_day"
+msgid "Day [n]"
+msgstr "Ziua [n]"
+
+msgctxt "Languages::travel_core.circuit_hotel"
+msgid "hotel"
+msgstr "hotel"
+
+msgctxt "Languages::travel_core.circuit_night"
+msgid "Night [n]"
+msgstr "Noaptea [n]"
+
+msgctxt "Languages::travel_core.circuit_nights_range"
+msgid "Nights [from]–[to]"
+msgstr "Nopțile [from]–[to]"
+
+msgctxt "Languages::travel_core.circuit_or_similar"
+msgid "or similar"
+msgstr "sau similar"
+
+msgctxt "Languages::travel_core.circuit_included"
+msgid "Included"
+msgstr "Include"
+
+msgctxt "Languages::travel_core.circuit_not_included"
+msgid "Not included"
+msgstr "Nu include"
+
+msgctxt "Languages::travel_core.circuit_group_min_one"
+msgid "The circuit leaves with at least [n] traveller; if not enough sign up, we offer you another date or refund what you paid."
+msgstr "Circuitul pleacă de la minimum [n] persoană; dacă nu se adună, îți propunem altă dată sau îți returnăm suma plătită."
+
+msgctxt "Languages::travel_core.circuit_group_min_few"
+msgid "The circuit leaves with at least [n] travellers; if not enough sign up, we offer you another date or refund what you paid."
+msgstr "Circuitul pleacă de la minimum [n] persoane; dacă nu se adună, îți propunem altă dată sau îți returnăm suma plătită."
+
+msgctxt "Languages::travel_core.circuit_group_min_many"
+msgid "The circuit leaves with at least [n] travellers; if not enough sign up, we offer you another date or refund what you paid."
+msgstr "Circuitul pleacă de la minimum [n] de persoane; dacă nu se adună, îți propunem altă dată sau îți returnăm suma plătită."
+
+msgctxt "Languages::travel_core.circuit_age_min_one"
+msgid "Travellers must be at least [n] year old."
+msgstr "Turiștii trebuie să aibă cel puțin [n] an."
+
+msgctxt "Languages::travel_core.circuit_age_min_few"
+msgid "Travellers must be at least [n] years old."
+msgstr "Turiștii trebuie să aibă cel puțin [n] ani."
+
+msgctxt "Languages::travel_core.circuit_age_min_many"
+msgid "Travellers must be at least [n] years old."
+msgstr "Turiștii trebuie să aibă cel puțin [n] de ani."
+
+msgctxt "Languages::travel_core.circuit_age_max_one"
+msgid "Travellers must be at most [n] year old."
+msgstr "Turiștii trebuie să aibă cel mult [n] an."
+
+msgctxt "Languages::travel_core.circuit_age_max_few"
+msgid "Travellers must be at most [n] years old."
+msgstr "Turiștii trebuie să aibă cel mult [n] ani."
+
+msgctxt "Languages::travel_core.circuit_age_max_many"
+msgid "Travellers must be at most [n] years old."
+msgstr "Turiștii trebuie să aibă cel mult [n] de ani."

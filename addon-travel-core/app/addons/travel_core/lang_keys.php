@@ -3559,4 +3559,90 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Choose each child\'s age to see the price.',
         'ro' => 'Alege vârsta fiecărui copil ca să vezi prețul.',
     ],
+    // Under its rooms: the program, hotels, things to know, inclusions (board 16.3,
+    // components/circuit_details.tpl).
+    'travel_core.circuit_menu_label' => [
+        'en' => 'About the circuit',
+        'ro' => 'Despre circuit',
+    ],
+    'travel_core.circuit_menu_program' => [
+        'en' => 'Day by day',
+        'ro' => 'Program pe zile',
+    ],
+    'travel_core.circuit_menu_include' => [
+        'en' => 'What\'s included',
+        'ro' => 'Ce include',
+    ],
+    'travel_core.circuit_menu_stays' => [
+        'en' => 'Accommodation',
+        'ro' => 'Cazare',
+    ],
+    'travel_core.circuit_menu_notes' => [
+        'en' => 'Good to know',
+        'ro' => 'De știut',
+    ],
+    'travel_core.circuit_day' => [
+        'en' => 'Day [n]',
+        'ro' => 'Ziua [n]',
+    ],
+    'travel_core.circuit_hotel' => [
+        'en' => 'hotel',
+        'ro' => 'hotel',
+    ],
+    'travel_core.circuit_night' => [
+        'en' => 'Night [n]',
+        'ro' => 'Noaptea [n]',
+    ],
+    'travel_core.circuit_nights_range' => [
+        'en' => 'Nights [from]–[to]',
+        'ro' => 'Nopțile [from]–[to]',
+    ],
+    'travel_core.circuit_or_similar' => [
+        'en' => 'or similar',
+        'ro' => 'sau similar',
+    ],
+    'travel_core.circuit_included' => [
+        'en' => 'Included',
+        'ro' => 'Include',
+    ],
+    'travel_core.circuit_not_included' => [
+        'en' => 'Not included',
+        'ro' => 'Nu include',
+    ],
+    'travel_core.circuit_group_min_one' => [
+        'en' => 'The circuit leaves with at least [n] traveller; if not enough sign up, we offer you another date or refund what you paid.',
+        'ro' => 'Circuitul pleacă de la minimum [n] persoană; dacă nu se adună, îți propunem altă dată sau îți returnăm suma plătită.',
+    ],
+    'travel_core.circuit_group_min_few' => [
+        'en' => 'The circuit leaves with at least [n] travellers; if not enough sign up, we offer you another date or refund what you paid.',
+        'ro' => 'Circuitul pleacă de la minimum [n] persoane; dacă nu se adună, îți propunem altă dată sau îți returnăm suma plătită.',
+    ],
+    'travel_core.circuit_group_min_many' => [
+        'en' => 'The circuit leaves with at least [n] travellers; if not enough sign up, we offer you another date or refund what you paid.',
+        'ro' => 'Circuitul pleacă de la minimum [n] de persoane; dacă nu se adună, îți propunem altă dată sau îți returnăm suma plătită.',
+    ],
+    'travel_core.circuit_age_min_one' => [
+        'en' => 'Travellers must be at least [n] year old.',
+        'ro' => 'Turiștii trebuie să aibă cel puțin [n] an.',
+    ],
+    'travel_core.circuit_age_min_few' => [
+        'en' => 'Travellers must be at least [n] years old.',
+        'ro' => 'Turiștii trebuie să aibă cel puțin [n] ani.',
+    ],
+    'travel_core.circuit_age_min_many' => [
+        'en' => 'Travellers must be at least [n] years old.',
+        'ro' => 'Turiștii trebuie să aibă cel puțin [n] de ani.',
+    ],
+    'travel_core.circuit_age_max_one' => [
+        'en' => 'Travellers must be at most [n] year old.',
+        'ro' => 'Turiștii trebuie să aibă cel mult [n] an.',
+    ],
+    'travel_core.circuit_age_max_few' => [
+        'en' => 'Travellers must be at most [n] years old.',
+        'ro' => 'Turiștii trebuie să aibă cel mult [n] ani.',
+    ],
+    'travel_core.circuit_age_max_many' => [
+        'en' => 'Travellers must be at most [n] years old.',
+        'ro' => 'Turiștii trebuie să aibă cel mult [n] de ani.',
+    ],
 ];

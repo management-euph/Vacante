@@ -30,6 +30,9 @@
          under the bar, above the tabs
     #40. Compact search summary, shown by pdp-design-a.js once the bar has
          scrolled away after a search
+    #45. A circuit's program, hotels, things to know and inclusions (board
+         16.3), under its rooms: components/circuit_details.tpl, first in
+         the tabs hook so it follows the bar its pre-hook renders
     #50. Product tabs ("Descriere" first, as ordered in Design → Product tabs)
 
     No short description, price column, options or quantity: a hotel's price
@@ -294,6 +297,11 @@
     {* #50. Product tabs (the booking form mount renders in its pre-hook) *}
     {if $show_product_tabs}
         {hook name="products:product_tabs"}
+            {* #45. A circuit's program, under its rooms (the bar comes from the pre-hook) *}
+            {if $travel_circuit}
+                {include file="addons/travel_core/components/circuit_details.tpl" travel_circuit=$travel_circuit}
+            {/if}
+
             {include file="views/tabs/components/product_tabs.tpl"
                 tabs=$tabs
                 smarty=$smarty

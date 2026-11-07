@@ -59,6 +59,9 @@ final class SchemaMigrator
                 'calendar_prices_raw' => "ADD COLUMN `calendar_prices_raw` JSON DEFAULT NULL COMMENT 'Per-date raw from-prices for the booking calendar (calendar_prices cron)' AFTER `sync_status`",
                 'giata_id' => "ADD COLUMN `giata_id` INT UNSIGNED DEFAULT NULL COMMENT 'GIATA id (external_ids): the same hotel at another supplier' AFTER `name`",
             ],
+            'sphinx_circuits' => [
+                'details_json' => "ADD COLUMN `details_json` JSON DEFAULT NULL COMMENT 'Included, not included, things to know, group size and age (static API)' AFTER `itinerary_json`",
+            ],
             'sphinx_destinations' => [
                 'full_path' => "ADD COLUMN `full_path` VARCHAR(500) DEFAULT NULL COMMENT 'Breadcrumb: City, Region, Country, Continent' AFTER `country_code`",
                 // NULL on the rows already there ("known before"): upgrading flags nothing as new.

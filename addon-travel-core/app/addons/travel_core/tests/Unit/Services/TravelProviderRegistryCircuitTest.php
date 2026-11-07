@@ -8,6 +8,8 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\TravelCore\Contracts\CircuitProductProviderInterface;
 use Tygh\Addons\TravelCore\Contracts\ProviderNormalizerInterface;
+use Tygh\Addons\TravelCore\Dto\Circuit\CircuitDay;
+use Tygh\Addons\TravelCore\Dto\Circuit\CircuitDetails;
 use Tygh\Addons\TravelCore\Dto\Circuit\CircuitPage;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
 
@@ -17,6 +19,7 @@ use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
  */
 #[CoversClass(TravelProviderRegistry::class)]
 #[CoversClass(CircuitPage::class)]
+#[CoversClass(CircuitDetails::class)]
 final class TravelProviderRegistryCircuitTest extends TestCase
 {
     protected function setUp(): void
@@ -36,14 +39,18 @@ final class TravelProviderRegistryCircuitTest extends TestCase
 
     /**
      * @param array<int, CircuitPage> $circuits product id => its circuit
+     * @param array<string, CircuitDetails> $details circuit id => what its page shows
      *
      * @return CircuitProductProviderInterface answering for those products only
      */
-    private static function provider(array $circuits): CircuitProductProviderInterface
+    private static function provider(array $circuits, array $details = []): CircuitProductProviderInterface
     {
-        return new class ($circuits) implements CircuitProductProviderInterface {
-            /** @param array<int, CircuitPage> $circuits product id => its circuit */
-            public function __construct(private readonly array $circuits)
+        return new class ($circuits, $details) implements CircuitProductProviderInterface {
+            /**
+             * @param array<int, CircuitPage> $circuits product id => its circuit
+             * @param array<string, CircuitDetails> $details circuit id => what its page shows
+             */
+            public function __construct(private readonly array $circuits, private readonly array $details)
             {
             }
 
@@ -51,6 +58,12 @@ final class TravelProviderRegistryCircuitTest extends TestCase
             public function resolveCircuit(int $productId, string $productCode): ?CircuitPage
             {
                 return $this->circuits[$productId] ?? null;
+            }
+
+            #[\Override]
+            public function circuitDetails(string $circuitId): ?CircuitDetails
+            {
+                return $this->details[$circuitId] ?? null;
             }
         };
     }
@@ -86,6 +99,19 @@ final class TravelProviderRegistryCircuitTest extends TestCase
         self::assertSame('3', self::circuit('1', $departures)->defaultDepartureId());
         self::assertSame('7', self::circuit('1', [['id' => '7', 'name' => 'Cluj-Napoca']])->defaultDepartureId(), 'else the first');
         self::assertSame('', self::circuit('1')->defaultDepartureId(), 'no departure known');
+    }
+
+    /** The program under a circuit's rooms (board 16.3) comes from the provider that sells it, and only when it says something. */
+    public function testTheCircuitsDetailsComeFromItsProvider(): void
+    {
+        $this->registerProvider('sphinx');
+        $program = new CircuitDetails([new CircuitDay('Sosire în Heraklion', 'Transfer la hotel.')]);
+        TravelProviderRegistry::setCircuitProductProvider('sphinx', self::provider([], ['17' => $program, '18' => new CircuitDetails()]));
+
+        self::assertSame($program, TravelProviderRegistry::circuitDetails(self::circuit('17')));
+        self::assertNull(TravelProviderRegistry::circuitDetails(self::circuit('18')), 'nothing to show');
+        self::assertNull(TravelProviderRegistry::circuitDetails(self::circuit('19')), 'unknown circuit');
+        self::assertNull(TravelProviderRegistry::circuitDetails(new CircuitPage('eurosite', '17', 'Creta', [], 5, 4)), 'another provider');
     }
 
     /** "Hoteluri de 4★ pe traseu" (board 16.3): the hotels' stars, a range, or nothing when unknown. */

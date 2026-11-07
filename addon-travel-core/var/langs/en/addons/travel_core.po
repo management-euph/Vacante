@@ -4369,3 +4369,87 @@ msgstr "No rooms left for this departure. Choose another date."
 msgctxt "Languages::travel_core.circuit_rooms_ages"
 msgid "Choose each child's age to see the price."
 msgstr "Choose each child's age to see the price."
+
+msgctxt "Languages::travel_core.circuit_menu_label"
+msgid "About the circuit"
+msgstr "About the circuit"
+
+msgctxt "Languages::travel_core.circuit_menu_program"
+msgid "Day by day"
+msgstr "Day by day"
+
+msgctxt "Languages::travel_core.circuit_menu_include"
+msgid "What's included"
+msgstr "What's included"
+
+msgctxt "Languages::travel_core.circuit_menu_stays"
+msgid "Accommodation"
+msgstr "Accommodation"
+
+msgctxt "Languages::travel_core.circuit_menu_notes"
+msgid "Good to know"
+msgstr "Good to know"
+
+msgctxt "Languages::travel_core.circuit_day"
+msgid "Day [n]"
+msgstr "Day [n]"
+
+msgctxt "Languages::travel_core.circuit_hotel"
+msgid "hotel"
+msgstr "hotel"
+
+msgctxt "Languages::travel_core.circuit_night"
+msgid "Night [n]"
+msgstr "Night [n]"
+
+msgctxt "Languages::travel_core.circuit_nights_range"
+msgid "Nights [from]–[to]"
+msgstr "Nights [from]–[to]"
+
+msgctxt "Languages::travel_core.circuit_or_similar"
+msgid "or similar"
+msgstr "or similar"
+
+msgctxt "Languages::travel_core.circuit_included"
+msgid "Included"
+msgstr "Included"
+
+msgctxt "Languages::travel_core.circuit_not_included"
+msgid "Not included"
+msgstr "Not included"
+
+msgctxt "Languages::travel_core.circuit_group_min_one"
+msgid "The circuit leaves with at least [n] traveller; if not enough sign up, we offer you another date or refund what you paid."
+msgstr "The circuit leaves with at least [n] traveller; if not enough sign up, we offer you another date or refund what you paid."
+
+msgctxt "Languages::travel_core.circuit_group_min_few"
+msgid "The circuit leaves with at least [n] travellers; if not enough sign up, we offer you another date or refund what you paid."
+msgstr "The circuit leaves with at least [n] travellers; if not enough sign up, we offer you another date or refund what you paid."
+
+msgctxt "Languages::travel_core.circuit_group_min_many"
+msgid "The circuit leaves with at least [n] travellers; if not enough sign up, we offer you another date or refund what you paid."
+msgstr "The circuit leaves with at least [n] travellers; if not enough sign up, we offer you another date or refund what you paid."
+
+msgctxt "Languages::travel_core.circuit_age_min_one"
+msgid "Travellers must be at least [n] year old."
+msgstr "Travellers must be at least [n] year old."
+
+msgctxt "Languages::travel_core.circuit_age_min_few"
+msgid "Travellers must be at least [n] years old."
+msgstr "Travellers must be at least [n] years old."
+
+msgctxt "Languages::travel_core.circuit_age_min_many"
+msgid "Travellers must be at least [n] years old."
+msgstr "Travellers must be at least [n] years old."
+
+msgctxt "Languages::travel_core.circuit_age_max_one"
+msgid "Travellers must be at most [n] year old."
+msgstr "Travellers must be at most [n] year old."
+
+msgctxt "Languages::travel_core.circuit_age_max_few"
+msgid "Travellers must be at most [n] years old."
+msgstr "Travellers must be at most [n] years old."
+
+msgctxt "Languages::travel_core.circuit_age_max_many"
+msgid "Travellers must be at most [n] years old."
+msgstr "Travellers must be at most [n] years old."
