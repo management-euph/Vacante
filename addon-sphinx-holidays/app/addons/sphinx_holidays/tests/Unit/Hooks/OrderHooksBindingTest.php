@@ -198,7 +198,7 @@ namespace Tygh\Addons\SphinxHolidays\Tests\Unit\Hooks {
                 public function verify(array $cart): array
                 {
                     return [
-                        'allow' => true, 'corrections' => [], 'notifications' => [], 'rejected' => [], 'reconfirm' => false,
+                        'allow' => true, 'corrections' => [], 'notifications' => [], 'rejected' => [], 'reconfirm' => false, 'live_prices' => [],
                         'unavailable' => [
                             7 => ['offer_id' => 'offer-luxury', 'hotel_name' => 'A', 'booking_id' => 10],
                             8 => ['offer_id' => 'offer-luxury', 'hotel_name' => 'B', 'booking_id' => 30],
@@ -319,6 +319,34 @@ namespace Tygh\Addons\SphinxHolidays\Tests\Unit\Hooks {
             self::assertSame([['update:10', ['total_price' => 1800.0, 'base_price' => 1800.0]]], self::$log);
         }
 
+        /**
+         * The re-check priced the booked offer a little lower: the line keeps
+         * charging its price (no correction), and the row keeps what the
+         * provider charges now, which the book call sends.
+         */
+        public function testALivePriceThatNeedsNoCorrectionIsKeptOnTheRow(): void
+        {
+            $_SESSION['sphinx_price_cache'] = [];
+            Container::override('api', static fn (): SphinxApi => new class extends SphinxApi {
+                public function __construct()
+                {
+                }
+
+                public function verifyHotelOffer(string $offerId): ?array
+                {
+                    return ['offer_id' => $offerId, 'available' => true, 'price' => 1450.0];
+                }
+            });
+            $cart = ['products' => [7 => self::line(10, 'offer-luxury', 1500.0)]];
+            $allow = true;
+
+            OrderHooks::prePlaceOrder($cart, $allow);
+
+            self::assertTrue($allow);
+            self::assertSame(1500.0, $cart['products'][7]['price'] ?? null, 'the line is not corrected');
+            self::assertSame([['update:10', ['base_price' => 1450.0]]], self::$log);
+        }
+
         public function testPlaceOrderPostBooksNothingForAForgedBookingId(): void
         {
             OrderHooks::placeOrderPost(501, ['products' => [7 => self::line(999, 'offer-luxury', 45.0)]]);
@@ -349,13 +377,17 @@ namespace Tygh\Addons\SphinxHolidays\Tests\Unit\Hooks {
         public function testPlaceOrderPostSendsTheRowsTravellersToTheRowsEndpoint(): void
         {
             self::$rows[10]['room_type'] = 'circuit';
-            $line = self::line(10, 'offer-luxury', 1500.0, ['booking_type' => 'hotel', 'guests_data' => '{"holder":"Forged Name"}']);
+            self::$rows[10]['guests_data'] = '{"room1_adult_1":{"first_name":"Ana","last_name":"Pop","type":"adult","gender":"f"}}';
+            $line = self::line(10, 'offer-luxury', 1500.0, ['booking_type' => 'hotel', 'guests_data' => '{"room1_adult_1":{"first_name":"Forged","last_name":"Name"}}']);
 
             OrderHooks::placeOrderPost(501, ['products' => [7 => $line]]);
 
             self::assertContains(['bookCircuit', 'offer-luxury'], self::$log);
             self::assertNotContains(['bookHotel', 'offer-luxury'], self::$log);
-            self::assertSame(['holder' => 'Ana Pop'], self::$payloads[0]['guests'] ?? null);
+            // A circuit's travellers travel in the documented occupancy.
+            $guests = self::$payloads[0]['occupancy'][0]['guests'] ?? null;
+            self::assertIsArray($guests);
+            self::assertSame(['Ana Pop'], array_map(static fn (array $guest): string => $guest['first_name'] . ' ' . $guest['last_name'], $guests));
         }
 
         /**

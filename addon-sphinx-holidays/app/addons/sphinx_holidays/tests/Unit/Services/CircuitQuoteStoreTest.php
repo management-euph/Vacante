@@ -25,9 +25,24 @@ final class CircuitQuoteStoreTest extends TestCase
         $store->remember('offer-1', 7, 850.0, 'EUR', '2026-11-02', 1000);
 
         self::assertSame(
-            ['circuit_id' => 7, 'selling_price' => 850.0, 'currency' => 'EUR', 'departure_date' => '2026-11-02', 'meal_type' => '', 'departure_name' => ''],
+            ['circuit_id' => 7, 'selling_price' => 850.0, 'currency' => 'EUR', 'departure_date' => '2026-11-02', 'meal_type' => '', 'departure_name' => '', 'pricing' => [], 'rooms' => []],
             $store->get('offer-1', 7, 1000 + 60),
         );
+    }
+
+    /** circuits/book sends the quote's own price and room codes for the offer, never the form's. */
+    public function testTheQuoteKeepsItsPricingAndRoomsForTheBooking(): void
+    {
+        $pricing = ['marketing_price' => 1030.0, 'discount' => 103.0, 'selling_price' => 927.0, 'currency' => 'EUR'];
+        $rooms = [['code' => 'standard-double', 'name' => 'Standard - Double', 'adults' => 2, 'children_ages' => []]];
+        $store = new CircuitQuoteStore();
+        $store->remember('offer-3', 1, 927.0, 'EUR', '2027-07-05', 1000, 'Mic Dejun', 'Bucharest', $pricing, $rooms);
+
+        $quote = $store->get('offer-3', 1, 1000);
+
+        self::assertNotNull($quote);
+        self::assertSame($pricing, $quote['pricing']);
+        self::assertSame($rooms, $quote['rooms']);
     }
 
     public function testTheQuoteKeepsItsMealPlanAndDepartureCityForTheOrder(): void

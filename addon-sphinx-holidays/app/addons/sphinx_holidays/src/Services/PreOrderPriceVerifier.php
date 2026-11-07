@@ -9,8 +9,10 @@ declare(strict_types=1);
  * booking type — each against its own endpoint:
  *  - hotel: verifyHotelOffer;
  *  - package: verifyPackageOffer (customizePackage when services were chosen);
- *  - circuit: no verify endpoint exists, so a fresh getCircuitQuote for the
- *    same departure and guests (customizeCircuit when services were chosen).
+ *  - circuit: no verify endpoint exists. customizeCircuit when services were
+ *    chosen; otherwise a fresh getCircuitQuote for the same departure and
+ *    guests, compared only when it returns this very offer: a fresh quote
+ *    is usually a new offer, and its price is not the booked offer's.
  * Circuit and package offers used to be sent to the HOTEL endpoint, which
  * does not know them: the line was dropped as "unavailable", or never
  * checked. If the offer is no longer available or the price has changed,
@@ -67,12 +69,15 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
      * {@inheritdoc}
      *
      * Provider-specific keys: unavailable (cart id => offer gone, the hook
-     * removes the line and deletes its booking row) and rejected (cart id =>
+     * removes the line and deletes its booking row), rejected (cart id =>
      * the line may not carry the booking it names, the hook removes the line,
-     * never the row, and blocks the order).
+     * never the row, and blocks the order) and live_prices (booking id =>
+     * what the provider charges for the booked offer now, before commission,
+     * when it differs from the row's base_price: the hook writes it there,
+     * whatever the line is charged, because the book call sends it).
      *
      * @param array<string, mixed> $cart
-     * @return array{allow: bool, corrections: array<int|string, array<string, float|int|string>>, notifications: array<int, array<string, mixed>>, unavailable: array<int|string, array<string, mixed>>, rejected: array<int|string, array<string, mixed>>, reconfirm: bool}
+     * @return array{allow: bool, corrections: array<int|string, array<string, float|int|string>>, notifications: array<int, array<string, mixed>>, unavailable: array<int|string, array<string, mixed>>, rejected: array<int|string, array<string, mixed>>, reconfirm: bool, live_prices: array<int, float>}
      */
     #[\Override]
     public function verify(array $cart): array
@@ -84,6 +89,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             'unavailable' => [],  // Cart IDs of unavailable Sphinx offers (to be removed by caller)
             'rejected' => [],     // Cart IDs of lines not bound to their booking (removed by caller, order blocked)
             'reconfirm' => false, // a correction exceeded the absorb allowance — hook must block for re-confirmation
+            'live_prices' => [],  // booking id => the booked offer's live raw price, for the row's base_price
         ];
 
         if (empty($cart['products'])) {
@@ -245,6 +251,13 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                 $apiPriceRaw = $live['price'];
                 if ($apiPriceRaw === null || $apiPriceRaw <= 0) {
                     continue;
+                }
+                // What the provider charges for the booked offer now. The row
+                // keeps it (base_price) whether or not the line is corrected
+                // below (a match, an absorbed rise, a lower price): the book
+                // call sends it, and Sphinx refuses another price.
+                if (abs($apiPriceRaw - TypeCoerce::toFloat($row['base_price'] ?? 0)) >= 0.005) {
+                    $result['live_prices'][$bookingId] = $apiPriceRaw;
                 }
             }
 
@@ -412,13 +425,19 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
     }
 
     /**
-     * The circuit as the provider prices it now. Circuits have no verify
-     * endpoint (as in BookingRetryService), so this is a fresh quote for the
-     * same departure and guests: none means the departure is gone. The quote
-     * for this offer_id when the provider returns it, else the first — the
-     * one the booking form offered. Chosen services are re-priced by
-     * customizeCircuit (price: null when that fails, never a removal).
+     * The booked circuit offer as the provider prices it now. Circuits have
+     * no verify endpoint. Chosen services are re-priced on this offer by
+     * customizeCircuit. Otherwise a fresh quote for the same departure and
+     * guests: none means the departure is gone (unavailable). A fresh quote
+     * is usually a new offer (a new offer_id), and its price is not this
+     * offer's: it used to be compared all the same (the first quote), so the
+     * line could be charged one offer's price while circuits/book sends the
+     * booked one's. Its price counts only when the quote returns this very
+     * offer; otherwise it is unknown (null: no comparison, the line keeps its
+     * booking's price). A customize failure is never a removal either.
      *
+     * @param \Tygh\Addons\SphinxHolidays\SphinxApi $api the API
+     * @param string $offerId the booked offer
      * @param array<string, mixed> $extra the cart line's extra
      * @return array{unavailable: bool, price: float|null} raw price, before commission
      */
@@ -455,19 +474,20 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
         if ($quotes === []) {
             return ['unavailable' => true, 'price' => null];
         }
-        $quote = $quotes[0];
-        foreach ($quotes as $candidate) {
-            if (TypeCoerce::toString($candidate['offer_id'] ?? '') === $offerId) {
-                $quote = $candidate;
-                break;
+        foreach ($quotes as $quote) {
+            if (TypeCoerce::toString($quote['offer_id'] ?? '') === $offerId) {
+                // The services could not be re-priced: this offer's quote
+                // without them would compare wrong.
+                return ['unavailable' => false, 'price' => $services !== [] ? null : OfferAvailability::extractPrice($quote)];
             }
         }
-        if ($services !== []) {
-            // The services could not be re-priced: a base quote would compare wrong.
-            return ['unavailable' => false, 'price' => null];
-        }
+        fn_log_event('general', 'runtime', [
+            'message' => 'Sphinx PreOrderPriceVerifier: the fresh circuit quote is another offer — the booked offer keeps its price',
+            'offer_id' => $offerId,
+            'quotes' => count($quotes),
+        ]);
 
-        return ['unavailable' => false, 'price' => OfferAvailability::extractPrice($quote)];
+        return ['unavailable' => false, 'price' => null];
     }
 
     /** The selling price from a customize answer, null when it has none. */

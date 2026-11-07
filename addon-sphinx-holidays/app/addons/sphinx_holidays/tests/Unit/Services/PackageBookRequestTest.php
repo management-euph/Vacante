@@ -6,6 +6,7 @@ namespace Tygh\Addons\SphinxHolidays\Tests\Unit\Services;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Tygh\Addons\SphinxHolidays\Services\OfferBookBody;
 use Tygh\Addons\SphinxHolidays\Services\PackageBookRequest;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
 
@@ -17,6 +18,7 @@ use Tygh\Addons\SphinxHolidays\SphinxApi;
  * body: {offer_id, guests map, contact}.
  */
 #[CoversClass(PackageBookRequest::class)]
+#[CoversClass(OfferBookBody::class)]
 final class PackageBookRequestTest extends TestCase
 {
     /**

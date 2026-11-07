@@ -3,10 +3,14 @@ declare(strict_types=1);
 /**
  * Sphinx Booking Controller — Circuit Add to Cart Mode
  *
- * Optionally customizes the circuit (adds optional services),
- * then creates booking records and adds to CS-Cart cart.
+ * Prices the circuit from the quote the booking form stored on the server
+ * (CircuitQuoteStore), customized with the optional services chosen (when
+ * any), then creates the booking record and adds it to the cart. The
+ * record keeps what circuits/book needs (CircuitBookRequest): the
+ * pre-commission selling price and its currency, the chosen services, the
+ * quote's rooms, and each guest's birth date and gender.
  *
- * Flow: quote → customize (optional) → book → add to cart
+ * Flow: quote (booking form) → customize (optional) → add to cart → book at order placement
  *
  * @package SphinxHolidays
  * @since   1.1.0
@@ -25,9 +29,17 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         return $rateLimited;
     }
 
-    $bookingData = TypeCoerce::toStringMap($_REQUEST);
     $offer_id = RequestCoerce::string($_REQUEST, 'offer_id');
     $circuit_id = RequestCoerce::int($_REQUEST, 'circuit_id');
+    // Back to the form for the same departure and party: it quotes again.
+    $formUrl = 'sphinx_booking.circuit_booking_form?' . http_build_query([
+        'circuit_id' => $circuit_id,
+        'departure_date' => RequestCoerce::string($_REQUEST, 'departure_date'),
+        'departure_id' => RequestCoerce::int($_REQUEST, 'departure_id'),
+        'adults' => RequestCoerce::int($_REQUEST, 'adults', 2),
+        'children' => RequestCoerce::int($_REQUEST, 'children'),
+        'children_ages' => RequestCoerce::string($_REQUEST, 'children_ages'),
+    ]);
 
     if (empty($offer_id) || empty($circuit_id)) {
         fn_set_notification('E', __('error'),
@@ -39,8 +51,12 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         return $duplicate;
     }
 
-    // Optional: customize circuit with selected services
-    $selected_services = RequestCoerce::list($_REQUEST, 'services');
+    // Optional: customize circuit with selected services (their codes;
+    // Sphinx refuses a code that is not one of the offer's).
+    $selected_services = array_values(array_filter(
+        array_map(static fn ($code): string => TypeCoerce::toString($code), RequestCoerce::list($_REQUEST, 'services')),
+        static fn (string $code): bool => $code !== '',
+    ));
     $customized = null;
     if (!empty($selected_services)) {
         try {
@@ -60,17 +76,27 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
     $storedQuote = (new \Tygh\Addons\SphinxHolidays\Services\CircuitQuoteStore())->get($offer_id, $circuit_id, time());
     $customizedMap = TypeCoerce::toStringMap($customized);
     $customizedPricing = TypeCoerce::toStringMap($customizedMap['pricing'] ?? null);
-    if ($storedQuote === null || ($selected_services !== [] && $customizedPricing === [])) {
+    // Services chosen but not priced: never sold at the price without them.
+    if ($storedQuote === null || ($selected_services !== [] && TypeCoerce::toFloat($customizedPricing['selling_price'] ?? 0) <= 0)) {
         fn_set_notification('W', __('warning'),
             __('sphinx_holidays.offer_unavailable', ['[default]' => 'This offer is no longer available.']));
-        return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.circuit_booking_form?' . http_build_query([
-            'circuit_id' => $circuit_id,
-            'departure_date' => RequestCoerce::string($_REQUEST, 'departure_date'),
-        ])];
+        return [CONTROLLER_STATUS_REDIRECT, $formUrl];
     }
-    $total_price   = TypeCoerce::toFloat($customizedPricing['selling_price'] ?? $storedQuote['selling_price']);
-    $basePrice     = TypeCoerce::toFloat($customizedPricing['supplier_price'] ?? $total_price);
-    $priceCurrency = TypeCoerce::toString($customizedPricing['currency'] ?? ($storedQuote['currency'] !== '' ? $storedQuote['currency'] : ConfigProvider::getDefaultCurrency()));
+    // The price circuits/book sends for this offer: the customized one with
+    // the services, else the quote's. base_price is that pre-commission
+    // selling price, as for hotels and packages (it was supplier_price when
+    // services were chosen, which the book call does not take).
+    $bookPricing   = $selected_services !== [] ? $customizedPricing : $storedQuote['pricing'];
+    if (TypeCoerce::toFloat($bookPricing['selling_price'] ?? 0) <= 0) {
+        // A quote stored before its pricing was: its own price and currency.
+        $bookPricing = ['selling_price' => $storedQuote['selling_price'], 'currency' => $storedQuote['currency']];
+    }
+    $total_price   = TypeCoerce::toFloat($bookPricing['selling_price'] ?? 0);
+    $basePrice     = $total_price;
+    $priceCurrency = TypeCoerce::toString($bookPricing['currency'] ?? '');
+    if ($priceCurrency === '') {
+        $priceCurrency = $storedQuote['currency'] !== '' ? $storedQuote['currency'] : ConfigProvider::getDefaultCurrency();
+    }
     // The raw price for the checkout re-check (PreOrderPriceVerifier).
     $cartService->rememberVerifiedPrice($offer_id, $total_price);
     $total_price   = $cartService->applyCommission($total_price);
@@ -91,13 +117,27 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.circuit_search'];
     }
 
-    // Guest validation
-    $departure_date = RequestCoerce::string($_REQUEST, 'departure_date');
+    // Guest validation, at the departure the provider quoted (the form's
+    // only as a fallback): Sphinx checks each age at that date.
+    $departure_date = $storedQuote['departure_date'] !== '' ? $storedQuote['departure_date'] : RequestCoerce::string($_REQUEST, 'departure_date');
     $parsed_guests = $cartService->parseGuests(RequestCoerce::stringMap($_REQUEST, 'guests'), $departure_date);
     if ($parsed_guests === false) {
-        return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.circuit_booking_form?' . http_build_query([
-            'circuit_id' => $circuit_id, 'departure_date' => $departure_date,
-        ])];
+        return [CONTROLLER_STATUS_REDIRECT, $formUrl];
+    }
+    // circuits/book wants each traveller's gender (m/f) and each child's
+    // real birth date (Sphinx checks it against the quoted age); the form
+    // asks both, and a request without them is refused here, not at Sphinx
+    // after payment.
+    foreach (TypeCoerce::toRowList(array_values(TypeCoerce::toStringMap($parsed_guests['guests_data'] ?? []))) as $guest) {
+        $missingGender = !in_array(TypeCoerce::toString($guest['gender'] ?? ''), ['m', 'f'], true);
+        $missingChildBirth = TypeCoerce::toString($guest['type'] ?? '') === 'child' && TypeCoerce::toString($guest['birthday'] ?? '') === '';
+        if ($missingGender || $missingChildBirth) {
+            fn_set_notification('E', __('error'), __('sphinx_holidays.traveller_details_required', [
+                '[default]' => "Please choose each traveller's gender, and fill in each child's date of birth.",
+            ]));
+
+            return [CONTROLLER_STATUS_REDIRECT, $formUrl];
+        }
     }
 
     // Price guard: the circuit quote is priced for the child ages the search
@@ -127,10 +167,17 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
     $children        = RequestCoerce::int($_REQUEST, 'children');
     $children_ages   = RequestCoerce::string($_REQUEST, 'children_ages');
 
-    $customizedRooms = TypeCoerce::toRowList($customizedMap['rooms'] ?? null);
-    $roomsJsonRaw = json_decode(RequestCoerce::string($_REQUEST, 'rooms_json', '[]'), true);
-    $roomsFallback = is_array($roomsJsonRaw) ? $roomsJsonRaw : [];
-    $rooms = !empty($customizedRooms) ? $customizedRooms : TypeCoerce::toRowList($roomsFallback);
+    // The quote's own rooms (customized, else as quoted): their codes are
+    // what circuits/book names (room_code). The form's copy only for a
+    // quote stored before its rooms were.
+    $rooms = TypeCoerce::toRowList($customizedMap['rooms'] ?? null);
+    if ($rooms === []) {
+        $rooms = $storedQuote['rooms'];
+    }
+    if ($rooms === []) {
+        $roomsJsonRaw = json_decode(RequestCoerce::string($_REQUEST, 'rooms_json', '[]'), true);
+        $rooms = TypeCoerce::toRowList(is_array($roomsJsonRaw) ? $roomsJsonRaw : []);
+    }
     $rooms_data = [];
     foreach ($rooms as $room) {
         $childrenAgesArr = TypeCoerce::toList($room['children_ages'] ?? []);
@@ -155,11 +202,13 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         ? date('Y-m-d', (int) strtotime($departure_date . " + {$tripLength} days"))
         : '';
 
-    // Build + persist booking record
+    // Build + persist booking record. Its offer snapshot is Sphinx's answer
+    // (customized, else the stored quote) — it was the form's request when
+    // nothing was customized.
     $booking_record = $cartService->buildBaseBookingRecord(
         $product_id, (string) $circuit_id, $offer_id, $title,
         $parsed_guests, $contact, $basePrice, $total_price, $priceCurrency,
-        is_array($customized) ? TypeCoerce::toStringMap($customized) : $bookingData
+        $customizedMap !== [] ? $customizedMap : $storedQuote
     );
     $booking_record += [
         'room_id'       => $rooms_data[0]['room_id'],
@@ -176,10 +225,9 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
     ];
 
     // Durable pricing breakdown for the admin booking view (same capture as
-    // the hotel flow; api_response gets overwritten at confirmation).
-    if ($customizedPricing !== []) {
-        $booking_record['pricing_json'] = json_encode($customizedPricing, JSON_UNESCAPED_UNICODE);
-    }
+    // the hotel flow; api_response gets overwritten at confirmation), with
+    // the services chosen: what circuits/book sends, on a retry too.
+    $booking_record['pricing_json'] = json_encode($bookPricing + ['chosen_services' => $selected_services], JSON_UNESCAPED_UNICODE);
 
     $booking_id = $cartService->upsertBooking(
         $booking_record, (string) $circuit_id, $departure_date, $check_out, TypeCoerce::toString($parsed_guests['holder_name'])
