@@ -37,7 +37,7 @@ namespace Tygh\Addons\TravelCore\Tests\Unit\Functions {
      * inputs/returns through TypeCoerce (apply_modifier's slug arm,
      * render_seo_template's array-placeholder join, render_seo_slug's fallback,
      * and run_long_task's redirect tuple). These run without the CS-Cart
-     * framework — fn_generate_seo_name() is intentionally absent so the built-in
+     * framework — CS-Cart's fn_generate_name() is absent, so the built-in
      * slug fallback path is exercised.
      */
     final class SeoTextHelpersTest extends TestCase
@@ -62,8 +62,34 @@ namespace Tygh\Addons\TravelCore\Tests\Unit\Functions {
 
         public function testApplyModifierSlugFallback(): void
         {
-            // No fn_generate_seo_name() defined → the inline fallback slugifier runs.
+            // No fn_generate_name() defined → the inline fallback slugifier runs.
             $this->assertSame('hello-world', fn_travel_core_apply_modifier('Hello   World!!', 'slug'));
+        }
+
+        /** Marked letters became gaps ("Gözde Hotel" → "g-zde-hotel"). */
+        public function testSlugsKeepTheLettersOfMarkedOnes(): void
+        {
+            $this->assertSame('gozde-hotel', fn_travel_core_slugify('Gözde Hotel'));
+            $this->assertSame('calis-beach', fn_travel_core_slugify('Çalış Beach'));
+            $this->assertSame('sirin-otel', fn_travel_core_slugify('Şirin Otel'));
+            $this->assertSame('hotel-taranesc-sinaia', fn_travel_core_slugify('Hotel Ţărănesc Șinaia'));
+            $this->assertSame('akra-v-antalya-city-turkey', fn_travel_core_render_seo_slug('{{name}}-{{city}}-{{country}}', ['name' => 'Akra -V', 'city' => 'Antalya City', 'country' => 'Turkey']));
+        }
+
+        /** On a store, CS-Cart's own generator makes the address, from the plain letters. */
+        public function testCsCartsGeneratorMakesTheAddress(): void
+        {
+            $given = [];
+            $generate = static function (string $text) use (&$given): string {
+                $given[] = $text;
+
+                return 'cs-cart-' . strtolower(str_replace(' ', '-', $text));
+            };
+
+            $this->assertSame('cs-cart-gozde-hotel', fn_travel_core_slugify('Gözde Hotel', $generate));
+            $this->assertSame(['Gozde Hotel'], $given);
+            $this->assertSame('gozde', fn_travel_core_slugify('Gözde', static fn (): string => ''), 'an empty answer falls back');
+            $this->assertFalse(function_exists('fn_generate_seo_name'));
         }
 
         public function testApplyModifierUnknownReturnsValueUnchanged(): void

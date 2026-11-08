@@ -41,7 +41,7 @@ function fn_travel_core_apply_modifier(string $value, string $modifier): string
         'title' => mb_convert_case($value, MB_CASE_TITLE, 'UTF-8'),
         'capitalize' => mb_strtoupper(mb_substr($value, 0, 1, 'UTF-8'), 'UTF-8') . mb_substr($value, 1, null, 'UTF-8'),
         'trim' => trim($value),
-        'slug' => TypeCoerce::toString(function_exists('fn_generate_seo_name') ? fn_generate_seo_name($value) : preg_replace('/-{2,}/', '-', trim((string) preg_replace('/[^a-z0-9-]+/', '-', mb_strtolower($value, 'UTF-8')), '-'))),
+        'slug' => fn_travel_core_slugify($value),
         'first' => mb_substr($value, 0, 1, 'UTF-8'),
         'last' => mb_substr($value, -1, 1, 'UTF-8'),
         'abs' => (string) abs((float) $value),
@@ -158,16 +158,47 @@ function fn_travel_core_render_seo_slug(string $pattern, array $placeholders): s
         return '';
     }
 
-    // Use CS-Cart's built-in SEO name generator if available
-    if (function_exists('fn_generate_seo_name')) {
-        return TypeCoerce::toString(fn_generate_seo_name($rendered));
+    return fn_travel_core_slugify($rendered);
+}
+
+/**
+ * A URL-safe address for $value, as CS-Cart makes one: letters with marks
+ * become plain ones first ("Gözde Çalış Ţărănesc" → "Gozde Calis Taranesc"),
+ * then CS-Cart's own fn_generate_name() (app/functions/fn.common.php).
+ * Without the first step the marked letters were cut out ("g-zde"); the
+ * generator used to be looked up as fn_generate_seo_name(), which CS-Cart
+ * does not define.
+ *
+ * @param (callable(string): mixed)|null $generate CS-Cart's generator; null = fn_generate_name when defined
+ */
+function fn_travel_core_slugify(string $value, ?callable $generate = null): string
+{
+    $plain = class_exists(\Transliterator::class)
+        ? \Transliterator::create('Any-Latin; Latin-ASCII')?->transliterate($value)
+        : null;
+    if (!is_string($plain)) {
+        $plain = strtr($value, [
+            'ă' => 'a', 'â' => 'a', 'î' => 'i', 'ș' => 's', 'ş' => 's', 'ț' => 't', 'ţ' => 't',
+            'Ă' => 'A', 'Â' => 'A', 'Î' => 'I', 'Ș' => 'S', 'Ş' => 'S', 'Ț' => 'T', 'Ţ' => 'T',
+            'ç' => 'c', 'ğ' => 'g', 'ı' => 'i', 'İ' => 'I', 'ö' => 'o', 'ü' => 'u',
+            'Ç' => 'C', 'Ğ' => 'G', 'Ö' => 'O', 'Ü' => 'U', 'ä' => 'a', 'Ä' => 'A', 'ß' => 'ss',
+        ]);
     }
 
-    // Fallback: basic slug generation
-    $slug = mb_strtolower($rendered, 'UTF-8');
-    $slug = (string) preg_replace('/[^a-z0-9-]+/', '-', $slug);
-    $slug = (string) preg_replace('/-{2,}/', '-', $slug); // collapse multiple dashes
-    return trim($slug, '-');
+    if ($generate === null && function_exists('fn_generate_name')) {
+        $generate = static fn (string $text): mixed => fn_generate_name($text);
+    }
+    if ($generate !== null) {
+        $name = TypeCoerce::toString($generate($plain));
+        if ($name !== '') {
+            return $name;
+        }
+    }
+
+    // Without CS-Cart (tests): the same shape.
+    $slug = (string) preg_replace('/[^a-z0-9-]+/', '-', mb_strtolower($plain, 'UTF-8'));
+
+    return trim((string) preg_replace('/-{2,}/', '-', $slug), '-');
 }
 
 // ============================================================================
