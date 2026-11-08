@@ -478,6 +478,15 @@ class HotelRepository implements HotelRepositoryInterface
     }
 
     /**
+     * The hotel API had no images for this hotel: it is asked again only
+     * after HotelLinkingRepository::RECHECK_IMAGES_DAYS.
+     */
+    public function markImagesChecked(string $hotelId): void
+    {
+        $this->linkingRepo->markImagesChecked($hotelId);
+    }
+
+    /**
      * Get unlinked hotels (no product_id) with optional country filter.
      *
      * @return list<array<string, mixed>> List of hotel rows without linked products

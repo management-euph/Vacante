@@ -651,9 +651,12 @@ function fn_travel_core_attach_product_image_pair(int $productId, string $tempFi
     // It answers the new pairs' ids, keyed as $pairsData.
     $pairIds = TypeCoerce::toList(fn_update_image_pairs([], $detailed, $pairsData, $productId, 'product'));
 
-    // fn_update_image_pairs copies the source via Storage::put() and leaves it in place,
-    // so the temp file is still present here — remove it unconditionally.
-    unlink($tempFile);
+    // Storage::put() copies a source from elsewhere but MOVES one from CS-Cart's own
+    // temp dir (fn_create_temp_file(), as Sphinx downloads): remove it only if left.
+    clearstatcache(true, $tempFile);
+    if (file_exists($tempFile)) {
+        unlink($tempFile);
+    }
 
     if ($pairIds === []) {
         \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError = "attach: fn_update_image_pairs returned no pair (object_id={$productId}, size={$tempSize}, mime={$imageInfo['mime']})";
