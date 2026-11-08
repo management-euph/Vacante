@@ -407,6 +407,24 @@ function fn_travel_core_get_or_create_child_category(int $parent_id, string $nam
  * Supports scalar values and arrays (arrays are joined as comma-separated,
  * limited to the first 3 items). Leftover unreplaced tokens are removed.
 /**
+ * CS-Cart's progress bar (fn_set_progress), only on a request that shows
+ * one: an AJAX (comet) request. On a plain page load "echo" writes the text
+ * into the page, the redirect that ends the task can no longer be sent
+ * ("headers already sent") and the admin lands on a 404 under a wall of
+ * "… — updated" lines (SEO Templates, "Apply templates now"). There the
+ * task runs quietly and its redirect carries the result.
+ *
+ * @param string $type fn_set_progress()'s type: init, echo, finish, …
+ */
+function fn_travel_core_progress(string $type, string $text = ''): void
+{
+    if (!defined('AJAX_REQUEST') || !AJAX_REQUEST || !function_exists('fn_set_progress')) {
+        return;
+    }
+    fn_set_progress($type, $text);
+}
+
+/**
  * Run a long-running admin task with progress bar and redirect.
  *
  * Wraps the common controller boilerplate: set_time_limit, progress init/finish,
@@ -423,9 +441,9 @@ function fn_travel_core_run_long_task(string $progressLabel, callable $task, str
     if (function_exists('set_time_limit')) {
         set_time_limit(0);
     }
-    fn_set_progress('init', $progressLabel);
+    fn_travel_core_progress('init', $progressLabel);
     $result = $task();
-    fn_set_progress('finish');
+    fn_travel_core_progress('finish');
 
     if ($onResult !== null) {
         $onResult($result);

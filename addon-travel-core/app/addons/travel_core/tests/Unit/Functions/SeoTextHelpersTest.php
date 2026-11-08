@@ -16,9 +16,11 @@ namespace {
         define('CONTROLLER_STATUS_REDIRECT', 'redirect');
     }
     // Progress-bar shim — the long-task wrapper drives CS-Cart's native bar.
+    // It records each call, so a test can see whether the bar was driven.
     if (!function_exists('fn_set_progress')) {
         function fn_set_progress(string $type, string $data = ''): void
         {
+            $GLOBALS['travel_core_test_progress'][] = [$type, $data];
         }
     }
 
@@ -222,6 +224,27 @@ namespace Tygh\Addons\TravelCore\Tests\Unit\Functions {
             $this->assertTrue($ran);
             $this->assertSame('RESULT', $received);
             $this->assertSame([CONTROLLER_STATUS_REDIRECT, 'dispatch=travel_core.done'], $result);
+        }
+
+        /**
+         * A plain page load has no progress bar: "echo" wrote into the page,
+         * the redirect could not be sent and the admin got a 404 under a
+         * wall of "… — updated" (SEO Templates, "Apply templates now").
+         */
+        public function testAPlainPageLoadRunsWithoutTheProgressBar(): void
+        {
+            $this->assertFalse(defined('AJAX_REQUEST'), 'this suite runs as a plain request');
+            $GLOBALS['travel_core_test_progress'] = [];
+
+            $result = fn_travel_core_run_long_task('travel_core.doing_work', static function (): bool {
+                fn_travel_core_progress('echo', 'Rixos Downtown — updated');
+
+                return true;
+            }, 'dispatch=sphinx_seo_templates.manage');
+
+            $this->assertSame([], $GLOBALS['travel_core_test_progress'], 'nothing written into the page');
+            $this->assertSame([CONTROLLER_STATUS_REDIRECT, 'dispatch=sphinx_seo_templates.manage'], $result, 'the redirect still ends it');
+            $this->assertStringContainsString("fn_travel_core_progress('echo',", (string) file_get_contents(dirname(__DIR__, 3) . '/functions/seo.php'));
         }
 
         public function testRunLongTaskWithoutOnResultStillRedirects(): void
