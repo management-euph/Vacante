@@ -66,6 +66,16 @@ namespace Tygh\Addons\TravelCore\Tests\Unit\Functions {
             self::assertSame(['akra-v-antalya-city-turkey', 0], $asked[0][1]);
         }
 
+        /** Each language's address is made in that language: "&" is "si" in Romanian. */
+        public function testTheAddressSpeaksItsLanguage(): void
+        {
+            DbStub::$getField = static fn (): ?int => null;
+            $hotel = ['name' => 'Hotel & Spa', 'city' => 'Mamaia', 'country' => 'Romania'];
+
+            self::assertSame('hotel-si-spa-mamaia-romania', fn_travel_core_apply_seo_fields('unitslug', $hotel, 0, '7', 'ro')['seo_name'] ?? null);
+            self::assertSame('hotel-and-spa-mamaia-romania', fn_travel_core_apply_seo_fields('unitslug', $hotel, 0, '7', 'en')['seo_name'] ?? null);
+        }
+
         public function testAFreeAddressIsKept(): void
         {
             DbStub::$getField = static fn (): ?int => null;

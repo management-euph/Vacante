@@ -149,23 +149,25 @@ function fn_travel_core_render_seo_template(string $pattern, array $placeholders
  *
  * @param string $pattern Template string with {{placeholder}} tokens
  * @param array<string, mixed> $placeholders Key => value map (keys without braces)
+ * @param string $langCode the address's language: "&" reads "si" in Romanian, "and" otherwise
  * @return string URL-safe slug
  */
-function fn_travel_core_render_seo_slug(string $pattern, array $placeholders): string
+function fn_travel_core_render_seo_slug(string $pattern, array $placeholders, string $langCode = ''): string
 {
     $rendered = fn_travel_core_render_seo_template($pattern, $placeholders);
     if ($rendered === '') {
         return '';
     }
 
-    return fn_travel_core_slugify($rendered);
+    return fn_travel_core_slugify($rendered, null, $langCode);
 }
 
 /**
  * A URL-safe address for $value, as CS-Cart makes one: letters with marks
  * become plain ones ("Gözde Çalış Țărănesc" → "gozde-calis-taranesc"),
- * spaces and other signs dashes; then CS-Cart's own fn_generate_name()
- * (app/functions/fn.common.php) sees it, for its generate_name hooks.
+ * "&" a word ("and", "si"), quotes go, spaces and other signs dashes; then CS-Cart's own
+ * fn_generate_name() (app/functions/fn.common.php) sees it, for its
+ * generate_name hooks.
  *
  * The address is made whole first: fn_generate_name() converts letters
  * only through its literal_converter table, and drops whatever is left
@@ -174,8 +176,9 @@ function fn_travel_core_render_seo_slug(string $pattern, array $placeholders): s
  * CS-Cart does not define: marked letters were cut out ("g-zde").
  *
  * @param (callable(string): mixed)|null $generate CS-Cart's generator; null = fn_generate_name when defined
+ * @param string $langCode the address's language: "&" reads "si" in Romanian ("hotel-si-spa"), "and" otherwise
  */
-function fn_travel_core_slugify(string $value, ?callable $generate = null): string
+function fn_travel_core_slugify(string $value, ?callable $generate = null, string $langCode = ''): string
 {
     $plain = class_exists(\Transliterator::class)
         ? \Transliterator::create('Any-Latin; Latin-ASCII')?->transliterate($value)
@@ -188,6 +191,12 @@ function fn_travel_core_slugify(string $value, ?callable $generate = null): stri
             'Ç' => 'C', 'Ğ' => 'G', 'Ö' => 'O', 'Ü' => 'U', 'ä' => 'a', 'Ä' => 'A', 'ß' => 'ss',
         ]);
     }
+    // CS-Cart's own punctuation (literal_converter/general.php): "&" is a
+    // word ("and"; "si" in a Romanian address), quotes go, so a name stays
+    // one word ("O'Hara" → "ohara", "McDonald's" → "mcdonalds"), with the
+    // signs suppliers type for an apostrophe (` ´ ʼ; ’ ‘ are ' by now).
+    $and = strtolower(substr($langCode, 0, 2)) === 'ro' ? 'si' : 'and';
+    $plain = strtr($plain, ['&' => '-' . $and . '-', "'" => '', '"' => '', '`' => '', '´' => '', 'ʼ' => '']);
     $slug = (string) preg_replace('/[^a-z0-9-]+/', '-', mb_strtolower($plain, 'UTF-8'));
     $slug = trim((string) preg_replace('/-{2,}/', '-', $slug), '-');
 
@@ -420,7 +429,7 @@ function fn_travel_core_apply_seo_fields(string $addonName, array $placeholders,
 
         // Render the field
         if ($productKey === 'seo_name') {
-            $rendered = fn_travel_core_render_seo_slug($template, $placeholders);
+            $rendered = fn_travel_core_render_seo_slug($template, $placeholders, $langCode);
             // Another product holding this address (two hotels of the same
             // name in one city) gets the hotel id appended. This check used to
             // need fn_generate_seo_name(), which CS-Cart does not define: it
