@@ -47,25 +47,9 @@ return [
         'en' => 'Scheduled jobs',
         'ro' => 'Joburi programate',
     ],
-    'novoton_holidays.dash_jobs_intro' => [
-        'en' => 'In the order the jobs run: each stage needs the one before it. Run works as a signed-in admin action, so the cron key never goes into the browser. ⋯ copies a job\'s crontab line, URL or CLI command with the real key.',
-        'ro' => 'În ordinea în care rulează: fiecare etapă are nevoie de cea dinainte. Rulează funcționează ca acțiune de administrator autentificat, așa că cheia cron nu ajunge niciodată în browser. ⋯ copiază linia crontab, URL-ul sau comanda CLI a jobului, cu cheia reală.',
-    ],
     'novoton_holidays.dash_col_job' => [
         'en' => 'Job',
         'ro' => 'Job',
-    ],
-    'novoton_holidays.dash_col_schedule' => [
-        'en' => 'Schedule',
-        'ro' => 'Program',
-    ],
-    'novoton_holidays.dash_col_last_run' => [
-        'en' => 'Last run',
-        'ro' => 'Ultima rulare',
-    ],
-    'novoton_holidays.dash_col_actions' => [
-        'en' => 'Actions',
-        'ro' => 'Acțiuni',
     ],
     'novoton_holidays.dash_stage_reference' => [
         'en' => 'Reference data',
@@ -86,10 +70,6 @@ return [
     'novoton_holidays.dash_stage_upkeep' => [
         'en' => 'Bookings and upkeep',
         'ro' => 'Rezervări și întreținere',
-    ],
-    'novoton_holidays.dash_recommended' => [
-        'en' => 'Recommended',
-        'ro' => 'Recomandat',
     ],
     'novoton_holidays.dash_job_resort_list' => [
         'en' => 'Resort list',
@@ -275,74 +255,6 @@ return [
         'en' => 'Closes old alternative requests',
         'ro' => 'Închide cererile de alternative vechi',
     ],
-    'novoton_holidays.dash_sched_every_minutes' => [
-        'en' => 'Every [n] min',
-        'ro' => 'La fiecare [n] min',
-    ],
-    'novoton_holidays.dash_sched_hourly' => [
-        'en' => 'Hourly at :[minute]',
-        'ro' => 'Din oră în oră, la :[minute]',
-    ],
-    'novoton_holidays.dash_sched_every_hours' => [
-        'en' => 'Every [n] hours at :[minute]',
-        'ro' => 'La fiecare [n] ore, la :[minute]',
-    ],
-    'novoton_holidays.dash_sched_daily' => [
-        'en' => 'Daily [time]',
-        'ro' => 'Zilnic [time]',
-    ],
-    'novoton_holidays.dash_sched_twice_daily' => [
-        'en' => 'Daily [time] and [time2]',
-        'ro' => 'Zilnic [time] și [time2]',
-    ],
-    'novoton_holidays.dash_sched_every_days' => [
-        'en' => 'Every [n] days, [time]',
-        'ro' => 'La fiecare [n] zile, [time]',
-    ],
-    'novoton_holidays.dash_sched_weekly_sun' => [
-        'en' => 'Sundays [time]',
-        'ro' => 'Duminica [time]',
-    ],
-    'novoton_holidays.dash_sched_weekly_mon' => [
-        'en' => 'Mondays [time]',
-        'ro' => 'Lunea [time]',
-    ],
-    'novoton_holidays.dash_sched_weekly_tue' => [
-        'en' => 'Tuesdays [time]',
-        'ro' => 'Marțea [time]',
-    ],
-    'novoton_holidays.dash_sched_weekly_wed' => [
-        'en' => 'Wednesdays [time]',
-        'ro' => 'Miercurea [time]',
-    ],
-    'novoton_holidays.dash_sched_weekly_thu' => [
-        'en' => 'Thursdays [time]',
-        'ro' => 'Joia [time]',
-    ],
-    'novoton_holidays.dash_sched_weekly_fri' => [
-        'en' => 'Fridays [time]',
-        'ro' => 'Vinerea [time]',
-    ],
-    'novoton_holidays.dash_sched_weekly_sat' => [
-        'en' => 'Saturdays [time]',
-        'ro' => 'Sâmbăta [time]',
-    ],
-    'novoton_holidays.dash_sched_raw' => [
-        'en' => '[cron]',
-        'ro' => '[cron]',
-    ],
-    'novoton_holidays.dash_sched_on_demand' => [
-        'en' => 'On demand',
-        'ro' => 'La cerere',
-    ],
-    'novoton_holidays.dash_run_ok' => [
-        'en' => 'On time',
-        'ro' => 'La timp',
-    ],
-    'novoton_holidays.dash_run_late' => [
-        'en' => 'Late',
-        'ro' => 'Întârziat',
-    ],
     'novoton_holidays.dash_run_failed' => [
         'en' => 'Failed',
         'ro' => 'Eșuat',
@@ -351,137 +263,9 @@ return [
         'en' => 'Running',
         'ro' => 'Rulează',
     ],
-    'novoton_holidays.dash_run_stalled' => [
-        'en' => 'Stalled',
-        'ro' => 'Blocat',
-    ],
-    'novoton_holidays.dash_run_never' => [
-        'en' => 'No runs yet',
-        'ro' => 'Nicio rulare încă',
-    ],
-    'novoton_holidays.dash_run_finished_at' => [
-        'en' => 'Finished [date]',
-        'ro' => 'Terminat [date]',
-    ],
-    'novoton_holidays.dash_run_started_at' => [
-        'en' => 'Started [date]',
-        'ro' => 'Pornit [date]',
-    ],
-    'novoton_holidays.dash_run_stalled_hint' => [
-        'en' => 'Started [date] and never finished',
-        'ro' => 'Pornit [date] și neterminat',
-    ],
-    'novoton_holidays.dash_run' => [
-        'en' => 'Run',
-        'ro' => 'Rulează',
-    ],
-    'novoton_holidays.dash_more_actions' => [
-        'en' => 'More actions',
-        'ro' => 'Mai multe acțiuni',
-    ],
-    'novoton_holidays.dash_copy_crontab_line' => [
-        'en' => 'Copy crontab line',
-        'ro' => 'Copiază linia crontab',
-    ],
-    'novoton_holidays.dash_copy_url' => [
-        'en' => 'Copy URL',
-        'ro' => 'Copiază URL-ul',
-    ],
-    'novoton_holidays.dash_copy_cli' => [
-        'en' => 'Copy CLI command',
-        'ro' => 'Copiază comanda CLI',
-    ],
-    'novoton_holidays.dash_copied' => [
-        'en' => 'Copied',
-        'ro' => 'Copiat',
-    ],
-    'novoton_holidays.dash_copy_failed' => [
-        'en' => 'Copy failed',
-        'ro' => 'Copierea a eșuat',
-    ],
-    'novoton_holidays.dash_check_status' => [
-        'en' => 'Check status',
-        'ro' => 'Verifică starea',
-    ],
-    'novoton_holidays.dash_force_full' => [
-        'en' => 'Force full sync',
-        'ro' => 'Forțează sincronizarea completă',
-    ],
-    'novoton_holidays.dash_force_full_confirm' => [
-        'en' => 'Run a full sync of [job] now? It re-reads every hotel and makes many API calls.',
-        'ro' => 'Rulezi acum sincronizarea completă pentru [job]? Recitește toate hotelurile și face multe apeluri API.',
-    ],
-    'novoton_holidays.dash_redo_all' => [
-        'en' => 'Redo all hotels',
-        'ro' => 'Refă toate hotelurile',
-    ],
-    'novoton_holidays.dash_redo_all_confirm' => [
-        'en' => 'Run [job] again for every hotel, including the ones already done? It continues in the scheduled runs until every hotel is done.',
-        'ro' => 'Rulezi din nou [job] pentru fiecare hotel, inclusiv pentru cele deja făcute? Continuă în rulările programate până termină toate hotelurile.',
-    ],
-    'novoton_holidays.dash_reset_progress' => [
-        'en' => 'Reset progress…',
-        'ro' => 'Resetează progresul…',
-    ],
-    'novoton_holidays.dash_reset_confirm' => [
-        'en' => 'Reset the progress of [job]? Its next run starts again from the first hotel.',
-        'ro' => 'Resetezi progresul pentru [job]? Următoarea rulare începe din nou de la primul hotel.',
-    ],
-    'novoton_holidays.dash_menu_needs_key' => [
-        'en' => 'Set the cron key in Travel Core to copy commands.',
-        'ro' => 'Setează cheia cron în Travel Core pentru a copia comenzile.',
-    ],
-    'novoton_holidays.dash_on_demand_title' => [
-        'en' => 'Other jobs, run on demand ([n])',
-        'ro' => 'Alte joburi, rulate la cerere ([n])',
-    ],
     'novoton_holidays.dash_on_demand_intro' => [
         'en' => 'Not part of the schedule: Full sync repeats jobs from the stages above, and the alternative-request jobs follow bookings.',
         'ro' => 'Nu fac parte din program: Sincronizarea completă repetă joburi din etapele de mai sus, iar joburile pentru cereri de alternative urmează rezervările.',
-    ],
-    'novoton_holidays.dash_commands_title' => [
-        'en' => 'All commands',
-        'ro' => 'Toate comenzile',
-    ],
-    'novoton_holidays.dash_commands_hint' => [
-        'en' => 'CLI (php): paste into the server crontab or cPanel → Cron Jobs. URL: for a cron service; add each one at the time shown.',
-        'ro' => 'CLI (php): lipește în crontab-ul serverului sau în cPanel → Cron Jobs. URL: pentru un serviciu cron; adaugă fiecare adresă la ora arătată.',
-    ],
-    'novoton_holidays.dash_format_label' => [
-        'en' => 'Command format',
-        'ro' => 'Formatul comenzii',
-    ],
-    'novoton_holidays.dash_format_cli' => [
-        'en' => 'CLI (php)',
-        'ro' => 'CLI (php)',
-    ],
-    'novoton_holidays.dash_format_url' => [
-        'en' => 'URL',
-        'ro' => 'URL',
-    ],
-    'novoton_holidays.dash_copy_all' => [
-        'en' => 'Copy all',
-        'ro' => 'Copiază tot',
-    ],
-    'novoton_holidays.dash_key_hidden_note' => [
-        'en' => 'The key is hidden here; Copy copies the real one. Anyone with the key can start these jobs; rotate it on Travel Core → Tools.',
-        'ro' => 'Cheia e ascunsă aici; Copiază copiază cheia reală. Oricine are cheia poate porni aceste joburi; o poți schimba în Travel Core → Instrumente.',
-    ],
-    'novoton_holidays.dash_open_tools' => [
-        'en' => 'Open Travel Core → Tools',
-        'ro' => 'Deschide Travel Core → Instrumente',
-    ],
-    'novoton_holidays.dash_no_key_title' => [
-        'en' => 'No cron key is set',
-        'ro' => 'Nu este setată nicio cheie cron',
-    ],
-    'novoton_holidays.dash_no_key_body' => [
-        'en' => 'Scheduled runs are refused until the shared cron key is set in Travel Core. Run still works from here.',
-        'ro' => 'Rulările programate sunt refuzate până când cheia cron comună este setată în Travel Core. Rulează funcționează în continuare de aici.',
-    ],
-    'novoton_holidays.dash_set_key' => [
-        'en' => 'Set it in Travel Core',
-        'ro' => 'Seteaz-o în Travel Core',
     ],
     'novoton_holidays.dash_xml_feed_title' => [
         'en' => 'Hotel features XML feed',

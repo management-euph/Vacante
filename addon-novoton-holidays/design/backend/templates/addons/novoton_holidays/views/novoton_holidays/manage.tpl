@@ -4,7 +4,9 @@
    (a summary; they are chosen on Novoton -> Destinations), the scheduled
    jobs (in the order they run), every command, recent sync activity. Built
    on Travel Core's travel-cron-* styles so the three providers' dashboards
-   read alike; behaviour in dashboard.js, no inline scripts. **}
+   read alike. The scheduled jobs and All commands are Travel Core's shared
+   cards (components/jobs_card.tpl, commands_card.tpl), driven by its
+   cron-jobs.js; no inline scripts. **}
 
 {capture name="mainbox"}
 
@@ -97,7 +99,7 @@
                                 {__("novoton_holidays.dash_attention_no_season", ["[with]" => $item.hotels_with_season, "[total]" => $item.hotels_total])}
                             {/if}
                         </span>
-                        {include file="addons/novoton_holidays/components/run_job.tpl" job=$item.mode label=__("novoton_holidays.dash_attention_run", ["[job]" => $_name]) class="btn btn-primary"}
+                        {include file="addons/travel_core/components/run_job.tpl" run_dispatch="novoton_holidays.run_job" job=$item.mode label=__("novoton_holidays.dash_attention_run", ["[job]" => $_name]) class="btn btn-primary"}
                     </li>
                 {/foreach}
             </ul>
@@ -129,7 +131,7 @@
             </div>
             <div class="novoton-tools__group">
                 <h4>{__("novoton_holidays.dash_tools_maintenance")}</h4>
-                {include file="addons/novoton_holidays/components/run_job.tpl" job="recompute_calendar_prices" label=__("novoton_holidays.dash_tool_recompute_calendar") class="btn" confirm=__("novoton_holidays.dash_tool_recompute_calendar_confirm")}
+                {include file="addons/travel_core/components/run_job.tpl" run_dispatch="novoton_holidays.run_job" job="recompute_calendar_prices" label=__("novoton_holidays.dash_tool_recompute_calendar") class="btn" confirm=__("novoton_holidays.dash_tool_recompute_calendar_confirm")}
                 <p class="travel-cron-hint">{__("novoton_holidays.dash_tool_recompute_calendar_hint")}</p>
             </div>
         </div>
@@ -143,103 +145,41 @@
         {include file="addons/travel_core/components/availability_card.tpl" card=$novoton_availability_card}
     {/if}
 
-    {** Scheduled jobs — id: the target of the "Open Novoton cron" link on Travel Core -> Tools.
-       One row per job, in the order the jobs run (CronPlanBuilder). No
-       command with the cron key is ever printed: they are shown masked and
-       Copy puts the real one on the clipboard; Run is an admin POST. **}
-    <section id="novoton-cron-jobs" class="travel-cron-card travel-cron-card--flush novoton-jobs" aria-labelledby="novoton-jobs-title">
-        <div class="travel-cron-card__head travel-cron-card__head--pad">
-            <div>
-                <h3 id="novoton-jobs-title">{__("novoton_holidays.dash_jobs_title")}</h3>
-                <p class="muted">{__("novoton_holidays.dash_jobs_intro")}</p>
-            </div>
-        </div>
-
-        {if !$novoton_cron_has_key}
-            <div class="alert alert-warning novoton-jobs__nokey">
-                <strong>{__("novoton_holidays.dash_no_key_title")}</strong>
-                {* Travel Core, not novoton: the cron secret authenticates OUR
-                   endpoint, so it lives once in Core and is shared by all three
-                   providers. *}
-                <p>{__("novoton_holidays.dash_no_key_body")} <a href="{"addons.update?addon=travel_core"|fn_url}">{__("novoton_holidays.dash_set_key")}</a></p>
-            </div>
-        {/if}
-
-        <table class="table table-middle travel-cron-table novoton-jobs__table">
-            <thead>
-                <tr>
-                    <th>{__("novoton_holidays.dash_col_job")}</th>
-                    <th>{__("novoton_holidays.dash_col_schedule")}</th>
-                    <th>{__("novoton_holidays.dash_col_last_run")}</th>
-                    <th class="right">{__("novoton_holidays.dash_col_actions")}</th>
-                </tr>
-            </thead>
-            {foreach from=$novoton_job_stages item=stage}
-                <tbody>
-                    <tr class="novoton-jobs__stage">
-                        <th colspan="4" scope="colgroup">{$stage.number}. {__("novoton_holidays.dash_stage_`$stage.stage`")}</th>
-                    </tr>
-                    {foreach from=$stage.jobs item=job}
-                        {include file="addons/novoton_holidays/components/job_row.tpl" job=$job has_key=$novoton_cron_has_key}
-                    {/foreach}
-                </tbody>
-            {/foreach}
-        </table>
-
-        {if $novoton_on_demand_jobs}
-            <details class="novoton-jobs__ondemand">
-                <summary>{__("novoton_holidays.dash_on_demand_title", ["[n]" => $novoton_on_demand_jobs|count])}</summary>
-                <p class="muted">{__("novoton_holidays.dash_on_demand_intro")}</p>
-                <table class="table table-middle travel-cron-table novoton-jobs__table">
-                    <tbody>
-                        {foreach from=$novoton_on_demand_jobs item=job}
-                            {include file="addons/novoton_holidays/components/job_row.tpl" job=$job has_key=$novoton_cron_has_key}
-                        {/foreach}
-                    </tbody>
-                </table>
-            </details>
-        {/if}
-    </section>
+    {** Scheduled jobs: Travel Core's shared card, from CronPlanBuilder's rows.
+       card_id is the target of the "Open Novoton cron" link on Travel Core ->
+       Tools. No command with the cron key is ever printed: the ⋯ menus copy
+       the real ones, and Run posts to novoton_holidays.run_job. **}
+    {include file="addons/travel_core/components/jobs_card.tpl"
+        card_id="novoton-cron-jobs"
+        stages=$novoton_job_stages
+        on_demand=$novoton_on_demand_jobs
+        on_demand_intro=__("novoton_holidays.dash_on_demand_intro")
+        has_key=$novoton_cron_has_key
+        run_dispatch="novoton_holidays.run_job"
+    }
 
     {if $novoton_cron_has_key}
-        {* Every job's command, for the server crontab (CLI) or a cron service
-           (URL). The key is masked in the DISPLAY only: a masked command pasted
-           into a crontab is a refused run at 04:30 nobody is awake to see, so
-           Copy all copies the real text (dashboard.js). *}
-        <section id="novoton-crontab" class="travel-cron-card novoton-crontab" aria-labelledby="novoton-crontab-title"
-                 data-crontab-cli="{$novoton_crontab_cli|escape:html}"
-                 data-crontab-url="{$novoton_crontab_url|escape:html}"
-                 data-key="{$novoton_cron_key|escape:html}"
-                 data-txt-copied="{__("novoton_holidays.dash_copied")|escape:html}"
-                 data-txt-copy-failed="{__("novoton_holidays.dash_copy_failed")|escape:html}">
-            <div class="travel-cron-card__head">
-                <div>
-                    <h3 id="novoton-crontab-title">{__("novoton_holidays.dash_commands_title")}</h3>
-                    <p class="muted">{__("novoton_holidays.dash_commands_hint")}</p>
-                </div>
-                <div class="novoton-crontab__tools">
-                    <div class="btn-group" role="group" aria-label="{__("novoton_holidays.dash_format_label")|escape:html}">
-                        <button type="button" class="btn" data-novoton-format="cli" aria-pressed="true">{__("novoton_holidays.dash_format_cli")}</button>
-                        <button type="button" class="btn" data-novoton-format="url" aria-pressed="false">{__("novoton_holidays.dash_format_url")}</button>
-                    </div>
-                    <button type="button" class="btn btn-primary" id="novoton-crontab-copy">{__("novoton_holidays.dash_copy_all")}</button>
-                </div>
-            </div>
-            <pre id="novoton-crontab-text" class="novoton-crontab__text">{$novoton_crontab_masked|escape:html}</pre>
-            <p class="travel-cron-foot novoton-crontab__note">
-                <i class="icon-lock" aria-hidden="true"></i> {__("novoton_holidays.dash_key_hidden_note")}
-                <a href="{"travel_tools.manage"|fn_url}">{__("novoton_holidays.dash_open_tools")}</a>
-            </p>
-
+        {** Every job's command (Travel Core's shared card), with Novoton's
+           hotel-features XML feed under it. Shown masked; the real text rides
+           only in data-* for Copy. **}
+        {capture name="novoton_xml_feed"}
             <div class="novoton-crontab__feed">
                 <strong>{__("novoton_holidays.dash_xml_feed_title")}</strong>
                 <p class="muted">{__("novoton_holidays.dash_xml_feed_hint")}</p>
                 <div class="novoton-crontab__feedrow">
                     <code class="travel-cron-cmd">{$novoton_xml_feed_masked|escape:html}</code>
-                    <button type="button" class="btn novoton-copy" data-copy="{$novoton_xml_feed_url|escape:html}">{__("novoton_holidays.dash_copy_url")}</button>
+                    <button type="button" class="btn travel-cron-copy" data-copy="{$novoton_xml_feed_url|escape:html}">{__("travel_core.jobs_copy_url")}</button>
                 </div>
             </div>
-        </section>
+        {/capture}
+        {include file="addons/travel_core/components/commands_card.tpl"
+            card_id="novoton-crontab"
+            cli=$novoton_crontab_cli
+            url=$novoton_crontab_url
+            masked=$novoton_crontab_masked
+            key=$novoton_cron_key
+            extra=$smarty.capture.novoton_xml_feed
+        }
     {/if}
 
     {** Recent sync activity, CS-Cart paginated (its own template: the
@@ -248,9 +188,9 @@
 
 </div>
 
-{* Inside the capture on purpose: admin top-nav navigation is AJAX and runs
-   only the scripts inside the mainbox capture. *}
-{script src="js/addons/novoton_holidays/dashboard.js"}
+{* No script here: the jobs card loads Travel Core's cron-jobs.js inside this
+   capture (admin top-nav navigation is AJAX and runs only the scripts inside
+   the mainbox capture), and it serves the Run buttons above it too. *}
 
 {/capture}
 

@@ -3784,4 +3784,238 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Looking for the prices of this departure… it can take up to half a minute.',
         'ro' => 'Căutăm prețurile pentru această plecare… poate dura până la jumătate de minut.',
     ],
+    // The providers' scheduled-jobs cards (components/jobs_card.tpl, job_row.tpl,
+    // run_job.tpl, commands_card.tpl) and the schedule words of Cron\CronJobPlan.
+    'travel_core.jobs_title' => [
+        'en' => 'Scheduled jobs',
+        'ro' => 'Joburi programate',
+    ],
+    'travel_core.jobs_intro' => [
+        'en' => 'In the order the jobs run: each stage needs the one before it. Run works as a signed-in admin action, so the cron key never goes into the browser. ⋯ copies a job\'s crontab line, URL or CLI command with the real key.',
+        'ro' => 'În ordinea în care rulează: fiecare etapă are nevoie de cea dinainte. Rulează funcționează ca acțiune de administrator autentificat, așa că cheia cron nu ajunge niciodată în browser. ⋯ copiază linia crontab, URL-ul sau comanda CLI a jobului, cu cheia reală.',
+    ],
+    'travel_core.jobs_col_job' => [
+        'en' => 'Job',
+        'ro' => 'Job',
+    ],
+    'travel_core.jobs_col_schedule' => [
+        'en' => 'Schedule',
+        'ro' => 'Program',
+    ],
+    'travel_core.jobs_col_last_run' => [
+        'en' => 'Last run',
+        'ro' => 'Ultima rulare',
+    ],
+    'travel_core.jobs_col_actions' => [
+        'en' => 'Actions',
+        'ro' => 'Acțiuni',
+    ],
+    'travel_core.jobs_recommended' => [
+        'en' => 'Recommended',
+        'ro' => 'Recomandat',
+    ],
+    'travel_core.jobs_sched_every_minutes' => [
+        'en' => 'Every [n] min',
+        'ro' => 'La fiecare [n] min',
+    ],
+    'travel_core.jobs_sched_hourly' => [
+        'en' => 'Hourly at :[minute]',
+        'ro' => 'Din oră în oră, la :[minute]',
+    ],
+    'travel_core.jobs_sched_every_hours' => [
+        'en' => 'Every [n] hours at :[minute]',
+        'ro' => 'La fiecare [n] ore, la :[minute]',
+    ],
+    'travel_core.jobs_sched_daily' => [
+        'en' => 'Daily [time]',
+        'ro' => 'Zilnic [time]',
+    ],
+    'travel_core.jobs_sched_twice_daily' => [
+        'en' => 'Daily [time] and [time2]',
+        'ro' => 'Zilnic [time] și [time2]',
+    ],
+    'travel_core.jobs_sched_every_days' => [
+        'en' => 'Every [n] days, [time]',
+        'ro' => 'La fiecare [n] zile, [time]',
+    ],
+    'travel_core.jobs_sched_weekly_sun' => [
+        'en' => 'Sundays [time]',
+        'ro' => 'Duminica [time]',
+    ],
+    'travel_core.jobs_sched_weekly_mon' => [
+        'en' => 'Mondays [time]',
+        'ro' => 'Lunea [time]',
+    ],
+    'travel_core.jobs_sched_weekly_tue' => [
+        'en' => 'Tuesdays [time]',
+        'ro' => 'Marțea [time]',
+    ],
+    'travel_core.jobs_sched_weekly_wed' => [
+        'en' => 'Wednesdays [time]',
+        'ro' => 'Miercurea [time]',
+    ],
+    'travel_core.jobs_sched_weekly_thu' => [
+        'en' => 'Thursdays [time]',
+        'ro' => 'Joia [time]',
+    ],
+    'travel_core.jobs_sched_weekly_fri' => [
+        'en' => 'Fridays [time]',
+        'ro' => 'Vinerea [time]',
+    ],
+    'travel_core.jobs_sched_weekly_sat' => [
+        'en' => 'Saturdays [time]',
+        'ro' => 'Sâmbăta [time]',
+    ],
+    'travel_core.jobs_sched_raw' => [
+        'en' => '[cron]',
+        'ro' => '[cron]',
+    ],
+    'travel_core.jobs_sched_on_demand' => [
+        'en' => 'On demand',
+        'ro' => 'La cerere',
+    ],
+    'travel_core.jobs_state_ok' => [
+        'en' => 'On time',
+        'ro' => 'La timp',
+    ],
+    'travel_core.jobs_state_late' => [
+        'en' => 'Late',
+        'ro' => 'Întârziat',
+    ],
+    'travel_core.jobs_state_failed' => [
+        'en' => 'Failed',
+        'ro' => 'Eșuat',
+    ],
+    'travel_core.jobs_state_running' => [
+        'en' => 'Running',
+        'ro' => 'Rulează',
+    ],
+    'travel_core.jobs_state_stalled' => [
+        'en' => 'Stalled',
+        'ro' => 'Blocat',
+    ],
+    'travel_core.jobs_state_never' => [
+        'en' => 'No runs yet',
+        'ro' => 'Nicio rulare încă',
+    ],
+    'travel_core.jobs_finished_at' => [
+        'en' => 'Finished [date]',
+        'ro' => 'Terminat [date]',
+    ],
+    'travel_core.jobs_started_at' => [
+        'en' => 'Started [date]',
+        'ro' => 'Pornit [date]',
+    ],
+    'travel_core.jobs_stalled_hint' => [
+        'en' => 'Started [date] and never finished',
+        'ro' => 'Pornit [date] și neterminat',
+    ],
+    'travel_core.jobs_run' => [
+        'en' => 'Run',
+        'ro' => 'Rulează',
+    ],
+    'travel_core.jobs_more_actions' => [
+        'en' => 'More actions',
+        'ro' => 'Mai multe acțiuni',
+    ],
+    'travel_core.jobs_copy_crontab_line' => [
+        'en' => 'Copy crontab line',
+        'ro' => 'Copiază linia crontab',
+    ],
+    'travel_core.jobs_copy_url' => [
+        'en' => 'Copy URL',
+        'ro' => 'Copiază URL-ul',
+    ],
+    'travel_core.jobs_copy_cli' => [
+        'en' => 'Copy CLI command',
+        'ro' => 'Copiază comanda CLI',
+    ],
+    'travel_core.jobs_copied' => [
+        'en' => 'Copied',
+        'ro' => 'Copiat',
+    ],
+    'travel_core.jobs_copy_failed' => [
+        'en' => 'Copy failed',
+        'ro' => 'Copierea a eșuat',
+    ],
+    'travel_core.jobs_check_status' => [
+        'en' => 'Check status',
+        'ro' => 'Verifică starea',
+    ],
+    'travel_core.jobs_force_full' => [
+        'en' => 'Force full sync',
+        'ro' => 'Forțează sincronizarea completă',
+    ],
+    'travel_core.jobs_force_full_confirm' => [
+        'en' => 'Run a full sync of [job] now? It re-reads every hotel and makes many API calls.',
+        'ro' => 'Rulezi acum sincronizarea completă pentru [job]? Recitește toate hotelurile și face multe apeluri API.',
+    ],
+    'travel_core.jobs_redo_all' => [
+        'en' => 'Redo all hotels',
+        'ro' => 'Refă toate hotelurile',
+    ],
+    'travel_core.jobs_redo_all_confirm' => [
+        'en' => 'Run [job] again for every hotel, including the ones already done? It continues in the scheduled runs until every hotel is done.',
+        'ro' => 'Rulezi din nou [job] pentru fiecare hotel, inclusiv pentru cele deja făcute? Continuă în rulările programate până termină toate hotelurile.',
+    ],
+    'travel_core.jobs_reset_progress' => [
+        'en' => 'Reset progress…',
+        'ro' => 'Resetează progresul…',
+    ],
+    'travel_core.jobs_reset_confirm' => [
+        'en' => 'Reset the progress of [job]? Its next run starts again from the first hotel.',
+        'ro' => 'Resetezi progresul pentru [job]? Următoarea rulare începe din nou de la primul hotel.',
+    ],
+    'travel_core.jobs_menu_needs_key' => [
+        'en' => 'Set the cron key in Travel Core to copy commands.',
+        'ro' => 'Setează cheia cron în Travel Core pentru a copia comenzile.',
+    ],
+    'travel_core.jobs_on_demand_title' => [
+        'en' => 'Other jobs, run on demand ([n])',
+        'ro' => 'Alte joburi, rulate la cerere ([n])',
+    ],
+    'travel_core.jobs_commands_title' => [
+        'en' => 'All commands',
+        'ro' => 'Toate comenzile',
+    ],
+    'travel_core.jobs_commands_hint' => [
+        'en' => 'CLI (php): paste into the server crontab or cPanel → Cron Jobs. URL: for a cron service; add each one at the time shown.',
+        'ro' => 'CLI (php): lipește în crontab-ul serverului sau în cPanel → Cron Jobs. URL: pentru un serviciu cron; adaugă fiecare adresă la ora arătată.',
+    ],
+    'travel_core.jobs_format_label' => [
+        'en' => 'Command format',
+        'ro' => 'Formatul comenzii',
+    ],
+    'travel_core.jobs_format_cli' => [
+        'en' => 'CLI (php)',
+        'ro' => 'CLI (php)',
+    ],
+    'travel_core.jobs_format_url' => [
+        'en' => 'URL',
+        'ro' => 'URL',
+    ],
+    'travel_core.jobs_copy_all' => [
+        'en' => 'Copy all',
+        'ro' => 'Copiază tot',
+    ],
+    'travel_core.jobs_key_hidden_note' => [
+        'en' => 'The key is hidden here; Copy copies the real one. Anyone with the key can start these jobs; rotate it on Travel Core → Tools.',
+        'ro' => 'Cheia e ascunsă aici; Copiază copiază cheia reală. Oricine are cheia poate porni aceste joburi; o poți schimba în Travel Core → Instrumente.',
+    ],
+    'travel_core.jobs_open_tools' => [
+        'en' => 'Open Travel Core → Tools',
+        'ro' => 'Deschide Travel Core → Instrumente',
+    ],
+    'travel_core.jobs_no_key_title' => [
+        'en' => 'No cron key is set',
+        'ro' => 'Nu este setată nicio cheie cron',
+    ],
+    'travel_core.jobs_no_key_body' => [
+        'en' => 'Scheduled runs are refused until the shared cron key is set in Travel Core. Run still works from here.',
+        'ro' => 'Rulările programate sunt refuzate până când cheia cron comună este setată în Travel Core. Rulează funcționează în continuare de aici.',
+    ],
+    'travel_core.jobs_set_key' => [
+        'en' => 'Set it in Travel Core',
+        'ro' => 'Seteaz-o în Travel Core',
+    ],
 ];
