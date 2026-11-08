@@ -56,6 +56,7 @@ final class SchemaMigrator
                 'gate_released' => "ADD COLUMN `gate_released` ENUM('Y','N') NOT NULL DEFAULT 'N' COMMENT 'Gate-hidden product changed by an admin; left alone until an immediate offer returns' AFTER `gate_hidden`",
                 'images_json' => "ADD COLUMN `images_json` JSON DEFAULT NULL COMMENT 'All image objects from API [{url, ...}, ...]' AFTER `image_url`",
                 'product_needs_update' => "ADD COLUMN `product_needs_update` ENUM('Y','N') DEFAULT 'N' COMMENT 'Set to Y when API data differs from CS-Cart product' AFTER `images_json`",
+                'images_checked_at' => "ADD COLUMN `images_checked_at` DATETIME DEFAULT NULL COMMENT 'Last time the hotel API had no images for it (enrich_hotel_data asks again after 30 days)' AFTER `images_json`",
                 'calendar_prices_raw' => "ADD COLUMN `calendar_prices_raw` JSON DEFAULT NULL COMMENT 'Per-date raw from-prices for the booking calendar (calendar_prices cron)' AFTER `sync_status`",
                 'giata_id' => "ADD COLUMN `giata_id` INT UNSIGNED DEFAULT NULL COMMENT 'GIATA id (external_ids): the same hotel at another supplier' AFTER `name`",
             ],

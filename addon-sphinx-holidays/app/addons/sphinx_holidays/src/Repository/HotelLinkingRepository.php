@@ -23,6 +23,9 @@ class HotelLinkingRepository
     use RowNarrowingTrait;
     use HotelListingColumnsTrait;
 
+    /** Days before a hotel the API had no images for is asked again. */
+    public const int RECHECK_IMAGES_DAYS = 30;
+
     /**
      * Get hotels that have no images stored (images_json is null/empty/[]).
      * Used by enrich_hotel_data to backfill from the detail API.
@@ -31,7 +34,10 @@ class HotelLinkingRepository
      */
     public function findMissingImages(string $countryCode = '', int $limit = 100): array
     {
-        $cond = "(h.images_json IS NULL OR h.images_json = '' OR h.images_json = '[]')";
+        // A hotel the API had no images for waits RECHECK_IMAGES_DAYS: else
+        // every run asked the same first hotels again and never got further.
+        $cond = "(h.images_json IS NULL OR h.images_json = '' OR h.images_json = '[]')"
+            . db_quote(' AND (h.images_checked_at IS NULL OR h.images_checked_at < ?s)', date('Y-m-d H:i:s', time() - self::RECHECK_IMAGES_DAYS * 86400));
         if ($countryCode !== '') {
             $cond .= db_quote(' AND h.country_code = ?s', $countryCode);
         }
@@ -43,6 +49,19 @@ class HotelLinkingRepository
              WHERE h.sync_status = 'active' AND {$cond}
              ORDER BY h.hotel_id ASC {$limitClause}",
         ));
+    }
+
+    /**
+     * The hotel API had no images for this hotel: findMissingImages() leaves
+     * it out for RECHECK_IMAGES_DAYS.
+     */
+    public function markImagesChecked(string $hotelId): void
+    {
+        db_query(
+            'UPDATE ?:sphinx_hotels SET images_checked_at = ?s WHERE hotel_id = ?s',
+            date('Y-m-d H:i:s'),
+            $hotelId,
+        );
     }
 
     /**
