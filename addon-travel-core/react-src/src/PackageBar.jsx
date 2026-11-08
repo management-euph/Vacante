@@ -55,12 +55,30 @@ function initialRooms(roomsData, maxRooms) {
     return [{ adults: 2, children: 0, childrenAges: [] }];
 }
 
-/** The answer of one quote, or null when it failed. */
-function fetchQuote(url) {
-    return fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+/** How long the page waits for a quote (the server's search stops at 25 s). */
+const QUOTE_TIMEOUT_MS = 45000;
+
+/**
+ * The answer of one quote, or null when it failed, took too long or was
+ * dropped (the bar moved on: `signal` aborts it, so it does not keep one of
+ * the browser's few connections to the store busy).
+ */
+function fetchQuote(url, signal) {
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timer = controller ? setTimeout(() => controller.abort(), QUOTE_TIMEOUT_MS) : null;
+    const drop = () => { if (controller) controller.abort(); };
+    if (signal) {
+        if (signal.aborted) drop();
+        else signal.addEventListener('abort', drop);
+    }
+    return fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, signal: controller ? controller.signal : undefined })
         .then((response) => (response.ok ? response.json() : null))
         .then((answer) => (answer && !answer.error && Array.isArray(answer.blocks) ? answer : null))
-        .catch(() => null);
+        .catch(() => null)
+        .finally(() => {
+            if (timer) clearTimeout(timer);
+            if (signal) signal.removeEventListener('abort', drop);
+        });
 }
 
 export default function PackageBar({ config }) {
@@ -168,6 +186,8 @@ export default function PackageBar({ config }) {
             return undefined;
         }
         let cancelled = false;
+        const dropped = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const signal = dropped ? dropped.signal : undefined;
         const choice = { hotelId, transport, departureId, date, nights, rooms: settledRooms };
         setQuote({ status: 'loading', data: null, choice });
         try {
@@ -175,7 +195,7 @@ export default function PackageBar({ config }) {
         } catch (_) { /* the address stays */ }
         setPrices((previous) => (previous.key === pricesKey ? previous : { key: pricesKey, byDate: {} }));
 
-        fetchQuote(packageQuoteUrl(base, quoteDispatch, choice)).then(async (answer) => {
+        fetchQuote(packageQuoteUrl(base, quoteDispatch, choice), signal).then(async (answer) => {
             if (cancelled) return;
             if (answer === null) {
                 setQuote({ status: 'error', data: null, choice });
@@ -186,14 +206,17 @@ export default function PackageBar({ config }) {
 
             for (const other of neighbourDates(dates.list, date, nights, 4)) {
                 if (cancelled) return;
-                const otherAnswer = await fetchQuote(packageQuoteUrl(base, quoteDispatch, { ...choice, date: other }));
+                const otherAnswer = await fetchQuote(packageQuoteUrl(base, quoteDispatch, { ...choice, date: other }), signal);
                 if (cancelled) return;
                 setPrices((previous) => (previous.key === pricesKey
                     ? { key: pricesKey, byDate: { ...previous.byDate, [other]: otherAnswer ? cheapest(otherAnswer.blocks) : null } }
                     : previous));
             }
         });
-        return () => { cancelled = true; };
+        return () => {
+            cancelled = true;
+            if (dropped) dropped.abort();
+        };
         // settledKey stands for settledRooms; askCount asks again on the button.
     }, [asked, askCount, datesReady, dates.status, base, quoteDispatch, hotelId, transport, departureId, date, nights, settledKey]);
 
@@ -243,6 +266,7 @@ export default function PackageBar({ config }) {
     const bookHref = (offer) => packageBookUrl(base, bookingDispatch, quote.choice || { rooms: settledRooms }, offer);
 
     const group = groups[monthIndex] || null;
+    const searching = asked && quote.status === 'loading';
     const knownPrices = prices.key === pricesKey ? prices.byDate : {};
     const note = transport === 'bus'
         ? t('packagePricesNoteBus', 'Total prices for [party], with the return coach trip and the accommodation.')
@@ -340,8 +364,17 @@ export default function PackageBar({ config }) {
                 </div>
 
                 <div className="nvt-field nvt-field--btn">
-                    <button type="button" className={`nvt-btn-search${asked ? ' nvt-btn-search--secondary' : ''}`} onClick={handleSubmit}>
-                        {asked ? t('circuitModify', 'Change') : t('circuitSeePrice', 'See the price')}
+                    {/* While the offers load, the button waits: a click asked the same search again. */}
+                    <button
+                        type="button"
+                        className={`nvt-btn-search${asked ? ' nvt-btn-search--secondary' : ''}`}
+                        onClick={handleSubmit}
+                        disabled={searching}
+                        aria-busy={searching}
+                    >
+                        {searching
+                            ? t('packageSearching', 'Searching…')
+                            : (asked ? t('circuitModify', 'Change') : t('circuitSeePrice', 'See the price'))}
                     </button>
                 </div>
             </div>

@@ -147,6 +147,32 @@ final class PackageHotelOffersTest extends TestCase
         self::assertArrayNotHasKey('departure_id', $asked[1], 'any city when none is chosen');
     }
 
+    /**
+     * The page waits for the answer ("Căutăm prețurile…"): a search still
+     * running after the budget gives the offers found so far, or none.
+     */
+    public function testASearchStopsAtItsBudget(): void
+    {
+        $asked = [];
+        $time = 0.0;
+        $clock = static function () use (&$time): float {
+            $time += 10.0;
+
+            return $time;
+        };
+        $running = ['results' => [], 'cursor' => 'more'];
+
+        $offers = new PackageHotelOffers($this->api(['search_id' => 's', 'cursor' => 'c'], array_fill(0, 30, $running), $asked), static fn (float $p): float => $p, null, 0, 30, null, 25.0, $clock);
+        self::assertTrue($offers->forHotel('3612', 'flight', 10, '2027-04-24', 7, [['adults' => 2, 'children_ages' => []]])['error'], 'nothing found in time: no answer');
+
+        $time = 0.0;
+        $pages = [['results' => [self::offer('o1', 3612, 'STANDARD', 'AI', 1756)], 'cursor' => 'more'], ...array_fill(0, 29, $running)];
+        $offers = new PackageHotelOffers($this->api(['search_id' => 's', 'cursor' => 'c'], $pages, $asked), static fn (float $p): float => $p, null, 0, 30, null, 25.0, $clock);
+        $answer = $offers->forHotel('3612', 'flight', 10, '2027-04-24', 7, [['adults' => 2, 'children_ages' => []]]);
+        self::assertFalse($answer['error']);
+        self::assertSame(['o1'], array_column($answer['blocks'][0]['offers'], 'offer_id'), 'what was found so far');
+    }
+
     public function testNoOfferIsAnAnswer(): void
     {
         $asked = [];

@@ -15,7 +15,7 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  *
  * packages/search is asked with hotel_ids (seen live: it answers only that
  * hotel's offers, while hotels/search ignores hotel_ids) and polled to its
- * end. The offers that travel the same way make one block (the transport,
+ * end, or for at most $budgetSeconds: the page waits for it. The offers that travel the same way make one block (the transport,
  * then their rooms), cheapest first: the transport is shown once above the
  * rooms, and a second block only when another flight leaves that day.
  *
@@ -35,6 +35,8 @@ final class PackageHotelOffers
      * @param int $cacheTtl how long, in seconds (0: never)
      * @param int $maxPolls results pages read at most
      * @param \Closure(): void|null $pause between two empty pages of a search still running
+     * @param float $budgetSeconds how long a search may run: then the offers found so far
+     * @param \Closure(): float|null $clock the time in seconds (null: microtime)
      */
     public function __construct(
         private readonly SphinxApi $api,
@@ -43,7 +45,14 @@ final class PackageHotelOffers
         private readonly int $cacheTtl = 0,
         private readonly int $maxPolls = 30,
         private readonly ?\Closure $pause = null,
+        private readonly float $budgetSeconds = 25.0,
+        private readonly ?\Closure $clock = null,
     ) {
+    }
+
+    private function now(): float
+    {
+        return $this->clock !== null ? ($this->clock)() : microtime(true);
     }
 
     /**
@@ -100,6 +109,7 @@ final class PackageHotelOffers
             }
         }
 
+        $startedAt = $this->now();
         $start = $this->api->searchPackages($params);
         $searchId = TypeCoerce::toString($start['search_id'] ?? '');
         $cursor = TypeCoerce::toString($start['cursor'] ?? '');
@@ -108,6 +118,7 @@ final class PackageHotelOffers
         }
 
         $offers = [];
+        $complete = false;
         for ($poll = 0; $poll < $this->maxPolls; $poll++) {
             $page = $this->api->getPackageResults($searchId, $cursor !== '' ? $cursor : null);
             if ($page === null) {
@@ -117,14 +128,22 @@ final class PackageHotelOffers
             array_push($offers, ...$rows);
             $cursor = TypeCoerce::toString($page['cursor'] ?? '');
             if ($cursor === '') {
+                $complete = true;
                 break;
+            }
+            // The page waits for this answer: past the budget, what was found
+            // so far (none found: no answer).
+            if ($this->now() - $startedAt >= $this->budgetSeconds) {
+                return $offers === [] ? null : $offers;
             }
             if ($rows === [] && $this->pause !== null) {
                 ($this->pause)();
             }
         }
 
-        if ($this->cache !== null && $this->cacheTtl > 0 && $offers !== []) {
+        // Only a search polled to its end is kept: a cut one would hide the
+        // rest of the offers for the cache's lifetime.
+        if ($complete && $this->cache !== null && $this->cacheTtl > 0 && $offers !== []) {
             $this->cache->set($key, ['results' => $offers], $this->cacheTtl);
         }
 

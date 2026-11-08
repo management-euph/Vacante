@@ -4821,3 +4821,7 @@ msgstr "Rulările programate sunt refuzate până când cheia cron comună este 
 msgctxt "Languages::travel_core.jobs_set_key"
 msgid "Set it in Travel Core"
 msgstr "Seteaz-o în Travel Core"
+
+msgctxt "Languages::travel_core.package_searching"
+msgid "Searching…"
+msgstr "Se caută…"

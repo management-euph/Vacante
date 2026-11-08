@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
+use Tygh\Addons\SphinxHolidays\Repository\HotelLinkingRepository;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
@@ -63,12 +64,13 @@ class EnrichHotelDataCommand extends AbstractSyncCommand
 
         if (empty($hotels)) {
             $this->output('No hotels with missing images found. Nothing to do.');
-            return ['success' => true, 'stats' => ['scanned' => 0, 'enriched' => 0, 'failed' => 0]];
+            return ['success' => true, 'stats' => ['scanned' => 0, 'enriched' => 0, 'none' => 0, 'failed' => 0]];
         }
 
         $this->output('Found ' . count($hotels) . ' hotel(s) with empty images_json.');
 
         $enriched = 0;
+        $none = 0;
         $failed = 0;
         $api = Container::getApi();
 
@@ -98,9 +100,12 @@ class EnrichHotelDataCommand extends AbstractSyncCommand
             /** @var mixed $rawImages */
             $rawImages = $hotelData['images'] ?? null;
 
+            // No images at Sphinx: not a failure. The hotel is asked again
+            // after RECHECK_IMAGES_DAYS, so the next run moves on to others.
             if (empty($rawImages) || !is_array($rawImages)) {
-                $this->output("[{$hotelId}] {$hotelName} — API returned no images. SKIPPED");
-                $failed++;
+                Container::getHotelRepository()->markImagesChecked($hotelId);
+                $this->output("[{$hotelId}] {$hotelName} — no images at Sphinx; asked again in " . HotelLinkingRepository::RECHECK_IMAGES_DAYS . ' days');
+                $none++;
                 continue;
             }
 
@@ -132,13 +137,14 @@ class EnrichHotelDataCommand extends AbstractSyncCommand
         $durationMs = (int)(microtime(true) * 1000) - $startMs;
         $scanned = count($hotels);
 
-        $this->output("Done: {$scanned} scanned, {$enriched} enriched, {$failed} failed (" . round($durationMs / 1000, 1) . 's)');
+        $this->output("Done: {$scanned} scanned, {$enriched} enriched, {$none} without images at Sphinx, {$failed} failed (" . round($durationMs / 1000, 1) . 's)');
 
         return [
             'success' => true,
             'stats' => [
                 'scanned' => $scanned,
                 'enriched' => $enriched,
+                'none' => $none,
                 'failed' => $failed,
                 'duration_ms' => $durationMs,
             ],

@@ -4018,4 +4018,8 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Set it in Travel Core',
         'ro' => 'Seteaz-o în Travel Core',
     ],
+    'travel_core.package_searching' => [
+        'en' => 'Searching…',
+        'ro' => 'Se caută…',
+    ],
 ];

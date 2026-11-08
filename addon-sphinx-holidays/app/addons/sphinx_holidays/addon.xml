@@ -282,6 +282,7 @@
                 `short_description` TEXT DEFAULT NULL,
                 `image_url`         VARCHAR(500) DEFAULT NULL,
                 `images_json`       JSON DEFAULT NULL COMMENT 'All image objects from API [{url, ...}, ...]',
+                `images_checked_at` DATETIME DEFAULT NULL COMMENT 'Last time the hotel API had no images for it (enrich_hotel_data asks again after 30 days)',
                 `product_needs_update` ENUM('Y','N') DEFAULT 'N' COMMENT 'Set to Y when API data differs from CS-Cart product',
                 `amenities_json`    JSON DEFAULT NULL COMMENT 'Array of amenity objects',
                 `tags_json`         JSON DEFAULT NULL COMMENT 'Array of tag objects',
@@ -748,6 +749,15 @@
                 ADD COLUMN `product_hidden` ENUM('Y','N') NOT NULL DEFAULT 'N'
                 COMMENT 'Product hidden by the circuits sync (no rate ahead); shown again with the circuit'
                 AFTER `sync_status`;
+        </item>
+
+        <!-- A hotel the API has no images for: enrich_hotel_data asks again
+             only after 30 days, instead of the same first hotels every run. -->
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD COLUMN `images_checked_at` DATETIME DEFAULT NULL
+                COMMENT 'Last time the hotel API had no images for it (enrich_hotel_data asks again after 30 days)'
+                AFTER `images_json`;
         </item>
 
         <!-- Uninstall SQL fallback: guarantees teardown of Sphinx-owned data
