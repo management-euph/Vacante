@@ -119,6 +119,25 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
             $page++;
         }
 
+        // Only the circuits Sphinx still prices from today on: the static list
+        // keeps circuits whose departures are all past. Unknown (the rates
+        // could not be read): keep everything, drop nothing this run.
+        // Asked about: the circuits just fetched and those stored already (an
+        // incremental run fetches only the changed ones; a stored circuit's
+        // departures pass without a change).
+        $candidates = array_merge(
+            array_map(static fn (array $circuit): int => TypeCoerce::toInt($circuit['circuit_id'] ?? 0), $allCircuits),
+            (new CircuitRepository())->allIds(),
+        );
+        $bookable = (new BookableCircuits($this->api))->ids(date('Y-m-d'), $candidates);
+        $past = 0;
+        if ($bookable === null) {
+            $this->output('WARNING: the circuit rates could not be read; no circuit is left out or removed this run.');
+        } else {
+            [$allCircuits, $past] = self::bookableOnly($allCircuits, $bookable);
+            $stats['total'] = count($allCircuits);
+        }
+
         if (!empty($allCircuits)) {
             $total = TypeCoerce::toInt($stats['total']);
             $this->output("Upserting {$total} circuits...");
@@ -128,14 +147,41 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
             }
         }
 
+        // The stored circuits Sphinx no longer prices leave the list: removed,
+        // or set inactive when a product was made for them (its link stays).
+        $pruneMsg = '';
+        if ($bookable !== null && TypeCoerce::toString($stats['error']) === '') {
+            $pruned = (new CircuitRepository())->pruneUnbookable($bookable);
+            $pruneMsg = ", {$past} skipped (no rate from today on), {$pruned['removed']} stored ones removed, {$pruned['deactivated']} set inactive (they have a product; {$pruned['hidden']} products hidden), {$pruned['shown']} products on sale again";
+        }
+
         $stats['success'] = true;
         $filterMsg = $filtered > 0 ? ", {$filtered} filtered (outside sync targets)" : '';
         $synced = TypeCoerce::toInt($stats['synced']);
         $total = TypeCoerce::toInt($stats['total']);
         $failed = TypeCoerce::toInt($stats['failed']);
-        $this->output("Circuit sync complete: {$synced}/{$total} synced, {$failed} failed{$filterMsg}.");
+        $this->output("Circuit sync complete: {$synced}/{$total} synced, {$failed} failed{$filterMsg}{$pruneMsg}.");
 
         return $stats;
+    }
+
+    /**
+     * The circuits of $circuits Sphinx still prices (BookableCircuits), and
+     * how many were left out.
+     *
+     * @param list<array<string, mixed>> $circuits normalized rows (circuit_id)
+     * @param list<int> $bookable
+     * @return array{0: list<array<string, mixed>>, 1: int}
+     */
+    public static function bookableOnly(array $circuits, array $bookable): array
+    {
+        $keep = array_flip($bookable);
+        $kept = array_values(array_filter(
+            $circuits,
+            static fn (array $circuit): bool => isset($keep[TypeCoerce::toInt($circuit['circuit_id'] ?? 0)]),
+        ));
+
+        return [$kept, count($circuits) - count($kept)];
     }
 
     /**

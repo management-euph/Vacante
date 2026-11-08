@@ -375,6 +375,7 @@
                 `currency`          VARCHAR(3) DEFAULT 'EUR',
                 `product_id`        INT UNSIGNED DEFAULT NULL COMMENT 'Linked CS-Cart product ID',
                 `sync_status`       ENUM('active','inactive') NOT NULL DEFAULT 'active',
+                `product_hidden`    ENUM('Y','N') NOT NULL DEFAULT 'N' COMMENT 'Product hidden by the circuits sync (no rate ahead); shown again with the circuit',
                 `last_synced_at`    DATETIME DEFAULT NULL,
                 KEY `idx_sync_status` (`sync_status`),
                 KEY `idx_product` (`product_id`)
@@ -738,6 +739,15 @@
                 ADD COLUMN `details_json` JSON DEFAULT NULL
                 COMMENT 'Included, not included, things to know, group size and age (static API)'
                 AFTER `itinerary_json`;
+        </item>
+
+        <!-- A circuit Sphinx no longer prices: the sync hides its product and
+             marks it here, so it shows the product again only when it hid it. -->
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_circuits`
+                ADD COLUMN `product_hidden` ENUM('Y','N') NOT NULL DEFAULT 'N'
+                COMMENT 'Product hidden by the circuits sync (no rate ahead); shown again with the circuit'
+                AFTER `sync_status`;
         </item>
 
         <!-- Uninstall SQL fallback: guarantees teardown of Sphinx-owned data

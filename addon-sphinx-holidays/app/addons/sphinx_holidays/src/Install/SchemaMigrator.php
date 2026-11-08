@@ -61,6 +61,7 @@ final class SchemaMigrator
             ],
             'sphinx_circuits' => [
                 'details_json' => "ADD COLUMN `details_json` JSON DEFAULT NULL COMMENT 'Included, not included, things to know, group size and age (static API)' AFTER `itinerary_json`",
+                'product_hidden' => "ADD COLUMN `product_hidden` ENUM('Y','N') NOT NULL DEFAULT 'N' COMMENT 'Product hidden by the circuits sync (no rate ahead); shown again with the circuit' AFTER `sync_status`",
             ],
             'sphinx_destinations' => [
                 'full_path' => "ADD COLUMN `full_path` VARCHAR(500) DEFAULT NULL COMMENT 'Breadcrumb: City, Region, Country, Continent' AFTER `country_code`",

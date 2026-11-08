@@ -88,6 +88,71 @@ class CircuitRepository
         ));
     }
 
+    /**
+     * Every stored circuit's id.
+     *
+     * @return list<int>
+     */
+    public function allIds(): array
+    {
+        return TypeCoerce::toIntList(db_get_fields('SELECT circuit_id FROM ?:sphinx_circuits'));
+    }
+
+    /**
+     * The stored circuits Sphinx no longer prices from today on (not in
+     * $bookable, BookableCircuits) leave the list: removed, or set inactive
+     * when a product was made for one (the product keeps its link, so a
+     * circuit priced again gets the same product, never a second one).
+     *
+     * An inactive circuit's product is hidden (H: off the lists and the
+     * search; its address and orders stay) when it was on sale (A), and
+     * marked product_hidden. A circuit priced again is active again, and
+     * its product on sale again only when this sync hid it and it is still
+     * hidden: a product an admin hid, or changed since, is left as it is.
+     *
+     * @param list<int> $bookable never empty: the caller keeps everything on an unknown answer
+     * @return array{removed: int, deactivated: int, hidden: int, shown: int}
+     */
+    public function pruneUnbookable(array $bookable): array
+    {
+        if ($bookable === []) {
+            return ['removed' => 0, 'deactivated' => 0, 'hidden' => 0, 'shown' => 0];
+        }
+        $removed = db_query(
+            'DELETE FROM ?:sphinx_circuits WHERE circuit_id NOT IN (?n) AND (product_id IS NULL OR product_id = 0)',
+            $bookable,
+        );
+        $hidden = db_query(
+            "UPDATE ?:products p INNER JOIN ?:sphinx_circuits c ON c.product_id = p.product_id
+             SET p.status = 'H', c.product_hidden = 'Y'
+             WHERE c.circuit_id NOT IN (?n) AND c.sync_status = 'active' AND p.status = 'A'",
+            $bookable,
+        );
+        $deactivated = db_query(
+            "UPDATE ?:sphinx_circuits SET sync_status = 'inactive' WHERE circuit_id NOT IN (?n) AND product_id > 0 AND sync_status = 'active'",
+            $bookable,
+        );
+        $shown = db_query(
+            "UPDATE ?:products p INNER JOIN ?:sphinx_circuits c ON c.product_id = p.product_id
+             SET p.status = 'A'
+             WHERE c.circuit_id IN (?n) AND c.product_hidden = 'Y' AND p.status = 'H'",
+            $bookable,
+        );
+        db_query(
+            "UPDATE ?:sphinx_circuits SET sync_status = 'active', product_hidden = 'N'
+             WHERE circuit_id IN (?n) AND (sync_status = 'inactive' OR product_hidden = 'Y')",
+            $bookable,
+        );
+
+        // A multi-table UPDATE counts the rows of both tables it changes.
+        return [
+            'removed' => TypeCoerce::toInt($removed),
+            'deactivated' => TypeCoerce::toInt($deactivated),
+            'hidden' => intdiv(TypeCoerce::toInt($hidden), 2),
+            'shown' => TypeCoerce::toInt($shown),
+        ];
+    }
+
     /** Write the CS-Cart product link (makes the circuit sellable). */
     public function linkToProduct(int $circuitId, int $productId): void
     {
