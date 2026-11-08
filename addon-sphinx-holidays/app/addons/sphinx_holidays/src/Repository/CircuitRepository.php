@@ -89,6 +89,16 @@ class CircuitRepository
     }
 
     /**
+     * Every stored circuit's id.
+     *
+     * @return list<int>
+     */
+    public function allIds(): array
+    {
+        return TypeCoerce::toIntList(db_get_fields('SELECT circuit_id FROM ?:sphinx_circuits'));
+    }
+
+    /**
      * The stored circuits Sphinx no longer prices from today on (not in
      * $bookable, BookableCircuits) leave the list: removed, or set inactive
      * when a product was made for one (the product keeps its link). One of

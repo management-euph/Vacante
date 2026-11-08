@@ -122,7 +122,14 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
         // Only the circuits Sphinx still prices from today on: the static list
         // keeps circuits whose departures are all past. Unknown (the rates
         // could not be read): keep everything, drop nothing this run.
-        $bookable = (new BookableCircuits($this->api))->ids(date('Y-m-d'));
+        // Asked about: the circuits just fetched and those stored already (an
+        // incremental run fetches only the changed ones; a stored circuit's
+        // departures pass without a change).
+        $candidates = array_merge(
+            array_map(static fn (array $circuit): int => TypeCoerce::toInt($circuit['circuit_id'] ?? 0), $allCircuits),
+            (new CircuitRepository())->allIds(),
+        );
+        $bookable = (new BookableCircuits($this->api))->ids(date('Y-m-d'), $candidates);
         $past = 0;
         if ($bookable === null) {
             $this->output('WARNING: the circuit rates could not be read; no circuit is left out or removed this run.');

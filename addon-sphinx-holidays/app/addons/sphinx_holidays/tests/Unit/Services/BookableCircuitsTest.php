@@ -56,29 +56,55 @@ final class BookableCircuitsTest extends TestCase
     {
         $asked = [];
         $api = $this->api([
+            // This month, every page: 281 only before today, 1700 today.
             self::page([
                 ['circuit_id' => 281, 'departure_date' => '2026-11-01'],
-                ['circuit_id' => 1662, 'departure_date' => '2027-04-10'],
-            ], 2),
-            self::page([
-                ['circuit_id' => 1662, 'departure_date' => '2027-05-10'],
                 ['circuit_id' => 1700, 'departure_date' => '2026-11-08'],
             ], 2),
+            self::page([['circuit_id' => 1700, 'departure_date' => '2026-11-20']], 2),
+            // Next month: only the circuits not found yet.
+            self::page([['circuit_id' => 1662, 'departure_date' => '2026-12-10']], 1),
+            // 281 has no departure in the 16 months left.
+            ...array_fill(0, 16, self::page([], 1)),
         ], $asked);
 
-        self::assertSame([1662, 1700], (new BookableCircuits($api))->ids('2026-11-08'), 'a departure before today does not count; today does');
-        self::assertCount(2, $asked, 'every page, up to the last');
-        self::assertSame(['page' => 2, 'per_page' => 100], $asked[1]['pagination']);
-        self::assertSame(BookableCircuits::months('2026-11-08'), $asked[0]['months']);
+        $ids = (new BookableCircuits($api))->ids('2026-11-08', [281, 1662, 1700, 1700, 0]);
+        sort($ids);
+
+        self::assertSame([1662, 1700], $ids, 'a departure before today does not count; today does');
+        self::assertSame([281, 1662, 1700], $asked[0]['circuit_ids']);
+        self::assertSame(['2026-11'], $asked[0]['months']);
+        self::assertSame(['page' => 2, 'per_page' => 100], $asked[1]['pagination'], 'every page of a month');
+        self::assertSame([281, 1662], $asked[2]['circuit_ids'], 'next month: 1700 is found, not asked again');
+        self::assertSame(['2026-12'], $asked[2]['months']);
+        self::assertSame([281], $asked[3]['circuit_ids'] ?? null, 'then only what is still missing');
+        self::assertCount(3 + 16, $asked, '281 is asked about every month left; nothing more');
+    }
+
+    /** Once every circuit is found, no further month is asked. */
+    public function testTheSearchStopsOnceEveryCircuitIsFound(): void
+    {
+        $asked = [];
+        $api = $this->api([
+            self::page([['circuit_id' => 5, 'departure_date' => '2026-11-20']], 1),
+            self::page([['circuit_id' => 6, 'departure_date' => '2027-01-03']], 1),
+        ], $asked);
+
+        $ids = (new BookableCircuits($api))->ids('2026-11-08', [5, 6]);
+        sort($ids);
+
+        self::assertSame([5, 6], $ids);
+        self::assertCount(2, $asked, 'November for both, December for 6 only: then nothing is left to ask');
+        self::assertSame([6], $asked[1]['circuit_ids']);
     }
 
     /** An unknown answer drops nothing: the sync keeps every circuit then. */
     public function testAnUnreadOrEmptyAnswerIsUnknown(): void
     {
         $asked = [];
-        self::assertNull((new BookableCircuits($this->api([self::page([['circuit_id' => 1, 'departure_date' => '2027-01-01']], 3), null], $asked)))->ids('2026-11-08'), 'a page failed');
-        self::assertNull((new BookableCircuits($this->api([self::page([], 1)], $asked)))->ids('2026-11-08'), 'no circuit priced at all');
-        self::assertNull((new BookableCircuits($this->api([self::page([['circuit_id' => 1, 'departure_date' => '2020-01-01']], 1)], $asked)))->ids('2026-11-08'), 'only past dates');
+        self::assertNull((new BookableCircuits($this->api([self::page([['circuit_id' => 1, 'departure_date' => '2026-11-20']], 3), null], $asked)))->ids('2026-11-08', [1, 2]), 'a page failed');
+        self::assertNull((new BookableCircuits($this->api(array_fill(0, 18, self::page([], 1)), $asked)))->ids('2026-11-08', [1]), 'no circuit priced at all');
+        self::assertNull((new BookableCircuits($this->api([], $asked)))->ids('2026-11-08', []), 'no circuit to ask about');
     }
 
     public function testEighteenMonthsFromThisOne(): void
@@ -128,7 +154,7 @@ final class BookableCircuitsTest extends TestCase
     {
         $sync = (string) file_get_contents(dirname(__DIR__, 3) . '/src/Services/CircuitSyncService.php');
 
-        $ask = strpos($sync, '$bookable = (new BookableCircuits($this->api))->ids(date(\'Y-m-d\'));');
+        $ask = strpos($sync, '$bookable = (new BookableCircuits($this->api))->ids(date(\'Y-m-d\'), $candidates);');
         self::assertNotFalse($ask);
         self::assertLessThan(strpos($sync, '$this->upsertBatch($batch)'), $ask, 'before the circuits are saved');
         self::assertStringContainsString('[$allCircuits, $past] = self::bookableOnly($allCircuits, $bookable);', $sync);
