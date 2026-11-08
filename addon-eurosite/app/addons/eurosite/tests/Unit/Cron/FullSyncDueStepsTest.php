@@ -7,6 +7,7 @@ namespace Tygh\Addons\Eurosite\Tests\Unit\Cron;
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\Eurosite\Cron\Commands\AbstractSyncCommand;
 use Tygh\Addons\Eurosite\Cron\Commands\FullSyncCommand;
+use Tygh\Addons\Eurosite\Services\CronPlanBuilder;
 use Tygh\Addons\Eurosite\Tests\Support\DbStub;
 use Tygh\Addons\TravelCore\Cron\CronRunLog;
 
@@ -71,11 +72,15 @@ final class FullSyncDueStepsTest extends TestCase
         self::assertSame(['hotels', 'tags'], self::$ran);
     }
 
-    public function testTheDashboardForcesIt(): void
+    /**
+     * The dashboard's Run runs what is due, as the nightly line does; its ⋯
+     * menu's "Run every catalog now" forces every step, as the old "Run
+     * full sync" did.
+     */
+    public function testTheDashboardRunsWhatIsDueAndItsMenuForcesIt(): void
     {
-        $controller = (string) file_get_contents(dirname(__DIR__, 3) . '/controllers/backend/eurosite.php');
-
-        self::assertStringContainsString("\$dispatcher->dispatch(\$syncType, \$syncType === 'full' ? ['force' => '1'] : [])", $controller);
+        self::assertSame([], CronPlanBuilder::runParams('full', ''));
+        self::assertSame(['force' => '1'], CronPlanBuilder::runParams('full', 'force'));
     }
 }
 

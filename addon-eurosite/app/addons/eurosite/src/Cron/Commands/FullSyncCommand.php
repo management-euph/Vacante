@@ -27,7 +27,8 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  * A step runs only when it is due (CronPlanBuilder::stepDue): Eurosite asked
  * (28 Oct 2026) for the static catalogs once a month and the hotel lists
  * weekly, so the nightly `full` line runs them on the 1st and once a week.
- * `force=1`, and a run started from the dashboard, run every step.
+ * The dashboard's Run does the same; `force=1` (its ⋯ menu's "Run every
+ * catalog now") runs every step.
  */
 final class FullSyncCommand extends AbstractSyncCommand
 {

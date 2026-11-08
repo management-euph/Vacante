@@ -62,33 +62,9 @@ return [
         'en' => 'Static-data catalogs',
         'ro' => 'Cataloage de date statice',
     ],
-    'eurosite.catalog' => [
-        'en' => 'Catalog',
-        'ro' => 'Catalog',
-    ],
-    'eurosite.rows' => [
-        'en' => 'Rows',
-        'ro' => 'Rânduri',
-    ],
-    'eurosite.last_sync' => [
-        'en' => 'Last sync',
-        'ro' => 'Ultima sincronizare',
-    ],
     'eurosite.never_synced' => [
         'en' => 'never',
         'ro' => 'niciodată',
-    ],
-    'eurosite.sync_now' => [
-        'en' => 'Sync now',
-        'ro' => 'Sincronizează acum',
-    ],
-    'eurosite.sync_full' => [
-        'en' => 'Run full sync',
-        'ro' => 'Rulează sincronizarea completă',
-    ],
-    'eurosite.sync_full_confirm' => [
-        'en' => 'Run the full static-data sync now? This makes many API calls.',
-        'ro' => 'Rulați acum sincronizarea completă a datelor statice? Se fac multe apeluri API.',
     ],
     'eurosite.recent_bookings' => [
         'en' => 'Recent bookings',
@@ -306,10 +282,6 @@ return [
         'en' => 'Last synced',
         'ro' => 'Ultima sincronizare',
     ],
-    'eurosite.cron_commands' => [
-        'en' => 'Scheduled jobs',
-        'ro' => 'Sarcini programate',
-    ],
     'eurosite.cron_col_mode' => [
         'en' => 'Mode',
         'ro' => 'Mod',
@@ -318,17 +290,9 @@ return [
         'en' => 'What it does',
         'ro' => 'Ce face',
     ],
-    'eurosite.cron_col_schedule' => [
-        'en' => 'Schedule',
-        'ro' => 'Programare',
-    ],
     'eurosite.cron_col_url' => [
         'en' => 'URL',
         'ro' => 'URL',
-    ],
-    'eurosite.cron_col_actions' => [
-        'en' => 'Actions',
-        'ro' => 'Acțiuni',
     ],
     'eurosite.run' => [
         'en' => 'Run',
@@ -338,34 +302,6 @@ return [
         'en' => 'Copy',
         'ro' => 'Copiază',
     ],
-    'eurosite.copy_url' => [
-        'en' => 'Copy URL',
-        'ro' => 'Copiază URL',
-    ],
-    'eurosite.copy_cli' => [
-        'en' => 'Copy CLI',
-        'ro' => 'Copiază CLI',
-    ],
-    'eurosite.copied' => [
-        'en' => 'Copied',
-        'ro' => 'Copiat',
-    ],
-    'eurosite.copy_failed' => [
-        'en' => 'Copy failed',
-        'ro' => 'Copierea a eșuat',
-    ],
-    'eurosite.cron_access_key_note' => [
-        'en' => 'The access key in these URLs is the shared Travel Core cron key — treat them as secrets. Rotating it re-issues the Travel Core, Sphinx and Novoton commands too.',
-        'ro' => 'Cheia de acces din aceste linkuri este cheia cron partajată din Travel Core — tratați-le ca date secrete. Schimbarea ei reemite și comenzile pentru Travel Core, Sphinx și Novoton.',
-    ],
-    'eurosite.catalogs_and_schedules' => [
-        'en' => 'Catalogs & schedules',
-        'ro' => 'Cataloage și programări',
-    ],
-    'eurosite.catalogs_hint' => [
-        'en' => 'One row per job, in the order the full pipeline runs them. Times are server time.',
-        'ro' => 'Câte un rând per sarcină, în ordinea în care le rulează sincronizarea completă. Orele sunt ora serverului.',
-    ],
     'eurosite.hotels_need_whitelist' => [
         'en' => 'Nothing to fetch: no destinations are whitelisted.',
         'ro' => 'Nu are ce prelua: nicio destinație nu este în listă.',
@@ -374,93 +310,195 @@ return [
         'en' => 'Open the whitelist',
         'ro' => 'Deschide lista de destinații',
     ],
-    'eurosite.copy_crontab_line' => [
-        'en' => 'Copy crontab line',
-        'ro' => 'Copiază linia de crontab',
+    // The dashboard's scheduled jobs on Travel Core's shared cards
+    // (Services\CronPlanBuilder, components/job_extra.tpl): stages, jobs, plans, counts.
+    'eurosite.jobs_stage_catalogs' => [
+        'en' => 'Catalogs',
+        'ro' => 'Cataloage',
     ],
-    'eurosite.cron_no_key_title' => [
-        'en' => 'No cron security key is set',
-        'ro' => 'Nu este setată cheia de securitate cron',
+    'eurosite.jobs_stage_hotels' => [
+        'en' => 'Hotel details and availability',
+        'ro' => 'Detaliile hotelurilor și disponibilitatea',
     ],
-    'eurosite.cron_no_key_body' => [
-        'en' => 'Scheduled syncs answer 403 until a key exists, so there are no commands to schedule yet. Nothing is exposed — the endpoint refuses every request while the key is blank.',
-        'ro' => 'Sincronizările programate răspund cu 403 până când există o cheie, deci nu există încă nicio comandă de programat. Nimic nu este expus — endpointul refuză orice cerere cât timp cheia este goală.',
+    'eurosite.jobs_stage_products' => [
+        'en' => 'Products',
+        'ro' => 'Produse',
     ],
-    'eurosite.generate_cron_key' => [
-        'en' => 'Generate a key',
-        'ro' => 'Generează o cheie',
+    'eurosite.jobs_stage_upkeep' => [
+        'en' => 'Bookings and clean-up',
+        'ro' => 'Rezervări și curățenie',
     ],
-    'eurosite.set_key_in_settings' => [
-        'en' => 'Set it in Travel Core settings',
-        'ro' => 'Setează-o în setările Travel Core',
+    'eurosite.jobs_job_full' => [
+        'en' => 'All catalogs, each when due',
+        'ro' => 'Toate cataloagele, fiecare când îi vine rândul',
     ],
-    'eurosite.cron_paste_hint' => [
-        'en' => 'CLI (php): paste it into the server crontab or cPanel → Cron Jobs. URL: add each address to a cron service at the time shown.',
-        'ro' => 'CLI (php): lipiți-l în crontab-ul serverului sau în cPanel → Cron Jobs. URL: adăugați fiecare adresă într-un serviciu cron la ora indicată.',
+    'eurosite.jobs_job_full_desc' => [
+        'en' => 'Runs the six catalogs below in order, each only when it is due: the monthly ones on the 1st, the hotels once a week. One nightly line instead of six.',
+        'ro' => 'Rulează în ordine cele șase cataloage de mai jos, fiecare doar când îi vine rândul: cele lunare pe 1, hotelurile o dată pe săptămână. O singură linie pe noapte în loc de șase.',
     ],
-    'eurosite.cron_plan' => [
-        'en' => 'Plan',
-        'ro' => 'Plan',
+    'eurosite.jobs_job_countries' => [
+        'en' => 'Countries',
+        'ro' => 'Țări',
     ],
-    'eurosite.cron_plan_full' => [
-        'en' => 'One nightly line: each step when due (catalogs monthly, hotels weekly)',
-        'ro' => 'O linie, noaptea: fiecare pas când îi vine rândul (cataloagele lunar, hotelurile săptămânal)',
+    'eurosite.jobs_job_countries_desc' => [
+        'en' => 'The countries Eurosite offers.',
+        'ro' => 'Țările oferite de Eurosite.',
     ],
-    'eurosite.cron_plan_per' => [
-        'en' => 'Per-catalog schedule',
-        'ro' => 'Programare per catalog',
+    'eurosite.jobs_job_own_cities' => [
+        'en' => 'Cities with own offers',
+        'ro' => 'Orașe cu oferte proprii',
     ],
-    'eurosite.recommended' => [
-        'en' => 'recommended',
-        'ro' => 'recomandat',
+    'eurosite.jobs_job_own_cities_desc' => [
+        'en' => 'The cities with the operator\'s own offers. Runs before Cities, so their countries get their cities even before anything is whitelisted.',
+        'ro' => 'Orașele cu ofertele proprii ale operatorului. Rulează înaintea Orașelor, ca țările lor să-și primească orașele chiar înainte să fie ceva în lista de destinații.',
     ],
-    'eurosite.cron_format' => [
-        'en' => 'Format',
-        'ro' => 'Format',
+    'eurosite.jobs_job_cities' => [
+        'en' => 'Cities',
+        'ro' => 'Orașe',
     ],
-    'eurosite.cron_format_url' => [
-        'en' => 'URL',
-        'ro' => 'URL',
+    'eurosite.jobs_job_cities_desc' => [
+        'en' => 'The cities of the countries you sell, and of those with own offers.',
+        'ro' => 'Orașele țărilor pe care le vinzi și ale celor cu oferte proprii.',
     ],
-    'eurosite.cron_format_cli' => [
-        'en' => 'CLI (php)',
-        'ro' => 'CLI (php)',
+    'eurosite.jobs_job_hotels' => [
+        'en' => 'Hotels',
+        'ro' => 'Hoteluri',
     ],
-    'eurosite.copy_all' => [
-        'en' => 'Copy all',
-        'ro' => 'Copiază tot',
+    'eurosite.jobs_job_hotels_desc' => [
+        'en' => 'The operator\'s hotels and their rooms, in the whitelisted destinations.',
+        'ro' => 'Hotelurile operatorului și camerele lor, din destinațiile din listă.',
     ],
-    'eurosite.reveal_key' => [
-        'en' => 'Reveal access key',
-        'ro' => 'Afișează cheia de acces',
+    'eurosite.jobs_job_room_types' => [
+        'en' => 'Room types',
+        'ro' => 'Tipuri de cameră',
     ],
-    'eurosite.hide_key' => [
-        'en' => 'Hide access key',
-        'ro' => 'Ascunde cheia de acces',
+    'eurosite.jobs_job_room_types_desc' => [
+        'en' => 'The catalog of room types.',
+        'ro' => 'Catalogul tipurilor de cameră.',
     ],
-    'eurosite.key_hidden_note' => [
-        'en' => 'Access key hidden — copying still copies the real value',
-        'ro' => 'Cheia de acces este ascunsă — copierea copiază totuși valoarea reală',
+    'eurosite.jobs_job_tags' => [
+        'en' => 'Offer tags',
+        'ro' => 'Etichete de ofertă',
     ],
-    'eurosite.key_shown_note' => [
-        'en' => 'Access key shown',
-        'ro' => 'Cheia de acces este afișată',
+    'eurosite.jobs_job_tags_desc' => [
+        'en' => 'The catalog of offer tags. It may be empty.',
+        'ro' => 'Catalogul etichetelor de ofertă. Poate fi gol.',
     ],
-    'eurosite.rotate_key' => [
-        'en' => 'Rotate key',
-        'ro' => 'Schimbă cheia',
+    'eurosite.jobs_job_product_info' => [
+        'en' => 'Hotel details',
+        'ro' => 'Detaliile hotelurilor',
     ],
-    'eurosite.rotate_key_confirm' => [
-        'en' => 'Generate a new shared cron key? Every scheduled job of every travel addon must be updated with the new URL.',
-        'ro' => 'Generați o cheie cron partajată nouă? Fiecare sarcină programată a fiecărui addon de turism trebuie actualizată cu noul URL.',
+    'eurosite.jobs_job_product_info_desc' => [
+        'en' => 'Each synced hotel\'s details from Eurosite, kept for 30 days: a run fetches the missing and older ones, up to the "Hotel details per night" setting.',
+        'ro' => 'Detaliile fiecărui hotel sincronizat, de la Eurosite, păstrate 30 de zile: o rulare le aduce pe cele lipsă și pe cele mai vechi, până la limita din setarea „Detalii hoteluri pe noapte”.',
     ],
-    'eurosite.more_actions' => [
-        'en' => 'More actions',
-        'ro' => 'Mai multe acțiuni',
+    'eurosite.jobs_job_availability' => [
+        'en' => 'Availability',
+        'ro' => 'Disponibilitate',
     ],
-    'eurosite.menu_needs_key' => [
-        'en' => 'Set a cron security key to copy scheduled commands.',
-        'ro' => 'Setați o cheie de securitate cron pentru a copia comenzile programate.',
+    'eurosite.jobs_job_availability_desc' => [
+        'en' => 'Which hotels in the whitelisted destinations have an Immediate offer, on the near and the peak-season dates. Hides the products of the others and shows them again when they have one.',
+        'ro' => 'Ce hoteluri din destinațiile din listă au ofertă Imediat, la datele apropiate și în sezonul de vârf. Ascunde produsele celorlalte și le arată din nou când au una.',
+    ],
+    'eurosite.jobs_job_add_products' => [
+        'en' => 'Add products',
+        'ro' => 'Adaugă produse',
+    ],
+    'eurosite.jobs_job_add_products_desc' => [
+        'en' => 'A product for each hotel with an Immediate offer and pictures, in the whitelisted destinations.',
+        'ro' => 'Un produs pentru fiecare hotel cu ofertă Imediat și poze, din destinațiile din listă.',
+    ],
+    'eurosite.jobs_job_update_products' => [
+        'en' => 'Update products',
+        'ro' => 'Actualizează produsele',
+    ],
+    'eurosite.jobs_job_update_products_desc' => [
+        'en' => 'Brings the Eurosite products up to date: price, description, pictures and features.',
+        'ro' => 'Aduce la zi produsele Eurosite: prețul, descrierea, pozele și caracteristicile.',
+    ],
+    'eurosite.jobs_job_booking_status' => [
+        'en' => 'Booking confirmations',
+        'ro' => 'Confirmările rezervărilor',
+    ],
+    'eurosite.jobs_job_booking_status_desc' => [
+        'en' => 'Checks the bookings waiting for Eurosite\'s confirmation, on their schedule: 30 minutes after booking, then every 30 minutes for 2 hours, and again 8 hours later.',
+        'ro' => 'Verifică rezervările care așteaptă confirmarea Eurosite, după programul lor: la 30 de minute după rezervare, apoi la fiecare 30 de minute timp de 2 ore și din nou după 8 ore.',
+    ],
+    'eurosite.jobs_job_cleanup' => [
+        'en' => 'Clean-up',
+        'ro' => 'Curățenie',
+    ],
+    'eurosite.jobs_job_cleanup_desc' => [
+        'en' => 'Trims the sync log and removes the details of hotels that no longer exist.',
+        'ro' => 'Scurtează jurnalul sincronizărilor și șterge detaliile hotelurilor care nu mai există.',
+    ],
+    'eurosite.jobs_full_force' => [
+        'en' => 'Run every catalog now',
+        'ro' => 'Rulează acum toate cataloagele',
+    ],
+    'eurosite.jobs_full_force_confirm' => [
+        'en' => 'Run every catalog now, also the ones not due yet? It makes many API calls.',
+        'ro' => 'Rulezi acum toate cataloagele, și pe cele care nu sunt încă la rând? Face multe apeluri API.',
+    ],
+    'eurosite.jobs_on_demand_intro' => [
+        'en' => 'Jobs that are not on the schedule: run them from here when needed.',
+        'ro' => 'Joburi care nu sunt în program: rulează-le de aici când e nevoie.',
+    ],
+    'eurosite.jobs_unknown' => [
+        'en' => 'Unknown job: [job]',
+        'ro' => 'Job necunoscut: [job]',
+    ],
+    'eurosite.jobs_plan_full' => [
+        'en' => 'Catalogs in one nightly run (recommended)',
+        'ro' => 'Cataloagele într-o singură rulare pe noapte (recomandat)',
+    ],
+    'eurosite.jobs_plan_full_hint' => [
+        'en' => 'One line at 01:00 runs the catalogs, each only when it is due; the other jobs keep their own lines. Install one plan only: both would run every catalog twice.',
+        'ro' => 'O linie la 01:00 rulează cataloagele, fiecare doar când îi vine rândul; celelalte joburi își păstrează liniile lor. Instalează un singur plan: amândouă ar rula fiecare catalog de două ori.',
+    ],
+    'eurosite.jobs_plan_per' => [
+        'en' => 'Each catalog on its own line',
+        'ro' => 'Fiecare catalog pe linia lui',
+    ],
+    'eurosite.jobs_plan_per_hint' => [
+        'en' => 'Each catalog at its own time, to move one of them elsewhere. Install one plan only: both would run every catalog twice.',
+        'ro' => 'Fiecare catalog la ora lui, ca să poți muta unul dintre ele. Instalează un singur plan: amândouă ar rula fiecare catalog de două ori.',
+    ],
+    'eurosite.jobs_count_countries' => [
+        'en' => 'Countries: [n]',
+        'ro' => 'Țări: [n]',
+    ],
+    'eurosite.jobs_count_own_cities' => [
+        'en' => 'Cities with own offers: [n]',
+        'ro' => 'Orașe cu oferte proprii: [n]',
+    ],
+    'eurosite.jobs_count_cities' => [
+        'en' => 'Cities: [n]',
+        'ro' => 'Orașe: [n]',
+    ],
+    'eurosite.jobs_count_hotels' => [
+        'en' => 'Hotels: [n]',
+        'ro' => 'Hoteluri: [n]',
+    ],
+    'eurosite.jobs_count_room_types' => [
+        'en' => 'Room types: [n]',
+        'ro' => 'Tipuri de cameră: [n]',
+    ],
+    'eurosite.jobs_count_tags' => [
+        'en' => 'Offer tags: [n]',
+        'ro' => 'Etichete de ofertă: [n]',
+    ],
+    'eurosite.jobs_count_cache' => [
+        'en' => 'Hotels with details: [n]',
+        'ro' => 'Hoteluri cu detalii: [n]',
+    ],
+    'eurosite.jobs_count_immediate' => [
+        'en' => 'Hotels with an Immediate offer: [n]',
+        'ro' => 'Hoteluri cu ofertă Imediat: [n]',
+    ],
+    'eurosite.jobs_count_products' => [
+        'en' => 'Products: [n]',
+        'ro' => 'Produse: [n]',
     ],
     // Eurosite → Hotels, and the product jobs
     'eurosite.hotels' => [

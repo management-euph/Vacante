@@ -5,8 +5,9 @@ declare(strict_types=1);
  * Eurosite Touring — backend admin controller.
  *
  * Modes:
- *   - manage (default): dashboard — API health, catalog counts, last syncs,
- *     recent bookings, cron URL map, quick sync actions
+ *   - manage (default): dashboard — API health, the scheduled jobs (Travel
+ *     Core's jobs and commands cards), destinations, availability, recent
+ *     bookings, the availability probe
  *   - whitelist: the destination whitelist (Travel Core's destination picker:
  *     per country Not sold / All cities / Own cities / Only selected)
  *   - whitelist_body (AJAX GET): one country's cities for the picker, as {html}
@@ -16,12 +17,14 @@ declare(strict_types=1);
  *   - create_products (POST): products for the selected hotels (hotel_keys[])
  *   - check_availability (POST): run the availability check for the selected
  *     hotels' destinations (all listed destinations when none is selected)
- *   - run_sync (POST): run one cron command inline (sync_type param)
+ *   - run_job (POST): run one cron job from the dashboard, its log in a new
+ *     window (Travel Core's jobs card)
+ *   - run_sync (POST): run one cron command inline (sync_type param), from
+ *     the whitelist editor
  *   - save_whitelist (POST): replace the whitelist (the picker's dest_json)
  *   - disable_outside (POST): disable the live products outside the saved
  *     whitelist that the admin confirmed (Save never touches products)
  *   - test_connection (POST): cheap auth probe (getRoomTypes)
- *   - generate_cron_key (POST): mint the SHARED Travel Core cron key
  *   - seo_templates: SEO Templates (Travel Core's shared page)
  *   - save_seo_templates (POST): mode, "Apply" ticks, per-language templates
  *   - apply_seo_templates (POST): save, then re-apply to every linked product
@@ -34,7 +37,8 @@ use Tygh\Addons\Eurosite\Services\Container;
 use Tygh\Addons\Eurosite\Services\CronPlanBuilder;
 use Tygh\Addons\Eurosite\Services\DestinationsPicker;
 use Tygh\Addons\Eurosite\Services\HotelListView;
-use Tygh\Addons\TravelCore\Cron\CronKeyService;
+use Tygh\Addons\TravelCore\Cron\CronRunLog;
+use Tygh\Addons\TravelCore\Cron\CronRunOutput;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\DestinationPicker;
@@ -117,6 +121,41 @@ if (function_exists('fn_eurosite_ensure_schema')) {
 // ─── POST handlers ───
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    /*
+     * Mode: run_job — run one cron job from the dashboard, as the signed-in admin.
+     *
+     * The jobs card's Run and its ⋯ items post here (a CS-Cart POST with its
+     * security_hash), so no cron key reaches the browser and a GET cannot
+     * start a job. Only the flags of an action the job's menu offers reach
+     * the command (CronPlanBuilder::runParams). The log streams as plain text
+     * in the window the dashboard opened, as the cron URL prints it
+     * (CronRunOutput). Not paced (Api\RequestPacer): only a scheduled run is.
+     */
+    if ($mode === 'run_job') {
+        if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
+            return [CONTROLLER_STATUS_DENIED];
+        }
+        $job = (string) preg_replace('/[^a-z0-9_]/', '', strtolower(RequestCoerce::string($_REQUEST, 'job')));
+        if (!array_key_exists($job, CronDispatcher::getAvailableModes())) {
+            fn_set_notification('E', __('error'), __('eurosite.jobs_unknown', ['[job]' => $job]));
+
+            return [CONTROLLER_STATUS_REDIRECT, 'eurosite.manage'];
+        }
+        $params = CronPlanBuilder::runParams($job, RequestCoerce::string($_REQUEST, 'job_action'));
+
+        if (function_exists('set_time_limit')) {
+            set_time_limit(0);
+        }
+        header('Content-Type: text/plain; charset=utf-8');
+        echo CronRunOutput::startLine('Eurosite', $job);
+        try {
+            CronRunOutput::dispatch(new CronDispatcher(), $job, $params);
+        } catch (\Throwable $e) {
+            echo 'ERROR: ' . $e->getMessage() . "\n";
+        }
+        exit;
+    }
+
     if ($mode === 'run_sync') {
         $syncType = (string) preg_replace('/[^a-z0-9_]/', '', strtolower(RequestCoerce::string($_REQUEST, 'sync_type')));
         $dispatcher = new CronDispatcher();
@@ -205,55 +244,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         fn_set_notification('N', __('notice'), __('travel_core.dest_disabled', ['[n]' => $n]));
 
         return [CONTROLLER_STATUS_REDIRECT, 'eurosite.whitelist'];
-    }
-
-    if ($mode === 'generate_cron_key') {
-        // The dashboard offers this because the alternative — an operator
-        // inventing a key in the settings form — is what left this store with
-        // a blank one, and a blank key makes every scheduled sync answer 403.
-        //
-        // The key it mints is NOT eurosite's any more. Cron authentication
-        // moved into Travel Core: one key, one place to rotate it, one
-        // crontab to update. Writing an eurosite-local key here would produce
-        // a row nothing reads — ConfigProvider::getCronKey() delegates to
-        // CronKeyService — so the button would report success while every
-        // scheduled job kept using the old key. The whole mint, including the
-        // row-creation and the read-back that a silent updateValue() no-op
-        // made necessary, lives in CronKeyService::generate() now; this is
-        // the same button pointed at it.
-        $newKey = CronKeyService::generate();
-        ConfigProvider::resetSettingsCache();
-
-        if ($newKey === '') {
-            fn_set_notification(
-                'E',
-                __('error'),
-                // Deliberately does NOT say "open an admin page to let the '
-                // self-heal create the setting": generate() already ran that
-                // same repair (CronKeyService::ensureSettingExists) before
-                // writing, so if we are here it did not work and repeating it
-                // will not either. Point at the log and the manual field.
-                'Could not store the cron security key. Check the PHP error log, then set the key '
-                . 'by hand in Settings > Travel Core > Cron security key.',
-            );
-
-            return [CONTROLLER_STATUS_REDIRECT, 'eurosite.manage'];
-        }
-
-        // 'W', not 'N': this rotates the key for EVERY travel addon, so Travel
-        // Core's own exchange-rate job and the Sphinx and Novoton crontab
-        // entries just stopped working too. Naming fewer places than that
-        // understates what the operator has to fix.
-        fn_set_notification(
-            'W',
-            __('warning'),
-            'A new shared cron security key was generated in Travel Core. It authenticates the '
-            . 'scheduled jobs of every travel addon, so re-copy the crontab commands from '
-            . 'Travel Core -> Tools and from the Eurosite, Sphinx and Novoton dashboards — '
-            . 'the old URLs no longer work.',
-        );
-
-        return [CONTROLLER_STATUS_REDIRECT, 'eurosite.manage'];
     }
 
     if ($mode === 'test_connection') {
@@ -547,7 +537,7 @@ if ($mode === 'manage' || empty($mode)) {
         'room_types' => 0, 'tags' => 0, 'cache' => 0, 'whitelist' => 0, 'bookings' => 0,
         'immediate' => 0, 'products' => 0,
     ];
-    $lastSyncs = [];
+    $legacyRuns = [];
     $recentBookings = [];
     $destCard = [];
     try {
@@ -571,17 +561,9 @@ if ($mode === 'manage' || empty($mode)) {
         // Destinations: what we sell per country, and what needs a look.
         $destCard = DestinationsPicker::card(_eurosite_dest_build(), TypeCoerce::toString(fn_url('eurosite.whitelist')));
 
-        // Pre-format for Smarty 5 (modifiers throw inside the admin capture).
-        foreach ($syncLog->getLastPerType() as $type => $row) {
-            $lastSyncs[$type] = [
-                'status'     => TypeCoerce::toString($row['status'] ?? ''),
-                'synced'     => TypeCoerce::toInt($row['items_synced'] ?? 0),
-                'total'      => TypeCoerce::toInt($row['items_total'] ?? 0),
-                'started_at' => TypeCoerce::toString($row['started_at'] ?? ''),
-                'duration_s' => round(TypeCoerce::toFloat($row['duration_ms'] ?? 0) / 1000, 1),
-                'error'      => TypeCoerce::toString($row['error_message'] ?? ''),
-            ];
-        }
+        // A job's last run from the sync log, for one the run log has not
+        // seen yet (a monthly catalog last synced before it existed).
+        $legacyRuns = CronPlanBuilder::legacyRuns($syncLog->getLastPerType());
 
         foreach (Container::bookings()->getRecent(10) as $row) {
             $recentBookings[] = [
@@ -600,35 +582,40 @@ if ($mode === 'manage' || empty($mode)) {
         fn_log_event('general', 'runtime', ['message' => 'Eurosite dashboard error: ' . $e->getMessage()]);
     }
 
-    $syncModes = CronDispatcher::getAvailableModes();
-
-    // ── Catalogs and their schedules, as ONE list ──
+    // ── Scheduled jobs: Travel Core's shared cards, from the plan ──
     //
-    // CronPlanBuilder owns the ordering, the schedule wording, the staleness
-    // test and the crontab text; the controller only hands it the numbers it
-    // already gathered. See its docblock for why the dashboard stopped
-    // describing the same eight jobs in two separate tables.
+    // One row per job, in the order they run (CronPlanBuilder), with the
+    // size of its catalog. The page never prints a command with the key in
+    // it: the ⋯ menus and Copy all copy the real ones, the commands card
+    // shows them masked, and Run posts to eurosite.run_job. The commands
+    // come in two plans, the catalogs through one nightly `full` line or
+    // each on its own; the card shows one at a time.
     $cronKey = ConfigProvider::getCronAccessKey();
-    $baseUrl = TypeCoerce::toString(\Tygh\Registry::get('config.http_location'));
+    $baseUrl = TypeCoerce::toString(\Tygh\Registry::get('config.http_location')) . '/';
     $plan = new CronPlanBuilder($baseUrl, $cronKey, defined('DIR_ROOT') ? TypeCoerce::toString(constant('DIR_ROOT')) : '');
-
-    $cronRows = $plan->rows($syncModes, $counts, $lastSyncs);
-
-    // All four crontab variants up front: the page switches plan (nightly full
-    // vs per-catalog) and format (URL vs CLI) client-side, with no round trip.
-    $generatedOn = date('j M Y') . ' · server time ' . date_default_timezone_get();
-    $crontabs = [];
-    foreach (['full', 'per'] as $planKey) {
-        foreach (['url', 'cli'] as $format) {
-            $crontabs[$planKey . '_' . $format] = $plan->crontab($planKey, $format, $syncModes, $generatedOn);
-        }
+    $cronModes = CronDispatcher::getAvailableModes();
+    $cronRecords = [];
+    foreach (array_keys($cronModes) as $cronMode) {
+        $cronRecords[$cronMode] = CronRunLog::get(CronPlanBuilder::ADDON, $cronMode);
     }
-
-    // Kept for the "Sync now" buttons, which post a mode rather than call a URL.
-    $cronUrls = [];
-    foreach (array_keys($syncModes) as $m) {
-        $cronUrls[$m] = $plan->url(TypeCoerce::toString($m));
+    $generatedOn = date('Y-m-d') . ', server time ' . date_default_timezone_get();
+    $cronPlans = [];
+    foreach (CronPlanBuilder::PLANS as $planKey) {
+        $planCli = $plan->crontabFor($planKey, $cronModes, 'cli', $generatedOn);
+        $cronPlans[] = [
+            'key' => $planKey,
+            'label' => __('eurosite.jobs_plan_' . $planKey),
+            'hint' => __('eurosite.jobs_plan_' . $planKey . '_hint'),
+            'cli' => $planCli,
+            'url' => $plan->crontabFor($planKey, $cronModes, 'url', $generatedOn),
+            'masked' => $cronKey === '' ? $planCli : str_replace($cronKey, '••••••••', $planCli),
+        ];
     }
+    $view->assign('eurosite_job_stages', CronPlanBuilder::withCounts($plan->stages($cronModes, $cronRecords, $legacyRuns, time()), $counts));
+    $view->assign('eurosite_on_demand_jobs', $plan->onDemandRows($cronModes, $cronRecords, time()));
+    $view->assign('eurosite_cron_has_key', $plan->hasKey());
+    $view->assign('eurosite_cron_key', $cronKey);
+    $view->assign('eurosite_cron_plans', $cronPlans);
 
     $apiUser = ConfigProvider::getApiUser();
     $view->assign('eurosite_counts', $counts);
@@ -636,12 +623,6 @@ if ($mode === 'manage' || empty($mode)) {
     // Its hotels per availability state, from Travel Core's weekly review.
     $view->assign('eurosite_availability_card', \Tygh\Addons\TravelCore\Services\AvailabilityCard::build('eurosite'));
     $view->assign('eurosite_recent_bookings', $recentBookings);
-    $view->assign('eurosite_sync_modes', $syncModes);
-    $view->assign('eurosite_cron_urls', $cronUrls);
-    $view->assign('eurosite_cron_rows', $cronRows);
-    $view->assign('eurosite_crontabs_json', json_encode($crontabs));
-    $view->assign('eurosite_cron_has_key', $plan->hasKey());
-    $view->assign('eurosite_cron_key', $cronKey);
     $view->assign('eurosite_api_url', ConfigProvider::getApiUrl());
     $view->assign('eurosite_api_user', $apiUser);
     $view->assign('eurosite_is_configured', $apiUser !== '' && $apiUser !== 'YourUser');

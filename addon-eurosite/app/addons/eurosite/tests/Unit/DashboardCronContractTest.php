@@ -5,20 +5,30 @@ declare(strict_types=1);
 namespace Tygh\Addons\Eurosite\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
-use Tygh\Addons\Eurosite\Cron\CronDispatcher;
 use Tygh\Addons\Eurosite\Services\CronPlanBuilder;
 
 /**
- * The dashboard's half of the scheduling feature: the controller hands the
- * page a plan, the template renders it, and dashboard.js drives the toggles.
+ * The dashboard's scheduled jobs, on Travel Core's shared cards.
  *
- * CronPlanBuilderTest owns the rules themselves. What is pinned here is the
- * join between the three files, which is exactly where a rename goes
- * unnoticed — the page still renders, just emptier.
+ * The page had a table of its own (inline-styled ⋯ menus, "Sync now"), a
+ * crontab block with a reveal-the-key toggle, and buttons that minted and
+ * rotated the shared cron key. It now shows Travel Core's jobs card and
+ * commands card, as Sphinx's and Novoton's dashboards do: commands masked,
+ * copied for real, Run as an admin POST to eurosite.run_job that CS-Cart
+ * checks with its security_hash, the key minted on Travel Core -> Tools only.
+ *
+ * CronPlanBuilderTest owns the plan's rules. What is pinned here is the join
+ * between the controller, the page and the cards, where a rename goes
+ * unnoticed: the page still renders, just emptier.
+ *
+ * Source-text assertions: the controller and templates run inside CS-Cart,
+ * which this repository does not ship.
  */
 final class DashboardCronContractTest extends TestCase
 {
-    private const ADDON_ROOT = __DIR__ . '/../..';
+    private const string ADDON_ROOT = __DIR__ . '/../..';
+
+    private const string TEMPLATES = '/addon-eurosite/design/backend/templates/addons/eurosite';
 
     private static function repoRoot(): string
     {
@@ -30,319 +40,237 @@ final class DashboardCronContractTest extends TestCase
         return (string) file_get_contents(self::ADDON_ROOT . '/controllers/backend/eurosite.php');
     }
 
-    private static function template(): string
+    /** A template of this add-on without its {* comments *}. */
+    private static function template(string $path): string
     {
-        return (string) file_get_contents(
-            self::repoRoot() . '/addon-eurosite/design/backend/templates/addons/eurosite/views/eurosite/manage.tpl',
+        $src = (string) file_get_contents(self::repoRoot() . self::TEMPLATES . '/' . $path);
+
+        return (string) preg_replace('/\{\*.*?\*\}/s', '', $src);
+    }
+
+    /** @return array<string, string> the dashboard and its part of each job's row */
+    private static function pages(): array
+    {
+        return [
+            'manage.tpl' => self::template('views/eurosite/manage.tpl'),
+            'job_extra.tpl' => self::template('components/job_extra.tpl'),
+        ];
+    }
+
+    /** The body of `if ($mode === '<mode>') {`, up to its closing brace at the same indent. */
+    private static function branch(string $opening): string
+    {
+        $src = self::controller();
+        $start = strpos($src, $opening);
+        self::assertIsInt($start, "no {$opening}");
+        $indent = strspn(substr($src, (int) strrpos(substr($src, 0, $start), "\n") + 1), ' ');
+        $end = strpos($src, "\n" . str_repeat(' ', $indent) . "}\n", $start);
+        self::assertIsInt($end);
+
+        return substr($src, $start, $end - $start);
+    }
+
+    public function testRunJobIsHandledOnlyForPost(): void
+    {
+        $src = self::controller();
+        $post = strpos($src, "if (\$_SERVER['REQUEST_METHOD'] === 'POST') {");
+        $handler = strpos($src, "if (\$mode === 'run_job') {");
+        self::assertIsInt($post);
+        self::assertIsInt($handler);
+        $postEnds = strpos($src, "\n}\n", $post);
+        self::assertIsInt($postEnds);
+
+        self::assertGreaterThan($post, $handler);
+        self::assertLessThan($postEnds, $handler, 'run_job must sit inside the POST block: a GET must not start a job');
+    }
+
+    public function testRunJobChecksPermissionAndRunsOnlyKnownJobsWithWhatThePlanAllows(): void
+    {
+        $body = self::branch("    if (\$mode === 'run_job') {");
+
+        self::assertStringContainsString("fn_check_permissions('manage_catalog', 'update', 'admin')", $body);
+        self::assertStringContainsString("preg_replace('/[^a-z0-9_]/', ''", $body);
+        self::assertStringContainsString('array_key_exists($job, CronDispatcher::getAvailableModes())', $body);
+        self::assertStringContainsString("\$params = CronPlanBuilder::runParams(\$job, RequestCoerce::string(\$_REQUEST, 'job_action'));", $body);
+        self::assertStringContainsString('CronRunOutput::dispatch(new CronDispatcher(), $job, $params);', $body);
+        self::assertStringNotContainsString('toStringMap($_REQUEST)', $body, 'the request reaches the job only through runParams()');
+        self::assertStringNotContainsString('access_key', $body);
+        self::assertStringNotContainsString('RequestPacer', $body, 'only a scheduled run is paced');
+        self::assertStringContainsString("header('Content-Type: text/plain; charset=utf-8');", $body);
+        self::assertStringContainsString("echo CronRunOutput::startLine('Eurosite', \$job);", $body);
+    }
+
+    /** The URL and the dashboard print a run the same way. */
+    public function testThePublicCronEndpointPrintsThroughTheSameOutput(): void
+    {
+        $cron = (string) file_get_contents(self::ADDON_ROOT . '/controllers/frontend/eurosite_cron.php');
+
+        self::assertStringContainsString("echo CronRunOutput::startLine('Eurosite', \$mode);", $cron);
+        self::assertStringContainsString('CronRunOutput::dispatch($dispatcher, $mode, TypeCoerce::toStringMap($_REQUEST));', $cron);
+        self::assertStringNotContainsString("echo 'Stats: '", $cron, 'a second copy of the printer drifts');
+    }
+
+    /** The shared key is minted on Travel Core -> Tools, for every provider. */
+    public function testTheDashboardNoLongerMintsTheKey(): void
+    {
+        self::assertStringNotContainsString("\$mode === 'generate_cron_key'", self::controller());
+        self::assertStringNotContainsString('CronKeyService', self::controller());
+        foreach (self::pages() as $name => $tpl) {
+            self::assertStringNotContainsString('generate_cron_key', $tpl, $name);
+        }
+    }
+
+    public function testNoPagePrintsTheKeyOrACronUrl(): void
+    {
+        foreach (self::pages() as $name => $tpl) {
+            self::assertStringNotContainsString('access_key', $tpl, $name);
+            self::assertStringNotContainsString('eurosite_cron.run', $tpl, $name);
+            self::assertStringNotContainsString('cron_mode=', $tpl, $name);
+            self::assertStringNotContainsString('{$eurosite_cron_key', $tpl, $name . ': the key only reaches the commands card, which masks it');
+        }
+    }
+
+    /** Travel Core's cards, given Eurosite's rows, plans and run action. */
+    public function testTheDashboardShowsTravelCoresCards(): void
+    {
+        $tpl = self::pages()['manage.tpl'];
+
+        self::assertMatchesRegularExpression(
+            '/\{include file="addons\/travel_core\/components\/jobs_card\.tpl"\s+card_id="eurosite-scheduled-jobs"\s+stages=\$eurosite_job_stages\s+on_demand=\$eurosite_on_demand_jobs\s+on_demand_intro=__\("eurosite\.jobs_on_demand_intro"\)\s+has_key=\$eurosite_cron_has_key\s+run_dispatch="eurosite\.run_job"\s+row_extra="addons\/eurosite\/components\/job_extra\.tpl"\s*\}/',
+            $tpl,
         );
-    }
-
-    private static function script(): string
-    {
-        return (string) file_get_contents(self::repoRoot() . '/addon-eurosite/js/addons/eurosite/dashboard.js');
-    }
-
-    protected function setUp(): void
-    {
-        CronDispatcher::reset();
-    }
-
-    public function testTheControllerBuildsThePlanWithTheService(): void
-    {
-        $controller = self::controller();
-
-        self::assertStringContainsString('use Tygh\\Addons\\Eurosite\\Services\\CronPlanBuilder;', $controller);
-        self::assertStringContainsString('new CronPlanBuilder($baseUrl, $cronKey, ', $controller);
-        self::assertStringContainsString('$plan->rows($syncModes, $counts, $lastSyncs)', $controller);
-
-        // The schedule table and the URL shape belong to the service now — a
-        // second copy in the controller is how the two drift apart.
-        self::assertStringNotContainsString('$cronSchedules', $controller);
-        self::assertStringNotContainsString('dispatch=eurosite_cron.run&access_key={$cronKey}', $controller);
-    }
-
-    /**
-     * All four crontab variants are rendered up front so the toggles need no
-     * round trip; the page reads them out of one attribute.
-     */
-    public function testAllFourCrontabVariantsReachThePage(): void
-    {
-        $controller = self::controller();
-        $tpl = self::template();
-
-        self::assertStringContainsString("foreach (['full', 'per'] as \$planKey)", $controller);
-        self::assertStringContainsString("foreach (['url', 'cli'] as \$format)", $controller);
-        self::assertStringContainsString("\$view->assign('eurosite_crontabs_json', json_encode(\$crontabs));", $controller);
-        self::assertStringContainsString('data-crontabs="{$eurosite_crontabs_json|escape:html}"', $tpl);
-
-        // The script indexes them by "<plan>_<format>".
-        self::assertStringContainsString("\$crontabs[\$planKey . '_' . \$format]", $controller);
-        self::assertStringContainsString("variants[state.plan + '_' + state.format]", self::script());
-    }
-
-    /**
-     * REGRESSION: with no key the endpoint answers 403 to everything, and the
-     * page used to print a table of commands with an empty access_key= — nine
-     * dead URLs, presented as ready to schedule.
-     */
-    public function testWithNoKeyThePageOffersAKeyInsteadOfCommands(): void
-    {
-        $tpl = self::template();
-        $controller = self::controller();
-
-        self::assertStringContainsString("\$view->assign('eurosite_cron_has_key', \$plan->hasKey());", $controller);
-        self::assertStringContainsString('{if !$eurosite_cron_has_key}', $tpl);
-        self::assertStringContainsString('eurosite.cron_no_key_title', $tpl);
-        self::assertStringContainsString('value="eurosite.generate_cron_key"', $tpl);
-
-        // The crontab block and the per-row copy buttons live on the other
-        // side of that branch.
-        $noKeyBranch = substr($tpl, strpos($tpl, '{if !$eurosite_cron_has_key}') ?: 0);
-        $elsePos = strpos($noKeyBranch, '{else}');
-        self::assertIsInt($elsePos);
-        self::assertStringNotContainsString('id="eurosite-crontab"', substr($noKeyBranch, 0, $elsePos));
-    }
-
-    /**
-     * The button still mints a key — Travel Core's, not an eurosite-local one.
-     *
-     * Cron authentication moved into Travel Core: one secret for all three
-     * providers, rotated in one place, in one crontab. The button stays where
-     * it is (this dashboard is where the commands are), but writing an
-     * eurosite row here would now produce a value nothing reads —
-     * ConfigProvider::getCronKey() delegates to CronKeyService — so it would
-     * report success while every scheduled job kept using the old key. That
-     * is a worse failure than the blank key this button was added for,
-     * because it looks like it worked.
-     */
-    public function testGeneratingAKeyMintsTheSharedCoreKey(): void
-    {
-        // Comment-stripped, and scoped to this one mode. The raw-source
-        // version of this test was satisfied by the COMMENT above the call
-        // ("lives in CronKeyService::generate() now"), so replacing the mint
-        // with a read of the existing key — a button that reports "a new key
-        // was generated" while changing nothing — kept every suite green.
-        $mode = self::modeBody('generate_cron_key');
-
-        self::assertStringContainsString('$newKey = CronKeyService::generate();', $mode);
-        self::assertStringNotContainsString(
-            "updateValue('cron_access_key'",
-            $mode,
-            'the dashboard still writes an eurosite-local cron key that nothing reads',
+        self::assertMatchesRegularExpression(
+            '/\{if \$eurosite_cron_has_key\}\s*\{include file="addons\/travel_core\/components\/commands_card\.tpl"\s+card_id="eurosite-crontab"\s+plans=\$eurosite_cron_plans\s+key=\$eurosite_cron_key\s*\}\s*\{\/if\}/',
+            $tpl,
         );
-        // The cached settings array would otherwise still hold the old key for
-        // the rest of the request.
-        self::assertStringContainsString('ConfigProvider::resetSettingsCache();', $mode);
-        // Rotating invalidates every scheduled URL of EVERY travel addon,
-        // Travel Core's own exchange-rate job included.
-        foreach (['Travel Core -> Tools', 'Eurosite', 'Sphinx', 'Novoton'] as $place) {
-            self::assertStringContainsString($place, $mode, "the rotation notice never mentions {$place}");
+        self::assertFileExists(self::repoRoot() . self::TEMPLATES . '/components/job_extra.tpl');
+    }
+
+    /** Every variable the page reads is assigned by the manage branch. */
+    public function testTheControllerHandsThePageItsData(): void
+    {
+        $manage = self::branch("if (\$mode === 'manage' || empty(\$mode)) {");
+        preg_match_all('/\$(eurosite_[a-z_]+)/', implode("\n", self::pages()), $m);
+
+        foreach (array_unique($m[1]) as $var) {
+            self::assertStringContainsString("\$view->assign('{$var}', ", $manage, "{$var} is read by the page but never assigned");
         }
+        self::assertStringContainsString('new CronPlanBuilder($baseUrl, $cronKey, ', $manage);
+        self::assertStringContainsString('CronRunLog::get(CronPlanBuilder::ADDON, $cronMode)', $manage);
+        self::assertStringContainsString('CronPlanBuilder::legacyRuns($syncLog->getLastPerType())', $manage);
+        self::assertStringContainsString("\$view->assign('eurosite_job_stages', CronPlanBuilder::withCounts(\$plan->stages(\$cronModes, \$cronRecords, \$legacyRuns, time()), \$counts));", $manage);
+
+        // The schedule table and the URL shape belong to the plan: a second
+        // copy in the controller is how the two drift apart.
+        self::assertStringNotContainsString('dispatch=eurosite_cron.run', $manage);
+        self::assertStringNotContainsString('$lastSyncs', $manage);
     }
 
     /**
-     * The comment-stripped body of `if ($mode === '<mode>') { ... }` in the
-     * controller, found by matching braces on PHP's tokens so a brace inside a
-     * string cannot end it early.
+     * Both plans reach the card, the recommended one first, each with its
+     * name, its hint and its commands, shown masked.
      */
-    private static function modeBody(string $mode): string
+    public function testBothPlansReachTheCommandsCard(): void
     {
-        $code = '';
-        $kinds = [];
-        foreach (token_get_all(self::controller()) as $token) {
-            if (is_array($token) && in_array($token[0], [T_COMMENT, T_DOC_COMMENT], true)) {
-                continue;
-            }
-            $text = is_array($token) ? $token[1] : $token;
-            $open = $token === '{' || (is_array($token) && in_array($token[0], [T_CURLY_OPEN, T_DOLLAR_OPEN_CURLY_BRACES], true));
-            $kinds[] = [strlen($code), $open ? 1 : ($token === '}' ? -1 : 0)];
-            $code .= $text;
-        }
+        $manage = self::branch("if (\$mode === 'manage' || empty(\$mode)) {");
 
-        $at = strpos($code, "if (\$mode === '{$mode}')");
-        self::assertIsInt($at, "mode {$mode} is gone");
-
-        $depth = 0;
-        $start = null;
-        foreach ($kinds as [$offset, $delta]) {
-            if ($offset < $at || $delta === 0) {
-                continue;
-            }
-            $depth += $delta;
-            $start ??= $offset;
-            if ($depth === 0) {
-                return substr($code, $start, $offset + 1 - $start);
-            }
-        }
-
-        self::fail("mode {$mode} has no balanced body");
-    }
-
-    public function testTheMergedTableRendersEveryFieldThePlanProvides(): void
-    {
-        $tpl = self::template();
-
-        self::assertStringContainsString('{foreach from=$eurosite_cron_rows item=job}', $tpl);
-        foreach (['mode', 'description', 'count', 'schedule_human', 'schedule_cron', 'state', 'state_label'] as $field) {
-            self::assertStringContainsString('$job.' . $field, $tpl, "the table never renders {$field}");
-        }
-
-        // The old page had a second table saying the same things.
-        self::assertStringNotContainsString('$eurosite_catalog_rows', $tpl);
-        self::assertStringNotContainsString("\$view->assign('eurosite_catalog_rows'", self::controller());
-    }
-
-    /**
-     * The one diagnosis the page can make by itself: hotels reads the
-     * whitelist, and the whitelist is empty.
-     */
-    public function testTheHotelsRowExplainsAnEmptyWhitelist(): void
-    {
-        $tpl = self::template();
-
-        self::assertStringContainsString("{if \$job.mode == 'hotels' && \$eurosite_counts.whitelist == 0}", $tpl);
-        self::assertStringContainsString('eurosite.hotels_need_whitelist', $tpl);
-        self::assertStringContainsString('{"eurosite.whitelist"|fn_url}', $tpl);
-    }
-
-    public function testEveryCopyButtonCarriesItsPayloadAndFeedbackText(): void
-    {
-        $tpl = self::template();
-
-        // Whole elements, not "up to the next '>'": the Smarty `=>` inside a
-        // label's [default] argument ends an attribute-only match early.
-        preg_match_all('#<button\b.*?</button>#s', $tpl, $m);
-        $copyButtons = array_values(array_filter(
-            $m[0],
-            static fn (string $html): bool => str_contains($html, 'eurosite-copy'),
-        ));
-        self::assertNotEmpty($copyButtons, 'no copy buttons on the dashboard');
-
-        foreach ($copyButtons as $html) {
-            self::assertStringContainsString('data-copy="', $html, 'a copy button with nothing to copy');
-            self::assertStringContainsString('data-txt-copied="', $html);
-            self::assertStringContainsString('data-txt-copy-failed="', $html);
-        }
-    }
-
-    public function testTheScriptShipsAndIsLoadedInsideTheCapture(): void
-    {
-        $tpl = self::template();
-        $js = self::repoRoot() . '/addon-eurosite/js/addons/eurosite/dashboard.js';
-
-        self::assertFileExists($js);
-        self::assertStringContainsString('{script src="js/addons/eurosite/dashboard.js"}', $tpl);
-
-        $script = strpos($tpl, '{script src="js/addons/eurosite/dashboard.js"}');
-        $endCapture = strpos($tpl, '{/capture}');
-        self::assertIsInt($script);
-        self::assertIsInt($endCapture);
-        self::assertLessThan($endCapture, $script, 'AJAX navigation drops a {script} outside the mainbox capture');
-
-        // navigator.clipboard is undefined on a plain-http admin, which is how
-        // most of these stores are reached — the fallback is not optional.
-        self::assertStringContainsString('execCommand', self::script(), 'the copy fallback is missing');
-    }
-
-    /**
-     * Masking is a display concern only. A crontab pasted with bullets in it
-     * is a 403 at 01:00 that nobody is awake to see.
-     */
-    public function testCopyingSendsTheRealKeyEvenWhileItIsMasked(): void
-    {
-        $js = self::script();
-
-        self::assertStringContainsString('function masked(', $js);
-        self::assertStringContainsString('pre.textContent = masked(plainText());', $js);
-        self::assertStringContainsString('copyToClipboard(plainText())', $js);
-        self::assertStringNotContainsString('copyToClipboard(masked(', $js);
-    }
-
-    public function testTheTogglesTheTemplateRendersAreTheOnesTheScriptBinds(): void
-    {
-        $tpl = self::template();
-        $js = self::script();
-
-        foreach (['eurosite_cron_plan', 'eurosite_cron_format'] as $group) {
-            self::assertStringContainsString('name="' . $group . '"', $tpl);
-            self::assertStringContainsString("bindRadios('" . $group . "'", $js);
-        }
-        foreach (['eurosite-crontab', 'eurosite-crontab-text', 'eurosite-crontab-copy', 'eurosite-crontab-reveal'] as $id) {
-            self::assertStringContainsString('id="' . $id . '"', $tpl);
-            self::assertStringContainsString("'" . $id . "'", $js);
-        }
-    }
-
-    /**
-     * The per-row actions live behind one glyph. Two things must hold: the
-     * toggle is a real menu button (an icon-only div with a click handler is
-     * invisible to Tab and to a screen reader), and the menu still renders
-     * when there is no key — saying why the copies are missing beats a column
-     * that silently loses its actions, which is how this looked on the store.
-     */
-    public function testEveryRowHasAnAccessibleOverflowMenu(): void
-    {
-        $tpl = self::template();
-
-        self::assertStringContainsString('class="eurosite-menu-wrap"', $tpl);
-        self::assertStringContainsString('class="btn btn-micro eurosite-menu-toggle"', $tpl);
-        self::assertStringContainsString('&#8943;', $tpl, 'the toggle needs its ⋯ glyph');
-
-        foreach (['aria-haspopup="true"', 'aria-expanded="false"', 'aria-controls="eurosite-menu-{$job.mode}"'] as $attr) {
-            self::assertStringContainsString($attr, $tpl, "the menu button is missing {$attr}");
-        }
-        self::assertStringContainsString('eurosite.more_actions', $tpl, 'an icon-only button needs a label');
-        self::assertStringContainsString('role="menu"', $tpl);
-        self::assertStringContainsString('id="eurosite-menu-{$job.mode}"', $tpl);
-
-        // The menu itself is outside the has-key branch; only its contents differ.
-        $menuStart = strpos($tpl, 'class="eurosite-menu-wrap"');
-        self::assertIsInt($menuStart);
-        $rowEnd = strpos($tpl, '</td>', $menuStart);
-        self::assertIsInt($rowEnd);
-        $cell = substr($tpl, $menuStart, $rowEnd - $menuStart);
-        self::assertStringContainsString('{if $eurosite_cron_has_key}', $cell);
-        self::assertStringContainsString('{else}', $cell);
-        self::assertStringContainsString('eurosite.menu_needs_key', $cell);
-        self::assertStringContainsString('#eurosite-scheduled-jobs', $cell, 'the no-key note must link to the fix');
-    }
-
-    public function testTheMenuOffersAllThreeCopiesAsMenuItems(): void
-    {
-        $tpl = self::template();
-
+        self::assertStringContainsString('foreach (CronPlanBuilder::PLANS as $planKey) {', $manage);
         foreach ([
-            '$job.crontab_line' => 'eurosite.copy_crontab_line',
-            '$job.url' => 'eurosite.copy_url',
-            '$job.cli' => 'eurosite.copy_cli',
-        ] as $payload => $label) {
-            self::assertStringContainsString('data-copy="{' . $payload . '|escape:html}"', $tpl);
-            self::assertStringContainsString($label, $tpl);
+            "'key' => \$planKey,",
+            "'label' => __('eurosite.jobs_plan_' . \$planKey),",
+            "'hint' => __('eurosite.jobs_plan_' . \$planKey . '_hint'),",
+            "'cli' => \$planCli,",
+            "'url' => \$plan->crontabFor(\$planKey, \$cronModes, 'url', \$generatedOn),",
+            "'masked' => \$cronKey === '' ? \$planCli : str_replace(\$cronKey, '••••••••', \$planCli),",
+        ] as $field) {
+            self::assertStringContainsString($field, $manage);
         }
-
-        // Each is a real menuitem carrying the shared copy behaviour.
-        preg_match_all('#<button[^>]*role="menuitem"[^>]*>#s', $tpl, $m);
-        self::assertCount(3, $m[0]);
-        foreach ($m[0] as $button) {
-            self::assertStringContainsString('eurosite-copy', $button);
-        }
+        self::assertStringContainsString("\$planCli = \$plan->crontabFor(\$planKey, \$cronModes, 'cli', \$generatedOn);", $manage);
+        self::assertStringContainsString("\$view->assign('eurosite_cron_plans', \$cronPlans);", $manage);
     }
 
     /**
-     * A dropdown that cannot be dismissed or escaped is worse than no
-     * dropdown: it covers the row below it until you reload.
+     * Under each job's name, what is Eurosite's own: its catalog's size, the
+     * hotel list, the probe beside the availability check, and the two states
+     * the page can diagnose by itself.
      */
-    public function testTheMenuScriptHandlesDismissalAndKeyboardUse(): void
+    public function testEachRowSaysWhatIsEurositesOwn(): void
     {
-        $js = self::script();
+        $extra = self::pages()['job_extra.tpl'];
 
-        self::assertStringContainsString('function initMenus(', $js);
-        self::assertStringContainsString("aria-expanded", $js, 'the toggle state must be announced');
-        self::assertStringContainsString("e.key === 'Escape'", $js);
-        self::assertStringContainsString("e.key === 'ArrowDown'", $js);
-        self::assertStringContainsString("e.key === 'ArrowUp'", $js);
-        self::assertStringContainsString('toggle.focus()', $js, 'Escape must not strand focus in a hidden menu');
-        self::assertStringContainsString('!open.menu.contains(e.target)', $js, 'clicking outside must close it');
+        self::assertStringContainsString('{if isset($job.count)}', $extra);
+        self::assertStringContainsString('{__($job.count_key, ["[n]" => $job.count])}', $extra);
+        self::assertStringContainsString('{if $job.mode == "hotels" || $job.mode == "availability" || $job.mode == "add_products"}', $extra);
+        self::assertStringContainsString('{"eurosite.hotels"|fn_url}', $extra);
+        self::assertStringContainsString('<a href="#eurosite-probe">', $extra);
+        self::assertStringContainsString('id="eurosite-probe"', self::pages()['manage.tpl'], 'the probe link lands on the page');
+
+        // No Immediate hotel on the configured dates: the probe says which dates would.
+        self::assertStringContainsString('{if $job.mode == "availability" && isset($job.count) && $job.count == 0}', $extra);
+        self::assertStringContainsString('{__("eurosite.probe_none_hint")}', $extra);
+        // The hotels job reads the whitelist, and the whitelist is empty.
+        self::assertStringContainsString('{if $job.mode == "hotels" && $eurosite_counts.whitelist == 0}', $extra);
+        self::assertStringContainsString('{__("eurosite.hotels_need_whitelist")}', $extra);
+        self::assertStringContainsString('{"eurosite.whitelist"|fn_url}', $extra);
+        self::assertStringNotContainsString('style="', $extra, 'Travel Core\'s hint classes, not inline styles');
+    }
+
+    /** The old page's script and table are gone: Travel Core's cards bring their own. */
+    public function testTheOldTableAndScriptAreGone(): void
+    {
+        $tpl = self::pages()['manage.tpl'];
+
+        self::assertFileDoesNotExist(self::repoRoot() . '/addon-eurosite/js/addons/eurosite/dashboard.js');
+        self::assertStringNotContainsString('dashboard.js', $tpl);
+        foreach (['eurosite-menu', 'eurosite-copy', 'eurosite_cron_rows', 'eurosite_crontabs_json', 'eurosite.run_sync', 'onclick='] as $old) {
+            self::assertStringNotContainsString($old, $tpl, $old);
+        }
+        foreach (['eurosite_cron_rows', 'eurosite_crontabs_json', 'eurosite_cron_urls', 'eurosite_sync_modes'] as $var) {
+            self::assertStringNotContainsString("assign('{$var}'", self::controller(), $var);
+        }
+    }
+
+    /** Every form on the dashboard goes to an action the controller has. */
+    public function testEveryDashboardFormGoesToAnExistingAction(): void
+    {
+        preg_match_all('/name="dispatch" value="eurosite\.([a-z_]+)"/', implode("\n", self::pages()), $m);
+
+        self::assertNotSame([], $m[1]);
+        foreach (array_unique($m[1]) as $mode) {
+            self::assertStringContainsString("\$mode === '{$mode}'", self::controller(), "the dashboard posts to eurosite.{$mode}, which nothing handles");
+        }
+    }
+
+    /** Every label the page, its row part and the plan's rows name exists, in both languages. */
+    public function testEveryLabelExists(): void
+    {
+        /** @var array<string, array<string, string>> $lang */
+        $lang = require self::ADDON_ROOT . '/lang_keys.php';
+
+        $keys = [];
+        preg_match_all('/__\("(eurosite\.[a-z0-9_]+)"/', implode("\n", self::pages()), $m);
+        $keys = [...$keys, ...$m[1]];
+        foreach (CronPlanBuilder::STAGES as $stage => $jobs) {
+            $keys[] = 'eurosite.jobs_stage_' . $stage;
+            foreach ($jobs as $job) {
+                $keys[] = 'eurosite.jobs_job_' . $job;
+                $keys[] = 'eurosite.jobs_job_' . $job . '_desc';
+            }
+        }
+        foreach (CronPlanBuilder::PLANS as $plan) {
+            $keys[] = 'eurosite.jobs_plan_' . $plan;
+            $keys[] = 'eurosite.jobs_plan_' . $plan . '_hint';
+        }
+        foreach (['countries', 'own_cities', 'cities', 'hotels', 'room_types', 'tags', 'cache', 'immediate', 'products'] as $count) {
+            $keys[] = 'eurosite.jobs_count_' . $count;
+        }
+        $keys = [...$keys, 'eurosite.jobs_full_force', 'eurosite.jobs_full_force_confirm', 'eurosite.jobs_unknown'];
+
+        foreach (array_unique($keys) as $key) {
+            self::assertArrayHasKey($key, $lang, "label {$key} is missing from lang_keys.php");
+            self::assertNotSame('', $lang[$key]['en'] ?? '', $key);
+            self::assertNotSame('', $lang[$key]['ro'] ?? '', $key);
+        }
     }
 
     public function testTheWrapperDivIsClosed(): void
@@ -350,50 +278,8 @@ final class DashboardCronContractTest extends TestCase
         // The page wrapper went unclosed for the life of this template; the
         // browser recovered by closing it at the end of the capture, which
         // also swallows anything appended after it.
-        $tpl = preg_replace('/\{\*.*?\*\}/s', '', self::template());
-        self::assertIsString($tpl);
-        self::assertSame(
-            substr_count($tpl, '<div'),
-            substr_count($tpl, '</div>'),
-            'unbalanced <div> in manage.tpl',
-        );
-    }
+        $tpl = self::pages()['manage.tpl'];
 
-    public function testTheAccessKeyWarningIsShown(): void
-    {
-        self::assertStringContainsString('eurosite.cron_access_key_note', self::template());
-    }
-
-    /**
-     * Cheap guard on the service's own table: a command registering a new mode
-     * should get a named slot rather than silently taking the fallback.
-     */
-    public function testEveryDispatcherModeHasItsOwnSchedule(): void
-    {
-        $plan = new CronPlanBuilder('https://example.test', 'k');
-        $modes = CronDispatcher::getAvailableModes();
-        self::assertNotEmpty($modes);
-
-        $rows = $plan->rows($modes, [], []);
-        $scheduled = [];
-        foreach ($rows as $row) {
-            $scheduled[(string) $row['mode']] = (string) $row['schedule_cron'];
-        }
-
-        foreach (array_keys($modes) as $mode) {
-            if ($mode === 'full') {
-                continue; // the headline action, not a row
-            }
-            if (in_array($mode, CronPlanBuilder::DIAGNOSTIC, true)) {
-                // Read-only, run by hand: never a dashboard row or a crontab line.
-                self::assertArrayNotHasKey($mode, $scheduled, "diagnostic {$mode} must not be scheduled");
-                continue;
-            }
-            self::assertArrayHasKey($mode, $scheduled, "cron mode {$mode} has no row");
-            self::assertTrue(
-                CronPlanBuilder::hasSchedule($mode),
-                "cron mode {$mode} has no slot of its own — add one to CronPlanBuilder::SCHEDULES",
-            );
-        }
+        self::assertSame(substr_count($tpl, '<div'), substr_count($tpl, '</div>'), 'unbalanced <div> in manage.tpl');
     }
 }

@@ -214,28 +214,23 @@ final class ToolsCronKeyButtonTest extends TestCase
     }
 
     /**
-     * Every form that mints the SHARED key carries a CSRF token — including
-     * Eurosite's, which predates this change.
+     * Every form that mints the SHARED key carries a CSRF token, and they are
+     * all on this page: one forged POST would break the scheduled jobs of
+     * every provider at once.
      *
-     * Eurosite's dashboard has had a generate button for a while, and neither
-     * of its forms carried a security_hash. That was a gap when the button
-     * rotated only Eurosite's own key; repointing it at the shared key raised
-     * the payoff, because one forged POST now breaks the scheduled jobs of all
-     * three providers at once.
+     * Eurosite's dashboard had generate and rotate buttons of its own (posting
+     * eurosite.generate_cron_key). Since it moved onto Travel Core's jobs
+     * card it sends the admin here, as Sphinx's and Novoton's do, and that
+     * action is gone.
      */
     public function testEveryFormThatMintsTheSharedKeyIsCsrfProtected(): void
     {
-        $eurosite = (string) file_get_contents(
-            dirname(__DIR__, 7)
-            . '/addon-eurosite/design/backend/templates/addons/eurosite/views/eurosite/manage.tpl',
-        );
-
-        $forms = substr_count($eurosite, 'value="eurosite.generate_cron_key"');
-        self::assertGreaterThanOrEqual(2, $forms, 'the eurosite generate forms have moved or gone');
-        self::assertSame(
-            $forms,
-            substr_count($eurosite, 'name="security_hash" value="{$security_hash}"'),
-            'an eurosite form posts generate_cron_key without a CSRF token',
+        $root = dirname(__DIR__, 7);
+        $eurosite = (string) file_get_contents($root . '/addon-eurosite/design/backend/templates/addons/eurosite/views/eurosite/manage.tpl');
+        self::assertStringNotContainsString('generate_cron_key', $eurosite, 'the shared key is minted on Travel Core -> Tools only');
+        self::assertStringNotContainsString(
+            "\$mode === 'generate_cron_key'",
+            (string) file_get_contents($root . '/addon-eurosite/app/addons/eurosite/controllers/backend/eurosite.php'),
         );
 
         // Every POST form on Travel Core's page, same rule — the two that mint

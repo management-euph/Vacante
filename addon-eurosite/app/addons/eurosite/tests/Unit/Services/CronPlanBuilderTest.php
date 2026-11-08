@@ -5,106 +5,143 @@ declare(strict_types=1);
 namespace Tygh\Addons\Eurosite\Tests\Unit\Services;
 
 use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tygh\Addons\Eurosite\Cron\CronDispatcher;
 use Tygh\Addons\Eurosite\Services\CronPlanBuilder;
 
 /**
- * The dashboard's scheduling rules, tested away from Smarty and the database.
- *
- * What these pin is everything the old page got wrong or could not say:
- * the order jobs really run in, whether a catalog is stale, whether a command
- * can work at all, and what a pasteable crontab looks like.
+ * Eurosite's scheduled jobs on Travel Core's shared jobs card, tested away
+ * from Smarty and the database: the order they run in, their slots and when
+ * each is late, what Run and the ⋯ menu pass on, the size of each catalog,
+ * and the two crontab plans (Travel Core's CronJobPlanTest covers the rows,
+ * the schedule words and the "late" rule themselves).
  */
 #[CoversClass(CronPlanBuilder::class)]
 final class CronPlanBuilderTest extends TestCase
 {
-    private const KEY = 'abc123';
+    private const string KEY = 'abc123';
+
+    private const int NOW = 1_758_000_000;
 
     /** Every mode the dispatcher registers, in the alphabetical order it hands them over. */
-    private const MODES = [
+    private const array MODES = [
+        'add_products' => 'Create products',
+        'availability' => 'Check which hotels have an Immediate offer',
+        'booking_status' => 'Check bookings waiting for confirmation',
         'cities' => 'Sync city catalogs',
         'cleanup' => 'Trim the sync log',
         'countries' => 'Sync the country catalog',
         'full' => 'Run every static-data sync in order',
         'hotels' => 'Sync own hotels + rooms',
         'own_cities' => 'Sync cities with own offers',
+        'probe_availability' => 'Read-only: search the next months',
         'product_info' => 'Warm the product-details cache',
         'room_types' => 'Sync the room-type catalog',
         'tags' => 'Sync the offer-tag catalog',
+        'update_products' => 'Refresh the Eurosite products',
     ];
 
-    private function builder(string $key = self::KEY): CronPlanBuilder
+    private static function plan(string $key = self::KEY, string $root = ''): CronPlanBuilder
     {
-        return new CronPlanBuilder('https://shop.example.ro', $key);
+        return new CronPlanBuilder('https://shop.example.ro', $key, $root);
     }
 
     /**
-     * @return list<string>
+     * @param array<string, string> $modes
+     * @param array<string, array<string, mixed>> $records
+     * @param array<string, array{at: int, ok: bool}> $legacy
+     *
+     * @return array<string, array<string, mixed>> mode => row
      */
-    private function modesOf(CronPlanBuilder $plan): array
+    private static function rows(array $modes = self::MODES, array $records = [], array $legacy = []): array
     {
-        return array_map(
-            static fn (array $row): string => (string) $row['mode'],
-            $plan->rows(self::MODES, [], []),
-        );
+        $rows = [];
+        foreach (self::plan()->stages($modes, $records, $legacy, self::NOW) as $stage) {
+            foreach ($stage['jobs'] as $job) {
+                $rows[(string) $job['mode']] = $job;
+            }
+        }
+
+        return $rows;
     }
 
-    // ── Ordering ─────────────────────────────────────────────────────────
+    // ── Order ────────────────────────────────────────────────────────────
 
     /**
-     * The dispatcher hands modes over alphabetically, which puts `cleanup`
-     * second — reading as though housekeeping runs before anything is synced.
-     * Rows follow FullSyncCommand's real sequence instead.
+     * The dispatcher hands modes over alphabetically, which put `cleanup`
+     * second, as if housekeeping ran before anything was synced. The card
+     * follows the order they depend on each other, `full` first as the one
+     * line that runs the catalogs.
      */
-    public function testRowsFollowThePipelineOrderNotTheAlphabet(): void
+    public function testTheJobsRunInStagesInTheOrderTheyDependOnEachOther(): void
     {
+        $stages = self::plan()->stages(self::MODES, [], [], self::NOW);
+
+        self::assertSame(['catalogs', 'hotels', 'products', 'upkeep'], array_column($stages, 'stage'));
+        self::assertSame([1, 2, 3, 4], array_column($stages, 'number'));
         self::assertSame(
-            ['countries', 'own_cities', 'cities', 'hotels', 'room_types', 'tags', 'product_info', 'cleanup'],
-            $this->modesOf($this->builder()),
+            [
+                ['full', 'countries', 'own_cities', 'cities', 'hotels', 'room_types', 'tags'],
+                ['product_info', 'availability'],
+                ['add_products', 'update_products'],
+                ['booking_status', 'cleanup'],
+            ],
+            array_map(static fn (array $stage): array => array_column($stage['jobs'], 'mode'), $stages),
         );
+        self::assertSame('eurosite.jobs_stage_catalogs', $stages[0]['title_key']);
+        self::assertSame(['full', ...CronPlanBuilder::PIPELINE], CronPlanBuilder::STAGES['catalogs'], 'FullSyncCommand\'s order');
     }
 
-    public function testFullIsNeverARowBecauseItIsNotACatalog(): void
+    /** The availability probe is a read-only tool with its own form: never a row, never a crontab line. */
+    public function testTheProbeIsNeverOnTheCard(): void
     {
-        self::assertNotContains('full', $this->modesOf($this->builder()));
+        self::assertArrayNotHasKey('probe_availability', self::rows());
+        self::assertSame([], self::plan()->onDemandRows(self::MODES, [], self::NOW));
+        foreach (CronPlanBuilder::PLANS as $plan) {
+            self::assertStringNotContainsString('probe_availability', self::plan()->crontabFor($plan, self::MODES, 'cli'));
+        }
     }
 
-    public function testAnUnknownModeStillGetsARowAtTheEnd(): void
+    /** A mode a new command registers is shown, with its code, to run on demand: never silently missing. */
+    public function testAModeThePlanDoesNotKnowIsShownOnDemand(): void
     {
-        $modes = self::MODES + ['experiments' => 'Something new'];
-        $rows = $this->builder()->rows($modes, [], []);
-        $modeNames = array_map(static fn (array $r): string => (string) $r['mode'], $rows);
+        $rows = self::plan()->onDemandRows(self::MODES + ['experiments' => 'Something new'], [], self::NOW);
 
-        self::assertContains('experiments', $modeNames, 'a newly registered command must not vanish');
-        self::assertSame('experiments', end($modeNames));
+        self::assertSame(['experiments'], array_column($rows, 'mode'));
+        self::assertFalse($rows[0]['labelled']);
+        self::assertSame('', $rows[0]['cron']);
+    }
 
-        $row = $rows[array_search('experiments', $modeNames, true)];
-        self::assertSame('0 4 * * *', $row['schedule_cron'], 'unknown modes take the fallback slot');
+    /** Every mode the real dispatcher registers is on the card with a slot of its own, or is the probe. */
+    public function testEveryDispatcherModeHasAPlace(): void
+    {
+        CronDispatcher::reset();
+        $modes = CronDispatcher::getAvailableModes();
+        self::assertNotEmpty($modes);
+
+        $rows = self::rows($modes);
+        foreach (array_keys($modes) as $mode) {
+            if (in_array($mode, CronPlanBuilder::DIAGNOSTIC, true)) {
+                continue;
+            }
+            self::assertArrayHasKey($mode, $rows, "{$mode} has no row: add it to CronPlanBuilder::STAGES");
+            self::assertNotSame('', $rows[$mode]['cron'], "{$mode} has no slot: add it to CronPlanBuilder::SCHEDULES");
+            self::assertTrue($rows[$mode]['labelled']);
+        }
     }
 
     // ── Commands ─────────────────────────────────────────────────────────
 
     public function testUrlAndCliCarryTheKeyAndTheMode(): void
     {
-        $plan = $this->builder();
-
+        self::assertSame('https://shop.example.ro/index.php?dispatch=eurosite_cron.run&access_key=abc123&cron_mode=hotels', self::plan()->url('hotels'));
+        self::assertSame('php app/addons/eurosite/cron.php access_key=abc123 mode=hotels', self::plan()->cli('hotels'));
         self::assertSame(
-            'https://shop.example.ro/index.php?dispatch=eurosite_cron.run&access_key=abc123&cron_mode=hotels',
-            $plan->url('hotels'),
+            'php /home/shop/public_html/app/addons/eurosite/cron.php access_key=abc123 mode=hotels',
+            self::plan(self::KEY, '/home/shop/public_html/')->cli('hotels'),
+            'absolute when the store root is known: a crontab runs from the account\'s home',
         );
-        self::assertSame(
-            'php app/addons/eurosite/cron.php access_key=abc123 mode=hotels',
-            $plan->cli('hotels'),
-        );
-    }
-
-    public function testTheBaseUrlIsJoinedWithExactlyOneSlash(): void
-    {
-        $withSlash = new CronPlanBuilder('https://shop.example.ro/', self::KEY);
-
-        self::assertStringStartsWith('https://shop.example.ro/index.php?', $withSlash->url('cities'));
-        self::assertStringNotContainsString('ro//index.php', $withSlash->url('cities'));
+        self::assertStringNotContainsString('ro//index.php', (new CronPlanBuilder('https://shop.example.ro/', self::KEY))->url('cities'));
     }
 
     public function testAKeyWithUrlSpecialCharactersIsEncodedInTheUrlButNotTheCliCommand(): void
@@ -112,275 +149,258 @@ final class CronPlanBuilderTest extends TestCase
         $plan = new CronPlanBuilder('https://shop.example.ro', 'a b&c=d');
 
         self::assertStringContainsString('access_key=a%20b%26c%3Dd&cron_mode=cities', $plan->url('cities'));
-        // The shell command takes the raw value: percent-encoding it there
-        // would send a different key than the one stored.
+        // The shell takes the raw value: percent-encoding it would send another key.
         self::assertStringContainsString('access_key=a b&c=d mode=cities', $plan->cli('cities'));
     }
 
     /**
      * REGRESSION: the live store rendered `access_key=&cron_mode=cities` nine
-     * times over. Every one of those 403s, because eurosite_cron.php refuses
-     * outright when no key is stored — so the page must not offer commands.
+     * times over, and every one was refused: with no key, no commands.
      */
     public function testHasKeyIsFalseForAnEmptyOrBlankKey(): void
     {
-        self::assertFalse($this->builder('')->hasKey());
-        self::assertFalse($this->builder('   ')->hasKey());
-        self::assertTrue($this->builder()->hasKey());
+        self::assertFalse(self::plan('')->hasKey());
+        self::assertFalse(self::plan('   ')->hasKey());
+        self::assertTrue(self::plan()->hasKey());
+    }
+
+    public function testEachRowsCrontabLineIsItsSlotAndItsCliCommand(): void
+    {
+        foreach (self::rows() as $mode => $row) {
+            self::assertSame($row['cron'] . '  ' . $row['cli'], $row['crontab_line'], $mode);
+            self::assertStringNotContainsString('curl', (string) $row['crontab_line']);
+        }
     }
 
     // ── Schedules ────────────────────────────────────────────────────────
 
+    /** Eurosite's answers (28 Oct 2026): the catalogs monthly, the hotel lists weekly, bulk work 01:00–06:00. */
+    public function testEachJobHasItsSlotInWords(): void
+    {
+        $rows = self::rows();
+
+        self::assertSame(['travel_core.jobs_sched_daily', ['[time]' => '01:00']], [$rows['full']['schedule_key'], $rows['full']['schedule_params']]);
+        self::assertSame(['travel_core.jobs_sched_monthly', ['[day]' => '1', '[time]' => '01:00']], [$rows['countries']['schedule_key'], $rows['countries']['schedule_params']]);
+        self::assertSame(['travel_core.jobs_sched_monthly', ['[day]' => '1', '[time]' => '03:45']], [$rows['tags']['schedule_key'], $rows['tags']['schedule_params']]);
+        self::assertSame(['travel_core.jobs_sched_weekly_sun', ['[time]' => '03:00']], [$rows['hotels']['schedule_key'], $rows['hotels']['schedule_params']]);
+        self::assertSame(['travel_core.jobs_sched_daily', ['[time]' => '04:00']], [$rows['product_info']['schedule_key'], $rows['product_info']['schedule_params']]);
+        self::assertSame(['travel_core.jobs_sched_every_minutes', ['[n]' => '15']], [$rows['booking_status']['schedule_key'], $rows['booking_status']['schedule_params']]);
+        self::assertSame(['travel_core.jobs_sched_weekly_sun', ['[time]' => '05:00']], [$rows['cleanup']['schedule_key'], $rows['cleanup']['schedule_params']]);
+    }
+
     /**
-     * @return array<string, array{string, string}>
+     * Late is measured against the job's OWN interval, twice over: a monthly
+     * catalog synced 40 days ago is fine, a daily job 3 days ago is not.
      */
-    public static function scheduleWordings(): array
+    public function testLateIsTwiceTheJobsOwnInterval(): void
     {
-        return [
-            'weekly sunday'  => ['0 2 * * 0', 'Sun 02:00'],
-            'weekly with minutes' => ['30 1 * * 0', 'Sun 01:30'],
-            'weekly friday'  => ['45 3 * * 5', 'Fri 03:45'],
-            'daily'          => ['0 3 * * *', 'Daily 03:00'],
-            'daily midnight' => ['0 0 * * *', 'Daily 00:00'],
-            'monthly'        => ['0 1 1 * *', 'Monthly 1st 01:00'],
-            'monthly later'  => ['45 3 22 * *', 'Monthly 22nd 03:45'],
-            'monthly 11th'   => ['0 2 11 * *', 'Monthly 11th 02:00'],
-            'every 15 min'   => ['*/15 * * * *', 'Every 15 min'],
-            // Shapes this class never generates are handed back untouched
-            // rather than mistranslated.
-            'step hours'     => ['0 */4 * * *', '0 */4 * * *'],
-            'one month only' => ['0 1 15 3 *', '0 1 15 3 *'],
-            'range of days'  => ['0 1 * * 1-5', '0 1 * * 1-5'],
-            'not five fields' => ['0 1 * *', '0 1 * *'],
-            'empty'          => ['', ''],
-        ];
+        $finished = static fn (int $daysAgo): array => ['started' => self::NOW - $daysAgo * 86400 - 60, 'finished' => self::NOW - $daysAgo * 86400, 'ok' => true, 'error' => ''];
+        $state = static fn (string $mode, int $daysAgo): string => (string) self::rows(self::MODES, [$mode => $finished($daysAgo)])[$mode]['state'];
+
+        self::assertSame('ok', $state('countries', 40));
+        self::assertSame('late', $state('countries', 63));
+        self::assertSame('ok', $state('hotels', 13));
+        self::assertSame('late', $state('hotels', 15));
+        self::assertSame('ok', $state('product_info', 1));
+        self::assertSame('late', $state('product_info', 3));
     }
 
-    #[DataProvider('scheduleWordings')]
-    public function testHumanScheduleReadsTheCronExpression(string $cron, string $expected): void
+    /** Each catalog is measured on its own row, whichever plan runs it: `full` itself is never late. */
+    public function testFullIsNeverLate(): void
     {
-        self::assertSame($expected, CronPlanBuilder::humanSchedule($cron));
+        $longAgo = ['started' => self::NOW - 90 * 86400 - 60, 'finished' => self::NOW - 90 * 86400, 'ok' => true, 'error' => ''];
+
+        self::assertSame('ok', self::rows(self::MODES, ['full' => $longAgo])['full']['state']);
     }
 
-    public function testEveryRowCarriesBothTheWordingAndTheRawExpression(): void
+    /** A catalog the run log never saw shows its last sync from the sync log; the run log wins when it has one. */
+    public function testTheSyncLogIsTheFallback(): void
     {
-        foreach ($this->builder()->rows(self::MODES, [], []) as $row) {
-            self::assertNotSame('', $row['schedule_cron'], $row['mode'] . ' has no slot');
-            self::assertNotSame('', $row['schedule_human'], $row['mode'] . ' has no wording');
-            // A crontab line must be a runnable command: the CLI one, never a bare URL.
-            self::assertSame(
-                $row['schedule_cron'] . '  ' . $row['cli'],
-                $row['crontab_line'],
-                'the per-row crontab line must be the slot plus the CLI command',
-            );
-            self::assertStringNotContainsString('curl', $row['crontab_line']);
+        $legacy = ['countries' => ['at' => self::NOW - 5 * 86400, 'ok' => true], 'cities' => ['at' => self::NOW - 86400, 'ok' => false]];
+        $rows = self::rows(self::MODES, ['cities' => ['started' => self::NOW - 7200, 'finished' => self::NOW - 3600, 'ok' => true, 'error' => '']], $legacy);
+
+        self::assertSame(['ok', self::NOW - 5 * 86400], [$rows['countries']['state'], $rows['countries']['at']]);
+        self::assertSame(['ok', self::NOW - 3600], [$rows['cities']['state'], $rows['cities']['at']]);
+        self::assertSame('never', $rows['tags']['state']);
+    }
+
+    public function testLegacyRunsAreTheFinishedRowsOfTheSyncLog(): void
+    {
+        $runs = CronPlanBuilder::legacyRuns([
+            'countries' => ['status' => 'completed', 'started_at' => '2026-10-01 01:00:00', 'completed_at' => '2026-10-01 01:02:00'],
+            'cities' => ['status' => 'failed', 'started_at' => '2026-10-01 02:00:00', 'completed_at' => '2026-10-01 02:05:00'],
+            // Written before completed_at was filled: when it started.
+            'tags' => ['status' => 'completed', 'started_at' => '2026-10-01 03:45:00', 'completed_at' => '0000-00-00 00:00:00'],
+            // Never finished: no run to show.
+            'hotels' => ['status' => 'started', 'started_at' => '2026-10-04 03:00:00', 'completed_at' => null],
+            'room_types' => ['status' => 'completed', 'started_at' => '', 'completed_at' => ''],
+        ]);
+
+        self::assertSame([
+            'countries' => ['at' => (int) strtotime('2026-10-01 01:02:00'), 'ok' => true],
+            'cities' => ['at' => (int) strtotime('2026-10-01 02:05:00'), 'ok' => false],
+            'tags' => ['at' => (int) strtotime('2026-10-01 03:45:00'), 'ok' => true],
+        ], $runs);
+    }
+
+    // ── What Run and the ⋯ menu pass on ──────────────────────────────────
+
+    public function testEachJobOffersTheActionsItAnswers(): void
+    {
+        $rows = self::rows();
+
+        self::assertTrue($rows['full']['recommended']);
+        self::assertSame([['action' => 'force', 'label' => 'eurosite.jobs_full_force', 'confirm' => 'eurosite.jobs_full_force_confirm']], $rows['full']['extras']);
+        self::assertSame(['force'], CronPlanBuilder::offeredActions('full'));
+        self::assertTrue($rows['product_info']['force_full']);
+        self::assertSame(['force_full'], CronPlanBuilder::offeredActions('product_info'));
+        foreach (['countries', 'hotels', 'availability', 'add_products', 'booking_status', 'cleanup'] as $mode) {
+            self::assertSame([], CronPlanBuilder::offeredActions($mode), $mode);
         }
     }
 
-    // ── Health ───────────────────────────────────────────────────────────
-
-    private const NOW = 1_758_000_000; // fixed clock, so "6h ago" is not flaky
-
     /**
-     * @param array<string, mixed> $last
-     *
-     * @return array<string, mixed>
+     * Run passes nothing on: `full` then runs what is due, as the nightly
+     * line does. "Run every catalog now" is force=1, Force full sync of the
+     * hotel details full=1, as their commands read them. Anything else the
+     * request carries is dropped.
      */
-    private function rowFor(string $mode, array $last): array
+    public function testRunPassesOnOnlyTheFlagsOfAnOfferedAction(): void
     {
-        $rows = $this->builder()->rows(self::MODES, [], [$mode => $last], self::NOW);
-        foreach ($rows as $row) {
-            if ($row['mode'] === $mode) {
-                return $row;
+        self::assertSame([], CronPlanBuilder::runParams('full', ''));
+        self::assertSame(['force' => '1'], CronPlanBuilder::runParams('full', 'force'));
+        self::assertSame(['full' => '1'], CronPlanBuilder::runParams('product_info', 'force_full'));
+
+        self::assertSame([], CronPlanBuilder::runParams('countries', 'force'), 'not offered for countries');
+        self::assertSame([], CronPlanBuilder::runParams('product_info', 'reset'));
+        self::assertSame([], CronPlanBuilder::runParams('full', 'force_full'));
+        self::assertSame([], CronPlanBuilder::runParams('add_products', 'dry_run'));
+    }
+
+    // ── The size of each catalog ─────────────────────────────────────────
+
+    public function testEachRowCarriesTheSizeOfItsCatalog(): void
+    {
+        $stages = CronPlanBuilder::withCounts(
+            self::plan()->stages(self::MODES, [], [], self::NOW),
+            ['countries' => 86, 'cities' => 1277, 'cache' => 42, 'immediate' => 0, 'products' => 12],
+        );
+        $rows = [];
+        foreach ($stages as $stage) {
+            foreach ($stage['jobs'] as $job) {
+                $rows[(string) $job['mode']] = [$job['count'], $job['count_key']];
             }
         }
 
-        self::fail("no row for {$mode}");
+        self::assertSame([86, 'eurosite.jobs_count_countries'], $rows['countries']);
+        self::assertSame([1277, 'eurosite.jobs_count_cities'], $rows['cities']);
+        // product_info fills the cache, which is counted as 'cache'.
+        self::assertSame([42, 'eurosite.jobs_count_cache'], $rows['product_info']);
+        self::assertSame([0, 'eurosite.jobs_count_immediate'], $rows['availability'], 'a zero is a figure, not a missing one');
+        self::assertSame([12, 'eurosite.jobs_count_products'], $rows['add_products']);
+        self::assertSame([12, 'eurosite.jobs_count_products'], $rows['update_products']);
+        self::assertSame([null, 'eurosite.jobs_count_hotels'], $rows['hotels'], 'not counted this time');
+        self::assertSame([null, ''], $rows['full'], 'no catalog of its own');
+        self::assertSame([null, ''], $rows['cleanup']);
+        self::assertSame(array_column(self::plan()->stages(self::MODES, [], [], self::NOW), 'stage'), array_column($stages, 'stage'));
     }
 
-    private static function at(int $secondsAgo): string
+    // ── The two plans ────────────────────────────────────────────────────
+
+    /** @return list<string> the modes a crontab block schedules, in order */
+    private static function scheduled(string $text): array
     {
-        return date('Y-m-d H:i:s', self::NOW - $secondsAgo);
+        preg_match_all('/ mode=([a-z_]+)$/m', $text, $m);
+
+        return $m[1];
     }
 
-    public function testAJobThatNeverRanSaysSo(): void
-    {
-        // No log row at all...
-        $rows = $this->builder()->rows(self::MODES, [], [], self::NOW);
-        foreach ($rows as $row) {
-            self::assertSame('never', $row['state'], $row['mode'] . ' has never run');
-            self::assertSame('never run', $row['state_label']);
-        }
-
-        // ...and an empty row, which the log can hand back, reads the same.
-        $empty = $this->rowFor('hotels', []);
-        self::assertSame('never', $empty['state']);
-        self::assertSame('never run', $empty['state_label']);
-    }
-
-    public function testARecentCompletedRunIsOk(): void
-    {
-        $row = $this->rowFor('hotels', ['status' => 'completed', 'started_at' => self::at(6 * 3600)]);
-
-        self::assertSame('ok', $row['state']);
-        self::assertSame('6h ago', $row['state_label']);
-    }
-
-    /**
-     * Staleness is measured against the job's OWN interval: 3 days is fine for
-     * a weekly catalog and badly overdue for a daily one. A single global
-     * threshold would either cry wolf weekly or never fire.
-     */
-    public function testOverdueIsRelativeToTheJobsOwnInterval(): void
-    {
-        $threeDays = ['status' => 'completed', 'started_at' => self::at(3 * 86400)];
-
-        self::assertSame('ok', $this->rowFor('hotels', $threeDays)['state'], 'weekly job, 3 days old');
-        self::assertSame('overdue', $this->rowFor('product_info', $threeDays)['state'], 'daily job, 3 days old');
-
-        // The threshold is twice the interval, so a weekly job tips over at
-        // 14 days: 14 exactly is still fine, 15 is not.
-        $exactly = ['status' => 'completed', 'started_at' => self::at(14 * 86400)];
-        self::assertSame('ok', $this->rowFor('hotels', $exactly)['state'], 'weekly job, exactly 2 intervals');
-
-        $past = ['status' => 'completed', 'started_at' => self::at(15 * 86400)];
-        self::assertSame('overdue', $this->rowFor('hotels', $past)['state'], 'weekly job, past 2 intervals');
-        self::assertSame('15d ago', $this->rowFor('hotels', $past)['state_label']);
-
-        // A monthly catalog: two months is its limit.
-        self::assertSame('ok', $this->rowFor('cities', $past)['state'], 'monthly job, 15 days old');
-        self::assertSame('overdue', $this->rowFor('cities', ['status' => 'completed', 'started_at' => self::at(63 * 86400)])['state']);
-    }
-
-    public function testAFailedRunOutranksItsAge(): void
-    {
-        $row = $this->rowFor('cities', ['status' => 'failed', 'started_at' => self::at(600)]);
-
-        self::assertSame('failed', $row['state']);
-        self::assertStringContainsString('failed', $row['state_label']);
-    }
-
-    public function testAnUnparseableTimestampDoesNotBecomeAFalseAge(): void
-    {
-        $row = $this->rowFor('cities', ['status' => 'completed', 'started_at' => 'not a date']);
-
-        self::assertSame('ok', $row['state']);
-        self::assertSame('completed', $row['state_label'], 'no timestamp means no "ago"');
-    }
-
-    public function testCountsAreMappedOntoTheirRowsIncludingTheCacheAlias(): void
-    {
-        $counts = ['countries' => 86, 'cities' => 1277, 'cache' => 42];
-        $rows = $this->builder()->rows(self::MODES, $counts, []);
-        $byMode = [];
-        foreach ($rows as $row) {
-            $byMode[(string) $row['mode']] = $row['count'];
-        }
-
-        self::assertSame(86, $byMode['countries']);
-        self::assertSame(1277, $byMode['cities']);
-        // product_info syncs the cache, which is counted under 'cache'.
-        self::assertSame(42, $byMode['product_info']);
-        self::assertNull($byMode['cleanup'], 'a job with no catalog shows no row count');
-    }
-
-    // ── Crontab ──────────────────────────────────────────────────────────
-
-    public function testTheNightlyPlanSchedulesThePipelineOnceAndNotItsSteps(): void
-    {
-        $modes = $this->builder()->plannedModes('full', self::MODES);
-
-        self::assertSame(['full', 'product_info', 'cleanup'], $modes);
-        foreach (CronPlanBuilder::PIPELINE as $step) {
-            self::assertNotContains($step, $modes, "{$step} runs inside full — scheduling it twice doubles the API calls");
-        }
-    }
-
-    public function testThePerCatalogPlanSchedulesEveryJobIndividually(): void
+    /** The recommended plan: `full` runs the catalogs; installing them too would run each twice. */
+    public function testTheNightlyPlanRunsTheCatalogsThroughFull(): void
     {
         self::assertSame(
-            ['countries', 'own_cities', 'cities', 'hotels', 'room_types', 'tags', 'product_info', 'cleanup'],
-            $this->builder()->plannedModes('per', self::MODES),
+            ['full', 'product_info', 'availability', 'add_products', 'update_products', 'booking_status', 'cleanup'],
+            self::scheduled(self::plan()->crontabFor('full', self::MODES, 'cli')),
         );
     }
 
-    public function testTheCrontabIsPasteableWithOneCommandPerLine(): void
+    public function testThePerCatalogPlanSchedulesEachCatalogAndNotFull(): void
     {
-        $text = $this->builder()->crontab('full', 'cli', self::MODES, '21 Sep 2026');
-        $lines = explode("\n", $text);
+        self::assertSame(
+            ['countries', 'own_cities', 'cities', 'hotels', 'room_types', 'tags', 'product_info', 'availability', 'add_products', 'update_products', 'booking_status', 'cleanup'],
+            self::scheduled(self::plan()->crontabFor('per', self::MODES, 'cli')),
+        );
+    }
 
-        self::assertSame('# Eurosite Touring — nightly full pipeline (each step only when due: catalogs monthly, hotels weekly)', $lines[0]);
-        self::assertSame('# generated 21 Sep 2026', $lines[1]);
-        self::assertCount(5, $lines, 'two comments plus full, product_info, cleanup');
+    public function testEachPlanSaysWhatItIsAndIsPasteable(): void
+    {
+        $lines = explode("\n", self::plan()->crontabFor('full', self::MODES, 'cli', '2026-11-08, server time Europe/Bucharest'));
 
-        foreach (array_slice($lines, 2) as $line) {
-            self::assertMatchesRegularExpression(
-                '/^[\d*\/ ,-]+\s{2}php app\/addons\/eurosite\/cron\.php access_key=abc123 mode=[a-z_]+$/',
-                $line,
-            );
+        self::assertSame('# Eurosite Touring: the catalogs in one nightly run (each only when due: monthly, hotels weekly), then the other jobs', $lines[0]);
+        self::assertSame('# generated 2026-11-08, server time Europe/Bucharest', $lines[1]);
+        self::assertSame('# 1. Catalogs', $lines[2]);
+        self::assertSame('0 1 * * *  php app/addons/eurosite/cron.php access_key=abc123 mode=full', $lines[3]);
+        self::assertSame('# 2. Hotel details and availability', $lines[4]);
+        foreach ($lines as $line) {
+            self::assertMatchesRegularExpression('/^(#.*|[\d*\/ ,-]+\s{2}php app\/addons\/eurosite\/cron\.php access_key=abc123 mode=[a-z_]+)$/', $line);
         }
-        self::assertStringContainsString('mode=full', $lines[2]);
+
+        $per = self::plan()->crontabFor('per', self::MODES, 'cli');
+        self::assertStringStartsWith("# Eurosite Touring: each job on its own line, in the order they run\n# 1. Catalogs\n0 1 1 * *  php app/addons/eurosite/cron.php access_key=abc123 mode=countries\n", $per);
+        self::assertStringNotContainsString('# generated', $per, 'no date was given');
     }
 
     /**
-     * The URL form is the plain address, for a cron service or the browser:
-     * no curl wrapper. It is not a crontab, so every schedule sits in a
-     * comment and the only uncommented lines are the URLs themselves.
+     * The URL form is for a cron service, not a crontab: every slot sits in
+     * a comment, and the only other lines are the plain addresses.
      */
     public function testTheUrlFormListsPlainUrlsUnderTheirSlot(): void
     {
-        $text = $this->builder()->crontab('full', 'url', self::MODES, '21 Sep 2026');
+        $text = self::plan()->crontabFor('full', self::MODES, 'url');
         $lines = explode("\n", $text);
 
+        self::assertSame('# URLs for a cron service: add each one at the time shown', $lines[1]);
+        self::assertSame(['# 1. Catalogs', '# 0 1 * * *', self::plan()->url('full')], array_slice($lines, 2, 3));
         self::assertStringNotContainsString('curl', $text);
-        self::assertStringNotContainsString('/dev/null', $text);
-        self::assertSame('# URLs for a cron service: add each one at the time shown', $lines[2]);
-        self::assertSame('# 0 1 * * * (' . CronPlanBuilder::humanSchedule('0 1 * * *') . ')', $lines[3]);
-        self::assertSame($this->builder()->url('full'), $lines[4]);
         foreach ($lines as $line) {
-            self::assertTrue(
-                str_starts_with($line, '#') || str_starts_with($line, 'https://shop.example.ro/index.php?'),
-                "not a comment and not a plain URL: {$line}",
-            );
+            self::assertTrue(str_starts_with($line, '#') || str_starts_with($line, 'https://shop.example.ro/index.php?'), $line);
         }
     }
 
-    public function testCliLinesAreAbsoluteWhenTheStoreRootIsKnown(): void
+    /** The page masks the key by replacing it in the text, so it must appear verbatim in every command. */
+    public function testEveryCommandCarriesTheKeyVerbatim(): void
     {
-        $plan = new CronPlanBuilder('https://shop.example.ro', self::KEY, '/home/shop/public_html/');
-
-        self::assertSame(
-            'php /home/shop/public_html/app/addons/eurosite/cron.php access_key=' . self::KEY . ' mode=hotels',
-            $plan->cli('hotels'),
-        );
-    }
-
-    public function testTheCliFormatUsesTheAddonsCronScript(): void
-    {
-        $text = $this->builder()->crontab('per', 'cli', self::MODES);
-
-        self::assertStringNotContainsString('curl', $text);
-        self::assertStringContainsString('0 1 1 * *  php app/addons/eurosite/cron.php access_key=abc123 mode=countries', $text);
-        self::assertStringContainsString('# Eurosite Touring — per-catalog schedule', $text);
-        self::assertStringNotContainsString('# generated', $text, 'no date was supplied');
-    }
-
-    /**
-     * The masking in the browser works by replacing the key string in the
-     * text, so the key must appear verbatim in every generated command.
-     */
-    public function testEveryGeneratedLineContainsTheKeyVerbatimSoTheUiCanMaskIt(): void
-    {
-        foreach (['full', 'per'] as $plan) {
+        foreach (CronPlanBuilder::PLANS as $plan) {
             foreach (['url', 'cli'] as $format) {
-                $text = $this->builder()->crontab($plan, $format, self::MODES);
-                foreach (explode("\n", $text) as $line) {
-                    if (str_starts_with($line, '#')) {
-                        continue;
+                foreach (explode("\n", self::plan()->crontabFor($plan, self::MODES, $format)) as $line) {
+                    if (!str_starts_with($line, '#')) {
+                        self::assertStringContainsString(self::KEY, $line, "{$plan}/{$format}: {$line}");
                     }
-                    self::assertStringContainsString(self::KEY, $line, "{$plan}/{$format}: {$line}");
                 }
             }
         }
+    }
+
+    /** A job the dispatcher does not have is in no plan. */
+    public function testAPlanListsOnlyTheJobsTheDispatcherHas(): void
+    {
+        $modes = self::MODES;
+        unset($modes['full'], $modes['tags']);
+
+        self::assertNotContains('full', self::scheduled(self::plan()->crontabFor('full', $modes, 'cli')));
+        self::assertNotContains('tags', self::scheduled(self::plan()->crontabFor('per', $modes, 'cli')));
+    }
+
+    public function testWhichPlanSchedulesWhichJob(): void
+    {
+        self::assertTrue(CronPlanBuilder::inPlan('full', 'full'));
+        self::assertFalse(CronPlanBuilder::inPlan('per', 'full'));
+        foreach (CronPlanBuilder::PIPELINE as $catalog) {
+            self::assertFalse(CronPlanBuilder::inPlan('full', $catalog), $catalog);
+            self::assertTrue(CronPlanBuilder::inPlan('per', $catalog), $catalog);
+        }
+        self::assertTrue(CronPlanBuilder::inPlan('full', 'availability'));
+        self::assertTrue(CronPlanBuilder::inPlan('per', 'availability'));
+        self::assertSame(['full', 'per'], CronPlanBuilder::PLANS, 'the recommended plan first: the card shows it on load');
     }
 }

@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 use Tygh\Addons\Eurosite\Cron\CronDispatcher;
 use Tygh\Addons\Eurosite\Services\ConfigProvider;
+use Tygh\Addons\TravelCore\Cron\CronRunOutput;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
@@ -74,7 +75,7 @@ if (function_exists('fn_eurosite_ensure_schema')) {
 
 $mode = (string) preg_replace('/[^a-z0-9_]/', '', strtolower(RequestCoerce::string($_REQUEST, 'cron_mode', 'full')));
 
-echo '[' . date('Y-m-d H:i:s') . "] Eurosite Cron Started - Mode: {$mode}\n";
+echo CronRunOutput::startLine('Eurosite', $mode);
 
 fn_log_event('general', 'runtime', [
     'message' => "Eurosite frontend cron started (mode: {$mode})",
@@ -89,37 +90,8 @@ try {
             echo "  {$m} - {$desc}\n";
         }
     } else {
-        $result = $dispatcher->dispatch($mode, TypeCoerce::toStringMap($_REQUEST));
-
-        $success = TypeCoerce::toBool($result['success'] ?? false);
-        $busy = TypeCoerce::toBool($result['busy'] ?? false);
-
-        if ($busy) {
-            echo "\n[" . date('Y-m-d H:i:s') . '] '
-                . TypeCoerce::toString($result['message'] ?? "Mode '{$mode}' is already running.") . "\n";
-        } else {
-            echo "\n[" . date('Y-m-d H:i:s') . '] Cron job '
-                . ($success ? 'completed successfully' : 'finished with errors') . ".\n";
-        }
-
-        if (!empty($result['error'])) {
-            echo 'Error: ' . TypeCoerce::toString($result['error']) . "\n";
-        }
-
-        if (!empty($result['stats'])) {
-            $s = TypeCoerce::toStringMap($result['stats']);
-            echo 'Stats: ' . TypeCoerce::toInt($s['synced'] ?? 0) . '/' . TypeCoerce::toInt($s['total'] ?? 0) . ' synced';
-            if (TypeCoerce::toInt($s['skipped'] ?? 0) > 0) {
-                echo ', ' . TypeCoerce::toInt($s['skipped'] ?? 0) . ' skipped';
-            }
-            if (TypeCoerce::toInt($s['failed'] ?? 0) > 0) {
-                echo ', ' . TypeCoerce::toInt($s['failed'] ?? 0) . ' failed';
-            }
-            if (TypeCoerce::toFloat($s['duration_ms'] ?? 0) > 0) {
-                echo ' (' . round(TypeCoerce::toFloat($s['duration_ms'] ?? 0) / 1000, 1) . 's)';
-            }
-            echo "\n";
-        }
+        // How it ended, its error and its figures, as the dashboard's Run prints it.
+        CronRunOutput::dispatch($dispatcher, $mode, TypeCoerce::toStringMap($_REQUEST));
     }
 } catch (\Throwable $e) {
     echo 'ERROR: ' . $e->getMessage() . "\n";

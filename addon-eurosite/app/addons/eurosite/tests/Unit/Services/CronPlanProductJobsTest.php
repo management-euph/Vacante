@@ -10,9 +10,9 @@ use Tygh\Addons\Eurosite\Cron\Commands\AvailabilityCommand;
 use Tygh\Addons\Eurosite\Services\CronPlanBuilder;
 
 /**
- * The three hotel-to-product jobs are scheduled like the rest, in the order
- * they depend on each other: details 04:00 → availability 04:30 → add
- * products 05:30 → update products 06:00.
+ * The hotel-to-product jobs are scheduled like the rest, in the order they
+ * depend on each other: details 04:00 → availability 04:15 → add products
+ * 05:30 → update products 06:00.
  */
 final class CronPlanProductJobsTest extends TestCase
 {
@@ -21,42 +21,65 @@ final class CronPlanProductJobsTest extends TestCase
         CronDispatcher::reset();
     }
 
-    public function testTheJobsRunAfterThePipelineInDependencyOrder(): void
+    /** @return array<string, array<string, mixed>> mode => row, in the card's order */
+    private static function rows(): array
     {
-        $rows = (new CronPlanBuilder('http://shop', 'k'))->rows(CronDispatcher::getAvailableModes(), [], []);
-        $modes = array_column($rows, 'mode');
+        $rows = [];
+        foreach ((new CronPlanBuilder('http://shop', 'k'))->stages(CronDispatcher::getAvailableModes(), [], [], time()) as $stage) {
+            foreach ($stage['jobs'] as $job) {
+                $rows[(string) $job['mode']] = $job;
+            }
+        }
 
-        $at = array_flip($modes);
+        return $rows;
+    }
+
+    public function testTheJobsRunAfterTheCatalogsInDependencyOrder(): void
+    {
+        $rows = self::rows();
+        $at = array_flip(array_keys($rows));
+
+        self::assertLessThan($at['product_info'], $at['tags']);
         self::assertLessThan($at['availability'], $at['product_info']);
         self::assertLessThan($at['add_products'], $at['availability']);
         self::assertLessThan($at['update_products'], $at['add_products']);
         self::assertLessThan($at['cleanup'], $at['update_products']);
 
-        $byMode = array_column($rows, null, 'mode');
-        self::assertSame('Daily 04:15', $byMode['availability']['schedule_human']);
-        self::assertSame('Daily 05:30', $byMode['add_products']['schedule_human']);
-        self::assertSame('Daily 06:00', $byMode['update_products']['schedule_human']);
+        self::assertSame('15 4 * * *', $rows['availability']['cron']);
+        self::assertSame('30 5 * * *', $rows['add_products']['cron']);
+        self::assertSame('0 6 * * *', $rows['update_products']['cron']);
         foreach (['availability', 'add_products', 'update_products'] as $mode) {
-            self::assertTrue(CronPlanBuilder::hasSchedule($mode), "{$mode} has its own slot");
-            self::assertFalse($byMode[$mode]['in_pipeline']);
+            self::assertNotContains($mode, CronPlanBuilder::PIPELINE, "{$mode} is not run by full");
         }
     }
 
-    public function testTheNightlyPlanSchedulesThemBesideTheFullSync(): void
+    public function testBothPlansScheduleThemBesideTheCatalogs(): void
     {
-        $planned = (new CronPlanBuilder('http://shop', 'k'))->plannedModes('full', CronDispatcher::getAvailableModes());
-
-        self::assertSame(['full', 'product_info', 'availability', 'add_products', 'update_products', 'booking_status', 'cleanup'], $planned);
+        $plan = new CronPlanBuilder('http://shop', 'k');
+        foreach (CronPlanBuilder::PLANS as $key) {
+            $text = $plan->crontabFor($key, CronDispatcher::getAvailableModes(), 'cli');
+            foreach (['product_info', 'availability', 'add_products', 'update_products', 'booking_status', 'cleanup'] as $mode) {
+                self::assertStringContainsString(' mode=' . $mode . "\n", $text . "\n", "{$key}: {$mode}");
+            }
+        }
     }
 
     public function testTheirRowsCountImmediateHotelsAndProducts(): void
     {
-        $rows = (new CronPlanBuilder('http://shop', 'k'))->rows(CronDispatcher::getAvailableModes(), ['immediate' => 50, 'products' => 12], []);
-        $byMode = array_column($rows, null, 'mode');
+        $stages = CronPlanBuilder::withCounts(
+            (new CronPlanBuilder('http://shop', 'k'))->stages(CronDispatcher::getAvailableModes(), [], [], time()),
+            ['immediate' => 50, 'products' => 12],
+        );
+        $count = [];
+        foreach ($stages as $stage) {
+            foreach ($stage['jobs'] as $job) {
+                $count[(string) $job['mode']] = $job['count'];
+            }
+        }
 
-        self::assertSame(50, $byMode['availability']['count']);
-        self::assertSame(12, $byMode['add_products']['count']);
-        self::assertSame(12, $byMode['update_products']['count']);
+        self::assertSame(50, $count['availability']);
+        self::assertSame(12, $count['add_products']);
+        self::assertSame(12, $count['update_products']);
     }
 
     public function testTheAvailabilityReportNamesEachDestination(): void

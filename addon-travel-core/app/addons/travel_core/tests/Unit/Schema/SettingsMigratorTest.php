@@ -398,8 +398,10 @@ final class SettingsMigratorTest extends TestCase
      *
      * So the assertions invert: the declaration must be GONE (or each heal
      * would recreate the row the consolidation just deleted, and the move
-     * would never finish), and the dashboard button must mint Core's key
-     * rather than a local one nothing reads.
+     * would never finish), and Core's key is the one minted. Eurosite's
+     * dashboard minted it with a button of its own; since it moved onto
+     * Travel Core's jobs card, Travel Core -> Tools is the one place that
+     * mints it, for every provider.
      */
     public function testEurositeMintsTheSharedCoreKeyAndNoLongerDeclaresItsOwn(): void
     {
@@ -415,19 +417,21 @@ final class SettingsMigratorTest extends TestCase
             '../../../var/langs/en/addons/travel_core.po',
         ));
 
-        // The mode's own comment-stripped body: a raw 3200-char window was
-        // satisfied by the comment above the call, so a mint replaced by a
-        // plain read of the old key passed.
+        // Eurosite no longer mints any key: no action, and no local write
+        // that would report success while every scheduled job kept using the
+        // old key (ConfigProvider reads through CronKeyService).
+        $eurosite = SourceCode::code($repoRoot . '/addon-eurosite/app/addons/eurosite/controllers/backend/eurosite.php');
+        self::assertStringNotContainsString("\$mode === 'generate_cron_key'", $eurosite);
+        self::assertStringNotContainsString("updateValue('cron_access_key'", $eurosite);
+
+        // The mode's own comment-stripped body: a raw window was satisfied by
+        // the comment above the call, so a mint replaced by a plain read of
+        // the old key passed.
         $block = SourceCode::body(
-            $repoRoot . '/addon-eurosite/app/addons/eurosite/controllers/backend/eurosite.php',
+            $repoRoot . '/addon-travel-core/app/addons/travel_core/controllers/backend/travel_tools.php',
             "if (\$mode === 'generate_cron_key')",
         );
-
-        self::assertStringContainsString('$newKey = CronKeyService::generate();', $block);
-        // A local write here would be a button that reports success while
-        // every scheduled job keeps using the old key — ConfigProvider reads
-        // through CronKeyService now.
-        self::assertStringNotContainsString("updateValue('cron_access_key', \$newKey, 'eurosite'", $block);
+        self::assertStringContainsString('$fresh = CronKeyService::generate();', $block);
         // The row-creation and the read-back are still REQUIRED, they just
         // live in the service; assert they are there rather than assuming.
         $service = self::src('src/Cron/CronKeyService.php');
