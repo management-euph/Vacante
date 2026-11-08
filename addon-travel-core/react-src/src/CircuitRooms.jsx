@@ -17,7 +17,7 @@ import { chipDate, formatPrice, partySummary } from './circuitFormat';
 import { roomsLabel, starsText, commonMeal, perPerson, place, daysLater } from './circuitRooms';
 
 /** "lun. 5 iul. · 10:40 Bucharest … (OTP) → 12:25 Heraklion … (HER)" */
-function Leg({ label, leg }) {
+export function Leg({ label, leg }) {
     const later = daysLater(leg.departure_date, leg.arrival_date);
     return (
         <div className="travel-circuit-flight__row">

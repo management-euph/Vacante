@@ -10,6 +10,7 @@ use Tygh\Addons\TravelCore\Contracts\CronDispatcherInterface;
 use Tygh\Addons\TravelCore\Contracts\HotelAvailabilitySourceInterface;
 use Tygh\Addons\TravelCore\Contracts\HotelProductProviderInterface;
 use Tygh\Addons\TravelCore\Contracts\IndicativePriceSourceInterface;
+use Tygh\Addons\TravelCore\Contracts\PackageModesProviderInterface;
 use Tygh\Addons\TravelCore\Contracts\ProviderNormalizerInterface;
 use Tygh\Addons\TravelCore\Dto\Circuit\CircuitDetails;
 use Tygh\Addons\TravelCore\Dto\Circuit\CircuitPage;
@@ -50,6 +51,9 @@ class TravelProviderRegistry
 
     /** @var array<string, CircuitProductProviderInterface> provider name => circuit-product resolver */
     private static array $circuits = [];
+
+    /** @var array<string, PackageModesProviderInterface> provider name => a hotel's package modes */
+    private static array $packageModes = [];
 
     /**
      * Register a travel provider.
@@ -203,6 +207,41 @@ class TravelProviderRegistry
         $details = $provider?->circuitDetails($circuit->circuitId);
 
         return $details !== null && !$details->isEmpty() ? $details : null;
+    }
+
+    /**
+     * Register the package modes of a provider's hotels (board 16.2: the
+     * hotel's page gets "Cu autocarul" / "Cu avionul"). Ignored unless
+     * register() ran first.
+     */
+    public static function setPackageModesProvider(string $name, PackageModesProviderInterface $provider): void
+    {
+        if (isset(self::$providers[$name])) {
+            self::$packageModes[$name] = $provider;
+        }
+    }
+
+    /**
+     * A hotel's package modes, from the provider that sells it; [] when it
+     * has none, the provider sells no packages, or asking failed (the page
+     * then is accommodation only, as before).
+     *
+     * @param string $providerName the hotel's provider (HotelSeoData::$providerName)
+     * @param string $hotelId the provider's hotel id
+     *
+     * @return list<array{transport: string, departures: list<array{id: int, name: string}>}>
+     */
+    public static function packageModes(string $providerName, string $hotelId): array
+    {
+        $provider = isset(self::$providers[$providerName]) ? (self::$packageModes[$providerName] ?? null) : null;
+        if ($provider === null || $hotelId === '') {
+            return [];
+        }
+        try {
+            return $provider->packageModes($hotelId);
+        } catch (\Throwable) {
+            return [];
+        }
     }
 
     /**
@@ -536,5 +575,6 @@ class TravelProviderRegistry
         self::$availability = [];
         self::$indicativePrices = [];
         self::$circuits = [];
+        self::$packageModes = [];
     }
 }

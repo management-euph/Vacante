@@ -13,6 +13,7 @@ import { createRoot } from 'react-dom/client';
 import { Component } from 'react';
 import BookingEngine from './BookingEngine';
 import CircuitBar from './CircuitBar';
+import HotelModes from './HotelModes';
 import Calendar from './Calendar';
 import GuestPicker from './GuestPicker';
 import { getLocale, parseDate, toDateString, t } from './utils';
@@ -318,6 +319,13 @@ function init() {
                     priceWindow:         serverConfig.priceWindow || null,
                 };
                 dbg('Rendering with config:', config);
+                // A hotel with packages (board 16.2): the switch "Doar cazare /
+                // Cu autocarul / Cu avionul" above the bar.
+                const pkg = serverConfig.package;
+                if (pkg && Array.isArray(pkg.modes) && pkg.modes.length > 0) {
+                    createRoot(el).render(<ErrorBoundary><HotelModes hotelConfig={config} packageConfig={pkg} /></ErrorBoundary>);
+                    return;
+                }
                 renderMount(el, config);
             }).catch(err => {
                 dbg('fetchConfig error:', err);

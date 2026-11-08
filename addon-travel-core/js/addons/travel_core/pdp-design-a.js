@@ -172,6 +172,10 @@
             return false;
         }
         scrollToElement(root.closest('.travel-search-form-wrapper') || root);
+        // A package mode (board 16.2) has its own bar: the dates are its chips.
+        if (root.closest('.travel-pdp-results--package')) {
+            return true;
+        }
         var trigger = root.querySelector('.nvt-field--date .nvt-field-input');
         if (trigger && trigger.getAttribute('aria-expanded') !== 'true') {
             trigger.click();
@@ -186,6 +190,12 @@
     }
 
     function gotoResults(page) {
+        // A package mode's offers are under its bar, inside the mount.
+        var offers = page.querySelector('.travel-pdp-results--package .travel-package-rooms');
+        if (offers) {
+            scrollToElement(offers);
+            return true;
+        }
         var first = firstResult(page);
         if (!first) {
             return false;
