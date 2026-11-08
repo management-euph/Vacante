@@ -73,6 +73,8 @@ namespace Tygh\Addons\TravelCore\Tests\Unit\Functions {
             $this->assertSame('calis-beach', fn_travel_core_slugify('Çalış Beach'));
             $this->assertSame('sirin-otel', fn_travel_core_slugify('Şirin Otel'));
             $this->assertSame('hotel-taranesc-sinaia', fn_travel_core_slugify('Hotel Ţărănesc Șinaia'));
+            $this->assertSame('st-nicholas-hotel-and-spa', fn_travel_core_slugify("St. Nicholas' Hotel & Spa"), 'CS-Cart: "&" is "and"');
+            $this->assertSame('ohara-hotel', fn_travel_core_slugify('O’Hara "Hotel"'), 'CS-Cart: quotes go');
             $this->assertSame('akra-v-antalya-city-turkey', fn_travel_core_render_seo_slug('{{name}}-{{city}}-{{country}}', ['name' => 'Akra -V', 'city' => 'Antalya City', 'country' => 'Turkey']));
         }
 

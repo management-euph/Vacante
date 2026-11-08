@@ -56,6 +56,7 @@ $sc_names = [
     'Mărăști Îngust Âmbru',
     'Akra -V',
     "St. Nicholas' Hotel & Spa",
+    "O'Hara Hotel",
 ];
 
 echo "== 1. Names → address ==\n";
@@ -81,5 +82,5 @@ foreach ([' ', 'ă', 'â', 'î', 'ș', 'ț', 'ş', 'ţ', 'Ă', 'Â', 'Î', 'Ș',
 
 echo "\n", $sc_missing === []
     ? 'Every letter above is in the table: fn_generate_name() alone would do for them.'
-    : 'Not in the table: ' . implode(' ', $sc_missing) . ' — CS-Cart alone drops them; the add-ons convert them first.',
+    : 'Not in the table: ' . implode(' ', $sc_missing) . ' — CS-Cart alone drops them (Travel Core adds them in schemas/literal_converter/schema.post.php: is it up to date and active?).',
     "\nRead-only: nothing was written.\n";

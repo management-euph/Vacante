@@ -164,8 +164,9 @@ function fn_travel_core_render_seo_slug(string $pattern, array $placeholders): s
 /**
  * A URL-safe address for $value, as CS-Cart makes one: letters with marks
  * become plain ones ("Gözde Çalış Țărănesc" → "gozde-calis-taranesc"),
- * spaces and other signs dashes; then CS-Cart's own fn_generate_name()
- * (app/functions/fn.common.php) sees it, for its generate_name hooks.
+ * "&" "and", quotes go, spaces and other signs dashes; then CS-Cart's own
+ * fn_generate_name() (app/functions/fn.common.php) sees it, for its
+ * generate_name hooks.
  *
  * The address is made whole first: fn_generate_name() converts letters
  * only through its literal_converter table, and drops whatever is left
@@ -188,6 +189,9 @@ function fn_travel_core_slugify(string $value, ?callable $generate = null): stri
             'Ç' => 'C', 'Ğ' => 'G', 'Ö' => 'O', 'Ü' => 'U', 'ä' => 'a', 'Ä' => 'A', 'ß' => 'ss',
         ]);
     }
+    // CS-Cart's own punctuation (literal_converter/general.php): "&" is
+    // "and", quotes go ("O'Hara" → "ohara").
+    $plain = strtr($plain, ['&' => '-and-', "'" => '', '"' => '']);
     $slug = (string) preg_replace('/[^a-z0-9-]+/', '-', mb_strtolower($plain, 'UTF-8'));
     $slug = trim((string) preg_replace('/-{2,}/', '-', $slug), '-');
 
