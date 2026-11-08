@@ -12,7 +12,8 @@
               the order the switch offers them, the first one shown on load.
               With plans, cli, url and masked come from them. key is a short
               [a-z0-9_] name; hint, one sentence on when to pick it.
-     extra    HTML the add-on adds at the end of the card (optional)
+     extra    HTML the add-on adds at the end of the card (optional), printed
+              as HTML: the add-on escapes what it puts in it
 
    The key is masked in the DISPLAY only: a masked command pasted into a
    crontab is a refused run at 04:30 nobody is awake to see, so Copy all
@@ -75,6 +76,9 @@
         <i class="icon-lock" aria-hidden="true"></i> {__("travel_core.jobs_key_hidden_note")}
         <a href="{"travel_tools.manage"|fn_url}">{__("travel_core.jobs_open_tools")}</a>
     </p>
-    {if $extra}{$extra}{/if}
+    {** nofilter: CS-Cart escapes every {$…} it prints, and escaped, the
+       add-on's block showed as markup, with the real key in its data-copy
+       in plain sight (Novoton's XML feed). **}
+    {if $extra}{$extra nofilter}{/if}
 </section>
 {script src="js/addons/travel_core/cron-jobs.js"}

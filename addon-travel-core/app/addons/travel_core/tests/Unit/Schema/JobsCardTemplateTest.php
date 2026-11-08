@@ -128,6 +128,23 @@ final class JobsCardTemplateTest extends TestCase
         self::assertStringContainsString('{"travel_tools.generate_cron_key"|fn_url}', substr($noKey, 0, (int) strpos($noKey, '{/if}')), 'with no key, the card offers Generate');
     }
 
+    /**
+     * CS-Cart escapes every {$…} a template prints, so HTML an add-on hands
+     * a card is printed with nofilter, and nothing else is. A plain {$extra}
+     * showed Novoton's XML feed block as markup, with the real cron key from
+     * its data-copy in plain sight.
+     */
+    public function testOnlyTheAddonsOwnHtmlIsPrintedUnescaped(): void
+    {
+        $card = self::templates()['commands_card'];
+        self::assertStringContainsString('{if $extra}{$extra nofilter}{/if}', $card);
+
+        foreach (self::templates() as $name => $src) {
+            preg_match_all('/\{\$[^}]*\bnofilter\}/', $src, $m);
+            self::assertSame($name === 'commands_card' ? ['{$extra nofilter}'] : [], $m[0], "{$name}: what is printed unescaped");
+        }
+    }
+
     /** An add-on can show what is its own under a job's name (a catalog's size, a link to its list). */
     public function testARowCanCarryTheAddonsOwnExtras(): void
     {
