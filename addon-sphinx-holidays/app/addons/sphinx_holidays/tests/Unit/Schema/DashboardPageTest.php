@@ -155,6 +155,20 @@ final class DashboardPageTest extends TestCase
         self::assertStringNotContainsString('sync-log-entry', self::page(), 'the tall log cards are gone');
     }
 
+    /** A scope's commands are copied, never shown: only with a key, from Queue images' row, its parameters added by image-scope.js. */
+    public function testTheScopeCardCopiesItsCommandsWithoutShowingThem(): void
+    {
+        $src = (string) file_get_contents(dirname(__DIR__, 6) . '/design/backend/templates/addons/sphinx_holidays/components/image_scope.tpl');
+        $tpl = (string) preg_replace('/\{\*.*?\*\}/s', '', $src);
+
+        self::assertStringContainsString('{if $_job.mode == "sync_images"}{$_queue = $_job}{/if}', $tpl);
+        self::assertStringContainsString('{if $sphinx_cron_has_key && $_queue}', $tpl);
+        self::assertSame(2, preg_match_all('/<button type="button" class="btn travel-cron-copy" data-copy="\{\$_queue\.(url|cli)\|escape:html\}" data-sphinx-scope-base="\{\$_queue\.\1\|escape:html\}" data-sphinx-scope-format="\1">/', $tpl), 'Copy URL and Copy CLI command, buttons that never submit the run');
+        self::assertStringContainsString('class="travel-cron-run-form travel-cron-form" data-sphinx-scope>', $tpl);
+        self::assertStringContainsString('{script src="js/addons/sphinx_holidays/image-scope.js"}', $tpl);
+        self::assertFileExists(dirname(__DIR__, 6) . '/js/addons/sphinx_holidays/image-scope.js');
+    }
+
     public function testTheControllerGivesTheSummaryItsFigures(): void
     {
         $manage = self::manage();

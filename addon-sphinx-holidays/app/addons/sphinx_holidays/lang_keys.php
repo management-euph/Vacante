@@ -1364,8 +1364,8 @@ return [
         'ro' => 'Pune din nou în coadă și hotelurile care au deja imagini',
     ],
     'sphinx_holidays.jobs_scope_schedule_hint' => [
-        'en' => 'To schedule a scope, add whitelist=strict, country=TR, destination_id=… or region_id=… to the URL that Queue images\' ⋯ menu copies.',
-        'ro' => 'Pentru a programa un domeniu, adaugă whitelist=strict, country=TR, destination_id=… sau region_id=… la URL-ul copiat din meniul ⋯ al jobului Pune imaginile în coadă.',
+        'en' => 'To schedule a scope, pick it above and press Copy URL or Copy CLI command: they copy Queue images\' command with the scope\'s parameters, for the crontab or a cron service.',
+        'ro' => 'Pentru a programa un domeniu, alege-l mai sus și apasă Copiază URL-ul sau Copiază comanda CLI: copiază comanda jobului Pune imaginile în coadă cu parametrii domeniului, pentru crontab sau un serviciu cron.',
     ],
     'sphinx_holidays.jobs_images_how' => [
         'en' => 'How image sync works',
