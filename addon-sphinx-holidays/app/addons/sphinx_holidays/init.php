@@ -68,6 +68,11 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
         'sphinx',
         new \Tygh\Addons\SphinxHolidays\Providers\SphinxCircuitProductProvider(),
     );
+    // A hotel's packages: its page gets "Cu autocarul" / "Cu avionul" (board 16.2).
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setPackageModesProvider(
+        'sphinx',
+        new \Tygh\Addons\SphinxHolidays\Providers\SphinxPackageModesProvider(),
+    );
     // What Sphinx records for Travel Core's hotel availability rules.
     \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setAvailabilitySource(
         'sphinx',

@@ -54,6 +54,48 @@ final class PackageDepartures
     }
 
     /**
+     * The dates of one transport from one city, each with its lengths; []
+     * when the hotel has none.
+     *
+     * @param list<array{transport: string, departures: list<array{id: int, name: string, dates: list<array{date: string, nights: list<int>}>}>}> $modes forHotel()
+     *
+     * @return list<array{date: string, nights: list<int>}>
+     */
+    public static function dates(array $modes, string $transport, int $departureId): array
+    {
+        foreach ($modes as $mode) {
+            if ($mode['transport'] !== $transport) {
+                continue;
+            }
+            foreach ($mode['departures'] as $departure) {
+                if ($departure['id'] === $departureId) {
+                    return $departure['dates'];
+                }
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * The modes without their dates, as the hotel's page config carries
+     * them: per transport, its cities (the bar asks a city's dates when it
+     * is chosen, PackageBar.jsx: a hotel reached from 28 cities on 131 days
+     * would make the page's config heavy).
+     *
+     * @param list<array{transport: string, departures: list<array{id: int, name: string, dates: list<array{date: string, nights: list<int>}>}>}> $modes forHotel()
+     *
+     * @return list<array{transport: string, departures: list<array{id: int, name: string}>}>
+     */
+    public static function cities(array $modes): array
+    {
+        return array_map(static fn (array $mode): array => [
+            'transport' => $mode['transport'],
+            'departures' => array_map(static fn (array $departure): array => ['id' => $departure['id'], 'name' => $departure['name']], $mode['departures']),
+        ], $modes);
+    }
+
+    /**
      * Whether $modes have this departure: the transport, the city (0: any
      * of them), the date and its length.
      *

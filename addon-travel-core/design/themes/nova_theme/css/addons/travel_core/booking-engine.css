@@ -1470,6 +1470,138 @@ button.nvt-field-input:active {
     }
 }
 
+/* ── A hotel's page with its packages (board 16.2, HotelModes.jsx,
+   PackageBar.jsx, PackageRooms.jsx) ────────────────────────────────────
+   The switch above the bar ("Doar cazare / Cu autocarul / Cu avionul"),
+   the package bar's "Nopți", the transport once above the rooms, then each
+   room type with its meal plans. */
+.travel-modes__switch {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 0 0 16px;
+    padding: 4px;
+    border: 1px solid #e3e8ef;
+    border-radius: 10px;
+    background: #ffffff;
+}
+.travel-modes__option {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: #4b5563;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.travel-modes__option:hover {
+    background: #f5f7fa;
+    color: #003580;
+}
+.travel-modes__option--selected,
+.travel-modes__option--selected:hover {
+    background: #eaf2fc;
+    color: #003580;
+}
+.travel-modes__option:focus-visible {
+    outline: 2px solid var(--nvt-primary, #003580);
+    outline-offset: 1px;
+}
+.travel-modes__option svg {
+    flex: 0 0 auto;
+}
+/* The accommodation results under the bar are not a package mode's. */
+.travel-pdp-results--package > :not(.travel-search-form-wrapper) {
+    display: none !important;
+}
+.nvt-field--nights {
+    flex: 0.55;
+}
+.travel-package-rooms__choice {
+    margin: 0 0 12px;
+    font-size: 14px;
+    color: var(--nvt-text-light, #4b5563);
+}
+.travel-package-transport {
+    margin: 0 0 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: #f5f7fa;
+}
+.travel-package-transport .travel-circuit-flight {
+    margin: 0;
+    padding: 0 0 8px;
+    border-bottom: 1px solid #e3e8ef;
+    background: transparent;
+}
+.travel-package-transport__included {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 8px 0 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #0a7a35;
+}
+.travel-package-transport__included svg {
+    flex: 0 0 auto;
+}
+.travel-package-room {
+    display: grid;
+    grid-template-columns: minmax(200px, 290px) minmax(0, 1fr);
+    margin: 0 0 12px;
+    border: 1px solid #e3e8ef;
+    border-radius: 10px;
+    background: #ffffff;
+    overflow: hidden;
+}
+.travel-package-room__name {
+    margin: 0;
+    padding: 16px 18px;
+    border-right: 1px solid #e3e8ef;
+    background: #fafbfc;
+    font-size: 17px;
+    font-weight: 700;
+}
+.travel-package-offer__confirm {
+    display: inline-block;
+    margin: 6px 0 0;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #fff4d6;
+    color: #8a5a00;
+    font-size: 12px;
+    font-weight: 600;
+}
+.travel-package-offer__confirm--now {
+    background: #e7f6ec;
+    color: #0a7a35;
+}
+@media (max-width: 767px) {
+    .travel-modes__switch {
+        display: flex;
+    }
+    .travel-modes__option {
+        flex: 1 1 auto;
+        justify-content: center;
+        padding: 0 10px;
+    }
+    .travel-package-room {
+        grid-template-columns: 1fr;
+    }
+    .travel-package-room__name {
+        border-right: 0;
+        border-bottom: 1px solid #e3e8ef;
+        padding: 12px 14px;
+    }
+}
+
 @media print {
     .nvt-booking-engine {
         display: none !important;

@@ -3723,4 +3723,65 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Group of up to [n] people',
         'ro' => 'Grup de maximum [n] de persoane',
     ],
+    // The hotel's page in a package mode (board 16.2, PackageBar.jsx, PackageRooms.jsx).
+    'travel_core.package_switch_label' => [
+        'en' => 'How you travel',
+        'ro' => 'Cum călătorești',
+    ],
+    'travel_core.package_stay_only' => [
+        'en' => 'Accommodation only',
+        'ro' => 'Doar cazare',
+    ],
+    'travel_core.package_by_bus' => [
+        'en' => 'By coach',
+        'ro' => 'Cu autocarul',
+    ],
+    'travel_core.package_by_plane' => [
+        'en' => 'By plane',
+        'ro' => 'Cu avionul',
+    ],
+    'travel_core.package_nights' => [
+        'en' => 'Nights',
+        'ro' => 'Nopți',
+    ],
+    'travel_core.package_prices_note_flight' => [
+        'en' => 'Total prices for [party], with the return flight and the accommodation.',
+        'ro' => 'Prețuri totale pentru [party], cu zborul dus-întors și cazarea.',
+    ],
+    'travel_core.package_prices_note_bus' => [
+        'en' => 'Total prices for [party], with the return coach trip and the accommodation.',
+        'ro' => 'Prețuri totale pentru [party], cu autocarul dus-întors și cazarea.',
+    ],
+    'travel_core.package_rooms_title' => [
+        'en' => 'Rooms and prices',
+        'ro' => 'Camere și prețuri',
+    ],
+    'travel_core.package_same_transport' => [
+        'en' => 'the transport is the same for every room',
+        'ro' => 'transportul e același pentru toate camerele',
+    ],
+    'travel_core.package_flight_choice' => [
+        'en' => '[count] flights leave that day: choose the room under the flight you want.',
+        'ro' => 'În ziua aceea pleacă [count] zboruri: alege camera sub zborul dorit.',
+    ],
+    'travel_core.package_included_flight' => [
+        'en' => 'Included: the return flight · [nights] at the hotel',
+        'ro' => 'Inclus: zborul dus-întors · [nights] de cazare',
+    ],
+    'travel_core.package_included_bus' => [
+        'en' => 'Included: a coach seat, return · [nights] at the hotel',
+        'ro' => 'Inclus: loc în autocar dus-întors · [nights] de cazare',
+    ],
+    'travel_core.package_direct' => [
+        'en' => 'direct',
+        'ro' => 'direct',
+    ],
+    'travel_core.package_with_stops' => [
+        'en' => 'with a stop',
+        'ro' => 'cu escală',
+    ],
+    'travel_core.package_loading_rooms' => [
+        'en' => 'Looking for the prices of this departure… it can take up to half a minute.',
+        'ro' => 'Căutăm prețurile pentru această plecare… poate dura până la jumătate de minut.',
+    ],
 ];

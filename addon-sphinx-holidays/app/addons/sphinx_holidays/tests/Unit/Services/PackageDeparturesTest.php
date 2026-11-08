@@ -72,6 +72,22 @@ final class PackageDeparturesTest extends TestCase
         self::assertFalse(PackageDepartures::offers($modes, 'flight', 10, '2027-04-04', 7), 'not that day');
     }
 
+    /** The page carries the cities; a city's dates come when the bar shows it. */
+    public function testACitysDatesAndThePagesCities(): void
+    {
+        $modes = PackageDepartures::group([
+            self::route('flight', 10, 'Bucuresti', ['2027-04-03'], 7),
+            self::route('bus', 30, 'Iasi', ['2026-11-09'], 5),
+        ], '2026-11-08');
+
+        self::assertSame([['date' => '2027-04-03', 'nights' => [7]]], PackageDepartures::dates($modes, 'flight', 10));
+        self::assertSame([], PackageDepartures::dates($modes, 'flight', 30), 'not by plane from there');
+        self::assertSame(
+            [['transport' => 'bus', 'departures' => [['id' => 30, 'name' => 'Iasi']]], ['transport' => 'flight', 'departures' => [['id' => 10, 'name' => 'Bucuresti']]]],
+            PackageDepartures::cities($modes),
+        );
+    }
+
     public function testOnlyAccommodationWhenNoRouteReachesTheHotel(): void
     {
         self::assertSame([], PackageDepartures::group([], '2026-11-08'));

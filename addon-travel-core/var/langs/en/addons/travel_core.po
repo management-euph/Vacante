@@ -4529,3 +4529,63 @@ msgstr "Group of up to [n] people"
 msgctxt "Languages::travel_core.circuit_terms_at_booking"
 msgid "You see the cancellation and payment terms when you book."
 msgstr "You see the cancellation and payment terms when you book."
+
+msgctxt "Languages::travel_core.package_switch_label"
+msgid "How you travel"
+msgstr "How you travel"
+
+msgctxt "Languages::travel_core.package_stay_only"
+msgid "Accommodation only"
+msgstr "Accommodation only"
+
+msgctxt "Languages::travel_core.package_by_bus"
+msgid "By coach"
+msgstr "By coach"
+
+msgctxt "Languages::travel_core.package_by_plane"
+msgid "By plane"
+msgstr "By plane"
+
+msgctxt "Languages::travel_core.package_nights"
+msgid "Nights"
+msgstr "Nights"
+
+msgctxt "Languages::travel_core.package_prices_note_flight"
+msgid "Total prices for [party], with the return flight and the accommodation."
+msgstr "Total prices for [party], with the return flight and the accommodation."
+
+msgctxt "Languages::travel_core.package_prices_note_bus"
+msgid "Total prices for [party], with the return coach trip and the accommodation."
+msgstr "Total prices for [party], with the return coach trip and the accommodation."
+
+msgctxt "Languages::travel_core.package_rooms_title"
+msgid "Rooms and prices"
+msgstr "Rooms and prices"
+
+msgctxt "Languages::travel_core.package_same_transport"
+msgid "the transport is the same for every room"
+msgstr "the transport is the same for every room"
+
+msgctxt "Languages::travel_core.package_flight_choice"
+msgid "[count] flights leave that day: choose the room under the flight you want."
+msgstr "[count] flights leave that day: choose the room under the flight you want."
+
+msgctxt "Languages::travel_core.package_included_flight"
+msgid "Included: the return flight · [nights] at the hotel"
+msgstr "Included: the return flight · [nights] at the hotel"
+
+msgctxt "Languages::travel_core.package_included_bus"
+msgid "Included: a coach seat, return · [nights] at the hotel"
+msgstr "Included: a coach seat, return · [nights] at the hotel"
+
+msgctxt "Languages::travel_core.package_direct"
+msgid "direct"
+msgstr "direct"
+
+msgctxt "Languages::travel_core.package_with_stops"
+msgid "with a stop"
+msgstr "with a stop"
+
+msgctxt "Languages::travel_core.package_loading_rooms"
+msgid "Looking for the prices of this departure… it can take up to half a minute."
+msgstr "Looking for the prices of this departure… it can take up to half a minute."

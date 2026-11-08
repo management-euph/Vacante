@@ -4529,3 +4529,63 @@ msgstr "Grup de maximum [n] de persoane"
 msgctxt "Languages::travel_core.circuit_terms_at_booking"
 msgid "You see the cancellation and payment terms when you book."
 msgstr "Condițiile de anulare și de plată le vezi la rezervare."
+
+msgctxt "Languages::travel_core.package_switch_label"
+msgid "How you travel"
+msgstr "Cum călătorești"
+
+msgctxt "Languages::travel_core.package_stay_only"
+msgid "Accommodation only"
+msgstr "Doar cazare"
+
+msgctxt "Languages::travel_core.package_by_bus"
+msgid "By coach"
+msgstr "Cu autocarul"
+
+msgctxt "Languages::travel_core.package_by_plane"
+msgid "By plane"
+msgstr "Cu avionul"
+
+msgctxt "Languages::travel_core.package_nights"
+msgid "Nights"
+msgstr "Nopți"
+
+msgctxt "Languages::travel_core.package_prices_note_flight"
+msgid "Total prices for [party], with the return flight and the accommodation."
+msgstr "Prețuri totale pentru [party], cu zborul dus-întors și cazarea."
+
+msgctxt "Languages::travel_core.package_prices_note_bus"
+msgid "Total prices for [party], with the return coach trip and the accommodation."
+msgstr "Prețuri totale pentru [party], cu autocarul dus-întors și cazarea."
+
+msgctxt "Languages::travel_core.package_rooms_title"
+msgid "Rooms and prices"
+msgstr "Camere și prețuri"
+
+msgctxt "Languages::travel_core.package_same_transport"
+msgid "the transport is the same for every room"
+msgstr "transportul e același pentru toate camerele"
+
+msgctxt "Languages::travel_core.package_flight_choice"
+msgid "[count] flights leave that day: choose the room under the flight you want."
+msgstr "În ziua aceea pleacă [count] zboruri: alege camera sub zborul dorit."
+
+msgctxt "Languages::travel_core.package_included_flight"
+msgid "Included: the return flight · [nights] at the hotel"
+msgstr "Inclus: zborul dus-întors · [nights] de cazare"
+
+msgctxt "Languages::travel_core.package_included_bus"
+msgid "Included: a coach seat, return · [nights] at the hotel"
+msgstr "Inclus: loc în autocar dus-întors · [nights] de cazare"
+
+msgctxt "Languages::travel_core.package_direct"
+msgid "direct"
+msgstr "direct"
+
+msgctxt "Languages::travel_core.package_with_stops"
+msgid "with a stop"
+msgstr "cu escală"
+
+msgctxt "Languages::travel_core.package_loading_rooms"
+msgid "Looking for the prices of this departure… it can take up to half a minute."
+msgstr "Căutăm prețurile pentru această plecare… poate dura până la jumătate de minut."

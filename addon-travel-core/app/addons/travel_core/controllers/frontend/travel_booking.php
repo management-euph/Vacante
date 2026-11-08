@@ -160,6 +160,12 @@ if ($mode === 'booking_config') {
                 'circuit_per_person', 'circuit_for_one_adult', 'circuit_book',
                 'circuit_loading_rooms', 'circuit_rooms_error', 'circuit_no_rooms', 'circuit_rooms_ages',
                 'circuit_terms_at_booking',
+                // A hotel's page in a package mode (board 16.2)
+                'package_switch_label', 'package_stay_only', 'package_by_bus', 'package_by_plane',
+                'package_nights', 'package_prices_note_flight', 'package_prices_note_bus',
+                'package_rooms_title', 'package_same_transport', 'package_flight_choice',
+                'package_included_flight', 'package_included_bus', 'package_direct', 'package_with_stops',
+                'package_loading_rooms', 'pdpa_r_immediate', 'pdpa_r_on_request_tag',
             ];
             $translations = [];
             foreach ($translationKeys as $key) {
@@ -232,6 +238,20 @@ if ($mode === 'booking_config') {
                     if ($calendar !== []) {
                         $config['calendarPrices'] = $calendar;
                         $config['calendarPricesCurrency'] = \Tygh\Addons\TravelCore\Services\CurrencyService::getDisplayCurrency();
+                    }
+
+                    // The hotel's packages (board 16.2): a switch above the
+                    // bar, "Doar cazare / Cu autocarul / Cu avionul", for the
+                    // transports it has; a city's dates and the offers come
+                    // from the provider (PackageModesProviderInterface).
+                    $packageModes = TravelProviderRegistry::packageModes($providerName, $hotelId);
+                    if ($packageModes !== []) {
+                        $config['package'] = [
+                            'modes' => $packageModes,
+                            'datesDispatch' => $providerName . '_booking.package_dates',
+                            'quoteDispatch' => $providerName . '_booking.package_quote',
+                            'bookingDispatch' => $providerName . '_booking.package_booking_form',
+                        ];
                     }
                 }
             }
