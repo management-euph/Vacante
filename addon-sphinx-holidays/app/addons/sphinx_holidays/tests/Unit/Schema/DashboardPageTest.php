@@ -64,7 +64,7 @@ final class DashboardPageTest extends TestCase
             'jobs' => 'components/jobs_card.tpl',
             'scope' => 'components/image_scope.tpl',
             'commands' => 'components/commands_card.tpl',
-            'activity' => 'sphinx_holidays.sync_log',
+            'activity' => 'components/activity.tpl',
         ] as $section => $marker) {
             $pos = strpos($page, $marker);
             self::assertIsInt($pos, "no {$section}");
@@ -137,6 +137,38 @@ final class DashboardPageTest extends TestCase
         self::assertStringContainsString('{include file="addons/sphinx_holidays/components/check_hotel.tpl"}', $tools);
     }
 
+    /** Recent sync activity: a table, All or Problems, paged, long errors folded. */
+    public function testTheActivityIsAPagedTableWithAProblemsFilter(): void
+    {
+        $src = (string) file_get_contents(dirname(__DIR__, 6) . '/design/backend/templates/addons/sphinx_holidays/components/activity.tpl');
+        $tpl = (string) preg_replace('/\{\*.*?\*\}/s', '', $src);
+
+        self::assertSame(2, substr_count($tpl, '{include file="common/pagination.tpl" save_current_page=true}'), 'the pagination pair wraps the table');
+        self::assertStringContainsString('"sphinx_holidays.manage?activity=problems"|fn_url', $tpl);
+        self::assertStringContainsString('"sphinx_holidays.manage"|fn_url', $tpl);
+        self::assertSame(7, substr_count($tpl, '<th scope="col"'), 'date, job, run, items, not synced, status, duration');
+        foreach (['ok', 'partial', 'failed', 'stalled', 'running'] as $state) {
+            self::assertStringContainsString('$run.state == "' . $state . '"', $tpl);
+        }
+        self::assertStringContainsString('<details class="travel-cron-activity__error">', $tpl);
+        self::assertStringContainsString('{$run.error_full|escape:html}', $tpl);
+        self::assertStringNotContainsString('sync-log-entry', self::page(), 'the tall log cards are gone');
+    }
+
+    /** A scope's commands are copied, never shown: only with a key, from Queue images' row, its parameters added by image-scope.js. */
+    public function testTheScopeCardCopiesItsCommandsWithoutShowingThem(): void
+    {
+        $src = (string) file_get_contents(dirname(__DIR__, 6) . '/design/backend/templates/addons/sphinx_holidays/components/image_scope.tpl');
+        $tpl = (string) preg_replace('/\{\*.*?\*\}/s', '', $src);
+
+        self::assertStringContainsString('{if $_job.mode == "sync_images"}{$_queue = $_job}{/if}', $tpl);
+        self::assertStringContainsString('{if $sphinx_cron_has_key && $_queue}', $tpl);
+        self::assertSame(2, preg_match_all('/<button type="button" class="btn travel-cron-copy" data-copy="\{\$_queue\.(url|cli)\|escape:html\}" data-sphinx-scope-base="\{\$_queue\.\1\|escape:html\}" data-sphinx-scope-format="\1">/', $tpl), 'Copy URL and Copy CLI command, buttons that never submit the run');
+        self::assertStringContainsString('class="travel-cron-run-form travel-cron-form" data-sphinx-scope>', $tpl);
+        self::assertStringContainsString('{script src="js/addons/sphinx_holidays/image-scope.js"}', $tpl);
+        self::assertFileExists(dirname(__DIR__, 6) . '/js/addons/sphinx_holidays/image-scope.js');
+    }
+
     public function testTheControllerGivesTheSummaryItsFigures(): void
     {
         $manage = self::manage();
@@ -145,7 +177,8 @@ final class DashboardPageTest extends TestCase
         self::assertStringContainsString("\$view->assign('sphinx_attention', DashboardSummary::attention(", $manage);
         self::assertStringContainsString('CronHealth::assess($cron_records, CronRunLog::lastWrongKeyRefusal(CronPlan::ADDON), time())', $manage);
         self::assertStringContainsString("\$cron_health['state'] === CronHealth::REFUSED ? \$cron_health['wrong_key_at'] : 0", $manage);
-        foreach (['counts_by_type', 'dest_last_synced', 'hotel_last_synced', 'unlinked_hotels', 'skipped_hotels'] as $var) {
+        self::assertStringContainsString("SyncActivity::page(Container::getSyncLogRepository(), \$_REQUEST, time())", $manage);
+        foreach (['counts_by_type', 'dest_last_synced', 'hotel_last_synced', 'unlinked_hotels', 'skipped_hotels', 'sphinx_activity', 'search'] as $var) {
             self::assertStringContainsString("\$view->assign('{$var}', ", $manage, "{$var} is read by the page");
         }
     }

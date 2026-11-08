@@ -3,7 +3,7 @@
    Top to bottom: at a glance, what needs attention, the tools, the
    destinations sold (Travel Core's shared cards; picked on the Destination
    whitelist page), the scheduled jobs in the order they run with Queue
-   images for a scope, every command, recent sync activity. Built on Travel
+   images for a scope, every command, recent sync activity (paged). Built on Travel
    Core's travel-cron-* styles, as Novoton's dashboard is, so the providers'
    dashboards read alike. No inline scripts: the jobs card loads Travel
    Core's cron-jobs.js inside this capture, and it serves every Run here. **}
@@ -223,37 +223,9 @@
         }
     {/if}
 
-    {* ── Recent Sync Logs ── *}
-    {if $sync_logs}
-        <h4>{__("sphinx_holidays.sync_log")}</h4>
-        {foreach from=$sync_logs item=log}
-            <div class="sync-log-entry">
-                <div class="sync-log-header">
-                    <span class="sync-log-date">{$log.started_at}</span>
-                    <span class="status-badge status-{if $log.status == 'completed'}ok{elseif $log.status == 'failed'}cancelled{else}pending{/if}">
-                        {$log.sync_type|escape:html}: {$log.status|escape:html}
-                    </span>
-                    {if $log.sync_mode == 'incremental'}
-                        <span class="status-badge status-ok">{__("sphinx_holidays.sync_mode_incremental")}</span>
-                    {elseif $log.sync_mode == 'full'}
-                        <span class="status-badge">{__("sphinx_holidays.sync_mode_full")}</span>
-                    {/if}
-                </div>
-                <div class="sync-log-stats">
-                    <span>{__("sphinx_holidays.items_synced")}: {$log.items_synced}/{$log.items_total}</span>
-                    {if $log.duration_ms}
-                        <span>{__("sphinx_holidays.duration")}: {($log.duration_ms/1000)|string_format:"%.1f"}s</span>
-                    {/if}
-                    {if $log.rate_limit_hits > 0}
-                        <span class="text-warning">{__("sphinx_holidays.rate_limited_requests")}: {$log.rate_limit_hits}</span>
-                    {/if}
-                    {if $log.error_message}
-                        <span class="text-error">{$log.error_message|escape:html|truncate:100}</span>
-                    {/if}
-                </div>
-            </div>
-        {/foreach}
-    {/if}
+    {** Recent sync activity (components/activity.tpl, its own template: the
+       pagination pair wraps exactly one list). **}
+    {include file="addons/sphinx_holidays/components/activity.tpl"}
 
 </div>
 

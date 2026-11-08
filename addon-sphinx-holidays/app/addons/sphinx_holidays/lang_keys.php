@@ -922,24 +922,24 @@ return [
         'ro' => 'Orașe vândute',
     ],
     'sphinx_holidays.dest_tile_cities_note' => [
-        'en' => 'in [n] regions',
-        'ro' => 'în [n] regiuni',
+        'en' => 'in [n] {region|regions}',
+        'ro' => 'în [n] {regiune|regiuni|de regiuni}',
     ],
     'sphinx_holidays.dest_tile_hotels' => [
         'en' => 'Hotels in scope',
         'ro' => 'Hoteluri incluse',
     ],
     'sphinx_holidays.dest_tile_hotels_note' => [
-        'en' => '[n] live products',
-        'ro' => '[n] produse active',
+        'en' => '[n] live {product|products}',
+        'ro' => '[n] {produs activ|produse active|de produse active}',
     ],
     'sphinx_holidays.dest_tile_circuits' => [
         'en' => 'Circuits in scope',
         'ro' => 'Circuite incluse',
     ],
     'sphinx_holidays.dest_tile_circuits_note' => [
-        'en' => '[n] package routes',
-        'ro' => '[n] rute de pachete',
+        'en' => '[n] package {route|routes}',
+        'ro' => '[n] {rută de pachete|rute de pachete|de rute de pachete}',
     ],
     'sphinx_holidays.dest_tile_new' => [
         'en' => 'New destinations to review',
@@ -1042,12 +1042,12 @@ return [
         'ro' => 'Destinații',
     ],
     'sphinx_holidays.dest_card_intro' => [
-        'en' => '[countries] countries, [cities] cities sold.',
-        'ro' => '[countries] țări, [cities] orașe vândute.',
+        'en' => '[countries] {country|countries}, [cities] {city|cities} sold.',
+        'ro' => '[countries] {țară|țări|de țări}, [cities] {oraș vândut|orașe vândute|de orașe vândute}.',
     ],
     'sphinx_holidays.dest_card_cities' => [
-        'en' => '[n] cities',
-        'ro' => '[n] orașe',
+        'en' => '[n] {city|cities}',
+        'ro' => '[n] {oraș|orașe|de orașe}',
     ],
     'sphinx_holidays.dest_col_circuits' => [
         'en' => 'Circuits',
@@ -1364,8 +1364,8 @@ return [
         'ro' => 'Pune din nou în coadă și hotelurile care au deja imagini',
     ],
     'sphinx_holidays.jobs_scope_schedule_hint' => [
-        'en' => 'To schedule a scope, add whitelist=strict, country=TR, destination_id=… or region_id=… to the URL that Queue images\' ⋯ menu copies.',
-        'ro' => 'Pentru a programa un domeniu, adaugă whitelist=strict, country=TR, destination_id=… sau region_id=… la URL-ul copiat din meniul ⋯ al jobului Pune imaginile în coadă.',
+        'en' => 'To schedule a scope, pick it above and press Copy URL or Copy CLI command: they copy Queue images\' command with the scope\'s parameters, for the crontab or a cron service.',
+        'ro' => 'Pentru a programa un domeniu, alege-l mai sus și apasă Copiază URL-ul sau Copiază comanda CLI: copiază comanda jobului Pune imaginile în coadă cu parametrii domeniului, pentru crontab sau un serviciu cron.',
     ],
     'sphinx_holidays.jobs_images_how' => [
         'en' => 'How image sync works',
@@ -1560,5 +1560,95 @@ return [
     'sphinx_holidays.dash_tools_fix_hint' => [
         'en' => 'Create products and Re-link existing products show here only when there is something to create or re-link.',
         'ro' => 'Creare Produse și Reconectează produsele existente apar aici doar când e ceva de creat sau de reconectat.',
+    ],
+    // The dashboard's Recent sync activity table
+    // (Services\SyncActivity, components/activity.tpl).
+    'sphinx_holidays.dash_activity_title' => [
+        'en' => 'Recent sync activity',
+        'ro' => 'Activitate recentă de sincronizare',
+    ],
+    'sphinx_holidays.dash_activity_filter' => [
+        'en' => 'Which runs',
+        'ro' => 'Ce rulări',
+    ],
+    'sphinx_holidays.dash_activity_all' => [
+        'en' => 'All ([n])',
+        'ro' => 'Toate ([n])',
+    ],
+    'sphinx_holidays.dash_activity_problems' => [
+        'en' => 'Problems ([n])',
+        'ro' => 'Probleme ([n])',
+    ],
+    'sphinx_holidays.dash_activity_col_date' => [
+        'en' => 'Date',
+        'ro' => 'Data',
+    ],
+    'sphinx_holidays.dash_activity_col_job' => [
+        'en' => 'Job',
+        'ro' => 'Job',
+    ],
+    'sphinx_holidays.dash_activity_col_run' => [
+        'en' => 'Run',
+        'ro' => 'Rulare',
+    ],
+    'sphinx_holidays.dash_activity_col_items' => [
+        'en' => 'Items',
+        'ro' => 'Elemente',
+    ],
+    'sphinx_holidays.dash_activity_col_not_synced' => [
+        'en' => 'Not synced',
+        'ro' => 'Nesincronizate',
+    ],
+    'sphinx_holidays.dash_activity_col_status' => [
+        'en' => 'Status',
+        'ro' => 'Stare',
+    ],
+    'sphinx_holidays.dash_activity_col_duration' => [
+        'en' => 'Duration',
+        'ro' => 'Durată',
+    ],
+    'sphinx_holidays.dash_activity_full' => [
+        'en' => 'Full',
+        'ro' => 'Completă',
+    ],
+    'sphinx_holidays.dash_activity_incremental' => [
+        'en' => 'Incremental',
+        'ro' => 'Incrementală',
+    ],
+    'sphinx_holidays.dash_activity_ok' => [
+        'en' => 'Completed',
+        'ro' => 'Finalizată',
+    ],
+    'sphinx_holidays.dash_activity_partial' => [
+        'en' => 'Partly done',
+        'ro' => 'Parțial',
+    ],
+    'sphinx_holidays.dash_activity_failed' => [
+        'en' => 'Failed',
+        'ro' => 'Eșuată',
+    ],
+    'sphinx_holidays.dash_activity_stalled' => [
+        'en' => 'Never finished',
+        'ro' => 'Neterminată',
+    ],
+    'sphinx_holidays.dash_activity_running' => [
+        'en' => 'Running',
+        'ro' => 'În curs',
+    ],
+    'sphinx_holidays.dash_activity_rate_limited' => [
+        'en' => 'Rate-limited requests: [n]',
+        'ro' => 'Cereri limitate de API: [n]',
+    ],
+    'sphinx_holidays.dash_activity_show_error' => [
+        'en' => 'Show full error',
+        'ro' => 'Arată eroarea completă',
+    ],
+    'sphinx_holidays.dash_activity_none' => [
+        'en' => 'No sync runs logged yet.',
+        'ro' => 'Nicio sincronizare înregistrată încă.',
+    ],
+    'sphinx_holidays.dash_activity_no_problems' => [
+        'en' => 'No problems in the log.',
+        'ro' => 'Nicio problemă în jurnal.',
     ],
 ];

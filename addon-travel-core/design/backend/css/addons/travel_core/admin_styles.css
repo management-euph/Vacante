@@ -884,6 +884,90 @@
     display: inline;
 }
 
+/* Recent sync activity: one row per run, a long error folded under its start. */
+.travel-cron-activity .travel-cron-table th,
+.travel-cron-activity .travel-cron-table td {
+    padding: 12px;
+}
+
+.travel-cron-activity__error summary {
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.travel-cron-activity__error pre {
+    max-height: 240px;
+    overflow: auto;
+    margin: 4px 0 0;
+    font-size: 12px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.travel-cron-activity__empty {
+    padding: 0 16px 16px;
+}
+
+/* Scheduled jobs at phone width: each job a block, its name and description
+ * across, its schedule and last run under them, Run and ⋯ beside those. Down
+ * to here the table scrolls sideways inside its card; below, nothing does. */
+@media (max-width: 600px) {
+    .travel-cron-jobs__table,
+    .travel-cron-jobs__table tbody,
+    .travel-cron-jobs__stage,
+    .travel-cron-jobs__stage th {
+        display: block;
+    }
+
+    .travel-cron-jobs__table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+    }
+
+    .travel-cron-jobs__table .travel-cron-job {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px 12px;
+        padding: 12px 14px;
+        border-top: 1px solid #e6e9ed;
+    }
+
+    .travel-cron-jobs__table .travel-cron-job--recommended {
+        background: #fffdf5;
+    }
+
+    .travel-cron-jobs__table .travel-cron-job > td {
+        display: block;
+        min-width: 0;
+        padding: 0;
+        border: 0;
+        background: none;
+    }
+
+    .travel-cron-jobs__table .travel-cron-job > td:first-child {
+        grid-column: 1 / -1;
+    }
+
+    .travel-cron-jobs__table .travel-cron-job > td:nth-child(2),
+    .travel-cron-jobs__table .travel-cron-job > td:nth-child(3) {
+        grid-column: 1;
+    }
+
+    .travel-cron-jobs__table .travel-cron-job > td.travel-cron-table__actions {
+        grid-column: 2;
+        grid-row: 2 / span 2;
+        align-self: center;
+    }
+
+    .travel-cron-job__mode,
+    .travel-cron-job__cron {
+        overflow-wrap: anywhere;
+    }
+}
+
 @media (max-width: 768px) {
     .travel-cron-tools__groups--two {
         grid-template-columns: 1fr;
