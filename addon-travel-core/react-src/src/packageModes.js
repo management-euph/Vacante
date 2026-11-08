@@ -61,6 +61,37 @@ export function nightsOf(dates, date) {
 }
 
 /**
+ * Every length a city's dates have, sorted: the bar's "Nopți" (a date has
+ * only some of them; 30 Dec. may leave for 5 nights only).
+ *
+ * @param {Array<{date: string, nights: number[]}>} dates
+ * @returns {number[]}
+ */
+export function allNights(dates) {
+    return [...new Set((dates || []).flatMap((d) => d.nights || []))].sort((a, b) => a - b);
+}
+
+/**
+ * The date to show for a length: the chosen one when it has it, else the
+ * nearest date that has it (the earlier of two as near); '' without any.
+ *
+ * @param {Array<{date: string, nights: number[]}>} dates
+ * @param {string} date the chosen one, or ''
+ * @param {number} nights
+ * @returns {string}
+ */
+export function dateForNights(dates, date, nights) {
+    const list = (dates || []).filter((d) => (d.nights || []).includes(nights));
+    if (list.some((d) => d.date === date)) return date;
+    if (list.length === 0) return '';
+    const chosen = Date.parse(`${date}T00:00:00Z`);
+    if (Number.isNaN(chosen)) return [...list].sort((a, b) => (a.date < b.date ? -1 : 1))[0].date;
+    const day = (d) => Date.parse(`${d}T00:00:00Z`);
+    return [...list]
+        .sort((a, b) => Math.abs(day(a.date) - chosen) - Math.abs(day(b.date) - chosen) || (a.date < b.date ? -1 : 1))[0].date;
+}
+
+/**
  * The nights the bar shows: the ones asked for when the date has them,
  * else a week when it has one, else the length nearest to a week.
  *
