@@ -1365,24 +1365,24 @@ msgid "Cities sold"
 msgstr "Cities sold"
 
 msgctxt "Languages::sphinx_holidays.dest_tile_cities_note"
-msgid "in [n] regions"
-msgstr "in [n] regions"
+msgid "in [n] {region|regions}"
+msgstr "in [n] {region|regions}"
 
 msgctxt "Languages::sphinx_holidays.dest_tile_hotels"
 msgid "Hotels in scope"
 msgstr "Hotels in scope"
 
 msgctxt "Languages::sphinx_holidays.dest_tile_hotels_note"
-msgid "[n] live products"
-msgstr "[n] live products"
+msgid "[n] live {product|products}"
+msgstr "[n] live {product|products}"
 
 msgctxt "Languages::sphinx_holidays.dest_tile_circuits"
 msgid "Circuits in scope"
 msgstr "Circuits in scope"
 
 msgctxt "Languages::sphinx_holidays.dest_tile_circuits_note"
-msgid "[n] package routes"
-msgstr "[n] package routes"
+msgid "[n] package {route|routes}"
+msgstr "[n] package {route|routes}"
 
 msgctxt "Languages::sphinx_holidays.dest_tile_new"
 msgid "New destinations to review"
@@ -1485,12 +1485,12 @@ msgid "Destinations"
 msgstr "Destinations"
 
 msgctxt "Languages::sphinx_holidays.dest_card_intro"
-msgid "[countries] countries, [cities] cities sold."
-msgstr "[countries] countries, [cities] cities sold."
+msgid "[countries] {country|countries}, [cities] {city|cities} sold."
+msgstr "[countries] {country|countries}, [cities] {city|cities} sold."
 
 msgctxt "Languages::sphinx_holidays.dest_card_cities"
-msgid "[n] cities"
-msgstr "[n] cities"
+msgid "[n] {city|cities}"
+msgstr "[n] {city|cities}"
 
 msgctxt "Languages::sphinx_holidays.dest_col_circuits"
 msgid "Circuits"

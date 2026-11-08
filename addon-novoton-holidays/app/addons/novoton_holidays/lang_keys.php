@@ -786,8 +786,8 @@ return [
         'ro' => 'Deschide Destinații →',
     ],
     'novoton_holidays.dash_dest_intro' => [
-        'en' => '[countries] countries, [resorts] resorts sold.',
-        'ro' => '[countries] țări, [resorts] stațiuni vândute.',
+        'en' => '[countries] {country|countries}, [resorts] {resort|resorts} sold.',
+        'ro' => '[countries] {țară|țări|de țări}, [resorts] {stațiune vândută|stațiuni vândute|de stațiuni vândute}.',
     ],
     'novoton_holidays.dash_dest_not_configured' => [
         'en' => 'No whitelist saved yet: this is what the selected countries and excluded resorts sell today.',
@@ -802,8 +802,8 @@ return [
         'ro' => 'Produse active',
     ],
     'novoton_holidays.dash_dest_n_resorts' => [
-        'en' => '[n] resorts',
-        'ro' => '[n] stațiuni',
+        'en' => '[n] {resort|resorts}',
+        'ro' => '[n] {stațiune|stațiuni|de stațiuni}',
     ],
     'novoton_holidays.dash_dest_resorts_word' => [
         'en' => 'resorts',

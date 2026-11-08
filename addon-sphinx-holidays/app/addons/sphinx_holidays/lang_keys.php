@@ -922,24 +922,24 @@ return [
         'ro' => 'Orașe vândute',
     ],
     'sphinx_holidays.dest_tile_cities_note' => [
-        'en' => 'in [n] regions',
-        'ro' => 'în [n] regiuni',
+        'en' => 'in [n] {region|regions}',
+        'ro' => 'în [n] {regiune|regiuni|de regiuni}',
     ],
     'sphinx_holidays.dest_tile_hotels' => [
         'en' => 'Hotels in scope',
         'ro' => 'Hoteluri incluse',
     ],
     'sphinx_holidays.dest_tile_hotels_note' => [
-        'en' => '[n] live products',
-        'ro' => '[n] produse active',
+        'en' => '[n] live {product|products}',
+        'ro' => '[n] {produs activ|produse active|de produse active}',
     ],
     'sphinx_holidays.dest_tile_circuits' => [
         'en' => 'Circuits in scope',
         'ro' => 'Circuite incluse',
     ],
     'sphinx_holidays.dest_tile_circuits_note' => [
-        'en' => '[n] package routes',
-        'ro' => '[n] rute de pachete',
+        'en' => '[n] package {route|routes}',
+        'ro' => '[n] {rută de pachete|rute de pachete|de rute de pachete}',
     ],
     'sphinx_holidays.dest_tile_new' => [
         'en' => 'New destinations to review',
@@ -1042,12 +1042,12 @@ return [
         'ro' => 'Destinații',
     ],
     'sphinx_holidays.dest_card_intro' => [
-        'en' => '[countries] countries, [cities] cities sold.',
-        'ro' => '[countries] țări, [cities] orașe vândute.',
+        'en' => '[countries] {country|countries}, [cities] {city|cities} sold.',
+        'ro' => '[countries] {țară|țări|de țări}, [cities] {oraș vândut|orașe vândute|de orașe vândute}.',
     ],
     'sphinx_holidays.dest_card_cities' => [
-        'en' => '[n] cities',
-        'ro' => '[n] orașe',
+        'en' => '[n] {city|cities}',
+        'ro' => '[n] {oraș|orașe|de orașe}',
     ],
     'sphinx_holidays.dest_col_circuits' => [
         'en' => 'Circuits',

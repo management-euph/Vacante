@@ -4169,8 +4169,8 @@ msgid "Open Destinations →"
 msgstr "Deschide Destinații →"
 
 msgctxt "Languages::novoton_holidays.dash_dest_intro"
-msgid "[countries] countries, [resorts] resorts sold."
-msgstr "[countries] țări, [resorts] stațiuni vândute."
+msgid "[countries] {country|countries}, [resorts] {resort|resorts} sold."
+msgstr "[countries] {țară|țări|de țări}, [resorts] {stațiune vândută|stațiuni vândute|de stațiuni vândute}."
 
 msgctxt "Languages::novoton_holidays.dash_dest_not_configured"
 msgid "No whitelist saved yet: this is what the selected countries and excluded resorts sell today."
@@ -4185,8 +4185,8 @@ msgid "Live products"
 msgstr "Produse active"
 
 msgctxt "Languages::novoton_holidays.dash_dest_n_resorts"
-msgid "[n] resorts"
-msgstr "[n] stațiuni"
+msgid "[n] {resort|resorts}"
+msgstr "[n] {stațiune|stațiuni|de stațiuni}"
 
 msgctxt "Languages::novoton_holidays.dash_dest_resorts_word"
 msgid "resorts"
