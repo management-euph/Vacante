@@ -76,6 +76,7 @@ $_sphinx_modes = [
     'package_search',
     'package_booking_form',
     'package_add_to_cart',
+    'package_quote',
 ];
 
 if (in_array($mode, $_sphinx_modes, true)) {
