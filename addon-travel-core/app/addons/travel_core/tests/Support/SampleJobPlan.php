@@ -62,6 +62,23 @@ final class SampleJobPlan extends CronJobPlan
     public const array REDO_ALL = ['geocode'];
 
     /** @var list<string> */
+    public const array FORCE_FULL = ['hotels'];
+
+    /** @var list<string> */
+    public const array RESETTABLE = ['circuits'];
+
+    /** @var array<string, array<string, string>> */
+    protected const array JOB_PARAMS = [
+        'geocode' => ['limit' => '100'],
+    ];
+
+    /** @var array<string, list<array{action: string, label: string, confirm?: string}>> */
+    protected const array EXTRA_ACTIONS = [
+        'hotels' => [['action' => 'retry_skipped', 'label' => 'sample_holidays.jobs_retry_skipped', 'confirm' => 'sample_holidays.jobs_retry_skipped_confirm']],
+        'cleanup' => [['action' => 'retry_failed', 'label' => 'sample_holidays.jobs_retry_failed']],
+    ];
+
+    /** @var list<string> */
     public const array ON_DEMAND = ['full', 'reassign_features'];
 
     /** @var list<string> */

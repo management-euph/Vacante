@@ -261,4 +261,43 @@ final class CronJobPlanTest extends TestCase
         self::assertSame('', $onDemand[0]['crontab_line'], 'a job with no slot has no crontab line');
         self::assertSame('', SampleJobPlan::cron('full'));
     }
+
+    /** A job's own parameters ride in every command for it: URL, CLI, crontab line and block. */
+    public function testAJobsOwnParametersRideInEveryCommand(): void
+    {
+        $plan = self::plan();
+
+        self::assertSame(['limit' => '100'], SampleJobPlan::jobParams('geocode'));
+        self::assertSame([], SampleJobPlan::jobParams('hotels'));
+        self::assertSame('http://shop.example/index.php?dispatch=sample_cron.run&access_key=' . self::KEY . '&cron_mode=geocode&limit=100', $plan->url('geocode'));
+        self::assertSame('php /var/www/html/app/addons/sample_holidays/cron.php access_key=' . self::KEY . ' mode=geocode limit=100', $plan->cli('geocode'));
+
+        $rows = self::rowsByMode($plan->stages(self::allModes(), [], [], self::NOW));
+        self::assertSame('*/15 * * * *  ' . $plan->cli('geocode'), $rows['geocode']['crontab_line']);
+        self::assertContains('*/15 * * * *  ' . $plan->cli('geocode'), explode("\n", $plan->crontab(self::allModes(), 'cli')));
+        self::assertContains($plan->url('geocode'), explode("\n", $plan->crontab(self::allModes(), 'url')));
+    }
+
+    /** The ⋯ menu offers each job only what it answers, and an add-on's run action takes only those. */
+    public function testEachJobOffersOnlyTheActionsItAnswers(): void
+    {
+        self::assertSame(['status', 'force_full', 'reset'], SampleJobPlan::offeredActions('destinations'));
+        self::assertSame(['force_full', 'retry_skipped'], SampleJobPlan::offeredActions('hotels'));
+        self::assertSame(['reset'], SampleJobPlan::offeredActions('circuits'));
+        self::assertSame(['status', 'force'], SampleJobPlan::offeredActions('geocode'));
+        self::assertSame(['retry_failed'], SampleJobPlan::offeredActions('cleanup'));
+        self::assertSame([], SampleJobPlan::offeredActions('order_status'));
+        self::assertSame([], SampleJobPlan::offeredActions('not_a_job'));
+
+        $rows = self::rowsByMode(self::plan()->stages(self::allModes(), [], [], self::NOW));
+        self::assertTrue($rows['hotels']['force_full']);
+        self::assertFalse($rows['hotels']['resettable']);
+        self::assertFalse($rows['hotels']['batched']);
+        self::assertTrue($rows['circuits']['resettable']);
+        self::assertFalse($rows['circuits']['force_full']);
+        self::assertTrue($rows['destinations']['force_full'], 'a batched job has Force full sync');
+        self::assertTrue($rows['destinations']['resettable'], 'and Reset progress');
+        self::assertSame([['action' => 'retry_skipped', 'label' => 'sample_holidays.jobs_retry_skipped', 'confirm' => 'sample_holidays.jobs_retry_skipped_confirm']], $rows['hotels']['extras']);
+        self::assertSame([], $rows['order_status']['extras']);
+    }
 }

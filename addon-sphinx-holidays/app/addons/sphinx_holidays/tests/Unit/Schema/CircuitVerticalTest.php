@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Tests\Unit\Schema;
 
 use PHPUnit\Framework\TestCase;
+use Tygh\Addons\SphinxHolidays\Cron\CronPlan;
 
 /**
  * Pins the completed circuit/package vertical and the experiences unroute.
@@ -51,9 +52,8 @@ final class CircuitVerticalTest extends TestCase
         self::assertStringContainsString('linkToProduct', $factory);
         self::assertStringContainsString('fn_update_product', $factory);
 
-        // Admin dashboard lists the cron URL.
-        $backend = self::read('controllers/backend/sphinx_holidays.php');
-        self::assertStringContainsString('cron_mode=add_circuit_products', $backend);
+        // The admin dashboard lists it, with Run, among the jobs run on demand.
+        self::assertContains('add_circuit_products', CronPlan::ON_DEMAND);
     }
 
     public function testCircuitAddToCartResolvesViaTheCircuitLink(): void

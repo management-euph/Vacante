@@ -89,6 +89,7 @@ declare(strict_types=1);
 
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Cron\CronDispatcher;
+use Tygh\Addons\SphinxHolidays\Cron\CronRunOutput;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
@@ -147,7 +148,8 @@ $mode = (string) preg_replace('/[^a-z0-9_]/', '', strtolower(RequestCoerce::stri
 
 // ── Dispatch ──
 
-echo "[" . date('Y-m-d H:i:s') . "] Sphinx Cron Started - Mode: {$mode}\n";
+// The same log as the dashboard's Run (sphinx_holidays.run_job): CronRunOutput.
+echo CronRunOutput::startLine($mode);
 
 fn_log_event('general', 'runtime', [
     'message' => "Sphinx frontend cron started (mode: {$mode})",
@@ -163,35 +165,7 @@ try {
             echo "  {$m} - {$desc}\n";
         }
     } else {
-        $result = $dispatcher->dispatch($mode, TypeCoerce::toStringMap($_REQUEST));
-
-        $success = TypeCoerce::toBool($result['success'] ?? false);
-        $busy = TypeCoerce::toBool($result['busy'] ?? false);
-
-        if ($busy) {
-            echo "\n[" . date('Y-m-d H:i:s') . "] " . TypeCoerce::toString($result['message'] ?? "Mode '{$mode}' is already running.") . "\n";
-        } else {
-            echo "\n[" . date('Y-m-d H:i:s') . "] Cron job " . ($success ? 'completed successfully' : 'finished with errors') . ".\n";
-        }
-
-        if (!empty($result['error'])) {
-            echo "Error: " . TypeCoerce::toString($result['error']) . "\n";
-        }
-
-        if (!empty($result['stats'])) {
-            $s = TypeCoerce::toStringMap($result['stats']);
-            echo "Stats: " . TypeCoerce::toInt($s['synced'] ?? $s['added'] ?? 0) . "/" . TypeCoerce::toInt($s['total'] ?? 0) . " synced";
-            if (TypeCoerce::toInt($s['skipped'] ?? 0) > 0) {
-                echo ", " . TypeCoerce::toInt($s['skipped'] ?? 0) . " skipped";
-            }
-            if (TypeCoerce::toInt($s['failed'] ?? 0) > 0) {
-                echo ", " . TypeCoerce::toInt($s['failed'] ?? 0) . " failed";
-            }
-            if (TypeCoerce::toFloat($s['duration_ms'] ?? 0) > 0) {
-                echo " (" . round(TypeCoerce::toFloat($s['duration_ms'] ?? 0) / 1000, 1) . "s)";
-            }
-            echo "\n";
-        }
+        CronRunOutput::dispatch($dispatcher, $mode, TypeCoerce::toStringMap($_REQUEST));
     }
 
 } catch (\Throwable $e) {

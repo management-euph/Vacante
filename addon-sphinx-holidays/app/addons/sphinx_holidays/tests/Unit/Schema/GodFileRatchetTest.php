@@ -18,7 +18,7 @@ final class GodFileRatchetTest extends TestCase
     /** @var array<string, int> repo-relative path (from addon root) => max lines */
     private const CEILINGS = [
         'func.php' => 541,
-        'controllers/backend/sphinx_holidays.php' => 830,
+        'controllers/backend/sphinx_holidays.php' => 747,
         'src/Cron/Commands/DiagnoseSearchCommand.php' => 665,
     ];
 

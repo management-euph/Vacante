@@ -62,15 +62,25 @@
                     {else}
                         <div class="travel-cron-menu__note">{__("travel_core.jobs_menu_needs_key")}</div>
                     {/if}
-                    {if $job.has_status}
+                    {if $job.has_status || $job.redo_all || $job.force_full || $job.resettable || $job.extras}
                         <div class="travel-cron-menu__divider" role="separator"></div>
+                    {/if}
+                    {if $job.has_status}
                         {include file="addons/travel_core/components/run_job.tpl" run_dispatch=$run_dispatch job=$job.mode action="status" label=__("travel_core.jobs_check_status") class="travel-cron-menu__item" menuitem=true}
                     {/if}
                     {if $job.redo_all}
                         {include file="addons/travel_core/components/run_job.tpl" run_dispatch=$run_dispatch job=$job.mode action="force" label=__("travel_core.jobs_redo_all") class="travel-cron-menu__item" menuitem=true confirm=__("travel_core.jobs_redo_all_confirm", ["[job]" => $_job_name])}
                     {/if}
-                    {if $job.batched}
+                    {if $job.force_full}
                         {include file="addons/travel_core/components/run_job.tpl" run_dispatch=$run_dispatch job=$job.mode action="force_full" label=__("travel_core.jobs_force_full") class="travel-cron-menu__item" menuitem=true confirm=__("travel_core.jobs_force_full_confirm", ["[job]" => $_job_name])}
+                    {/if}
+                    {* The add-on's own items (CronJobPlan::EXTRA_ACTIONS), labelled from its packs. *}
+                    {foreach from=$job.extras item=_extra}
+                        {$_confirm = ""}
+                        {if isset($_extra.confirm)}{$_confirm = __($_extra.confirm, ["[job]" => $_job_name])}{/if}
+                        {include file="addons/travel_core/components/run_job.tpl" run_dispatch=$run_dispatch job=$job.mode action=$_extra.action label=__($_extra.label) class="travel-cron-menu__item" menuitem=true confirm=$_confirm}
+                    {/foreach}
+                    {if $job.resettable}
                         {include file="addons/travel_core/components/run_job.tpl" run_dispatch=$run_dispatch job=$job.mode action="reset" label=__("travel_core.jobs_reset_progress") class="travel-cron-menu__item travel-cron-menu__item--danger" menuitem=true confirm=__("travel_core.jobs_reset_confirm", ["[job]" => $_job_name])}
                     {/if}
                 </div>

@@ -448,14 +448,6 @@ msgctxt "Languages::sphinx_holidays.sync_package_routes"
 msgid "Sync Package Routes"
 msgstr "Sync Package Routes"
 
-msgctxt "Languages::sphinx_holidays.sync_circuits_confirm"
-msgid "Sync the circuit catalog from the Sphinx API now?"
-msgstr "Sync the circuit catalog from the Sphinx API now?"
-
-msgctxt "Languages::sphinx_holidays.sync_package_routes_confirm"
-msgid "Sync package routes from the Sphinx API now?"
-msgstr "Sync package routes from the Sphinx API now?"
-
 msgctxt "Languages::sphinx_holidays.no_circuits"
 msgid "No circuits found."
 msgstr "No circuits found."
@@ -784,10 +776,6 @@ msgctxt "Languages::sphinx_holidays.cron_access_key.tooltip"
 msgid "Access key for cron URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mode=hotels"
 msgstr "Access key for cron URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mode=hotels"
 
-msgctxt "Languages::sphinx_holidays.cron_commands"
-msgid "Cron Commands"
-msgstr "Cron Commands"
-
 msgctxt "Languages::sphinx_holidays.debug_header"
 msgid "Debug"
 msgstr "Debug"
@@ -1103,10 +1091,6 @@ msgstr "Circuit booking added to cart."
 msgctxt "Languages::sphinx_holidays.circuits_found"
 msgid "Circuits found"
 msgstr "Circuits found"
-
-msgctxt "Languages::sphinx_holidays.cron_key_not_set"
-msgid "Cron key not set — set it in Settings → Travel Core → Cron security key. It is shared by every travel addon."
-msgstr "Cron key not set — set it in Settings → Travel Core → Cron security key. It is shared by every travel addon."
 
 msgctxt "Languages::sphinx_holidays.date"
 msgid "Date"
@@ -1543,3 +1527,347 @@ msgstr "Sphinx gave no clear answer for booking #[booking_id] ([what]) of order 
 msgctxt "Languages::sphinx_holidays.traveller_details_required"
 msgid "Please choose each traveller's gender, and fill in each child's date of birth."
 msgstr "Please choose each traveller's gender, and fill in each child's date of birth."
+
+msgctxt "Languages::sphinx_holidays.jobs_stage_reference"
+msgid "Reference data"
+msgstr "Reference data"
+
+msgctxt "Languages::sphinx_holidays.jobs_stage_catalogue"
+msgid "Catalogue"
+msgstr "Catalogue"
+
+msgctxt "Languages::sphinx_holidays.jobs_stage_products"
+msgid "Products"
+msgstr "Products"
+
+msgctxt "Languages::sphinx_holidays.jobs_stage_locations"
+msgid "Locations and product updates"
+msgstr "Locations and product updates"
+
+msgctxt "Languages::sphinx_holidays.jobs_stage_images"
+msgid "Images"
+msgstr "Images"
+
+msgctxt "Languages::sphinx_holidays.jobs_stage_upkeep"
+msgid "Bookings and upkeep"
+msgstr "Bookings and upkeep"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_destinations"
+msgid "Destinations"
+msgstr "Destinations"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_destinations_desc"
+msgid "Countries, regions and cities from Sphinx. Resumes where it stopped."
+msgstr "Countries, regions and cities from Sphinx. Resumes where it stopped."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_hotels"
+msgid "Hotels"
+msgstr "Hotels"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_hotels_desc"
+msgid "Hotels in the destinations you sell. Force full sync re-reads every hotel, coordinates too."
+msgstr "Hotels in the destinations you sell. Force full sync re-reads every hotel, coordinates too."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_circuits"
+msgid "Circuits"
+msgstr "Circuits"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_circuits_desc"
+msgid "The circuit catalogue, incremental. Force full sync re-reads every circuit."
+msgstr "The circuit catalogue, incremental. Force full sync re-reads every circuit."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_package_routes"
+msgid "Package routes"
+msgstr "Package routes"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_package_routes_desc"
+msgid "Flight and bus routes for packages."
+msgstr "Flight and bus routes for packages."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_add_products"
+msgid "Create products"
+msgstr "Create products"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_add_products_desc"
+msgid "A product for each hotel that has none yet. A hotel without an immediate offer waits."
+msgstr "A product for each hotel that has none yet. A hotel without an immediate offer waits."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_discover_boards"
+msgid "Meal plans"
+msgstr "Meal plans"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_discover_boards_desc"
+msgid "Which boards each hotel offers, from the live search API. Batched; resumes where it stopped."
+msgstr "Which boards each hotel offers, from the live search API. Batched; resumes where it stopped."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_assign_boards"
+msgid "Assign boards"
+msgstr "Assign boards"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_assign_boards_desc"
+msgid "Puts the boards found onto the hotels' products. Batched; resumes where it stopped."
+msgstr "Puts the boards found onto the hotels' products. Batched; resumes where it stopped."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_backfill_hotel_locations"
+msgid "Hotel locations"
+msgstr "Hotel locations"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_backfill_hotel_locations_desc"
+msgid "Re-reads City and Region for stored hotels from the destination tree. No API calls."
+msgstr "Re-reads City and Region for stored hotels from the destination tree. No API calls."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_geocode_hotels"
+msgid "Geocode hotels"
+msgstr "Geocode hotels"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_geocode_hotels_desc"
+msgid "City, Region and street from coordinates (OpenStreetMap, one request a second, 100 hotels a run), when the tree and the address cannot tell. Needs geocoding on in Travel Core."
+msgstr "City, Region and street from coordinates (OpenStreetMap, one request a second, 100 hotels a run), when the tree and the address cannot tell. Needs geocoding on in Travel Core."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_update_products"
+msgid "Update products"
+msgstr "Update products"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_update_products_desc"
+msgid "Carries changed hotel data onto the products: stars, City, Region, boards. Costs nothing when nothing changed."
+msgstr "Carries changed hotel data onto the products: stars, City, Region, boards. Costs nothing when nothing changed."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_enrich_hotel_data"
+msgid "Image data"
+msgstr "Image data"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_enrich_hotel_data_desc"
+msgid "Fills in the image list of hotels that have none, from the hotel detail API. A hotel Sphinx has no images for is asked again after 30 days."
+msgstr "Fills in the image list of hotels that have none, from the hotel detail API. A hotel Sphinx has no images for is asked again after 30 days."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_sync_images"
+msgid "Queue images"
+msgstr "Queue images"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_sync_images_desc"
+msgid "Queues each hotel's images from the database. No API calls. For fewer hotels: Queue images for a scope, below."
+msgstr "Queues each hotel's images from the database. No API calls. For fewer hotels: Queue images for a scope, below."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_process_image_queue"
+msgid "Download images"
+msgstr "Download images"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_process_image_queue_desc"
+msgid "Downloads and attaches the next 50 queued images."
+msgstr "Downloads and attaches the next 50 queued images."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_order_status"
+msgid "Booking statuses"
+msgstr "Booking statuses"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_order_status_desc"
+msgid "Checks each Sphinx booking's status through the Orders API."
+msgstr "Checks each Sphinx booking's status through the Orders API."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_cleanup"
+msgid "Cleanup"
+msgstr "Cleanup"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_cleanup_desc"
+msgid "Expired cache, orphan bookings and old sync logs."
+msgstr "Expired cache, orphan bookings and old sync logs."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_reassign_features"
+msgid "Reassign features"
+msgstr "Reassign features"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_reassign_features_desc"
+msgid "Re-assigns every product feature (stars, City, Region, boards…) of every linked hotel: the catch-all when something looks stale."
+msgstr "Re-assigns every product feature (stars, City, Region, boards…) of every linked hotel: the catch-all when something looks stale."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_full"
+msgid "Full sync"
+msgstr "Full sync"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_full_desc"
+msgid "Every sync in one run: repeats the jobs above."
+msgstr "Every sync in one run: repeats the jobs above."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_add_circuit_products"
+msgid "Circuit products"
+msgstr "Circuit products"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_add_circuit_products_desc"
+msgid "Products for the synced circuits, so they can be sold. Run after Circuits."
+msgstr "Products for the synced circuits, so they can be sold. Run after Circuits."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_experiences"
+msgid "Experiences"
+msgstr "Experiences"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_experiences_desc"
+msgid "The experience catalogue from the Sphinx static API."
+msgstr "The experience catalogue from the Sphinx static API."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_calendar_prices"
+msgid "Calendar prices"
+msgstr "Calendar prices"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_calendar_prices_desc"
+msgid "The lowest price on each date, for the booking engine's calendar."
+msgstr "The lowest price on each date, for the booking engine's calendar."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_sync_and_upload_images"
+msgid "Queue and download images"
+msgstr "Queue and download images"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_sync_and_upload_images_desc"
+msgid "Queue images and Download images in one run."
+msgstr "Queue images and Download images in one run."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_deduplicate"
+msgid "Merge duplicate hotels"
+msgstr "Merge duplicate hotels"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_deduplicate_desc"
+msgid "Finds and merges duplicate hotels: same name, type, classification and region."
+msgstr "Finds and merges duplicate hotels: same name, type, classification and region."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_audit_facilities"
+msgid "Audit facilities"
+msgstr "Audit facilities"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_audit_facilities_desc"
+msgid "Lists the facility IDs in Sphinx hotels that have no mapping. A report; changes nothing."
+msgstr "Lists the facility IDs in Sphinx hotels that have no mapping. A report; changes nothing."
+
+msgctxt "Languages::sphinx_holidays.jobs_on_demand_intro"
+msgid "Not part of the schedule: Full sync repeats the jobs above; the others are one-off repairs and reports."
+msgstr "Not part of the schedule: Full sync repeats the jobs above; the others are one-off repairs and reports."
+
+msgctxt "Languages::sphinx_holidays.jobs_requeue_images"
+msgid "Queue all images again…"
+msgstr "Queue all images again…"
+
+msgctxt "Languages::sphinx_holidays.jobs_requeue_images_confirm"
+msgid "Queue the images of every hotel again, including the ones that already have them?"
+msgstr "Queue the images of every hotel again, including the ones that already have them?"
+
+msgctxt "Languages::sphinx_holidays.jobs_retry_failed_images"
+msgid "Retry failed images"
+msgstr "Retry failed images"
+
+msgctxt "Languages::sphinx_holidays.jobs_unknown"
+msgid "Unknown job: [job]"
+msgstr "Unknown job: [job]"
+
+msgctxt "Languages::sphinx_holidays.jobs_scope_title"
+msgid "Queue images for a scope"
+msgstr "Queue images for a scope"
+
+msgctxt "Languages::sphinx_holidays.jobs_scope_intro"
+msgid "Queue images takes every country you sell; here it runs once, for fewer hotels. The log opens in a new tab."
+msgstr "Queue images takes every country you sell; here it runs once, for fewer hotels. The log opens in a new tab."
+
+msgctxt "Languages::sphinx_holidays.jobs_scope_which"
+msgid "Which hotels"
+msgstr "Which hotels"
+
+msgctxt "Languages::sphinx_holidays.jobs_scope_all"
+msgid "Every country you sell"
+msgstr "Every country you sell"
+
+msgctxt "Languages::sphinx_holidays.jobs_scope_strict"
+msgid "Only the destinations you picked"
+msgstr "Only the destinations you picked"
+
+msgctxt "Languages::sphinx_holidays.jobs_scope_country"
+msgid "One country"
+msgstr "One country"
+
+msgctxt "Languages::sphinx_holidays.jobs_scope_destination"
+msgid "One destination"
+msgstr "One destination"
+
+msgctxt "Languages::sphinx_holidays.jobs_scope_region"
+msgid "One region"
+msgstr "One region"
+
+msgctxt "Languages::sphinx_holidays.jobs_scope_country_label"
+msgid "Country (for One country)"
+msgstr "Country (for One country)"
+
+msgctxt "Languages::sphinx_holidays.jobs_scope_id"
+msgid "Destination or region ID"
+msgstr "Destination or region ID"
+
+msgctxt "Languages::sphinx_holidays.jobs_scope_limit"
+msgid "At most this many hotels"
+msgstr "At most this many hotels"
+
+msgctxt "Languages::sphinx_holidays.jobs_scope_force"
+msgid "Queue hotels that already have images again"
+msgstr "Queue hotels that already have images again"
+
+msgctxt "Languages::sphinx_holidays.jobs_scope_schedule_hint"
+msgid "To schedule a scope, add whitelist=strict, country=TR, destination_id=… or region_id=… to the URL that Queue images' ⋯ menu copies."
+msgstr "To schedule a scope, add whitelist=strict, country=TR, destination_id=… or region_id=… to the URL that Queue images' ⋯ menu copies."
+
+msgctxt "Languages::sphinx_holidays.jobs_images_how"
+msgid "How image sync works"
+msgstr "How image sync works"
+
+msgctxt "Languages::sphinx_holidays.jobs_images_step_enrich"
+msgid "Image data reads, from the hotel detail API, the image list of each hotel that has none; a hotel Sphinx has no images for is asked again after 30 days."
+msgstr "Image data reads, from the hotel detail API, the image list of each hotel that has none; a hotel Sphinx has no images for is asked again after 30 days."
+
+msgctxt "Languages::sphinx_holidays.jobs_images_step_queue"
+msgid "Queue images adds one queue row per image, from the database; images already queued are skipped, so it is safe to run again."
+msgstr "Queue images adds one queue row per image, from the database; images already queued are skipped, so it is safe to run again."
+
+msgctxt "Languages::sphinx_holidays.jobs_images_step_download"
+msgid "Download images takes the next 50 rows every 2 minutes: it downloads each image, attaches it to the product and marks the row done or failed."
+msgstr "Download images takes the next 50 rows every 2 minutes: it downloads each image, attaches it to the product and marks the row done or failed."
+
+msgctxt "Languages::sphinx_holidays.jobs_check_title"
+msgid "Check one hotel"
+msgstr "Check one hotel"
+
+msgctxt "Languages::sphinx_holidays.jobs_check_intro"
+msgid "Each check opens in a new tab as a signed-in admin action, with no key in its address."
+msgstr "Each check opens in a new tab as a signed-in admin action, with no key in its address."
+
+msgctxt "Languages::sphinx_holidays.jobs_check_hotel"
+msgid "Hotel ID or name"
+msgstr "Hotel ID or name"
+
+msgctxt "Languages::sphinx_holidays.jobs_check_hotel_hint"
+msgid "Search API also takes a name (kazbek dubrovnik); the other checks need the hotel's ID."
+msgstr "Search API also takes a name (kazbek dubrovnik); the other checks need the hotel's ID."
+
+msgctxt "Languages::sphinx_holidays.jobs_check_search"
+msgid "Search API"
+msgstr "Search API"
+
+msgctxt "Languages::sphinx_holidays.jobs_check_images"
+msgid "Images"
+msgstr "Images"
+
+msgctxt "Languages::sphinx_holidays.jobs_check_seo"
+msgid "SEO fields"
+msgstr "SEO fields"
+
+msgctxt "Languages::sphinx_holidays.jobs_check_features"
+msgid "Product features"
+msgstr "Product features"
+
+msgctxt "Languages::sphinx_holidays.jobs_check_attach"
+msgid "Images: also attach them to the product"
+msgstr "Images: also attach them to the product"
+
+msgctxt "Languages::sphinx_holidays.jobs_check_attach_confirm"
+msgid "Attach this hotel's images to its product?"
+msgstr "Attach this hotel's images to its product?"
+
+msgctxt "Languages::sphinx_holidays.jobs_check_apply"
+msgid "SEO fields: also write the missing ones"
+msgstr "SEO fields: also write the missing ones"
+
+msgctxt "Languages::sphinx_holidays.jobs_check_apply_confirm"
+msgid "Write this hotel's missing SEO fields?"
+msgstr "Write this hotel's missing SEO fields?"

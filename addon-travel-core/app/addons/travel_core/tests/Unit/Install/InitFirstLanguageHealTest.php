@@ -103,6 +103,6 @@ final class InitFirstLanguageHealTest extends TestCase
         }
         // One label each that changed after install, so a seed that writes
         // only the stamp cannot pass.
-        self::assertContains('sphinx_holidays.cron_key_not_set', $written);
+        self::assertContains('sphinx_holidays.jobs_job_hotels', $written);
     }
 }

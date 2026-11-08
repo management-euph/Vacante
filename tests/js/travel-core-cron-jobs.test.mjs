@@ -55,6 +55,14 @@ beforeAll(async () => {
             <button type="submit" class="btn btn-primary" id="btn-run">Run</button>
         </form>
 
+        <form class="travel-cron-run-form" id="form-check" method="post">
+            <input type="text" name="hotel" id="check-hotel" required>
+            <input type="checkbox" name="attach" value="Y" id="check-attach"
+                   data-travel-cron-confirm="Attach this hotel's images to its product?" data-travel-cron-confirm-for="diagnose_images">
+            <button type="submit" name="job" value="diagnose_search" id="check-search">Search API</button>
+            <button type="submit" name="job" value="diagnose_images" id="check-images">Images</button>
+        </form>
+
         <section id="commands" data-travel-cron-commands
                  data-crontab-cli="${CLI.replace(/&/g, '&amp;').replace(/\n/g, '&#10;')}"
                  data-crontab-url="${URL_FORM.replace(/&/g, '&amp;').replace(/\n/g, '&#10;')}"
@@ -344,6 +352,49 @@ describe('job buttons open the job in a new window', () => {
         expect(opened).toHaveLength(1);
         expect(submitted).toEqual([$('#form-run')]);
         expect(pageHandler).not.toHaveBeenCalled();
+    });
+
+    it('a form with several buttons sends the one pressed, in one hidden field', () => {
+        $('#check-hotel').value = '89812';
+        $('#check-images').click();
+        const carried = () => $('#form-check').querySelectorAll('input[data-travel-cron-submitter]');
+        expect(submitted).toEqual([$('#form-check')]);
+        expect(carried()).toHaveLength(1);
+        expect(carried()[0].name).toBe('job');
+        expect(carried()[0].value).toBe('diagnose_images');
+
+        $('#check-search').click();
+        expect(carried()).toHaveLength(1);
+        expect(carried()[0].value).toBe('diagnose_search');
+    });
+
+    it('a required field left empty stops the run before any window opens', () => {
+        $('#check-hotel').value = '';
+        $('#check-search').click();
+        expect(opened).toEqual([]);
+        expect(submitted).toEqual([]);
+        expect(pageHandler).not.toHaveBeenCalled();
+    });
+
+    it('a ticked box that makes the run write asks first, and only for its own button', () => {
+        const ask = vi.spyOn(window, 'confirm');
+        $('#check-hotel').value = '89812';
+        $('#check-attach').checked = true;
+
+        $('#check-search').click();
+        expect(ask).not.toHaveBeenCalled();
+        expect(submitted).toEqual([$('#form-check')]);
+
+        ask.mockReturnValueOnce(false);
+        $('#check-images').click();
+        expect(ask).toHaveBeenCalledWith("Attach this hotel's images to its product?");
+        expect(submitted).toHaveLength(1);
+
+        ask.mockReturnValueOnce(true);
+        $('#check-images').click();
+        expect(submitted).toHaveLength(2);
+        $('#check-attach').checked = false;
+        ask.mockRestore();
     });
 
     it('closes the ⋯ menu it was launched from, putting it back in its row', () => {
