@@ -1256,8 +1256,8 @@ return [
         'ro' => 'Produse pentru circuite',
     ],
     'sphinx_holidays.jobs_job_add_circuit_products_desc' => [
-        'en' => 'Products for the synced circuits, so they can be sold. Run after Circuits.',
-        'ro' => 'Produse pentru circuitele sincronizate, ca să poată fi vândute. Rulează după Circuite.',
+        'en' => 'Products for the synced circuits that have none yet, so they can be sold.',
+        'ro' => 'Produse pentru circuitele sincronizate care nu au încă unul, ca să poată fi vândute.',
     ],
     'sphinx_holidays.jobs_job_experiences' => [
         'en' => 'Experiences',
@@ -1272,8 +1272,8 @@ return [
         'ro' => 'Prețurile din calendar',
     ],
     'sphinx_holidays.jobs_job_calendar_prices_desc' => [
-        'en' => 'The lowest price on each date, for the booking engine\'s calendar.',
-        'ro' => 'Cel mai mic preț pe fiecare dată, pentru calendarul motorului de rezervare.',
+        'en' => 'The lowest price on each date of the next 60 days, for the booking engine\'s calendar and the products\' prices.',
+        'ro' => 'Cel mai mic preț pe fiecare dată din următoarele 60 de zile, pentru calendarul motorului de rezervare și prețurile produselor.',
     ],
     'sphinx_holidays.jobs_job_sync_and_upload_images' => [
         'en' => 'Queue and download images',
@@ -1300,8 +1300,8 @@ return [
         'ro' => 'Listează ID-urile de facilități din hotelurile Sphinx care nu au corespondență. Un raport; nu schimbă nimic.',
     ],
     'sphinx_holidays.jobs_on_demand_intro' => [
-        'en' => 'Not part of the schedule: Full sync repeats the jobs above; the others are one-off repairs and reports.',
-        'ro' => 'Nu fac parte din program: Sincronizarea completă repetă joburile de mai sus; celelalte sunt reparații și rapoarte ocazionale.',
+        'en' => 'Not part of the schedule: each one runs when you start it. Full sync repeats the jobs above.',
+        'ro' => 'Nu fac parte din program: fiecare rulează când îl pornești. Sincronizarea completă repetă joburile de mai sus.',
     ],
     'sphinx_holidays.jobs_requeue_images' => [
         'en' => 'Queue all images again…',

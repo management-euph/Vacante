@@ -1693,8 +1693,8 @@ msgid "Circuit products"
 msgstr "Produse pentru circuite"
 
 msgctxt "Languages::sphinx_holidays.jobs_job_add_circuit_products_desc"
-msgid "Products for the synced circuits, so they can be sold. Run after Circuits."
-msgstr "Produse pentru circuitele sincronizate, ca să poată fi vândute. Rulează după Circuite."
+msgid "Products for the synced circuits that have none yet, so they can be sold."
+msgstr "Produse pentru circuitele sincronizate care nu au încă unul, ca să poată fi vândute."
 
 msgctxt "Languages::sphinx_holidays.jobs_job_experiences"
 msgid "Experiences"
@@ -1709,8 +1709,8 @@ msgid "Calendar prices"
 msgstr "Prețurile din calendar"
 
 msgctxt "Languages::sphinx_holidays.jobs_job_calendar_prices_desc"
-msgid "The lowest price on each date, for the booking engine's calendar."
-msgstr "Cel mai mic preț pe fiecare dată, pentru calendarul motorului de rezervare."
+msgid "The lowest price on each date of the next 60 days, for the booking engine's calendar and the products' prices."
+msgstr "Cel mai mic preț pe fiecare dată din următoarele 60 de zile, pentru calendarul motorului de rezervare și prețurile produselor."
 
 msgctxt "Languages::sphinx_holidays.jobs_job_sync_and_upload_images"
 msgid "Queue and download images"
@@ -1737,8 +1737,8 @@ msgid "Lists the facility IDs in Sphinx hotels that have no mapping. A report; c
 msgstr "Listează ID-urile de facilități din hotelurile Sphinx care nu au corespondență. Un raport; nu schimbă nimic."
 
 msgctxt "Languages::sphinx_holidays.jobs_on_demand_intro"
-msgid "Not part of the schedule: Full sync repeats the jobs above; the others are one-off repairs and reports."
-msgstr "Nu fac parte din program: Sincronizarea completă repetă joburile de mai sus; celelalte sunt reparații și rapoarte ocazionale."
+msgid "Not part of the schedule: each one runs when you start it. Full sync repeats the jobs above."
+msgstr "Nu fac parte din program: fiecare rulează când îl pornești. Sincronizarea completă repetă joburile de mai sus."
 
 msgctxt "Languages::sphinx_holidays.jobs_requeue_images"
 msgid "Queue all images again…"

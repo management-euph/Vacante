@@ -14,11 +14,11 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  *
  * The dashboard used to list the jobs as a table of URLs, each carrying the
  * shared cron key in plain text, with Run links that put it in the browser's
- * history. The schedules below are the ones that table gave; the order is what
- * each job needs first: hotels need the destination tree, products need the
- * hotels, the location jobs flag a hotel whose City or Region changed and
- * update_products carries it onto the product, and images are queued from the
- * hotels' image lists, then downloaded.
+ * history. The order is what each job needs first: hotels need the
+ * destination tree, products need the hotels, the location jobs flag a hotel
+ * whose City or Region changed and update_products carries it onto the
+ * product, calendar prices are read for the hotels that have a product, and
+ * images are queued from the hotels' image lists, then downloaded.
  */
 final class CronPlan extends CronJobPlan
 {
@@ -43,8 +43,8 @@ final class CronPlan extends CronJobPlan
     public const array STAGES = [
         'reference' => ['destinations'],
         'catalogue' => ['hotels', 'circuits', 'package_routes'],
-        'products' => ['add_products', 'discover_boards', 'assign_boards'],
-        'locations' => ['backfill_hotel_locations', 'geocode_hotels', 'update_products'],
+        'products' => ['add_products', 'add_circuit_products', 'discover_boards', 'assign_boards'],
+        'locations' => ['backfill_hotel_locations', 'geocode_hotels', 'update_products', 'calendar_prices'],
         'images' => ['enrich_hotel_data', 'sync_images', 'process_image_queue'],
         'upkeep' => ['order_status', 'cleanup'],
     ];
@@ -64,9 +64,15 @@ final class CronPlan extends CronJobPlan
     ];
 
     /**
-     * Each job's slot, as the dashboard listed it, and when it counts as late:
-     * a weekly job after two weeks, a daily one after two days, a job that
-     * runs every few minutes after two hours.
+     * Each job's slot, and when it counts as late: a weekly job after two
+     * weeks, a daily one after two days, a job that runs every few minutes
+     * after two hours.
+     *
+     * The slots are the ones the dashboard's old table gave, except four
+     * (decided 8 Nov 2026): Meal plans and Assign boards start after Hotels
+     * and Create products, whose data they use, instead of with them; Circuit
+     * products follows Circuits; Calendar prices runs after Update products,
+     * clear of Meal plans, the other job that calls the search API.
      *
      * @var array<string, array{cron: string, late_after_hours: int}>
      */
@@ -76,11 +82,13 @@ final class CronPlan extends CronJobPlan
         'circuits' => ['cron' => '15 3 * * *', 'late_after_hours' => 48],
         'package_routes' => ['cron' => '0 4 * * 1', 'late_after_hours' => 2 * 168],
         'add_products' => ['cron' => '30 3 * * *', 'late_after_hours' => 48],
-        'discover_boards' => ['cron' => '0 3 * * *', 'late_after_hours' => 48],
-        'assign_boards' => ['cron' => '30 3 * * *', 'late_after_hours' => 48],
+        'add_circuit_products' => ['cron' => '40 3 * * *', 'late_after_hours' => 48],
+        'discover_boards' => ['cron' => '45 3 * * *', 'late_after_hours' => 48],
+        'assign_boards' => ['cron' => '15 4 * * *', 'late_after_hours' => 48],
         'backfill_hotel_locations' => ['cron' => '30 4 * * *', 'late_after_hours' => 48],
         'geocode_hotels' => ['cron' => '*/15 * * * *', 'late_after_hours' => 2],
         'update_products' => ['cron' => '0 6 * * *', 'late_after_hours' => 48],
+        'calendar_prices' => ['cron' => '30 6 * * *', 'late_after_hours' => 48],
         'enrich_hotel_data' => ['cron' => '*/5 * * * *', 'late_after_hours' => 2],
         'sync_images' => ['cron' => '0 4 * * *', 'late_after_hours' => 48],
         'process_image_queue' => ['cron' => '*/2 * * * *', 'late_after_hours' => 2],
@@ -146,12 +154,13 @@ final class CronPlan extends CronJobPlan
     ];
 
     /**
-     * Real jobs with no place in the schedule: `full` repeats the staged
-     * jobs; the others are one-off repairs and reports.
+     * Real jobs with no place in the schedule, run when someone starts them:
+     * `full` repeats the staged jobs, `sync_and_upload_images` two of them in
+     * one run; the others sync the experience catalogue, repair or report.
      *
      * @var list<string>
      */
-    public const array ON_DEMAND = ['reassign_features', 'full', 'add_circuit_products', 'experiences', 'calendar_prices', 'sync_and_upload_images', 'deduplicate', 'audit_facilities'];
+    public const array ON_DEMAND = ['reassign_features', 'full', 'experiences', 'sync_and_upload_images', 'deduplicate', 'audit_facilities'];
 
     /**
      * One-hotel checks: run from Check one hotel, never listed as jobs.

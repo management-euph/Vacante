@@ -88,8 +88,8 @@ final class CronPlanTest extends TestCase
         self::assertSame([
             'destinations',
             'hotels', 'circuits', 'package_routes',
-            'add_products', 'discover_boards', 'assign_boards',
-            'backfill_hotel_locations', 'geocode_hotels', 'update_products',
+            'add_products', 'add_circuit_products', 'discover_boards', 'assign_boards',
+            'backfill_hotel_locations', 'geocode_hotels', 'update_products', 'calendar_prices',
             'enrich_hotel_data', 'sync_images', 'process_image_queue',
             'order_status', 'cleanup',
         ], self::flatten($stages));
@@ -103,10 +103,12 @@ final class CronPlanTest extends TestCase
         foreach ([
             ['destinations', 'hotels'],
             ['hotels', 'add_products'],
+            ['circuits', 'add_circuit_products'],
             ['add_products', 'discover_boards'],
             ['discover_boards', 'assign_boards'],
             ['backfill_hotel_locations', 'update_products'],
             ['geocode_hotels', 'update_products'],
+            ['add_products', 'calendar_prices'],
             ['hotels', 'enrich_hotel_data'],
             ['enrich_hotel_data', 'sync_images'],
             ['sync_images', 'process_image_queue'],
@@ -115,8 +117,12 @@ final class CronPlanTest extends TestCase
         }
     }
 
-    /** The slots the dashboard's old Cron Commands table gave, unchanged. */
-    public function testTheSchedulesAreTheOnesTheDashboardListed(): void
+    /**
+     * The slots the dashboard's old Cron Commands table gave, except the four
+     * decided on 8 Nov 2026: Meal plans and Assign boards moved to 03:45 and
+     * 04:15, Circuit products and Calendar prices scheduled.
+     */
+    public function testTheSchedulesAreTheOnesDecided(): void
     {
         $listed = [
             'destinations' => '0 2 * * 0',
@@ -124,11 +130,13 @@ final class CronPlanTest extends TestCase
             'circuits' => '15 3 * * *',
             'package_routes' => '0 4 * * 1',
             'add_products' => '30 3 * * *',
-            'discover_boards' => '0 3 * * *',
-            'assign_boards' => '30 3 * * *',
+            'add_circuit_products' => '40 3 * * *',
+            'discover_boards' => '45 3 * * *',
+            'assign_boards' => '15 4 * * *',
             'backfill_hotel_locations' => '30 4 * * *',
             'geocode_hotels' => '*/15 * * * *',
             'update_products' => '0 6 * * *',
+            'calendar_prices' => '30 6 * * *',
             'enrich_hotel_data' => '*/5 * * * *',
             'sync_images' => '0 4 * * *',
             'process_image_queue' => '*/2 * * * *',
@@ -143,6 +151,43 @@ final class CronPlanTest extends TestCase
         ksort($slots);
         ksort($listed);
         self::assertSame($listed, $slots);
+    }
+
+    /** Minutes after midnight a daily job starts at. */
+    private static function startsAt(string $mode): int
+    {
+        [$minute, $hour, $dom, $month, $dow] = explode(' ', CronPlan::cron($mode));
+        self::assertTrue(ctype_digit($minute) && ctype_digit($hour), "{$mode} is not a job that starts at a fixed time");
+        self::assertSame(['*', '*', '*'], [$dom, $month, $dow], "{$mode} does not run daily");
+
+        return (int) $hour * 60 + (int) $minute;
+    }
+
+    /**
+     * A daily job starts after the daily jobs whose data it uses, so it never
+     * works on the day before's: Meal plans used to start with Hotels and
+     * Assign boards with Create products.
+     */
+    public function testEachDailyJobStartsAfterTheJobsWhoseDataItUses(): void
+    {
+        foreach ([
+            ['hotels', 'add_products'],
+            ['hotels', 'discover_boards'],
+            ['add_products', 'discover_boards'],
+            ['discover_boards', 'assign_boards'],
+            ['add_products', 'assign_boards'],
+            ['circuits', 'add_circuit_products'],
+            ['add_products', 'calendar_prices'],
+            ['update_products', 'calendar_prices'],
+        ] as [$first, $then]) {
+            self::assertGreaterThan(self::startsAt($first), self::startsAt($then), "{$then} starts before {$first}, whose data it uses");
+        }
+    }
+
+    /** Calendar prices and Meal plans both call the search API: they never start within an hour of each other. */
+    public function testTheSearchApiJobsDoNotOverlap(): void
+    {
+        self::assertGreaterThanOrEqual(60, abs(self::startsAt('calendar_prices') - self::startsAt('discover_boards')));
     }
 
     public function testEveryScheduledJobHasASlotThatReadsAsWords(): void
@@ -215,7 +260,7 @@ final class CronPlanTest extends TestCase
         self::assertSame('0 2 * * 0  php /var/www/html/app/addons/sphinx_holidays/cron.php access_key=' . self::KEY . ' mode=destinations', $lines[3]);
 
         $commands = array_values(array_filter($lines, static fn (string $l): bool => $l !== '' && !str_starts_with($l, '#')));
-        self::assertCount(15, $commands);
+        self::assertCount(17, $commands);
         foreach ($commands as $line) {
             self::assertMatchesRegularExpression('/^\S+ \S+ \S+ \S+ \S+  php \//', $line);
         }

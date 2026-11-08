@@ -1693,8 +1693,8 @@ msgid "Circuit products"
 msgstr "Circuit products"
 
 msgctxt "Languages::sphinx_holidays.jobs_job_add_circuit_products_desc"
-msgid "Products for the synced circuits, so they can be sold. Run after Circuits."
-msgstr "Products for the synced circuits, so they can be sold. Run after Circuits."
+msgid "Products for the synced circuits that have none yet, so they can be sold."
+msgstr "Products for the synced circuits that have none yet, so they can be sold."
 
 msgctxt "Languages::sphinx_holidays.jobs_job_experiences"
 msgid "Experiences"
@@ -1709,8 +1709,8 @@ msgid "Calendar prices"
 msgstr "Calendar prices"
 
 msgctxt "Languages::sphinx_holidays.jobs_job_calendar_prices_desc"
-msgid "The lowest price on each date, for the booking engine's calendar."
-msgstr "The lowest price on each date, for the booking engine's calendar."
+msgid "The lowest price on each date of the next 60 days, for the booking engine's calendar and the products' prices."
+msgstr "The lowest price on each date of the next 60 days, for the booking engine's calendar and the products' prices."
 
 msgctxt "Languages::sphinx_holidays.jobs_job_sync_and_upload_images"
 msgid "Queue and download images"
@@ -1737,8 +1737,8 @@ msgid "Lists the facility IDs in Sphinx hotels that have no mapping. A report; c
 msgstr "Lists the facility IDs in Sphinx hotels that have no mapping. A report; changes nothing."
 
 msgctxt "Languages::sphinx_holidays.jobs_on_demand_intro"
-msgid "Not part of the schedule: Full sync repeats the jobs above; the others are one-off repairs and reports."
-msgstr "Not part of the schedule: Full sync repeats the jobs above; the others are one-off repairs and reports."
+msgid "Not part of the schedule: each one runs when you start it. Full sync repeats the jobs above."
+msgstr "Not part of the schedule: each one runs when you start it. Full sync repeats the jobs above."
 
 msgctxt "Languages::sphinx_holidays.jobs_requeue_images"
 msgid "Queue all images again…"

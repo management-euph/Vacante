@@ -52,8 +52,9 @@ final class CircuitVerticalTest extends TestCase
         self::assertStringContainsString('linkToProduct', $factory);
         self::assertStringContainsString('fn_update_product', $factory);
 
-        // The admin dashboard lists it, with Run, among the jobs run on demand.
-        self::assertContains('add_circuit_products', CronPlan::ON_DEMAND);
+        // The admin dashboard schedules it after the circuit sync, with Run.
+        self::assertContains('add_circuit_products', CronPlan::STAGES['products']);
+        self::assertContains('circuits', CronPlan::STAGES['catalogue']);
     }
 
     public function testCircuitAddToCartResolvesViaTheCircuitLink(): void
