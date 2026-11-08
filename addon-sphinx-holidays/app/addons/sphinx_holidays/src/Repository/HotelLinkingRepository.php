@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Repository;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
 
 /**
@@ -41,6 +42,21 @@ class HotelLinkingRepository
              FROM ?:sphinx_hotels h
              WHERE h.sync_status = 'active' AND {$cond}
              ORDER BY h.hotel_id ASC {$limitClause}",
+        ));
+    }
+
+    /**
+     * Hotels linked to a product that no longer exists (deleted before the
+     * delete hook unlinked them, or straight from the database) are
+     * unlinked, as HotelRepository::unlinkProduct() does, so add_products
+     * makes them a new one: how many.
+     */
+    public function unlinkMissingProducts(): int
+    {
+        return TypeCoerce::toInt(db_query(
+            "UPDATE ?:sphinx_hotels h LEFT JOIN ?:products p ON p.product_id = h.product_id
+             SET h.product_id = NULL, h.gate_hidden = 'N', h.gate_released = 'N'
+             WHERE h.product_id > 0 AND p.product_id IS NULL",
         ));
     }
 

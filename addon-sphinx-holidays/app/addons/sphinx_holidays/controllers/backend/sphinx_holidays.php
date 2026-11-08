@@ -189,6 +189,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($mode === 'add_products') {
         $hotelRepo = Container::getHotelRepository();
+        $hotelRepo->unlinkMissingProducts(); // a deleted product's hotel gets a new one
         $unlinked = $hotelRepo->findUnlinked('', 1);
 
         if (empty($unlinked)) {

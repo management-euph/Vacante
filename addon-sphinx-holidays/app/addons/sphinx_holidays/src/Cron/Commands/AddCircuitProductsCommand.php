@@ -55,6 +55,12 @@ class AddCircuitProductsCommand extends AbstractSyncCommand
         $repo = new CircuitRepository();
         $factory = new CircuitProductFactory($repo);
 
+        // A circuit whose product was deleted gets a new one.
+        $orphaned = $repo->unlinkMissingProducts();
+        if ($orphaned > 0) {
+            $this->output("{$orphaned} circuits were linked to a product that no longer exists: unlinked, a new product is made for them.");
+        }
+
         $circuits = $repo->findUnlinked($limit);
 
         if ($circuits === []) {

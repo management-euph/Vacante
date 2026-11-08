@@ -153,6 +153,33 @@ class CircuitRepository
         ];
     }
 
+    /**
+     * The circuit of a deleted product loses its link (and the sync's
+     * hidden mark, which was the product's): the next "Create Products"
+     * makes it a new one.
+     */
+    public function unlinkProduct(int $productId): int
+    {
+        return TypeCoerce::toInt(db_query(
+            "UPDATE ?:sphinx_circuits SET product_id = NULL, product_hidden = 'N' WHERE product_id = ?i",
+            $productId,
+        ));
+    }
+
+    /**
+     * Circuits linked to a product that no longer exists (deleted before
+     * the delete hook unlinked them, or straight from the database) are
+     * unlinked, as unlinkProduct() does: how many.
+     */
+    public function unlinkMissingProducts(): int
+    {
+        return TypeCoerce::toInt(db_query(
+            "UPDATE ?:sphinx_circuits c LEFT JOIN ?:products p ON p.product_id = c.product_id
+             SET c.product_id = NULL, c.product_hidden = 'N'
+             WHERE c.product_id > 0 AND p.product_id IS NULL",
+        ));
+    }
+
     /** Write the CS-Cart product link (makes the circuit sellable). */
     public function linkToProduct(int $circuitId, int $productId): void
     {
