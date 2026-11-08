@@ -15,6 +15,7 @@ declare(strict_types=1);
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 use Tygh\Tygh;
+use Tygh\Addons\SphinxHolidays\Services\CartService;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
@@ -51,6 +52,17 @@ try {
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.package_search'];
     }
 
+    // A package the store cannot sell (its hotel has no buyable product) is
+    // turned away now, not once the guests are filled in: add-to-cart would
+    // refuse it (CartService::resolveProductId()). The results page leaves
+    // such packages out; an older link can still lead here.
+    $cartService = Container::getCartService();
+    if ($cartService->resolveProductId(CartService::packageHotelId($verifyResult)) <= 0) {
+        fn_set_notification('W', __('warning'),
+            __('sphinx_holidays.offer_unavailable', ['[default]' => 'This offer is no longer available.']));
+        return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.package_search'];
+    }
+
     /** @var array<string, mixed> $offer */
     $offer = $verifyResult;
 
@@ -59,7 +71,7 @@ try {
     $pricing = is_array($offer['pricing'] ?? null) ? $offer['pricing'] : [];
     $sellingPrice = TypeCoerce::toFloat($pricing['selling_price'] ?? 0);
     $basePrice = $sellingPrice;
-    $sellingPrice = Container::getCartService()->applyCommission($sellingPrice);
+    $sellingPrice = $cartService->applyCommission($sellingPrice);
 
     // Parse hotel info
     /** @var array<string, mixed> $hotel */

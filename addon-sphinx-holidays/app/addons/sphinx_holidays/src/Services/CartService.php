@@ -220,6 +220,56 @@ final class CartService implements CartServiceInterface
     }
 
     /**
+     * The package search results the store can sell: those whose hotel has
+     * a buyable product, the one resolveProductId() puts the booking on.
+     * package_add_to_cart refuses any other package, and only once the
+     * guests are filled in. One query for the lot.
+     *
+     * @param list<array<string, mixed>> $results package search results (hotel.id)
+     * @return list<array<string, mixed>>
+     */
+    public function sellablePackages(array $results): array
+    {
+        $hotelIds = array_values(array_unique(array_filter(
+            array_map(self::packageHotelId(...), $results),
+            static fn (string $id): bool => $id !== '',
+        )));
+        if ($hotelIds === []) {
+            return [];
+        }
+
+        $buyable = [];
+        foreach (TypeCoerce::toRowList(db_get_array(
+            "SELECT h.hotel_id, p.status, EXISTS (
+                SELECT 1 FROM ?:sphinx_hotels g WHERE g.product_id = h.product_id AND g.gate_hidden = 'Y'
+             ) AS gate_hidden
+             FROM ?:sphinx_hotels h
+             INNER JOIN ?:products p ON p.product_id = h.product_id
+             WHERE h.hotel_id IN (?a) AND h.product_id > 0",
+            $hotelIds,
+        )) as $row) {
+            if (ProviderCartProduct::canBeBought(TypeCoerce::toString($row['status'] ?? ''), TypeCoerce::toInt($row['gate_hidden'] ?? 0) === 1)) {
+                $buyable[TypeCoerce::toString($row['hotel_id'] ?? '')] = true;
+            }
+        }
+
+        return array_values(array_filter(
+            $results,
+            static fn (array $result): bool => isset($buyable[self::packageHotelId($result)]),
+        ));
+    }
+
+    /**
+     * A package result's or offer's hotel id ('' when it names none).
+     *
+     * @param array<string, mixed> $package
+     */
+    public static function packageHotelId(array $package): string
+    {
+        return TypeCoerce::toString(TypeCoerce::toStringMap($package['hotel'] ?? null)['id'] ?? '');
+    }
+
+    /**
      * The CS-Cart product for a circuit: its own product in ?:sphinx_circuits
      * (written by the add_circuit_products cron), for an active circuit, and
      * active — circuits have no availability gate. A product_id in the
