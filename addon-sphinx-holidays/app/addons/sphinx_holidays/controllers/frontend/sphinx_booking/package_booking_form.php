@@ -117,7 +117,7 @@ try {
         'total_price' => $sellingPrice,
         'base_price' => $basePrice,
         'currency' => TypeCoerce::toString($pricing['currency'] ?? ConfigProvider::getDefaultCurrency()),
-        'additional_services' => $offer['additional_services'] ?? [],
+        'additional_services' => \Tygh\Addons\SphinxHolidays\Helpers\ServiceRows::forShopper($offer['additional_services'] ?? null, $cartService->applyCommission(...)),
         'payment_terms' => $offer['payment_terms'] ?? [],
         'cancellation_fees' => $offer['cancellation_fees'] ?? [],
         'confirmation' => $offer['confirmation'] ?? '',

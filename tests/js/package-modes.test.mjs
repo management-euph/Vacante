@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
     modeFromUrl, pickDeparture, nightsOf, pickNights, packageQuoteUrl, packageDatesUrl,
-    packageBookUrl, packageUrl, neighbourDates, cheapest, roomTypes,
+    packageBookUrl, packageUrl, neighbourDates, cheapest, roomTypes, allNights, dateForNights,
 } from '../../addon-travel-core/react-src/src/packageModes.js';
 
 /**
@@ -39,6 +39,28 @@ describe('the mode and city the page opens on', () => {
         expect(pickNights([4, 10], '')).toBe(4); // as near: the shorter
         expect(pickNights([3, 11], '')).toBe(3);
         expect(pickNights([], '7')).toBe(0);
+    });
+});
+
+describe('"Nopți" offers every length of the city', () => {
+    // Bucharest → Antalya, live: 30 Dec. for 5 nights only, then April for 3, 5 or 7.
+    const dates = [
+        { date: '2026-12-30', nights: [5] },
+        { date: '2027-04-03', nights: [3, 5, 7] },
+        { date: '2027-04-10', nights: [7] },
+    ];
+
+    it('lists every length the city\'s dates have', () => {
+        expect(allNights(dates)).toEqual([3, 5, 7]);
+        expect(allNights([])).toEqual([]);
+    });
+
+    it('keeps the date when it has the length, else moves to the nearest that has it', () => {
+        expect(dateForNights(dates, '2026-12-30', 5)).toBe('2026-12-30');
+        expect(dateForNights(dates, '2026-12-30', 7)).toBe('2027-04-03');
+        expect(dateForNights(dates, '2027-04-10', 3)).toBe('2027-04-03');
+        expect(dateForNights(dates, '', 7)).toBe('2027-04-03');
+        expect(dateForNights(dates, '2026-12-30', 10)).toBe('');
     });
 });
 

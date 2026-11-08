@@ -25,7 +25,7 @@ import { chipDate, formatPrice, partySummary } from './circuitFormat';
 import { roomsKey } from './circuitRooms';
 import {
     pickDeparture, nightsOf, pickNights, packageQuoteUrl, packageDatesUrl, packageBookUrl,
-    packageUrl, neighbourDates, cheapest,
+    packageUrl, neighbourDates, cheapest, allNights, dateForNights,
 } from './packageModes';
 
 const MONTH_KEYS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
@@ -124,6 +124,19 @@ export default function PackageBar({ config }) {
     const groups = useMemo(() => groupByMonth(dates.list), [dates.list]);
     // A new list opens on the chosen date's month (date is read, not watched).
     useEffect(() => { setMonthIndex(monthIndexOf(groups, date)); }, [groups]);
+
+    // "Nopți" offers every length the city has; one the date has not moves
+    // to the nearest date that has it.
+    const cityNights = useMemo(() => allNights(dates.list), [dates.list]);
+    const chooseNights = (value) => {
+        const next = dateForNights(dates.list, date, value);
+        if (next !== '' && next !== date) {
+            setDate(next);
+            setMonthIndex(monthIndexOf(groups, next));
+        }
+        setNights(value);
+        setMessage('');
+    };
 
     const city = useMemo(() => {
         const departure = departures.find((d) => d.id === departureId);
@@ -281,15 +294,15 @@ export default function PackageBar({ config }) {
                             <span className="nvt-label">{t('packageNights', 'Nights')}</span>
                             <span className="nvt-value">{nights > 0 ? nights : '–'}</span>
                         </span>
-                        {dateNights.length > 1 && <span className="nvt-field-input-arrow"><ChevronDown /></span>}
+                        {cityNights.length > 1 && <span className="nvt-field-input-arrow"><ChevronDown /></span>}
                         <select
                             className="nvt-circuit-select"
                             value={nights}
-                            onChange={(event) => setNights(parseInt(event.target.value, 10))}
-                            disabled={dateNights.length < 2}
+                            onChange={(event) => chooseNights(parseInt(event.target.value, 10))}
+                            disabled={cityNights.length < 2}
                             aria-label={t('packageNights', 'Nights')}
                         >
-                            {dateNights.map((n) => <option key={n} value={n}>{n}</option>)}
+                            {cityNights.map((n) => <option key={n} value={n}>{n}</option>)}
                         </select>
                     </label>
                 </div>

@@ -596,7 +596,7 @@ function fn_travel_core_seo_localize(string $addonName, array $placeholders, int
 /**
  * Bulk-apply SEO templates to all existing hotel products for an addon.
  *
- * Respects overwrite mode and field toggles. Uses fn_set_progress() for
+ * Respects overwrite mode and field toggles. Uses fn_set_progress() (fn_travel_core_progress) for
  * CS-Cart's native progress bar in the admin panel.
  *
  * Provider addons supply their own data-fetching and placeholder-building
@@ -645,9 +645,7 @@ function fn_travel_core_seo_bulk_apply(string $addonName, callable $hotelFetcher
             $wroteAny = fn_travel_core_seo_localize($addonName, $placeholders, $productId, $hotelId, $languages);
             $wroteAny ? $updated++ : $skipped++;
 
-            if (function_exists('fn_set_progress')) {
-                fn_set_progress('echo', TypeCoerce::toString($hotel['hotel_name'] ?? $hotel['name'] ?? $hotel['hotel_id'] ?? '') . ' — ' . ($wroteAny ? 'updated' : 'skipped'));
-            }
+            fn_travel_core_progress('echo', TypeCoerce::toString($hotel['hotel_name'] ?? $hotel['name'] ?? $hotel['hotel_id'] ?? '') . ' — ' . ($wroteAny ? 'updated' : 'skipped'));
         }
 
         $offset += $batchSize;

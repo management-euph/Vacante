@@ -196,7 +196,7 @@
                             {/if}
                         </div>
                         <div class="travel-service-price">
-                            +{$service.pricing.selling_price|number_format:2:",":"."} {$service.pricing.currency}
+                            {if $service.price > 0}+{$service.price|number_format:2:",":"."} {$service.currency}{/if}
                         </div>
                     </div>
                 {/foreach}

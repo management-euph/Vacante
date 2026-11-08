@@ -97,13 +97,20 @@ class ImageHelper
     }
 
     /**
-     * Download an external image URL and attach it to a CS-Cart product
-     * (body of the fn_sphinx_holidays_add_product_image shell).
+     * Download an image URL and attach it to a CS-Cart product (body of the
+     * fn_sphinx_holidays_add_product_image shell).
      *
-     * Uses CS-Cart's image pipeline (via the travel_core attach helpers) to
-     * generate thumbnails and store the image in the standard product
-     * gallery. Only API-hosted images need auth headers + watermark removal
-     * via cURL; CDN images are public and delegate to the URL approach.
+     * Every image is downloaded here, with cURL, then attached through
+     * CS-Cart's image pairs (fn_travel_core_attach_product_image), which
+     * generate the thumbnails and store the file. An API-hosted image is asked
+     * with the API's auth headers and without its watermark; any other is
+     * asked as it is, without them (the API key never leaves for another host).
+     *
+     * Public images used to go through fn_update_product with the URL
+     * (fn_travel_core_attach_images_from_urls), which reports no reason when
+     * CS-Cart does not fetch it: a sandbox queue of 1230 images all "FAILED"
+     * with an empty reason, in 8.7 s, none downloaded. Now a failure says why:
+     * the HTTP code, cURL's error, or that the file is not an image.
      *
      * On failure, the short reason is exposed via self::$lastDownloadError
      * so cron callers can echo it without inspecting the CS-Cart event log.
@@ -120,6 +127,11 @@ class ImageHelper
             self::$lastDownloadError = 'empty args';
             return false;
         }
+        $scheme = strtolower((string) parse_url($image_url, PHP_URL_SCHEME));
+        if ($scheme !== 'http' && $scheme !== 'https') {
+            self::$lastDownloadError = 'not an http(s) URL';
+            return false;
+        }
 
         $temp_file = fn_create_temp_file();
         $temp_file = is_string($temp_file) ? $temp_file : '';
@@ -129,37 +141,47 @@ class ImageHelper
             return false;
         }
 
+        // API-hosted: strip the watermark and send the Bearer auth headers.
         $isApiHosted = self::matchesApiHost($image_url, ConfigProvider::getApiBaseUrl());
+        $download_url = $isApiHosted ? self::withoutWatermark($image_url) : $image_url;
+        $headers = $isApiHosted ? self::getCurlAuthHeaders() : [];
 
-        if (!$isApiHosted) {
-            if (file_exists($temp_file)) {
-                unlink($temp_file);
-            }
-            return fn_travel_core_attach_images_from_urls($product_id, [$image_url], $is_main) > 0;
-        }
-
-        // API-hosted: must strip watermark param and send Bearer auth headers.
-        // CS-Cart's URL-fetch path cannot carry custom headers, so cURL is required.
-        $download_url = self::withoutWatermark($image_url);
-        $headers = self::getCurlAuthHeaders();
-
-        $fp = fopen($temp_file, 'wb');
-        if ($fp === false) {
-            self::$lastDownloadError = 'fopen failed';
-            fn_log_event('general', 'runtime', ['message' => "Sphinx: fopen() failed for temp file '{$temp_file}' product #{$product_id}"]);
+        if (!self::download($download_url, $headers, $temp_file, $product_id)) {
             if (file_exists($temp_file)) {
                 unlink($temp_file);
             }
             return false;
         }
 
-        $ch = curl_init($download_url);
+        if (fn_travel_core_attach_product_image($product_id, $temp_file, 'sphinx', $is_main)) {
+            return true;
+        }
+        self::$lastDownloadError = \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError !== ''
+            ? \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError
+            : 'attach failed';
+
+        return false;
+    }
+
+    /**
+     * Download $url into $tempFile; false (with self::$lastDownloadError)
+     * unless it answered 200 with a body of at least 1 KB.
+     *
+     * @param list<string> $headers "Name: Value" headers
+     */
+    private static function download(string $url, array $headers, string $tempFile, int $productId): bool
+    {
+        $fp = fopen($tempFile, 'wb');
+        if ($fp === false) {
+            self::$lastDownloadError = 'fopen failed';
+            fn_log_event('general', 'runtime', ['message' => "Sphinx: fopen() failed for temp file '{$tempFile}' product #{$productId}"]);
+            return false;
+        }
+
+        $ch = curl_init($url);
         if ($ch === false) {
             self::$lastDownloadError = 'curl init failed';
             fclose($fp);
-            if (file_exists($temp_file)) {
-                unlink($temp_file);
-            }
             return false;
         }
         curl_setopt_array($ch, [
@@ -169,6 +191,9 @@ class ImageHelper
             CURLOPT_TIMEOUT => 30,
             CURLOPT_CONNECTTIMEOUT => 10,
             CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_MAXREDIRS => 5,
+            CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+            CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         ]);
@@ -179,15 +204,16 @@ class ImageHelper
         curl_close($ch);
         fclose($fp);
 
-        if ($httpCode !== 200 || !file_exists($temp_file) || filesize($temp_file) < 1000) {
-            self::$lastDownloadError = "HTTP {$httpCode}" . ($curlError !== '' ? " ({$curlError})" : '');
-            fn_log_event('general', 'runtime', ['message' => "Sphinx: image download failed for product #{$product_id}: HTTP {$httpCode}, size=" . (file_exists($temp_file) ? filesize($temp_file) : 'N/A') . ", url={$download_url}" . ($curlError !== '' ? " ({$curlError})" : '')]);
-            if (file_exists($temp_file)) {
-                unlink($temp_file);
-            }
+        clearstatcache(true, $tempFile);
+        $size = file_exists($tempFile) ? (int) filesize($tempFile) : -1;
+        if ($httpCode !== 200 || $size < 1000) {
+            self::$lastDownloadError = "HTTP {$httpCode}" . ($curlError !== '' ? " ({$curlError})" : '') . ($httpCode === 200 ? ", {$size} bytes" : '');
+            $host = (string) parse_url($url, PHP_URL_HOST);
+            fn_log_event('general', 'runtime', ['message' => "Sphinx: image download failed for product #{$productId}: " . self::$lastDownloadError . ", host={$host}"]);
+
             return false;
         }
 
-        return fn_travel_core_attach_product_image($product_id, $temp_file, 'sphinx', $is_main);
+        return true;
     }
 }

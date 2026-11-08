@@ -132,7 +132,7 @@ try {
 
 
     // Parse additional services (optional/mandatory)
-    $additionalServices = TypeCoerce::toList($quote['additional_services'] ?? []);
+    $additionalServices = \Tygh\Addons\SphinxHolidays\Helpers\ServiceRows::forShopper($quote['additional_services'] ?? null, Container::getCartService()->applyCommission(...));
 
     $quoteDuration = TypeCoerce::toStringMap($quote['duration'] ?? null);
 
