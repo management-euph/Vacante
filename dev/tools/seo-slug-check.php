@@ -63,7 +63,10 @@ echo "== 1. Names → address ==\n";
 foreach ($sc_names as $sc_name) {
     echo $sc_name, "\n";
     echo '  CS-Cart alone (fn_generate_name): ', TypeCoerce::toString(fn_generate_name($sc_name)), "\n";
-    echo '  add-ons (fn_travel_core_slugify): ', fn_travel_core_slugify($sc_name), "\n";
+    echo '  add-ons (fn_travel_core_slugify): ', fn_travel_core_slugify($sc_name, null, 'en'), "\n";
+    if (str_contains($sc_name, '&')) {
+        echo '  add-ons, Romanian address:        ', fn_travel_core_slugify($sc_name, null, 'ro'), "\n";
+    }
 }
 
 echo "\n== 2. CS-Cart's literal_converter table (schema) ==\n";
