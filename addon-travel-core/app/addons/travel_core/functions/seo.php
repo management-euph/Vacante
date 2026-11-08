@@ -387,9 +387,11 @@ function fn_travel_core_apply_seo_fields(string $addonName, array $placeholders,
         // Render the field
         if ($productKey === 'seo_name') {
             $rendered = fn_travel_core_render_seo_slug($template, $placeholders);
-            // Ensure uniqueness for existing or new products
-            if ($hotelId !== null && function_exists('fn_generate_seo_name')) {
-                // Check for duplicates (append hotel_id suffix if needed)
+            // Another product holding this address (two hotels of the same
+            // name in one city) gets the hotel id appended. This check used to
+            // need fn_generate_seo_name(), which CS-Cart does not define: it
+            // never ran, and CS-Cart appended "-en" with a notice instead.
+            if ($hotelId !== null && $rendered !== '') {
                 $existing = db_get_field(
                     "SELECT object_id FROM ?:seo_names WHERE name = ?s AND type = 'p' AND object_id != ?i LIMIT 1",
                     $rendered,

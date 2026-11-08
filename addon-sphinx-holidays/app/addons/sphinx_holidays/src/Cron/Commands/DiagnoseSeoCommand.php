@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
 use Tygh\Addons\SphinxHolidays\Helpers\SphinxProductFactory;
+use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Helpers\RegistryCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
@@ -98,6 +99,23 @@ class DiagnoseSeoCommand extends AbstractSyncCommand
             $this->output("  {$key}: {$status}");
         }
 
+        // The SEO Templates page saves each language's own template
+        // ("<key>__<lang>"); those win over the keys above.
+        if (function_exists('fn_travel_core_seo_settings')) {
+            $this->output('  Per-language templates (SEO Templates page; these win):');
+            $perLang = 0;
+            foreach (fn_travel_core_seo_settings('sphinx_holidays') as $key => $val) {
+                if (str_contains($key, '__') && str_starts_with($key, 'seo_')) {
+                    $strVal = TypeCoerce::toString($val);
+                    $this->output("    {$key}: " . ($strVal === '' ? 'EMPTY' : (strlen($strVal) > 80 ? substr($strVal, 0, 80) . '…' : $strVal)));
+                    $perLang++;
+                }
+            }
+            if ($perLang === 0) {
+                $this->output('    (none saved)');
+            }
+        }
+
         // ── 2. DB hotel record ────────────────────────────────────────
         $this->output('');
         $this->output('--- 2. Hotel DB record ---');
@@ -138,15 +156,24 @@ class DiagnoseSeoCommand extends AbstractSyncCommand
 
         // ── 4. SEO field rendering ────────────────────────────────────
         $this->output('');
-        $this->output('--- 4. SEO rendering (productId=0, overwrite_mode ignored) ---');
+        $this->output('--- 4. SEO rendering, per product language (as a re-apply would write it) ---');
 
-        /** @var array<string, mixed> $rendered */
-        $rendered = [];
+        $languages = ConfigProvider::getProductLanguages();
+        if ($languages === []) {
+            $languages = [defined('CART_LANGUAGE') ? TypeCoerce::toString(CART_LANGUAGE) : 'en'];
+        }
+
+        /** @var array<string, array<string, mixed>> $renderedByLang */
+        $renderedByLang = [];
         if (function_exists('fn_travel_core_apply_seo_fields')) {
-            $rendered = fn_travel_core_apply_seo_fields('sphinx_holidays', $placeholders, 0, $hotelId);
+            foreach ($languages as $lang) {
+                $renderedByLang[$lang] = fn_travel_core_apply_seo_fields('sphinx_holidays', $placeholders, $productId, $hotelId, $lang);
+            }
         } else {
             $this->output('  WARNING: fn_travel_core_apply_seo_fields() not found — travel_core may not be active.');
         }
+        /** @var array<string, mixed> $rendered the first (primary) language's */
+        $rendered = $renderedByLang === [] ? [] : reset($renderedByLang);
 
         $fieldLabels = [
             'product' => 'product (name)',
@@ -157,17 +184,20 @@ class DiagnoseSeoCommand extends AbstractSyncCommand
             'full_description' => 'full_description',
         ];
 
-        foreach ($fieldLabels as $renderKey => $label) {
-            if (!array_key_exists($renderKey, $rendered)) {
-                $this->output("  {$label}: SKIPPED (toggle off or template empty)");
-                continue;
-            }
-            $renderVal = TypeCoerce::toString($rendered[$renderKey] ?? '');
-            if ($renderVal === '') {
-                $this->output("  {$label}: EMPTY");
-            } else {
-                $display = strlen($renderVal) > 100 ? substr($renderVal, 0, 100) . '…' : $renderVal;
-                $this->output("  {$label}: OK — {$display}");
+        foreach ($renderedByLang as $lang => $langRendered) {
+            $this->output("  [{$lang}]");
+            foreach ($fieldLabels as $renderKey => $label) {
+                if (!array_key_exists($renderKey, $langRendered)) {
+                    $this->output("  {$label}: SKIPPED (toggle off or template empty)");
+                    continue;
+                }
+                $renderVal = TypeCoerce::toString($langRendered[$renderKey] ?? '');
+                if ($renderVal === '') {
+                    $this->output("  {$label}: EMPTY");
+                } else {
+                    $display = strlen($renderVal) > 100 ? substr($renderVal, 0, 100) . '…' : $renderVal;
+                    $this->output("  {$label}: OK — {$display}");
+                }
             }
         }
 
@@ -180,7 +210,7 @@ class DiagnoseSeoCommand extends AbstractSyncCommand
         } else {
             /** @var mixed $rawRows */
             $rawRows = db_get_array(
-                'SELECT lang_code, product, page_title, meta_description, meta_keywords, seo_name FROM ?:product_descriptions WHERE product_id = ?i ORDER BY lang_code',
+                'SELECT lang_code, product, page_title, meta_description, meta_keywords FROM ?:product_descriptions WHERE product_id = ?i ORDER BY lang_code',
                 $productId,
             );
             $rows = is_array($rawRows) ? $rawRows : [];
@@ -198,7 +228,12 @@ class DiagnoseSeoCommand extends AbstractSyncCommand
                         'page_title' => TypeCoerce::toString($row['page_title'] ?? ''),
                         'meta_description' => TypeCoerce::toString($row['meta_description'] ?? ''),
                         'meta_keywords' => TypeCoerce::toString($row['meta_keywords'] ?? ''),
-                        'seo_name' => TypeCoerce::toString($row['seo_name'] ?? ''),
+                        // The address lives in ?:seo_names, not here.
+                        'seo_name' => TypeCoerce::toString(db_get_field(
+                            "SELECT name FROM ?:seo_names WHERE object_id = ?i AND type = 'p' AND lang_code = ?s",
+                            $productId,
+                            $lang,
+                        )),
                     ];
                     $parts = [];
                     foreach ($cols as $col => $colVal) {
