@@ -75,6 +75,10 @@ namespace Tygh\Addons\TravelCore\Tests\Unit\Functions {
             $this->assertSame('hotel-taranesc-sinaia', fn_travel_core_slugify('Hotel Ţărănesc Șinaia'));
             $this->assertSame('st-nicholas-hotel-and-spa', fn_travel_core_slugify("St. Nicholas' Hotel & Spa"), 'CS-Cart: "&" is "and"');
             $this->assertSame('ohara-hotel', fn_travel_core_slugify('O’Hara "Hotel"'), 'CS-Cart: quotes go');
+            foreach (["O'Hara", 'O‘Hara', 'O`Hara', 'O´Hara', 'Oʼhara'] as $apostrophe) {
+                $this->assertSame('ohara', fn_travel_core_slugify($apostrophe), $apostrophe . ': one word, not "o-hara"');
+            }
+            $this->assertSame('mcdonalds-oreilly', fn_travel_core_slugify("McDonald's O'Reilly"));
             $this->assertSame('akra-v-antalya-city-turkey', fn_travel_core_render_seo_slug('{{name}}-{{city}}-{{country}}', ['name' => 'Akra -V', 'city' => 'Antalya City', 'country' => 'Turkey']));
         }
 

@@ -190,8 +190,10 @@ function fn_travel_core_slugify(string $value, ?callable $generate = null): stri
         ]);
     }
     // CS-Cart's own punctuation (literal_converter/general.php): "&" is
-    // "and", quotes go ("O'Hara" → "ohara").
-    $plain = strtr($plain, ['&' => '-and-', "'" => '', '"' => '']);
+    // "and", quotes go, so a name stays one word ("O'Hara" → "ohara",
+    // "McDonald's" → "mcdonalds"), with the signs suppliers type for an
+    // apostrophe (` ´ ʼ; ’ ‘ are ' by now).
+    $plain = strtr($plain, ['&' => '-and-', "'" => '', '"' => '', '`' => '', '´' => '', 'ʼ' => '']);
     $slug = (string) preg_replace('/[^a-z0-9-]+/', '-', mb_strtolower($plain, 'UTF-8'));
     $slug = trim((string) preg_replace('/-{2,}/', '-', $slug), '-');
 
