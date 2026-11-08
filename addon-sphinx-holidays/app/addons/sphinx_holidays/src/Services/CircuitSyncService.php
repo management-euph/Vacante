@@ -152,7 +152,7 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
         $pruneMsg = '';
         if ($bookable !== null && TypeCoerce::toString($stats['error']) === '') {
             $pruned = (new CircuitRepository())->pruneUnbookable($bookable);
-            $pruneMsg = ", {$past} skipped (no rate from today on), {$pruned['removed']} stored ones removed, {$pruned['deactivated']} set inactive (they have a product)";
+            $pruneMsg = ", {$past} skipped (no rate from today on), {$pruned['removed']} stored ones removed, {$pruned['deactivated']} set inactive (they have a product; {$pruned['hidden']} products hidden), {$pruned['shown']} products on sale again";
         }
 
         $stats['success'] = true;

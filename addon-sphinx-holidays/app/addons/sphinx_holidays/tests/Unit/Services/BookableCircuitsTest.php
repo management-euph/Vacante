@@ -128,25 +128,54 @@ final class BookableCircuitsTest extends TestCase
         self::assertSame(1, $left);
     }
 
-    /** Stored ones no longer priced: removed, or inactive when they have a product; priced again: active. */
+    /**
+     * Stored ones no longer priced: removed, or inactive when they have a
+     * product, which is hidden (only one on sale; marked so). Priced again:
+     * active, and the product on sale again only when the sync hid it.
+     */
     public function testStoredCircuitsNoLongerPricedLeaveTheList(): void
     {
         $queries = [];
         DbStub::$query = static function (string $query, mixed ...$params) use (&$queries): int {
             $queries[] = [$query, $params];
 
-            return str_starts_with($query, 'DELETE') ? 5 : 2;
+            return match (count($queries)) {
+                1 => 5,  // removed
+                2 => 6,  // 3 products hidden: 3 products + 3 circuits changed
+                3 => 3,  // set inactive
+                4 => 1,  // 1 product on sale again
+                default => 1,
+            };
         };
 
-        self::assertSame(['removed' => 5, 'deactivated' => 2], (new CircuitRepository())->pruneUnbookable([1662, 1700]));
-        self::assertStringContainsString('DELETE FROM ?:sphinx_circuits WHERE circuit_id NOT IN (?n) AND (product_id IS NULL OR product_id = 0)', $queries[0][0]);
-        self::assertStringContainsString("SET sync_status = 'inactive' WHERE circuit_id NOT IN (?n) AND product_id > 0", $queries[1][0]);
-        self::assertStringContainsString("SET sync_status = 'active' WHERE circuit_id IN (?n)", $queries[2][0]);
+        self::assertSame(
+            ['removed' => 5, 'deactivated' => 3, 'hidden' => 3, 'shown' => 1],
+            (new CircuitRepository())->pruneUnbookable([1662, 1700]),
+        );
+        [$delete, $hide, $deactivate, $show, $reactivate] = array_column($queries, 0);
+        self::assertStringContainsString('DELETE FROM ?:sphinx_circuits WHERE circuit_id NOT IN (?n) AND (product_id IS NULL OR product_id = 0)', $delete);
+        self::assertStringContainsString("SET p.status = 'H', c.product_hidden = 'Y'", $hide);
+        self::assertStringContainsString("WHERE c.circuit_id NOT IN (?n) AND c.sync_status = 'active' AND p.status = 'A'", $hide, 'only a product on sale; one an admin hid stays unmarked');
+        self::assertStringContainsString("SET sync_status = 'inactive' WHERE circuit_id NOT IN (?n) AND product_id > 0", $deactivate);
+        self::assertStringContainsString("WHERE c.circuit_id IN (?n) AND c.product_hidden = 'Y' AND p.status = 'H'", $show, 'only what the sync hid, still hidden');
+        self::assertStringContainsString("SET sync_status = 'active', product_hidden = 'N'", $reactivate);
         self::assertSame([[1662, 1700]], $queries[0][1]);
 
         $queries = [];
-        self::assertSame(['removed' => 0, 'deactivated' => 0], (new CircuitRepository())->pruneUnbookable([]));
+        self::assertSame(['removed' => 0, 'deactivated' => 0, 'hidden' => 0, 'shown' => 0], (new CircuitRepository())->pruneUnbookable([]));
         self::assertSame([], $queries, 'never with an empty list');
+    }
+
+    /** product_hidden reaches fresh installs, upgrades and the installs SchemaMigrator converges. */
+    public function testTheHiddenProductMarkReachesEveryInstall(): void
+    {
+        $root = dirname(__DIR__, 3);
+        $xml = (string) file_get_contents($root . '/addon.xml');
+        $definition = "ENUM('Y','N') NOT NULL DEFAULT 'N' COMMENT 'Product hidden by the circuits sync (no rate ahead); shown again with the circuit'";
+
+        self::assertStringContainsString("`product_hidden`    {$definition},", $xml, 'the CREATE TABLE');
+        self::assertStringContainsString("ALTER TABLE `?:sphinx_circuits`\n                ADD COLUMN `product_hidden` ENUM('Y','N') NOT NULL DEFAULT 'N'", $xml, 'the upgrade item');
+        self::assertStringContainsString("'product_hidden' => \"ADD COLUMN `product_hidden` {$definition} AFTER `sync_status`\"", (string) file_get_contents($root . '/src/Install/SchemaMigrator.php'));
     }
 
     /** The sync asks before it saves, and prunes only on a clean run with a known answer. */
