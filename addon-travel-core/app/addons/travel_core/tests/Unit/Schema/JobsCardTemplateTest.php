@@ -202,4 +202,24 @@ final class JobsCardTemplateTest extends TestCase
         self::assertStringContainsString("document.body.appendChild(menu)", $js);
         self::assertStringContainsString("menu.classList.add('travel-cron-menu--floating')", $js);
     }
+
+    /**
+     * At phone width each job stacks instead of scrolling sideways: its name
+     * and description across, schedule and last run under them, Run and ⋯
+     * beside those (the proposal's phone board; checked rendered at 360,
+     * 390 and 600 px when it was built).
+     */
+    public function testJobsStackAtPhoneWidth(): void
+    {
+        $css = (string) file_get_contents(self::repo() . '/design/backend/css/addons/travel_core/admin_styles.css');
+        $at = strpos($css, '@media (max-width: 600px) {');
+        self::assertIsInt($at, 'no phone-width rules');
+        $end = strpos($css, "\n}\n", $at);
+        self::assertIsInt($end);
+        $phone = substr($css, $at, $end - $at);
+
+        self::assertMatchesRegularExpression('/\.travel-cron-jobs__table \.travel-cron-job \{[^}]*display: grid;[^}]*grid-template-columns: minmax\(0, 1fr\) auto;/', $phone);
+        self::assertMatchesRegularExpression('/\.travel-cron-job > td:first-child \{[^}]*grid-column: 1 \/ -1;/', $phone, 'name and description across');
+        self::assertMatchesRegularExpression('/td\.travel-cron-table__actions \{[^}]*grid-column: 2;[^}]*grid-row: 2 \/ span 2;/', $phone, 'Run and ⋯ beside schedule and last run');
+    }
 }
