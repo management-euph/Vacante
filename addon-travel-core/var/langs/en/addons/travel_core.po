@@ -4590,6 +4590,238 @@ msgctxt "Languages::travel_core.package_loading_rooms"
 msgid "Looking for the prices of this departure… it can take up to half a minute."
 msgstr "Looking for the prices of this departure… it can take up to half a minute."
 
+msgctxt "Languages::travel_core.jobs_title"
+msgid "Scheduled jobs"
+msgstr "Scheduled jobs"
+
+msgctxt "Languages::travel_core.jobs_intro"
+msgid "In the order the jobs run: each stage needs the one before it. Run works as a signed-in admin action, so the cron key never goes into the browser. ⋯ copies a job's crontab line, URL or CLI command with the real key."
+msgstr "In the order the jobs run: each stage needs the one before it. Run works as a signed-in admin action, so the cron key never goes into the browser. ⋯ copies a job's crontab line, URL or CLI command with the real key."
+
+msgctxt "Languages::travel_core.jobs_col_job"
+msgid "Job"
+msgstr "Job"
+
+msgctxt "Languages::travel_core.jobs_col_schedule"
+msgid "Schedule"
+msgstr "Schedule"
+
+msgctxt "Languages::travel_core.jobs_col_last_run"
+msgid "Last run"
+msgstr "Last run"
+
+msgctxt "Languages::travel_core.jobs_col_actions"
+msgid "Actions"
+msgstr "Actions"
+
+msgctxt "Languages::travel_core.jobs_recommended"
+msgid "Recommended"
+msgstr "Recommended"
+
+msgctxt "Languages::travel_core.jobs_sched_every_minutes"
+msgid "Every [n] min"
+msgstr "Every [n] min"
+
+msgctxt "Languages::travel_core.jobs_sched_hourly"
+msgid "Hourly at :[minute]"
+msgstr "Hourly at :[minute]"
+
+msgctxt "Languages::travel_core.jobs_sched_every_hours"
+msgid "Every [n] hours at :[minute]"
+msgstr "Every [n] hours at :[minute]"
+
+msgctxt "Languages::travel_core.jobs_sched_daily"
+msgid "Daily [time]"
+msgstr "Daily [time]"
+
+msgctxt "Languages::travel_core.jobs_sched_twice_daily"
+msgid "Daily [time] and [time2]"
+msgstr "Daily [time] and [time2]"
+
+msgctxt "Languages::travel_core.jobs_sched_every_days"
+msgid "Every [n] days, [time]"
+msgstr "Every [n] days, [time]"
+
+msgctxt "Languages::travel_core.jobs_sched_weekly_sun"
+msgid "Sundays [time]"
+msgstr "Sundays [time]"
+
+msgctxt "Languages::travel_core.jobs_sched_weekly_mon"
+msgid "Mondays [time]"
+msgstr "Mondays [time]"
+
+msgctxt "Languages::travel_core.jobs_sched_weekly_tue"
+msgid "Tuesdays [time]"
+msgstr "Tuesdays [time]"
+
+msgctxt "Languages::travel_core.jobs_sched_weekly_wed"
+msgid "Wednesdays [time]"
+msgstr "Wednesdays [time]"
+
+msgctxt "Languages::travel_core.jobs_sched_weekly_thu"
+msgid "Thursdays [time]"
+msgstr "Thursdays [time]"
+
+msgctxt "Languages::travel_core.jobs_sched_weekly_fri"
+msgid "Fridays [time]"
+msgstr "Fridays [time]"
+
+msgctxt "Languages::travel_core.jobs_sched_weekly_sat"
+msgid "Saturdays [time]"
+msgstr "Saturdays [time]"
+
+msgctxt "Languages::travel_core.jobs_sched_raw"
+msgid "[cron]"
+msgstr "[cron]"
+
+msgctxt "Languages::travel_core.jobs_sched_on_demand"
+msgid "On demand"
+msgstr "On demand"
+
+msgctxt "Languages::travel_core.jobs_state_ok"
+msgid "On time"
+msgstr "On time"
+
+msgctxt "Languages::travel_core.jobs_state_late"
+msgid "Late"
+msgstr "Late"
+
+msgctxt "Languages::travel_core.jobs_state_failed"
+msgid "Failed"
+msgstr "Failed"
+
+msgctxt "Languages::travel_core.jobs_state_running"
+msgid "Running"
+msgstr "Running"
+
+msgctxt "Languages::travel_core.jobs_state_stalled"
+msgid "Stalled"
+msgstr "Stalled"
+
+msgctxt "Languages::travel_core.jobs_state_never"
+msgid "No runs yet"
+msgstr "No runs yet"
+
+msgctxt "Languages::travel_core.jobs_finished_at"
+msgid "Finished [date]"
+msgstr "Finished [date]"
+
+msgctxt "Languages::travel_core.jobs_started_at"
+msgid "Started [date]"
+msgstr "Started [date]"
+
+msgctxt "Languages::travel_core.jobs_stalled_hint"
+msgid "Started [date] and never finished"
+msgstr "Started [date] and never finished"
+
+msgctxt "Languages::travel_core.jobs_run"
+msgid "Run"
+msgstr "Run"
+
+msgctxt "Languages::travel_core.jobs_more_actions"
+msgid "More actions"
+msgstr "More actions"
+
+msgctxt "Languages::travel_core.jobs_copy_crontab_line"
+msgid "Copy crontab line"
+msgstr "Copy crontab line"
+
+msgctxt "Languages::travel_core.jobs_copy_url"
+msgid "Copy URL"
+msgstr "Copy URL"
+
+msgctxt "Languages::travel_core.jobs_copy_cli"
+msgid "Copy CLI command"
+msgstr "Copy CLI command"
+
+msgctxt "Languages::travel_core.jobs_copied"
+msgid "Copied"
+msgstr "Copied"
+
+msgctxt "Languages::travel_core.jobs_copy_failed"
+msgid "Copy failed"
+msgstr "Copy failed"
+
+msgctxt "Languages::travel_core.jobs_check_status"
+msgid "Check status"
+msgstr "Check status"
+
+msgctxt "Languages::travel_core.jobs_force_full"
+msgid "Force full sync"
+msgstr "Force full sync"
+
+msgctxt "Languages::travel_core.jobs_force_full_confirm"
+msgid "Run a full sync of [job] now? It re-reads every hotel and makes many API calls."
+msgstr "Run a full sync of [job] now? It re-reads every hotel and makes many API calls."
+
+msgctxt "Languages::travel_core.jobs_redo_all"
+msgid "Redo all hotels"
+msgstr "Redo all hotels"
+
+msgctxt "Languages::travel_core.jobs_redo_all_confirm"
+msgid "Run [job] again for every hotel, including the ones already done? It continues in the scheduled runs until every hotel is done."
+msgstr "Run [job] again for every hotel, including the ones already done? It continues in the scheduled runs until every hotel is done."
+
+msgctxt "Languages::travel_core.jobs_reset_progress"
+msgid "Reset progress…"
+msgstr "Reset progress…"
+
+msgctxt "Languages::travel_core.jobs_reset_confirm"
+msgid "Reset the progress of [job]? Its next run starts again from the first hotel."
+msgstr "Reset the progress of [job]? Its next run starts again from the first hotel."
+
+msgctxt "Languages::travel_core.jobs_menu_needs_key"
+msgid "Set the cron key in Travel Core to copy commands."
+msgstr "Set the cron key in Travel Core to copy commands."
+
+msgctxt "Languages::travel_core.jobs_on_demand_title"
+msgid "Other jobs, run on demand ([n])"
+msgstr "Other jobs, run on demand ([n])"
+
+msgctxt "Languages::travel_core.jobs_commands_title"
+msgid "All commands"
+msgstr "All commands"
+
+msgctxt "Languages::travel_core.jobs_commands_hint"
+msgid "CLI (php): paste into the server crontab or cPanel → Cron Jobs. URL: for a cron service; add each one at the time shown."
+msgstr "CLI (php): paste into the server crontab or cPanel → Cron Jobs. URL: for a cron service; add each one at the time shown."
+
+msgctxt "Languages::travel_core.jobs_format_label"
+msgid "Command format"
+msgstr "Command format"
+
+msgctxt "Languages::travel_core.jobs_format_cli"
+msgid "CLI (php)"
+msgstr "CLI (php)"
+
+msgctxt "Languages::travel_core.jobs_format_url"
+msgid "URL"
+msgstr "URL"
+
+msgctxt "Languages::travel_core.jobs_copy_all"
+msgid "Copy all"
+msgstr "Copy all"
+
+msgctxt "Languages::travel_core.jobs_key_hidden_note"
+msgid "The key is hidden here; Copy copies the real one. Anyone with the key can start these jobs; rotate it on Travel Core → Tools."
+msgstr "The key is hidden here; Copy copies the real one. Anyone with the key can start these jobs; rotate it on Travel Core → Tools."
+
+msgctxt "Languages::travel_core.jobs_open_tools"
+msgid "Open Travel Core → Tools"
+msgstr "Open Travel Core → Tools"
+
+msgctxt "Languages::travel_core.jobs_no_key_title"
+msgid "No cron key is set"
+msgstr "No cron key is set"
+
+msgctxt "Languages::travel_core.jobs_no_key_body"
+msgid "Scheduled runs are refused until the shared cron key is set in Travel Core. Run still works from here."
+msgstr "Scheduled runs are refused until the shared cron key is set in Travel Core. Run still works from here."
+
+msgctxt "Languages::travel_core.jobs_set_key"
+msgid "Set it in Travel Core"
+msgstr "Set it in Travel Core"
+
 msgctxt "Languages::travel_core.package_searching"
 msgid "Searching…"
 msgstr "Searching…"

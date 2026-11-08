@@ -38,7 +38,7 @@ final class DashboardPageTest extends TestCase
         self::assertIsInt($start);
         $loop = substr($tpl, $start, (int) strpos($tpl, '{/foreach}', $start) - $start);
 
-        self::assertStringContainsString('components/run_job.tpl" job=$item.mode', $loop);
+        self::assertStringContainsString('travel_core/components/run_job.tpl" run_dispatch="novoton_holidays.run_job" job=$item.mode', $loop);
         foreach (['failed', 'stalled', 'never', 'late'] as $kind) {
             self::assertStringContainsString('$item.kind == "' . $kind . '"', $loop);
         }
@@ -51,7 +51,7 @@ final class DashboardPageTest extends TestCase
         $tpl = self::code('views/novoton_holidays/manage.tpl');
 
         self::assertStringNotContainsString('"novoton_holidays.recompute_calendar_prices"|fn_url', $tpl);
-        self::assertMatchesRegularExpression('/run_job\.tpl" job="recompute_calendar_prices"[^}]*confirm=__\(/', $tpl);
+        self::assertMatchesRegularExpression('/run_job\.tpl" run_dispatch="novoton_holidays\.run_job" job="recompute_calendar_prices"[^}]*confirm=__\(/', $tpl);
 
         $controller = self::controller();
         $start = strpos($controller, "if (\$mode === 'recompute_calendar_prices') {");
@@ -133,12 +133,17 @@ final class DashboardPageTest extends TestCase
     /** Each page's script loads inside its capture, so it runs after the admin's AJAX navigation too. */
     public function testThePageScriptsLoadInsideTheCapture(): void
     {
+        // The jobs card (Travel Core's) loads cron-jobs.js, which serves every
+        // Run and Copy on the dashboard: it must sit inside the mainbox capture.
         $tpl = self::code('views/novoton_holidays/manage.tpl');
-        $close = strpos($tpl, '{/capture}');
+        $close = strpos($tpl, "{/capture}\n\n{capture name=\"buttons\"}");
         self::assertIsInt($close);
-        $at = strpos($tpl, '{script src="js/addons/novoton_holidays/dashboard.js"}');
-        self::assertIsInt($at, 'dashboard.js is not loaded');
+        $at = strpos($tpl, '{include file="addons/travel_core/components/jobs_card.tpl"');
+        self::assertIsInt($at, 'the jobs card is not included');
         self::assertLessThan($close, $at);
+        $card = (string) file_get_contents(dirname(__DIR__, 7) . '/addon-travel-core/design/backend/templates/addons/travel_core/components/jobs_card.tpl');
+        self::assertStringContainsString('{script src="js/addons/travel_core/cron-jobs.js"}', $card);
+        self::assertFileDoesNotExist(dirname(__DIR__, 6) . '/js/addons/novoton_holidays/dashboard.js', 'replaced by travel_core/cron-jobs.js');
 
         // The Destinations page includes the picker inside its capture; the
         // picker loads its own script, so it comes along.

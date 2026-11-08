@@ -25,9 +25,15 @@ final class DashboardRunJobTest extends TestCase
         return (string) file_get_contents(dirname(__DIR__, 3) . '/controllers/backend/novoton_holidays.php');
     }
 
+    /** The form every Run on the dashboard is: Travel Core's, given Novoton's run action. */
     private static function component(): string
     {
-        return (string) file_get_contents(dirname(__DIR__, 6) . '/design/backend/templates/addons/novoton_holidays/components/run_job.tpl');
+        return (string) file_get_contents(dirname(__DIR__, 7) . '/addon-travel-core/design/backend/templates/addons/travel_core/components/run_job.tpl');
+    }
+
+    private static function dashboard(): string
+    {
+        return (string) preg_replace('/\{\*.*?\*\}/s', '', (string) file_get_contents(dirname(__DIR__, 6) . '/design/backend/templates/addons/novoton_holidays/views/novoton_holidays/manage.tpl'));
     }
 
     /** @return string the run_job handler's body */
@@ -77,9 +83,22 @@ final class DashboardRunJobTest extends TestCase
 
         self::assertMatchesRegularExpression('/<form[^>]*method="post"/', $tpl);
         self::assertStringContainsString('name="security_hash" value="{$security_hash}"', $tpl);
-        self::assertStringContainsString('name="dispatch" value="novoton_holidays.run_job"', $tpl);
+        self::assertStringContainsString('name="dispatch" value="{$run_dispatch|escape:html}"', $tpl);
         self::assertStringContainsString('{$job|escape:html}', $tpl);
         self::assertStringNotContainsString('access_key', $tpl);
-        self::assertStringNotContainsString('novoton_cron.run', $tpl);
+        self::assertStringNotContainsString('_cron.run', $tpl);
+    }
+
+    /** The dashboard hands every Run form, and the jobs card, this controller's run_job action. */
+    public function testTheDashboardRunsJobsThroughThisAction(): void
+    {
+        $tpl = self::dashboard();
+        preg_match_all('/\{include file="addons\/travel_core\/components\/(?:run_job|jobs_card)\.tpl"[^}]*\}/', $tpl, $m);
+
+        self::assertCount(3, $m[0], 'jobs_card, the Needs attention Run and the Tools recompute');
+        foreach ($m[0] as $include) {
+            self::assertStringContainsString('run_dispatch="novoton_holidays.run_job"', $include);
+        }
+        self::assertIsInt(strpos(self::controller(), "if (\$mode === 'run_job') {"));
     }
 }

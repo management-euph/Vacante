@@ -546,6 +546,196 @@
     }
 }
 
+/* ─── Scheduled jobs on the providers' dashboards ───
+ * components/jobs_card.tpl, job_row.tpl, run_job.tpl and commands_card.tpl,
+ * driven by js/addons/travel_core/cron-jobs.js. Built on the travel-cron
+ * card, table and pill styles above, so every provider's jobs read alike.
+ * Every state is told in words and an icon, not colour alone. */
+
+.travel-cron-jobs__nokey {
+    margin: 0 16px 12px;
+}
+
+.travel-cron-jobs__nokey p {
+    margin: 4px 0 0;
+}
+
+.travel-cron-jobs__table {
+    margin: 0;
+}
+
+.travel-cron-jobs__table td {
+    vertical-align: top;
+}
+
+.travel-cron-jobs__stage th {
+    padding: 7px 12px;
+    background: #f5f6f8;
+    border-top: 1px solid #e3e6ea;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #4a5360;
+    text-align: left;
+}
+
+.travel-cron-job--recommended td {
+    background: #fffdf5;
+}
+
+.travel-cron-job__badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 8px;
+    border-radius: 10px;
+    background: #e3f4e8;
+    color: #1d6b34;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.travel-cron-job__desc {
+    font-size: 12px;
+    color: #4a5360;
+    margin-top: 2px;
+}
+
+.travel-cron-job__mode,
+.travel-cron-job__cron {
+    font-size: 11px;
+    color: #4a5360;
+    background: none;
+    border: 0;
+    padding: 0;
+}
+
+.travel-cron-job__actions {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.travel-cron-run-form {
+    display: inline-block;
+    margin: 0;
+}
+
+.travel-cron-menu-wrap {
+    position: relative;
+    display: inline-block;
+}
+
+.travel-cron-menu {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    z-index: 100;
+    min-width: 220px;
+    margin-top: 2px;
+    padding: 4px;
+    text-align: left;
+    background: #fff;
+    border: 1px solid #d5dae1;
+    border-radius: 6px;
+    box-shadow: 0 6px 18px rgba(16, 24, 40, 0.14);
+}
+
+/* Open: lifted onto <body> and pinned beside its button by cron-jobs.js,
+ * so the card's sideways scroll box cannot cut it off. Level with the
+ * admin's own dropdown menus. */
+.travel-cron-menu--floating {
+    position: fixed;
+    right: auto;
+    margin-top: 0;
+    z-index: 1000;
+}
+
+.travel-cron-menu .travel-cron-run-form {
+    display: block;
+}
+
+.travel-cron-menu__item {
+    display: block;
+    width: 100%;
+    padding: 6px 10px;
+    border: 0;
+    border-radius: 4px;
+    background: none;
+    text-align: left;
+    white-space: nowrap;
+    color: #1c2330;
+    cursor: pointer;
+}
+
+.travel-cron-menu__item:hover,
+.travel-cron-menu__item:focus {
+    background: #f2f6fc;
+}
+
+.travel-cron-menu__item--danger {
+    color: #a3161b;
+    font-weight: 600;
+}
+
+.travel-cron-menu__divider {
+    height: 1px;
+    margin: 4px 0;
+    background: #eceff3;
+}
+
+.travel-cron-menu__note {
+    padding: 6px 10px;
+    font-size: 11px;
+    color: #4a5360;
+    white-space: normal;
+}
+
+.travel-cron-jobs__ondemand {
+    padding: 0 16px 12px;
+}
+
+.travel-cron-jobs__ondemand summary {
+    cursor: pointer;
+    padding: 10px 0;
+    font-weight: 600;
+}
+
+.travel-cron-commands__tools {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.travel-cron-commands__tools .btn-group {
+    margin: 0;
+}
+
+.travel-cron-commands__tools [aria-pressed="true"] {
+    background: #2457c5;
+    border-color: #2457c5;
+    color: #fff;
+}
+
+.travel-cron-commands__text {
+    margin: 0;
+    padding: 12px 14px;
+    background: #10151c;
+    color: #e6edf6;
+    border: 0;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 1.8;
+    white-space: pre;
+    overflow-x: auto;
+}
+
+.travel-cron-commands__note {
+    padding: 10px 0 0;
+    border-top: 0;
+}
+
 /* ─── Feature Mappings (travel_feature_mappings.*) ─── */
 
 .travel-fm-intro {

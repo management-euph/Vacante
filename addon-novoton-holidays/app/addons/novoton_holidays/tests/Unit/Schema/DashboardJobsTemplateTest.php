@@ -8,9 +8,11 @@ use PHPUnit\Framework\TestCase;
 use Tygh\Addons\NovotonHolidays\Services\CronPlanBuilder;
 
 /**
- * The dashboard's scheduled-jobs section: the cron key is never printed or
- * put in a link, every action is a protected POST, and every label it uses
- * exists in both language packs.
+ * The dashboard's scheduled-jobs section: Travel Core's shared jobs and
+ * commands cards (components/jobs_card.tpl, commands_card.tpl, whose own
+ * markup Travel Core's JobsCardTemplateTest checks), fed with Novoton's
+ * plan. Here: the cron key is never printed or put in a link, every Run goes
+ * to Novoton's own run action, and every label Novoton names exists.
  *
  * Source-text assertions: the templates render inside CS-Cart's Smarty,
  * which this repository does not ship.
@@ -40,10 +42,17 @@ final class DashboardJobsTemplateTest extends TestCase
     {
         return [
             'manage' => self::code('views/novoton_holidays/manage.tpl'),
-            'job_row' => self::code('components/job_row.tpl'),
-            'run_job' => self::code('components/run_job.tpl'),
             'activity' => self::code('components/activity.tpl'),
         ];
+    }
+
+    /** One {include …} of a Travel Core component, whole, even across lines. */
+    private static function include(string $component): string
+    {
+        $manage = self::dashboardTemplates()['manage'];
+        self::assertSame(1, preg_match('/\{include file="addons\/travel_core\/components\/' . preg_quote($component, '/') . '\.tpl"[^}]*\}/', $manage, $m), "{$component} is not included once");
+
+        return $m[0];
     }
 
     public function testNoLinkOrTextCarriesTheCronKey(): void
@@ -62,118 +71,108 @@ final class DashboardJobsTemplateTest extends TestCase
         self::assertStringContainsString("\$view->assign('novoton_xml_feed_masked', \$mask(\$xml_feed_url));", $controller);
     }
 
-    /** Every place the real key reaches the page is an attribute Copy reads, never visible text. */
+    /** The real commands go to the commands card as values it puts in data-*; the page prints only masked text. */
     public function testTheRealCommandsOnlyRideInDataAttributes(): void
     {
+        $commands = self::include('commands_card');
+        foreach (['card_id="novoton-crontab"', 'cli=$novoton_crontab_cli', 'url=$novoton_crontab_url', 'masked=$novoton_crontab_masked', 'key=$novoton_cron_key', 'extra=$smarty.capture.novoton_xml_feed'] as $param) {
+            self::assertStringContainsString($param, $commands);
+        }
+
         $manage = self::dashboardTemplates()['manage'];
-        self::assertStringContainsString('<pre id="novoton-crontab-text" class="novoton-crontab__text">{$novoton_crontab_masked|escape:html}</pre>', $manage);
-        self::assertStringContainsString('data-crontab-cli="{$novoton_crontab_cli|escape:html}"', $manage);
         self::assertStringContainsString('<code class="travel-cron-cmd">{$novoton_xml_feed_masked|escape:html}</code>', $manage);
-
-        preg_match_all('/\{\$(novoton_crontab_cli|novoton_crontab_url|novoton_cron_key|novoton_xml_feed_url)\|escape:html\}/', $manage, $m, PREG_OFFSET_CAPTURE);
-        self::assertNotSame([], $m[0]);
-        foreach ($m[0] as [$use, $at]) {
-            $before = substr($manage, max(0, $at - 30), 30);
-            self::assertMatchesRegularExpression('/data-[a-z-]+="$/', $before, "{$use} is printed outside a data-* attribute");
+        self::assertStringContainsString('<button type="button" class="btn travel-cron-copy" data-copy="{$novoton_xml_feed_url|escape:html}">', $manage);
+        foreach (['novoton_crontab_cli', 'novoton_crontab_url', 'novoton_cron_key', 'novoton_crontab_masked'] as $var) {
+            self::assertStringNotContainsString('{$' . $var, $manage, "{$var} is printed on the page");
         }
-
-        $row = self::dashboardTemplates()['job_row'];
-        foreach (['$job.crontab_line', '$job.url', '$job.cli'] as $real) {
-            self::assertStringContainsString('data-copy="{' . $real . '|escape:html}"', $row);
-            self::assertSame(1, substr_count($row, '{' . $real), "{$real} appears outside its data-copy");
-        }
+        preg_match_all('/\{\$novoton_xml_feed_url\|escape:html\}/', $manage, $m, PREG_OFFSET_CAPTURE);
+        self::assertCount(1, $m[0]);
+        self::assertMatchesRegularExpression('/data-copy="$/', substr($manage, max(0, $m[0][0][1] - 30), 30));
     }
 
-    /** Run, Check status, Force full sync and Reset are POSTs with CS-Cart's CSRF token. */
-    public function testEveryActionIsAProtectedPost(): void
+    /** Every Run on the page — the jobs card's, Needs attention's, Tools' — posts to novoton_holidays.run_job. */
+    public function testEveryRunGoesToNovotonsRunAction(): void
     {
-        foreach (self::dashboardTemplates() as $name => $src) {
-            preg_match_all('/<form\b[^>]*>.*?<\/form>/s', $src, $forms);
-            foreach ($forms[0] as $form) {
-                self::assertMatchesRegularExpression('/method="post"/', $form, "{$name}: a form is not a POST");
-                self::assertStringContainsString('name="security_hash"', $form, "{$name}: a POST form without security_hash");
-            }
+        $jobs = self::include('jobs_card');
+        foreach (['card_id="novoton-cron-jobs"', 'stages=$novoton_job_stages', 'on_demand=$novoton_on_demand_jobs', 'on_demand_intro=__("novoton_holidays.dash_on_demand_intro")', 'has_key=$novoton_cron_has_key', 'run_dispatch="novoton_holidays.run_job"'] as $param) {
+            self::assertStringContainsString($param, $jobs);
         }
 
-        $row = self::dashboardTemplates()['job_row'];
-        self::assertStringContainsString('components/run_job.tpl" job=$job.mode label=__("novoton_holidays.dash_run")', $row);
-        foreach (['status', 'force_full', 'reset', 'force'] as $action) {
-            self::assertStringContainsString('action="' . $action . '"', $row);
+        $manage = self::dashboardTemplates()['manage'];
+        preg_match_all('/\{include file="addons\/travel_core\/components\/run_job\.tpl"[^}]*\}/', $manage, $runs);
+        self::assertCount(2, $runs[0], 'the Needs attention Run and the Tools recompute');
+        foreach ($runs[0] as $run) {
+            self::assertStringContainsString('run_dispatch="novoton_holidays.run_job"', $run);
         }
-        // The ones that undo or redo work ask first.
-        self::assertMatchesRegularExpression('/action="force_full"[^}]*confirm=__\("novoton_holidays\.dash_force_full_confirm"/', $row);
-        self::assertMatchesRegularExpression('/action="reset"[^}]*confirm=__\("novoton_holidays\.dash_reset_confirm"/', $row);
-        self::assertMatchesRegularExpression('/action="force"[^}]*confirm=__\("novoton_holidays\.dash_redo_all_confirm"/', $row);
-        self::assertStringContainsString('data-novoton-confirm="{$confirm|escape:html}"', self::dashboardTemplates()['run_job']);
+        self::assertStringNotContainsString('addons/novoton_holidays/components/run_job.tpl', $manage);
+        self::assertStringNotContainsString('addons/novoton_holidays/components/job_row.tpl', $manage);
     }
 
-    public function testTheSectionKeepsItsAnchorAndLoadsItsScriptInsideTheCapture(): void
+    public function testTheSectionKeepsItsAnchorAndItsScriptLoadsInsideTheCapture(): void
     {
         $manage = self::tpl('views/novoton_holidays/manage.tpl');
 
         // Travel Core -> Tools links to #novoton-cron-jobs.
-        self::assertStringContainsString('id="novoton-cron-jobs"', $manage);
+        self::assertStringContainsString('card_id="novoton-cron-jobs"', $manage);
 
+        // The jobs card loads cron-jobs.js itself; included inside the capture,
+        // it runs after admin AJAX navigation too.
         $open = strpos($manage, '{capture name="mainbox"}');
-        $script = strpos($manage, '{script src="js/addons/novoton_holidays/dashboard.js"}');
-        $close = strpos($manage, '{/capture}');
+        $card = strpos($manage, '{include file="addons/travel_core/components/jobs_card.tpl"');
+        $close = strpos($manage, "{/capture}\n\n{capture name=\"buttons\"}");
         self::assertIsInt($open);
-        self::assertIsInt($script);
+        self::assertIsInt($card);
         self::assertIsInt($close);
-        self::assertGreaterThan($open, $script);
-        self::assertLessThan($close, $script, 'admin AJAX navigation runs only the scripts inside the mainbox capture');
+        self::assertGreaterThan($open, $card);
+        self::assertLessThan($close, $card, 'admin AJAX navigation runs only the scripts inside the mainbox capture');
+
+        self::assertFileDoesNotExist(self::repo() . '/js/addons/novoton_holidays/dashboard.js', 'replaced by travel_core/cron-jobs.js');
+        self::assertFileDoesNotExist(self::repo() . self::TPL . '/components/job_row.tpl', 'replaced by travel_core/components/job_row.tpl');
+        self::assertFileDoesNotExist(self::repo() . self::TPL . '/components/run_job.tpl', 'replaced by travel_core/components/run_job.tpl');
     }
 
-    /** Text that comes from a job or the API is printed escaped. */
-    public function testRunErrorsAndDescriptionsAreEscaped(): void
-    {
-        $row = self::dashboardTemplates()['job_row'];
-
-        self::assertStringContainsString('{$job.error|escape:html}', $row);
-        self::assertStringContainsString('{$job.description|escape:html}', $row);
-        self::assertDoesNotMatchRegularExpression('/\{\$job\.(error|description)\}/', $row);
-    }
-
-    /** Every label the section uses, and every job/stage/schedule label the builder can ask for, exists. */
+    /**
+     * Every Novoton label the page and the plan name exists here; the words
+     * for schedules and run states are Travel Core's.
+     */
     public function testEveryLabelExists(): void
     {
         /** @var array<string, array<string, string>> $lang */
         $lang = require dirname(__DIR__, 3) . '/lang_keys.php';
+        /** @var array<string, array<string, string>> $core */
+        $core = require dirname(__DIR__, 7) . '/addon-travel-core/app/addons/travel_core/lang_keys.php';
 
         $used = [];
         foreach (self::dashboardTemplates() as $src) {
             preg_match_all('/__\("(novoton_holidays\.dash_[a-z0-9_]+)"/', $src, $m);
             $used = [...$used, ...$m[1]];
         }
-        foreach (array_keys(CronPlanBuilder::STAGES) as $stage) {
-            $used[] = 'novoton_holidays.dash_stage_' . $stage;
-        }
+        $builder = new CronPlanBuilder('http://shop.example/', 'k');
+        $modes = [];
         foreach ([...array_merge(...array_values(CronPlanBuilder::STAGES)), ...CronPlanBuilder::ON_DEMAND] as $mode) {
-            $used[] = 'novoton_holidays.dash_job_' . $mode;
-            $used[] = 'novoton_holidays.dash_job_' . $mode . '_desc';
-            $used[] = CronPlanBuilder::scheduleWords(CronPlanBuilder::cron($mode) ?: 'x')['key'];
+            $modes[$mode] = '';
         }
-        foreach (['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as $day) {
-            $used[] = 'novoton_holidays.dash_sched_weekly_' . $day;
+        $coreKeys = [];
+        foreach ($builder->stages($modes, [], [], 0) as $stage) {
+            $used[] = $stage['title_key'];
+            foreach ($stage['jobs'] as $job) {
+                $used[] = (string) $job['name_key'];
+                $used[] = (string) $job['desc_key'];
+                $coreKeys[] = (string) $job['schedule_key'];
+            }
         }
-        foreach (['ok', 'late', 'failed', 'running', 'stalled', 'never'] as $state) {
-            $used[] = 'novoton_holidays.dash_run_' . $state;
+        foreach ($builder->onDemandRows($modes, [], 0) as $job) {
+            $used[] = (string) $job['name_key'];
+            $used[] = (string) $job['desc_key'];
+            $coreKeys[] = (string) $job['schedule_key'];
         }
 
         foreach (array_unique($used) as $key) {
             self::assertArrayHasKey($key, $lang, "label {$key} is missing from lang_keys.php");
         }
-    }
-
-    /** Every state the builder can return has its own pill. */
-    public function testEveryRunStateHasAWordedPill(): void
-    {
-        $row = self::dashboardTemplates()['job_row'];
-
-        foreach (['ok', 'late', 'failed', 'running', 'stalled'] as $state) {
-            self::assertStringContainsString('$job.state == "' . $state . '"', $row);
-            self::assertStringContainsString('__("novoton_holidays.dash_run_' . $state . '")', $row);
+        foreach (array_unique($coreKeys) as $key) {
+            self::assertArrayHasKey($key, $core, "schedule label {$key} is missing from Travel Core's lang_keys.php");
         }
-        self::assertStringContainsString('__("novoton_holidays.dash_run_never")', $row);
+        self::assertArrayHasKey('travel_core.jobs_copy_url', $core, 'the XML feed\'s Copy button');
     }
 }

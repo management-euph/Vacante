@@ -8,6 +8,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\NovotonHolidays\Cron\CronDispatcher;
 use Tygh\Addons\NovotonHolidays\Services\CronPlanBuilder;
+use Tygh\Addons\TravelCore\Cron\CronJobPlan;
 
 /**
  * The dashboard's scheduled-jobs table: one row per job, in the order the
@@ -126,7 +127,7 @@ final class CronPlanBuilderTest extends TestCase
     {
         foreach (array_merge(...array_values(CronPlanBuilder::STAGES)) as $mode) {
             self::assertNotSame('', CronPlanBuilder::cron($mode), $mode);
-            self::assertNotSame('novoton_holidays.dash_sched_raw', CronPlanBuilder::scheduleWords(CronPlanBuilder::cron($mode))['key'], "{$mode} has no words for its schedule");
+            self::assertNotSame('travel_core.jobs_sched_raw', CronPlanBuilder::scheduleWords(CronPlanBuilder::cron($mode))['key'], "{$mode} has no words for its schedule");
         }
     }
 
@@ -233,15 +234,15 @@ final class CronPlanBuilderTest extends TestCase
     /** @return iterable<string, array{string, string, array<string, string>}> */
     public static function schedules(): iterable
     {
-        yield 'every 5 min' => ['*/5 * * * *', 'novoton_holidays.dash_sched_every_minutes', ['[n]' => '5']];
-        yield 'hourly' => ['45 * * * *', 'novoton_holidays.dash_sched_hourly', ['[minute]' => '45']];
-        yield 'every 2 hours' => ['15 */2 * * *', 'novoton_holidays.dash_sched_every_hours', ['[n]' => '2', '[minute]' => '15']];
-        yield 'daily' => ['30 3 * * *', 'novoton_holidays.dash_sched_daily', ['[time]' => '03:30']];
-        yield 'twice a day' => ['0 5,17 * * *', 'novoton_holidays.dash_sched_twice_daily', ['[time]' => '05:00', '[time2]' => '17:00']];
-        yield 'sunday' => ['15 1 * * 0', 'novoton_holidays.dash_sched_weekly_sun', ['[time]' => '01:15']];
-        yield 'every 3 days' => ['0 2 */3 * *', 'novoton_holidays.dash_sched_every_days', ['[n]' => '3', '[time]' => '02:00']];
-        yield 'anything else' => ['0 0 1 1 *', 'novoton_holidays.dash_sched_raw', ['[cron]' => '0 0 1 1 *']];
-        yield 'not cron' => ['nonsense', 'novoton_holidays.dash_sched_raw', ['[cron]' => 'nonsense']];
+        yield 'every 5 min' => ['*/5 * * * *', 'travel_core.jobs_sched_every_minutes', ['[n]' => '5']];
+        yield 'hourly' => ['45 * * * *', 'travel_core.jobs_sched_hourly', ['[minute]' => '45']];
+        yield 'every 2 hours' => ['15 */2 * * *', 'travel_core.jobs_sched_every_hours', ['[n]' => '2', '[minute]' => '15']];
+        yield 'daily' => ['30 3 * * *', 'travel_core.jobs_sched_daily', ['[time]' => '03:30']];
+        yield 'twice a day' => ['0 5,17 * * *', 'travel_core.jobs_sched_twice_daily', ['[time]' => '05:00', '[time2]' => '17:00']];
+        yield 'sunday' => ['15 1 * * 0', 'travel_core.jobs_sched_weekly_sun', ['[time]' => '01:15']];
+        yield 'every 3 days' => ['0 2 */3 * *', 'travel_core.jobs_sched_every_days', ['[n]' => '3', '[time]' => '02:00']];
+        yield 'anything else' => ['0 0 1 1 *', 'travel_core.jobs_sched_raw', ['[cron]' => '0 0 1 1 *']];
+        yield 'not cron' => ['nonsense', 'travel_core.jobs_sched_raw', ['[cron]' => 'nonsense']];
     }
 
     /** @param array<string, string> $params */
@@ -308,7 +309,21 @@ final class CronPlanBuilderTest extends TestCase
         self::assertFalse($rows['cleanup']['recommended']);
 
         $onDemand = self::builder()->onDemandRows(self::allModes(), [], self::NOW);
-        self::assertSame('novoton_holidays.dash_sched_on_demand', $onDemand[0]['schedule_key']);
+        self::assertSame('travel_core.jobs_sched_on_demand', $onDemand[0]['schedule_key']);
         self::assertSame('', $onDemand[0]['crontab_line']);
+    }
+
+    /**
+     * Novoton hands Travel Core's shared plan its job list and its own
+     * names: the jobs card reads each row's labels from Novoton's packs.
+     */
+    public function testTheRowsNameNovotonsOwnLabels(): void
+    {
+        self::assertInstanceOf(CronJobPlan::class, self::builder());
+
+        $stage = self::builder()->stages(self::allModes(), [], [], self::NOW)[0];
+        self::assertSame('novoton_holidays.dash_stage_reference', $stage['title_key']);
+        self::assertSame('novoton_holidays.dash_job_resort_list', $stage['jobs'][0]['name_key']);
+        self::assertSame('novoton_holidays.dash_job_resort_list_desc', $stage['jobs'][0]['desc_key']);
     }
 }
