@@ -14,9 +14,11 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  * departures are all past ("… 2024 (charter avion)"); the circuits sync
  * saves only the ones named here (CircuitSyncService).
  *
- * Month by month, and only for the circuits not found yet: a circuit with
- * a departure this month is not asked about next month, and the search
- * stops once every circuit is found (or the months run out).
+ * Month by month, one request a month (every page): the endpoint ignores
+ * circuit_ids (seen live: it answers every circuit's rates for the month
+ * asked), so it is not sent. A circuit found in a month needs no later
+ * one, and the search stops once every candidate is found (or the months
+ * run out).
  *
  * ids() is null when the rates could not be read (an API failure, too
  * many pages) or priced no circuit at all: the sync then keeps what it
@@ -28,9 +30,6 @@ final class BookableCircuits
 
     /** The most the endpoint gives per page. */
     private const int PER_PAGE = 100;
-
-    /** Circuits asked about in one request. */
-    private const int IDS_PER_REQUEST = 200;
 
     /** A stop for a runaway listing, per request. */
     private const int MAX_PAGES = 200;
@@ -53,13 +52,11 @@ final class BookableCircuits
         /** @var array<int, true> $found */
         $found = [];
         foreach (self::months($today) as $month) {
-            foreach (array_chunk($remaining, self::IDS_PER_REQUEST) as $chunk) {
-                $priced = $this->priced($chunk, $month, $today);
-                if ($priced === null) {
-                    return null;
-                }
-                $found += array_fill_keys($priced, true);
+            $priced = $this->priced($month, $today);
+            if ($priced === null) {
+                return null;
             }
+            $found += array_fill_keys(array_values(array_intersect($priced, $remaining)), true);
             $remaining = array_values(array_filter($remaining, static fn (int $id): bool => !isset($found[$id])));
             if ($remaining === []) {
                 break;
@@ -70,18 +67,16 @@ final class BookableCircuits
     }
 
     /**
-     * Which of $circuitIds Sphinx prices on a departure in $month from
-     * $today on: every page; null when a page could not be read.
+     * The circuits Sphinx prices on a departure in $month from $today on:
+     * every page; null when a page could not be read.
      *
-     * @param list<int> $circuitIds
      * @return list<int>|null
      */
-    private function priced(array $circuitIds, string $month, string $today): ?array
+    private function priced(string $month, string $today): ?array
     {
         $ids = [];
         for ($page = 1; $page <= self::MAX_PAGES; $page++) {
             $response = $this->api->getCircuitRates([
-                'circuit_ids' => $circuitIds,
                 'months' => [$month],
                 'pagination' => ['page' => $page, 'per_page' => self::PER_PAGE],
             ]);

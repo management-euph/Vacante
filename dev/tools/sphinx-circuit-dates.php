@@ -77,6 +77,7 @@ echo 'sphinx-circuit-dates — circuit ', $cd_circuit, $cd_name !== '' ? ' (' . 
 
 $cd_api = Container::getApi();
 $cd_total = 0;
+$cd_others = 0;
 foreach (BookableCircuits::months($cd_today) as $cd_month) {
     $cd_dates = [];
     for ($cd_page = 1; $cd_page <= 20; $cd_page++) {
@@ -91,11 +92,15 @@ foreach (BookableCircuits::months($cd_today) as $cd_month) {
         }
         $cd_rates = TypeCoerce::toRowList($cd_response['results'] ?? []);
         foreach ($cd_rates as $cd_rate) {
+            // The endpoint ignores circuit_ids: other circuits' rates are counted, not listed.
+            if (TypeCoerce::toInt($cd_rate['circuit_id'] ?? 0) !== $cd_circuit) {
+                $cd_others++;
+                continue;
+            }
             $cd_pricing = TypeCoerce::toStringMap($cd_rate['pricing'] ?? null);
             $cd_dates[] = sprintf(
-                '%s%s %s %s%s',
+                '%s %s %s%s',
                 TypeCoerce::toString($cd_rate['departure_date'] ?? '(no date)'),
-                TypeCoerce::toInt($cd_rate['circuit_id'] ?? 0) !== $cd_circuit ? ' [circuit ' . TypeCoerce::toInt($cd_rate['circuit_id'] ?? 0) . '!]' : '',
                 number_format(TypeCoerce::toFloat($cd_pricing['selling_price'] ?? 0), 0, ',', '.'),
                 TypeCoerce::toString($cd_pricing['currency'] ?? ''),
                 TypeCoerce::toString($cd_rate['departure_date'] ?? '') < $cd_today ? ' (past)' : '',
@@ -110,4 +115,4 @@ foreach (BookableCircuits::months($cd_today) as $cd_month) {
     echo $cd_month, ': ', $cd_dates === [] ? '-' : implode(' · ', $cd_dates), "\n";
 }
 
-echo "\n", $cd_total, " rates over 18 months. Read-only: nothing was written.\n";
+echo "\n", $cd_total, ' departures of this circuit over 18 months (', $cd_others, " rates of other circuits left out: the endpoint ignores circuit_ids). Read-only: nothing was written.\n";
