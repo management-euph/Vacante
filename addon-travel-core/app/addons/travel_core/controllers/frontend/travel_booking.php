@@ -165,7 +165,7 @@ if ($mode === 'booking_config') {
                 'package_nights', 'package_prices_note_flight', 'package_prices_note_bus',
                 'package_rooms_title', 'package_same_transport', 'package_flight_choice',
                 'package_included_flight', 'package_included_bus', 'package_direct', 'package_with_stops',
-                'package_loading_rooms', 'pdpa_r_immediate', 'pdpa_r_on_request_tag',
+                'package_loading_rooms', 'package_searching', 'pdpa_r_immediate', 'pdpa_r_on_request_tag',
             ];
             $translations = [];
             foreach ($translationKeys as $key) {

@@ -4589,3 +4589,7 @@ msgstr "cu escală"
 msgctxt "Languages::travel_core.package_loading_rooms"
 msgid "Looking for the prices of this departure… it can take up to half a minute."
 msgstr "Căutăm prețurile pentru această plecare… poate dura până la jumătate de minut."
+
+msgctxt "Languages::travel_core.package_searching"
+msgid "Searching…"
+msgstr "Se caută…"

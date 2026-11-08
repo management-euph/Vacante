@@ -3784,4 +3784,8 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Looking for the prices of this departure… it can take up to half a minute.',
         'ro' => 'Căutăm prețurile pentru această plecare… poate dura până la jumătate de minut.',
     ],
+    'travel_core.package_searching' => [
+        'en' => 'Searching…',
+        'ro' => 'Se caută…',
+    ],
 ];

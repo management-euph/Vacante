@@ -54,7 +54,8 @@ final class PackageModesWiringTest extends TestCase
         self::assertStringContainsString('<BookingEngine config={hotelConfig} />', $modes);
         self::assertStringContainsString("page.classList.toggle('travel-pdp-results--package', mode !== '')", $modes);
         self::assertStringContainsString('fetch(packageDatesUrl(base, datesDispatch, hotelId, transport, departureId)', $bar);
-        self::assertStringContainsString('fetchQuote(packageQuoteUrl(base, quoteDispatch, choice))', $bar);
+        self::assertStringContainsString('fetchQuote(packageQuoteUrl(base, quoteDispatch, choice), signal)', $bar);
+        self::assertStringContainsString('if (dropped) dropped.abort();', $bar, 'a dropped quote is aborted');
         self::assertStringContainsString('<PackageRooms quote={quote} bookHref={bookHref} />', $bar);
         self::assertStringContainsString('href={bookHref(offer)}', self::repo('react-src/src/PackageRooms.jsx'));
     }

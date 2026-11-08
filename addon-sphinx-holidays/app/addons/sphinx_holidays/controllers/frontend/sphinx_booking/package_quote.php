@@ -49,6 +49,11 @@ $asked = preg_match('/^\d+$/', $hotelId) === 1
     && PackageDepartures::offers(PackageDepartures::forHotel($hotelId, date('Y-m-d')), $transport, $departureId, $departureDate, $nights)
     && CircuitRoomOffers::validOccupancy($occupancy, ProviderRoomLimit::maxRooms('sphinx'));
 if ($asked) {
+    // The search runs up to PackageHotelOffers' budget (25 s), past PHP's
+    // usual 30 s with the offers' pricing.
+    if (function_exists('set_time_limit')) {
+        set_time_limit(60);
+    }
     try {
         $answer = (new PackageHotelOffers(
             Container::getApi(),

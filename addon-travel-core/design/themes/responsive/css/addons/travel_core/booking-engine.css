@@ -1523,6 +1523,11 @@ button.nvt-field-input:active {
 .nvt-field--nights {
     flex: 0.55;
 }
+/* "Se caută…": the package search is running; the button waits for it. */
+.nvt-package-bar .nvt-btn-search:disabled {
+    cursor: progress;
+    opacity: 0.75;
+}
 .travel-package-rooms__choice {
     margin: 0 0 12px;
     font-size: 14px;
