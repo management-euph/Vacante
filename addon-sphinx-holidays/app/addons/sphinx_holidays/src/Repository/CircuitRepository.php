@@ -88,6 +88,36 @@ class CircuitRepository
         ));
     }
 
+    /**
+     * The stored circuits Sphinx no longer prices from today on (not in
+     * $bookable, BookableCircuits) leave the list: removed, or set inactive
+     * when a product was made for one (the product keeps its link). One of
+     * $bookable set inactive earlier is active again.
+     *
+     * @param list<int> $bookable never empty: the caller keeps everything on an unknown answer
+     * @return array{removed: int, deactivated: int}
+     */
+    public function pruneUnbookable(array $bookable): array
+    {
+        if ($bookable === []) {
+            return ['removed' => 0, 'deactivated' => 0];
+        }
+        $removed = db_query(
+            'DELETE FROM ?:sphinx_circuits WHERE circuit_id NOT IN (?n) AND (product_id IS NULL OR product_id = 0)',
+            $bookable,
+        );
+        $deactivated = db_query(
+            "UPDATE ?:sphinx_circuits SET sync_status = 'inactive' WHERE circuit_id NOT IN (?n) AND product_id > 0 AND sync_status = 'active'",
+            $bookable,
+        );
+        db_query(
+            "UPDATE ?:sphinx_circuits SET sync_status = 'active' WHERE circuit_id IN (?n) AND sync_status = 'inactive'",
+            $bookable,
+        );
+
+        return ['removed' => TypeCoerce::toInt($removed), 'deactivated' => TypeCoerce::toInt($deactivated)];
+    }
+
     /** Write the CS-Cart product link (makes the circuit sellable). */
     public function linkToProduct(int $circuitId, int $productId): void
     {
