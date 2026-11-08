@@ -372,7 +372,7 @@ abstract class CronJobPlan
      */
     private static function staged(): array
     {
-        return array_values(array_merge(...array_values(static::STAGES)));
+        return array_merge(...array_values(static::STAGES));
     }
 
     /**
