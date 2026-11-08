@@ -89,7 +89,7 @@ declare(strict_types=1);
 
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Cron\CronDispatcher;
-use Tygh\Addons\SphinxHolidays\Cron\CronRunOutput;
+use Tygh\Addons\TravelCore\Cron\CronRunOutput;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
@@ -149,7 +149,7 @@ $mode = (string) preg_replace('/[^a-z0-9_]/', '', strtolower(RequestCoerce::stri
 // ── Dispatch ──
 
 // The same log as the dashboard's Run (sphinx_holidays.run_job): CronRunOutput.
-echo CronRunOutput::startLine($mode);
+echo CronRunOutput::startLine('Sphinx', $mode);
 
 fn_log_event('general', 'runtime', [
     'message' => "Sphinx frontend cron started (mode: {$mode})",

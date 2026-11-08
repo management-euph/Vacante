@@ -162,6 +162,10 @@ final class CronJobPlanTest extends TestCase
         yield 'sunday' => ['15 1 * * 0', 'travel_core.jobs_sched_weekly_sun', ['[time]' => '01:15']];
         yield 'monday' => ['0 4 * * 1', 'travel_core.jobs_sched_weekly_mon', ['[time]' => '04:00']];
         yield 'every 3 days' => ['0 2 */3 * *', 'travel_core.jobs_sched_every_days', ['[n]' => '3', '[time]' => '02:00']];
+        yield 'monthly, on the 1st' => ['0 1 1 * *', 'travel_core.jobs_sched_monthly', ['[day]' => '1', '[time]' => '01:00']];
+        yield 'monthly, on the 15th' => ['45 3 15 * *', 'travel_core.jobs_sched_monthly', ['[day]' => '15', '[time]' => '03:45']];
+        yield 'day 0 is not a day of the month' => ['0 1 0 * *', 'travel_core.jobs_sched_raw', ['[cron]' => '0 1 0 * *']];
+        yield 'day 32 is not a day of the month' => ['0 1 32 * *', 'travel_core.jobs_sched_raw', ['[cron]' => '0 1 32 * *']];
         yield 'day 7 is not a weekday' => ['0 6 * * 7', 'travel_core.jobs_sched_raw', ['[cron]' => '0 6 * * 7']];
         yield 'anything else' => ['0 0 1 1 *', 'travel_core.jobs_sched_raw', ['[cron]' => '0 0 1 1 *']];
         yield 'not cron' => ['nonsense', 'travel_core.jobs_sched_raw', ['[cron]' => 'nonsense']];

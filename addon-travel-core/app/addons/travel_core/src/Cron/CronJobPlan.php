@@ -392,6 +392,9 @@ abstract class CronJobPlan
         if ($mon === '*' && $dow === '*' && preg_match('/^\*\/(\d+)$/', $dom, $m) === 1 && ctype_digit($minute) && ctype_digit($hour)) {
             return ['key' => 'travel_core.jobs_sched_every_days', 'params' => ['[n]' => $m[1], '[time]' => self::time($hour, $minute)]];
         }
+        if ($mon === '*' && $dow === '*' && ctype_digit($dom) && (int) $dom >= 1 && (int) $dom <= 31 && ctype_digit($minute) && ctype_digit($hour)) {
+            return ['key' => 'travel_core.jobs_sched_monthly', 'params' => ['[day]' => (string) (int) $dom, '[time]' => self::time($hour, $minute)]];
+        }
 
         return ['key' => 'travel_core.jobs_sched_raw', 'params' => ['[cron]' => $cron]];
     }

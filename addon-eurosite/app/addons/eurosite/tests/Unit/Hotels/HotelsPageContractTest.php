@@ -91,7 +91,9 @@ final class HotelsPageContractTest extends TestCase
         $actions = self::read(self::ADDON . '/schemas/menu/actions.post.php');
         self::assertStringContainsString("'href'     => 'eurosite.hotels'", $actions);
         self::assertStringContainsString("foreach (['eurosite.manage', 'eurosite.hotels', 'eurosite.whitelist', 'eurosite.seo_templates'] as \$page)", $actions);
-        self::assertStringContainsString('{"eurosite.hotels"|fn_url}', self::read(self::ADDON . '/../../../design/backend/templates/addons/eurosite/views/eurosite/manage.tpl'));
+        // On the dashboard, under the jobs that fill or read the list (its part of each job's row).
+        self::assertStringContainsString('{"eurosite.hotels"|fn_url}', self::read(self::ADDON . '/../../../design/backend/templates/addons/eurosite/components/job_extra.tpl'));
+        self::assertStringContainsString('row_extra="addons/eurosite/components/job_extra.tpl"', self::read(self::ADDON . '/../../../design/backend/templates/addons/eurosite/views/eurosite/manage.tpl'));
     }
 
     public function testEveryLabelThePageUsesExists(): void

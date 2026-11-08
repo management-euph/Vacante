@@ -23,7 +23,6 @@ declare(strict_types=1);
 use Tygh\Addons\SphinxHolidays\Cron\Commands\AddProductsCommand;
 use Tygh\Addons\SphinxHolidays\Cron\CronDispatcher;
 use Tygh\Addons\SphinxHolidays\Cron\CronPlan;
-use Tygh\Addons\SphinxHolidays\Cron\CronRunOutput;
 use Tygh\Addons\SphinxHolidays\Repository\HotelSkipRepository;
 use Tygh\Addons\SphinxHolidays\Services\CircuitSyncService;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
@@ -35,6 +34,7 @@ use Tygh\Addons\SphinxHolidays\Services\PackageRouteSyncService;
 use Tygh\Addons\SphinxHolidays\Services\WhitelistPageLoader;
 use Tygh\Addons\TravelCore\Cron\CronHealth;
 use Tygh\Addons\TravelCore\Cron\CronRunLog;
+use Tygh\Addons\TravelCore\Cron\CronRunOutput;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\DestinationPicker;
@@ -115,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $params = CronPlan::runParams($job, RequestCoerce::string($_REQUEST, 'job_action'), $_REQUEST);
 
         header('Content-Type: text/plain; charset=utf-8');
-        echo CronRunOutput::startLine($job);
+        echo CronRunOutput::startLine('Sphinx', $job);
         try {
             CronRunOutput::dispatch(new CronDispatcher(), $job, $params);
         } catch (\Throwable $e) {

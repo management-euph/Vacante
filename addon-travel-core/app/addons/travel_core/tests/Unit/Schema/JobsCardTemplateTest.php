@@ -69,12 +69,48 @@ final class JobsCardTemplateTest extends TestCase
         self::assertStringContainsString('data-crontab-url="{$url|escape:html}"', $card);
         self::assertStringContainsString('data-key="{$key|escape:html}"', $card);
         self::assertStringContainsString('<pre class="travel-cron-commands__text" data-travel-cron-text>{$masked|escape:html}</pre>', $card);
-        preg_match_all('/\{\$(cli|url|key)\|escape:html\}/', $card, $m, PREG_OFFSET_CAPTURE);
-        self::assertCount(3, $m[0]);
+        // A plan's texts too: data-crontab-<plan>-cli and -url.
+        self::assertStringContainsString('data-crontab-{$_plan.key|escape:html}-cli="{$_plan.cli|escape:html}"', $card);
+        self::assertStringContainsString('data-crontab-{$_plan.key|escape:html}-url="{$_plan.url|escape:html}"', $card);
+        preg_match_all('/\{\$(cli|url|key|_plan\.cli|_plan\.url)\|escape:html\}/', $card, $m, PREG_OFFSET_CAPTURE);
+        self::assertCount(5, $m[0]);
         foreach ($m[0] as [$use, $at]) {
-            $before = substr($card, max(0, $at - 30), 30);
-            self::assertMatchesRegularExpression('/data-[a-z-]+="$/', $before, "{$use} is printed outside a data-* attribute");
+            $before = substr($card, max(0, $at - 50), 50);
+            self::assertMatchesRegularExpression('/data-[a-z{}$._|:-]+="$/', $before, "{$use} is printed outside a data-* attribute");
         }
+        // A plan's masked text is what the card shows on load, never its real one.
+        self::assertStringContainsString('{$masked = $_plan.masked}', $card);
+        self::assertStringNotContainsString('{$_plan.masked', $card);
+    }
+
+    /**
+     * An add-on with more than one way to schedule its jobs offers them as
+     * plans: one shown at a time, the first on load, each with its hint, and
+     * the switch on its own row, where long names wrap.
+     */
+    public function testTheCommandsCardOffersPlansOneAtATime(): void
+    {
+        $card = self::templates()['commands_card'];
+
+        self::assertStringContainsString('data-plan="{$_plan_key|escape:html}"', $card, 'the plan shown on load');
+        self::assertStringContainsString('data-travel-cron-plan="{$_plan.key|escape:html}" aria-pressed="{if $smarty.foreach.plans.first}true{else}false{/if}"', $card);
+        self::assertStringContainsString('{$_plan.label|escape:html}', $card);
+        self::assertStringContainsString('data-travel-cron-plan-hint="{$_plan.key|escape:html}"{if !$smarty.foreach.plans.first} hidden{/if}>{$_plan.hint|escape:html}', $card);
+        self::assertStringContainsString('<div class="travel-cron-commands__plans" role="group" aria-labelledby="{$card_id}-plans">', $card);
+        self::assertStringContainsString('{__("travel_core.jobs_plan_label")}', $card);
+
+        $css = (string) file_get_contents(self::repo() . '/design/backend/css/addons/travel_core/admin_styles.css');
+        self::assertMatchesRegularExpression('/\.travel-cron-commands__plans \{[^}]*flex-wrap: wrap;/', $css);
+        self::assertMatchesRegularExpression('/\.travel-cron-commands__plans \.btn \{[^}]*white-space: normal;/', $css);
+
+        $js = (string) file_get_contents(self::repo() . '/js/addons/travel_core/cron-jobs.js');
+        self::assertStringContainsString("root.getAttribute('data-plan')", $js);
+    }
+
+    /** An add-on can show what is its own under a job's name (a catalog's size, a link to its list). */
+    public function testARowCanCarryTheAddonsOwnExtras(): void
+    {
+        self::assertStringContainsString('{if $row_extra}{include file=$row_extra job=$job}{/if}', self::templates()['job_row']);
     }
 
     /** Run, Check status, Force full sync, Redo all and Reset are POSTs with CS-Cart's CSRF token, to the add-on's run action. */
@@ -110,7 +146,7 @@ final class JobsCardTemplateTest extends TestCase
         self::assertMatchesRegularExpression('/action="force"[^}]*confirm=__\("travel_core\.jobs_redo_all_confirm"/', $row);
 
         $card = self::templates()['jobs_card'];
-        self::assertSame(2, substr_count($card, '{include file="addons/travel_core/components/job_row.tpl" job=$job has_key=$has_key run_dispatch=$run_dispatch}'), 'the staged rows and the on-demand rows');
+        self::assertSame(2, substr_count($card, '{include file="addons/travel_core/components/job_row.tpl" job=$job has_key=$has_key run_dispatch=$run_dispatch row_extra=$row_extra|default:""}'), 'the staged rows and the on-demand rows');
     }
 
     /** Each menu item shows only for a job that answers it (CronJobPlan's row flags), the add-on's own items included. */

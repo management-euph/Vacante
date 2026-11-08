@@ -111,7 +111,7 @@ final class DashboardJobsTest extends TestCase
         self::assertStringNotContainsString('toStringMap($_REQUEST)', $body);
         self::assertStringNotContainsString('access_key', $body);
         self::assertStringContainsString("header('Content-Type: text/plain; charset=utf-8');", $body);
-        self::assertStringContainsString('echo CronRunOutput::startLine($job);', $body);
+        self::assertStringContainsString('echo CronRunOutput::startLine(\'Sphinx\', $job);', $body);
     }
 
     /** The URL and the dashboard print a run the same way. */
@@ -119,7 +119,7 @@ final class DashboardJobsTest extends TestCase
     {
         $cron = (string) file_get_contents(dirname(__DIR__, 3) . '/controllers/frontend/sphinx_cron.php');
 
-        self::assertStringContainsString('echo CronRunOutput::startLine($mode);', $cron);
+        self::assertStringContainsString('echo CronRunOutput::startLine(\'Sphinx\', $mode);', $cron);
         self::assertStringContainsString('CronRunOutput::dispatch($dispatcher, $mode, TypeCoerce::toStringMap($_REQUEST));', $cron);
     }
 

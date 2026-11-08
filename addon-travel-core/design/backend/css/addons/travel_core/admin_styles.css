@@ -712,10 +712,35 @@
     margin: 0;
 }
 
-.travel-cron-commands__tools [aria-pressed="true"] {
+.travel-cron-commands__tools [aria-pressed="true"],
+.travel-cron-commands__plans [aria-pressed="true"] {
     background: #2457c5;
     border-color: #2457c5;
     color: #fff;
+}
+
+/* A choice of plans (commands_card.tpl's plans): a row of its own whose
+ * buttons wrap, and whose names may take two lines rather than run over the
+ * next button. */
+.travel-cron-commands__plans {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 8px;
+}
+
+.travel-cron-commands__plans-label {
+    font-weight: 600;
+}
+
+.travel-cron-commands__plans .btn {
+    white-space: normal;
+    text-align: left;
+}
+
+.travel-cron-commands__plan-hint {
+    margin: 0 0 10px;
 }
 
 .travel-cron-commands__text {

@@ -4642,6 +4642,10 @@ msgctxt "Languages::travel_core.jobs_sched_every_days"
 msgid "Every [n] days, [time]"
 msgstr "Every [n] days, [time]"
 
+msgctxt "Languages::travel_core.jobs_sched_monthly"
+msgid "Monthly on day [day], [time]"
+msgstr "Monthly on day [day], [time]"
+
 msgctxt "Languages::travel_core.jobs_sched_weekly_sun"
 msgid "Sundays [time]"
 msgstr "Sundays [time]"
@@ -4797,6 +4801,10 @@ msgstr "CLI (php)"
 msgctxt "Languages::travel_core.jobs_format_url"
 msgid "URL"
 msgstr "URL"
+
+msgctxt "Languages::travel_core.jobs_plan_label"
+msgid "Plan"
+msgstr "Plan"
 
 msgctxt "Languages::travel_core.jobs_copy_all"
 msgid "Copy all"
