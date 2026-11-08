@@ -1,7 +1,8 @@
 {* One scheduled job on a provider's dashboard: name, schedule, last run, Run and ⋯.
 
    Params: job (a CronJobPlan row), has_key, run_dispatch (the add-on's
-   run_job action).
+   run_job action), row_extra (the add-on's template shown under the name and
+   description, optional).
 
    The key is never printed: the ⋯ menu's copy items carry the real
    commands in data-copy (cron-jobs.js copies them), and Run posts to the
@@ -17,6 +18,7 @@
         {if $job.recommended}<span class="travel-cron-job__badge">{__("travel_core.jobs_recommended")}</span>{/if}
         <div class="travel-cron-job__desc">{if $job.labelled}{__($job.desc_key)}{else}{$job.description|escape:html}{/if}</div>
         <code class="travel-cron-job__mode">{$job.mode|escape:html}</code>
+        {if $row_extra}{include file=$row_extra job=$job}{/if}
     </td>
     <td>
         {__($job.schedule_key, $job.schedule_params)}

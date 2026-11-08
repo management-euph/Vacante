@@ -2,23 +2,24 @@
 
 declare(strict_types=1);
 
-namespace Tygh\Addons\SphinxHolidays\Cron;
+namespace Tygh\Addons\TravelCore\Cron;
 
 use Tygh\Addons\TravelCore\Contracts\CronDispatcherInterface;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
- * A job's run as plain text, the same from the public cron URL
- * (controllers/frontend/sphinx_cron.php) and from the dashboard's Run
- * (sphinx_holidays.run_job): a first line, the job's own output as it goes
- * (the dispatcher echoes it), then how it ended, its error and its figures.
+ * A job's run as plain text, the same from a provider's public cron URL
+ * (sphinx_cron.php, eurosite_cron.php) and from its dashboard's Run
+ * (sphinx_holidays.run_job, eurosite.run_job): a first line, the job's own
+ * output as it goes (the dispatcher echoes it), then how it ended, its error
+ * and its figures. Sphinx and Eurosite each printed this with their own copy.
  */
 final class CronRunOutput
 {
-    /** The first line of every run. */
-    public static function startLine(string $mode): string
+    /** The first line of every run: "[time] Sphinx Cron Started - Mode: hotels". */
+    public static function startLine(string $provider, string $mode): string
     {
-        return '[' . date('Y-m-d H:i:s') . "] Sphinx Cron Started - Mode: {$mode}\n";
+        return '[' . date('Y-m-d H:i:s') . "] {$provider} Cron Started - Mode: {$mode}\n";
     }
 
     /**

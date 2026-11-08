@@ -19,6 +19,21 @@ const KEY = 'realKEY123';
 const CLI = `# Novoton Holidays: scheduled jobs, in the order they run\n0 1 * * 0  php /var/www/html/app/addons/novoton_holidays/cron.php access_key=${KEY} mode=resort_list`;
 const URL_FORM = `# URLs for a cron service: add each one at the time shown\n# 0 1 * * 0\nhttp://shop.example/index.php?dispatch=novoton_cron.run&access_key=${KEY}&mode=resort_list`;
 
+// An add-on with two ways to schedule its jobs (Eurosite): one shown at a time.
+const PLANS = {
+    full: {
+        cli: `# Eurosite Touring: the catalogs in one nightly run\n0 1 * * *  php cron.php access_key=${KEY} mode=full`,
+        url: `# URLs for a cron service: add each one at the time shown\n# 0 1 * * *\nhttp://shop.example/index.php?dispatch=eurosite_cron.run&access_key=${KEY}&cron_mode=full`,
+    },
+    per: {
+        cli: `# Eurosite Touring: each job on its own line\n0 1 1 * *  php cron.php access_key=${KEY} mode=countries`,
+        url: `# URLs for a cron service: add each one at the time shown\n# 0 1 1 * *\nhttp://shop.example/index.php?dispatch=eurosite_cron.run&access_key=${KEY}&cron_mode=countries`,
+    },
+};
+
+/** As Smarty's escape:html puts a text into an attribute. */
+const attr = (text) => text.replace(/&/g, '&amp;').replace(/\n/g, '&#10;');
+
 let copied = [];
 
 const SCRIPT = '../../addon-travel-core/js/addons/travel_core/cron-jobs.js';
@@ -72,6 +87,23 @@ beforeAll(async () => {
             <button type="button" id="copy-all" data-travel-cron-copy-all>Copy all</button>
             <pre id="crontab-text" data-travel-cron-text>server-rendered masked text</pre>
             <button type="button" class="travel-cron-copy" id="feed-copy" data-copy="http://shop.example/feed?access_key=${KEY}">Copy URL</button>
+        </section>
+
+        <section id="plans" data-travel-cron-commands data-plan="full"
+                 data-crontab-full-cli="${attr(PLANS.full.cli)}" data-crontab-full-url="${attr(PLANS.full.url)}"
+                 data-crontab-per-cli="${attr(PLANS.per.cli)}" data-crontab-per-url="${attr(PLANS.per.url)}"
+                 data-key="${KEY}" data-txt-copied="Copied" data-txt-copy-failed="Copy failed">
+            <button type="button" data-travel-cron-format="cli" aria-pressed="true" id="plans-cli">CLI (php)</button>
+            <button type="button" data-travel-cron-format="url" aria-pressed="false" id="plans-url">URL</button>
+            <button type="button" id="plans-copy-all" data-travel-cron-copy-all>Copy all</button>
+            <div role="group">
+                <button type="button" data-travel-cron-plan="full" aria-pressed="true" id="plan-full">Catalogs in one nightly run</button>
+                <button type="button" data-travel-cron-plan="per" aria-pressed="false" id="plan-per">Each job on its own line</button>
+                <button type="button" data-travel-cron-plan="weekly" aria-pressed="false" id="plan-unknown">A plan the card does not carry</button>
+            </div>
+            <p data-travel-cron-plan-hint="full" id="hint-full">Recommended.</p>
+            <p data-travel-cron-plan-hint="per" id="hint-per" hidden>Never install both.</p>
+            <pre id="plans-text" data-travel-cron-text>server-rendered masked text</pre>
         </section>
     `;
 
@@ -148,6 +180,60 @@ describe('All commands block', () => {
         } finally {
             vi.useRealTimers();
         }
+    });
+});
+
+describe('a card with plans', () => {
+    beforeEach(() => {
+        $('#plan-full').click();
+        $('#plans-cli').click();
+    });
+
+    it('starts on the first plan, masked, with its hint and only its hint', () => {
+        const text = $('#plans-text').textContent;
+        expect(text).toContain('mode=full');
+        expect(text).toContain('access_key=••••••••');
+        expect(text).not.toContain(KEY);
+        expect($('#plan-full').getAttribute('aria-pressed')).toBe('true');
+        expect($('#plan-per').getAttribute('aria-pressed')).toBe('false');
+        expect($('#hint-full').hidden).toBe(false);
+        expect($('#hint-per').hidden).toBe(true);
+    });
+
+    it('switches plan, its hint with it, and keeps the format chosen', () => {
+        $('#plans-url').click();
+        $('#plan-per').click();
+        const text = $('#plans-text').textContent;
+        expect(text).toContain('&access_key=••••••••&cron_mode=countries');
+        expect(text).not.toContain('cron_mode=full');
+        expect(text).not.toContain(KEY);
+        expect($('#plan-per').getAttribute('aria-pressed')).toBe('true');
+        expect($('#plan-full').getAttribute('aria-pressed')).toBe('false');
+        expect($('#hint-per').hidden).toBe(false);
+        expect($('#hint-full').hidden).toBe(true);
+        expect($('#plans-url').getAttribute('aria-pressed')).toBe('true');
+    });
+
+    it('Copy all copies the REAL text of the plan and the format shown', async () => {
+        $('#plan-per').click();
+        $('#plans-copy-all').click();
+        await flush();
+        $('#plans-url').click();
+        $('#plans-copy-all').click();
+        await flush();
+        expect(copied).toEqual([PLANS.per.cli, PLANS.per.url]);
+    });
+
+    it('a plan the card does not carry changes nothing', () => {
+        $('#plan-unknown').click();
+        expect($('#plans-text').textContent).toContain('mode=full');
+        expect($('#plan-full').getAttribute('aria-pressed')).toBe('true');
+        expect($('#plan-unknown').getAttribute('aria-pressed')).toBe('false');
+    });
+
+    it('leaves the card without plans as it was', () => {
+        $('#plan-per').click();
+        expect($('#crontab-text').textContent).toContain('mode=resort_list');
     });
 });
 

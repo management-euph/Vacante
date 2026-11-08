@@ -3838,6 +3838,10 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Every [n] days, [time]',
         'ro' => 'La fiecare [n] zile, [time]',
     ],
+    'travel_core.jobs_sched_monthly' => [
+        'en' => 'Monthly on day [day], [time]',
+        'ro' => 'Lunar, pe data de [day], [time]',
+    ],
     'travel_core.jobs_sched_weekly_sun' => [
         'en' => 'Sundays [time]',
         'ro' => 'Duminica [time]',
@@ -3993,6 +3997,10 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
     'travel_core.jobs_format_url' => [
         'en' => 'URL',
         'ro' => 'URL',
+    ],
+    'travel_core.jobs_plan_label' => [
+        'en' => 'Plan',
+        'ro' => 'Plan',
     ],
     'travel_core.jobs_copy_all' => [
         'en' => 'Copy all',

@@ -7,7 +7,8 @@
 //    there is no room below — no table, card or scroll box around the row
 //    can cut it off (the jobs card scrolls sideways, which clipped the
 //    menus of its last rows);
-//  - the "All commands" block: CLI / URL switch, masked key, Copy all;
+//  - the "All commands" block: CLI / URL switch, a choice of plans where the
+//    add-on offers one, masked key, Copy all;
 //  - every job button (Run, Check status, Force full sync, Reset progress,
 //    a "Needs attention" Run) opens the job's log in a NEW window; the ones
 //    carrying data-travel-cron-confirm ask first (the question comes from
@@ -189,6 +190,11 @@
     }
 
     // ── "All commands": CLI / URL, masked on screen, copied for real ──
+    //
+    // A card can also offer plans (an add-on with more than one way to
+    // schedule its jobs): each plan's texts ride in data-crontab-<plan>-cli
+    // and -url, the card starts on data-plan, and one plan shows at a time,
+    // with its hint — installing two would run every job twice.
     function initCommands() {
         each('[data-travel-cron-commands]', function (root) {
             if (root.__travelCronCommands) { return; }
@@ -197,11 +203,17 @@
             var pre = root.querySelector('[data-travel-cron-text]');
             var copyBtn = root.querySelector('[data-travel-cron-copy-all]');
             var formats = Array.prototype.slice.call(root.querySelectorAll('[data-travel-cron-format]'));
+            var plans = Array.prototype.slice.call(root.querySelectorAll('[data-travel-cron-plan]'));
+            var hints = Array.prototype.slice.call(root.querySelectorAll('[data-travel-cron-plan-hint]'));
             var key = root.getAttribute('data-key') || '';
-            var state = { format: 'cli' };
+            var state = { format: 'cli', plan: root.getAttribute('data-plan') || '' };
+
+            function attr(plan, format) {
+                return 'data-crontab-' + (plan === '' ? '' : plan + '-') + format;
+            }
 
             function text() {
-                return root.getAttribute(state.format === 'url' ? 'data-crontab-url' : 'data-crontab-cli') || '';
+                return root.getAttribute(attr(state.plan, state.format === 'url' ? 'url' : 'cli')) || '';
             }
 
             function render() {
@@ -211,12 +223,30 @@
                 formats.forEach(function (b) {
                     b.setAttribute('aria-pressed', b.getAttribute('data-travel-cron-format') === state.format ? 'true' : 'false');
                 });
+                plans.forEach(function (b) {
+                    b.setAttribute('aria-pressed', b.getAttribute('data-travel-cron-plan') === state.plan ? 'true' : 'false');
+                });
+                hints.forEach(function (p) {
+                    p.hidden = p.getAttribute('data-travel-cron-plan-hint') !== state.plan;
+                });
             }
 
             formats.forEach(function (b) {
                 b.addEventListener('click', function (e) {
                     e.preventDefault();
                     state.format = b.getAttribute('data-travel-cron-format') === 'url' ? 'url' : 'cli';
+                    render();
+                });
+            });
+
+            plans.forEach(function (b) {
+                b.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    var plan = b.getAttribute('data-travel-cron-plan') || '';
+                    // Only a plan the card carries: any other would show an empty block.
+                    if (plan !== '' && root.hasAttribute(attr(plan, 'cli'))) {
+                        state.plan = plan;
+                    }
                     render();
                 });
             });

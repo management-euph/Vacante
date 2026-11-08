@@ -8,6 +8,9 @@
      on_demand_intro  the add-on's note above its on-demand list (optional)
      has_key          FALSE: the "no cron key" warning, and the ⋯ menus say why nothing can be copied
      run_dispatch     the add-on's run_job action, e.g. novoton_holidays.run_job
+     row_extra        a template of the add-on's, shown under each job's name and
+                      description with that job's row as $job (optional): what is
+                      its own, such as a catalog's size or a link to its list
 
    No command with the cron key is ever printed: the ⋯ menus copy the real
    ones (cron-jobs.js) and Run is an admin POST. The script is loaded here,
@@ -47,7 +50,7 @@
                     <th colspan="4" scope="colgroup">{$stage.number}. {__($stage.title_key)}</th>
                 </tr>
                 {foreach from=$stage.jobs item=job}
-                    {include file="addons/travel_core/components/job_row.tpl" job=$job has_key=$has_key run_dispatch=$run_dispatch}
+                    {include file="addons/travel_core/components/job_row.tpl" job=$job has_key=$has_key run_dispatch=$run_dispatch row_extra=$row_extra|default:""}
                 {/foreach}
             </tbody>
         {/foreach}
@@ -60,7 +63,7 @@
             <table class="table table-middle travel-cron-table travel-cron-jobs__table">
                 <tbody>
                     {foreach from=$on_demand item=job}
-                        {include file="addons/travel_core/components/job_row.tpl" job=$job has_key=$has_key run_dispatch=$run_dispatch}
+                        {include file="addons/travel_core/components/job_row.tpl" job=$job has_key=$has_key run_dispatch=$run_dispatch row_extra=$row_extra|default:""}
                     {/foreach}
                 </tbody>
             </table>

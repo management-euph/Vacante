@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Tygh\Addons\SphinxHolidays\Tests\Unit\Cron;
+namespace Tygh\Addons\TravelCore\Tests\Unit\Cron;
 
 use PHPUnit\Framework\TestCase;
-use Tygh\Addons\SphinxHolidays\Cron\CronRunOutput;
 use Tygh\Addons\TravelCore\Contracts\CronDispatcherInterface;
+use Tygh\Addons\TravelCore\Cron\CronRunOutput;
 
 /**
- * A job's log reads the same from the public cron URL and from the
- * dashboard's Run (sphinx_holidays.run_job): both print it through
- * CronRunOutput, with the lines sphinx_cron.php always printed.
+ * A job's log reads the same from a provider's public cron URL and from its
+ * dashboard's Run (Sphinx's and Eurosite's run_job): both print it through
+ * CronRunOutput, with the lines their cron endpoints always printed.
  */
 final class CronRunOutputTest extends TestCase
 {
@@ -74,11 +74,12 @@ final class CronRunOutputTest extends TestCase
         return (string) preg_replace('/\[\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\]/', '[T]', $out);
     }
 
-    public function testTheFirstLineNamesTheJob(): void
+    public function testTheFirstLineNamesTheProviderAndTheJob(): void
     {
+        self::assertStringEndsWith("] Eurosite Cron Started - Mode: full\n", CronRunOutput::startLine('Eurosite', 'full'));
         self::assertMatchesRegularExpression(
             '/^\[\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\] Sphinx Cron Started - Mode: hotels\n$/',
-            CronRunOutput::startLine('hotels'),
+            CronRunOutput::startLine('Sphinx', 'hotels'),
         );
     }
 
