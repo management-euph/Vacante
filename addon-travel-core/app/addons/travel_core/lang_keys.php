@@ -4023,8 +4023,8 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'ro' => 'Rulările programate sunt refuzate până când cheia cron comună este setată în Travel Core. Rulează funcționează în continuare de aici.',
     ],
     'travel_core.jobs_set_key' => [
-        'en' => 'Set it in Travel Core',
-        'ro' => 'Seteaz-o în Travel Core',
+        'en' => 'Generate one on Travel Core → Tools',
+        'ro' => 'Generează una în Travel Core → Instrumente',
     ],
     'travel_core.package_searching' => [
         'en' => 'Searching…',

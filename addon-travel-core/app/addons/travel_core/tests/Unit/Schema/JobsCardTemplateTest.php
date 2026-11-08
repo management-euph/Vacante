@@ -107,6 +107,27 @@ final class JobsCardTemplateTest extends TestCase
         self::assertStringContainsString("root.getAttribute('data-plan')", $js);
     }
 
+    /**
+     * With no cron key, the card sends the admin to the key's card on Travel
+     * Core -> Tools, where Generate mints a strong key in one click: a key
+     * typed by hand into the settings form is how a store ended up with a
+     * weak or blank one. That card offers Generate when there is no key.
+     */
+    public function testWithNoKeyTheCardLeadsToGenerate(): void
+    {
+        $card = self::templates()['jobs_card'];
+        self::assertMatchesRegularExpression(
+            '/\{if !\$has_key\}.*<a href="\{"travel_tools\.manage"\|fn_url\}#travel-cron-key-title">\{__\("travel_core\.jobs_set_key"\)\}<\/a>.*\{\/if\}/s',
+            $card,
+        );
+        self::assertStringNotContainsString('addons.update', $card);
+
+        $tools = (string) file_get_contents(self::repo() . '/design/backend/templates/addons/travel_core/views/travel_tools/manage.tpl');
+        self::assertStringContainsString('<h3 id="travel-cron-key-title">', $tools, 'the link lands on the key\'s card');
+        $noKey = substr($tools, (int) strpos($tools, '{if !$cron_key}'));
+        self::assertStringContainsString('{"travel_tools.generate_cron_key"|fn_url}', substr($noKey, 0, (int) strpos($noKey, '{/if}')), 'with no key, the card offers Generate');
+    }
+
     /** An add-on can show what is its own under a job's name (a catalog's size, a link to its list). */
     public function testARowCanCarryTheAddonsOwnExtras(): void
     {

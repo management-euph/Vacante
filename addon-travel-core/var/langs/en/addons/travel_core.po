@@ -4827,8 +4827,8 @@ msgid "Scheduled runs are refused until the shared cron key is set in Travel Cor
 msgstr "Scheduled runs are refused until the shared cron key is set in Travel Core. Run still works from here."
 
 msgctxt "Languages::travel_core.jobs_set_key"
-msgid "Set it in Travel Core"
-msgstr "Set it in Travel Core"
+msgid "Generate one on Travel Core → Tools"
+msgstr "Generate one on Travel Core → Tools"
 
 msgctxt "Languages::travel_core.package_searching"
 msgid "Searching…"
