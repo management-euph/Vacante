@@ -56,13 +56,12 @@ final class BookableCircuitsTest extends TestCase
     {
         $asked = [];
         $api = $this->api([
-            // This month, every page: 281 only before today, 1700 today.
+            // This month, every page: 281 only before today, 1700 today; 9 is not a candidate.
             self::page([
                 ['circuit_id' => 281, 'departure_date' => '2026-11-01'],
                 ['circuit_id' => 1700, 'departure_date' => '2026-11-08'],
             ], 2),
-            self::page([['circuit_id' => 1700, 'departure_date' => '2026-11-20']], 2),
-            // Next month: only the circuits not found yet.
+            self::page([['circuit_id' => 9, 'departure_date' => '2026-11-20']], 2),
             self::page([['circuit_id' => 1662, 'departure_date' => '2026-12-10']], 1),
             // 281 has no departure in the 16 months left.
             ...array_fill(0, 16, self::page([], 1)),
@@ -71,22 +70,20 @@ final class BookableCircuitsTest extends TestCase
         $ids = (new BookableCircuits($api))->ids('2026-11-08', [281, 1662, 1700, 1700, 0]);
         sort($ids);
 
-        self::assertSame([1662, 1700], $ids, 'a departure before today does not count; today does');
-        self::assertSame([281, 1662, 1700], $asked[0]['circuit_ids']);
-        self::assertSame(['2026-11'], $asked[0]['months']);
+        self::assertSame([1662, 1700], $ids, 'a departure before today does not count; today does; only candidates');
+        self::assertSame(['months' => ['2026-11'], 'pagination' => ['page' => 1, 'per_page' => 100]], $asked[0], 'no circuit_ids: the endpoint ignores them');
         self::assertSame(['page' => 2, 'per_page' => 100], $asked[1]['pagination'], 'every page of a month');
-        self::assertSame([281, 1662], $asked[2]['circuit_ids'], 'next month: 1700 is found, not asked again');
         self::assertSame(['2026-12'], $asked[2]['months']);
-        self::assertSame([281], $asked[3]['circuit_ids'] ?? null, 'then only what is still missing');
-        self::assertCount(3 + 16, $asked, '281 is asked about every month left; nothing more');
+        self::assertCount(2 + 17, $asked, 'one request a page, a month at a time; 281 keeps it going to the last month');
     }
 
-    /** Once every circuit is found, no further month is asked. */
+    /** Once every candidate is found, no further month is asked. */
     public function testTheSearchStopsOnceEveryCircuitIsFound(): void
     {
         $asked = [];
         $api = $this->api([
             self::page([['circuit_id' => 5, 'departure_date' => '2026-11-20']], 1),
+            self::page([['circuit_id' => 5, 'departure_date' => '2026-12-20']], 1),
             self::page([['circuit_id' => 6, 'departure_date' => '2027-01-03']], 1),
         ], $asked);
 
@@ -94,8 +91,7 @@ final class BookableCircuitsTest extends TestCase
         sort($ids);
 
         self::assertSame([5, 6], $ids);
-        self::assertCount(2, $asked, 'November for both, December for 6 only: then nothing is left to ask');
-        self::assertSame([6], $asked[1]['circuit_ids']);
+        self::assertSame(['2026-11', '2026-12', '2027-01'], array_merge(...array_column($asked, 'months')), 'then nothing is left to ask');
     }
 
     /** An unknown answer drops nothing: the sync keeps every circuit then. */
