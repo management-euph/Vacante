@@ -76,18 +76,21 @@ namespace Tygh\Addons\TravelCore\Tests\Unit\Functions {
             $this->assertSame('akra-v-antalya-city-turkey', fn_travel_core_render_seo_slug('{{name}}-{{city}}-{{country}}', ['name' => 'Akra -V', 'city' => 'Antalya City', 'country' => 'Turkey']));
         }
 
-        /** On a store, CS-Cart's own generator makes the address, from the plain letters. */
-        public function testCsCartsGeneratorMakesTheAddress(): void
+        /**
+         * On a store, CS-Cart's fn_generate_name() sees the finished address:
+         * it drops a space unless its letter table turns it into a dash.
+         */
+        public function testCsCartsGeneratorGetsTheFinishedAddress(): void
         {
             $given = [];
             $generate = static function (string $text) use (&$given): string {
                 $given[] = $text;
 
-                return 'cs-cart-' . strtolower(str_replace(' ', '-', $text));
+                return (string) preg_replace('/[^a-z0-9-.]/', '', strtolower($text)); // fn_generate_name without a table
             };
 
-            $this->assertSame('cs-cart-gozde-hotel', fn_travel_core_slugify('Gözde Hotel', $generate));
-            $this->assertSame(['Gozde Hotel'], $given);
+            $this->assertSame('gozde-butik-otel-belek', fn_travel_core_slugify('Gözde Butik Otel Belek', $generate));
+            $this->assertSame(['gozde-butik-otel-belek'], $given);
             $this->assertSame('gozde', fn_travel_core_slugify('Gözde', static fn (): string => ''), 'an empty answer falls back');
             $this->assertFalse(function_exists('fn_generate_seo_name'));
         }
