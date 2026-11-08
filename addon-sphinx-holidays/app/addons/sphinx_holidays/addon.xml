@@ -948,10 +948,6 @@
         <item lang="ro" id="sphinx_holidays.no_destinations"><![CDATA[Nu s-au găsit destinații. Rulați mai întâi o sincronizare.]]></item>
         <item lang="en" id="sphinx_holidays.api_not_configured"><![CDATA[Sphinx API is not configured. Please set the API key in addon settings.]]></item>
         <item lang="ro" id="sphinx_holidays.api_not_configured"><![CDATA[API-ul Sphinx nu este configurat. Setați cheia API în setările addon-ului.]]></item>
-        <item lang="en" id="sphinx_holidays.sync_log"><![CDATA[Sync Log]]></item>
-        <item lang="ro" id="sphinx_holidays.sync_log"><![CDATA[Jurnal Sincronizare]]></item>
-        <item lang="en" id="sphinx_holidays.items_synced"><![CDATA[Items Synced]]></item>
-        <item lang="ro" id="sphinx_holidays.items_synced"><![CDATA[Elemente Sincronizate]]></item>
         <item lang="en" id="sphinx_holidays.duration"><![CDATA[Duration]]></item>
         <item lang="ro" id="sphinx_holidays.duration"><![CDATA[Durată]]></item>
 
@@ -1049,14 +1045,8 @@
         <item lang="ro" id="sphinx_holidays.product_languages.tooltip"><![CDATA[Selectați pentru care limbi CS-Cart să se creeze descrierile produselor hoteliere. Hotelurile vor apărea în magazin doar pentru limbile selectate.]]></item>
 
         <!-- Rate Limiting -->
-        <item lang="en" id="sphinx_holidays.rate_limited_requests"><![CDATA[Rate-limited requests]]></item>
-        <item lang="ro" id="sphinx_holidays.rate_limited_requests"><![CDATA[Cereri limitate de rată]]></item>
 
         <!-- Sync Mode + Caching -->
-        <item lang="en" id="sphinx_holidays.sync_mode_incremental"><![CDATA[Incremental]]></item>
-        <item lang="ro" id="sphinx_holidays.sync_mode_incremental"><![CDATA[Incremental]]></item>
-        <item lang="en" id="sphinx_holidays.sync_mode_full"><![CDATA[Full sync]]></item>
-        <item lang="ro" id="sphinx_holidays.sync_mode_full"><![CDATA[Sincronizare completă]]></item>
         <item lang="en" id="sphinx_holidays.cached_result"><![CDATA[Cached result]]></item>
         <item lang="ro" id="sphinx_holidays.cached_result"><![CDATA[Rezultat din cache]]></item>
 

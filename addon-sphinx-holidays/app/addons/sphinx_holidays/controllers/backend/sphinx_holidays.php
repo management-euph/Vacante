@@ -549,9 +549,8 @@ if ($mode === 'manage') {
     $hotelRepo = Container::getHotelRepository();
     $skipRepo = Container::getHotelSkipRepository();
 
-    // The hotel table: every hotel, those with a product, those waiting for
-    // an immediate offer (the availability gate's, not "Retry skipped"'s),
-    // those skipped. The rest have no product yet: Create products.
+    // The hotel table: every hotel, those with a product, those waiting for an immediate offer
+    // (the availability gate's, not "Retry skipped"'s), those skipped; the rest: Create products.
     $totalHotels = $hotelRepo->getTotal();
     $linkedCount = $hotelRepo->countLinked();
     $skippedCount = $skipRepo->countSkipped();
@@ -577,10 +576,11 @@ if ($mode === 'manage') {
     // relink action actually repairs. (The old gate used the orphan count —
     // hotels whose product was deleted — which relink cannot fix and which is
     // 0 on the far more common "hotel rows lost" store, hiding the button.)
-    $view->assign('unlinked_sphinx_products', $hotelRepo->countUnlinkedProducts(
-        ConfigProvider::getProductCodePrefix(),
-    ));
-    $view->assign('sync_logs', Container::getSyncLogRepository()->getRecent(10));
+    $view->assign('unlinked_sphinx_products', $hotelRepo->countUnlinkedProducts(ConfigProvider::getProductCodePrefix()));
+    // Recent sync activity, All or Problems, paged: $search drives common/pagination.tpl.
+    $sphinxActivity = \Tygh\Addons\SphinxHolidays\Services\SyncActivity::page(Container::getSyncLogRepository(), $_REQUEST, time());
+    $view->assign('sphinx_activity', $sphinxActivity);
+    $view->assign('search', $sphinxActivity['search']);
 
     // Scheduled jobs: one row per job, in the order they run, from the plan
     // (Travel Core's shared jobs card draws them). The page never prints a

@@ -884,6 +884,30 @@
     display: inline;
 }
 
+/* Recent sync activity: one row per run, a long error folded under its start. */
+.travel-cron-activity .travel-cron-table th,
+.travel-cron-activity .travel-cron-table td {
+    padding: 12px;
+}
+
+.travel-cron-activity__error summary {
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.travel-cron-activity__error pre {
+    max-height: 240px;
+    overflow: auto;
+    margin: 4px 0 0;
+    font-size: 12px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.travel-cron-activity__empty {
+    padding: 0 16px 16px;
+}
+
 @media (max-width: 768px) {
     .travel-cron-tools__groups--two {
         grid-template-columns: 1fr;

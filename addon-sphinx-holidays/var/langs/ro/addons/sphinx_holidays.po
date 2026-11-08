@@ -1995,3 +1995,91 @@ msgstr "Repară produsele"
 msgctxt "Languages::sphinx_holidays.dash_tools_fix_hint"
 msgid "Create products and Re-link existing products show here only when there is something to create or re-link."
 msgstr "Creare Produse și Reconectează produsele existente apar aici doar când e ceva de creat sau de reconectat."
+
+msgctxt "Languages::sphinx_holidays.dash_activity_title"
+msgid "Recent sync activity"
+msgstr "Activitate recentă de sincronizare"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_filter"
+msgid "Which runs"
+msgstr "Ce rulări"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_all"
+msgid "All ([n])"
+msgstr "Toate ([n])"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_problems"
+msgid "Problems ([n])"
+msgstr "Probleme ([n])"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_col_date"
+msgid "Date"
+msgstr "Data"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_col_job"
+msgid "Job"
+msgstr "Job"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_col_run"
+msgid "Run"
+msgstr "Rulare"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_col_items"
+msgid "Items"
+msgstr "Elemente"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_col_not_synced"
+msgid "Not synced"
+msgstr "Nesincronizate"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_col_status"
+msgid "Status"
+msgstr "Stare"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_col_duration"
+msgid "Duration"
+msgstr "Durată"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_full"
+msgid "Full"
+msgstr "Completă"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_incremental"
+msgid "Incremental"
+msgstr "Incrementală"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_ok"
+msgid "Completed"
+msgstr "Finalizată"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_partial"
+msgid "Partly done"
+msgstr "Parțial"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_failed"
+msgid "Failed"
+msgstr "Eșuată"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_stalled"
+msgid "Never finished"
+msgstr "Neterminată"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_running"
+msgid "Running"
+msgstr "În curs"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_rate_limited"
+msgid "Rate-limited requests: [n]"
+msgstr "Cereri limitate de API: [n]"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_show_error"
+msgid "Show full error"
+msgstr "Arată eroarea completă"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_none"
+msgid "No sync runs logged yet."
+msgstr "Nicio sincronizare înregistrată încă."
+
+msgctxt "Languages::sphinx_holidays.dash_activity_no_problems"
+msgid "No problems in the log."
+msgstr "Nicio problemă în jurnal."

@@ -1561,4 +1561,94 @@ return [
         'en' => 'Create products and Re-link existing products show here only when there is something to create or re-link.',
         'ro' => 'Creare Produse și Reconectează produsele existente apar aici doar când e ceva de creat sau de reconectat.',
     ],
+    // The dashboard's Recent sync activity table
+    // (Services\SyncActivity, components/activity.tpl).
+    'sphinx_holidays.dash_activity_title' => [
+        'en' => 'Recent sync activity',
+        'ro' => 'Activitate recentă de sincronizare',
+    ],
+    'sphinx_holidays.dash_activity_filter' => [
+        'en' => 'Which runs',
+        'ro' => 'Ce rulări',
+    ],
+    'sphinx_holidays.dash_activity_all' => [
+        'en' => 'All ([n])',
+        'ro' => 'Toate ([n])',
+    ],
+    'sphinx_holidays.dash_activity_problems' => [
+        'en' => 'Problems ([n])',
+        'ro' => 'Probleme ([n])',
+    ],
+    'sphinx_holidays.dash_activity_col_date' => [
+        'en' => 'Date',
+        'ro' => 'Data',
+    ],
+    'sphinx_holidays.dash_activity_col_job' => [
+        'en' => 'Job',
+        'ro' => 'Job',
+    ],
+    'sphinx_holidays.dash_activity_col_run' => [
+        'en' => 'Run',
+        'ro' => 'Rulare',
+    ],
+    'sphinx_holidays.dash_activity_col_items' => [
+        'en' => 'Items',
+        'ro' => 'Elemente',
+    ],
+    'sphinx_holidays.dash_activity_col_not_synced' => [
+        'en' => 'Not synced',
+        'ro' => 'Nesincronizate',
+    ],
+    'sphinx_holidays.dash_activity_col_status' => [
+        'en' => 'Status',
+        'ro' => 'Stare',
+    ],
+    'sphinx_holidays.dash_activity_col_duration' => [
+        'en' => 'Duration',
+        'ro' => 'Durată',
+    ],
+    'sphinx_holidays.dash_activity_full' => [
+        'en' => 'Full',
+        'ro' => 'Completă',
+    ],
+    'sphinx_holidays.dash_activity_incremental' => [
+        'en' => 'Incremental',
+        'ro' => 'Incrementală',
+    ],
+    'sphinx_holidays.dash_activity_ok' => [
+        'en' => 'Completed',
+        'ro' => 'Finalizată',
+    ],
+    'sphinx_holidays.dash_activity_partial' => [
+        'en' => 'Partly done',
+        'ro' => 'Parțial',
+    ],
+    'sphinx_holidays.dash_activity_failed' => [
+        'en' => 'Failed',
+        'ro' => 'Eșuată',
+    ],
+    'sphinx_holidays.dash_activity_stalled' => [
+        'en' => 'Never finished',
+        'ro' => 'Neterminată',
+    ],
+    'sphinx_holidays.dash_activity_running' => [
+        'en' => 'Running',
+        'ro' => 'În curs',
+    ],
+    'sphinx_holidays.dash_activity_rate_limited' => [
+        'en' => 'Rate-limited requests: [n]',
+        'ro' => 'Cereri limitate de API: [n]',
+    ],
+    'sphinx_holidays.dash_activity_show_error' => [
+        'en' => 'Show full error',
+        'ro' => 'Arată eroarea completă',
+    ],
+    'sphinx_holidays.dash_activity_none' => [
+        'en' => 'No sync runs logged yet.',
+        'ro' => 'Nicio sincronizare înregistrată încă.',
+    ],
+    'sphinx_holidays.dash_activity_no_problems' => [
+        'en' => 'No problems in the log.',
+        'ro' => 'Nicio problemă în jurnal.',
+    ],
 ];

@@ -1995,3 +1995,91 @@ msgstr "Fix products"
 msgctxt "Languages::sphinx_holidays.dash_tools_fix_hint"
 msgid "Create products and Re-link existing products show here only when there is something to create or re-link."
 msgstr "Create products and Re-link existing products show here only when there is something to create or re-link."
+
+msgctxt "Languages::sphinx_holidays.dash_activity_title"
+msgid "Recent sync activity"
+msgstr "Recent sync activity"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_filter"
+msgid "Which runs"
+msgstr "Which runs"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_all"
+msgid "All ([n])"
+msgstr "All ([n])"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_problems"
+msgid "Problems ([n])"
+msgstr "Problems ([n])"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_col_date"
+msgid "Date"
+msgstr "Date"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_col_job"
+msgid "Job"
+msgstr "Job"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_col_run"
+msgid "Run"
+msgstr "Run"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_col_items"
+msgid "Items"
+msgstr "Items"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_col_not_synced"
+msgid "Not synced"
+msgstr "Not synced"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_col_status"
+msgid "Status"
+msgstr "Status"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_col_duration"
+msgid "Duration"
+msgstr "Duration"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_full"
+msgid "Full"
+msgstr "Full"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_incremental"
+msgid "Incremental"
+msgstr "Incremental"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_ok"
+msgid "Completed"
+msgstr "Completed"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_partial"
+msgid "Partly done"
+msgstr "Partly done"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_failed"
+msgid "Failed"
+msgstr "Failed"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_stalled"
+msgid "Never finished"
+msgstr "Never finished"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_running"
+msgid "Running"
+msgstr "Running"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_rate_limited"
+msgid "Rate-limited requests: [n]"
+msgstr "Rate-limited requests: [n]"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_show_error"
+msgid "Show full error"
+msgstr "Show full error"
+
+msgctxt "Languages::sphinx_holidays.dash_activity_none"
+msgid "No sync runs logged yet."
+msgstr "No sync runs logged yet."
+
+msgctxt "Languages::sphinx_holidays.dash_activity_no_problems"
+msgid "No problems in the log."
+msgstr "No problems in the log."
