@@ -14,7 +14,7 @@
 
     {** At a glance: each tile says whether its figure is a problem. **}
     {$_hotels = $novoton_stats.hotels}
-    <div class="travel-cron-tiles novoton-tiles">
+    <div class="travel-cron-tiles travel-cron-tiles--four">
         <div class="travel-cron-tile{if $_hotels.total > 0 && $_hotels.with_packages == 0} travel-cron-tile--warn{/if}">
             <div class="travel-cron-tile__label">{__("novoton_holidays.dash_tile_hotels")}</div>
             <div class="travel-cron-tile__value">{$_hotels.total|default:0}</div>
@@ -40,7 +40,7 @@
             </div>
         </div>
         {$_jh = $novoton_job_health}
-        <div class="travel-cron-tile{if $_jh.tone == "bad"} novoton-tile--bad{elseif $_jh.tone == "warn"} travel-cron-tile--warn{/if}">
+        <div class="travel-cron-tile{if $_jh.tone == "bad"} travel-cron-tile--bad{elseif $_jh.tone == "warn"} travel-cron-tile--warn{/if}">
             <div class="travel-cron-tile__label">{__("novoton_holidays.dash_jobs_title")}</div>
             <div class="travel-cron-tile__value">
                 {if $_jh.counts.failed + $_jh.counts.stalled > 0}
@@ -62,12 +62,12 @@
 
     {** Needs attention: only real problems, each with the one action that fixes it. **}
     {if $novoton_attention || $novoton_dest_alerts}
-        <section class="travel-cron-card novoton-attention" aria-labelledby="novoton-attention-title">
+        <section class="travel-cron-card travel-cron-attention" aria-labelledby="novoton-attention-title">
             <h3 id="novoton-attention-title">{__("novoton_holidays.dash_attention_title", ["[n]" => $novoton_attention|count + $novoton_dest_alerts|count])}</h3>
-            <ul class="novoton-attention__list">
+            <ul class="travel-cron-attention__list">
                 {foreach from=$novoton_dest_alerts item=alert}
-                    <li class="novoton-attention__item">
-                        <span class="novoton-attention__text">
+                    <li class="travel-cron-attention__item">
+                        <span class="travel-cron-attention__text">
                             {if $alert.kind == "new"}
                                 {__("novoton_holidays.dash_dest_alert_new", ["[n]" => $alert.n, "[country]" => $alert.country])}
                             {elseif $alert.kind == "gone"}
@@ -82,8 +82,8 @@
                 {foreach from=$novoton_attention item=item}
                     {$_name = __("novoton_holidays.dash_job_`$item.mode`")}
                     {$_at = $item.at|date_format:"`$settings.Appearance.date_format`, `$settings.Appearance.time_format`"}
-                    <li class="novoton-attention__item">
-                        <span class="novoton-attention__text">
+                    <li class="travel-cron-attention__item">
+                        <span class="travel-cron-attention__text">
                             {if $item.kind == "failed"}
                                 {__("novoton_holidays.dash_attention_failed", ["[job]" => $_name, "[date]" => $_at])}
                                 {if $item.error}<span class="travel-cron-hint--bad">{$item.error|escape:html}</span>{/if}
@@ -107,10 +107,10 @@
     {/if}
 
     {** Tools, grouped by what they do. Diagnostics open in a new tab. **}
-    <section class="travel-cron-card novoton-tools" aria-labelledby="novoton-tools-title">
+    <section class="travel-cron-card travel-cron-tools" aria-labelledby="novoton-tools-title">
         <h3 id="novoton-tools-title">{__("novoton_holidays.dash_tools_title")}</h3>
-        <div class="novoton-tools__groups">
-            <div class="novoton-tools__group">
+        <div class="travel-cron-tools__groups">
+            <div class="travel-cron-tools__group">
                 <h4>{__("novoton_holidays.dash_tools_check")}</h4>
                 <a class="btn" href="{"novoton_holidays.check_prices"|fn_url}" target="_blank" rel="noopener">{__("novoton_holidays.dash_tool_check_prices")}</a>
                 <a class="btn" href="{"novoton_holidays.check_prices_hotel"|fn_url}" target="_blank" rel="noopener">{__("novoton_holidays.dash_tool_check_prices_hotel")}</a>
@@ -118,18 +118,18 @@
                 <a class="btn" href="{"novoton_holidays.test_api"|fn_url}" target="_blank" rel="noopener">{__("novoton_holidays.dash_tool_test_api")}</a>
                 <a class="btn" href="{"novoton_diagnostic.health"|fn_url}" target="_blank" rel="noopener">{__("novoton_holidays.dash_tool_health")}</a>
             </div>
-            <div class="novoton-tools__group">
+            <div class="travel-cron-tools__group">
                 <h4>{__("novoton_holidays.dash_tools_open")}</h4>
                 <a class="btn" href="{"novoton_bookings.manage"|fn_url}">{__("novoton_holidays.dash_tool_bookings")}</a>
                 <a class="btn" href="{"novoton_alternatives.manage"|fn_url}">{__("novoton_holidays.dash_tool_alternatives")}</a>
                 <a class="btn" href="{"novoton_price_compare.manage"|fn_url}">{__("novoton_holidays.dash_tool_price_compare")}</a>
             </div>
-            <div class="novoton-tools__group">
+            <div class="travel-cron-tools__group">
                 <h4>{__("novoton_holidays.dash_tools_export")}</h4>
                 <a class="btn" href="{"novoton_holidays.export_hotel_features_csv"|fn_url}">{__("novoton_holidays.dash_tool_features_csv")}</a>
                 <a class="btn" href="{"novoton_holidays.export_hotel_features_xml"|fn_url}">{__("novoton_holidays.dash_tool_features_xml")}</a>
             </div>
-            <div class="novoton-tools__group">
+            <div class="travel-cron-tools__group">
                 <h4>{__("novoton_holidays.dash_tools_maintenance")}</h4>
                 {include file="addons/travel_core/components/run_job.tpl" run_dispatch="novoton_holidays.run_job" job="recompute_calendar_prices" label=__("novoton_holidays.dash_tool_recompute_calendar") class="btn" confirm=__("novoton_holidays.dash_tool_recompute_calendar_confirm")}
                 <p class="travel-cron-hint">{__("novoton_holidays.dash_tool_recompute_calendar_hint")}</p>

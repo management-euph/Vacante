@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\TravelCore\Cron\JobHealth;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
@@ -15,13 +16,14 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  * and "Hotel Info: Never" sat in a list of dates. This decides, from the
  * figures the controller gathered, what needs doing.
  *
+ * The rules for the jobs themselves (the tile's counts, which jobs need
+ * someone) are Travel Core's JobHealth, shared with Sphinx's dashboard;
+ * what is Novoton's own (season prices, destinations) is here.
+ *
  * Pure: arrays in, arrays out, so every rule is unit-tested.
  */
 final class DashboardSummary
 {
-    /** Most serious first: the strip lists items in this order. */
-    private const array SEVERITY = ['failed' => 0, 'stalled' => 1, 'never' => 2, 'late' => 3, 'no_season_prices' => 4];
-
     /**
      * How many jobs are in each state, and the tile's overall tone.
      *
@@ -31,33 +33,17 @@ final class DashboardSummary
      */
     public static function jobHealth(array $stages): array
     {
-        $counts = ['ok' => 0, 'late' => 0, 'failed' => 0, 'running' => 0, 'stalled' => 0, 'never' => 0];
-        $jobs = 0;
-        foreach ($stages as $stage) {
-            foreach ($stage['jobs'] as $job) {
-                $state = TypeCoerce::toString($job['state'] ?? 'never');
-                $counts[$state] = ($counts[$state] ?? 0) + 1;
-                $jobs++;
-            }
-        }
-
-        $tone = match (true) {
-            $counts['failed'] + $counts['stalled'] > 0 => 'bad',
-            $counts['late'] + $counts['never'] > 0 => 'warn',
-            default => 'ok',
-        };
-
-        return ['counts' => $counts, 'tone' => $tone, 'jobs' => $jobs];
+        return JobHealth::counts($stages);
     }
 
     /**
      * The problems worth acting on, each with the job whose Run fixes it.
      *
-     * - any job that failed or stalled;
-     * - a RECOMMENDED job that never ran (the other jobs start "no runs yet"
-     *   on a new store, and listing all seventeen would bury the two that matter);
-     * - any job that is late for its own interval;
-     * - hotels without season prices while the price job has run fine.
+     * - the jobs JobHealth::problems() lists: any job that failed or stalled,
+     *   a RECOMMENDED job that never ran (the other jobs start "no runs yet"
+     *   on a new store, and listing all seventeen would bury the two that
+     *   matter), any job that is late for its own interval;
+     * - after them, hotels without season prices while the price job has run fine.
      *
      * @param list<array{jobs: list<array<string, mixed>>}> $stages
      * @param array{total: int, with_packages: int} $hotels
@@ -67,43 +53,25 @@ final class DashboardSummary
     public static function attention(array $stages, array $hotels): array
     {
         $items = [];
-        $order = 0;
-        $priceJob = null;
-
-        foreach ($stages as $stage) {
-            foreach ($stage['jobs'] as $job) {
-                $order++;
-                $mode = TypeCoerce::toString($job['mode'] ?? '');
-                $state = TypeCoerce::toString($job['state'] ?? '');
-                if ($mode === 'sync_priceinfo_batched') {
-                    $priceJob = $state;
-                }
-
-                $kind = match (true) {
-                    in_array($state, ['failed', 'stalled', 'late'], true) => $state,
-                    $state === 'never' && ($job['recommended'] ?? false) === true => 'never',
-                    default => null,
-                };
-                if ($kind === null) {
-                    continue;
-                }
-                $items[] = self::item($kind, $mode, TypeCoerce::toInt($job['at'] ?? 0), TypeCoerce::toString($job['error'] ?? ''), $hotels, $order);
-            }
+        foreach (JobHealth::problems($stages) as $problem) {
+            $items[] = self::item($problem['kind'], $problem['mode'], $problem['at'], $problem['error'], $hotels);
         }
 
         // Season prices missing while the job that fetches them runs fine is
         // its own problem; when that job is the reason, its own item says so.
+        $priceJob = null;
+        foreach ($stages as $stage) {
+            foreach ($stage['jobs'] as $job) {
+                if (TypeCoerce::toString($job['mode'] ?? '') === 'sync_priceinfo_batched') {
+                    $priceJob = TypeCoerce::toString($job['state'] ?? '');
+                }
+            }
+        }
         if ($hotels['total'] > 0 && $hotels['with_packages'] === 0 && $priceJob !== null && in_array($priceJob, ['ok', 'running'], true)) {
-            $items[] = self::item('no_season_prices', 'sync_priceinfo_batched', 0, '', $hotels, PHP_INT_MAX);
+            $items[] = self::item('no_season_prices', 'sync_priceinfo_batched', 0, '', $hotels);
         }
 
-        usort($items, static fn (array $a, array $b): int => [self::SEVERITY[$a['kind']], $a['order']] <=> [self::SEVERITY[$b['kind']], $b['order']]);
-
-        return array_map(static function (array $i): array {
-            unset($i['order']);
-
-            return $i;
-        }, $items);
+        return $items;
     }
 
     /**
@@ -150,9 +118,9 @@ final class DashboardSummary
     /**
      * @param array{total: int, with_packages: int} $hotels
      *
-     * @return array{kind: string, mode: string, at: int, error: string, hotels_total: int, hotels_with_season: int, order: int}
+     * @return array{kind: string, mode: string, at: int, error: string, hotels_total: int, hotels_with_season: int}
      */
-    private static function item(string $kind, string $mode, int $at, string $error, array $hotels, int $order): array
+    private static function item(string $kind, string $mode, int $at, string $error, array $hotels): array
     {
         return [
             'kind' => $kind,
@@ -161,7 +129,6 @@ final class DashboardSummary
             'error' => $error,
             'hotels_total' => $hotels['total'],
             'hotels_with_season' => $hotels['with_packages'],
-            'order' => $order,
         ];
     }
 }

@@ -395,10 +395,6 @@ return [
         'en' => 'With selected',
         'ro' => 'Cu cele selectate',
     ],
-    'sphinx_holidays.skipped_hotels' => [
-        'en' => 'Skipped hotels',
-        'ro' => 'Hoteluri omise',
-    ],
     'sphinx_holidays.retry_skipped' => [
         'en' => 'Retry skipped hotels',
         'ro' => 'Reîncearcă hotelurile omise',
@@ -1256,8 +1252,8 @@ return [
         'ro' => 'Produse pentru circuite',
     ],
     'sphinx_holidays.jobs_job_add_circuit_products_desc' => [
-        'en' => 'Products for the synced circuits, so they can be sold. Run after Circuits.',
-        'ro' => 'Produse pentru circuitele sincronizate, ca să poată fi vândute. Rulează după Circuite.',
+        'en' => 'Products for the synced circuits that have none yet, so they can be sold.',
+        'ro' => 'Produse pentru circuitele sincronizate care nu au încă unul, ca să poată fi vândute.',
     ],
     'sphinx_holidays.jobs_job_experiences' => [
         'en' => 'Experiences',
@@ -1272,8 +1268,8 @@ return [
         'ro' => 'Prețurile din calendar',
     ],
     'sphinx_holidays.jobs_job_calendar_prices_desc' => [
-        'en' => 'The lowest price on each date, for the booking engine\'s calendar.',
-        'ro' => 'Cel mai mic preț pe fiecare dată, pentru calendarul motorului de rezervare.',
+        'en' => 'The lowest price on each date of the next 60 days, for the booking engine\'s calendar and the products\' prices.',
+        'ro' => 'Cel mai mic preț pe fiecare dată din următoarele 60 de zile, pentru calendarul motorului de rezervare și prețurile produselor.',
     ],
     'sphinx_holidays.jobs_job_sync_and_upload_images' => [
         'en' => 'Queue and download images',
@@ -1300,8 +1296,8 @@ return [
         'ro' => 'Listează ID-urile de facilități din hotelurile Sphinx care nu au corespondență. Un raport; nu schimbă nimic.',
     ],
     'sphinx_holidays.jobs_on_demand_intro' => [
-        'en' => 'Not part of the schedule: Full sync repeats the jobs above; the others are one-off repairs and reports.',
-        'ro' => 'Nu fac parte din program: Sincronizarea completă repetă joburile de mai sus; celelalte sunt reparații și rapoarte ocazionale.',
+        'en' => 'Not part of the schedule: each one runs when you start it. Full sync repeats the jobs above.',
+        'ro' => 'Nu fac parte din program: fiecare rulează când îl pornești. Sincronizarea completă repetă joburile de mai sus.',
     ],
     'sphinx_holidays.jobs_requeue_images' => [
         'en' => 'Queue all images again…',
@@ -1434,5 +1430,135 @@ return [
     'sphinx_holidays.jobs_check_apply_confirm' => [
         'en' => 'Write this hotel\'s missing SEO fields?',
         'ro' => 'Scrii câmpurile SEO lipsă ale acestui hotel?',
+    ],
+    // The dashboard's At a glance tiles, Needs attention and Tools card
+    // (Services\DashboardSummary, views/sphinx_holidays/manage.tpl).
+    'sphinx_holidays.dash_tile_hotels' => [
+        'en' => 'Hotels in scope',
+        'ro' => 'Hoteluri în destinațiile vândute',
+    ],
+    'sphinx_holidays.dash_tile_hotels_cities' => [
+        'en' => 'Cities sold: [n]',
+        'ro' => 'Orașe vândute: [n]',
+    ],
+    'sphinx_holidays.dash_tile_hotels_synced' => [
+        'en' => 'Last hotel sync: [date]',
+        'ro' => 'Ultima sincronizare a hotelurilor: [date]',
+    ],
+    'sphinx_holidays.dash_tile_hotels_open' => [
+        'en' => 'Open hotels',
+        'ro' => 'Deschide hotelurile',
+    ],
+    'sphinx_holidays.dash_tile_products' => [
+        'en' => 'Products',
+        'ro' => 'Produse',
+    ],
+    'sphinx_holidays.dash_tile_products_note' => [
+        'en' => 'Linked to a Sphinx hotel · live in the destinations you sell: [n]',
+        'ro' => 'Legate de un hotel Sphinx · active în destinațiile pe care le vinzi: [n]',
+    ],
+    'sphinx_holidays.dash_tile_products_open' => [
+        'en' => 'See the hotels with a product',
+        'ro' => 'Vezi hotelurile cu produs',
+    ],
+    'sphinx_holidays.dash_tile_unlinked' => [
+        'en' => 'Hotels without a product',
+        'ro' => 'Hoteluri fără produs',
+    ],
+    'sphinx_holidays.dash_tile_unlinked_value' => [
+        'en' => '[n] of [total]',
+        'ro' => '[n] din [total]',
+    ],
+    'sphinx_holidays.dash_tile_unlinked_waiting' => [
+        'en' => 'Waiting for an immediate offer: [n]',
+        'ro' => 'Așteaptă o ofertă imediată: [n]',
+    ],
+    'sphinx_holidays.dash_tile_unlinked_skipped' => [
+        'en' => 'skipped: [n]',
+        'ro' => 'omise: [n]',
+    ],
+    'sphinx_holidays.dash_tile_unlinked_ready' => [
+        'en' => 'ready to create: [n]',
+        'ro' => 'gata de creat: [n]',
+    ],
+    'sphinx_holidays.dash_tile_unlinked_open' => [
+        'en' => 'See which',
+        'ro' => 'Vezi care',
+    ],
+    'sphinx_holidays.dash_tile_jobs_failing' => [
+        'en' => 'Failing: [n]',
+        'ro' => 'Eșuează: [n]',
+    ],
+    'sphinx_holidays.dash_tile_jobs_late' => [
+        'en' => 'Late: [n]',
+        'ro' => 'Întârziate: [n]',
+    ],
+    'sphinx_holidays.dash_tile_jobs_never' => [
+        'en' => 'No runs yet: [n]',
+        'ro' => 'Încă nerulate: [n]',
+    ],
+    'sphinx_holidays.dash_tile_jobs_ok' => [
+        'en' => 'All on time',
+        'ro' => 'Toate la timp',
+    ],
+    'sphinx_holidays.dash_tile_jobs_note' => [
+        'en' => 'On time: [ok] · late: [late] · no runs yet: [never]',
+        'ro' => 'La timp: [ok] · întârziate: [late] · încă nerulate: [never]',
+    ],
+    'sphinx_holidays.dash_tile_jobs_open' => [
+        'en' => 'See the jobs ↓',
+        'ro' => 'Vezi joburile ↓',
+    ],
+    'sphinx_holidays.dash_attention_title' => [
+        'en' => 'Needs attention ([n])',
+        'ro' => 'Necesită atenție ([n])',
+    ],
+    'sphinx_holidays.dash_attention_refused' => [
+        'en' => 'A cron request with a wrong key was refused on [date]: the crontab is probably still on an old key.',
+        'ro' => 'O cerere cron cu o cheie greșită a fost refuzată pe [date]: crontab-ul folosește probabil încă o cheie veche.',
+    ],
+    'sphinx_holidays.dash_attention_copy_commands' => [
+        'en' => 'Copy the commands again',
+        'ro' => 'Copiază din nou comenzile',
+    ],
+    'sphinx_holidays.dash_attention_failed' => [
+        'en' => '[job] failed on [date].',
+        'ro' => '[job] a eșuat pe [date].',
+    ],
+    'sphinx_holidays.dash_attention_stalled' => [
+        'en' => '[job] started on [date] and never finished.',
+        'ro' => '[job] a pornit pe [date] și nu s-a mai terminat.',
+    ],
+    'sphinx_holidays.dash_attention_never' => [
+        'en' => '[job] has never run.',
+        'ro' => '[job] nu a rulat niciodată.',
+    ],
+    'sphinx_holidays.dash_attention_late' => [
+        'en' => '[job] is late: it last finished on [date]. Schedule: [schedule].',
+        'ro' => '[job] întârzie: s-a terminat ultima dată pe [date]. Program: [schedule].',
+    ],
+    'sphinx_holidays.dash_attention_run' => [
+        'en' => 'Run [job]',
+        'ro' => 'Rulează [job]',
+    ],
+    'sphinx_holidays.dash_attention_skipped' => [
+        'en' => 'Hotels skipped, with no product: [n].',
+        'ro' => 'Hoteluri omise, fără produs: [n].',
+    ],
+    'sphinx_holidays.dash_tools_title' => [
+        'en' => 'Tools',
+        'ro' => 'Instrumente',
+    ],
+    'sphinx_holidays.dash_tools_intro' => [
+        'en' => 'Syncing now is each job\'s Run, under Scheduled jobs: it opens the job\'s log in a new window and leaves this page where it is.',
+        'ro' => 'Sincronizarea imediată se face cu Rulează, la fiecare job din Joburi programate: deschide jurnalul jobului într-o fereastră nouă și lasă pagina aceasta neschimbată.',
+    ],
+    'sphinx_holidays.dash_tools_fix' => [
+        'en' => 'Fix products',
+        'ro' => 'Repară produsele',
+    ],
+    'sphinx_holidays.dash_tools_fix_hint' => [
+        'en' => 'Create products and Re-link existing products show here only when there is something to create or re-link.',
+        'ro' => 'Creare Produse și Reconectează produsele existente apar aici doar când e ceva de creat sau de reconectat.',
     ],
 ];

@@ -892,10 +892,6 @@ msgctxt "Languages::sphinx_holidays.with_selected"
 msgid "With selected"
 msgstr "With selected"
 
-msgctxt "Languages::sphinx_holidays.skipped_hotels"
-msgid "Skipped hotels"
-msgstr "Skipped hotels"
-
 msgctxt "Languages::sphinx_holidays.retry_skipped"
 msgid "Retry skipped hotels"
 msgstr "Retry skipped hotels"
@@ -1693,8 +1689,8 @@ msgid "Circuit products"
 msgstr "Circuit products"
 
 msgctxt "Languages::sphinx_holidays.jobs_job_add_circuit_products_desc"
-msgid "Products for the synced circuits, so they can be sold. Run after Circuits."
-msgstr "Products for the synced circuits, so they can be sold. Run after Circuits."
+msgid "Products for the synced circuits that have none yet, so they can be sold."
+msgstr "Products for the synced circuits that have none yet, so they can be sold."
 
 msgctxt "Languages::sphinx_holidays.jobs_job_experiences"
 msgid "Experiences"
@@ -1709,8 +1705,8 @@ msgid "Calendar prices"
 msgstr "Calendar prices"
 
 msgctxt "Languages::sphinx_holidays.jobs_job_calendar_prices_desc"
-msgid "The lowest price on each date, for the booking engine's calendar."
-msgstr "The lowest price on each date, for the booking engine's calendar."
+msgid "The lowest price on each date of the next 60 days, for the booking engine's calendar and the products' prices."
+msgstr "The lowest price on each date of the next 60 days, for the booking engine's calendar and the products' prices."
 
 msgctxt "Languages::sphinx_holidays.jobs_job_sync_and_upload_images"
 msgid "Queue and download images"
@@ -1737,8 +1733,8 @@ msgid "Lists the facility IDs in Sphinx hotels that have no mapping. A report; c
 msgstr "Lists the facility IDs in Sphinx hotels that have no mapping. A report; changes nothing."
 
 msgctxt "Languages::sphinx_holidays.jobs_on_demand_intro"
-msgid "Not part of the schedule: Full sync repeats the jobs above; the others are one-off repairs and reports."
-msgstr "Not part of the schedule: Full sync repeats the jobs above; the others are one-off repairs and reports."
+msgid "Not part of the schedule: each one runs when you start it. Full sync repeats the jobs above."
+msgstr "Not part of the schedule: each one runs when you start it. Full sync repeats the jobs above."
 
 msgctxt "Languages::sphinx_holidays.jobs_requeue_images"
 msgid "Queue all images again…"
@@ -1871,3 +1867,131 @@ msgstr "SEO fields: also write the missing ones"
 msgctxt "Languages::sphinx_holidays.jobs_check_apply_confirm"
 msgid "Write this hotel's missing SEO fields?"
 msgstr "Write this hotel's missing SEO fields?"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_hotels"
+msgid "Hotels in scope"
+msgstr "Hotels in scope"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_hotels_cities"
+msgid "Cities sold: [n]"
+msgstr "Cities sold: [n]"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_hotels_synced"
+msgid "Last hotel sync: [date]"
+msgstr "Last hotel sync: [date]"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_hotels_open"
+msgid "Open hotels"
+msgstr "Open hotels"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_products"
+msgid "Products"
+msgstr "Products"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_products_note"
+msgid "Linked to a Sphinx hotel · live in the destinations you sell: [n]"
+msgstr "Linked to a Sphinx hotel · live in the destinations you sell: [n]"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_products_open"
+msgid "See the hotels with a product"
+msgstr "See the hotels with a product"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_unlinked"
+msgid "Hotels without a product"
+msgstr "Hotels without a product"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_unlinked_value"
+msgid "[n] of [total]"
+msgstr "[n] of [total]"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_unlinked_waiting"
+msgid "Waiting for an immediate offer: [n]"
+msgstr "Waiting for an immediate offer: [n]"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_unlinked_skipped"
+msgid "skipped: [n]"
+msgstr "skipped: [n]"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_unlinked_ready"
+msgid "ready to create: [n]"
+msgstr "ready to create: [n]"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_unlinked_open"
+msgid "See which"
+msgstr "See which"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_jobs_failing"
+msgid "Failing: [n]"
+msgstr "Failing: [n]"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_jobs_late"
+msgid "Late: [n]"
+msgstr "Late: [n]"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_jobs_never"
+msgid "No runs yet: [n]"
+msgstr "No runs yet: [n]"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_jobs_ok"
+msgid "All on time"
+msgstr "All on time"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_jobs_note"
+msgid "On time: [ok] · late: [late] · no runs yet: [never]"
+msgstr "On time: [ok] · late: [late] · no runs yet: [never]"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_jobs_open"
+msgid "See the jobs ↓"
+msgstr "See the jobs ↓"
+
+msgctxt "Languages::sphinx_holidays.dash_attention_title"
+msgid "Needs attention ([n])"
+msgstr "Needs attention ([n])"
+
+msgctxt "Languages::sphinx_holidays.dash_attention_refused"
+msgid "A cron request with a wrong key was refused on [date]: the crontab is probably still on an old key."
+msgstr "A cron request with a wrong key was refused on [date]: the crontab is probably still on an old key."
+
+msgctxt "Languages::sphinx_holidays.dash_attention_copy_commands"
+msgid "Copy the commands again"
+msgstr "Copy the commands again"
+
+msgctxt "Languages::sphinx_holidays.dash_attention_failed"
+msgid "[job] failed on [date]."
+msgstr "[job] failed on [date]."
+
+msgctxt "Languages::sphinx_holidays.dash_attention_stalled"
+msgid "[job] started on [date] and never finished."
+msgstr "[job] started on [date] and never finished."
+
+msgctxt "Languages::sphinx_holidays.dash_attention_never"
+msgid "[job] has never run."
+msgstr "[job] has never run."
+
+msgctxt "Languages::sphinx_holidays.dash_attention_late"
+msgid "[job] is late: it last finished on [date]. Schedule: [schedule]."
+msgstr "[job] is late: it last finished on [date]. Schedule: [schedule]."
+
+msgctxt "Languages::sphinx_holidays.dash_attention_run"
+msgid "Run [job]"
+msgstr "Run [job]"
+
+msgctxt "Languages::sphinx_holidays.dash_attention_skipped"
+msgid "Hotels skipped, with no product: [n]."
+msgstr "Hotels skipped, with no product: [n]."
+
+msgctxt "Languages::sphinx_holidays.dash_tools_title"
+msgid "Tools"
+msgstr "Tools"
+
+msgctxt "Languages::sphinx_holidays.dash_tools_intro"
+msgid "Syncing now is each job's Run, under Scheduled jobs: it opens the job's log in a new window and leaves this page where it is."
+msgstr "Syncing now is each job's Run, under Scheduled jobs: it opens the job's log in a new window and leaves this page where it is."
+
+msgctxt "Languages::sphinx_holidays.dash_tools_fix"
+msgid "Fix products"
+msgstr "Fix products"
+
+msgctxt "Languages::sphinx_holidays.dash_tools_fix_hint"
+msgid "Create products and Re-link existing products show here only when there is something to create or re-link."
+msgstr "Create products and Re-link existing products show here only when there is something to create or re-link."
