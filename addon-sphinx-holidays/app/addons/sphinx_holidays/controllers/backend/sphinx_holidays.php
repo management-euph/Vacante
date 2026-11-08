@@ -736,6 +736,8 @@ if ($mode === 'manage') {
     $view->assign('sort_url_base', $sortUrlBase);
     $view->assign('last_synced_at', $circuitRepo->getLastSyncedAt());
     $view->assign('total_count', $circuitRepo->countAll());
+    // "Sync now" is enabled only when the API is configured.
+    $view->assign('is_configured', ConfigProvider::isConfigured());
 
 } elseif ($mode === 'package_routes') {
     $routeRepo = Container::getPackageRouteRepository();
@@ -756,4 +758,6 @@ if ($mode === 'manage') {
     $view->assign('sort_url_base', $sortUrlBase);
     $view->assign('last_synced_at', $routeRepo->getLastSyncedAt());
     $view->assign('total_count', $routeRepo->countAll());
+    // "Sync now" is enabled only when the API is configured.
+    $view->assign('is_configured', ConfigProvider::isConfigured());
 }

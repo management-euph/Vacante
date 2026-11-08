@@ -135,7 +135,7 @@ function pm_prices(float $amount, string $currency): string
  * The synced Sphinx hotels, each with whether the store sells it: a
  * product, active or hidden by the availability gate (ProviderCartProduct).
  *
- * @return array<string, array{name: string, destination_id: int, product_id: int, sellable: bool}>
+ * @return array<string, array{name: string, destination_id: int, product_id: int, status: string, gate_hidden: bool, sellable: bool}>
  */
 function pm_synced_hotels(): array
 {
@@ -150,6 +150,8 @@ function pm_synced_hotels(): array
             'name' => TypeCoerce::toString($row['name'] ?? ''),
             'destination_id' => TypeCoerce::toInt($row['destination_id'] ?? 0),
             'product_id' => $productId,
+            'status' => TypeCoerce::toString($row['status'] ?? ''),
+            'gate_hidden' => TypeCoerce::toString($row['gate_hidden'] ?? '') === 'Y',
             'sellable' => $productId > 0
                 && ProviderCartProduct::canBeBought(TypeCoerce::toString($row['status'] ?? ''), TypeCoerce::toString($row['gate_hidden'] ?? '') === 'Y'),
         ];
@@ -158,16 +160,23 @@ function pm_synced_hotels(): array
     return $hotels;
 }
 
-/** @return array<int, int> destination id => its parent's (0 = none) */
-function pm_parents(): array
+/**
+ * Each destination's parent (0 = none) and type (country, region, city…).
+ *
+ * @return array{0: array<int, int>, 1: array<int, string>}
+ */
+function pm_destinations(): array
 {
     $parents = [];
-    foreach ((array) db_get_array('SELECT destination_id, parent_id FROM ?:sphinx_destinations') as $row) {
+    $types = [];
+    foreach ((array) db_get_array('SELECT destination_id, parent_id, type FROM ?:sphinx_destinations') as $row) {
         $row = TypeCoerce::toStringMap($row);
-        $parents[TypeCoerce::toInt($row['destination_id'] ?? 0)] = TypeCoerce::toInt($row['parent_id'] ?? 0);
+        $id = TypeCoerce::toInt($row['destination_id'] ?? 0);
+        $parents[$id] = TypeCoerce::toInt($row['parent_id'] ?? 0);
+        $types[$id] = TypeCoerce::toString($row['type'] ?? '');
     }
 
-    return $parents;
+    return [$parents, $types];
 }
 
 /**
@@ -403,7 +412,7 @@ if ($pm_unknown !== []) {
 // ── 2. Destinations and the store's hotels in them ──────────────────────
 pm_h("2. Destinations by bus and by plane, with the store's hotels (theirs or a parent destination)");
 $pm_hotels = pm_synced_hotels();
-$pm_parents = pm_parents();
+[$pm_parents, $pm_dest_types] = pm_destinations();
 /** @var array<int, array{name: string, routes: array<string, list<array{type: string, departure_id: int, departure: string, arrival_id: int, arrival: string, dates: list<string>, nights: int}>>, hotels: list<string>}> $pm_arrivals */
 $pm_arrivals = [];
 foreach ($pm_routes as $pm_route) {
@@ -427,6 +436,19 @@ uasort($pm_both, static fn (array $a, array $b): int => count($b['hotels']) <=> 
 $pm_sellable = count(array_filter($pm_hotels, static fn (array $h): bool => $h['sellable']));
 $pm_reached = count(array_unique(array_merge(...array_values(array_map(static fn (array $a): array => $a['hotels'], $pm_arrivals)))));
 $pm_reached_both = count(array_unique(array_merge(...array_values(array_map(static fn (array $a): array => $a['hotels'], $pm_both)))));
+$pm_with_product = array_filter($pm_hotels, static fn (array $h): bool => $h['product_id'] > 0);
+$pm_statuses = array_count_values(array_map(
+    static fn (array $h): string => ($h['status'] !== '' ? $h['status'] : 'no such product') . ($h['gate_hidden'] ? ' (gate-hidden)' : ''),
+    $pm_with_product,
+));
+ksort($pm_statuses);
+pm_line(sprintf(
+    'Synced Sphinx hotels: %d · with a store product: %d · product status: %s',
+    count($pm_hotels),
+    count($pm_with_product),
+    $pm_statuses === [] ? 'none' : implode(', ', array_map(static fn (string $k, int $v): string => "{$k} {$v}", array_keys($pm_statuses), $pm_statuses)),
+));
+pm_line('  (sellable = status A, or H when the availability gate hid it; D, or H set by hand, is not sold)');
 pm_line(sprintf(
     'Store hotels (sellable): %d · in a destination with a package route: %d · with both bus and plane routes: %d',
     $pm_sellable,
@@ -450,10 +472,40 @@ foreach (array_slice($pm_both, 0, 15, true) as $pm_arrival_id => $pm_arrival) {
     ));
 }
 
+// The destinations to search: those reached both ways first, then those
+// with the most store hotels; a city before a region before a country (a
+// country-wide search is slow and may outlast the page); then the most routes.
+$pm_rank = static function (int $id, array $a) use ($pm_dest_types): array {
+    $type = $pm_dest_types[$id] ?? '';
+
+    return [
+        isset($a['routes']['bus'], $a['routes']['flight']) ? 0 : 1,
+        -count($a['hotels']),
+        $type === 'country' || $type === 'continent' ? 2 : ($type === 'region' ? 1 : 0),
+        -count($a['routes']['flight'] ?? []) - count($a['routes']['bus'] ?? []),
+    ];
+};
+$pm_ranked = array_filter($pm_arrivals, static fn (array $a): bool => $a['routes'] !== []);
+uksort($pm_ranked, static fn (int $x, int $y): int => $pm_rank($x, $pm_ranked[$x]) <=> $pm_rank($y, $pm_ranked[$y]));
+if ($pm_both === []) {
+    pm_line('Destinations to search first (use ?arrival=ID for one):');
+    foreach (array_slice($pm_ranked, 0, 15, true) as $pm_arrival_id => $pm_arrival) {
+        pm_line(sprintf(
+            '  %s (%d, %s): %d store hotels · plane from %s%s',
+            $pm_arrival['name'],
+            $pm_arrival_id,
+            ($pm_dest_types[$pm_arrival_id] ?? '') !== '' ? $pm_dest_types[$pm_arrival_id] : 'type unknown',
+            count($pm_arrival['hotels']),
+            implode(', ', array_slice(array_unique(array_column($pm_arrival['routes']['flight'] ?? [], 'departure')), 0, 6)) ?: '-',
+            isset($pm_arrival['routes']['bus']) ? ' · bus from ' . implode(', ', array_unique(array_column($pm_arrival['routes']['bus'], 'departure'))) : '',
+        ));
+    }
+}
+
 // ── 3. Package searches, by bus and by plane ────────────────────────────
 $pm_targets = $pm_only > 0
     ? [$pm_only]
-    : array_slice(array_keys($pm_both !== [] ? $pm_both : $pm_arrivals), 0, $pm_sample);
+    : array_slice(array_keys($pm_ranked), 0, $pm_sample);
 /** @var array<string, array<string, array{price: float, currency: string, line: string, offers: int, departure: string, date: string, nights: int, arrival_id: int}>> $pm_found hotel id => transport => its cheapest offer */
 $pm_found = [];
 foreach ($pm_targets as $pm_arrival_id) {
@@ -470,6 +522,7 @@ foreach ($pm_targets as $pm_arrival_id) {
             continue;
         }
         $pm_date = $pm_route['dates'][0];
+        pm_line(sprintf('  searching %s from %s on %s, %d nights…', $pm_type, $pm_route['departure'], $pm_date, $pm_route['nights']));
         $pm_result = pm_packages($pm_api, pm_request([
             'departure_id' => $pm_route['departure_id'],
             'destination_id' => $pm_arrival_id,
