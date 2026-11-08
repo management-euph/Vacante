@@ -488,6 +488,14 @@ class HotelRepository implements HotelRepositoryInterface
     }
 
     /**
+     * Unlink the hotels whose product no longer exists: how many.
+     */
+    public function unlinkMissingProducts(): int
+    {
+        return $this->linkingRepo->unlinkMissingProducts();
+    }
+
+    /**
      * Count hotels that have a linked CS-Cart product.
      */
     public function countLinked(): int

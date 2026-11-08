@@ -82,12 +82,12 @@ class HotelStatsRepository
     }
 
     /**
-     * Count hotels that have a linked CS-Cart product.
+     * Count hotels that have a linked CS-Cart product (one that still exists).
      */
     public function countLinked(): int
     {
         return TypeCoerce::toInt(db_get_field(
-            "SELECT COUNT(*) FROM ?:sphinx_hotels WHERE product_id IS NOT NULL AND product_id > 0 AND sync_status = 'active'",
+            "SELECT COUNT(*) FROM ?:sphinx_hotels h INNER JOIN ?:products p ON p.product_id = h.product_id WHERE h.sync_status = 'active'",
         ));
     }
 

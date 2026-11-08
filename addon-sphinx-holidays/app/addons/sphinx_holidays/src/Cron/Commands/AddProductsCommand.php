@@ -138,6 +138,12 @@ class AddProductsCommand extends AbstractSyncCommand
         $batchSize = ValidationHelpers::toInt($params['batch_size'] ?? 200);
         $retrySkipped = ValidationHelpers::toString($params['retry_skipped'] ?? '');
 
+        // A hotel whose product was deleted gets a new one.
+        $orphaned = $hotelRepo->unlinkMissingProducts();
+        if ($orphaned > 0) {
+            $this->output("{$orphaned} hotels were linked to a product that no longer exists: unlinked, a new product is made for them.");
+        }
+
         // Handle retry_skipped: reset product_skip_reason so hotels become eligible again
         if ($retrySkipped !== '') {
             $reason = ($retrySkipped === '1') ? '' : $retrySkipped;

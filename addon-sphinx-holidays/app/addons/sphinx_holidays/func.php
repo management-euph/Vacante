@@ -361,37 +361,34 @@ function fn_sphinx_holidays_calculate_cart_items(&$cart, &$cart_products, &$auth
 }
 
 /**
- * Hook: get_product_data_post
- * Attach booking engine config to Sphinx hotel products.
+ * Hooks get_product_data_post and gather_additional_product_data_post:
+ * complete no-ops for Smarty 5. They run during template rendering, and any
+ * change to $product_data / $product (or a $view->assign()) corrupts Smarty
+ * 5's Variable wrapper and scope chain: Data::getVariable() recursion
+ * (Data.php:265) that exhausts 256MB. Templates detect Sphinx products from
+ * $product.product_code.
  *
- * @param mixed $product_data Untouched (see body note)
+ * @param mixed $product_data Untouched
  * @param mixed $auth         Unused (hook signature)
  * @param mixed $preview      Unused (hook signature)
  * @param mixed $lang_code    Unused (hook signature)
  */
 function fn_sphinx_holidays_get_product_data_post(&$product_data, &$auth, $preview, $lang_code): void
 {
-    // Complete no-op for Smarty 5 compatibility.
-    // Do NOT modify $product_data during template rendering — any modification
-    // corrupts Smarty 5's Variable wrapper, causing Data::getVariable()
-    // infinite recursion (Data.php:265) that exhausts 256MB memory.
-    // Templates detect Sphinx products from $product.product_code prefix (SPX).
+}
+
+/** The same no-op, for gather_additional_product_data_post. */
+function fn_sphinx_holidays_gather_additional_product_data_post(mixed &$product, mixed $auth, mixed $params): void
+{
 }
 
 /**
- * Hook: gather_additional_product_data_post
- * Complete no-op for Smarty 5 compatibility.
- * Templates detect Sphinx products from $product.product_code prefix (SPX).
- *
- * @param mixed $product Untouched (see body note)
- * @param mixed $auth    Unused (hook signature)
- * @param mixed $params  Unused (hook signature)
+ * Hook: delete_product_post. A deleted product's hotel or circuit is
+ * unlinked, so "Create Products" makes it a new one (Hooks\ProductHooks).
  */
-function fn_sphinx_holidays_gather_additional_product_data_post(&$product, $auth, $params): void
+function fn_sphinx_holidays_delete_product_post(mixed $product_id, mixed $product_deleted): void
 {
-    // Do NOT modify $product or call $view->assign() here.
-    // This hook runs during Smarty 5 template rendering — any $product
-    // modification corrupts Smarty's scope chain (Data.php:265 crash).
+    \Tygh\Addons\SphinxHolidays\Hooks\ProductHooks::unlinkDeleted($product_id, $product_deleted);
 }
 
 /**

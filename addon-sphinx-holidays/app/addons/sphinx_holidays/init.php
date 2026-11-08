@@ -198,6 +198,7 @@ fn_register_hooks(
     'place_order_post',                        // Submit booking to Sphinx API after order
     'calculate_cart_items',                     // Preserve stored price for Sphinx bookings
     'get_product_data_post',                   // Attach hotel data to Sphinx products
+    'delete_product_post',                     // A deleted product's hotel or circuit is unlinked
     'gather_additional_product_data_post',     // Pass booking form config to templates
     'user_login_post',                         // Link session bookings to logged-in user
     'create_user_post',                        // Link bookings to newly registered users
