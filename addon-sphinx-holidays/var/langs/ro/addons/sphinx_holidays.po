@@ -892,10 +892,6 @@ msgctxt "Languages::sphinx_holidays.with_selected"
 msgid "With selected"
 msgstr "Cu cele selectate"
 
-msgctxt "Languages::sphinx_holidays.skipped_hotels"
-msgid "Skipped hotels"
-msgstr "Hoteluri omise"
-
 msgctxt "Languages::sphinx_holidays.retry_skipped"
 msgid "Retry skipped hotels"
 msgstr "Reîncearcă hotelurile omise"
@@ -1871,3 +1867,131 @@ msgstr "Câmpuri SEO: le scrie și pe cele lipsă"
 msgctxt "Languages::sphinx_holidays.jobs_check_apply_confirm"
 msgid "Write this hotel's missing SEO fields?"
 msgstr "Scrii câmpurile SEO lipsă ale acestui hotel?"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_hotels"
+msgid "Hotels in scope"
+msgstr "Hoteluri în destinațiile vândute"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_hotels_cities"
+msgid "Cities sold: [n]"
+msgstr "Orașe vândute: [n]"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_hotels_synced"
+msgid "Last hotel sync: [date]"
+msgstr "Ultima sincronizare a hotelurilor: [date]"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_hotels_open"
+msgid "Open hotels"
+msgstr "Deschide hotelurile"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_products"
+msgid "Products"
+msgstr "Produse"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_products_note"
+msgid "Linked to a Sphinx hotel · live in the destinations you sell: [n]"
+msgstr "Legate de un hotel Sphinx · active în destinațiile pe care le vinzi: [n]"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_products_open"
+msgid "See the hotels with a product"
+msgstr "Vezi hotelurile cu produs"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_unlinked"
+msgid "Hotels without a product"
+msgstr "Hoteluri fără produs"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_unlinked_value"
+msgid "[n] of [total]"
+msgstr "[n] din [total]"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_unlinked_waiting"
+msgid "Waiting for an immediate offer: [n]"
+msgstr "Așteaptă o ofertă imediată: [n]"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_unlinked_skipped"
+msgid "skipped: [n]"
+msgstr "omise: [n]"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_unlinked_ready"
+msgid "ready to create: [n]"
+msgstr "gata de creat: [n]"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_unlinked_open"
+msgid "See which"
+msgstr "Vezi care"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_jobs_failing"
+msgid "Failing: [n]"
+msgstr "Eșuează: [n]"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_jobs_late"
+msgid "Late: [n]"
+msgstr "Întârziate: [n]"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_jobs_never"
+msgid "No runs yet: [n]"
+msgstr "Încă nerulate: [n]"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_jobs_ok"
+msgid "All on time"
+msgstr "Toate la timp"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_jobs_note"
+msgid "On time: [ok] · late: [late] · no runs yet: [never]"
+msgstr "La timp: [ok] · întârziate: [late] · încă nerulate: [never]"
+
+msgctxt "Languages::sphinx_holidays.dash_tile_jobs_open"
+msgid "See the jobs ↓"
+msgstr "Vezi joburile ↓"
+
+msgctxt "Languages::sphinx_holidays.dash_attention_title"
+msgid "Needs attention ([n])"
+msgstr "Necesită atenție ([n])"
+
+msgctxt "Languages::sphinx_holidays.dash_attention_refused"
+msgid "A cron request with a wrong key was refused on [date]: the crontab is probably still on an old key."
+msgstr "O cerere cron cu o cheie greșită a fost refuzată pe [date]: crontab-ul folosește probabil încă o cheie veche."
+
+msgctxt "Languages::sphinx_holidays.dash_attention_copy_commands"
+msgid "Copy the commands again"
+msgstr "Copiază din nou comenzile"
+
+msgctxt "Languages::sphinx_holidays.dash_attention_failed"
+msgid "[job] failed on [date]."
+msgstr "[job] a eșuat pe [date]."
+
+msgctxt "Languages::sphinx_holidays.dash_attention_stalled"
+msgid "[job] started on [date] and never finished."
+msgstr "[job] a pornit pe [date] și nu s-a mai terminat."
+
+msgctxt "Languages::sphinx_holidays.dash_attention_never"
+msgid "[job] has never run."
+msgstr "[job] nu a rulat niciodată."
+
+msgctxt "Languages::sphinx_holidays.dash_attention_late"
+msgid "[job] is late: it last finished on [date]. Schedule: [schedule]."
+msgstr "[job] întârzie: s-a terminat ultima dată pe [date]. Program: [schedule]."
+
+msgctxt "Languages::sphinx_holidays.dash_attention_run"
+msgid "Run [job]"
+msgstr "Rulează [job]"
+
+msgctxt "Languages::sphinx_holidays.dash_attention_skipped"
+msgid "Hotels skipped, with no product: [n]."
+msgstr "Hoteluri omise, fără produs: [n]."
+
+msgctxt "Languages::sphinx_holidays.dash_tools_title"
+msgid "Tools"
+msgstr "Instrumente"
+
+msgctxt "Languages::sphinx_holidays.dash_tools_intro"
+msgid "Syncing now is each job's Run, under Scheduled jobs: it opens the job's log in a new window and leaves this page where it is."
+msgstr "Sincronizarea imediată se face cu Rulează, la fiecare job din Joburi programate: deschide jurnalul jobului într-o fereastră nouă și lasă pagina aceasta neschimbată."
+
+msgctxt "Languages::sphinx_holidays.dash_tools_fix"
+msgid "Fix products"
+msgstr "Repară produsele"
+
+msgctxt "Languages::sphinx_holidays.dash_tools_fix_hint"
+msgid "Create products and Re-link existing products show here only when there is something to create or re-link."
+msgstr "Creare Produse și Reconectează produsele existente apar aici doar când e ceva de creat sau de reconectat."

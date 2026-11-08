@@ -28,10 +28,12 @@ use Tygh\Addons\SphinxHolidays\Repository\HotelSkipRepository;
 use Tygh\Addons\SphinxHolidays\Services\CircuitSyncService;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\SphinxHolidays\Services\DashboardSummary;
 use Tygh\Addons\SphinxHolidays\Services\DestinationsPicker;
 use Tygh\Addons\SphinxHolidays\Services\HotelSyncService;
 use Tygh\Addons\SphinxHolidays\Services\PackageRouteSyncService;
 use Tygh\Addons\SphinxHolidays\Services\WhitelistPageLoader;
+use Tygh\Addons\TravelCore\Cron\CronHealth;
 use Tygh\Addons\TravelCore\Cron\CronRunLog;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
@@ -545,62 +547,32 @@ if ($mode === 'product_links') {
 if ($mode === 'manage') {
     $destRepo = Container::getDestinationRepository();
     $hotelRepo = Container::getHotelRepository();
-
-    // Destination stats
-    $countsByType = $destRepo->getCountsByType();
-    $totalDestinations = $destRepo->getTotal();
-    $destLastSynced = $destRepo->getLastSyncedAt();
-
-    // Hotel stats
-    $totalHotels = $hotelRepo->getTotal();
-    $hotelsByCountry = $hotelRepo->getCountsByCountry();
-    $hotelLastSynced = $hotelRepo->getLastSyncedAt();
-
-    // Product stats
-    $linkedCount = $hotelRepo->countLinked();
     $skipRepo = Container::getHotelSkipRepository();
-    $skippedCount = $skipRepo->countSkipped();
-    // Waiting for an immediate offer: the availability gate's, not "Retry skipped"'s.
-    $waitingCount = $skipRepo->countSkipped(HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY);
-    $unlinkedCount = $totalHotels - $linkedCount - $skippedCount - $waitingCount;
 
-    // API status
-    $isConfigured = ConfigProvider::isConfigured();
+    // The hotel table: every hotel, those with a product, those waiting for
+    // an immediate offer (the availability gate's, not "Retry skipped"'s),
+    // those skipped. The rest have no product yet: Create products.
+    $totalHotels = $hotelRepo->getTotal();
+    $linkedCount = $hotelRepo->countLinked();
+    $skippedCount = $skipRepo->countSkipped();
+    $waitingCount = $skipRepo->countSkipped(HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY);
     $selectedCountries = ConfigProvider::getSelectedCountryCodes();
 
-    // Recent sync logs (both types)
-    $syncLogRepo = Container::getSyncLogRepository();
-    $syncLogs = $syncLogRepo->getRecent(10);
-
-    $view->assign('counts_by_type', $countsByType);
-    $view->assign('total_destinations', $totalDestinations);
-    $view->assign('dest_last_synced', $destLastSynced);
-    $view->assign('total_hotels', $totalHotels);
-    $view->assign('hotels_by_country', $hotelsByCountry);
-    $view->assign('hotel_last_synced', $hotelLastSynced);
-    $view->assign('linked_products', $linkedCount);
-    $view->assign('unlinked_hotels', $unlinkedCount);
+    // The Sphinx catalog line under the Destinations card.
+    $view->assign('counts_by_type', $destRepo->getCountsByType());
+    $view->assign('dest_last_synced', $destRepo->getLastSyncedAt());
+    $view->assign('hotel_last_synced', $hotelRepo->getLastSyncedAt());
+    // Fix products: each button shows only when it has something to do.
+    $view->assign('unlinked_hotels', $totalHotels - $linkedCount - $skippedCount - $waitingCount);
     $view->assign('skipped_hotels', $skippedCount);
-    $view->assign('waiting_hotels', $waitingCount);
     $view->assign('selected_countries', $selectedCountries);
     $destLoader = new WhitelistPageLoader();
     $destBuilt = $destLoader->built();
     $view->assign('sphinx_dest_card', DestinationsPicker::card($destBuilt, $destLoader->outside(), TypeCoerce::toString(fn_url('sphinx_holidays.whitelist'))));
-    // Queue images for a scope offers the countries sold, by their names in
-    // the destination tree (the code until the tree has the country).
-    $countryNames = [];
-    foreach ($destBuilt['countries'] as $treeCountry) {
-        $countryNames[TypeCoerce::toString($treeCountry['code'] ?? '')] = TypeCoerce::toString($treeCountry['label'] ?? '');
-    }
-    $scopeCountries = [];
-    foreach ($selectedCountries as $scopeCode) {
-        $scopeName = $countryNames[$scopeCode] ?? '';
-        $scopeCountries[] = ['code' => $scopeCode, 'name' => $scopeName !== '' ? $scopeName : $scopeCode];
-    }
-    $view->assign('sphinx_scope_countries', $scopeCountries);
+    $view->assign('sphinx_scope_countries', DashboardSummary::scopeCountries($selectedCountries, $destBuilt['countries']));
     // Its hotels per availability state, from Travel Core's weekly review.
     $view->assign('sphinx_availability_card', \Tygh\Addons\TravelCore\Services\AvailabilityCard::build('sphinx'));
-    $view->assign('is_configured', $isConfigured);
+    $view->assign('is_configured', ConfigProvider::isConfigured());
     // Sphinx-shaped products with NO hotel row linked to them — what the
     // relink action actually repairs. (The old gate used the orphan count —
     // hotels whose product was deleted — which relink cannot fix and which is
@@ -608,10 +580,7 @@ if ($mode === 'manage') {
     $view->assign('unlinked_sphinx_products', $hotelRepo->countUnlinkedProducts(
         ConfigProvider::getProductCodePrefix(),
     ));
-    // Hotels with a dead product_id (product deleted from CS-Cart without clearing the link)
-    $view->assign('orphaned_spx_products', $hotelRepo->countOrphanedProducts());
-
-    $view->assign('sync_logs', $syncLogs);
+    $view->assign('sync_logs', Container::getSyncLogRepository()->getRecent(10));
 
     // Scheduled jobs: one row per job, in the order they run, from the plan
     // (Travel Core's shared jobs card draws them). The page never prints a
@@ -628,13 +597,29 @@ if ($mode === 'manage') {
         $cron_records[$cron_mode] = CronRunLog::get(CronPlan::ADDON, $cron_mode);
     }
     $crontab_cli = $planner->crontab($cron_modes, 'cli', date('Y-m-d'));
-    $view->assign('sphinx_job_stages', $planner->stages($cron_modes, $cron_records, [], time()));
+    $job_stages = $planner->stages($cron_modes, $cron_records, [], time());
+    $view->assign('sphinx_job_stages', $job_stages);
     $view->assign('sphinx_on_demand_jobs', $planner->onDemandRows($cron_modes, $cron_records, time()));
     $view->assign('sphinx_cron_has_key', $planner->hasKey());
     $view->assign('sphinx_cron_key', $cron_key);
     $view->assign('sphinx_crontab_cli', $crontab_cli);
     $view->assign('sphinx_crontab_url', $planner->crontab($cron_modes, 'url', date('Y-m-d')));
     $view->assign('sphinx_crontab_masked', $cron_key === '' ? $crontab_cli : str_replace($cron_key, '••••••••', $crontab_cli));
+
+    // At a glance and Needs attention (Services\DashboardSummary), from the
+    // figures above, the jobs' runs and whether a cron request was refused
+    // for a wrong key since the last good scheduled run (Travel Core's CronHealth).
+    $view->assign('sphinx_glance', DashboardSummary::glance(
+        ['total' => $totalHotels, 'linked' => $linkedCount, 'waiting' => $waitingCount, 'skipped' => $skippedCount],
+        $destBuilt,
+        $job_stages,
+    ));
+    $cron_health = CronHealth::assess($cron_records, CronRunLog::lastWrongKeyRefusal(CronPlan::ADDON), time());
+    $view->assign('sphinx_attention', DashboardSummary::attention(
+        $job_stages,
+        $skippedCount,
+        $cron_health['state'] === CronHealth::REFUSED ? $cron_health['wrong_key_at'] : 0,
+    ));
 
 } elseif ($mode === 'destinations') {
     $repository = Container::getDestinationRepository();

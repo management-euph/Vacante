@@ -787,6 +787,109 @@
     height: 0;
 }
 
+/* ─── The top of the providers' dashboards ───
+ * At a glance (four travel-cron-tiles), Needs attention and the Tools card,
+ * as Novoton's dashboard drew them first; Sphinx's uses the same. */
+
+.travel-cron-tiles--four {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.travel-cron-tile--bad {
+    border-color: #a3161b;
+    background: #fdf0f0;
+}
+
+.travel-cron-attention {
+    border-color: #e8b4b6;
+    padding: 0;
+    overflow: hidden;
+}
+
+.travel-cron-attention h3 {
+    margin: 0;
+    padding: 12px 16px;
+    background: #fdf0f0;
+    color: #7d1115;
+    font-size: 15px;
+}
+
+.travel-cron-attention__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.travel-cron-attention__item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 16px;
+    border-top: 1px solid #f2dcdd;
+}
+
+.travel-cron-attention__text .travel-cron-hint--bad {
+    display: block;
+    font-size: 12px;
+}
+
+.travel-cron-tools__groups {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 8px;
+}
+
+.travel-cron-tools__group h4 {
+    margin: 0 0 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #4a5360;
+}
+
+.travel-cron-tools__group .btn,
+.travel-cron-tools__group .travel-cron-run-form {
+    margin: 0 4px 6px 0;
+}
+
+@media (max-width: 1100px) {
+    .travel-cron-tiles--four,
+    .travel-cron-tools__groups {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .travel-cron-tiles--four,
+    .travel-cron-tools__groups {
+        grid-template-columns: 1fr;
+    }
+
+    .travel-cron-attention__item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+/* Two groups, the second wider: a few buttons beside a form. */
+.travel-cron-tools__groups--two {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+}
+
+/* A one-button POST form among a group's buttons (not a Run: no log window). */
+.travel-cron-tools__form {
+    display: inline;
+}
+
+@media (max-width: 768px) {
+    .travel-cron-tools__groups--two {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* ─── Feature Mappings (travel_feature_mappings.*) ─── */
 
 .travel-fm-intro {
