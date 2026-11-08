@@ -5,11 +5,10 @@ declare(strict_types=1);
  * Sphinx Holidays - Backend Admin Controller
  *
  * Modes:
- *   - manage (default): Dashboard with destination + hotel stats, sync controls
+ *   - manage (default): Dashboard with destination + hotel stats and the scheduled jobs
+ *   - run_job (POST): run one cron job from the dashboard, as the signed-in admin
  *   - destinations: List/filter destinations with pagination
  *   - hotels: List/filter hotels with pagination
- *   - sync_destinations (POST): Trigger destination sync from admin panel
- *   - sync_hotels (POST): Trigger hotel sync from admin panel
  *   - whitelist: the destination whitelist (Travel Core's destination picker:
  *     per country Not sold / All destinations / Only selected, whole regions)
  *   - whitelist_body (AJAX GET): one country's regions and cities, as {html}
@@ -22,15 +21,18 @@ declare(strict_types=1);
  */
 
 use Tygh\Addons\SphinxHolidays\Cron\Commands\AddProductsCommand;
+use Tygh\Addons\SphinxHolidays\Cron\CronDispatcher;
+use Tygh\Addons\SphinxHolidays\Cron\CronPlan;
+use Tygh\Addons\SphinxHolidays\Cron\CronRunOutput;
 use Tygh\Addons\SphinxHolidays\Repository\HotelSkipRepository;
 use Tygh\Addons\SphinxHolidays\Services\CircuitSyncService;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\DestinationsPicker;
-use Tygh\Addons\SphinxHolidays\Services\DestinationSyncService;
 use Tygh\Addons\SphinxHolidays\Services\HotelSyncService;
 use Tygh\Addons\SphinxHolidays\Services\PackageRouteSyncService;
 use Tygh\Addons\SphinxHolidays\Services\WhitelistPageLoader;
+use Tygh\Addons\TravelCore\Cron\CronRunLog;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\DestinationPicker;
@@ -83,63 +85,41 @@ function _sphinx_dest_page(array $built, bool $lazy): array
 }
 
 // $mode is set automatically by CS-Cart from the dispatch parameter
-// e.g. dispatch=sphinx_holidays.sync_destinations sets $mode = 'sync_destinations'
+// e.g. dispatch=sphinx_holidays.sync_circuits sets $mode = 'sync_circuits'
 
 // ─── POST handlers ───
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if ($mode === 'sync_destinations') {
-        if (!ConfigProvider::isConfigured()) {
-            fn_set_notification('E', __('error'), __('sphinx_holidays.api_not_configured'));
+    /*
+     * Mode: run_job — run one cron job from the dashboard, as the signed-in admin.
+     *
+     * The dashboard's Run, its ⋯ menu items, Queue images for a scope and
+     * Check one hotel post here (a CS-Cart POST with its security_hash), so
+     * no cron key reaches the browser and a GET cannot start a job. Only what
+     * CronPlan::runParams() allows reaches the command: the job's own
+     * parameters, the flags of an action its menu offers, the scope and hotel
+     * fields. The log streams as plain text in the window the dashboard
+     * opened, as the cron URL prints it (CronRunOutput).
+     */
+    if ($mode === 'run_job') {
+        if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
+            return [CONTROLLER_STATUS_DENIED];
+        }
+        $job = (string) preg_replace('/[^a-z0-9_]/', '', strtolower(RequestCoerce::string($_REQUEST, 'job')));
+        if (!array_key_exists($job, CronDispatcher::getAvailableModes())) {
+            fn_set_notification('E', __('error'), __('sphinx_holidays.jobs_unknown', ['[job]' => $job]));
             return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
         }
+        $params = CronPlan::runParams($job, RequestCoerce::string($_REQUEST, 'job_action'), $_REQUEST);
 
-        if (function_exists('set_time_limit')) {
-            set_time_limit(0);
+        header('Content-Type: text/plain; charset=utf-8');
+        echo CronRunOutput::startLine($job);
+        try {
+            CronRunOutput::dispatch(new CronDispatcher(), $job, $params);
+        } catch (\Throwable $e) {
+            echo 'ERROR: ' . $e->getMessage() . "\n";
         }
-
-        $api = Container::getApi();
-        $repository = Container::getDestinationRepository();
-        $service = new DestinationSyncService($api, $repository);
-
-        $result = $service->sync();
-
-        if (!empty($result['success'])) {
-            fn_set_notification('N', __('notice'), TypeCoerce::toString(__('sphinx_holidays.sync_completed')) . ': ' . TypeCoerce::toInt($result['synced']) . '/' . TypeCoerce::toInt($result['total']));
-        } else {
-            fn_set_notification('E', __('error'), TypeCoerce::toString(__('sphinx_holidays.sync_failed')) . ': ' . (TypeCoerce::toString($result['error']) ?: 'Unknown error'));
-        }
-
-        return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
-    }
-
-    if ($mode === 'sync_hotels') {
-        if (!ConfigProvider::isConfigured()) {
-            fn_set_notification('E', __('error'), __('sphinx_holidays.api_not_configured'));
-            return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
-        }
-
-        if (function_exists('set_time_limit')) {
-            set_time_limit(0);
-        }
-
-        $api = Container::getApi();
-        $hotelRepo = Container::getHotelRepository();
-        $destRepo = Container::getDestinationRepository();
-        $skipRepo = Container::getHotelSkipRepository();
-        $service = new HotelSyncService($api, $hotelRepo, $destRepo, $skipRepo);
-
-        // The whitelist's destination ids too: with country codes alone the
-        // service syncs every destination of an "Only selected" country.
-        $result = $service->sync(ConfigProvider::getSelectedCountryCodes(), ConfigProvider::getAllowedDestinationIds());
-
-        if (!empty($result['success'])) {
-            fn_set_notification('N', __('notice'), TypeCoerce::toString(__('sphinx_holidays.hotel_sync_completed')) . ': ' . TypeCoerce::toInt($result['synced']) . '/' . TypeCoerce::toInt($result['total']));
-        } else {
-            fn_set_notification('E', __('error'), TypeCoerce::toString(__('sphinx_holidays.hotel_sync_failed')) . ': ' . (TypeCoerce::toString($result['error']) ?: 'Unknown error'));
-        }
-
-        return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
+        exit;
     }
 
     if ($mode === 'sync_circuits') {
@@ -604,7 +584,20 @@ if ($mode === 'manage') {
     $view->assign('waiting_hotels', $waitingCount);
     $view->assign('selected_countries', $selectedCountries);
     $destLoader = new WhitelistPageLoader();
-    $view->assign('sphinx_dest_card', DestinationsPicker::card($destLoader->built(), $destLoader->outside(), TypeCoerce::toString(fn_url('sphinx_holidays.whitelist'))));
+    $destBuilt = $destLoader->built();
+    $view->assign('sphinx_dest_card', DestinationsPicker::card($destBuilt, $destLoader->outside(), TypeCoerce::toString(fn_url('sphinx_holidays.whitelist'))));
+    // Queue images for a scope offers the countries sold, by their names in
+    // the destination tree (the code until the tree has the country).
+    $countryNames = [];
+    foreach ($destBuilt['countries'] as $treeCountry) {
+        $countryNames[TypeCoerce::toString($treeCountry['code'] ?? '')] = TypeCoerce::toString($treeCountry['label'] ?? '');
+    }
+    $scopeCountries = [];
+    foreach ($selectedCountries as $scopeCode) {
+        $scopeName = $countryNames[$scopeCode] ?? '';
+        $scopeCountries[] = ['code' => $scopeCode, 'name' => $scopeName !== '' ? $scopeName : $scopeCode];
+    }
+    $view->assign('sphinx_scope_countries', $scopeCountries);
     // Its hotels per availability state, from Travel Core's weekly review.
     $view->assign('sphinx_availability_card', \Tygh\Addons\TravelCore\Services\AvailabilityCard::build('sphinx'));
     $view->assign('is_configured', $isConfigured);
@@ -620,39 +613,28 @@ if ($mode === 'manage') {
 
     $view->assign('sync_logs', $syncLogs);
 
-    // Cron URLs for the dashboard.
-    // Use the storefront root (config.http_location) — same as novoton's
-    // dashboard. fn_url('', 'C') returns a URL that already ends in
-    // "index.php" on installs without SEO clean-URLs, so appending
-    // "index.php?..." below produced a broken "index.phpindex.php".
+    // Scheduled jobs: one row per job, in the order they run, from the plan
+    // (Travel Core's shared jobs card draws them). The page never prints a
+    // command with the key in it: they are shown masked, Copy puts the real
+    // one on the clipboard, and Run posts to sphinx_holidays.run_job.
+    // The base is the storefront root (config.http_location), as novoton's:
+    // fn_url('', 'C') ends in "index.php" on installs without SEO URLs.
     $cron_key = ConfigProvider::getCronAccessKey();
     $base_url = TypeCoerce::toString(\Tygh\Registry::get('config.http_location')) . '/';
-    $cron_urls = [
-        'destinations' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=destinations",
-        'hotels' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=hotels",
-        'add_products' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=add_products",
-        'add_circuit_products' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=add_circuit_products",
-        'package_routes' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=package_routes",
-        'circuits' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=circuits",
-        'experiences' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=experiences",
-        'order_status' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=order_status",
-        'cleanup' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=cleanup",
-        'discover_boards' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=discover_boards",
-        'assign_boards' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=assign_boards",
-        'update_products' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=update_products",
-        'reassign_features' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=reassign_features",
-        'enrich_hotel_data' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=enrich_hotel_data",
-        'backfill_hotel_locations' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=backfill_hotel_locations",
-        'geocode_hotels' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=geocode_hotels",
-        'sync_images' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=sync_images",
-        'process_image_queue' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=process_image_queue",
-        'sync_and_upload_images' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=sync_and_upload_images",
-        'diagnose_search' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=diagnose_search",
-        'diagnose_images' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=diagnose_images",
-        'diagnose_seo' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=diagnose_seo",
-    ];
-    $view->assign('cron_urls', $cron_urls);
-    $view->assign('cron_key', $cron_key);
+    $planner = new CronPlan($base_url, $cron_key, defined('DIR_ROOT') ? TypeCoerce::toString(DIR_ROOT) : '');
+    $cron_modes = CronDispatcher::getAvailableModes();
+    $cron_records = [];
+    foreach (array_keys($cron_modes) as $cron_mode) {
+        $cron_records[$cron_mode] = CronRunLog::get(CronPlan::ADDON, $cron_mode);
+    }
+    $crontab_cli = $planner->crontab($cron_modes, 'cli', date('Y-m-d'));
+    $view->assign('sphinx_job_stages', $planner->stages($cron_modes, $cron_records, [], time()));
+    $view->assign('sphinx_on_demand_jobs', $planner->onDemandRows($cron_modes, $cron_records, time()));
+    $view->assign('sphinx_cron_has_key', $planner->hasKey());
+    $view->assign('sphinx_cron_key', $cron_key);
+    $view->assign('sphinx_crontab_cli', $crontab_cli);
+    $view->assign('sphinx_crontab_url', $planner->crontab($cron_modes, 'url', date('Y-m-d')));
+    $view->assign('sphinx_crontab_masked', $cron_key === '' ? $crontab_cli : str_replace($cron_key, '••••••••', $crontab_cli));
 
 } elseif ($mode === 'destinations') {
     $repository = Container::getDestinationRepository();

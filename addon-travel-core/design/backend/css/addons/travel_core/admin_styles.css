@@ -736,6 +736,57 @@
     border-top: 0;
 }
 
+/* A run with a few choices (a scope, a hotel) inside a jobs card: fields in
+ * rows that wrap, never squeezed over each other. */
+.travel-cron-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 10px 16px;
+    margin: 0;
+}
+
+.travel-cron-form__field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.travel-cron-form__field label {
+    margin: 0;
+    font-weight: 600;
+}
+
+.travel-cron-form input[type="text"],
+.travel-cron-form input[type="number"],
+.travel-cron-form select {
+    margin: 0;
+    max-width: 100%;
+}
+
+.travel-cron-form__check {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+}
+
+.travel-cron-form__check input {
+    margin: 0;
+}
+
+.travel-cron-form__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.travel-cron-form__break {
+    flex-basis: 100%;
+    height: 0;
+}
+
 /* ─── Feature Mappings (travel_feature_mappings.*) ─── */
 
 .travel-fm-intro {

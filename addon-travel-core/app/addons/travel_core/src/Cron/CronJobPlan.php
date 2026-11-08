@@ -102,6 +102,38 @@ abstract class CronJobPlan
     public const array REDO_ALL = [];
 
     /**
+     * Jobs that answer force_full without being batched: a full re-read, no progress to reset.
+     *
+     * @var list<string>
+     */
+    public const array FORCE_FULL = [];
+
+    /**
+     * Jobs that answer reset without being batched (they keep progress, but have no full mode).
+     *
+     * @var list<string>
+     */
+    public const array RESETTABLE = [];
+
+    /**
+     * Parameters every run of a job carries, scheduled or from the dashboard:
+     * they go into its URL, its CLI line and its crontab line.
+     *
+     * @var array<string, array<string, string>>
+     */
+    protected const array JOB_PARAMS = [];
+
+    /**
+     * The add-on's own ⋯ menu items, after the shared ones: an action its run
+     * action understands, the item's label and, for one that undoes or redoes
+     * work, the question asked first (labels from the add-on's packs; [job]
+     * is the job's name).
+     *
+     * @var array<string, list<array{action: string, label: string, confirm?: string}>>
+     */
+    protected const array EXTRA_ACTIONS = [];
+
+    /**
      * Real jobs with no place in the schedule: listed after the stages, with Run and the commands.
      *
      * @var list<string>
@@ -150,22 +182,70 @@ abstract class CronJobPlan
 
     final public function url(string $mode): string
     {
-        return rtrim($this->baseUrl, '/')
+        $url = rtrim($this->baseUrl, '/')
             . '/index.php?dispatch=' . static::CRON_DISPATCH . '&access_key=' . rawurlencode($this->accessKey)
             . '&' . static::URL_MODE_PARAM . '=' . rawurlencode($mode);
+        foreach (static::jobParams($mode) as $name => $value) {
+            $url .= '&' . rawurlencode($name) . '=' . rawurlencode($value);
+        }
+
+        return $url;
     }
 
     final public function cli(string $mode): string
     {
         $root = $this->dirRoot === '' ? '' : rtrim($this->dirRoot, '/') . '/';
+        $cli = 'php ' . $root . static::CLI_SCRIPT . ' access_key=' . $this->accessKey . ' mode=' . $mode;
+        foreach (static::jobParams($mode) as $name => $value) {
+            $cli .= ' ' . $name . '=' . $value;
+        }
 
-        return 'php ' . $root . static::CLI_SCRIPT . ' access_key=' . $this->accessKey . ' mode=' . $mode;
+        return $cli;
     }
 
     /** The cron expression suggested for a job, '' for one without a slot. */
     final public static function cron(string $mode): string
     {
         return static::SCHEDULES[$mode]['cron'] ?? '';
+    }
+
+    /**
+     * The parameters every run of a job carries (JOB_PARAMS).
+     *
+     * @return array<string, string>
+     */
+    final public static function jobParams(string $mode): array
+    {
+        return static::JOB_PARAMS[$mode] ?? [];
+    }
+
+    /**
+     * The actions a job's ⋯ menu offers, which are the only ones an add-on's
+     * run action should take for it: status, force, force_full, reset, then
+     * the add-on's own.
+     *
+     * @return list<string>
+     */
+    final public static function offeredActions(string $mode): array
+    {
+        $actions = [];
+        if (self::hasStatus($mode)) {
+            $actions[] = 'status';
+        }
+        if (in_array($mode, static::REDO_ALL, true)) {
+            $actions[] = 'force';
+        }
+        if (self::forceFull($mode)) {
+            $actions[] = 'force_full';
+        }
+        if (self::resettable($mode)) {
+            $actions[] = 'reset';
+        }
+        foreach (static::EXTRA_ACTIONS[$mode] ?? [] as $extra) {
+            $actions[] = $extra['action'];
+        }
+
+        return $actions;
     }
 
     /**
@@ -375,6 +455,24 @@ abstract class CronJobPlan
         return array_merge(...array_values(static::STAGES));
     }
 
+    /** A batched job, or one that answers status=1 on its own. */
+    private static function hasStatus(string $mode): bool
+    {
+        return in_array($mode, static::BATCHED, true) || in_array($mode, static::HAS_STATUS, true);
+    }
+
+    /** A batched job, or one with a full re-read but no progress to reset. */
+    private static function forceFull(string $mode): bool
+    {
+        return in_array($mode, static::BATCHED, true) || in_array($mode, static::FORCE_FULL, true);
+    }
+
+    /** A batched job, or one that keeps progress but has no full mode. */
+    private static function resettable(string $mode): bool
+    {
+        return in_array($mode, static::BATCHED, true) || in_array($mode, static::RESETTABLE, true);
+    }
+
     /**
      * @param array<string, mixed> $record
      * @param array{at: int, ok: bool}|null $legacy
@@ -398,8 +496,11 @@ abstract class CronJobPlan
             'desc_key' => static::LABEL_PREFIX . 'job_' . $mode . '_desc',
             'recommended' => in_array($mode, static::RECOMMENDED, true),
             'batched' => in_array($mode, static::BATCHED, true),
-            'has_status' => in_array($mode, static::BATCHED, true) || in_array($mode, static::HAS_STATUS, true),
+            'has_status' => self::hasStatus($mode),
             'redo_all' => in_array($mode, static::REDO_ALL, true),
+            'force_full' => self::forceFull($mode),
+            'resettable' => self::resettable($mode),
+            'extras' => static::EXTRA_ACTIONS[$mode] ?? [],
             'cron' => $cron,
             'schedule_key' => $words['key'],
             'schedule_params' => $words['params'],

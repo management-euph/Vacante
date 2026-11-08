@@ -96,7 +96,7 @@ final class JobsCardTemplateTest extends TestCase
 
         $row = self::templates()['job_row'];
         preg_match_all('/\{include file="addons\/travel_core\/components\/run_job\.tpl"[^}]*\}/', $row, $includes);
-        self::assertCount(5, $includes[0], 'Run, Check status, Redo all, Force full sync, Reset');
+        self::assertCount(6, $includes[0], 'Run, Check status, Redo all, Force full sync, the add-on\'s own items, Reset');
         foreach ($includes[0] as $include) {
             self::assertStringContainsString('run_dispatch=$run_dispatch', $include);
         }
@@ -111,6 +111,20 @@ final class JobsCardTemplateTest extends TestCase
 
         $card = self::templates()['jobs_card'];
         self::assertSame(2, substr_count($card, '{include file="addons/travel_core/components/job_row.tpl" job=$job has_key=$has_key run_dispatch=$run_dispatch}'), 'the staged rows and the on-demand rows');
+    }
+
+    /** Each menu item shows only for a job that answers it (CronJobPlan's row flags), the add-on's own items included. */
+    public function testEachMenuItemShowsOnlyForAJobThatAnswersIt(): void
+    {
+        $row = self::templates()['job_row'];
+
+        foreach (['has_status' => 'status', 'redo_all' => 'force', 'force_full' => 'force_full', 'resettable' => 'reset'] as $flag => $action) {
+            self::assertMatchesRegularExpression('/\{if \$job\.' . $flag . '\}\s*\{include file="addons\/travel_core\/components\/run_job\.tpl"[^}]*action="' . $action . '"/', $row, "{$action} is not behind {$flag}");
+        }
+        self::assertStringContainsString('{foreach from=$job.extras item=_extra}', $row);
+        self::assertMatchesRegularExpression('/action=\$_extra\.action label=__\(\$_extra\.label\)[^}]*confirm=\$_confirm\}/', $row);
+        self::assertStringContainsString('{if isset($_extra.confirm)}{$_confirm = __($_extra.confirm, ["[job]" => $_job_name])}{/if}', $row);
+        self::assertStringContainsString('{if $job.has_status || $job.redo_all || $job.force_full || $job.resettable || $job.extras}', $row, 'a divider before any action item');
     }
 
     /** Text that comes from a job or the API is printed escaped; the add-on's labels come from its language packs. */

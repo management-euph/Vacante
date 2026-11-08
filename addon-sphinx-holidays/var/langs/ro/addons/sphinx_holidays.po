@@ -448,14 +448,6 @@ msgctxt "Languages::sphinx_holidays.sync_package_routes"
 msgid "Sync Package Routes"
 msgstr "Sincronizează Rute Pachete"
 
-msgctxt "Languages::sphinx_holidays.sync_circuits_confirm"
-msgid "Sync the circuit catalog from the Sphinx API now?"
-msgstr "Sincronizați acum catalogul de circuite din API-ul Sphinx?"
-
-msgctxt "Languages::sphinx_holidays.sync_package_routes_confirm"
-msgid "Sync package routes from the Sphinx API now?"
-msgstr "Sincronizați acum rutele de pachete din API-ul Sphinx?"
-
 msgctxt "Languages::sphinx_holidays.no_circuits"
 msgid "No circuits found."
 msgstr "Niciun circuit găsit."
@@ -784,10 +776,6 @@ msgctxt "Languages::sphinx_holidays.cron_access_key.tooltip"
 msgid "Access key for cron URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mode=hotels"
 msgstr "Cheie acces pentru URL cron: index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mode=hotels"
 
-msgctxt "Languages::sphinx_holidays.cron_commands"
-msgid "Cron Commands"
-msgstr "Comenzi Cron"
-
 msgctxt "Languages::sphinx_holidays.debug_header"
 msgid "Debug"
 msgstr "Depanare"
@@ -1103,10 +1091,6 @@ msgstr "Rezervarea circuitului a fost adăugată în coș."
 msgctxt "Languages::sphinx_holidays.circuits_found"
 msgid "Circuits found"
 msgstr "Circuite găsite"
-
-msgctxt "Languages::sphinx_holidays.cron_key_not_set"
-msgid "Cron key not set — set it in Settings → Travel Core → Cron security key. It is shared by every travel addon."
-msgstr "Cheia cron nu este setată — setați-o în Setări → Travel Core → Cheie de securitate cron. Este partajată de toate addon-urile de turism."
 
 msgctxt "Languages::sphinx_holidays.date"
 msgid "Date"
@@ -1543,3 +1527,347 @@ msgstr "Sphinx nu a dat un răspuns clar pentru rezervarea #[booking_id] ([what]
 msgctxt "Languages::sphinx_holidays.traveller_details_required"
 msgid "Please choose each traveller's gender, and fill in each child's date of birth."
 msgstr "Alegeți genul fiecărui turist și completați data nașterii fiecărui copil."
+
+msgctxt "Languages::sphinx_holidays.jobs_stage_reference"
+msgid "Reference data"
+msgstr "Date de referință"
+
+msgctxt "Languages::sphinx_holidays.jobs_stage_catalogue"
+msgid "Catalogue"
+msgstr "Catalog"
+
+msgctxt "Languages::sphinx_holidays.jobs_stage_products"
+msgid "Products"
+msgstr "Produse"
+
+msgctxt "Languages::sphinx_holidays.jobs_stage_locations"
+msgid "Locations and product updates"
+msgstr "Locații și actualizarea produselor"
+
+msgctxt "Languages::sphinx_holidays.jobs_stage_images"
+msgid "Images"
+msgstr "Imagini"
+
+msgctxt "Languages::sphinx_holidays.jobs_stage_upkeep"
+msgid "Bookings and upkeep"
+msgstr "Rezervări și întreținere"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_destinations"
+msgid "Destinations"
+msgstr "Destinații"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_destinations_desc"
+msgid "Countries, regions and cities from Sphinx. Resumes where it stopped."
+msgstr "Țările, regiunile și orașele din Sphinx. Continuă de unde a rămas."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_hotels"
+msgid "Hotels"
+msgstr "Hoteluri"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_hotels_desc"
+msgid "Hotels in the destinations you sell. Force full sync re-reads every hotel, coordinates too."
+msgstr "Hotelurile din destinațiile pe care le vinzi. Sincronizarea completă le recitește pe toate, inclusiv coordonatele."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_circuits"
+msgid "Circuits"
+msgstr "Circuite"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_circuits_desc"
+msgid "The circuit catalogue, incremental. Force full sync re-reads every circuit."
+msgstr "Catalogul de circuite, incremental. Sincronizarea completă le recitește pe toate."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_package_routes"
+msgid "Package routes"
+msgstr "Rute pentru pachete"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_package_routes_desc"
+msgid "Flight and bus routes for packages."
+msgstr "Rutele de zbor și de autocar pentru pachete."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_add_products"
+msgid "Create products"
+msgstr "Creează produse"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_add_products_desc"
+msgid "A product for each hotel that has none yet. A hotel without an immediate offer waits."
+msgstr "Un produs pentru fiecare hotel care nu are încă unul. Un hotel fără ofertă imediată așteaptă."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_discover_boards"
+msgid "Meal plans"
+msgstr "Tipuri de masă"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_discover_boards_desc"
+msgid "Which boards each hotel offers, from the live search API. Batched; resumes where it stopped."
+msgstr "Tipurile de masă oferite de fiecare hotel, din căutarea live. Pe loturi; continuă de unde a rămas."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_assign_boards"
+msgid "Assign boards"
+msgstr "Atribuie tipurile de masă"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_assign_boards_desc"
+msgid "Puts the boards found onto the hotels' products. Batched; resumes where it stopped."
+msgstr "Pune tipurile de masă găsite pe produsele hotelurilor. Pe loturi; continuă de unde a rămas."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_backfill_hotel_locations"
+msgid "Hotel locations"
+msgstr "Locațiile hotelurilor"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_backfill_hotel_locations_desc"
+msgid "Re-reads City and Region for stored hotels from the destination tree. No API calls."
+msgstr "Recitește orașul și regiunea hotelurilor salvate din arborele de destinații. Fără apeluri API."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_geocode_hotels"
+msgid "Geocode hotels"
+msgstr "Geocodare hoteluri"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_geocode_hotels_desc"
+msgid "City, Region and street from coordinates (OpenStreetMap, one request a second, 100 hotels a run), when the tree and the address cannot tell. Needs geocoding on in Travel Core."
+msgstr "Orașul, regiunea și strada din coordonate (OpenStreetMap, o cerere pe secundă, 100 de hoteluri pe rulare), când arborele și adresa nu le dau. Necesită geocodarea activă în Travel Core."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_update_products"
+msgid "Update products"
+msgstr "Actualizează produsele"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_update_products_desc"
+msgid "Carries changed hotel data onto the products: stars, City, Region, boards. Costs nothing when nothing changed."
+msgstr "Duce pe produse datele schimbate ale hotelurilor: stele, oraș, regiune, tipuri de masă. Nu costă nimic când nu s-a schimbat nimic."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_enrich_hotel_data"
+msgid "Image data"
+msgstr "Datele imaginilor"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_enrich_hotel_data_desc"
+msgid "Fills in the image list of hotels that have none, from the hotel detail API. A hotel Sphinx has no images for is asked again after 30 days."
+msgstr "Completează lista de imagini a hotelurilor care nu au, din API-ul de detalii. Un hotel pentru care Sphinx nu are imagini e întrebat din nou după 30 de zile."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_sync_images"
+msgid "Queue images"
+msgstr "Pune imaginile în coadă"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_sync_images_desc"
+msgid "Queues each hotel's images from the database. No API calls. For fewer hotels: Queue images for a scope, below."
+msgstr "Pune în coadă imaginile fiecărui hotel, din baza de date. Fără apeluri API. Pentru mai puține hoteluri: Pune imaginile în coadă pentru un domeniu, mai jos."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_process_image_queue"
+msgid "Download images"
+msgstr "Descarcă imaginile"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_process_image_queue_desc"
+msgid "Downloads and attaches the next 50 queued images."
+msgstr "Descarcă și atașează următoarele 50 de imagini din coadă."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_order_status"
+msgid "Booking statuses"
+msgstr "Statusurile rezervărilor"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_order_status_desc"
+msgid "Checks each Sphinx booking's status through the Orders API."
+msgstr "Verifică statusul fiecărei rezervări Sphinx prin API-ul de comenzi."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_cleanup"
+msgid "Cleanup"
+msgstr "Curățenie"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_cleanup_desc"
+msgid "Expired cache, orphan bookings and old sync logs."
+msgstr "Cache expirat, rezervări orfane și jurnale de sincronizare vechi."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_reassign_features"
+msgid "Reassign features"
+msgstr "Reatribuie caracteristicile"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_reassign_features_desc"
+msgid "Re-assigns every product feature (stars, City, Region, boards…) of every linked hotel: the catch-all when something looks stale."
+msgstr "Reatribuie toate caracteristicile produselor (stele, oraș, regiune, tipuri de masă…) pentru fiecare hotel legat: soluția generală când ceva pare învechit."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_full"
+msgid "Full sync"
+msgstr "Sincronizare completă"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_full_desc"
+msgid "Every sync in one run: repeats the jobs above."
+msgstr "Toate sincronizările într-o singură rulare: repetă joburile de mai sus."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_add_circuit_products"
+msgid "Circuit products"
+msgstr "Produse pentru circuite"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_add_circuit_products_desc"
+msgid "Products for the synced circuits, so they can be sold. Run after Circuits."
+msgstr "Produse pentru circuitele sincronizate, ca să poată fi vândute. Rulează după Circuite."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_experiences"
+msgid "Experiences"
+msgstr "Experiențe"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_experiences_desc"
+msgid "The experience catalogue from the Sphinx static API."
+msgstr "Catalogul de experiențe din API-ul static Sphinx."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_calendar_prices"
+msgid "Calendar prices"
+msgstr "Prețurile din calendar"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_calendar_prices_desc"
+msgid "The lowest price on each date, for the booking engine's calendar."
+msgstr "Cel mai mic preț pe fiecare dată, pentru calendarul motorului de rezervare."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_sync_and_upload_images"
+msgid "Queue and download images"
+msgstr "Coadă și descărcare imagini"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_sync_and_upload_images_desc"
+msgid "Queue images and Download images in one run."
+msgstr "Pune imaginile în coadă și le descarcă, într-o singură rulare."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_deduplicate"
+msgid "Merge duplicate hotels"
+msgstr "Unește hotelurile duplicate"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_deduplicate_desc"
+msgid "Finds and merges duplicate hotels: same name, type, classification and region."
+msgstr "Găsește și unește hotelurile duplicate: același nume, tip, clasificare și regiune."
+
+msgctxt "Languages::sphinx_holidays.jobs_job_audit_facilities"
+msgid "Audit facilities"
+msgstr "Verifică facilitățile"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_audit_facilities_desc"
+msgid "Lists the facility IDs in Sphinx hotels that have no mapping. A report; changes nothing."
+msgstr "Listează ID-urile de facilități din hotelurile Sphinx care nu au corespondență. Un raport; nu schimbă nimic."
+
+msgctxt "Languages::sphinx_holidays.jobs_on_demand_intro"
+msgid "Not part of the schedule: Full sync repeats the jobs above; the others are one-off repairs and reports."
+msgstr "Nu fac parte din program: Sincronizarea completă repetă joburile de mai sus; celelalte sunt reparații și rapoarte ocazionale."
+
+msgctxt "Languages::sphinx_holidays.jobs_requeue_images"
+msgid "Queue all images again…"
+msgstr "Pune din nou toate imaginile în coadă…"
+
+msgctxt "Languages::sphinx_holidays.jobs_requeue_images_confirm"
+msgid "Queue the images of every hotel again, including the ones that already have them?"
+msgstr "Pui din nou în coadă imaginile tuturor hotelurilor, inclusiv ale celor care le au deja?"
+
+msgctxt "Languages::sphinx_holidays.jobs_retry_failed_images"
+msgid "Retry failed images"
+msgstr "Reîncearcă imaginile eșuate"
+
+msgctxt "Languages::sphinx_holidays.jobs_unknown"
+msgid "Unknown job: [job]"
+msgstr "Job necunoscut: [job]"
+
+msgctxt "Languages::sphinx_holidays.jobs_scope_title"
+msgid "Queue images for a scope"
+msgstr "Pune imaginile în coadă pentru un domeniu"
+
+msgctxt "Languages::sphinx_holidays.jobs_scope_intro"
+msgid "Queue images takes every country you sell; here it runs once, for fewer hotels. The log opens in a new tab."
+msgstr "Pune imaginile în coadă ia toate țările pe care le vinzi; aici rulează o dată, pentru mai puține hoteluri. Jurnalul se deschide într-un tab nou."
+
+msgctxt "Languages::sphinx_holidays.jobs_scope_which"
+msgid "Which hotels"
+msgstr "Ce hoteluri"
+
+msgctxt "Languages::sphinx_holidays.jobs_scope_all"
+msgid "Every country you sell"
+msgstr "Toate țările pe care le vinzi"
+
+msgctxt "Languages::sphinx_holidays.jobs_scope_strict"
+msgid "Only the destinations you picked"
+msgstr "Doar destinațiile alese"
+
+msgctxt "Languages::sphinx_holidays.jobs_scope_country"
+msgid "One country"
+msgstr "O țară"
+
+msgctxt "Languages::sphinx_holidays.jobs_scope_destination"
+msgid "One destination"
+msgstr "O destinație"
+
+msgctxt "Languages::sphinx_holidays.jobs_scope_region"
+msgid "One region"
+msgstr "O regiune"
+
+msgctxt "Languages::sphinx_holidays.jobs_scope_country_label"
+msgid "Country (for One country)"
+msgstr "Țara (pentru O țară)"
+
+msgctxt "Languages::sphinx_holidays.jobs_scope_id"
+msgid "Destination or region ID"
+msgstr "ID-ul destinației sau al regiunii"
+
+msgctxt "Languages::sphinx_holidays.jobs_scope_limit"
+msgid "At most this many hotels"
+msgstr "Cel mult atâtea hoteluri"
+
+msgctxt "Languages::sphinx_holidays.jobs_scope_force"
+msgid "Queue hotels that already have images again"
+msgstr "Pune din nou în coadă și hotelurile care au deja imagini"
+
+msgctxt "Languages::sphinx_holidays.jobs_scope_schedule_hint"
+msgid "To schedule a scope, add whitelist=strict, country=TR, destination_id=… or region_id=… to the URL that Queue images' ⋯ menu copies."
+msgstr "Pentru a programa un domeniu, adaugă whitelist=strict, country=TR, destination_id=… sau region_id=… la URL-ul copiat din meniul ⋯ al jobului Pune imaginile în coadă."
+
+msgctxt "Languages::sphinx_holidays.jobs_images_how"
+msgid "How image sync works"
+msgstr "Cum funcționează sincronizarea imaginilor"
+
+msgctxt "Languages::sphinx_holidays.jobs_images_step_enrich"
+msgid "Image data reads, from the hotel detail API, the image list of each hotel that has none; a hotel Sphinx has no images for is asked again after 30 days."
+msgstr "Datele imaginilor citesc din API-ul de detalii lista de imagini a fiecărui hotel care nu are; un hotel pentru care Sphinx nu are imagini e întrebat din nou după 30 de zile."
+
+msgctxt "Languages::sphinx_holidays.jobs_images_step_queue"
+msgid "Queue images adds one queue row per image, from the database; images already queued are skipped, so it is safe to run again."
+msgstr "Pune imaginile în coadă adaugă un rând în coadă pentru fiecare imagine, din baza de date; imaginile deja în coadă sunt sărite, deci poate rula din nou fără grijă."
+
+msgctxt "Languages::sphinx_holidays.jobs_images_step_download"
+msgid "Download images takes the next 50 rows every 2 minutes: it downloads each image, attaches it to the product and marks the row done or failed."
+msgstr "Descarcă imaginile ia următoarele 50 de rânduri la fiecare 2 minute: descarcă fiecare imagine, o atașează la produs și marchează rândul ca terminat sau eșuat."
+
+msgctxt "Languages::sphinx_holidays.jobs_check_title"
+msgid "Check one hotel"
+msgstr "Verifică un hotel"
+
+msgctxt "Languages::sphinx_holidays.jobs_check_intro"
+msgid "Each check opens in a new tab as a signed-in admin action, with no key in its address."
+msgstr "Fiecare verificare se deschide într-un tab nou, ca acțiune de administrator autentificat, fără cheie în adresă."
+
+msgctxt "Languages::sphinx_holidays.jobs_check_hotel"
+msgid "Hotel ID or name"
+msgstr "ID-ul sau numele hotelului"
+
+msgctxt "Languages::sphinx_holidays.jobs_check_hotel_hint"
+msgid "Search API also takes a name (kazbek dubrovnik); the other checks need the hotel's ID."
+msgstr "API-ul de căutare acceptă și un nume (kazbek dubrovnik); celelalte verificări au nevoie de ID-ul hotelului."
+
+msgctxt "Languages::sphinx_holidays.jobs_check_search"
+msgid "Search API"
+msgstr "API-ul de căutare"
+
+msgctxt "Languages::sphinx_holidays.jobs_check_images"
+msgid "Images"
+msgstr "Imagini"
+
+msgctxt "Languages::sphinx_holidays.jobs_check_seo"
+msgid "SEO fields"
+msgstr "Câmpuri SEO"
+
+msgctxt "Languages::sphinx_holidays.jobs_check_features"
+msgid "Product features"
+msgstr "Caracteristicile produsului"
+
+msgctxt "Languages::sphinx_holidays.jobs_check_attach"
+msgid "Images: also attach them to the product"
+msgstr "Imagini: le atașează și la produs"
+
+msgctxt "Languages::sphinx_holidays.jobs_check_attach_confirm"
+msgid "Attach this hotel's images to its product?"
+msgstr "Atașezi imaginile acestui hotel la produsul lui?"
+
+msgctxt "Languages::sphinx_holidays.jobs_check_apply"
+msgid "SEO fields: also write the missing ones"
+msgstr "Câmpuri SEO: le scrie și pe cele lipsă"
+
+msgctxt "Languages::sphinx_holidays.jobs_check_apply_confirm"
+msgid "Write this hotel's missing SEO fields?"
+msgstr "Scrii câmpurile SEO lipsă ale acestui hotel?"

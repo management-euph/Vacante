@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Tests\Unit\Services;
 
 use PHPUnit\Framework\TestCase;
+use Tygh\Addons\SphinxHolidays\Cron\CronPlan;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Tests\Support\DbStub;
 
@@ -123,11 +124,18 @@ final class WhitelistResolutionTest extends TestCase
         ]));
     }
 
-    /** The dashboard's Sync hotels button used to send the country codes alone: the whole country. */
-    public function testTheSyncHotelsButtonSendsTheWhitelistedDestinations(): void
+    /**
+     * The dashboard's Sync hotels button used to send the country codes alone:
+     * the whole country. Its Run now runs the hotels job, which reads the
+     * whitelist's destinations too, and passes it no country or destination
+     * of its own.
+     */
+    public function testTheDashboardsHotelsRunSyncsTheWhitelistedDestinations(): void
     {
-        $src = (string) file_get_contents(dirname(__DIR__, 3) . '/controllers/backend/sphinx_holidays.php');
+        $src = (string) file_get_contents(dirname(__DIR__, 3) . '/src/Cron/Commands/HotelSyncCommand.php');
 
-        self::assertStringContainsString('$service->sync(ConfigProvider::getSelectedCountryCodes(), ConfigProvider::getAllowedDestinationIds());', $src);
+        self::assertStringContainsString('$countryCodes = ConfigProvider::getSelectedCountryCodes();', $src);
+        self::assertStringContainsString('$destinationIds = ConfigProvider::getAllowedDestinationIds();', $src);
+        self::assertSame([], CronPlan::runParams('hotels', '', ['country' => 'TR', 'destination_ids' => '1,2']));
     }
 }

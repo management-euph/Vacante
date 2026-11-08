@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Tests\Unit\Schema;
 
 use PHPUnit\Framework\TestCase;
+use Tygh\Addons\SphinxHolidays\Cron\CronPlan;
 
 /**
  * Pins the City/Region chain end to end: resolve → store → PRODUCT FEATURE,
@@ -21,7 +22,8 @@ use PHPUnit\Framework\TestCase;
  *  2. The repair chain had no Run buttons: `geocode_hotels` was absent from
  *     `$cron_urls`, and `reassign_features` / `backfill_hotel_locations` had
  *     URLs but no dashboard rows. Production remedies must be reachable from
- *     the addon.
+ *     the addon: each is now a row of the dashboard's scheduled jobs
+ *     (Cron\CronPlan), with Run.
  *  3. The grid's City column showed the RAW API address city — precisely the
  *     value the ladder demotes — so the fix could not be verified there.
  */
@@ -111,16 +113,20 @@ final class LocationChainReachabilityTest extends TestCase
 
     public function testTheRepairChainHasRunButtons(): void
     {
-        $controller = self::src('controllers/backend/sphinx_holidays.php');
-        self::assertStringContainsString("'geocode_hotels' =>", $controller);
+        // Every job of the plan is a row of the dashboard's jobs card, with Run:
+        // the two repairs, then update_products, which carries them onto the
+        // products; reassign_features on demand.
+        self::assertSame(['backfill_hotel_locations', 'geocode_hotels', 'update_products'], CronPlan::STAGES['locations']);
+        self::assertContains('reassign_features', CronPlan::ON_DEMAND);
 
         $tpl = self::design('backend/templates/addons/sphinx_holidays/views/sphinx_holidays/manage.tpl');
-        foreach (['backfill_hotel_locations', 'geocode_hotels', 'reassign_features'] as $mode) {
-            self::assertStringContainsString('{$cron_urls.' . $mode . '}', $tpl, "no dashboard row for {$mode}");
-        }
-        // The geocode row offers the batch/backlog/redo variants.
-        self::assertStringContainsString('&amp;limit=100', $tpl);
-        self::assertStringContainsString('&amp;status=1', $tpl);
+        self::assertStringContainsString('stages=$sphinx_job_stages', $tpl);
+        self::assertStringContainsString('on_demand=$sphinx_on_demand_jobs', $tpl);
+
+        // The geocode row runs a batch of 100, and its menu offers the
+        // backlog check and the redo-all variant.
+        self::assertSame(['limit' => '100'], CronPlan::jobParams('geocode_hotels'));
+        self::assertSame(['status', 'force'], CronPlan::offeredActions('geocode_hotels'));
     }
 
     public function testGridShowsTheResolvedLocationNotTheRawAddress(): void

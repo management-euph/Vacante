@@ -11,7 +11,9 @@
 //  - every job button (Run, Check status, Force full sync, Reset progress,
 //    a "Needs attention" Run) opens the job's log in a NEW window; the ones
 //    carrying data-travel-cron-confirm ask first (the question comes from
-//    the template, no inline JS).
+//    the template, no inline JS), and so does a ticked box that makes the
+//    run write. A form's required fields are checked, and the button pressed
+//    is sent along (a form can offer several jobs, as Check one hotel).
 //
 // The cron key is masked in the DISPLAY only. A masked command pasted into a
 // crontab is a refused run at 04:30 that nobody is awake to see, so every
@@ -105,11 +107,55 @@
     // where the form says so, open a named window inside the click (so no
     // popup blocker objects), and post into it with the native submit(),
     // which fires no submit event for anything else to intercept.
-    function launch(form) {
+    // The native submit() below checks no field and sends no button, so this
+    // does both: a required field left empty stops the run, and the button
+    // pressed (a form with several, as Check one hotel) rides in a hidden field.
+    function carryButton(form, btn) {
+        var carrier = form.querySelector('input[data-travel-cron-submitter]');
+        if (btn && btn.name) {
+            if (!carrier) {
+                carrier = document.createElement('input');
+                carrier.type = 'hidden';
+                carrier.setAttribute('data-travel-cron-submitter', '');
+                form.appendChild(carrier);
+            }
+            carrier.name = btn.name;
+            carrier.value = btn.value;
+        } else if (carrier) {
+            carrier.parentNode.removeChild(carrier);
+        }
+    }
+
+    // A ticked box that makes the run write (attach images, apply SEO) asks
+    // its own question first; data-travel-cron-confirm-for names the one
+    // button it is about, when the form has several.
+    function confirmTicked(form, btn) {
+        var boxes = Array.prototype.slice.call(form.querySelectorAll('input[type="checkbox"][data-travel-cron-confirm]'));
+        for (var i = 0; i < boxes.length; i++) {
+            var box = boxes[i];
+            var forButton = box.getAttribute('data-travel-cron-confirm-for');
+            if (!box.checked || (forButton && (!btn || btn.value !== forButton))) {
+                continue;
+            }
+            if (!window.confirm(box.getAttribute('data-travel-cron-confirm'))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function launch(form, btn) {
+        if (typeof form.reportValidity === 'function' && !form.reportValidity()) {
+            return;
+        }
         var question = form.getAttribute('data-travel-cron-confirm');
         if (question && !window.confirm(question)) {
             return;
         }
+        if (!confirmTicked(form, btn)) {
+            return;
+        }
+        carryButton(form, btn);
 
         var name = 'travel_cron_job_' + Date.now() + '_' + (++shared.runSeq);
         var win = window.open('about:blank', name);
@@ -130,14 +176,14 @@
                 if (!btn || !form.contains(btn)) { return; }
                 e.preventDefault();
                 e.stopImmediatePropagation();
-                launch(form);
+                launch(form, btn);
             }, true);
 
             // Any other way the form gets submitted (Enter key, requestSubmit).
             form.addEventListener('submit', function (e) {
                 e.preventDefault();
                 e.stopImmediatePropagation();
-                launch(form);
+                launch(form, e.submitter || null);
             }, true);
         });
     }

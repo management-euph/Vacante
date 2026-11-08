@@ -150,7 +150,6 @@ return [
     'sphinx_holidays.cron_header' => ['en' => 'Cron Settings', 'ro' => 'Setări Cron'],
     'sphinx_holidays.cron_access_key' => ['en' => 'Cron access key (URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=hotels)', 'ro' => 'Cheie acces cron (URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=hotels)'],
     'sphinx_holidays.cron_access_key.tooltip' => ['en' => 'Access key for cron URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mode=hotels', 'ro' => 'Cheie acces pentru URL cron: index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mode=hotels'],
-    'sphinx_holidays.cron_commands' => ['en' => 'Cron Commands', 'ro' => 'Comenzi Cron'],
     'sphinx_holidays.debug_header' => ['en' => 'Debug', 'ro' => 'Depanare'],
     'sphinx_holidays.debug_logging' => ['en' => 'Enable debug logging', 'ro' => 'Activează logare depanare'],
     'sphinx_holidays.search_metrics' => ['en' => 'Enable search timing metrics', 'ro' => 'Activează metrici de timp pentru căutare'],
@@ -311,14 +310,6 @@ return [
     'sphinx_holidays.sync_package_routes' => [
         'en' => 'Sync Package Routes',
         'ro' => 'Sincronizează Rute Pachete',
-    ],
-    'sphinx_holidays.sync_circuits_confirm' => [
-        'en' => 'Sync the circuit catalog from the Sphinx API now?',
-        'ro' => 'Sincronizați acum catalogul de circuite din API-ul Sphinx?',
-    ],
-    'sphinx_holidays.sync_package_routes_confirm' => [
-        'en' => 'Sync package routes from the Sphinx API now?',
-        'ro' => 'Sincronizați acum rutele de pachete din API-ul Sphinx?',
     ],
     'sphinx_holidays.no_circuits' => [
         'en' => 'No circuits found.',
@@ -563,16 +554,6 @@ return [
     'sphinx_holidays.circuits_found' => [
         'en' => 'Circuits found',
         'ro' => 'Circuite găsite',
-    ],
-    'sphinx_holidays.cron_key_not_set' => [
-        // Names Travel Core because the key moved there: one shared cron
-        // secret for all three providers. Without the location this reads as
-        // "something is wrong" with nowhere to go, and the field it used to
-        // mean is no longer on this addon's settings page.
-        'en' => 'Cron key not set — set it in Settings → Travel Core → Cron security key. '
-            . 'It is shared by every travel addon.',
-        'ro' => 'Cheia cron nu este setată — setați-o în Setări → Travel Core → Cheie de securitate cron. '
-            . 'Este partajată de toate addon-urile de turism.',
     ],
     'sphinx_holidays.date' => [
         'en' => 'Date',
@@ -1107,5 +1088,351 @@ return [
     'sphinx_holidays.traveller_details_required' => [
         'en' => 'Please choose each traveller\'s gender, and fill in each child\'s date of birth.',
         'ro' => 'Alegeți genul fiecărui turist și completați data nașterii fiecărui copil.',
+    ],
+    // Scheduled jobs (Cron\CronPlan: stages, jobs, Sphinx's own ⋯ menu items)
+    // and the dashboard's Queue images for a scope and Check one hotel cards.
+    'sphinx_holidays.jobs_stage_reference' => [
+        'en' => 'Reference data',
+        'ro' => 'Date de referință',
+    ],
+    'sphinx_holidays.jobs_stage_catalogue' => [
+        'en' => 'Catalogue',
+        'ro' => 'Catalog',
+    ],
+    'sphinx_holidays.jobs_stage_products' => [
+        'en' => 'Products',
+        'ro' => 'Produse',
+    ],
+    'sphinx_holidays.jobs_stage_locations' => [
+        'en' => 'Locations and product updates',
+        'ro' => 'Locații și actualizarea produselor',
+    ],
+    'sphinx_holidays.jobs_stage_images' => [
+        'en' => 'Images',
+        'ro' => 'Imagini',
+    ],
+    'sphinx_holidays.jobs_stage_upkeep' => [
+        'en' => 'Bookings and upkeep',
+        'ro' => 'Rezervări și întreținere',
+    ],
+    'sphinx_holidays.jobs_job_destinations' => [
+        'en' => 'Destinations',
+        'ro' => 'Destinații',
+    ],
+    'sphinx_holidays.jobs_job_destinations_desc' => [
+        'en' => 'Countries, regions and cities from Sphinx. Resumes where it stopped.',
+        'ro' => 'Țările, regiunile și orașele din Sphinx. Continuă de unde a rămas.',
+    ],
+    'sphinx_holidays.jobs_job_hotels' => [
+        'en' => 'Hotels',
+        'ro' => 'Hoteluri',
+    ],
+    'sphinx_holidays.jobs_job_hotels_desc' => [
+        'en' => 'Hotels in the destinations you sell. Force full sync re-reads every hotel, coordinates too.',
+        'ro' => 'Hotelurile din destinațiile pe care le vinzi. Sincronizarea completă le recitește pe toate, inclusiv coordonatele.',
+    ],
+    'sphinx_holidays.jobs_job_circuits' => [
+        'en' => 'Circuits',
+        'ro' => 'Circuite',
+    ],
+    'sphinx_holidays.jobs_job_circuits_desc' => [
+        'en' => 'The circuit catalogue, incremental. Force full sync re-reads every circuit.',
+        'ro' => 'Catalogul de circuite, incremental. Sincronizarea completă le recitește pe toate.',
+    ],
+    'sphinx_holidays.jobs_job_package_routes' => [
+        'en' => 'Package routes',
+        'ro' => 'Rute pentru pachete',
+    ],
+    'sphinx_holidays.jobs_job_package_routes_desc' => [
+        'en' => 'Flight and bus routes for packages.',
+        'ro' => 'Rutele de zbor și de autocar pentru pachete.',
+    ],
+    'sphinx_holidays.jobs_job_add_products' => [
+        'en' => 'Create products',
+        'ro' => 'Creează produse',
+    ],
+    'sphinx_holidays.jobs_job_add_products_desc' => [
+        'en' => 'A product for each hotel that has none yet. A hotel without an immediate offer waits.',
+        'ro' => 'Un produs pentru fiecare hotel care nu are încă unul. Un hotel fără ofertă imediată așteaptă.',
+    ],
+    'sphinx_holidays.jobs_job_discover_boards' => [
+        'en' => 'Meal plans',
+        'ro' => 'Tipuri de masă',
+    ],
+    'sphinx_holidays.jobs_job_discover_boards_desc' => [
+        'en' => 'Which boards each hotel offers, from the live search API. Batched; resumes where it stopped.',
+        'ro' => 'Tipurile de masă oferite de fiecare hotel, din căutarea live. Pe loturi; continuă de unde a rămas.',
+    ],
+    'sphinx_holidays.jobs_job_assign_boards' => [
+        'en' => 'Assign boards',
+        'ro' => 'Atribuie tipurile de masă',
+    ],
+    'sphinx_holidays.jobs_job_assign_boards_desc' => [
+        'en' => 'Puts the boards found onto the hotels\' products. Batched; resumes where it stopped.',
+        'ro' => 'Pune tipurile de masă găsite pe produsele hotelurilor. Pe loturi; continuă de unde a rămas.',
+    ],
+    'sphinx_holidays.jobs_job_backfill_hotel_locations' => [
+        'en' => 'Hotel locations',
+        'ro' => 'Locațiile hotelurilor',
+    ],
+    'sphinx_holidays.jobs_job_backfill_hotel_locations_desc' => [
+        'en' => 'Re-reads City and Region for stored hotels from the destination tree. No API calls.',
+        'ro' => 'Recitește orașul și regiunea hotelurilor salvate din arborele de destinații. Fără apeluri API.',
+    ],
+    'sphinx_holidays.jobs_job_geocode_hotels' => [
+        'en' => 'Geocode hotels',
+        'ro' => 'Geocodare hoteluri',
+    ],
+    'sphinx_holidays.jobs_job_geocode_hotels_desc' => [
+        'en' => 'City, Region and street from coordinates (OpenStreetMap, one request a second, 100 hotels a run), when the tree and the address cannot tell. Needs geocoding on in Travel Core.',
+        'ro' => 'Orașul, regiunea și strada din coordonate (OpenStreetMap, o cerere pe secundă, 100 de hoteluri pe rulare), când arborele și adresa nu le dau. Necesită geocodarea activă în Travel Core.',
+    ],
+    'sphinx_holidays.jobs_job_update_products' => [
+        'en' => 'Update products',
+        'ro' => 'Actualizează produsele',
+    ],
+    'sphinx_holidays.jobs_job_update_products_desc' => [
+        'en' => 'Carries changed hotel data onto the products: stars, City, Region, boards. Costs nothing when nothing changed.',
+        'ro' => 'Duce pe produse datele schimbate ale hotelurilor: stele, oraș, regiune, tipuri de masă. Nu costă nimic când nu s-a schimbat nimic.',
+    ],
+    'sphinx_holidays.jobs_job_enrich_hotel_data' => [
+        'en' => 'Image data',
+        'ro' => 'Datele imaginilor',
+    ],
+    'sphinx_holidays.jobs_job_enrich_hotel_data_desc' => [
+        'en' => 'Fills in the image list of hotels that have none, from the hotel detail API. A hotel Sphinx has no images for is asked again after 30 days.',
+        'ro' => 'Completează lista de imagini a hotelurilor care nu au, din API-ul de detalii. Un hotel pentru care Sphinx nu are imagini e întrebat din nou după 30 de zile.',
+    ],
+    'sphinx_holidays.jobs_job_sync_images' => [
+        'en' => 'Queue images',
+        'ro' => 'Pune imaginile în coadă',
+    ],
+    'sphinx_holidays.jobs_job_sync_images_desc' => [
+        'en' => 'Queues each hotel\'s images from the database. No API calls. For fewer hotels: Queue images for a scope, below.',
+        'ro' => 'Pune în coadă imaginile fiecărui hotel, din baza de date. Fără apeluri API. Pentru mai puține hoteluri: Pune imaginile în coadă pentru un domeniu, mai jos.',
+    ],
+    'sphinx_holidays.jobs_job_process_image_queue' => [
+        'en' => 'Download images',
+        'ro' => 'Descarcă imaginile',
+    ],
+    'sphinx_holidays.jobs_job_process_image_queue_desc' => [
+        'en' => 'Downloads and attaches the next 50 queued images.',
+        'ro' => 'Descarcă și atașează următoarele 50 de imagini din coadă.',
+    ],
+    'sphinx_holidays.jobs_job_order_status' => [
+        'en' => 'Booking statuses',
+        'ro' => 'Statusurile rezervărilor',
+    ],
+    'sphinx_holidays.jobs_job_order_status_desc' => [
+        'en' => 'Checks each Sphinx booking\'s status through the Orders API.',
+        'ro' => 'Verifică statusul fiecărei rezervări Sphinx prin API-ul de comenzi.',
+    ],
+    'sphinx_holidays.jobs_job_cleanup' => [
+        'en' => 'Cleanup',
+        'ro' => 'Curățenie',
+    ],
+    'sphinx_holidays.jobs_job_cleanup_desc' => [
+        'en' => 'Expired cache, orphan bookings and old sync logs.',
+        'ro' => 'Cache expirat, rezervări orfane și jurnale de sincronizare vechi.',
+    ],
+    'sphinx_holidays.jobs_job_reassign_features' => [
+        'en' => 'Reassign features',
+        'ro' => 'Reatribuie caracteristicile',
+    ],
+    'sphinx_holidays.jobs_job_reassign_features_desc' => [
+        'en' => 'Re-assigns every product feature (stars, City, Region, boards…) of every linked hotel: the catch-all when something looks stale.',
+        'ro' => 'Reatribuie toate caracteristicile produselor (stele, oraș, regiune, tipuri de masă…) pentru fiecare hotel legat: soluția generală când ceva pare învechit.',
+    ],
+    'sphinx_holidays.jobs_job_full' => [
+        'en' => 'Full sync',
+        'ro' => 'Sincronizare completă',
+    ],
+    'sphinx_holidays.jobs_job_full_desc' => [
+        'en' => 'Every sync in one run: repeats the jobs above.',
+        'ro' => 'Toate sincronizările într-o singură rulare: repetă joburile de mai sus.',
+    ],
+    'sphinx_holidays.jobs_job_add_circuit_products' => [
+        'en' => 'Circuit products',
+        'ro' => 'Produse pentru circuite',
+    ],
+    'sphinx_holidays.jobs_job_add_circuit_products_desc' => [
+        'en' => 'Products for the synced circuits, so they can be sold. Run after Circuits.',
+        'ro' => 'Produse pentru circuitele sincronizate, ca să poată fi vândute. Rulează după Circuite.',
+    ],
+    'sphinx_holidays.jobs_job_experiences' => [
+        'en' => 'Experiences',
+        'ro' => 'Experiențe',
+    ],
+    'sphinx_holidays.jobs_job_experiences_desc' => [
+        'en' => 'The experience catalogue from the Sphinx static API.',
+        'ro' => 'Catalogul de experiențe din API-ul static Sphinx.',
+    ],
+    'sphinx_holidays.jobs_job_calendar_prices' => [
+        'en' => 'Calendar prices',
+        'ro' => 'Prețurile din calendar',
+    ],
+    'sphinx_holidays.jobs_job_calendar_prices_desc' => [
+        'en' => 'The lowest price on each date, for the booking engine\'s calendar.',
+        'ro' => 'Cel mai mic preț pe fiecare dată, pentru calendarul motorului de rezervare.',
+    ],
+    'sphinx_holidays.jobs_job_sync_and_upload_images' => [
+        'en' => 'Queue and download images',
+        'ro' => 'Coadă și descărcare imagini',
+    ],
+    'sphinx_holidays.jobs_job_sync_and_upload_images_desc' => [
+        'en' => 'Queue images and Download images in one run.',
+        'ro' => 'Pune imaginile în coadă și le descarcă, într-o singură rulare.',
+    ],
+    'sphinx_holidays.jobs_job_deduplicate' => [
+        'en' => 'Merge duplicate hotels',
+        'ro' => 'Unește hotelurile duplicate',
+    ],
+    'sphinx_holidays.jobs_job_deduplicate_desc' => [
+        'en' => 'Finds and merges duplicate hotels: same name, type, classification and region.',
+        'ro' => 'Găsește și unește hotelurile duplicate: același nume, tip, clasificare și regiune.',
+    ],
+    'sphinx_holidays.jobs_job_audit_facilities' => [
+        'en' => 'Audit facilities',
+        'ro' => 'Verifică facilitățile',
+    ],
+    'sphinx_holidays.jobs_job_audit_facilities_desc' => [
+        'en' => 'Lists the facility IDs in Sphinx hotels that have no mapping. A report; changes nothing.',
+        'ro' => 'Listează ID-urile de facilități din hotelurile Sphinx care nu au corespondență. Un raport; nu schimbă nimic.',
+    ],
+    'sphinx_holidays.jobs_on_demand_intro' => [
+        'en' => 'Not part of the schedule: Full sync repeats the jobs above; the others are one-off repairs and reports.',
+        'ro' => 'Nu fac parte din program: Sincronizarea completă repetă joburile de mai sus; celelalte sunt reparații și rapoarte ocazionale.',
+    ],
+    'sphinx_holidays.jobs_requeue_images' => [
+        'en' => 'Queue all images again…',
+        'ro' => 'Pune din nou toate imaginile în coadă…',
+    ],
+    'sphinx_holidays.jobs_requeue_images_confirm' => [
+        'en' => 'Queue the images of every hotel again, including the ones that already have them?',
+        'ro' => 'Pui din nou în coadă imaginile tuturor hotelurilor, inclusiv ale celor care le au deja?',
+    ],
+    'sphinx_holidays.jobs_retry_failed_images' => [
+        'en' => 'Retry failed images',
+        'ro' => 'Reîncearcă imaginile eșuate',
+    ],
+    'sphinx_holidays.jobs_unknown' => [
+        'en' => 'Unknown job: [job]',
+        'ro' => 'Job necunoscut: [job]',
+    ],
+    'sphinx_holidays.jobs_scope_title' => [
+        'en' => 'Queue images for a scope',
+        'ro' => 'Pune imaginile în coadă pentru un domeniu',
+    ],
+    'sphinx_holidays.jobs_scope_intro' => [
+        'en' => 'Queue images takes every country you sell; here it runs once, for fewer hotels. The log opens in a new tab.',
+        'ro' => 'Pune imaginile în coadă ia toate țările pe care le vinzi; aici rulează o dată, pentru mai puține hoteluri. Jurnalul se deschide într-un tab nou.',
+    ],
+    'sphinx_holidays.jobs_scope_which' => [
+        'en' => 'Which hotels',
+        'ro' => 'Ce hoteluri',
+    ],
+    'sphinx_holidays.jobs_scope_all' => [
+        'en' => 'Every country you sell',
+        'ro' => 'Toate țările pe care le vinzi',
+    ],
+    'sphinx_holidays.jobs_scope_strict' => [
+        'en' => 'Only the destinations you picked',
+        'ro' => 'Doar destinațiile alese',
+    ],
+    'sphinx_holidays.jobs_scope_country' => [
+        'en' => 'One country',
+        'ro' => 'O țară',
+    ],
+    'sphinx_holidays.jobs_scope_destination' => [
+        'en' => 'One destination',
+        'ro' => 'O destinație',
+    ],
+    'sphinx_holidays.jobs_scope_region' => [
+        'en' => 'One region',
+        'ro' => 'O regiune',
+    ],
+    'sphinx_holidays.jobs_scope_country_label' => [
+        'en' => 'Country (for One country)',
+        'ro' => 'Țara (pentru O țară)',
+    ],
+    'sphinx_holidays.jobs_scope_id' => [
+        'en' => 'Destination or region ID',
+        'ro' => 'ID-ul destinației sau al regiunii',
+    ],
+    'sphinx_holidays.jobs_scope_limit' => [
+        'en' => 'At most this many hotels',
+        'ro' => 'Cel mult atâtea hoteluri',
+    ],
+    'sphinx_holidays.jobs_scope_force' => [
+        'en' => 'Queue hotels that already have images again',
+        'ro' => 'Pune din nou în coadă și hotelurile care au deja imagini',
+    ],
+    'sphinx_holidays.jobs_scope_schedule_hint' => [
+        'en' => 'To schedule a scope, add whitelist=strict, country=TR, destination_id=… or region_id=… to the URL that Queue images\' ⋯ menu copies.',
+        'ro' => 'Pentru a programa un domeniu, adaugă whitelist=strict, country=TR, destination_id=… sau region_id=… la URL-ul copiat din meniul ⋯ al jobului Pune imaginile în coadă.',
+    ],
+    'sphinx_holidays.jobs_images_how' => [
+        'en' => 'How image sync works',
+        'ro' => 'Cum funcționează sincronizarea imaginilor',
+    ],
+    'sphinx_holidays.jobs_images_step_enrich' => [
+        'en' => 'Image data reads, from the hotel detail API, the image list of each hotel that has none; a hotel Sphinx has no images for is asked again after 30 days.',
+        'ro' => 'Datele imaginilor citesc din API-ul de detalii lista de imagini a fiecărui hotel care nu are; un hotel pentru care Sphinx nu are imagini e întrebat din nou după 30 de zile.',
+    ],
+    'sphinx_holidays.jobs_images_step_queue' => [
+        'en' => 'Queue images adds one queue row per image, from the database; images already queued are skipped, so it is safe to run again.',
+        'ro' => 'Pune imaginile în coadă adaugă un rând în coadă pentru fiecare imagine, din baza de date; imaginile deja în coadă sunt sărite, deci poate rula din nou fără grijă.',
+    ],
+    'sphinx_holidays.jobs_images_step_download' => [
+        'en' => 'Download images takes the next 50 rows every 2 minutes: it downloads each image, attaches it to the product and marks the row done or failed.',
+        'ro' => 'Descarcă imaginile ia următoarele 50 de rânduri la fiecare 2 minute: descarcă fiecare imagine, o atașează la produs și marchează rândul ca terminat sau eșuat.',
+    ],
+    'sphinx_holidays.jobs_check_title' => [
+        'en' => 'Check one hotel',
+        'ro' => 'Verifică un hotel',
+    ],
+    'sphinx_holidays.jobs_check_intro' => [
+        'en' => 'Each check opens in a new tab as a signed-in admin action, with no key in its address.',
+        'ro' => 'Fiecare verificare se deschide într-un tab nou, ca acțiune de administrator autentificat, fără cheie în adresă.',
+    ],
+    'sphinx_holidays.jobs_check_hotel' => [
+        'en' => 'Hotel ID or name',
+        'ro' => 'ID-ul sau numele hotelului',
+    ],
+    'sphinx_holidays.jobs_check_hotel_hint' => [
+        'en' => 'Search API also takes a name (kazbek dubrovnik); the other checks need the hotel\'s ID.',
+        'ro' => 'API-ul de căutare acceptă și un nume (kazbek dubrovnik); celelalte verificări au nevoie de ID-ul hotelului.',
+    ],
+    'sphinx_holidays.jobs_check_search' => [
+        'en' => 'Search API',
+        'ro' => 'API-ul de căutare',
+    ],
+    'sphinx_holidays.jobs_check_images' => [
+        'en' => 'Images',
+        'ro' => 'Imagini',
+    ],
+    'sphinx_holidays.jobs_check_seo' => [
+        'en' => 'SEO fields',
+        'ro' => 'Câmpuri SEO',
+    ],
+    'sphinx_holidays.jobs_check_features' => [
+        'en' => 'Product features',
+        'ro' => 'Caracteristicile produsului',
+    ],
+    'sphinx_holidays.jobs_check_attach' => [
+        'en' => 'Images: also attach them to the product',
+        'ro' => 'Imagini: le atașează și la produs',
+    ],
+    'sphinx_holidays.jobs_check_attach_confirm' => [
+        'en' => 'Attach this hotel\'s images to its product?',
+        'ro' => 'Atașezi imaginile acestui hotel la produsul lui?',
+    ],
+    'sphinx_holidays.jobs_check_apply' => [
+        'en' => 'SEO fields: also write the missing ones',
+        'ro' => 'Câmpuri SEO: le scrie și pe cele lipsă',
+    ],
+    'sphinx_holidays.jobs_check_apply_confirm' => [
+        'en' => 'Write this hotel\'s missing SEO fields?',
+        'ro' => 'Scrii câmpurile SEO lipsă ale acestui hotel?',
     ],
 ];
