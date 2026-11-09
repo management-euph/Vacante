@@ -92,6 +92,7 @@
             {/if}
 
             {* h2: the page title (booking_steps.tpl header) is the page's one h1 *}
+            {if $tbs.kind_label|default:""}<p class="travel-bsidebar-kind">{$tbs.kind_label|escape:html}</p>{/if}
             <h2 class="travel-bsidebar-name">
                 {if $tbs.product_id}
                     <bdi><a href="{"products.view?product_id=`$tbs.product_id`"|fn_url}" target="_blank" rel="noopener" class="product-title travel-hotel-name-link" title="{$tbs.name|escape:html}">{$tbs.name|escape:html}</a></bdi>
@@ -182,6 +183,22 @@
 
             {if $tbs.board_name}
                 <div class="travel-bsidebar-board">{$tbs.board_name|escape:html}</div>
+            {/if}
+
+            {* A trip's journeys (package, circuit): each leg's day, times and
+               airports, and its flight number. *}
+            {if $tbs.legs|default:[]}
+                <dl class="travel-bsidebar-legs">
+                    {foreach from=$tbs.legs item="tbs_leg"}
+                        <div><dt>{$tbs_leg.title|escape:html}</dt><dd>{$tbs_leg.line|escape:html}{if $tbs_leg.note}<span class="travel-bsidebar-legs__note">{$tbs_leg.note|escape:html}</span>{/if}</dd></div>
+                    {/foreach}
+                </dl>
+            {/if}
+            {if $tbs.includes|default:[]}
+                <p class="travel-bsidebar-incl">&#10003; {__("travel_core.trip_included")}: {foreach from=$tbs.includes item="tbs_inc" name="tbs_inc"}{$tbs_inc|escape:html}{if !$smarty.foreach.tbs_inc.last}, {/if}{/foreach}</p>
+            {/if}
+            {if $tbs.excludes|default:[]}
+                <p class="travel-bsidebar-excl">{__("travel_core.trip_not_included")}: {foreach from=$tbs.excludes item="tbs_exc" name="tbs_exc"}{$tbs_exc|escape:html}{if !$smarty.foreach.tbs_exc.last}, {/if}{/foreach}</p>
             {/if}
 
             {if $tbs.change_url}

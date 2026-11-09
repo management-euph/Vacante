@@ -1462,6 +1462,18 @@ msgctxt "Languages::travel_core.step_checkout"
 msgid "Checkout"
 msgstr "Checkout"
 
+msgctxt "Languages::travel_core.guest_names_airline"
+msgid "Names, gender and date of birth go to the airline; a mistake can only be corrected for a fee."
+msgstr "Names, gender and date of birth go to the airline; a mistake can only be corrected for a fee."
+
+msgctxt "Languages::travel_core.trip_included"
+msgid "Included"
+msgstr "Included"
+
+msgctxt "Languages::travel_core.trip_not_included"
+msgid "Not included"
+msgstr "Not included"
+
 msgctxt "Languages::travel_core.guest_names_hint"
 msgid "Enter each name exactly as it appears on the guest's ID card or passport."
 msgstr "Enter each name exactly as it appears on the guest's ID card or passport."

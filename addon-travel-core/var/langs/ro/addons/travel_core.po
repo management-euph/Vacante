@@ -1462,6 +1462,18 @@ msgctxt "Languages::travel_core.step_checkout"
 msgid "Checkout"
 msgstr "Finalizare comandă"
 
+msgctxt "Languages::travel_core.guest_names_airline"
+msgid "Names, gender and date of birth go to the airline; a mistake can only be corrected for a fee."
+msgstr "Numele, genul și data nașterii ajung la compania aeriană; o greșeală se corectează doar cu taxă."
+
+msgctxt "Languages::travel_core.trip_included"
+msgid "Included"
+msgstr "Inclus"
+
+msgctxt "Languages::travel_core.trip_not_included"
+msgid "Not included"
+msgstr "Neinclus"
+
 msgctxt "Languages::travel_core.guest_names_hint"
 msgid "Enter each name exactly as it appears on the guest's ID card or passport."
 msgstr "Introduceți fiecare nume exact ca în actul de identitate sau pașaportul turistului."

@@ -31,7 +31,7 @@ final class BookingFormActionsTest extends TestCase
 
         self::assertStringContainsString('{$fa_total = $travel_booking_sidebar.total|default:""}', $newBooking);
         self::assertStringContainsString(
-            '{fn_travel_core_booking_cta_label($fa_addon)}{if $fa_total} (<span class="price-total">{$fa_total nofilter}</span>){/if} &rarr;',
+            '{fn_travel_core_booking_cta_label($fa_addon)}{/if}{if $fa_total} (<span class="price-total">{$fa_total nofilter}</span>){/if} &rarr;',
             $newBooking,
         );
         // Editing a cart line saves; it names no price.

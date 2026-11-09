@@ -569,6 +569,18 @@ return [
         'en' => 'Checkout',
         'ro' => 'Finalizare comandă',
     ],
+    'travel_core.guest_names_airline' => [
+        'en' => 'Names, gender and date of birth go to the airline; a mistake can only be corrected for a fee.',
+        'ro' => 'Numele, genul și data nașterii ajung la compania aeriană; o greșeală se corectează doar cu taxă.',
+    ],
+    'travel_core.trip_included' => [
+        'en' => 'Included',
+        'ro' => 'Inclus',
+    ],
+    'travel_core.trip_not_included' => [
+        'en' => 'Not included',
+        'ro' => 'Neinclus',
+    ],
     'travel_core.guest_names_hint' => [
         'en' => 'Enter each name exactly as it appears on the guest\'s ID card or passport.',
         'ro' => 'Introduceți fiecare nume exact ca în actul de identitate sau pașaportul turistului.',

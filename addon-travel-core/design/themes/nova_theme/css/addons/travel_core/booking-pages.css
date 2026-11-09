@@ -191,6 +191,25 @@
     }
 }
 
+/* ── A trip in the summary (package, circuit): its kind over the name, its
+   journeys, and what the price includes and leaves out. ── */
+.travel-booking-page .travel-bsidebar-kind {
+    margin: 0 0 2px; font-size: 12px; font-weight: 700; color: #4b5563;
+    text-transform: uppercase; letter-spacing: 0.03em;
+}
+.travel-booking-page .travel-bsidebar-legs {
+    display: flex; flex-direction: column; gap: 10px;
+    margin: 12px 0 0; padding-top: 12px; border-top: 1px solid #e3e8ef;
+}
+.travel-booking-page .travel-bsidebar-legs dt { font-size: 12px; font-weight: 700; color: #4b5563; }
+.travel-booking-page .travel-bsidebar-legs dd { margin: 2px 0 0; font-size: 14px; font-weight: 600; color: #1a1a1a; }
+.travel-booking-page .travel-bsidebar-legs__note { display: block; font-size: 12px; font-weight: 400; color: #4b5563; }
+.travel-booking-page .travel-bsidebar-incl { margin: 10px 0 0; font-size: 13px; font-weight: 600; color: #0a7a35; }
+.travel-booking-page .travel-bsidebar-excl { margin: 4px 0 0; font-size: 13px; color: #4b5563; }
+/* The guest hint for a trip with a flight: amber, names go to the airline. */
+.travel-booking-page .travel-guest-hint.travel-guest-hint--airline { background: #fff8e6; border: 1px solid #f5d9a8; color: #1a1a1a; }
+.travel-booking-page .travel-guest-hint--airline .travel-guest-hint__icon { color: #8a4b00; }
+
 /* ── Phone: the summary folded into one sticky bar (booking_sidebar.tpl) ── */
 /* At 900 px and less: name, stay, guests and total in a bar that sticks to
    the top while the guest fills the form; tapping it opens the summary's

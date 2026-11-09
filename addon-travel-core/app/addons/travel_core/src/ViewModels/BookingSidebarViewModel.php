@@ -64,6 +64,10 @@ final class BookingSidebarViewModel
      * @param int $featuresMax chips shown before "+N more" (admin setting)
      * @param bool $showWeekday false when the store date format already
      *                          prints the weekday
+     * @param string $kindLabel a trip's kind, over its name ("Pachet · avion + hotel"); '' for a hotel
+     * @param list<array{title: string, line: string, note: string}> $legs a trip's journeys, in order
+     * @param list<string> $includes what the trip's price includes
+     * @param list<string> $excludes what it does not
      */
     public function __construct(
         public readonly array $imagePair = [],
@@ -103,6 +107,10 @@ final class BookingSidebarViewModel
         public readonly array $paymentSplit = [],
         public readonly int $featuresMax = 6,
         public readonly bool $showWeekday = true,
+        public readonly string $kindLabel = '',
+        public readonly array $legs = [],
+        public readonly array $includes = [],
+        public readonly array $excludes = [],
     ) {
     }
 
@@ -166,6 +174,10 @@ final class BookingSidebarViewModel
             'features_max' => max(1, $this->featuresMax),
             'features_extra' => max(0, count($this->features) - max(1, $this->featuresMax)),
             'show_weekday' => $this->showWeekday,
+            'kind_label' => $this->kindLabel,
+            'legs' => $this->legs,
+            'includes' => $this->includes,
+            'excludes' => $this->excludes,
         ];
     }
 }
