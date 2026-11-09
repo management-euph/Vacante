@@ -83,7 +83,7 @@ final class DashboardSummary
      *
      * - a cron request refused for a wrong key (every scheduled run fails
      *   until the crontab gets the commands with the current key);
-     * - the jobs JobHealth::problems() lists (failed, stalled, never run,
+     * - the jobs JobHealth::attention() lists (failed, stalled, never run,
      *   late), each with its name's label and its schedule, for "is late";
      * - hotels skipped with no product.
      *
@@ -96,26 +96,13 @@ final class DashboardSummary
     {
         $items = [];
         if ($wrongKeyAt > 0) {
-            $items[] = self::item('refused', '', $wrongKeyAt);
+            $items[] = self::item('refused', $wrongKeyAt);
         }
 
-        $rows = [];
-        foreach ($stages as $stage) {
-            foreach ($stage['jobs'] as $job) {
-                $params = [];
-                foreach (TypeCoerce::toStringMap($job['schedule_params'] ?? []) as $name => $value) {
-                    $params[$name] = TypeCoerce::toString($value);
-                }
-                $rows[TypeCoerce::toString($job['mode'] ?? '')] = [TypeCoerce::toString($job['name_key'] ?? ''), TypeCoerce::toString($job['schedule_key'] ?? ''), $params];
-            }
-        }
-        foreach (JobHealth::problems($stages) as $problem) {
-            [$nameKey, $scheduleKey, $params] = $rows[$problem['mode']] ?? ['', '', []];
-            $items[] = self::item($problem['kind'], $problem['mode'], $problem['at'], $problem['error'], 0, $nameKey, $scheduleKey, $params);
-        }
+        $items = [...$items, ...JobHealth::attention($stages)];
 
         if ($skipped > 0) {
-            $items[] = self::item('skipped', '', 0, '', $skipped);
+            $items[] = self::item('skipped', 0, $skipped);
         }
 
         return $items;
@@ -147,21 +134,22 @@ final class DashboardSummary
     }
 
     /**
-     * @param array<string, string> $scheduleParams
+     * An item that is not a job's (a refused request, skipped hotels), in the
+     * shape JobHealth::attention() gives the jobs' own.
      *
      * @return array{kind: string, mode: string, at: int, error: string, n: int, name_key: string, schedule_key: string, schedule_params: array<string, string>}
      */
-    private static function item(string $kind, string $mode, int $at, string $error = '', int $n = 0, string $nameKey = '', string $scheduleKey = '', array $scheduleParams = []): array
+    private static function item(string $kind, int $at, int $n = 0): array
     {
         return [
             'kind' => $kind,
-            'mode' => $mode,
+            'mode' => '',
             'at' => $at,
-            'error' => $error,
+            'error' => '',
             'n' => $n,
-            'name_key' => $nameKey,
-            'schedule_key' => $scheduleKey,
-            'schedule_params' => $scheduleParams,
+            'name_key' => '',
+            'schedule_key' => '',
+            'schedule_params' => [],
         ];
     }
 }

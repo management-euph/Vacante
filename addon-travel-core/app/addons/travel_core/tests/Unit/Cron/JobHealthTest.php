@@ -78,4 +78,22 @@ final class JobHealthTest extends TestCase
         self::assertSame([], JobHealth::problems(self::stages([[['a', 'never'], ['b', 'running'], ['c', 'ok']]])));
         self::assertSame('never', JobHealth::problems(self::stages([[['a', 'never', ['recommended' => true]]]]))[0]['kind']);
     }
+
+    /**
+     * Needs attention prints each problem with its job's name label and its
+     * schedule in words, in the shape the dashboards' other items share.
+     */
+    public function testAttentionCarriesEachJobsNameAndSchedule(): void
+    {
+        $items = JobHealth::attention(self::stages([
+            [['hotels', 'late', ['at' => 1_700_000_000, 'name_key' => 'eurosite.jobs_job_hotels', 'schedule_key' => 'travel_core.jobs_sched_weekly_sun', 'schedule_params' => ['[time]' => '03:00']]]],
+            [['cleanup', 'failed', ['at' => 1_700_100_000, 'error' => 'disk full', 'name_key' => 'eurosite.jobs_job_cleanup']], ['tags', 'ok']],
+        ]));
+
+        self::assertSame([
+            ['kind' => 'failed', 'mode' => 'cleanup', 'at' => 1_700_100_000, 'error' => 'disk full', 'n' => 0, 'name_key' => 'eurosite.jobs_job_cleanup', 'schedule_key' => '', 'schedule_params' => []],
+            ['kind' => 'late', 'mode' => 'hotels', 'at' => 1_700_000_000, 'error' => '', 'n' => 0, 'name_key' => 'eurosite.jobs_job_hotels', 'schedule_key' => 'travel_core.jobs_sched_weekly_sun', 'schedule_params' => ['[time]' => '03:00']],
+        ], $items);
+        self::assertSame([], JobHealth::attention(self::stages([[['a', 'ok'], ['b', 'running']]])));
+    }
 }

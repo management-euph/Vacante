@@ -1362,6 +1362,10 @@ msgctxt "Languages::travel_core.cancel_cost_title"
 msgid "How much will it cost to cancel?"
 msgstr "How much will it cost to cancel?"
 
+msgctxt "Languages::travel_core.cancel_today_costs"
+msgid "If you cancel today, you pay"
+msgstr "If you cancel today, you pay"
+
 msgctxt "Languages::travel_core.cancel_you_will_pay"
 msgid "If you cancel, you'll pay"
 msgstr "If you cancel, you'll pay"
@@ -1450,10 +1454,6 @@ msgctxt "Languages::travel_core.booking_progress"
 msgid "Booking progress"
 msgstr "Booking progress"
 
-msgctxt "Languages::travel_core.step_search"
-msgid "Search"
-msgstr "Search"
-
 msgctxt "Languages::travel_core.step_guest_details"
 msgid "Guest details"
 msgstr "Guest details"
@@ -1461,10 +1461,6 @@ msgstr "Guest details"
 msgctxt "Languages::travel_core.step_checkout"
 msgid "Checkout"
 msgstr "Checkout"
-
-msgctxt "Languages::travel_core.step_confirmation"
-msgid "Confirmation"
-msgstr "Confirmation"
 
 msgctxt "Languages::travel_core.guest_names_hint"
 msgid "Enter each name exactly as it appears on the guest's ID card or passport."
@@ -1526,17 +1522,25 @@ msgctxt "Languages::travel_core.who_is_staying"
 msgid "Who is staying?"
 msgstr "Who is staying?"
 
-msgctxt "Languages::travel_core.step_guests"
-msgid "Guests"
-msgstr "Guests"
+msgctxt "Languages::travel_core.step_offer"
+msgid "Offer"
+msgstr "Offer"
+
+msgctxt "Languages::travel_core.step_offer_back"
+msgid "Back to the offer, to change the room or the dates"
+msgstr "Back to the offer, to change the room or the dates"
+
+msgctxt "Languages::travel_core.step_details"
+msgid "Booking details"
+msgstr "Booking details"
+
+msgctxt "Languages::travel_core.back_to_offer"
+msgid "Back to the offer"
+msgstr "Back to the offer"
 
 msgctxt "Languages::travel_core.step_payment"
 msgid "Payment"
 msgstr "Payment"
-
-msgctxt "Languages::travel_core.step_search_back"
-msgid "Back to your search results"
-msgstr "Back to your search results"
 
 msgctxt "Languages::travel_core.step_locked_hint"
 msgid "Enter the guest details first"
@@ -1957,6 +1961,10 @@ msgstr "Deposit"
 msgctxt "Languages::travel_core.split_balance"
 msgid "Balance"
 msgstr "Balance"
+
+msgctxt "Languages::travel_core.option_selected"
+msgid "Selected"
+msgstr "Selected"
 
 msgctxt "Languages::travel_core.pay_mode_legend"
 msgid "How would you like to pay?"
@@ -4827,8 +4835,32 @@ msgid "Scheduled runs are refused until the shared cron key is set in Travel Cor
 msgstr "Scheduled runs are refused until the shared cron key is set in Travel Core. Run still works from here."
 
 msgctxt "Languages::travel_core.jobs_set_key"
-msgid "Set it in Travel Core"
-msgstr "Set it in Travel Core"
+msgid "Generate one on Travel Core → Tools"
+msgstr "Generate one on Travel Core → Tools"
+
+msgctxt "Languages::travel_core.jobs_tile_failing"
+msgid "Failing: [n]"
+msgstr "Failing: [n]"
+
+msgctxt "Languages::travel_core.jobs_tile_late"
+msgid "Late: [n]"
+msgstr "Late: [n]"
+
+msgctxt "Languages::travel_core.jobs_tile_never"
+msgid "No runs yet: [n]"
+msgstr "No runs yet: [n]"
+
+msgctxt "Languages::travel_core.jobs_tile_ok"
+msgid "All on time"
+msgstr "All on time"
+
+msgctxt "Languages::travel_core.jobs_tile_note"
+msgid "On time: [ok] · late: [late] · no runs yet: [never]"
+msgstr "On time: [ok] · late: [late] · no runs yet: [never]"
+
+msgctxt "Languages::travel_core.jobs_tile_open"
+msgid "See the jobs ↓"
+msgstr "See the jobs ↓"
 
 msgctxt "Languages::travel_core.package_searching"
 msgid "Searching…"

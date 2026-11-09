@@ -1348,10 +1348,6 @@ msgctxt "Languages::novoton_holidays.board"
 msgid "Board"
 msgstr "Masă"
 
-msgctxt "Languages::novoton_holidays.back_to_results"
-msgid "Back to Results"
-msgstr "Înapoi la rezultate"
-
 msgctxt "Languages::novoton_holidays.stay_nights"
 msgid "Stay: [nights] nights"
 msgstr "Cazare: [nights] nopți"
@@ -3436,10 +3432,6 @@ msgctxt "Languages::novoton_holidays.dash_job_unknown"
 msgid "Unknown job: [job]"
 msgstr "Job necunoscut: [job]"
 
-msgctxt "Languages::novoton_holidays.dash_jobs_title"
-msgid "Scheduled jobs"
-msgstr "Joburi programate"
-
 msgctxt "Languages::novoton_holidays.dash_col_job"
 msgid "Job"
 msgstr "Job"
@@ -3711,30 +3703,6 @@ msgstr "Confirmate: [confirmed] · anulate: [cancelled]"
 msgctxt "Languages::novoton_holidays.dash_tile_bookings_open"
 msgid "Open Novoton bookings →"
 msgstr "Deschide rezervările Novoton →"
-
-msgctxt "Languages::novoton_holidays.dash_tile_jobs_failing"
-msgid "Failing: [n]"
-msgstr "Cu erori: [n]"
-
-msgctxt "Languages::novoton_holidays.dash_tile_jobs_late"
-msgid "Late: [n]"
-msgstr "Întârziate: [n]"
-
-msgctxt "Languages::novoton_holidays.dash_tile_jobs_never"
-msgid "Not run yet: [n]"
-msgstr "Nerulate încă: [n]"
-
-msgctxt "Languages::novoton_holidays.dash_tile_jobs_ok"
-msgid "All on time"
-msgstr "Toate la timp"
-
-msgctxt "Languages::novoton_holidays.dash_tile_jobs_note"
-msgid "On time: [ok] · late: [late] · no runs yet: [never]"
-msgstr "La timp: [ok] · întârziate: [late] · nerulate încă: [never]"
-
-msgctxt "Languages::novoton_holidays.dash_tile_jobs_open"
-msgid "See the jobs ↓"
-msgstr "Vezi joburile ↓"
 
 msgctxt "Languages::novoton_holidays.dash_attention_title"
 msgid "Needs attention ([n])"

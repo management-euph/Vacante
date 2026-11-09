@@ -30,8 +30,11 @@
         <div class="alert alert-warning travel-cron-jobs__nokey">
             <strong>{__("travel_core.jobs_no_key_title")}</strong>
             {* The cron secret authenticates the providers' own endpoints, so it
-               lives once in Travel Core and is shared by all of them. *}
-            <p>{__("travel_core.jobs_no_key_body")} <a href="{"addons.update?addon=travel_core"|fn_url}">{__("travel_core.jobs_set_key")}</a></p>
+               lives once in Travel Core and is shared by all of them. The link
+               goes to its card on Travel Core -> Tools, where Generate mints a
+               strong one in one click: a key typed by hand into the settings
+               form is how a store ended up with a weak or blank one. *}
+            <p>{__("travel_core.jobs_no_key_body")} <a href="{"travel_tools.manage"|fn_url}#travel-cron-key-title">{__("travel_core.jobs_set_key")}</a></p>
         </div>
     {/if}
 

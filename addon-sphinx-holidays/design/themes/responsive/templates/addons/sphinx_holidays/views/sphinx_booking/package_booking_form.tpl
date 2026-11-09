@@ -27,7 +27,7 @@
                     <span><strong>{__("travel_core.check_in")|default:"Check-in"}:</strong> {$sphinx_package_booking.check_in|date_format:"%d.%m.%Y"}</span>
                     <span><strong>{__("travel_core.check_out")|default:"Check-out"}:</strong> {$sphinx_package_booking.check_out|date_format:"%d.%m.%Y"}</span>
                     {if $sphinx_package_booking.meal_type}
-                        <span><strong>{__("travel_core.meal")|default:"Meal"}:</strong> {$sphinx_package_booking.meal_type|escape:html}</span>
+                        <span><strong>{__("travel_core.meal_plan")}:</strong> {$sphinx_package_booking.meal_type|escape:html}</span>
                     {/if}
                 </div>
 
@@ -238,7 +238,7 @@
            of what is booked. *}
         {if $sphinx_trip_terms.payment_split && fn_travel_core_deposit_offered("sphinx_holidays")}
             <div class="travel-info-card sphinx-pay-mode">
-                <h3 class="travel-section-title">{__("travel_core.pay_mode_legend")}</h3>
+                {* The choice's own legend, "How would you like to pay?", is its title. *}
                 {include file="addons/travel_core/components/booking_payment_split.tpl" ps=$sphinx_trip_terms.payment_split ps_form="sphinx-package-booking-form"}
             </div>
         {/if}

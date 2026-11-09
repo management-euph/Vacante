@@ -39,25 +39,7 @@
                 <br><a href="{"travel_bookings.manage?provider=novoton"|fn_url}">{__("novoton_holidays.dash_tile_bookings_open")}</a>
             </div>
         </div>
-        {$_jh = $novoton_job_health}
-        <div class="travel-cron-tile{if $_jh.tone == "bad"} travel-cron-tile--bad{elseif $_jh.tone == "warn"} travel-cron-tile--warn{/if}">
-            <div class="travel-cron-tile__label">{__("novoton_holidays.dash_jobs_title")}</div>
-            <div class="travel-cron-tile__value">
-                {if $_jh.counts.failed + $_jh.counts.stalled > 0}
-                    {__("novoton_holidays.dash_tile_jobs_failing", ["[n]" => $_jh.counts.failed + $_jh.counts.stalled])}
-                {elseif $_jh.counts.late > 0}
-                    {__("novoton_holidays.dash_tile_jobs_late", ["[n]" => $_jh.counts.late])}
-                {elseif $_jh.counts.never > 0}
-                    {__("novoton_holidays.dash_tile_jobs_never", ["[n]" => $_jh.counts.never])}
-                {else}
-                    {__("novoton_holidays.dash_tile_jobs_ok")}
-                {/if}
-            </div>
-            <div class="travel-cron-tile__note">
-                {__("novoton_holidays.dash_tile_jobs_note", ["[ok]" => $_jh.counts.ok, "[late]" => $_jh.counts.late, "[never]" => $_jh.counts.never])}
-                <br><a href="#novoton-cron-jobs">{__("novoton_holidays.dash_tile_jobs_open")}</a>
-            </div>
-        </div>
+        {include file="addons/travel_core/components/jobs_tile.tpl" health=$novoton_job_health card_id="novoton-cron-jobs"}
     </div>
 
     {** Needs attention: only real problems, each with the one action that fixes it. **}

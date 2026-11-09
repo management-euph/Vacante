@@ -785,6 +785,7 @@
 
 .travel-cron-form input[type="text"],
 .travel-cron-form input[type="number"],
+.travel-cron-form input[type="date"],
 .travel-cron-form select {
     margin: 0;
     max-width: 100%;

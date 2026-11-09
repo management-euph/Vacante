@@ -161,7 +161,7 @@
            of what is booked. *}
         {if $sphinx_trip_terms.payment_split && fn_travel_core_deposit_offered("sphinx_holidays")}
             <div class="travel-info-card sphinx-pay-mode">
-                <h3 class="travel-section-title">{__("travel_core.pay_mode_legend")}</h3>
+                {* The choice's own legend, "How would you like to pay?", is its title. *}
                 {include file="addons/travel_core/components/booking_payment_split.tpl" ps=$sphinx_trip_terms.payment_split ps_form="sphinx-circuit-booking-form"}
             </div>
         {/if}

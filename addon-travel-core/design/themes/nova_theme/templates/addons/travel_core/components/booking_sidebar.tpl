@@ -1,6 +1,6 @@
 {*
-    Shared booking-form summary sidebar — the left column of the 2-column
-    booking page, rendered identically for every provider (2 surfaces x 2
+    Shared booking-form summary sidebar — the right column of the 2-column
+    booking page (a sticky bar above the form on a phone), rendered identically for every provider (2 surfaces x 2
     themes = this file + its nova_theme mirror, synced by `composer mirror`).
 
     Data contract: $travel_booking_sidebar, assigned from
@@ -26,7 +26,24 @@
 *}
 {$tbs = $travel_booking_sidebar}
 {if $tbs}
-<aside class="travel-bsidebar">
+{* ── Phone: the summary folded into one sticky bar ──────────────────── *}
+{* At 900 px and less, a bar with the name, the stay, the guests and the
+   total sticks to the top while the guest fills the form; tapping it opens
+   the cards below. It sits beside the aside, in the layout, so it can stay
+   stuck all the way down the form. booking-conditions.js folds the cards
+   (without it they stay open, as before). The total is a .price-total,
+   kept in step by every re-pricing script. Hidden on wider screens. *}
+{capture assign="tbs_bar_guests"}{__("travel_core.n_adults", [$tbs.adults])}{if $tbs.children > 0}, {__("travel_core.n_children", [$tbs.children])}{/if}{/capture}
+<div class="travel-sumbar">
+    <button type="button" class="travel-sumbar__toggle" aria-expanded="true" aria-controls="travel-bsidebar" data-travel-sumbar>
+        <span class="travel-sumbar__text">
+            <span class="travel-sumbar__name">{$tbs.name|escape:html}</span>
+            <span class="travel-sumbar__meta">{if $tbs.check_in}{$tbs.check_in|escape:html} &ndash; {$tbs.check_out|escape:html} &middot; {/if}{$tbs_bar_guests nofilter}</span>
+        </span>
+        <span class="travel-sumbar__end"><strong class="price-total">{$tbs.total nofilter}</strong><span class="travel-sumbar__chev" aria-hidden="true"></span></span>
+    </button>
+</div>
+<aside class="travel-bsidebar" id="travel-bsidebar">
 
     {* ── 1. Hotel ─────────────────────────────────────────────────────── *}
     <section class="travel-bcard travel-bcard--hotel">
@@ -198,15 +215,17 @@
 
             {if $tbs.per_night && $tbs.nights > 0}
                 {capture assign="tbs_pn_nights"}{__("travel_core.n_nights", [$tbs.nights])}{/capture}
-                <div class="travel-bsidebar-pernight" id="travel-price-pernight">{capture assign="tbs_pn_price"}<span class="travel-price-pernight__value">{$tbs.per_night|escape:html}</span>{/capture}{__("travel_core.per_night_line", ["[nights]" => $tbs_pn_nights, "[price]" => $tbs_pn_price])}</div>
+                <div class="travel-bsidebar-pernight" id="travel-price-pernight">{capture assign="tbs_pn_price"}<span class="travel-price-pernight__value">{$tbs.per_night|escape:html}</span>{/capture}{__("travel_core.per_night_line", ["[nights]" => $tbs_pn_nights, "[price]" => $tbs_pn_price]) nofilter}</div>
             {/if}
 
-            {* Deposit / balance from the supplier's payment terms — the "Pay in
-               full / Pay a deposit" choice where the provider offers one
-               (tbs_deposit_addon + tbs_deposit_form, never in edit mode),
-               else information only. novoton's re-price refills it. *}
+            {* Deposit / balance from the supplier's payment terms, as
+               information. Where the provider offers the "Pay in full / Pay a
+               deposit" choice (tbs_deposit_addon + tbs_deposit_form, never in
+               edit mode), the choice sits in the form instead
+               (booking_pay_choice.tpl), with the page's only
+               #travel-price-split. novoton's re-price refills either. *}
             {if $tbs_deposit_addon|default:"" && !$is_edit_mode|default:false && fn_travel_core_deposit_offered($tbs_deposit_addon)}{$tbs_ps_form = $tbs_deposit_form|default:""}{else}{$tbs_ps_form = ""}{/if}
-            <div id="travel-price-split"{if $tbs_ps_form} data-deposit-form="{$tbs_ps_form|escape:html}"{/if}>{include file="addons/travel_core/components/booking_payment_split.tpl" ps=$tbs.payment_split|default:[] ps_form=$tbs_ps_form}</div>
+            {if !$tbs_ps_form}<div id="travel-price-split">{include file="addons/travel_core/components/booking_payment_split.tpl" ps=$tbs.payment_split|default:[] ps_form=""}</div>{/if}
 
             <span id="price-unverified-badge" class="travel-price-unverified travel-is-hidden"></span>
             <a href="#" id="refresh-price-link" class="travel-price-refresh travel-is-hidden" onclick="if (window.refreshPrice) { refreshPrice(); } return false;"></a>
@@ -219,10 +238,22 @@
        #travel-cancel-body with the same partial, server-rendered, after the
        price re-check that already runs on page load. *}
     <section class="travel-bcard travel-bcard--cancel{if !$tbs.cancel_steps && !$tbs.cancel_lines && !$tbs.cancel_full_amount && !$tbs.cancel_free_until && !$tbs.payment_steps && !$tbs.payment_lines} travel-is-hidden{/if}" id="travel-cancel-card">
-        <h3 class="travel-bcard__title">{__("travel_core.cancel_payment_title")}</h3>
-        <div class="travel-bcard__body" id="travel-cancel-body">
-            {include file="addons/travel_core/components/booking_terms_timeline.tpl" tt=$tbs tt_show_link=true tt_ids=true}
-        </div>
+        {* Folded to its title and one line, what cancelling today costs
+           (booking_cancel_preview.tpl); the timeline opens under it. When
+           novoton swaps the body in, the new terms bring their own line,
+           copied up by booking-conditions.js. *}
+        <details class="travel-cancel-fold">
+            <summary class="travel-bcard__title">
+                <span class="travel-cancel-fold__text">
+                    <span>{__("travel_core.cancel_payment_title")}</span>
+                    <span id="travel-cancel-preview">{include file="addons/travel_core/components/booking_cancel_preview.tpl" cp=$tbs}</span>
+                </span>
+                <span class="travel-cancel-fold__chev" aria-hidden="true"></span>
+            </summary>
+            <div class="travel-bcard__body" id="travel-cancel-body">
+                {include file="addons/travel_core/components/booking_terms_timeline.tpl" tt=$tbs tt_show_link=true tt_ids=true}
+            </div>
+        </details>
     </section>
     </div>
 

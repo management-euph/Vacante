@@ -138,13 +138,16 @@
                 {/foreach}
             </div>
             
+            {* "How would you like to pay?" where a deposit is offered (shared). *}
+            {include file="addons/travel_core/components/booking_pay_choice.tpl" pc_addon="novoton_holidays" pc_form="novoton-booking-form"}
+
             {* Form actions (shared): back to the results and the payment
                button; editing, back to the booking, Cancel and Save. *}
             {include file="addons/travel_core/components/booking_form_actions.tpl"
                 fa_addon="novoton_holidays"
                 fa_edit_mode=$is_edit_mode|default:false
                 fa_back_url=$nvt_results_url
-                fa_back_label=__("novoton_holidays.back_to_results")
+                fa_back_label=__("travel_core.back_to_offer")
                 fa_button_id="booking-submit-btn"}
 
             {* "What are my booking conditions?" modal (shared; its link sits in

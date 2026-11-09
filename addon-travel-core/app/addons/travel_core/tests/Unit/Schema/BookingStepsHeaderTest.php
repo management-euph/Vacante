@@ -7,13 +7,13 @@ namespace Tygh\Addons\TravelCore\Tests\Unit\Schema;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Pins the booking page header (components/booking_steps.tpl): the page
- * title and the progress bar on one row, no breadcrumb.
+ * Pins the booking page header (components/booking_steps.tpl): a three-step
+ * progress bar, full width, with the page title kept for screen readers.
  *
  * The stepper rule a later edit could quietly break: only the PAST step
- * (Search) is a link, back to the guest's own results; the current step is
- * marked; future steps are never links, because clicking ahead to payment
- * before the guest details are in only produces validation errors.
+ * (Offer) is a link, back to the offer the guest picked; the current step
+ * is marked; the future step is never a link, because clicking ahead to
+ * payment before the guest details are in only produces validation errors.
  */
 final class BookingStepsHeaderTest extends TestCase
 {
@@ -29,24 +29,44 @@ final class BookingStepsHeaderTest extends TestCase
         );
     }
 
-    public function testTitleAndStepsShareOneHeaderRow(): void
+    public function testNewBookingTitleIsForScreenReadersOnly(): void
     {
         $tpl = self::tpl();
 
         self::assertStringContainsString('<div class="travel-booking-head', $tpl);
-        self::assertStringContainsString('<h1 class="travel-booking-head__title">', $tpl);
-        // "Complete Booking" (short, so it fits beside the bar); edit mode keeps its own page title.
+        // A new booking: the H1 stays for screen readers and search engines; the bar says where the guest is.
+        self::assertStringContainsString('<h1 class="travel-booking-head__title{if !$bs_edit_mode|default:false} travel-sr-only{/if}">', $tpl);
         self::assertStringContainsString('__("travel_core.complete_booking_title")', $tpl);
+        // Edit mode keeps its own, visible title.
         self::assertStringContainsString('{$bs_default_title = $page_title', $tpl);
         self::assertStringContainsString('$bs_title|default:$bs_default_title', $tpl);
         self::assertLessThan(strpos($tpl, '<nav class="travel-steps-nav"'), strpos($tpl, '<h1'), 'title first, then the steps');
     }
 
-    public function testOnlyTheSearchStepIsALink(): void
+    /** Offer → Booking details → Payment: no Confirmation step (CS-Cart's page after payment is that). */
+    public function testThreeStepsAndNoConfirmation(): void
     {
         $tpl = self::tpl();
 
-        self::assertSame(1, substr_count($tpl, '<a '), 'exactly one link: Search');
+        self::assertSame(3, substr_count($tpl, '<li class="travel-steps__item'));
+        $offer = strpos($tpl, '__("travel_core.step_offer")');
+        $details = strpos($tpl, '__("travel_core.step_details")');
+        $payment = strpos($tpl, '__("travel_core.step_payment")');
+        self::assertNotFalse($offer);
+        self::assertNotFalse($details);
+        self::assertNotFalse($payment);
+        self::assertLessThan($details, $offer);
+        self::assertLessThan($payment, $details);
+        self::assertStringNotContainsString('step_confirmation', $tpl);
+        self::assertStringNotContainsString('step_search', $tpl);
+        self::assertStringNotContainsString('step_guests', $tpl);
+    }
+
+    public function testOnlyTheOfferStepIsALink(): void
+    {
+        $tpl = self::tpl();
+
+        self::assertSame(1, substr_count($tpl, '<a '), 'exactly one link: Offer');
         $link = strpos($tpl, '<a class="travel-steps__link"');
         $done = strpos($tpl, 'travel-steps__item--done');
         $active = strpos($tpl, 'travel-steps__item--active');
@@ -56,10 +76,45 @@ final class BookingStepsHeaderTest extends TestCase
         self::assertStringContainsString('href="{$bs_back|fn_url}"', $tpl);
         self::assertStringContainsString('$bs_search_url|default:$travel_booking_sidebar.change_url', $tpl);
 
-        // Upcoming steps are plain text.
+        // The upcoming step is plain text.
         $upcoming = substr($tpl, (int) strpos($tpl, 'travel-steps__item--upcoming'));
         self::assertStringNotContainsString('<a ', $upcoming);
-        self::assertSame(2, substr_count($tpl, 'travel-steps__item--upcoming'));
+        self::assertSame(1, substr_count($tpl, 'travel-steps__item--upcoming'));
+    }
+
+    /**
+     * Three equal, underlined segments. On a phone only the current step
+     * keeps its words on screen; the others' words stay for screen readers
+     * (clipped, never display:none, so the Offer link keeps its name).
+     */
+    public function testBarIsThreeSegmentsAndPhonesKeepTheWordsForScreenReaders(): void
+    {
+        $css = (string) file_get_contents(
+            self::root() . '/addon-travel-core/design/themes/responsive/css/addons/travel_core/booking-pages.css',
+        );
+
+        self::assertMatchesRegularExpression('/\.travel-steps \{\s*display: grid; grid-template-columns: repeat\(3, minmax\(0, 1fr\)\);/', $css);
+        self::assertMatchesRegularExpression('/\.travel-steps__item \{[^}]*border-bottom: 4px solid/', $css);
+        $phone = substr($css, (int) strpos($css, '@media (max-width: 640px) {'));
+        $phone = substr($phone, 0, (int) strpos($phone, "\n}\n"));
+        self::assertStringContainsString('.travel-steps__item--upcoming .travel-steps__label {', $phone);
+        self::assertStringContainsString('clip: rect(0, 0, 0, 0)', $phone);
+        self::assertStringNotContainsString('display: none', $phone);
+    }
+
+    /** The back link under the form names the same place as the Offer step. */
+    public function testBackLinksSayBackToTheOffer(): void
+    {
+        $root = self::root();
+        foreach ([
+            'addon-eurosite/design/themes/responsive/templates/addons/eurosite/views/eurosite_booking/booking_form.tpl',
+            'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/views/novoton_booking/booking_form.tpl',
+            'addon-novoton-holidays/design/themes/nova_theme/templates/addons/novoton_holidays/views/novoton_booking/booking_form.tpl',
+        ] as $form) {
+            $src = (string) file_get_contents($root . '/' . $form);
+            self::assertStringContainsString('fa_back_label=__("travel_core.back_to_offer")', $src, $form);
+            self::assertStringNotContainsString('back_to_results', $src, $form);
+        }
     }
 
     public function testCurrentStepIsMarkedForAssistiveTech(): void
@@ -76,7 +131,7 @@ final class BookingStepsHeaderTest extends TestCase
     {
         $keys = require self::root() . '/addon-travel-core/app/addons/travel_core/lang_keys.php';
         self::assertIsArray($keys);
-        foreach (['complete_booking_title' => 'Complete Booking', 'step_guests' => 'Guests', 'step_payment' => 'Payment', 'step_search_back' => null, 'step_locked_hint' => null, 'step_current' => null] as $key => $en) {
+        foreach (['complete_booking_title' => 'Complete Booking', 'step_offer' => 'Offer', 'step_details' => 'Booking details', 'step_payment' => 'Payment', 'step_offer_back' => null, 'step_locked_hint' => null, 'step_current' => null] as $key => $en) {
             $row = $keys['travel_core.' . $key] ?? null;
             self::assertIsArray($row, $key);
             self::assertNotSame('', $row['ro'] ?? '', $key . ' ro');
@@ -131,7 +186,11 @@ final class BookingStepsHeaderTest extends TestCase
     {
         $root = self::root();
         $sidebar = (string) file_get_contents($root . '/addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/booking_sidebar.tpl');
-        self::assertStringContainsString('<div id="travel-price-split"{if $tbs_ps_form} data-deposit-form="{$tbs_ps_form|escape:html}"{/if}>{include file="addons/travel_core/components/booking_payment_split.tpl" ps=$tbs.payment_split', $sidebar);
+        // Information under the total where no choice is offered; the choice lives in the form.
+        self::assertStringContainsString('{if !$tbs_ps_form}<div id="travel-price-split">{include file="addons/travel_core/components/booking_payment_split.tpl" ps=$tbs.payment_split|default:[] ps_form=""}</div>{/if}', $sidebar);
+        $choice = (string) file_get_contents($root . '/addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/booking_pay_choice.tpl');
+        self::assertStringContainsString('id="travel-price-split" data-deposit-form="{$pc_form|escape:html}">{include file="addons/travel_core/components/booking_payment_split.tpl" ps=$pc_tbs.payment_split|default:[] ps_form=$pc_form}', $choice);
+        self::assertStringContainsString('!$is_edit_mode|default:false && fn_travel_core_deposit_offered($pc_addon)', $choice);
 
         $partial = (string) file_get_contents($root . '/addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/booking_payment_split.tpl');
         foreach (['split_deposit', 'split_balance', 'due_by'] as $key) {

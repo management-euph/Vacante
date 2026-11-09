@@ -88,6 +88,12 @@ final class DashboardJobsTemplateTest extends TestCase
         preg_match_all('/\{\$novoton_xml_feed_url\|escape:html\}/', $manage, $m, PREG_OFFSET_CAPTURE);
         self::assertCount(1, $m[0]);
         self::assertMatchesRegularExpression('/data-copy="$/', substr($manage, max(0, $m[0][0][1] - 30), 30));
+
+        // The card prints the feed block as HTML. CS-Cart escapes every {$…}
+        // it prints: with a plain {$extra} the block showed as markup on the
+        // page, the real key from its data-copy in plain sight.
+        $card = (string) file_get_contents(dirname(self::repo()) . '/addon-travel-core/design/backend/templates/addons/travel_core/components/commands_card.tpl');
+        self::assertStringContainsString('{if $extra}{$extra nofilter}{/if}', $card);
     }
 
     /** Every Run on the page — the jobs card's, Needs attention's, Tools' — posts to novoton_holidays.run_job. */

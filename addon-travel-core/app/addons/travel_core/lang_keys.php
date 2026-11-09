@@ -463,6 +463,10 @@ return [
         'en' => 'How much will it cost to cancel?',
         'ro' => 'Cât costă să anulez?',
     ],
+    'travel_core.cancel_today_costs' => [
+        'en' => 'If you cancel today, you pay',
+        'ro' => 'Dacă anulați azi, plătiți',
+    ],
     'travel_core.cancel_you_will_pay' => [
         'en' => "If you cancel, you'll pay",
         'ro' => 'Dacă anulați, veți plăti',
@@ -557,10 +561,6 @@ return [
         'en' => 'Booking progress',
         'ro' => 'Etapele rezervării',
     ],
-    'travel_core.step_search' => [
-        'en' => 'Search',
-        'ro' => 'Căutare',
-    ],
     'travel_core.step_guest_details' => [
         'en' => 'Guest details',
         'ro' => 'Datele turiștilor',
@@ -568,10 +568,6 @@ return [
     'travel_core.step_checkout' => [
         'en' => 'Checkout',
         'ro' => 'Finalizare comandă',
-    ],
-    'travel_core.step_confirmation' => [
-        'en' => 'Confirmation',
-        'ro' => 'Confirmare',
     ],
     'travel_core.guest_names_hint' => [
         'en' => 'Enter each name exactly as it appears on the guest\'s ID card or passport.',
@@ -639,17 +635,25 @@ return [
         'en' => 'Who is staying?',
         'ro' => 'Cine se cazează?',
     ],
-    'travel_core.step_guests' => [
-        'en' => 'Guests',
-        'ro' => 'Turiști',
+    'travel_core.step_offer' => [
+        'en' => 'Offer',
+        'ro' => 'Ofertă',
+    ],
+    'travel_core.step_offer_back' => [
+        'en' => 'Back to the offer, to change the room or the dates',
+        'ro' => 'Înapoi la ofertă, pentru a schimba camera sau datele',
+    ],
+    'travel_core.step_details' => [
+        'en' => 'Booking details',
+        'ro' => 'Detalii rezervare',
+    ],
+    'travel_core.back_to_offer' => [
+        'en' => 'Back to the offer',
+        'ro' => 'Înapoi la ofertă',
     ],
     'travel_core.step_payment' => [
         'en' => 'Payment',
         'ro' => 'Plată',
-    ],
-    'travel_core.step_search_back' => [
-        'en' => 'Back to your search results',
-        'ro' => 'Înapoi la rezultatele căutării',
     ],
     'travel_core.step_locked_hint' => [
         'en' => 'Enter the guest details first',
@@ -1070,6 +1074,10 @@ return [
         'ro' => 'Rest de plată',
     ],
     // Booking page: "Pay in full / Pay a deposit" choice (DepositPolicy).
+    'travel_core.option_selected' => [
+        'en' => 'Selected',
+        'ro' => 'Selectat',
+    ],
     'travel_core.pay_mode_legend' => [
         'en' => 'How would you like to pay?',
         'ro' => 'Cum doriți să plătiți?',
@@ -4023,11 +4031,64 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'ro' => 'Rulările programate sunt refuzate până când cheia cron comună este setată în Travel Core. Rulează funcționează în continuare de aici.',
     ],
     'travel_core.jobs_set_key' => [
-        'en' => 'Set it in Travel Core',
-        'ro' => 'Seteaz-o în Travel Core',
+        'en' => 'Generate one on Travel Core → Tools',
+        'ro' => 'Generează una în Travel Core → Instrumente',
+    ],
+    // The jobs' tile in a provider's At a glance row (components/jobs_tile.tpl).
+    'travel_core.jobs_tile_failing' => [
+        'en' => 'Failing: [n]',
+        'ro' => 'Eșuează: [n]',
+    ],
+    'travel_core.jobs_tile_late' => [
+        'en' => 'Late: [n]',
+        'ro' => 'Întârziate: [n]',
+    ],
+    'travel_core.jobs_tile_never' => [
+        'en' => 'No runs yet: [n]',
+        'ro' => 'Încă nerulate: [n]',
+    ],
+    'travel_core.jobs_tile_ok' => [
+        'en' => 'All on time',
+        'ro' => 'Toate la timp',
+    ],
+    'travel_core.jobs_tile_note' => [
+        'en' => 'On time: [ok] · late: [late] · no runs yet: [never]',
+        'ro' => 'La timp: [ok] · întârziate: [late] · încă nerulate: [never]',
+    ],
+    'travel_core.jobs_tile_open' => [
+        'en' => 'See the jobs ↓',
+        'ro' => 'Vezi joburile ↓',
     ],
     'travel_core.package_searching' => [
         'en' => 'Searching…',
         'ro' => 'Se caută…',
+    ],
+    // Storefront labels that lived only in the .po files, which CS-Cart reads
+    // at install: on a store installed before them they printed as raw keys
+    // ("_travel_core.total_price"). TemplateLangKeysSeededTest keeps every
+    // travel_core label an add-on's template uses in a seeded source.
+    'travel_core.total_price' => [
+        'en' => 'Total price',
+        'ro' => 'Preț total',
+    ],
+    'travel_core.payment_terms' => [
+        'en' => 'Terms of Payment',
+        'ro' => 'Termeni de plată',
+    ],
+    'travel_core.cancellation_policy' => [
+        'en' => 'Cancellation Policy',
+        'ro' => 'Politica de anulare',
+    ],
+    'travel_core.days' => [
+        'en' => 'days',
+        'ro' => 'zile',
+    ],
+    'travel_core.must_be_under_18' => [
+        'en' => 'Must be under 18 years old.',
+        'ro' => 'Trebuie să aibă sub 18 ani.',
+    ],
+    'travel_core.child_age_mismatch' => [
+        'en' => 'The child [guest] will be [actual] years old at check-in, but the offer was priced for age [declared]. The search was re-run with the correct ages — please choose an offer again.',
+        'ro' => 'Copilul [guest] va avea [actual] ani la check-in, dar oferta a fost calculată pentru [declared] ani. Căutarea a fost refăcută cu vârstele corecte — vă rugăm să alegeți din nou o ofertă.',
     ],
 ];

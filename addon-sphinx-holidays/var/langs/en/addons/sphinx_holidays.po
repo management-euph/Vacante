@@ -1920,30 +1920,6 @@ msgctxt "Languages::sphinx_holidays.dash_tile_unlinked_open"
 msgid "See which"
 msgstr "See which"
 
-msgctxt "Languages::sphinx_holidays.dash_tile_jobs_failing"
-msgid "Failing: [n]"
-msgstr "Failing: [n]"
-
-msgctxt "Languages::sphinx_holidays.dash_tile_jobs_late"
-msgid "Late: [n]"
-msgstr "Late: [n]"
-
-msgctxt "Languages::sphinx_holidays.dash_tile_jobs_never"
-msgid "No runs yet: [n]"
-msgstr "No runs yet: [n]"
-
-msgctxt "Languages::sphinx_holidays.dash_tile_jobs_ok"
-msgid "All on time"
-msgstr "All on time"
-
-msgctxt "Languages::sphinx_holidays.dash_tile_jobs_note"
-msgid "On time: [ok] · late: [late] · no runs yet: [never]"
-msgstr "On time: [ok] · late: [late] · no runs yet: [never]"
-
-msgctxt "Languages::sphinx_holidays.dash_tile_jobs_open"
-msgid "See the jobs ↓"
-msgstr "See the jobs ↓"
-
 msgctxt "Languages::sphinx_holidays.dash_attention_title"
 msgid "Needs attention ([n])"
 msgstr "Needs attention ([n])"

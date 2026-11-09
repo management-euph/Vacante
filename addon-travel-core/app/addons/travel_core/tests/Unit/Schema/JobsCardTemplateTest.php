@@ -42,6 +42,7 @@ final class JobsCardTemplateTest extends TestCase
             'job_row' => self::code('job_row'),
             'run_job' => self::code('run_job'),
             'commands_card' => self::code('commands_card'),
+            'jobs_tile' => self::code('jobs_tile'),
         ];
     }
 
@@ -105,6 +106,70 @@ final class JobsCardTemplateTest extends TestCase
 
         $js = (string) file_get_contents(self::repo() . '/js/addons/travel_core/cron-jobs.js');
         self::assertStringContainsString("root.getAttribute('data-plan')", $js);
+    }
+
+    /**
+     * With no cron key, the card sends the admin to the key's card on Travel
+     * Core -> Tools, where Generate mints a strong key in one click: a key
+     * typed by hand into the settings form is how a store ended up with a
+     * weak or blank one. That card offers Generate when there is no key.
+     */
+    public function testWithNoKeyTheCardLeadsToGenerate(): void
+    {
+        $card = self::templates()['jobs_card'];
+        self::assertMatchesRegularExpression(
+            '/\{if !\$has_key\}.*<a href="\{"travel_tools\.manage"\|fn_url\}#travel-cron-key-title">\{__\("travel_core\.jobs_set_key"\)\}<\/a>.*\{\/if\}/s',
+            $card,
+        );
+        self::assertStringNotContainsString('addons.update', $card);
+
+        $tools = (string) file_get_contents(self::repo() . '/design/backend/templates/addons/travel_core/views/travel_tools/manage.tpl');
+        self::assertStringContainsString('<h3 id="travel-cron-key-title">', $tools, 'the link lands on the key\'s card');
+        $noKey = substr($tools, (int) strpos($tools, '{if !$cron_key}'));
+        self::assertStringContainsString('{"travel_tools.generate_cron_key"|fn_url}', substr($noKey, 0, (int) strpos($noKey, '{/if}')), 'with no key, the card offers Generate');
+    }
+
+    /**
+     * CS-Cart escapes every {$…} a template prints, so HTML an add-on hands
+     * a card is printed with nofilter, and nothing else is. A plain {$extra}
+     * showed Novoton's XML feed block as markup, with the real cron key from
+     * its data-copy in plain sight.
+     */
+    public function testOnlyTheAddonsOwnHtmlIsPrintedUnescaped(): void
+    {
+        $card = self::templates()['commands_card'];
+        self::assertStringContainsString('{if $extra}{$extra nofilter}{/if}', $card);
+
+        foreach (self::templates() as $name => $src) {
+            preg_match_all('/\{\$[^}]*\bnofilter\}/', $src, $m);
+            self::assertSame($name === 'commands_card' ? ['{$extra nofilter}'] : [], $m[0], "{$name}: what is printed unescaped");
+        }
+    }
+
+    /**
+     * The jobs' tile in each provider's At a glance row: the same words and
+     * colours on every dashboard, red when a job failed or stalled, amber
+     * when one is late or never ran, a link down to the jobs card.
+     */
+    public function testTheJobsTileReadsTheSameOnEveryDashboard(): void
+    {
+        $tile = self::templates()['jobs_tile'];
+        self::assertStringContainsString('{if $health.tone == "bad"} travel-cron-tile--bad{elseif $health.tone == "warn"} travel-cron-tile--warn{/if}', $tile);
+        foreach (['failing', 'late', 'never', 'ok', 'note', 'open'] as $word) {
+            self::assertStringContainsString('__("travel_core.jobs_tile_' . $word . '"', $tile, $word);
+        }
+        self::assertStringContainsString('<a href="#{$card_id|escape:html}">', $tile);
+
+        $root = dirname(self::repo());
+        foreach ([
+            'addon-novoton-holidays/design/backend/templates/addons/novoton_holidays/views/novoton_holidays/manage.tpl' => 'health=$novoton_job_health card_id="novoton-cron-jobs"',
+            'addon-sphinx-holidays/design/backend/templates/addons/sphinx_holidays/views/sphinx_holidays/manage.tpl' => 'health=$_g.jobs card_id="sphinx-cron-commands"',
+            'addon-eurosite/design/backend/templates/addons/eurosite/views/eurosite/manage.tpl' => 'health=$_g.jobs card_id="eurosite-scheduled-jobs"',
+        ] as $page => $params) {
+            $src = (string) file_get_contents($root . '/' . $page);
+            self::assertStringContainsString('{include file="addons/travel_core/components/jobs_tile.tpl" ' . $params . '}', $src, $page);
+            self::assertStringNotContainsString('dash_tile_jobs_', $src, $page . ': no copy of its own');
+        }
     }
 
     /** An add-on can show what is its own under a job's name (a catalog's size, a link to its list). */

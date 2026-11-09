@@ -1920,30 +1920,6 @@ msgctxt "Languages::sphinx_holidays.dash_tile_unlinked_open"
 msgid "See which"
 msgstr "Vezi care"
 
-msgctxt "Languages::sphinx_holidays.dash_tile_jobs_failing"
-msgid "Failing: [n]"
-msgstr "Eșuează: [n]"
-
-msgctxt "Languages::sphinx_holidays.dash_tile_jobs_late"
-msgid "Late: [n]"
-msgstr "Întârziate: [n]"
-
-msgctxt "Languages::sphinx_holidays.dash_tile_jobs_never"
-msgid "No runs yet: [n]"
-msgstr "Încă nerulate: [n]"
-
-msgctxt "Languages::sphinx_holidays.dash_tile_jobs_ok"
-msgid "All on time"
-msgstr "Toate la timp"
-
-msgctxt "Languages::sphinx_holidays.dash_tile_jobs_note"
-msgid "On time: [ok] · late: [late] · no runs yet: [never]"
-msgstr "La timp: [ok] · întârziate: [late] · încă nerulate: [never]"
-
-msgctxt "Languages::sphinx_holidays.dash_tile_jobs_open"
-msgid "See the jobs ↓"
-msgstr "Vezi joburile ↓"
-
 msgctxt "Languages::sphinx_holidays.dash_attention_title"
 msgid "Needs attention ([n])"
 msgstr "Necesită atenție ([n])"

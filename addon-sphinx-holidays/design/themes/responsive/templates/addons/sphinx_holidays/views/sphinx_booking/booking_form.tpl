@@ -58,8 +58,10 @@
         <input type="hidden" name="num_rooms" value="{$sphinx_booking_data.num_rooms|default:1}">
         <input type="hidden" name="rooms_data" value="{$sphinx_booking_data.rooms_data|json_encode|escape:html}">
 
-        <div class="guest-names-section">
-            <h3 class="travel-section-title"><i class="icon-user"></i> {__("travel_core.who_is_staying")}</h3>
+        {* The same section shell as Novoton's and Eurosite's pages, so the
+           guest cards, the payment choice and the button line up. *}
+        <div class="travel-form-section guest-names-section">
+            <h3>{__("travel_core.who_is_staying")}</h3>
             {include file="addons/travel_core/components/booking_guest_hint.tpl"}
 
             {* Guest name + DOB cards — shared travel_core component (same markup
@@ -76,6 +78,9 @@
 
         {* Contact (email/phone) is NOT collected here: CS-Cart checkout already
            collects it, and the booking submission reads it from the order. *}
+
+        {* "How would you like to pay?" where a deposit is offered (shared). *}
+        {include file="addons/travel_core/components/booking_pay_choice.tpl" pc_addon="sphinx_holidays" pc_form="sphinx-booking-form"}
 
         {* Submit *}
         {* Right-aligned with the guest cards, taller, more air around it —

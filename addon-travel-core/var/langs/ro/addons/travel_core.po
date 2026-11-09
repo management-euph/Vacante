@@ -1362,6 +1362,10 @@ msgctxt "Languages::travel_core.cancel_cost_title"
 msgid "How much will it cost to cancel?"
 msgstr "Cât costă să anulez?"
 
+msgctxt "Languages::travel_core.cancel_today_costs"
+msgid "If you cancel today, you pay"
+msgstr "Dacă anulați azi, plătiți"
+
 msgctxt "Languages::travel_core.cancel_you_will_pay"
 msgid "If you cancel, you'll pay"
 msgstr "Dacă anulați, veți plăti"
@@ -1450,10 +1454,6 @@ msgctxt "Languages::travel_core.booking_progress"
 msgid "Booking progress"
 msgstr "Etapele rezervării"
 
-msgctxt "Languages::travel_core.step_search"
-msgid "Search"
-msgstr "Căutare"
-
 msgctxt "Languages::travel_core.step_guest_details"
 msgid "Guest details"
 msgstr "Datele turiștilor"
@@ -1461,10 +1461,6 @@ msgstr "Datele turiștilor"
 msgctxt "Languages::travel_core.step_checkout"
 msgid "Checkout"
 msgstr "Finalizare comandă"
-
-msgctxt "Languages::travel_core.step_confirmation"
-msgid "Confirmation"
-msgstr "Confirmare"
 
 msgctxt "Languages::travel_core.guest_names_hint"
 msgid "Enter each name exactly as it appears on the guest's ID card or passport."
@@ -1526,17 +1522,25 @@ msgctxt "Languages::travel_core.who_is_staying"
 msgid "Who is staying?"
 msgstr "Cine se cazează?"
 
-msgctxt "Languages::travel_core.step_guests"
-msgid "Guests"
-msgstr "Turiști"
+msgctxt "Languages::travel_core.step_offer"
+msgid "Offer"
+msgstr "Ofertă"
+
+msgctxt "Languages::travel_core.step_offer_back"
+msgid "Back to the offer, to change the room or the dates"
+msgstr "Înapoi la ofertă, pentru a schimba camera sau datele"
+
+msgctxt "Languages::travel_core.step_details"
+msgid "Booking details"
+msgstr "Detalii rezervare"
+
+msgctxt "Languages::travel_core.back_to_offer"
+msgid "Back to the offer"
+msgstr "Înapoi la ofertă"
 
 msgctxt "Languages::travel_core.step_payment"
 msgid "Payment"
 msgstr "Plată"
-
-msgctxt "Languages::travel_core.step_search_back"
-msgid "Back to your search results"
-msgstr "Înapoi la rezultatele căutării"
 
 msgctxt "Languages::travel_core.step_locked_hint"
 msgid "Enter the guest details first"
@@ -1957,6 +1961,10 @@ msgstr "Avans"
 msgctxt "Languages::travel_core.split_balance"
 msgid "Balance"
 msgstr "Rest de plată"
+
+msgctxt "Languages::travel_core.option_selected"
+msgid "Selected"
+msgstr "Selectat"
 
 msgctxt "Languages::travel_core.pay_mode_legend"
 msgid "How would you like to pay?"
@@ -4827,8 +4835,32 @@ msgid "Scheduled runs are refused until the shared cron key is set in Travel Cor
 msgstr "Rulările programate sunt refuzate până când cheia cron comună este setată în Travel Core. Rulează funcționează în continuare de aici."
 
 msgctxt "Languages::travel_core.jobs_set_key"
-msgid "Set it in Travel Core"
-msgstr "Seteaz-o în Travel Core"
+msgid "Generate one on Travel Core → Tools"
+msgstr "Generează una în Travel Core → Instrumente"
+
+msgctxt "Languages::travel_core.jobs_tile_failing"
+msgid "Failing: [n]"
+msgstr "Eșuează: [n]"
+
+msgctxt "Languages::travel_core.jobs_tile_late"
+msgid "Late: [n]"
+msgstr "Întârziate: [n]"
+
+msgctxt "Languages::travel_core.jobs_tile_never"
+msgid "No runs yet: [n]"
+msgstr "Încă nerulate: [n]"
+
+msgctxt "Languages::travel_core.jobs_tile_ok"
+msgid "All on time"
+msgstr "Toate la timp"
+
+msgctxt "Languages::travel_core.jobs_tile_note"
+msgid "On time: [ok] · late: [late] · no runs yet: [never]"
+msgstr "La timp: [ok] · întârziate: [late] · încă nerulate: [never]"
+
+msgctxt "Languages::travel_core.jobs_tile_open"
+msgid "See the jobs ↓"
+msgstr "Vezi joburile ↓"
 
 msgctxt "Languages::travel_core.package_searching"
 msgid "Searching…"

@@ -1128,10 +1128,6 @@ msgctxt "Languages::novoton_holidays.terms_and_conditions"
 msgid "Terms and Conditions"
 msgstr "Terms and Conditions"
 
-msgctxt "Languages::novoton_holidays.back_to_results"
-msgid "Back to Results"
-msgstr "Back to Results"
-
 msgctxt "Languages::novoton_holidays.add_to_cart_and_checkout"
 msgid "Add to Cart & Checkout"
 msgstr "Add to Cart & Checkout"
@@ -3436,10 +3432,6 @@ msgctxt "Languages::novoton_holidays.dash_job_unknown"
 msgid "Unknown job: [job]"
 msgstr "Unknown job: [job]"
 
-msgctxt "Languages::novoton_holidays.dash_jobs_title"
-msgid "Scheduled jobs"
-msgstr "Scheduled jobs"
-
 msgctxt "Languages::novoton_holidays.dash_col_job"
 msgid "Job"
 msgstr "Job"
@@ -3711,30 +3703,6 @@ msgstr "Confirmed: [confirmed] · cancelled: [cancelled]"
 msgctxt "Languages::novoton_holidays.dash_tile_bookings_open"
 msgid "Open Novoton bookings →"
 msgstr "Open Novoton bookings →"
-
-msgctxt "Languages::novoton_holidays.dash_tile_jobs_failing"
-msgid "Failing: [n]"
-msgstr "Failing: [n]"
-
-msgctxt "Languages::novoton_holidays.dash_tile_jobs_late"
-msgid "Late: [n]"
-msgstr "Late: [n]"
-
-msgctxt "Languages::novoton_holidays.dash_tile_jobs_never"
-msgid "Not run yet: [n]"
-msgstr "Not run yet: [n]"
-
-msgctxt "Languages::novoton_holidays.dash_tile_jobs_ok"
-msgid "All on time"
-msgstr "All on time"
-
-msgctxt "Languages::novoton_holidays.dash_tile_jobs_note"
-msgid "On time: [ok] · late: [late] · no runs yet: [never]"
-msgstr "On time: [ok] · late: [late] · no runs yet: [never]"
-
-msgctxt "Languages::novoton_holidays.dash_tile_jobs_open"
-msgid "See the jobs ↓"
-msgstr "See the jobs ↓"
 
 msgctxt "Languages::novoton_holidays.dash_attention_title"
 msgid "Needs attention ([n])"

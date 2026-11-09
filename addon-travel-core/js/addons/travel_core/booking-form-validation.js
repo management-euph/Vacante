@@ -51,6 +51,27 @@
     };
 
     // =========================================================================
+    // BRING A FIELD TO THE GUEST
+    // =========================================================================
+
+    // The first field to fix goes to the middle of the screen, clear of the
+    // sticky bars at the top and bottom of a phone, and then takes the focus.
+    // A guest who asked for reduced motion gets the jump without the glide.
+    function focusField(el) {
+        var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+        try {
+            if (typeof el.scrollIntoView === 'function') {
+                el.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
+                el.focus({ preventScroll: true });
+            } else {
+                el.focus();
+            }
+        } catch (err) {
+            try { el.focus(); } catch (err2) {}
+        }
+    }
+
+    // =========================================================================
     // LOGGING UTILITIES
     // =========================================================================
 
@@ -646,7 +667,7 @@
         }
         if (firstBad) {
             e.preventDefault();
-            try { firstBad.focus(); } catch (err) {}
+            focusField(firstBad);
         }
     });
 
@@ -903,7 +924,7 @@
         if (!_invalidFocused) {
             // `invalid` fires once per bad field; focus only the first.
             _invalidFocused = true;
-            try { el.focus(); } catch (err) {}
+            focusField(el);
             setTimeout(function () { _invalidFocused = false; }, 0);
         }
     }, true);
@@ -929,6 +950,7 @@
     document.addEventListener('change', _clearRequired);
 
     window.TravelBooking.requiredMessage = _requiredMessage;
+    window.TravelBooking.focusField = focusField;
     window.TravelBooking.syncInvalid = _syncInvalid;
 
 })();

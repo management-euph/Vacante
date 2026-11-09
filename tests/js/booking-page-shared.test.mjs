@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
  * The shared booking page's small behaviours, one set for sphinx, novoton
@@ -120,6 +120,53 @@ describe('named messages and a red state that follows the messages', () => {
     });
 });
 
+describe('the first field to fix is brought to the middle of the screen', () => {
+    let scrolled;
+    beforeEach(async () => {
+        // The `invalid` handler focuses one field per round; let the last round end.
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        scrolled = [];
+        HTMLElement.prototype.scrollIntoView = function (options) {
+            scrolled.push({ id: this.id, options });
+        };
+    });
+    afterEach(() => {
+        delete HTMLElement.prototype.scrollIntoView;
+        delete window.matchMedia;
+    });
+    function page(inner) {
+        document.body.innerHTML = '<div class="travel-booking-page"><form id="f">' + inner + '</form></div>';
+        return document.getElementById('f');
+    }
+
+    it('scrolls only the first missing field to the middle, then focuses it', () => {
+        page('<div class="travel-guest-field"><input id="a" required></div>'
+            + '<div class="travel-guest-field"><input id="b" required></div>');
+        document.getElementById('a').dispatchEvent(new Event('invalid', { cancelable: true }));
+        document.getElementById('b').dispatchEvent(new Event('invalid', { cancelable: true }));
+
+        expect(scrolled).toEqual([{ id: 'a', options: { block: 'center', behavior: 'smooth' } }]);
+        expect(document.activeElement.id).toBe('a');
+    });
+
+    it('jumps without the glide for a guest who asked for reduced motion', () => {
+        window.matchMedia = (query) => ({ matches: query.includes('reduce'), media: query });
+        page('<div class="travel-guest-field"><input id="a" required></div>');
+        document.getElementById('a').dispatchEvent(new Event('invalid', { cancelable: true }));
+
+        expect(scrolled).toEqual([{ id: 'a', options: { block: 'center', behavior: 'auto' } }]);
+    });
+
+    it('does the same for a half-typed date of birth caught on submit', () => {
+        const form = page('<div class="travel-guest-field"><input id="dob" class="js-dob-basics" '
+            + 'name="guests[room1_adult_1][dob]" value="12/05"></div>');
+        form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+
+        expect(scrolled.map((s) => s.id)).toEqual(['dob']);
+        expect(document.activeElement.id).toBe('dob');
+    });
+});
+
 describe('child age at check-in', () => {
     it('uses the page\'s ISO check-in when the form field is not ISO', () => {
         window.bookingData = { checkIn: '2026-10-05' };
@@ -227,6 +274,10 @@ describe('"same last name as Adult 1"', () => {
         box.checked = true;
         box.dispatchEvent(new Event('change', { bubbles: true }));
     }
+    function untick(box) {
+        box.checked = false;
+        box.dispatchEvent(new Event('change', { bubbles: true }));
+    }
 
     it('is offered only to two guests or more', () => {
         expect(page(1).closest('label').hidden).toBe(true);
@@ -256,6 +307,122 @@ describe('"same last name as Adult 1"', () => {
         expect(box.checked).toBe(false);
         type('last1', 'Ionescu');
         expect(document.getElementById('last2').value).toBe('Ilie');
+    });
+
+    it('takes the copies back when unticked, and gives each guest what they had before', () => {
+        const box = page(4);
+        type('last1', 'Popescu');
+        type('last3', 'Ilie');
+        tick(box);
+        expect(['last2', 'last3', 'last4'].map((id) => document.getElementById(id).value)).toEqual(['Popescu', 'Popescu', 'Popescu']);
+
+        untick(box);
+        expect(document.getElementById('last1').value).toBe('Popescu');
+        expect(['last2', 'last3', 'last4'].map((id) => document.getElementById(id).value)).toEqual(['', 'Ilie', '']);
+    });
+
+    it('takes back the copies Adult 1 kept in step, too', () => {
+        const box = page(3);
+        type('last1', 'Popescu');
+        tick(box);
+        type('last1', 'Ionescu');
+        untick(box);
+
+        expect(document.getElementById('last2').value).toBe('');
+        expect(document.getElementById('last3').value).toBe('');
+    });
+
+    it('keeps the names once a guest typed their own, and a later untick only undoes the later tick', () => {
+        const box = page(3);
+        type('last1', 'Popescu');
+        tick(box);
+        type('last2', 'Marin');
+        expect(box.checked).toBe(false);
+        expect(document.getElementById('last3').value, 'the other copies stay').toBe('Popescu');
+
+        type('last1', 'Ionescu');
+        expect(document.getElementById('last3').value, 'no longer in step').toBe('Popescu');
+
+        tick(box);
+        expect(document.getElementById('last2').value).toBe('Ionescu');
+        untick(box);
+        expect(document.getElementById('last2').value).toBe('Marin');
+        expect(document.getElementById('last3').value).toBe('Popescu');
+    });
+
+    it('lets the validation script see a name taken back', () => {
+        const box = page(2);
+        type('last1', 'Popescu');
+        tick(box);
+        const seen = [];
+        document.getElementById('last2').addEventListener('input', (e) => seen.push(e.target.value));
+        untick(box);
+
+        expect(seen).toEqual(['']);
+    });
+});
+
+describe('the cancellation card\'s folded line', () => {
+    function card(bodyHtml) {
+        document.body.innerHTML = '<div class="travel-booking-page"><section id="travel-cancel-card"><details class="travel-cancel-fold">'
+            + '<summary><span id="travel-cancel-preview"></span></summary>'
+            + '<div id="travel-cancel-body">' + bodyHtml + '</div></details></section></div>';
+        window.TravelConditions.armCancelPreview();
+        return document.getElementById('travel-cancel-preview');
+    }
+    const terms = (line) => '<ol class="travel-timeline"></ol><template class="travel-cancel-preview-src">'
+        + '<span class="travel-cancel-fold__preview travel-cancel-fold__preview--cost">' + line + '</span></template>';
+
+    it('takes the line of the terms swapped in after the price re-check', async () => {
+        const slot = card('');
+        document.getElementById('travel-cancel-body').innerHTML = terms('Dacă anulați azi, plătiți 708,50 € (50%)');
+        await Promise.resolve();
+
+        expect(slot.textContent).toBe('Dacă anulați azi, plătiți 708,50 € (50%)');
+        expect(slot.querySelector('.travel-cancel-fold__preview--cost')).not.toBeNull();
+    });
+
+    it('follows a later re-price, and keeps its line when new terms bring none', async () => {
+        const slot = card('');
+        const body = document.getElementById('travel-cancel-body');
+        body.innerHTML = terms('Dacă anulați azi, plătiți 620 € (50%)');
+        await Promise.resolve();
+        body.innerHTML = terms('Dacă anulați azi, plătiți 650 € (50%)');
+        await Promise.resolve();
+        expect(slot.textContent).toBe('Dacă anulați azi, plătiți 650 € (50%)');
+
+        body.innerHTML = '<ul class="travel-bsidebar-cancel"><li>Anulare gratuită până la 1 iunie</li></ul>';
+        await Promise.resolve();
+        expect(slot.textContent).toBe('Dacă anulați azi, plătiți 650 € (50%)');
+    });
+});
+
+describe('phone: the summary folded into one sticky bar', () => {
+    function page() {
+        document.body.innerHTML = '<div class="travel-booking-page"><div class="travel-booking-layout" id="layout">'
+            + '<div class="travel-sumbar"><button type="button" class="travel-sumbar__toggle" aria-expanded="true" aria-controls="travel-bsidebar" data-travel-sumbar>'
+            + '<span>Adalya Elite Lara</span></button></div>'
+            + '<aside class="travel-bsidebar" id="travel-bsidebar"></aside><div class="travel-booking-col-main"></div></div></div>';
+        window.TravelConditions.armSummaryBar(document);
+        return { layout: document.getElementById('layout'), toggle: document.querySelector('[data-travel-sumbar]') };
+    }
+
+    it('starts folded, and says so', () => {
+        const { layout, toggle } = page();
+
+        expect(layout.classList.contains('travel-booking-layout--folded')).toBe(true);
+        expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('opens and closes the summary on a tap', () => {
+        const { layout, toggle } = page();
+        toggle.click();
+        expect(toggle.getAttribute('aria-expanded')).toBe('true');
+        expect(layout.classList.contains('travel-booking-layout--folded')).toBe(false);
+
+        toggle.querySelector('span').click();
+        expect(toggle.getAttribute('aria-expanded')).toBe('false');
+        expect(layout.classList.contains('travel-booking-layout--folded')).toBe(true);
     });
 });
 
