@@ -115,6 +115,28 @@ final class BookingSidebarViewModel
     }
 
     /**
+     * The same summary for a trip (package, circuit): its kind, journeys and
+     * inclusions, where "Change your selection" and the Offer step lead, and
+     * no per-night price, which would spread the flights over the nights.
+     *
+     * @param list<array{title: string, line: string, note: string}> $legs
+     * @param list<string> $includes
+     * @param list<string> $excludes
+     */
+    public function withTrip(string $kindLabel, array $legs, array $includes, array $excludes, string $changeUrl): self
+    {
+        $args = get_object_vars($this);
+        $args['kindLabel'] = $kindLabel;
+        $args['legs'] = $legs;
+        $args['includes'] = $includes;
+        $args['excludes'] = $excludes;
+        $args['changeUrl'] = $changeUrl;
+        $args['perNight'] = '';
+
+        return new self(...$args);
+    }
+
+    /**
      * The badge status, whatever the provider supplied: an explicit status
      * wins; otherwise the legacy bool maps to available / on_request.
      */

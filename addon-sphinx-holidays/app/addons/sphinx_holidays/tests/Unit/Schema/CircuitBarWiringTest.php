@@ -84,7 +84,16 @@ final class CircuitBarWiringTest extends TestCase
         foreach (['circuit' => 'circuit_booking_form', 'package' => 'package_booking_form'] as $kind => $mode) {
             self::assertStringContainsString("\$view->assign('sphinx_trip_terms', \\Tygh\\Addons\\SphinxHolidays\\ViewModels\\SphinxBookingSidebarBuilder::tripTerms(", self::read("controllers/frontend/sphinx_booking/{$mode}.php"), $kind);
             $template = (string) file_get_contents(dirname(__DIR__, 6) . "/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/{$mode}.tpl");
-            self::assertStringContainsString('{include file="addons/travel_core/components/booking_terms_timeline.tpl" tt=$sphinx_trip_terms}', $template, $kind);
+            if ($kind === 'package') {
+                // The package page is on the shared booking page: its summary carries the terms (folded card).
+                self::assertStringContainsString('{include file="addons/travel_core/components/booking_sidebar.tpl" tbs_deposit_addon="sphinx_holidays" tbs_deposit_form="sphinx-package-booking-form"}', $template);
+                $controller = self::read('controllers/frontend/sphinx_booking/package_booking_form.php');
+                self::assertStringContainsString("        \$offer['cancellation_fees'] ?? null,\n        true,", $controller);
+                self::assertStringContainsString("        \$offer['payment_terms'] ?? null,\n        date('Y-m-d'),", $controller);
+                self::assertStringContainsString("\$view->assign('travel_booking_sidebar', \$pkgSidebar->toViewArray());", $controller);
+            } else {
+                self::assertStringContainsString('{include file="addons/travel_core/components/booking_terms_timeline.tpl" tt=$sphinx_trip_terms}', $template, $kind);
+            }
 
             $cart = self::read("controllers/frontend/sphinx_booking/{$kind}_add_to_cart.php");
             self::assertStringContainsString("\$payment_terms_raw = TypeCoerce::toStringMap(\$customizedMap['payment_terms'] ?? null);", $cart, $kind);
@@ -108,12 +117,17 @@ final class CircuitBarWiringTest extends TestCase
         $chosen = '$deposit_plan = CartService::chosenDeposit(TypeCoerce::toStringMap($_REQUEST), $cancellation_fees_raw, $payment_terms_raw);';
         foreach (['circuit' => 'circuit_booking_form', 'package' => 'package_booking_form'] as $kind => $mode) {
             $template = (string) file_get_contents(dirname(__DIR__, 6) . "/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/{$mode}.tpl");
-            self::assertStringContainsString('{if $sphinx_trip_terms.payment_split && fn_travel_core_deposit_offered("sphinx_holidays")}', $template, $kind);
-            self::assertStringContainsString(
-                "{include file=\"addons/travel_core/components/booking_payment_split.tpl\" ps=\$sphinx_trip_terms.payment_split ps_form=\"sphinx-{$kind}-booking-form\"}",
-                $template,
-                $kind,
-            );
+            if ($kind === 'package') {
+                // As on a hotel's page: the shared choice in the form, from the summary's split.
+                self::assertStringContainsString('{include file="addons/travel_core/components/booking_pay_choice.tpl" pc_addon="sphinx_holidays" pc_form="sphinx-package-booking-form"}', $template);
+            } else {
+                self::assertStringContainsString('{if $sphinx_trip_terms.payment_split && fn_travel_core_deposit_offered("sphinx_holidays")}', $template, $kind);
+                self::assertStringContainsString(
+                    "{include file=\"addons/travel_core/components/booking_payment_split.tpl\" ps=\$sphinx_trip_terms.payment_split ps_form=\"sphinx-{$kind}-booking-form\"}",
+                    $template,
+                    $kind,
+                );
+            }
             self::assertStringContainsString("id=\"sphinx-{$kind}-booking-form\"", $template, $kind . ': the form the radios post with');
 
             $cart = self::read("controllers/frontend/sphinx_booking/{$kind}_add_to_cart.php");

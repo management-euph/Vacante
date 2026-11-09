@@ -191,6 +191,38 @@
     }
 }
 
+/* ── A trip's optional services (package, circuit), in the form: whole-row
+   checkbox cards. A ticked one turns light green with a green border and a
+   "Selected" badge; a mandatory one is ticked, fixed and tagged. ── */
+.travel-booking-page .travel-extras { display: flex; flex-direction: column; gap: 8px; }
+.travel-booking-page .travel-extras > h3 { margin-bottom: 8px; }
+.travel-booking-page .travel-extra {
+    display: flex; align-items: center; gap: 12px; min-height: 56px; margin: 0; padding: 10px 14px;
+    border: 1px solid #c4cbd6; border-radius: 8px; background: #fff; cursor: pointer; box-sizing: border-box;
+    font-size: 14px; line-height: 1.35; color: #1e293b; text-align: left;
+    transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.travel-booking-page .travel-extra:hover { border-color: #7cc296; }
+.travel-booking-page .travel-extra:has(input:checked) { border: 2px solid #15803d; padding: 9px 13px; background: #eef8f1; }
+.travel-booking-page .travel-extra:has(input:focus-visible) { box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.35); }
+.travel-booking-page .travel-extra--fixed { cursor: default; }
+.travel-booking-page .travel-extra input { width: 20px; height: 20px; margin: 0; flex: none; accent-color: #15803d; cursor: inherit; }
+.travel-booking-page .travel-extra__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.travel-booking-page .travel-extra__name { font-size: 15px; font-weight: 700; }
+.travel-booking-page .travel-extra__note { font-size: 13px; color: #4b5563; }
+.travel-booking-page .travel-extra__price { flex: none; font-size: 15px; font-weight: 700; color: var(--nvt-primary, #003580); white-space: nowrap; }
+.travel-booking-page .travel-extra__sel { display: none; }
+.travel-booking-page .travel-extra:has(input:checked) .travel-extra__sel,
+.travel-booking-page .travel-extra__tag {
+    display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px;
+    font-size: 11px; font-weight: 700; vertical-align: 1px;
+}
+.travel-booking-page .travel-extra:has(input:checked) .travel-extra__sel { background: #d7f0de; color: #0a7a35; }
+.travel-booking-page .travel-extra__tag { background: #eef1f4; color: #4b5563; }
+@media (prefers-reduced-motion: reduce) {
+    .travel-booking-page .travel-extra { transition: none; }
+}
+
 /* ── A trip in the summary (package, circuit): its kind over the name, its
    journeys, and what the price includes and leaves out. ── */
 .travel-booking-page .travel-bsidebar-kind {

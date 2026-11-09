@@ -97,12 +97,20 @@ final class TemplateLangKeysSeededTest extends TestCase
         );
     }
 
+    /**
+     * Sphinx's package page once asked for travel_core.meal, which doesn't
+     * exist ("_travel_core.meal: Mic dejun"). It is now on the shared booking
+     * page, whose summary shows the meal plan as the board line, from the
+     * offer's meal_type_name; the page prints no meal label of its own.
+     */
     public function testSphinxPackageFormNamesTheMealWithTheSharedLabel(): void
     {
-        $form = (string) file_get_contents(dirname(__DIR__, 7)
-            . '/addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/package_booking_form.tpl');
+        $root = dirname(__DIR__, 7) . '/addon-sphinx-holidays';
+        $form = (string) file_get_contents($root . '/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/package_booking_form.tpl');
+        $controller = (string) file_get_contents($root . '/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/package_booking_form.php');
 
-        self::assertStringContainsString('{__("travel_core.meal_plan")}:', $form);
         self::assertStringNotContainsString('travel_core.meal")', $form);
+        self::assertStringContainsString("'board_name' => TypeCoerce::toString(\$hotel['meal_type_name'] ?? ''),", $controller);
+        self::assertStringContainsString('{include file="addons/travel_core/components/booking_sidebar.tpl"', $form);
     }
 }

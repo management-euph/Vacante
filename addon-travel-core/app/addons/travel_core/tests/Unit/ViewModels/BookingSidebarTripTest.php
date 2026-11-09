@@ -51,6 +51,23 @@ final class BookingSidebarTripTest extends TestCase
         self::assertSame(['asigurare medicală'], $view['excludes']);
     }
 
+    /** A hotel's summary becomes a trip's: the rest stays, the per-night price goes (it would spread the flights over the nights). */
+    public function testWithTripKeepsTheRestAndDropsThePerNightPrice(): void
+    {
+        $hotel = new BookingSidebarViewModel(name: 'Hotel', nights: 7, total: '1.240 €', perNight: '177 €', changeUrl: 'products.view?product_id=9', boardName: 'Mic dejun');
+        $trip = $hotel->withTrip('Pachet · avion + hotel', [['title' => '✈ Dus', 'line' => 'OTP → HER', 'note' => '']], ['zbor'], ['asigurare'], 'products.view?product_id=9&transport=flight');
+        $view = $trip->toViewArray();
+
+        self::assertSame('Hotel', $view['name']);
+        self::assertSame('1.240 €', $view['total']);
+        self::assertSame('Mic dejun', $view['board_name']);
+        self::assertSame(7, $view['nights']);
+        self::assertSame('', $view['per_night']);
+        self::assertSame('Pachet · avion + hotel', $view['kind_label']);
+        self::assertSame('products.view?product_id=9&transport=flight', $view['change_url']);
+        self::assertSame('177 €', $hotel->toViewArray()['per_night'], 'the hotel summary is untouched');
+    }
+
     public function testTheSidebarShowsThemOnlyWhenGiven(): void
     {
         $tpl = self::sidebar();
