@@ -672,6 +672,138 @@ msgctxt "Languages::eurosite.jobs_count_products"
 msgid "Products: [n]"
 msgstr "Products: [n]"
 
+msgctxt "Languages::eurosite.dash_tile_hotels"
+msgid "Hotels in the destinations sold"
+msgstr "Hotels in the destinations sold"
+
+msgctxt "Languages::eurosite.dash_tile_hotels_cities"
+msgid "Cities sold: [n]"
+msgstr "Cities sold: [n]"
+
+msgctxt "Languages::eurosite.dash_tile_hotels_synced"
+msgid "Last hotel sync: [date]"
+msgstr "Last hotel sync: [date]"
+
+msgctxt "Languages::eurosite.dash_tile_hotels_never"
+msgid "The hotels have not been synced yet"
+msgstr "The hotels have not been synced yet"
+
+msgctxt "Languages::eurosite.dash_tile_offers"
+msgid "With an Immediate offer"
+msgstr "With an Immediate offer"
+
+msgctxt "Languages::eurosite.dash_tile_offers_note"
+msgid "On request: [or] · stop sale: [st] · no offer: [none]"
+msgstr "On request: [or] · stop sale: [st] · no offer: [none]"
+
+msgctxt "Languages::eurosite.dash_tile_offers_unchecked"
+msgid "Not checked yet: [n]"
+msgstr "Not checked yet: [n]"
+
+msgctxt "Languages::eurosite.dash_tile_offers_checked"
+msgid "Last check: [date]"
+msgstr "Last check: [date]"
+
+msgctxt "Languages::eurosite.dash_tile_offers_never"
+msgid "Availability has not been checked yet"
+msgstr "Availability has not been checked yet"
+
+msgctxt "Languages::eurosite.dash_tile_offers_open"
+msgid "See them"
+msgstr "See them"
+
+msgctxt "Languages::eurosite.dash_tile_products"
+msgid "Products"
+msgstr "Products"
+
+msgctxt "Languages::eurosite.dash_tile_products_live"
+msgid "Live in the destinations you sell: [n]"
+msgstr "Live in the destinations you sell: [n]"
+
+msgctxt "Languages::eurosite.dash_tile_products_hidden"
+msgid "Hidden, no Immediate offer: [n]"
+msgstr "Hidden, no Immediate offer: [n]"
+
+msgctxt "Languages::eurosite.dash_tile_products_waiting"
+msgid "Immediate, no product yet: [n]"
+msgstr "Immediate, no product yet: [n]"
+
+msgctxt "Languages::eurosite.dash_tile_products_open"
+msgid "See the hotels with a product"
+msgstr "See the hotels with a product"
+
+msgctxt "Languages::eurosite.dash_tile_jobs_failing"
+msgid "Failing: [n]"
+msgstr "Failing: [n]"
+
+msgctxt "Languages::eurosite.dash_tile_jobs_late"
+msgid "Late: [n]"
+msgstr "Late: [n]"
+
+msgctxt "Languages::eurosite.dash_tile_jobs_never"
+msgid "No runs yet: [n]"
+msgstr "No runs yet: [n]"
+
+msgctxt "Languages::eurosite.dash_tile_jobs_ok"
+msgid "All on time"
+msgstr "All on time"
+
+msgctxt "Languages::eurosite.dash_tile_jobs_note"
+msgid "On time: [ok] · late: [late] · no runs yet: [never]"
+msgstr "On time: [ok] · late: [late] · no runs yet: [never]"
+
+msgctxt "Languages::eurosite.dash_tile_jobs_open"
+msgid "See the jobs ↓"
+msgstr "See the jobs ↓"
+
+msgctxt "Languages::eurosite.dash_attention_title"
+msgid "Needs attention ([n])"
+msgstr "Needs attention ([n])"
+
+msgctxt "Languages::eurosite.dash_attention_refused"
+msgid "A cron request with a wrong key was refused on [date]: the crontab is probably still on an old key."
+msgstr "A cron request with a wrong key was refused on [date]: the crontab is probably still on an old key."
+
+msgctxt "Languages::eurosite.dash_attention_copy_commands"
+msgid "Copy the commands again"
+msgstr "Copy the commands again"
+
+msgctxt "Languages::eurosite.dash_attention_nothing_sold"
+msgid "No destination is whitelisted: the hotel sync has nothing to fetch, and nothing can be sold."
+msgstr "No destination is whitelisted: the hotel sync has nothing to fetch, and nothing can be sold."
+
+msgctxt "Languages::eurosite.dash_attention_no_immediate"
+msgid "No listed hotel has an Immediate offer on the configured dates, so none can become a product."
+msgstr "No listed hotel has an Immediate offer on the configured dates, so none can become a product."
+
+msgctxt "Languages::eurosite.dash_attention_failed"
+msgid "[job] failed on [date]."
+msgstr "[job] failed on [date]."
+
+msgctxt "Languages::eurosite.dash_attention_stalled"
+msgid "[job] started on [date] and never finished."
+msgstr "[job] started on [date] and never finished."
+
+msgctxt "Languages::eurosite.dash_attention_never"
+msgid "[job] has never run."
+msgstr "[job] has never run."
+
+msgctxt "Languages::eurosite.dash_attention_late"
+msgid "[job] is late: it last finished on [date]. Schedule: [schedule]."
+msgstr "[job] is late: it last finished on [date]. Schedule: [schedule]."
+
+msgctxt "Languages::eurosite.dash_attention_run"
+msgid "Run [job]"
+msgstr "Run [job]"
+
+msgctxt "Languages::eurosite.dash_tools_title"
+msgid "Tools"
+msgstr "Tools"
+
+msgctxt "Languages::eurosite.dash_tools_intro"
+msgid "Syncing is each job's Run, under Scheduled jobs."
+msgstr "Syncing is each job's Run, under Scheduled jobs."
+
 msgctxt "Languages::eurosite.hotels"
 msgid "Hotels"
 msgstr "Hotels"
@@ -1093,8 +1225,8 @@ msgid "Search offers"
 msgstr "Search offers"
 
 msgctxt "Languages::eurosite.probe_none_hint"
-msgid "No Immediate hotel on the configured dates. Find dates with offers below, then add them to the peak-season dates."
-msgstr "No Immediate hotel on the configured dates. Find dates with offers below, then add them to the peak-season dates."
+msgid "No Immediate hotel on the configured dates. Find dates with offers, then add them to the peak-season dates."
+msgstr "No Immediate hotel on the configured dates. Find dates with offers, then add them to the peak-season dates."
 
 msgctxt "Languages::eurosite.probe_cities_all"
 msgid "empty = all synced"

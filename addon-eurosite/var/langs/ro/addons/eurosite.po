@@ -672,6 +672,138 @@ msgctxt "Languages::eurosite.jobs_count_products"
 msgid "Products: [n]"
 msgstr "Produse: [n]"
 
+msgctxt "Languages::eurosite.dash_tile_hotels"
+msgid "Hotels in the destinations sold"
+msgstr "Hoteluri în destinațiile vândute"
+
+msgctxt "Languages::eurosite.dash_tile_hotels_cities"
+msgid "Cities sold: [n]"
+msgstr "Orașe vândute: [n]"
+
+msgctxt "Languages::eurosite.dash_tile_hotels_synced"
+msgid "Last hotel sync: [date]"
+msgstr "Ultima sincronizare a hotelurilor: [date]"
+
+msgctxt "Languages::eurosite.dash_tile_hotels_never"
+msgid "The hotels have not been synced yet"
+msgstr "Hotelurile nu au fost sincronizate încă"
+
+msgctxt "Languages::eurosite.dash_tile_offers"
+msgid "With an Immediate offer"
+msgstr "Cu ofertă Imediat"
+
+msgctxt "Languages::eurosite.dash_tile_offers_note"
+msgid "On request: [or] · stop sale: [st] · no offer: [none]"
+msgstr "La cerere: [or] · stop vânzare: [st] · fără ofertă: [none]"
+
+msgctxt "Languages::eurosite.dash_tile_offers_unchecked"
+msgid "Not checked yet: [n]"
+msgstr "Neverificate încă: [n]"
+
+msgctxt "Languages::eurosite.dash_tile_offers_checked"
+msgid "Last check: [date]"
+msgstr "Ultima verificare: [date]"
+
+msgctxt "Languages::eurosite.dash_tile_offers_never"
+msgid "Availability has not been checked yet"
+msgstr "Disponibilitatea nu a fost verificată încă"
+
+msgctxt "Languages::eurosite.dash_tile_offers_open"
+msgid "See them"
+msgstr "Vezi-le"
+
+msgctxt "Languages::eurosite.dash_tile_products"
+msgid "Products"
+msgstr "Produse"
+
+msgctxt "Languages::eurosite.dash_tile_products_live"
+msgid "Live in the destinations you sell: [n]"
+msgstr "Active în destinațiile pe care le vinzi: [n]"
+
+msgctxt "Languages::eurosite.dash_tile_products_hidden"
+msgid "Hidden, no Immediate offer: [n]"
+msgstr "Ascunse, fără ofertă Imediat: [n]"
+
+msgctxt "Languages::eurosite.dash_tile_products_waiting"
+msgid "Immediate, no product yet: [n]"
+msgstr "Cu ofertă Imediat, încă fără produs: [n]"
+
+msgctxt "Languages::eurosite.dash_tile_products_open"
+msgid "See the hotels with a product"
+msgstr "Vezi hotelurile cu produs"
+
+msgctxt "Languages::eurosite.dash_tile_jobs_failing"
+msgid "Failing: [n]"
+msgstr "Eșuează: [n]"
+
+msgctxt "Languages::eurosite.dash_tile_jobs_late"
+msgid "Late: [n]"
+msgstr "Întârziate: [n]"
+
+msgctxt "Languages::eurosite.dash_tile_jobs_never"
+msgid "No runs yet: [n]"
+msgstr "Încă nerulate: [n]"
+
+msgctxt "Languages::eurosite.dash_tile_jobs_ok"
+msgid "All on time"
+msgstr "Toate la timp"
+
+msgctxt "Languages::eurosite.dash_tile_jobs_note"
+msgid "On time: [ok] · late: [late] · no runs yet: [never]"
+msgstr "La timp: [ok] · întârziate: [late] · încă nerulate: [never]"
+
+msgctxt "Languages::eurosite.dash_tile_jobs_open"
+msgid "See the jobs ↓"
+msgstr "Vezi joburile ↓"
+
+msgctxt "Languages::eurosite.dash_attention_title"
+msgid "Needs attention ([n])"
+msgstr "Necesită atenție ([n])"
+
+msgctxt "Languages::eurosite.dash_attention_refused"
+msgid "A cron request with a wrong key was refused on [date]: the crontab is probably still on an old key."
+msgstr "O cerere cron cu o cheie greșită a fost refuzată pe [date]: crontab-ul folosește probabil încă o cheie veche."
+
+msgctxt "Languages::eurosite.dash_attention_copy_commands"
+msgid "Copy the commands again"
+msgstr "Copiază din nou comenzile"
+
+msgctxt "Languages::eurosite.dash_attention_nothing_sold"
+msgid "No destination is whitelisted: the hotel sync has nothing to fetch, and nothing can be sold."
+msgstr "Nicio destinație nu este în listă: sincronizarea hotelurilor nu are ce prelua și nu se poate vinde nimic."
+
+msgctxt "Languages::eurosite.dash_attention_no_immediate"
+msgid "No listed hotel has an Immediate offer on the configured dates, so none can become a product."
+msgstr "Niciun hotel din listă nu are ofertă Imediat la datele configurate, deci niciunul nu poate deveni produs."
+
+msgctxt "Languages::eurosite.dash_attention_failed"
+msgid "[job] failed on [date]."
+msgstr "[job] a eșuat pe [date]."
+
+msgctxt "Languages::eurosite.dash_attention_stalled"
+msgid "[job] started on [date] and never finished."
+msgstr "[job] a pornit pe [date] și nu s-a mai terminat."
+
+msgctxt "Languages::eurosite.dash_attention_never"
+msgid "[job] has never run."
+msgstr "[job] nu a rulat niciodată."
+
+msgctxt "Languages::eurosite.dash_attention_late"
+msgid "[job] is late: it last finished on [date]. Schedule: [schedule]."
+msgstr "[job] întârzie: s-a terminat ultima dată pe [date]. Program: [schedule]."
+
+msgctxt "Languages::eurosite.dash_attention_run"
+msgid "Run [job]"
+msgstr "Rulează [job]"
+
+msgctxt "Languages::eurosite.dash_tools_title"
+msgid "Tools"
+msgstr "Instrumente"
+
+msgctxt "Languages::eurosite.dash_tools_intro"
+msgid "Syncing is each job's Run, under Scheduled jobs."
+msgstr "Sincronizările se pornesc cu Rulează, la fiecare job din Joburi programate."
+
 msgctxt "Languages::eurosite.hotels"
 msgid "Hotels"
 msgstr "Hoteluri"
@@ -1093,8 +1225,8 @@ msgid "Search offers"
 msgstr "Caută oferte"
 
 msgctxt "Languages::eurosite.probe_none_hint"
-msgid "No Immediate hotel on the configured dates. Find dates with offers below, then add them to the peak-season dates."
-msgstr "Niciun hotel Imediat la datele configurate. Găsiți mai jos date cu oferte, apoi adăugați-le la datele de sezon."
+msgid "No Immediate hotel on the configured dates. Find dates with offers, then add them to the peak-season dates."
+msgstr "Niciun hotel Imediat la datele configurate. Găsiți date cu oferte, apoi adăugați-le la datele de sezon."
 
 msgctxt "Languages::eurosite.probe_cities_all"
 msgid "empty = all synced"

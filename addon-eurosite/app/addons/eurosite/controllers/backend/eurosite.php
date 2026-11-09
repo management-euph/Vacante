@@ -5,9 +5,10 @@ declare(strict_types=1);
  * Eurosite Touring — backend admin controller.
  *
  * Modes:
- *   - manage (default): dashboard — API health, the scheduled jobs (Travel
- *     Core's jobs and commands cards), destinations, availability, recent
- *     bookings, the availability probe
+ *   - manage (default): dashboard — at a glance, needs attention, tools (the
+ *     API connection, the availability probe), destinations, availability,
+ *     the scheduled jobs (Travel Core's jobs and commands cards), recent
+ *     bookings
  *   - whitelist: the destination whitelist (Travel Core's destination picker:
  *     per country Not sold / All cities / Own cities / Only selected)
  *   - whitelist_body (AJAX GET): one country's cities for the picker, as {html}
@@ -35,8 +36,10 @@ use Tygh\Addons\Eurosite\Repository\HotelListingRepository;
 use Tygh\Addons\Eurosite\Services\ConfigProvider;
 use Tygh\Addons\Eurosite\Services\Container;
 use Tygh\Addons\Eurosite\Services\CronPlanBuilder;
+use Tygh\Addons\Eurosite\Services\DashboardSummary;
 use Tygh\Addons\Eurosite\Services\DestinationsPicker;
 use Tygh\Addons\Eurosite\Services\HotelListView;
+use Tygh\Addons\TravelCore\Cron\CronHealth;
 use Tygh\Addons\TravelCore\Cron\CronRunLog;
 use Tygh\Addons\TravelCore\Cron\CronRunOutput;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
@@ -540,26 +543,39 @@ if ($mode === 'manage' || empty($mode)) {
     $legacyRuns = [];
     $recentBookings = [];
     $destCard = [];
+    $destBuilt = ['configured' => false, 'countries' => [], 'totals' => [], 'outside' => []];
+    $hotelFigures = ['listed' => 0, 'availability' => [], 'products' => 0, 'hidden' => 0, 'immediate_without' => 0];
     try {
         $syncLog = Container::syncLog();
+        $hotelRepo = Container::hotels();
+        $availability = $hotelRepo->countByAvailability();
 
         $counts = [
             'countries'  => Container::countries()->count(),
             'cities'     => Container::cities()->count(),
             'own_cities' => Container::cities()->count(true),
-            'hotels'     => Container::hotels()->countActive(),
+            'hotels'     => $hotelRepo->countActive(),
             'room_types' => Container::roomTypes()->count(),
             'tags'       => Container::tags()->count(),
             'cache'      => Container::productInfoCache()->count(),
             'whitelist'  => Container::whitelist()->count(),
             'bookings'   => Container::bookings()->count(),
             // The rows for the availability check and the product jobs.
-            'immediate'  => Container::hotels()->countByAvailability()['IM'],
-            'products'   => Container::hotels()->countProducts(),
+            'immediate'  => $availability['IM'],
+            'products'   => $hotelRepo->countProducts(),
+        ];
+        // What the At a glance tiles and Needs attention read.
+        $hotelFigures = [
+            'listed' => $counts['hotels'],
+            'availability' => $availability,
+            'products' => $counts['products'],
+            'hidden' => $hotelRepo->countGateHidden(),
+            'immediate_without' => $hotelRepo->countImmediateWithoutProduct(),
         ];
 
         // Destinations: what we sell per country, and what needs a look.
-        $destCard = DestinationsPicker::card(_eurosite_dest_build(), TypeCoerce::toString(fn_url('eurosite.whitelist')));
+        $destBuilt = _eurosite_dest_build();
+        $destCard = DestinationsPicker::card($destBuilt, TypeCoerce::toString(fn_url('eurosite.whitelist')));
 
         // A job's last run from the sync log, for one the run log has not
         // seen yet (a monthly catalog last synced before it existed).
@@ -611,11 +627,24 @@ if ($mode === 'manage' || empty($mode)) {
             'masked' => $cronKey === '' ? $planCli : str_replace($cronKey, '••••••••', $planCli),
         ];
     }
-    $view->assign('eurosite_job_stages', CronPlanBuilder::withCounts($plan->stages($cronModes, $cronRecords, $legacyRuns, time()), $counts));
+    $jobStages = CronPlanBuilder::withCounts($plan->stages($cronModes, $cronRecords, $legacyRuns, time()), $counts);
+    $view->assign('eurosite_job_stages', $jobStages);
     $view->assign('eurosite_on_demand_jobs', $plan->onDemandRows($cronModes, $cronRecords, time()));
     $view->assign('eurosite_cron_has_key', $plan->hasKey());
     $view->assign('eurosite_cron_key', $cronKey);
     $view->assign('eurosite_cron_plans', $cronPlans);
+
+    // At a glance and Needs attention (Services\DashboardSummary), from the
+    // figures above, the jobs' runs and whether a cron request was refused
+    // for a wrong key since the last good scheduled run (Travel Core's CronHealth).
+    $view->assign('eurosite_glance', DashboardSummary::glance($destBuilt, $hotelFigures, $jobStages));
+    $cronHealth = CronHealth::assess($cronRecords, CronRunLog::lastWrongKeyRefusal(CronPlanBuilder::ADDON), time());
+    $view->assign('eurosite_attention', DashboardSummary::attention(
+        $jobStages,
+        $cronHealth['state'] === CronHealth::REFUSED ? $cronHealth['wrong_key_at'] : 0,
+        $counts['whitelist'],
+        $hotelFigures,
+    ));
 
     $apiUser = ConfigProvider::getApiUser();
     $view->assign('eurosite_counts', $counts);

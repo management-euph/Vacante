@@ -187,6 +187,18 @@ class HotelRepository
         ));
     }
 
+    /**
+     * Listed hotels with an Immediate offer and no product yet: what Add
+     * products takes next (the hotel list's Immediate + No product filters).
+     */
+    public function countImmediateWithoutProduct(): int
+    {
+        return TypeCoerce::toInt(db_get_field(
+            "SELECT COUNT(*) FROM ?:eurosite_hotels
+             WHERE sync_status = 'active' AND availability = 'IM' AND (product_id IS NULL OR product_id = 0)",
+        ));
+    }
+
     public function countGateHidden(): int
     {
         return TypeCoerce::toInt(db_get_field(

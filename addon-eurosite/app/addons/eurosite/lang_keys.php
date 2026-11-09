@@ -500,6 +500,140 @@ return [
         'en' => 'Products: [n]',
         'ro' => 'Produse: [n]',
     ],
+    // The dashboard's At a glance tiles, Needs attention and Tools
+    // (Services\DashboardSummary, views/eurosite/manage.tpl).
+    'eurosite.dash_tile_hotels' => [
+        'en' => 'Hotels in the destinations sold',
+        'ro' => 'Hoteluri în destinațiile vândute',
+    ],
+    'eurosite.dash_tile_hotels_cities' => [
+        'en' => 'Cities sold: [n]',
+        'ro' => 'Orașe vândute: [n]',
+    ],
+    'eurosite.dash_tile_hotels_synced' => [
+        'en' => 'Last hotel sync: [date]',
+        'ro' => 'Ultima sincronizare a hotelurilor: [date]',
+    ],
+    'eurosite.dash_tile_hotels_never' => [
+        'en' => 'The hotels have not been synced yet',
+        'ro' => 'Hotelurile nu au fost sincronizate încă',
+    ],
+    'eurosite.dash_tile_offers' => [
+        'en' => 'With an Immediate offer',
+        'ro' => 'Cu ofertă Imediat',
+    ],
+    'eurosite.dash_tile_offers_note' => [
+        'en' => 'On request: [or] · stop sale: [st] · no offer: [none]',
+        'ro' => 'La cerere: [or] · stop vânzare: [st] · fără ofertă: [none]',
+    ],
+    'eurosite.dash_tile_offers_unchecked' => [
+        'en' => 'Not checked yet: [n]',
+        'ro' => 'Neverificate încă: [n]',
+    ],
+    'eurosite.dash_tile_offers_checked' => [
+        'en' => 'Last check: [date]',
+        'ro' => 'Ultima verificare: [date]',
+    ],
+    'eurosite.dash_tile_offers_never' => [
+        'en' => 'Availability has not been checked yet',
+        'ro' => 'Disponibilitatea nu a fost verificată încă',
+    ],
+    'eurosite.dash_tile_offers_open' => [
+        'en' => 'See them',
+        'ro' => 'Vezi-le',
+    ],
+    'eurosite.dash_tile_products' => [
+        'en' => 'Products',
+        'ro' => 'Produse',
+    ],
+    'eurosite.dash_tile_products_live' => [
+        'en' => 'Live in the destinations you sell: [n]',
+        'ro' => 'Active în destinațiile pe care le vinzi: [n]',
+    ],
+    'eurosite.dash_tile_products_hidden' => [
+        'en' => 'Hidden, no Immediate offer: [n]',
+        'ro' => 'Ascunse, fără ofertă Imediat: [n]',
+    ],
+    'eurosite.dash_tile_products_waiting' => [
+        'en' => 'Immediate, no product yet: [n]',
+        'ro' => 'Cu ofertă Imediat, încă fără produs: [n]',
+    ],
+    'eurosite.dash_tile_products_open' => [
+        'en' => 'See the hotels with a product',
+        'ro' => 'Vezi hotelurile cu produs',
+    ],
+    'eurosite.dash_tile_jobs_failing' => [
+        'en' => 'Failing: [n]',
+        'ro' => 'Eșuează: [n]',
+    ],
+    'eurosite.dash_tile_jobs_late' => [
+        'en' => 'Late: [n]',
+        'ro' => 'Întârziate: [n]',
+    ],
+    'eurosite.dash_tile_jobs_never' => [
+        'en' => 'No runs yet: [n]',
+        'ro' => 'Încă nerulate: [n]',
+    ],
+    'eurosite.dash_tile_jobs_ok' => [
+        'en' => 'All on time',
+        'ro' => 'Toate la timp',
+    ],
+    'eurosite.dash_tile_jobs_note' => [
+        'en' => 'On time: [ok] · late: [late] · no runs yet: [never]',
+        'ro' => 'La timp: [ok] · întârziate: [late] · încă nerulate: [never]',
+    ],
+    'eurosite.dash_tile_jobs_open' => [
+        'en' => 'See the jobs ↓',
+        'ro' => 'Vezi joburile ↓',
+    ],
+    'eurosite.dash_attention_title' => [
+        'en' => 'Needs attention ([n])',
+        'ro' => 'Necesită atenție ([n])',
+    ],
+    'eurosite.dash_attention_refused' => [
+        'en' => 'A cron request with a wrong key was refused on [date]: the crontab is probably still on an old key.',
+        'ro' => 'O cerere cron cu o cheie greșită a fost refuzată pe [date]: crontab-ul folosește probabil încă o cheie veche.',
+    ],
+    'eurosite.dash_attention_copy_commands' => [
+        'en' => 'Copy the commands again',
+        'ro' => 'Copiază din nou comenzile',
+    ],
+    'eurosite.dash_attention_nothing_sold' => [
+        'en' => 'No destination is whitelisted: the hotel sync has nothing to fetch, and nothing can be sold.',
+        'ro' => 'Nicio destinație nu este în listă: sincronizarea hotelurilor nu are ce prelua și nu se poate vinde nimic.',
+    ],
+    'eurosite.dash_attention_no_immediate' => [
+        'en' => 'No listed hotel has an Immediate offer on the configured dates, so none can become a product.',
+        'ro' => 'Niciun hotel din listă nu are ofertă Imediat la datele configurate, deci niciunul nu poate deveni produs.',
+    ],
+    'eurosite.dash_attention_failed' => [
+        'en' => '[job] failed on [date].',
+        'ro' => '[job] a eșuat pe [date].',
+    ],
+    'eurosite.dash_attention_stalled' => [
+        'en' => '[job] started on [date] and never finished.',
+        'ro' => '[job] a pornit pe [date] și nu s-a mai terminat.',
+    ],
+    'eurosite.dash_attention_never' => [
+        'en' => '[job] has never run.',
+        'ro' => '[job] nu a rulat niciodată.',
+    ],
+    'eurosite.dash_attention_late' => [
+        'en' => '[job] is late: it last finished on [date]. Schedule: [schedule].',
+        'ro' => '[job] întârzie: s-a terminat ultima dată pe [date]. Program: [schedule].',
+    ],
+    'eurosite.dash_attention_run' => [
+        'en' => 'Run [job]',
+        'ro' => 'Rulează [job]',
+    ],
+    'eurosite.dash_tools_title' => [
+        'en' => 'Tools',
+        'ro' => 'Instrumente',
+    ],
+    'eurosite.dash_tools_intro' => [
+        'en' => 'Syncing is each job\'s Run, under Scheduled jobs.',
+        'ro' => 'Sincronizările se pornesc cu Rulează, la fiecare job din Joburi programate.',
+    ],
     // Eurosite → Hotels, and the product jobs
     'eurosite.hotels' => [
         'en' => 'Hotels',
@@ -928,8 +1062,8 @@ return [
         'ro' => 'Caută oferte',
     ],
     'eurosite.probe_none_hint' => [
-        'en' => 'No Immediate hotel on the configured dates. Find dates with offers below, then add them to the peak-season dates.',
-        'ro' => 'Niciun hotel Imediat la datele configurate. Găsiți mai jos date cu oferte, apoi adăugați-le la datele de sezon.',
+        'en' => 'No Immediate hotel on the configured dates. Find dates with offers, then add them to the peak-season dates.',
+        'ro' => 'Niciun hotel Imediat la datele configurate. Găsiți date cu oferte, apoi adăugați-le la datele de sezon.',
     ],
     'eurosite.probe_cities_all' => [
         'en' => 'empty = all synced',

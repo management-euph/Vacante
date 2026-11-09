@@ -97,4 +97,44 @@ final class JobHealth
             $items,
         );
     }
+
+    /**
+     * The problems() as Needs attention prints them: each with its job's
+     * name label and its schedule in words (for "is late"), in the shape the
+     * dashboards' other attention items share (n is their count, 0 here).
+     *
+     * @param list<array{jobs: list<array<string, mixed>>}> $stages CronJobPlan::stages()
+     *
+     * @return list<array{kind: string, mode: string, at: int, error: string, n: int, name_key: string, schedule_key: string, schedule_params: array<string, string>}>
+     */
+    public static function attention(array $stages): array
+    {
+        $rows = [];
+        foreach ($stages as $stage) {
+            foreach ($stage['jobs'] as $job) {
+                $params = [];
+                foreach (TypeCoerce::toStringMap($job['schedule_params'] ?? []) as $name => $value) {
+                    $params[$name] = TypeCoerce::toString($value);
+                }
+                $rows[TypeCoerce::toString($job['mode'] ?? '')] = [TypeCoerce::toString($job['name_key'] ?? ''), TypeCoerce::toString($job['schedule_key'] ?? ''), $params];
+            }
+        }
+
+        $items = [];
+        foreach (self::problems($stages) as $problem) {
+            [$nameKey, $scheduleKey, $params] = $rows[$problem['mode']] ?? ['', '', []];
+            $items[] = [
+                'kind' => $problem['kind'],
+                'mode' => $problem['mode'],
+                'at' => $problem['at'],
+                'error' => $problem['error'],
+                'n' => 0,
+                'name_key' => $nameKey,
+                'schedule_key' => $scheduleKey,
+                'schedule_params' => $params,
+            ];
+        }
+
+        return $items;
+    }
 }

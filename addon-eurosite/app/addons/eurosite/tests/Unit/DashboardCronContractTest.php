@@ -158,7 +158,8 @@ final class DashboardCronContractTest extends TestCase
         self::assertStringContainsString('new CronPlanBuilder($baseUrl, $cronKey, ', $manage);
         self::assertStringContainsString('CronRunLog::get(CronPlanBuilder::ADDON, $cronMode)', $manage);
         self::assertStringContainsString('CronPlanBuilder::legacyRuns($syncLog->getLastPerType())', $manage);
-        self::assertStringContainsString("\$view->assign('eurosite_job_stages', CronPlanBuilder::withCounts(\$plan->stages(\$cronModes, \$cronRecords, \$legacyRuns, time()), \$counts));", $manage);
+        self::assertStringContainsString('$jobStages = CronPlanBuilder::withCounts($plan->stages($cronModes, $cronRecords, $legacyRuns, time()), $counts);', $manage);
+        self::assertStringContainsString("\$view->assign('eurosite_job_stages', \$jobStages);", $manage);
 
         // The schedule table and the URL shape belong to the plan: a second
         // copy in the controller is how the two drift apart.
@@ -271,6 +272,76 @@ final class DashboardCronContractTest extends TestCase
             self::assertNotSame('', $lang[$key]['en'] ?? '', $key);
             self::assertNotSame('', $lang[$key]['ro'] ?? '', $key);
         }
+    }
+
+    /**
+     * The page reads as Sphinx's and Novoton's: at a glance, what needs
+     * attention, the tools, the destinations and availability, the jobs and
+     * their commands, then recent bookings.
+     */
+    public function testTheSectionsComeInTheProvidersOrder(): void
+    {
+        $tpl = self::pages()['manage.tpl'];
+        $at = [];
+        foreach ([
+            'glance' => '<div class="travel-cron-tiles travel-cron-tiles--four">',
+            'attention' => '<section class="travel-cron-card travel-cron-attention"',
+            'tools' => '<section class="travel-cron-card travel-cron-tools"',
+            'destinations' => 'components/destinations_card.tpl',
+            'availability' => 'components/availability_card.tpl',
+            'jobs' => 'components/jobs_card.tpl',
+            'commands' => 'components/commands_card.tpl',
+            'bookings' => 'aria-labelledby="eurosite-bookings-title"',
+        ] as $name => $marker) {
+            $pos = strpos($tpl, $marker);
+            self::assertIsInt($pos, "no {$name} section");
+            $at[$name] = $pos;
+        }
+        $sorted = $at;
+        asort($sorted);
+        self::assertSame(array_keys($at), array_keys($sorted));
+    }
+
+    /** At a glance and Needs attention come from Services\DashboardSummary, fed by the manage branch. */
+    public function testTheTopOfThePageComesFromTheSummary(): void
+    {
+        $manage = self::branch("if (\$mode === 'manage' || empty(\$mode)) {");
+        self::assertStringContainsString("\$view->assign('eurosite_glance', DashboardSummary::glance(\$destBuilt, \$hotelFigures, \$jobStages));", $manage);
+        self::assertStringContainsString('CronHealth::assess($cronRecords, CronRunLog::lastWrongKeyRefusal(CronPlanBuilder::ADDON), time())', $manage);
+        self::assertStringContainsString("\$view->assign('eurosite_attention', DashboardSummary::attention(", $manage);
+        self::assertStringContainsString("'immediate_without' => \$hotelRepo->countImmediateWithoutProduct(),", $manage);
+
+        $tpl = self::pages()['manage.tpl'];
+        self::assertSame(4, preg_match_all('/<div class="travel-cron-tile(?:"|\{)/', $tpl), 'four tiles');
+        // Every kind DashboardSummary::attention() gives has its line and its one action.
+        foreach (['refused' => 'href="#eurosite-crontab"', 'nothing_sold' => 'href="{"eurosite.whitelist"|fn_url}"', 'no_immediate' => 'href="#eurosite-probe"'] as $kind => $action) {
+            $branch = substr($tpl, (int) strpos($tpl, '$item.kind == "' . $kind . '"'), 400);
+            self::assertStringContainsString('{__("eurosite.dash_attention_' . $kind . '"', $branch, $kind);
+            self::assertStringContainsString($action, $branch, $kind);
+        }
+        foreach (['failed', 'stalled', 'never', 'late'] as $kind) {
+            self::assertStringContainsString('{__("eurosite.dash_attention_' . $kind . '", ["[job]" => $_name', $tpl, $kind);
+        }
+        self::assertStringContainsString('{include file="addons/travel_core/components/run_job.tpl" run_dispatch="eurosite.run_job" job=$item.mode', $tpl, 'a job\'s line runs it as the jobs card does');
+    }
+
+    /** The Tools card: the API connection and the probe; every POST carries CS-Cart's CSRF token. */
+    public function testTheToolsCardHoldsTheApiConnectionAndTheProbe(): void
+    {
+        $tpl = self::pages()['manage.tpl'];
+        $tools = substr($tpl, (int) strpos($tpl, '<section class="travel-cron-card travel-cron-tools"'));
+        $tools = substr($tools, 0, (int) strpos($tools, '</section>'));
+
+        self::assertStringContainsString('value="eurosite.test_connection"', $tools);
+        self::assertStringContainsString('id="eurosite-probe"', $tools);
+        self::assertStringContainsString('{$eurosite_api_url|escape:html}', $tools);
+
+        preg_match_all('/<form\b[^>]*method="post"[^>]*>.*?<\/form>/s', $tpl, $posts);
+        self::assertNotEmpty($posts[0]);
+        foreach ($posts[0] as $form) {
+            self::assertStringContainsString('name="security_hash" value="{$security_hash}"', $form);
+        }
+        self::assertStringNotContainsString('style="', $tpl, 'Travel Core\'s card classes, not inline styles');
     }
 
     public function testTheWrapperDivIsClosed(): void
