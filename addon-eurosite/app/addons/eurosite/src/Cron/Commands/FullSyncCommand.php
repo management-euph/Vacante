@@ -13,8 +13,8 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * mode `full` — the whole static-data pipeline in dependency order:
- * countries → own_cities → cities → hotels → room_types → tags →
- * package_routes.
+ * countries → own_cities → cities → hotels → package_routes → room_types →
+ * tags.
  *
  * own_cities runs BEFORE cities so its countries join the city-sync target
  * set even with an empty whitelist (first-run bootstrap). product_info is
@@ -39,9 +39,9 @@ final class FullSyncCommand extends AbstractSyncCommand
         'own_cities' => OwnCitiesSyncCommand::class,
         'cities' => CitiesSyncCommand::class,
         'hotels' => HotelsSyncCommand::class,
+        'package_routes' => PackageRoutesSyncCommand::class,
         'room_types' => RoomTypesSyncCommand::class,
         'tags' => TagsSyncCommand::class,
-        'package_routes' => PackageRoutesSyncCommand::class,
     ];
 
     /** @var array<string, class-string<AbstractSyncCommand>> */
@@ -63,7 +63,7 @@ final class FullSyncCommand extends AbstractSyncCommand
     #[\Override]
     public static function getDescription(): string
     {
-        return 'Run every static-data sync in order (countries, own_cities, cities, hotels, room_types, tags, package_routes)';
+        return 'Run every static-data sync in order (countries, own_cities, cities, hotels, package_routes, room_types, tags)';
     }
 
     #[\Override]

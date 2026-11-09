@@ -532,6 +532,14 @@ msgctxt "Languages::eurosite.jobs_job_hotels_desc"
 msgid "The operator's hotels and their rooms, in the whitelisted destinations."
 msgstr "The operator's hotels and their rooms, in the whitelisted destinations."
 
+msgctxt "Languages::eurosite.jobs_job_package_routes"
+msgid "Package routes"
+msgstr "Package routes"
+
+msgctxt "Languages::eurosite.jobs_job_package_routes_desc"
+msgid "Coach and plane routes for packages: destinations, departure cities and their dates."
+msgstr "Coach and plane routes for packages: destinations, departure cities and their dates."
+
 msgctxt "Languages::eurosite.jobs_job_room_types"
 msgid "Room types"
 msgstr "Room types"
@@ -547,14 +555,6 @@ msgstr "Offer tags"
 msgctxt "Languages::eurosite.jobs_job_tags_desc"
 msgid "The catalog of offer tags. It may be empty."
 msgstr "The catalog of offer tags. It may be empty."
-
-msgctxt "Languages::eurosite.jobs_job_package_routes"
-msgid "Package routes"
-msgstr "Package routes"
-
-msgctxt "Languages::eurosite.jobs_job_package_routes_desc"
-msgid "Where the packages go, the cities they leave from and their departure dates, for plane and coach packages."
-msgstr "Where the packages go, the cities they leave from and their departure dates, for plane and coach packages."
 
 msgctxt "Languages::eurosite.jobs_job_product_info"
 msgid "Hotel details"
@@ -652,6 +652,10 @@ msgctxt "Languages::eurosite.jobs_count_hotels"
 msgid "Hotels: [n]"
 msgstr "Hotels: [n]"
 
+msgctxt "Languages::eurosite.jobs_count_package_routes"
+msgid "Package routes: [n]"
+msgstr "Package routes: [n]"
+
 msgctxt "Languages::eurosite.jobs_count_room_types"
 msgid "Room types: [n]"
 msgstr "Room types: [n]"
@@ -659,10 +663,6 @@ msgstr "Room types: [n]"
 msgctxt "Languages::eurosite.jobs_count_tags"
 msgid "Offer tags: [n]"
 msgstr "Offer tags: [n]"
-
-msgctxt "Languages::eurosite.jobs_count_package_routes"
-msgid "Package routes: [n]"
-msgstr "Package routes: [n]"
 
 msgctxt "Languages::eurosite.jobs_count_cache"
 msgid "Hotels with details: [n]"
@@ -675,6 +675,78 @@ msgstr "Hotels with an Immediate offer: [n]"
 msgctxt "Languages::eurosite.jobs_count_products"
 msgid "Products: [n]"
 msgstr "Products: [n]"
+
+msgctxt "Languages::eurosite.package_routes"
+msgid "Package routes"
+msgstr "Package routes"
+
+msgctxt "Languages::eurosite.package_routes_title"
+msgid "Eurosite — Package routes"
+msgstr "Eurosite — Package routes"
+
+msgctxt "Languages::eurosite.routes_count"
+msgid "[n] package routes"
+msgstr "[n] package routes"
+
+msgctxt "Languages::eurosite.sync_now"
+msgid "Sync now"
+msgstr "Sync now"
+
+msgctxt "Languages::eurosite.transport"
+msgid "Transport"
+msgstr "Transport"
+
+msgctxt "Languages::eurosite.all_transports"
+msgid "All"
+msgstr "All"
+
+msgctxt "Languages::eurosite.transport_plane"
+msgid "Plane"
+msgstr "Plane"
+
+msgctxt "Languages::eurosite.transport_bus"
+msgid "Coach"
+msgstr "Coach"
+
+msgctxt "Languages::eurosite.departure"
+msgid "Departure"
+msgstr "Departure"
+
+msgctxt "Languages::eurosite.arrival"
+msgid "Arrival"
+msgstr "Arrival"
+
+msgctxt "Languages::eurosite.duration"
+msgid "Duration"
+msgstr "Duration"
+
+msgctxt "Languages::eurosite.available_dates"
+msgid "Available dates"
+msgstr "Available dates"
+
+msgctxt "Languages::eurosite.routes_nights"
+msgid "[nights] nights"
+msgstr "[nights] nights"
+
+msgctxt "Languages::eurosite.routes_nights_from_setting"
+msgid "from the settings"
+msgstr "from the settings"
+
+msgctxt "Languages::eurosite.routes_more_dates"
+msgid "+[n] more"
+msgstr "+[n] more"
+
+msgctxt "Languages::eurosite.routes_no_dates_ahead"
+msgid "No dates ahead"
+msgstr "No dates ahead"
+
+msgctxt "Languages::eurosite.no_routes_match"
+msgid "No route matches this search."
+msgstr "No route matches this search."
+
+msgctxt "Languages::eurosite.no_package_routes"
+msgid "No package routes yet. Sync now fetches them from Eurosite; if none come back, ask Eurosite to enable packages (Pachete) for your XML user."
+msgstr "No package routes yet. Sync now fetches them from Eurosite; if none come back, ask Eurosite to enable packages (Pachete) for your XML user."
 
 msgctxt "Languages::eurosite.dash_tile_hotels"
 msgid "Hotels in the destinations sold"

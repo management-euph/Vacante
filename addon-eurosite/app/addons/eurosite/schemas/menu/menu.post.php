@@ -30,6 +30,12 @@ $schema['central']['eurosite'] = [
             'position' => 150,
             'title' => __('eurosite.hotels', ['[default]' => 'Hotels']),
         ],
+        'eurosite_package_routes' => [
+            'attrs' => ['class' => 'is-addon'],
+            'href' => 'eurosite.package_routes',
+            'position' => 175,
+            'title' => __('eurosite.package_routes', ['[default]' => 'Package routes']),
+        ],
         'eurosite_whitelist' => [
             'attrs' => ['class' => 'is-addon'],
             'href' => 'eurosite.whitelist',

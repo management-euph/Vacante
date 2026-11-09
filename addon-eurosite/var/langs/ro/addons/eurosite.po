@@ -532,6 +532,14 @@ msgctxt "Languages::eurosite.jobs_job_hotels_desc"
 msgid "The operator's hotels and their rooms, in the whitelisted destinations."
 msgstr "Hotelurile operatorului și camerele lor, din destinațiile din listă."
 
+msgctxt "Languages::eurosite.jobs_job_package_routes"
+msgid "Package routes"
+msgstr "Rutele pachetelor"
+
+msgctxt "Languages::eurosite.jobs_job_package_routes_desc"
+msgid "Coach and plane routes for packages: destinations, departure cities and their dates."
+msgstr "Rutele cu autocarul și cu avionul pentru pachete: destinațiile, orașele de plecare și datele lor."
+
 msgctxt "Languages::eurosite.jobs_job_room_types"
 msgid "Room types"
 msgstr "Tipuri de cameră"
@@ -547,14 +555,6 @@ msgstr "Etichete de ofertă"
 msgctxt "Languages::eurosite.jobs_job_tags_desc"
 msgid "The catalog of offer tags. It may be empty."
 msgstr "Catalogul etichetelor de ofertă. Poate fi gol."
-
-msgctxt "Languages::eurosite.jobs_job_package_routes"
-msgid "Package routes"
-msgstr "Rutele pachetelor"
-
-msgctxt "Languages::eurosite.jobs_job_package_routes_desc"
-msgid "Where the packages go, the cities they leave from and their departure dates, for plane and coach packages."
-msgstr "Unde merg pachetele, orașele din care pleacă și datele plecărilor, pentru pachetele cu avionul și cu autocarul."
 
 msgctxt "Languages::eurosite.jobs_job_product_info"
 msgid "Hotel details"
@@ -652,6 +652,10 @@ msgctxt "Languages::eurosite.jobs_count_hotels"
 msgid "Hotels: [n]"
 msgstr "Hoteluri: [n]"
 
+msgctxt "Languages::eurosite.jobs_count_package_routes"
+msgid "Package routes: [n]"
+msgstr "Rute de pachete: [n]"
+
 msgctxt "Languages::eurosite.jobs_count_room_types"
 msgid "Room types: [n]"
 msgstr "Tipuri de cameră: [n]"
@@ -659,10 +663,6 @@ msgstr "Tipuri de cameră: [n]"
 msgctxt "Languages::eurosite.jobs_count_tags"
 msgid "Offer tags: [n]"
 msgstr "Etichete de ofertă: [n]"
-
-msgctxt "Languages::eurosite.jobs_count_package_routes"
-msgid "Package routes: [n]"
-msgstr "Rute de pachete: [n]"
 
 msgctxt "Languages::eurosite.jobs_count_cache"
 msgid "Hotels with details: [n]"
@@ -675,6 +675,78 @@ msgstr "Hoteluri cu ofertă Imediat: [n]"
 msgctxt "Languages::eurosite.jobs_count_products"
 msgid "Products: [n]"
 msgstr "Produse: [n]"
+
+msgctxt "Languages::eurosite.package_routes"
+msgid "Package routes"
+msgstr "Rutele pachetelor"
+
+msgctxt "Languages::eurosite.package_routes_title"
+msgid "Eurosite — Package routes"
+msgstr "Eurosite — Rutele pachetelor"
+
+msgctxt "Languages::eurosite.routes_count"
+msgid "[n] package routes"
+msgstr "[n] rute de pachete"
+
+msgctxt "Languages::eurosite.sync_now"
+msgid "Sync now"
+msgstr "Sincronizează acum"
+
+msgctxt "Languages::eurosite.transport"
+msgid "Transport"
+msgstr "Transport"
+
+msgctxt "Languages::eurosite.all_transports"
+msgid "All"
+msgstr "Toate"
+
+msgctxt "Languages::eurosite.transport_plane"
+msgid "Plane"
+msgstr "Avion"
+
+msgctxt "Languages::eurosite.transport_bus"
+msgid "Coach"
+msgstr "Autocar"
+
+msgctxt "Languages::eurosite.departure"
+msgid "Departure"
+msgstr "Plecare"
+
+msgctxt "Languages::eurosite.arrival"
+msgid "Arrival"
+msgstr "Sosire"
+
+msgctxt "Languages::eurosite.duration"
+msgid "Duration"
+msgstr "Durată"
+
+msgctxt "Languages::eurosite.available_dates"
+msgid "Available dates"
+msgstr "Date disponibile"
+
+msgctxt "Languages::eurosite.routes_nights"
+msgid "[nights] nights"
+msgstr "[nights] nopți"
+
+msgctxt "Languages::eurosite.routes_nights_from_setting"
+msgid "from the settings"
+msgstr "din setări"
+
+msgctxt "Languages::eurosite.routes_more_dates"
+msgid "+[n] more"
+msgstr "+încă [n]"
+
+msgctxt "Languages::eurosite.routes_no_dates_ahead"
+msgid "No dates ahead"
+msgstr "Nicio dată de acum înainte"
+
+msgctxt "Languages::eurosite.no_routes_match"
+msgid "No route matches this search."
+msgstr "Nicio rută nu se potrivește acestei căutări."
+
+msgctxt "Languages::eurosite.no_package_routes"
+msgid "No package routes yet. Sync now fetches them from Eurosite; if none come back, ask Eurosite to enable packages (Pachete) for your XML user."
+msgstr "Încă nu există rute de pachete. „Sincronizează acum” le aduce de la Eurosite; dacă nu vine niciuna, cereți Eurosite să activeze pachetele (Pachete) pentru utilizatorul XML."
 
 msgctxt "Languages::eurosite.dash_tile_hotels"
 msgid "Hotels in the destinations sold"

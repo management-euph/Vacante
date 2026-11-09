@@ -33,12 +33,14 @@ declare(strict_types=1);
 
 use Tygh\Addons\Eurosite\Cron\CronDispatcher;
 use Tygh\Addons\Eurosite\Repository\HotelListingRepository;
+use Tygh\Addons\Eurosite\Repository\PackageRouteListing;
 use Tygh\Addons\Eurosite\Services\ConfigProvider;
 use Tygh\Addons\Eurosite\Services\Container;
 use Tygh\Addons\Eurosite\Services\CronPlanBuilder;
 use Tygh\Addons\Eurosite\Services\DashboardSummary;
 use Tygh\Addons\Eurosite\Services\DestinationsPicker;
 use Tygh\Addons\Eurosite\Services\HotelListView;
+use Tygh\Addons\Eurosite\Services\PackageRoutesView;
 use Tygh\Addons\Eurosite\Services\SyncActivity;
 use Tygh\Addons\TravelCore\Cron\CronHealth;
 use Tygh\Addons\TravelCore\Cron\CronRunLog;
@@ -184,12 +186,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ob_end_clean();
         }
 
-        // A sync fired from the whitelist editor returns there, not to the
-        // dashboard — being bounced off the page you were working on is how
-        // you lose your place in an 86-row list.
-        $returnTo = RequestCoerce::string($_REQUEST, 'return_to') === 'whitelist'
-            ? 'eurosite.whitelist'
-            : 'eurosite.manage';
+        // A sync fired from the whitelist editor or the package routes
+        // returns there, not to the dashboard — being bounced off the page
+        // you were working on is how you lose your place in an 86-row list.
+        $returnTo = match (RequestCoerce::string($_REQUEST, 'return_to')) {
+            'whitelist' => 'eurosite.whitelist',
+            'package_routes' => 'eurosite.package_routes',
+            default => 'eurosite.manage',
+        };
 
         $success = TypeCoerce::toBool($result['success'] ?? false);
         $stats = TypeCoerce::toStringMap($result['stats'] ?? []);
@@ -480,6 +484,37 @@ if ($mode === 'hotels') {
     $view->assign('eurosite_hotels_query', HotelListView::filterQuery($search));
     $view->assign('eurosite_root_category_set', ConfigProvider::getHotelsCategoryId() > 0);
     $view->assign('eurosite_without_images_allowed', ConfigProvider::allowProductsWithoutImages());
+
+    return;
+}
+
+if ($mode === 'package_routes') {
+    // Eurosite → Package routes: where the packages go, from where and on
+    // which dates, as the weekly package_routes job keeps them.
+    $perPageRaw = \Tygh\Registry::get('settings.Appearance.admin_elements_per_page');
+    $listing = new PackageRouteListing(is_numeric($perPageRaw) && (int) $perPageRaw > 0 ? (int) $perPageRaw : 50);
+    $rows = [];
+    $search = $listing->normalize($_REQUEST) + ['total_items' => 0];
+    $total = 0;
+    $lastSynced = '';
+    try {
+        [$rows, $search] = $listing->getListing($_REQUEST);
+        $total = Container::packageRoutes()->count();
+        $lastSynced = Container::packageRoutes()->getLastSyncedAt();
+    } catch (\Throwable $e) {
+        fn_set_notification('E', __('error'), 'Eurosite package routes unavailable: ' . $e->getMessage());
+    }
+
+    $view->assign('eurosite_package_routes', PackageRoutesView::rows($rows, ConfigProvider::getPackageNights(), date('Y-m-d')));
+    $view->assign('search', $search);
+    $view->assign('eurosite_routes_total', $total);
+    $view->assign('eurosite_routes_last_synced', PackageRoutesView::when($lastSynced));
+    // The column links keep the filters.
+    $view->assign('eurosite_routes_url', 'eurosite.package_routes?' . http_build_query(array_filter([
+        'transport' => TypeCoerce::toString($search['transport'] ?? ''),
+        'departure' => TypeCoerce::toString($search['departure'] ?? ''),
+        'arrival' => TypeCoerce::toString($search['arrival'] ?? ''),
+    ], static fn (string $v): bool => $v !== '')));
 
     return;
 }

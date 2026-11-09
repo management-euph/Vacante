@@ -82,7 +82,7 @@ final class CronPlanBuilderTest extends TestCase
         self::assertSame([1, 2, 3, 4], array_column($stages, 'number'));
         self::assertSame(
             [
-                ['full', 'countries', 'own_cities', 'cities', 'hotels', 'room_types', 'tags', 'package_routes'],
+                ['full', 'countries', 'own_cities', 'cities', 'hotels', 'package_routes', 'room_types', 'tags'],
                 ['product_info', 'availability'],
                 ['add_products', 'update_products'],
                 ['booking_status', 'cleanup'],
@@ -184,8 +184,8 @@ final class CronPlanBuilderTest extends TestCase
         self::assertSame(['travel_core.jobs_sched_monthly', ['[day]' => '1', '[time]' => '01:00']], [$rows['countries']['schedule_key'], $rows['countries']['schedule_params']]);
         self::assertSame(['travel_core.jobs_sched_monthly', ['[day]' => '1', '[time]' => '03:45']], [$rows['tags']['schedule_key'], $rows['tags']['schedule_params']]);
         self::assertSame(['travel_core.jobs_sched_weekly_sun', ['[time]' => '03:00']], [$rows['hotels']['schedule_key'], $rows['hotels']['schedule_params']]);
-        // The package routes with the hotel lists, weekly, the last of the catalogs.
-        self::assertSame(['travel_core.jobs_sched_weekly_sun', ['[time]' => '03:50']], [$rows['package_routes']['schedule_key'], $rows['package_routes']['schedule_params']]);
+        // The package routes right after the hotel lists, weekly too.
+        self::assertSame(['travel_core.jobs_sched_weekly_sun', ['[time]' => '03:30']], [$rows['package_routes']['schedule_key'], $rows['package_routes']['schedule_params']]);
         self::assertSame(['travel_core.jobs_sched_daily', ['[time]' => '04:00']], [$rows['product_info']['schedule_key'], $rows['product_info']['schedule_params']]);
         self::assertSame(['travel_core.jobs_sched_every_minutes', ['[n]' => '15']], [$rows['booking_status']['schedule_key'], $rows['booking_status']['schedule_params']]);
         self::assertSame(['travel_core.jobs_sched_weekly_sun', ['[time]' => '05:00']], [$rows['cleanup']['schedule_key'], $rows['cleanup']['schedule_params']]);
@@ -330,7 +330,7 @@ final class CronPlanBuilderTest extends TestCase
     public function testThePerCatalogPlanSchedulesEachCatalogAndNotFull(): void
     {
         self::assertSame(
-            ['countries', 'own_cities', 'cities', 'hotels', 'room_types', 'tags', 'package_routes', 'product_info', 'availability', 'add_products', 'update_products', 'booking_status', 'cleanup'],
+            ['countries', 'own_cities', 'cities', 'hotels', 'package_routes', 'room_types', 'tags', 'product_info', 'availability', 'add_products', 'update_products', 'booking_status', 'cleanup'],
             self::scheduled(self::plan()->crontabFor('per', self::MODES, 'cli')),
         );
     }

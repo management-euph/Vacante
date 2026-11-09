@@ -39,10 +39,10 @@ final class CronPlanBuilder extends CronJobPlan
     protected const string LABEL_PREFIX = 'eurosite.jobs_';
 
     /** The catalogs `full` runs, in its order (FullSyncCommand::SEQUENCE). */
-    public const array PIPELINE = ['countries', 'own_cities', 'cities', 'hotels', 'room_types', 'tags', 'package_routes'];
+    public const array PIPELINE = ['countries', 'own_cities', 'cities', 'hotels', 'package_routes', 'room_types', 'tags'];
 
     /**
-     * The order the jobs run in: the catalogs (01:00–03:50, `full` first, as
+     * The order the jobs run in: the catalogs (01:00–03:45, `full` first, as
      * the one line that runs them), then each hotel's details and which
      * hotels have an Immediate offer (04:00, 04:15), then the products for
      * them (05:30, 06:00), then the bookings, every 15 minutes, and the
@@ -89,9 +89,9 @@ final class CronPlanBuilder extends CronJobPlan
         'own_cities' => ['cron' => '30 1 1 * *', 'every_hours' => self::MONTH_HOURS, 'late_after_hours' => 2 * self::MONTH_HOURS],
         'cities' => ['cron' => '0 2 1 * *', 'every_hours' => self::MONTH_HOURS, 'late_after_hours' => 2 * self::MONTH_HOURS],
         'hotels' => ['cron' => '0 3 * * 0', 'every_hours' => 168, 'late_after_hours' => 2 * 168],
+        'package_routes' => ['cron' => '30 3 * * 0', 'every_hours' => 168, 'late_after_hours' => 2 * 168],
         'room_types' => ['cron' => '30 3 1 * *', 'every_hours' => self::MONTH_HOURS, 'late_after_hours' => 2 * self::MONTH_HOURS],
         'tags' => ['cron' => '45 3 1 * *', 'every_hours' => self::MONTH_HOURS, 'late_after_hours' => 2 * self::MONTH_HOURS],
-        'package_routes' => ['cron' => '50 3 * * 0', 'every_hours' => 168, 'late_after_hours' => 2 * 168],
         'product_info' => ['cron' => '0 4 * * *', 'every_hours' => 24, 'late_after_hours' => 48],
         'availability' => ['cron' => '15 4 * * *', 'every_hours' => 24, 'late_after_hours' => 48],
         'add_products' => ['cron' => '30 5 * * *', 'every_hours' => 24, 'late_after_hours' => 48],
@@ -135,8 +135,8 @@ final class CronPlanBuilder extends CronJobPlan
         'cities' => 'cities',
         'hotels' => 'hotels',
         'room_types' => 'room_types',
-        'tags' => 'tags',
         'package_routes' => 'package_routes',
+        'tags' => 'tags',
         'product_info' => 'cache',
         'availability' => 'immediate',
         'add_products' => 'products',

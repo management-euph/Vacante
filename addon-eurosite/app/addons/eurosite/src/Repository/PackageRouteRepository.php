@@ -85,4 +85,10 @@ final class PackageRouteRepository
     {
         return TypeCoerce::toInt(db_get_field('SELECT COUNT(*) FROM ?:eurosite_package_routes'));
     }
+
+    /** When the routes were last written ('' before the first run). */
+    public function getLastSyncedAt(): string
+    {
+        return TypeCoerce::toString(db_get_field('SELECT MAX(last_synced_at) FROM ?:eurosite_package_routes'));
+    }
 }
