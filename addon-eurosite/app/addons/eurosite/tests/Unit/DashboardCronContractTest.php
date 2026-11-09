@@ -263,7 +263,7 @@ final class DashboardCronContractTest extends TestCase
             $keys[] = 'eurosite.jobs_plan_' . $plan;
             $keys[] = 'eurosite.jobs_plan_' . $plan . '_hint';
         }
-        foreach (['countries', 'own_cities', 'cities', 'hotels', 'room_types', 'tags', 'cache', 'immediate', 'products'] as $count) {
+        foreach (['countries', 'own_cities', 'cities', 'hotels', 'room_types', 'tags', 'package_routes', 'cache', 'immediate', 'products'] as $count) {
             $keys[] = 'eurosite.jobs_count_' . $count;
         }
         $keys = [...$keys, 'eurosite.jobs_full_force', 'eurosite.jobs_full_force_confirm', 'eurosite.jobs_unknown'];

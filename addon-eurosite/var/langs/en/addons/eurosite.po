@@ -192,6 +192,18 @@ msgctxt "SettingsTooltips::eurosite::hide_unavailable_products"
 msgid "Shown again when an Immediate offer returns. A product you hid or disabled by hand is never shown automatically. A hidden product you activate or disable by hand stays as you set it until the hotel has an Immediate offer again."
 msgstr "Shown again when an Immediate offer returns. A product you hid or disabled by hand is never shown automatically. A hidden product you activate or disable by hand stays as you set it until the hotel has an Immediate offer again."
 
+msgctxt "SettingsOptions::eurosite::packages_header"
+msgid "Packages"
+msgstr "Packages"
+
+msgctxt "SettingsOptions::eurosite::package_nights"
+msgid "Packages: nights offered"
+msgstr "Packages: nights offered"
+
+msgctxt "SettingsTooltips::eurosite::package_nights"
+msgid "The stays a hotel's package search offers, in nights, comma separated (e.g. 7, 10, 14). An offer Eurosite returns for a slightly different stay keeps its own dates."
+msgstr "The stays a hotel's package search offers, in nights, comma separated (e.g. 7, 10, 14). An offer Eurosite returns for a slightly different stay keeps its own dates."
+
 msgctxt "Languages::eurosite.addon_name"
 msgid "Eurosite Touring"
 msgstr "Eurosite Touring"
@@ -485,8 +497,8 @@ msgid "All catalogs, each when due"
 msgstr "All catalogs, each when due"
 
 msgctxt "Languages::eurosite.jobs_job_full_desc"
-msgid "Runs the six catalogs below in order, each only when it is due: the monthly ones on the 1st, the hotels once a week. One nightly line instead of six."
-msgstr "Runs the six catalogs below in order, each only when it is due: the monthly ones on the 1st, the hotels once a week. One nightly line instead of six."
+msgid "Runs the seven catalogs below in order, each only when it is due: the monthly ones on the 1st, the hotels and the package routes once a week. One nightly line instead of seven."
+msgstr "Runs the seven catalogs below in order, each only when it is due: the monthly ones on the 1st, the hotels and the package routes once a week. One nightly line instead of seven."
 
 msgctxt "Languages::eurosite.jobs_job_countries"
 msgid "Countries"
@@ -535,6 +547,14 @@ msgstr "Offer tags"
 msgctxt "Languages::eurosite.jobs_job_tags_desc"
 msgid "The catalog of offer tags. It may be empty."
 msgstr "The catalog of offer tags. It may be empty."
+
+msgctxt "Languages::eurosite.jobs_job_package_routes"
+msgid "Package routes"
+msgstr "Package routes"
+
+msgctxt "Languages::eurosite.jobs_job_package_routes_desc"
+msgid "Where the packages go, the cities they leave from and their departure dates, for plane and coach packages."
+msgstr "Where the packages go, the cities they leave from and their departure dates, for plane and coach packages."
 
 msgctxt "Languages::eurosite.jobs_job_product_info"
 msgid "Hotel details"
@@ -639,6 +659,10 @@ msgstr "Room types: [n]"
 msgctxt "Languages::eurosite.jobs_count_tags"
 msgid "Offer tags: [n]"
 msgstr "Offer tags: [n]"
+
+msgctxt "Languages::eurosite.jobs_count_package_routes"
+msgid "Package routes: [n]"
+msgstr "Package routes: [n]"
 
 msgctxt "Languages::eurosite.jobs_count_cache"
 msgid "Hotels with details: [n]"

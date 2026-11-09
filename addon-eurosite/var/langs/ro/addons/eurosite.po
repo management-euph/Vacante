@@ -192,6 +192,18 @@ msgctxt "SettingsTooltips::eurosite::hide_unavailable_products"
 msgid "Shown again when an Immediate offer returns. A product you hid or disabled by hand is never shown automatically. A hidden product you activate or disable by hand stays as you set it until the hotel has an Immediate offer again."
 msgstr "Reafișat când revine o ofertă Imediată. Un produs ascuns sau dezactivat manual nu este niciodată afișat automat. Un produs ascuns pe care îl activați sau dezactivați manual rămâne așa până când hotelul are din nou o ofertă Imediată."
 
+msgctxt "SettingsOptions::eurosite::packages_header"
+msgid "Packages"
+msgstr "Pachete"
+
+msgctxt "SettingsOptions::eurosite::package_nights"
+msgid "Packages: nights offered"
+msgstr "Pachete: nopți oferite"
+
+msgctxt "SettingsTooltips::eurosite::package_nights"
+msgid "The stays a hotel's package search offers, in nights, comma separated (e.g. 7, 10, 14). An offer Eurosite returns for a slightly different stay keeps its own dates."
+msgstr "Duratele sejurului oferite la căutarea unui pachet pe pagina hotelului, în nopți, separate prin virgulă (ex. 7, 10, 14). O ofertă pe care Eurosite o întoarce pentru un sejur puțin diferit își păstrează datele ei."
+
 msgctxt "Languages::eurosite.addon_name"
 msgid "Eurosite Touring"
 msgstr "Eurosite Touring"
@@ -485,8 +497,8 @@ msgid "All catalogs, each when due"
 msgstr "Toate cataloagele, fiecare când îi vine rândul"
 
 msgctxt "Languages::eurosite.jobs_job_full_desc"
-msgid "Runs the six catalogs below in order, each only when it is due: the monthly ones on the 1st, the hotels once a week. One nightly line instead of six."
-msgstr "Rulează în ordine cele șase cataloage de mai jos, fiecare doar când îi vine rândul: cele lunare pe 1, hotelurile o dată pe săptămână. O singură linie pe noapte în loc de șase."
+msgid "Runs the seven catalogs below in order, each only when it is due: the monthly ones on the 1st, the hotels and the package routes once a week. One nightly line instead of seven."
+msgstr "Rulează în ordine cele șapte cataloage de mai jos, fiecare doar când îi vine rândul: cele lunare pe 1, hotelurile și rutele pachetelor o dată pe săptămână. O singură linie pe noapte în loc de șapte."
 
 msgctxt "Languages::eurosite.jobs_job_countries"
 msgid "Countries"
@@ -535,6 +547,14 @@ msgstr "Etichete de ofertă"
 msgctxt "Languages::eurosite.jobs_job_tags_desc"
 msgid "The catalog of offer tags. It may be empty."
 msgstr "Catalogul etichetelor de ofertă. Poate fi gol."
+
+msgctxt "Languages::eurosite.jobs_job_package_routes"
+msgid "Package routes"
+msgstr "Rutele pachetelor"
+
+msgctxt "Languages::eurosite.jobs_job_package_routes_desc"
+msgid "Where the packages go, the cities they leave from and their departure dates, for plane and coach packages."
+msgstr "Unde merg pachetele, orașele din care pleacă și datele plecărilor, pentru pachetele cu avionul și cu autocarul."
 
 msgctxt "Languages::eurosite.jobs_job_product_info"
 msgid "Hotel details"
@@ -639,6 +659,10 @@ msgstr "Tipuri de cameră: [n]"
 msgctxt "Languages::eurosite.jobs_count_tags"
 msgid "Offer tags: [n]"
 msgstr "Etichete de ofertă: [n]"
+
+msgctxt "Languages::eurosite.jobs_count_package_routes"
+msgid "Package routes: [n]"
+msgstr "Rute de pachete: [n]"
 
 msgctxt "Languages::eurosite.jobs_count_cache"
 msgid "Hotels with details: [n]"

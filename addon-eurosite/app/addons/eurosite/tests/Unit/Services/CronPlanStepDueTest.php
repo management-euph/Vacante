@@ -35,6 +35,15 @@ final class CronPlanStepDueTest extends TestCase
         self::assertTrue(CronPlanBuilder::stepDue('hotels', $last, self::at('2026-11-01 01:00')), 'a week later, although it ended at 01:20');
     }
 
+    /** The package routes go with the hotel lists: once a week, not once a month. */
+    public function testThePackageRoutesRunWeekly(): void
+    {
+        $last = self::at('2026-10-25 01:30');
+
+        self::assertFalse(CronPlanBuilder::stepDue('package_routes', $last, self::at('2026-10-31 01:00')));
+        self::assertTrue(CronPlanBuilder::stepDue('package_routes', $last, self::at('2026-11-01 01:00')));
+    }
+
     public function testAStepThatNeverFinishedWellIsDue(): void
     {
         self::assertTrue(CronPlanBuilder::stepDue('cities', null, self::at('2026-10-31 01:00')));

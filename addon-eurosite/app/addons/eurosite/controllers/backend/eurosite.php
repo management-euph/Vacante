@@ -540,7 +540,7 @@ if ($mode === 'manage' || empty($mode)) {
     // on an otherwise-rendered page, so the admin sees WHAT is wrong.
     $counts = [
         'countries' => 0, 'cities' => 0, 'own_cities' => 0, 'hotels' => 0,
-        'room_types' => 0, 'tags' => 0, 'cache' => 0, 'whitelist' => 0, 'bookings' => 0,
+        'room_types' => 0, 'tags' => 0, 'package_routes' => 0, 'cache' => 0, 'whitelist' => 0, 'bookings' => 0,
         'immediate' => 0, 'products' => 0,
     ];
     $legacyRuns = [];
@@ -561,6 +561,7 @@ if ($mode === 'manage' || empty($mode)) {
             'hotels'     => $hotelRepo->countActive(),
             'room_types' => Container::roomTypes()->count(),
             'tags'       => Container::tags()->count(),
+            'package_routes' => Container::packageRoutes()->count(),
             'cache'      => Container::productInfoCache()->count(),
             'whitelist'  => Container::whitelist()->count(),
             'bookings'   => Container::bookings()->count(),

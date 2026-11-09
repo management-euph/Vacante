@@ -39,10 +39,10 @@ final class CronPlanBuilder extends CronJobPlan
     protected const string LABEL_PREFIX = 'eurosite.jobs_';
 
     /** The catalogs `full` runs, in its order (FullSyncCommand::SEQUENCE). */
-    public const array PIPELINE = ['countries', 'own_cities', 'cities', 'hotels', 'room_types', 'tags'];
+    public const array PIPELINE = ['countries', 'own_cities', 'cities', 'hotels', 'room_types', 'tags', 'package_routes'];
 
     /**
-     * The order the jobs run in: the catalogs (01:00–03:45, `full` first, as
+     * The order the jobs run in: the catalogs (01:00–03:50, `full` first, as
      * the one line that runs them), then each hotel's details and which
      * hotels have an Immediate offer (04:00, 04:15), then the products for
      * them (05:30, 06:00), then the bookings, every 15 minutes, and the
@@ -75,7 +75,8 @@ final class CronPlanBuilder extends CronJobPlan
      * its own row, whichever plan runs it.
      *
      * Eurosite's answers (28 Oct 2026) set them: the static catalogs once a
-     * month, the hotel lists weekly, details kept 30 days, availability as
+     * month, the hotel lists weekly (and the package routes with them: the
+     * spec only asks for them "now and then"), details kept 30 days, availability as
      * often as needed, bulk work between 01:00 and 06:00, and a booking
      * waiting for confirmation checked on their schedule
      * (BookingStatusSchedule).
@@ -90,6 +91,7 @@ final class CronPlanBuilder extends CronJobPlan
         'hotels' => ['cron' => '0 3 * * 0', 'every_hours' => 168, 'late_after_hours' => 2 * 168],
         'room_types' => ['cron' => '30 3 1 * *', 'every_hours' => self::MONTH_HOURS, 'late_after_hours' => 2 * self::MONTH_HOURS],
         'tags' => ['cron' => '45 3 1 * *', 'every_hours' => self::MONTH_HOURS, 'late_after_hours' => 2 * self::MONTH_HOURS],
+        'package_routes' => ['cron' => '50 3 * * 0', 'every_hours' => 168, 'late_after_hours' => 2 * 168],
         'product_info' => ['cron' => '0 4 * * *', 'every_hours' => 24, 'late_after_hours' => 48],
         'availability' => ['cron' => '15 4 * * *', 'every_hours' => 24, 'late_after_hours' => 48],
         'add_products' => ['cron' => '30 5 * * *', 'every_hours' => 24, 'late_after_hours' => 48],
@@ -134,6 +136,7 @@ final class CronPlanBuilder extends CronJobPlan
         'hotels' => 'hotels',
         'room_types' => 'room_types',
         'tags' => 'tags',
+        'package_routes' => 'package_routes',
         'product_info' => 'cache',
         'availability' => 'immediate',
         'add_products' => 'products',
@@ -193,7 +196,7 @@ final class CronPlanBuilder extends CronJobPlan
         $lines = [
             $plan === 'per'
                 ? '# ' . self::TITLE . ': each job on its own line, in the order they run'
-                : '# ' . self::TITLE . ': the catalogs in one nightly run (each only when due: monthly, hotels weekly), then the other jobs',
+                : '# ' . self::TITLE . ': the catalogs in one nightly run (each only when due: monthly; hotels and package routes weekly), then the other jobs',
         ];
         if ($generatedOn !== '') {
             $lines[] = '# generated ' . $generatedOn;

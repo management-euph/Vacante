@@ -13,7 +13,8 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * mode `full` — the whole static-data pipeline in dependency order:
- * countries → own_cities → cities → hotels → room_types → tags.
+ * countries → own_cities → cities → hotels → room_types → tags →
+ * package_routes.
  *
  * own_cities runs BEFORE cities so its countries join the city-sync target
  * set even with an empty whitelist (first-run bootstrap). product_info is
@@ -26,7 +27,8 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  *
  * A step runs only when it is due (CronPlanBuilder::stepDue): Eurosite asked
  * (28 Oct 2026) for the static catalogs once a month and the hotel lists
- * weekly, so the nightly `full` line runs them on the 1st and once a week.
+ * weekly (the package routes go with them), so the nightly `full` line runs
+ * them on the 1st and once a week.
  * The dashboard's Run does the same; `force=1` (its ⋯ menu's "Run every
  * catalog now") runs every step.
  */
@@ -39,6 +41,7 @@ final class FullSyncCommand extends AbstractSyncCommand
         'hotels' => HotelsSyncCommand::class,
         'room_types' => RoomTypesSyncCommand::class,
         'tags' => TagsSyncCommand::class,
+        'package_routes' => PackageRoutesSyncCommand::class,
     ];
 
     /** @var array<string, class-string<AbstractSyncCommand>> */
@@ -60,7 +63,7 @@ final class FullSyncCommand extends AbstractSyncCommand
     #[\Override]
     public static function getDescription(): string
     {
-        return 'Run every static-data sync in order (countries, own_cities, cities, hotels, room_types, tags)';
+        return 'Run every static-data sync in order (countries, own_cities, cities, hotels, room_types, tags, package_routes)';
     }
 
     #[\Override]

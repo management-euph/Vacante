@@ -313,8 +313,8 @@ return [
         'ro' => 'Toate cataloagele, fiecare când îi vine rândul',
     ],
     'eurosite.jobs_job_full_desc' => [
-        'en' => 'Runs the six catalogs below in order, each only when it is due: the monthly ones on the 1st, the hotels once a week. One nightly line instead of six.',
-        'ro' => 'Rulează în ordine cele șase cataloage de mai jos, fiecare doar când îi vine rândul: cele lunare pe 1, hotelurile o dată pe săptămână. O singură linie pe noapte în loc de șase.',
+        'en' => 'Runs the seven catalogs below in order, each only when it is due: the monthly ones on the 1st, the hotels and the package routes once a week. One nightly line instead of seven.',
+        'ro' => 'Rulează în ordine cele șapte cataloage de mai jos, fiecare doar când îi vine rândul: cele lunare pe 1, hotelurile și rutele pachetelor o dată pe săptămână. O singură linie pe noapte în loc de șapte.',
     ],
     'eurosite.jobs_job_countries' => [
         'en' => 'Countries',
@@ -363,6 +363,14 @@ return [
     'eurosite.jobs_job_tags_desc' => [
         'en' => 'The catalog of offer tags. It may be empty.',
         'ro' => 'Catalogul etichetelor de ofertă. Poate fi gol.',
+    ],
+    'eurosite.jobs_job_package_routes' => [
+        'en' => 'Package routes',
+        'ro' => 'Rutele pachetelor',
+    ],
+    'eurosite.jobs_job_package_routes_desc' => [
+        'en' => 'Where the packages go, the cities they leave from and their departure dates, for plane and coach packages.',
+        'ro' => 'Unde merg pachetele, orașele din care pleacă și datele plecărilor, pentru pachetele cu avionul și cu autocarul.',
     ],
     'eurosite.jobs_job_product_info' => [
         'en' => 'Hotel details',
@@ -467,6 +475,10 @@ return [
     'eurosite.jobs_count_tags' => [
         'en' => 'Offer tags: [n]',
         'ro' => 'Etichete de ofertă: [n]',
+    ],
+    'eurosite.jobs_count_package_routes' => [
+        'en' => 'Package routes: [n]',
+        'ro' => 'Rute de pachete: [n]',
     ],
     'eurosite.jobs_count_cache' => [
         'en' => 'Hotels with details: [n]',

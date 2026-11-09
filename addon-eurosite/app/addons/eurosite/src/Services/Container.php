@@ -13,6 +13,7 @@ use Tygh\Addons\Eurosite\Repository\CountryRepository;
 use Tygh\Addons\Eurosite\Repository\DestinationWhitelistRepository;
 use Tygh\Addons\Eurosite\Repository\EurositeBookingRepository;
 use Tygh\Addons\Eurosite\Repository\HotelRepository;
+use Tygh\Addons\Eurosite\Repository\PackageRouteRepository;
 use Tygh\Addons\Eurosite\Repository\ProductInfoCacheRepository;
 use Tygh\Addons\Eurosite\Repository\RoomTypeRepository;
 use Tygh\Addons\Eurosite\Repository\SyncLogRepository;
@@ -82,6 +83,8 @@ final class Container
 
     private static ?ProductInfoCacheRepository $productInfoCache = null;
 
+    private static ?PackageRouteRepository $packageRoutes = null;
+
     private static ?EurositeBookingRepository $bookings = null;
 
     private static ?EurositeProductFactory $productFactory = null;
@@ -148,6 +151,11 @@ final class Container
         return self::$productInfoCache ??= new ProductInfoCacheRepository();
     }
 
+    public static function packageRoutes(): PackageRouteRepository
+    {
+        return self::$packageRoutes ??= new PackageRouteRepository();
+    }
+
     /**
      * Reset cached singletons (tests / after a settings change).
      */
@@ -163,6 +171,7 @@ final class Container
         self::$whitelist = null;
         self::$syncLog = null;
         self::$productInfoCache = null;
+        self::$packageRoutes = null;
         self::$bookings = null;
         self::$productFactory = null;
         self::$hotelProducts = null;
