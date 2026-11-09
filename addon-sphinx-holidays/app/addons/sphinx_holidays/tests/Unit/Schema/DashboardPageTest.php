@@ -90,7 +90,8 @@ final class DashboardPageTest extends TestCase
     {
         $tiles = self::between('travel-cron-tiles travel-cron-tiles--four', 'travel-cron-card travel-cron-attention');
 
-        self::assertSame(4, preg_match_all('/<div class="travel-cron-tile(?:"|\{)/', $tiles));
+        self::assertSame(3, preg_match_all('/<div class="travel-cron-tile(?:"|\{)/', $tiles), 'three of Sphinx\'s own');
+        self::assertStringContainsString('{include file="addons/travel_core/components/jobs_tile.tpl" health=$_g.jobs card_id="sphinx-cron-commands"}', $tiles, 'and Travel Core\'s jobs tile');
         foreach (['$_g.hotels.in_scope|number_format', '$_g.products.linked|number_format', '$_g.unlinked.count|number_format', '$_g.unlinked.total|number_format'] as $figure) {
             self::assertStringContainsString($figure, $tiles);
         }
@@ -99,11 +100,9 @@ final class DashboardPageTest extends TestCase
             '"sphinx_holidays.hotels?link_status=linked"|fn_url',
             '"sphinx_holidays.hotels?availability=waiting"|fn_url',
             '"sphinx_holidays.hotels?link_status=orphan"|fn_url',
-            'href="#sphinx-cron-commands"',
         ] as $link) {
             self::assertStringContainsString($link, $tiles);
         }
-        self::assertStringContainsString('travel-cron-tile--bad', $tiles, 'a failing job turns the jobs tile red, as on Novoton\'s');
     }
 
     /** Each line has the one action that fixes it. */

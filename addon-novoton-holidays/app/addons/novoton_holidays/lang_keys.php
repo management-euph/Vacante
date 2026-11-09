@@ -43,10 +43,6 @@ return [
         'en' => 'Unknown job: [job]',
         'ro' => 'Job necunoscut: [job]',
     ],
-    'novoton_holidays.dash_jobs_title' => [
-        'en' => 'Scheduled jobs',
-        'ro' => 'Joburi programate',
-    ],
     'novoton_holidays.dash_col_job' => [
         'en' => 'Job',
         'ro' => 'Job',
@@ -326,30 +322,6 @@ return [
     'novoton_holidays.dash_tile_bookings_open' => [
         'en' => 'Open Novoton bookings →',
         'ro' => 'Deschide rezervările Novoton →',
-    ],
-    'novoton_holidays.dash_tile_jobs_failing' => [
-        'en' => 'Failing: [n]',
-        'ro' => 'Cu erori: [n]',
-    ],
-    'novoton_holidays.dash_tile_jobs_late' => [
-        'en' => 'Late: [n]',
-        'ro' => 'Întârziate: [n]',
-    ],
-    'novoton_holidays.dash_tile_jobs_never' => [
-        'en' => 'Not run yet: [n]',
-        'ro' => 'Nerulate încă: [n]',
-    ],
-    'novoton_holidays.dash_tile_jobs_ok' => [
-        'en' => 'All on time',
-        'ro' => 'Toate la timp',
-    ],
-    'novoton_holidays.dash_tile_jobs_note' => [
-        'en' => 'On time: [ok] · late: [late] · no runs yet: [never]',
-        'ro' => 'La timp: [ok] · întârziate: [late] · nerulate încă: [never]',
-    ],
-    'novoton_holidays.dash_tile_jobs_open' => [
-        'en' => 'See the jobs ↓',
-        'ro' => 'Vezi joburile ↓',
     ],
     'novoton_holidays.dash_attention_title' => [
         'en' => 'Needs attention ([n])',

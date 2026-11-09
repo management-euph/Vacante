@@ -55,25 +55,7 @@
                 <br><a href="{"eurosite.hotels?product=yes"|fn_url}">{__("eurosite.dash_tile_products_open")}</a>
             </div>
         </div>
-        {$_jh = $_g.jobs}
-        <div class="travel-cron-tile{if $_jh.tone == "bad"} travel-cron-tile--bad{elseif $_jh.tone == "warn"} travel-cron-tile--warn{/if}">
-            <div class="travel-cron-tile__label">{__("travel_core.jobs_title")}</div>
-            <div class="travel-cron-tile__value">
-                {if $_jh.counts.failed + $_jh.counts.stalled > 0}
-                    {__("eurosite.dash_tile_jobs_failing", ["[n]" => $_jh.counts.failed + $_jh.counts.stalled])}
-                {elseif $_jh.counts.late > 0}
-                    {__("eurosite.dash_tile_jobs_late", ["[n]" => $_jh.counts.late])}
-                {elseif $_jh.counts.never > 0}
-                    {__("eurosite.dash_tile_jobs_never", ["[n]" => $_jh.counts.never])}
-                {else}
-                    {__("eurosite.dash_tile_jobs_ok")}
-                {/if}
-            </div>
-            <div class="travel-cron-tile__note">
-                {__("eurosite.dash_tile_jobs_note", ["[ok]" => $_jh.counts.ok, "[late]" => $_jh.counts.late, "[never]" => $_jh.counts.never])}
-                <br><a href="#eurosite-scheduled-jobs">{__("eurosite.dash_tile_jobs_open")}</a>
-            </div>
-        </div>
+        {include file="addons/travel_core/components/jobs_tile.tpl" health=$_g.jobs card_id="eurosite-scheduled-jobs"}
     </div>
 
     {** Needs attention: only real problems, each with the one action that

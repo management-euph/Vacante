@@ -314,7 +314,8 @@ final class DashboardCronContractTest extends TestCase
         self::assertStringContainsString("'immediate_without' => \$hotelRepo->countImmediateWithoutProduct(),", $manage);
 
         $tpl = self::pages()['manage.tpl'];
-        self::assertSame(4, preg_match_all('/<div class="travel-cron-tile(?:"|\{)/', $tpl), 'four tiles');
+        self::assertSame(3, preg_match_all('/<div class="travel-cron-tile(?:"|\{)/', $tpl), 'three of Eurosite\'s own');
+        self::assertStringContainsString('{include file="addons/travel_core/components/jobs_tile.tpl" health=$_g.jobs card_id="eurosite-scheduled-jobs"}', $tpl, 'and Travel Core\'s jobs tile');
         // Every kind DashboardSummary::attention() gives has its line and its one action.
         foreach (['refused' => 'href="#eurosite-crontab"', 'nothing_sold' => 'href="{"eurosite.whitelist"|fn_url}"', 'no_immediate' => 'href="#eurosite-probe"'] as $kind => $action) {
             $branch = substr($tpl, (int) strpos($tpl, '$item.kind == "' . $kind . '"'), 400);

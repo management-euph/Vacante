@@ -1485,30 +1485,6 @@ return [
         'en' => 'See which',
         'ro' => 'Vezi care',
     ],
-    'sphinx_holidays.dash_tile_jobs_failing' => [
-        'en' => 'Failing: [n]',
-        'ro' => 'Eșuează: [n]',
-    ],
-    'sphinx_holidays.dash_tile_jobs_late' => [
-        'en' => 'Late: [n]',
-        'ro' => 'Întârziate: [n]',
-    ],
-    'sphinx_holidays.dash_tile_jobs_never' => [
-        'en' => 'No runs yet: [n]',
-        'ro' => 'Încă nerulate: [n]',
-    ],
-    'sphinx_holidays.dash_tile_jobs_ok' => [
-        'en' => 'All on time',
-        'ro' => 'Toate la timp',
-    ],
-    'sphinx_holidays.dash_tile_jobs_note' => [
-        'en' => 'On time: [ok] · late: [late] · no runs yet: [never]',
-        'ro' => 'La timp: [ok] · întârziate: [late] · încă nerulate: [never]',
-    ],
-    'sphinx_holidays.dash_tile_jobs_open' => [
-        'en' => 'See the jobs ↓',
-        'ro' => 'Vezi joburile ↓',
-    ],
     'sphinx_holidays.dash_attention_title' => [
         'en' => 'Needs attention ([n])',
         'ro' => 'Necesită atenție ([n])',

@@ -4830,6 +4830,30 @@ msgctxt "Languages::travel_core.jobs_set_key"
 msgid "Generate one on Travel Core → Tools"
 msgstr "Generează una în Travel Core → Instrumente"
 
+msgctxt "Languages::travel_core.jobs_tile_failing"
+msgid "Failing: [n]"
+msgstr "Eșuează: [n]"
+
+msgctxt "Languages::travel_core.jobs_tile_late"
+msgid "Late: [n]"
+msgstr "Întârziate: [n]"
+
+msgctxt "Languages::travel_core.jobs_tile_never"
+msgid "No runs yet: [n]"
+msgstr "Încă nerulate: [n]"
+
+msgctxt "Languages::travel_core.jobs_tile_ok"
+msgid "All on time"
+msgstr "Toate la timp"
+
+msgctxt "Languages::travel_core.jobs_tile_note"
+msgid "On time: [ok] · late: [late] · no runs yet: [never]"
+msgstr "La timp: [ok] · întârziate: [late] · încă nerulate: [never]"
+
+msgctxt "Languages::travel_core.jobs_tile_open"
+msgid "See the jobs ↓"
+msgstr "Vezi joburile ↓"
+
 msgctxt "Languages::travel_core.package_searching"
 msgid "Searching…"
 msgstr "Se caută…"

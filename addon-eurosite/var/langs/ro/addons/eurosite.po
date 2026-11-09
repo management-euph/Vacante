@@ -456,26 +456,6 @@ msgctxt "Languages::eurosite.last_synced"
 msgid "Last synced"
 msgstr "Ultima sincronizare"
 
-msgctxt "Languages::eurosite.cron_col_mode"
-msgid "Mode"
-msgstr "Mod"
-
-msgctxt "Languages::eurosite.cron_col_description"
-msgid "What it does"
-msgstr "Ce face"
-
-msgctxt "Languages::eurosite.cron_col_url"
-msgid "URL"
-msgstr "URL"
-
-msgctxt "Languages::eurosite.run"
-msgid "Run"
-msgstr "Rulează"
-
-msgctxt "Languages::eurosite.copy"
-msgid "Copy"
-msgstr "Copiază"
-
 msgctxt "Languages::eurosite.hotels_need_whitelist"
 msgid "Nothing to fetch: no destinations are whitelisted."
 msgstr "Nu are ce prelua: nicio destinație nu este în listă."
@@ -731,30 +711,6 @@ msgstr "Cu ofertă Imediat, încă fără produs: [n]"
 msgctxt "Languages::eurosite.dash_tile_products_open"
 msgid "See the hotels with a product"
 msgstr "Vezi hotelurile cu produs"
-
-msgctxt "Languages::eurosite.dash_tile_jobs_failing"
-msgid "Failing: [n]"
-msgstr "Eșuează: [n]"
-
-msgctxt "Languages::eurosite.dash_tile_jobs_late"
-msgid "Late: [n]"
-msgstr "Întârziate: [n]"
-
-msgctxt "Languages::eurosite.dash_tile_jobs_never"
-msgid "No runs yet: [n]"
-msgstr "Încă nerulate: [n]"
-
-msgctxt "Languages::eurosite.dash_tile_jobs_ok"
-msgid "All on time"
-msgstr "Toate la timp"
-
-msgctxt "Languages::eurosite.dash_tile_jobs_note"
-msgid "On time: [ok] · late: [late] · no runs yet: [never]"
-msgstr "La timp: [ok] · întârziate: [late] · încă nerulate: [never]"
-
-msgctxt "Languages::eurosite.dash_tile_jobs_open"
-msgid "See the jobs ↓"
-msgstr "Vezi joburile ↓"
 
 msgctxt "Languages::eurosite.dash_attention_title"
 msgid "Needs attention ([n])"

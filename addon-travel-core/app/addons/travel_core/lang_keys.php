@@ -4026,6 +4026,31 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Generate one on Travel Core → Tools',
         'ro' => 'Generează una în Travel Core → Instrumente',
     ],
+    // The jobs' tile in a provider's At a glance row (components/jobs_tile.tpl).
+    'travel_core.jobs_tile_failing' => [
+        'en' => 'Failing: [n]',
+        'ro' => 'Eșuează: [n]',
+    ],
+    'travel_core.jobs_tile_late' => [
+        'en' => 'Late: [n]',
+        'ro' => 'Întârziate: [n]',
+    ],
+    'travel_core.jobs_tile_never' => [
+        'en' => 'No runs yet: [n]',
+        'ro' => 'Încă nerulate: [n]',
+    ],
+    'travel_core.jobs_tile_ok' => [
+        'en' => 'All on time',
+        'ro' => 'Toate la timp',
+    ],
+    'travel_core.jobs_tile_note' => [
+        'en' => 'On time: [ok] · late: [late] · no runs yet: [never]',
+        'ro' => 'La timp: [ok] · întârziate: [late] · încă nerulate: [never]',
+    ],
+    'travel_core.jobs_tile_open' => [
+        'en' => 'See the jobs ↓',
+        'ro' => 'Vezi joburile ↓',
+    ],
     'travel_core.package_searching' => [
         'en' => 'Searching…',
         'ro' => 'Se caută…',

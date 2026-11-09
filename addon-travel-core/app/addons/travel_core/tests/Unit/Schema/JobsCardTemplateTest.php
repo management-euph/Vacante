@@ -42,6 +42,7 @@ final class JobsCardTemplateTest extends TestCase
             'job_row' => self::code('job_row'),
             'run_job' => self::code('run_job'),
             'commands_card' => self::code('commands_card'),
+            'jobs_tile' => self::code('jobs_tile'),
         ];
     }
 
@@ -142,6 +143,32 @@ final class JobsCardTemplateTest extends TestCase
         foreach (self::templates() as $name => $src) {
             preg_match_all('/\{\$[^}]*\bnofilter\}/', $src, $m);
             self::assertSame($name === 'commands_card' ? ['{$extra nofilter}'] : [], $m[0], "{$name}: what is printed unescaped");
+        }
+    }
+
+    /**
+     * The jobs' tile in each provider's At a glance row: the same words and
+     * colours on every dashboard, red when a job failed or stalled, amber
+     * when one is late or never ran, a link down to the jobs card.
+     */
+    public function testTheJobsTileReadsTheSameOnEveryDashboard(): void
+    {
+        $tile = self::templates()['jobs_tile'];
+        self::assertStringContainsString('{if $health.tone == "bad"} travel-cron-tile--bad{elseif $health.tone == "warn"} travel-cron-tile--warn{/if}', $tile);
+        foreach (['failing', 'late', 'never', 'ok', 'note', 'open'] as $word) {
+            self::assertStringContainsString('__("travel_core.jobs_tile_' . $word . '"', $tile, $word);
+        }
+        self::assertStringContainsString('<a href="#{$card_id|escape:html}">', $tile);
+
+        $root = dirname(self::repo());
+        foreach ([
+            'addon-novoton-holidays/design/backend/templates/addons/novoton_holidays/views/novoton_holidays/manage.tpl' => 'health=$novoton_job_health card_id="novoton-cron-jobs"',
+            'addon-sphinx-holidays/design/backend/templates/addons/sphinx_holidays/views/sphinx_holidays/manage.tpl' => 'health=$_g.jobs card_id="sphinx-cron-commands"',
+            'addon-eurosite/design/backend/templates/addons/eurosite/views/eurosite/manage.tpl' => 'health=$_g.jobs card_id="eurosite-scheduled-jobs"',
+        ] as $page => $params) {
+            $src = (string) file_get_contents($root . '/' . $page);
+            self::assertStringContainsString('{include file="addons/travel_core/components/jobs_tile.tpl" ' . $params . '}', $src, $page);
+            self::assertStringNotContainsString('dash_tile_jobs_', $src, $page . ': no copy of its own');
         }
     }
 

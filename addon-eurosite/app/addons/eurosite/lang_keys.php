@@ -282,26 +282,6 @@ return [
         'en' => 'Last synced',
         'ro' => 'Ultima sincronizare',
     ],
-    'eurosite.cron_col_mode' => [
-        'en' => 'Mode',
-        'ro' => 'Mod',
-    ],
-    'eurosite.cron_col_description' => [
-        'en' => 'What it does',
-        'ro' => 'Ce face',
-    ],
-    'eurosite.cron_col_url' => [
-        'en' => 'URL',
-        'ro' => 'URL',
-    ],
-    'eurosite.run' => [
-        'en' => 'Run',
-        'ro' => 'Rulează',
-    ],
-    'eurosite.copy' => [
-        'en' => 'Copy',
-        'ro' => 'Copiază',
-    ],
     'eurosite.hotels_need_whitelist' => [
         'en' => 'Nothing to fetch: no destinations are whitelisted.',
         'ro' => 'Nu are ce prelua: nicio destinație nu este în listă.',
@@ -561,30 +541,6 @@ return [
     'eurosite.dash_tile_products_open' => [
         'en' => 'See the hotels with a product',
         'ro' => 'Vezi hotelurile cu produs',
-    ],
-    'eurosite.dash_tile_jobs_failing' => [
-        'en' => 'Failing: [n]',
-        'ro' => 'Eșuează: [n]',
-    ],
-    'eurosite.dash_tile_jobs_late' => [
-        'en' => 'Late: [n]',
-        'ro' => 'Întârziate: [n]',
-    ],
-    'eurosite.dash_tile_jobs_never' => [
-        'en' => 'No runs yet: [n]',
-        'ro' => 'Încă nerulate: [n]',
-    ],
-    'eurosite.dash_tile_jobs_ok' => [
-        'en' => 'All on time',
-        'ro' => 'Toate la timp',
-    ],
-    'eurosite.dash_tile_jobs_note' => [
-        'en' => 'On time: [ok] · late: [late] · no runs yet: [never]',
-        'ro' => 'La timp: [ok] · întârziate: [late] · încă nerulate: [never]',
-    ],
-    'eurosite.dash_tile_jobs_open' => [
-        'en' => 'See the jobs ↓',
-        'ro' => 'Vezi joburile ↓',
     ],
     'eurosite.dash_attention_title' => [
         'en' => 'Needs attention ([n])',

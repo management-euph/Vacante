@@ -176,8 +176,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // away so they never leak into the admin page.
         ob_start();
         try {
-            // Someone asked for the whole pipeline: every step, due or not.
-            $result = $dispatcher->dispatch($syncType, $syncType === 'full' ? ['force' => '1'] : []);
+            // A plain run: the whitelist editor syncs one catalog. The whole
+            // pipeline, every step due or not, is the jobs card's "Run every
+            // catalog now" (eurosite.run_job, force=1).
+            $result = $dispatcher->dispatch($syncType);
         } finally {
             ob_end_clean();
         }
