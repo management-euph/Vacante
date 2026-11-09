@@ -404,6 +404,26 @@ final class BookingSidebarTest extends TestCase
         }
     }
 
+    /**
+     * "6 nopți · ≈ 142 € / noapte": the price goes into the label wrapped in
+     * the span that Novoton's re-price updates. CS-Cart escapes what a tag
+     * prints, so without nofilter the guest read the span's markup as text
+     * and the re-price found no span to update. Both pieces put into the
+     * label are escaped where they are built.
+     */
+    public function testPerNightLinePrintsItsPriceSpanAsMarkup(): void
+    {
+        $tpl = self::tpl();
+
+        self::assertStringContainsString('{capture assign="tbs_pn_price"}<span class="travel-price-pernight__value">{$tbs.per_night|escape:html}</span>{/capture}', $tpl);
+        self::assertStringContainsString('{__("travel_core.per_night_line", ["[nights]" => $tbs_pn_nights, "[price]" => $tbs_pn_price]) nofilter}', $tpl);
+        self::assertStringContainsString('{capture assign="tbs_pn_nights"}{__("travel_core.n_nights", [$tbs.nights])}{/capture}', $tpl);
+        self::assertStringContainsString(
+            "document.querySelector('#travel-price-pernight .travel-price-pernight__value')",
+            (string) file_get_contents(self::repoRoot() . '/addon-novoton-holidays/js/addons/novoton_holidays/booking-form.js'),
+        );
+    }
+
     public function testCancellationCardIsHiddenUntilItHasSomethingToSay(): void
     {
         $tpl = self::tpl();

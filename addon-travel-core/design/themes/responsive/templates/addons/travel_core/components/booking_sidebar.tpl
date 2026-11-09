@@ -198,7 +198,7 @@
 
             {if $tbs.per_night && $tbs.nights > 0}
                 {capture assign="tbs_pn_nights"}{__("travel_core.n_nights", [$tbs.nights])}{/capture}
-                <div class="travel-bsidebar-pernight" id="travel-price-pernight">{capture assign="tbs_pn_price"}<span class="travel-price-pernight__value">{$tbs.per_night|escape:html}</span>{/capture}{__("travel_core.per_night_line", ["[nights]" => $tbs_pn_nights, "[price]" => $tbs_pn_price])}</div>
+                <div class="travel-bsidebar-pernight" id="travel-price-pernight">{capture assign="tbs_pn_price"}<span class="travel-price-pernight__value">{$tbs.per_night|escape:html}</span>{/capture}{__("travel_core.per_night_line", ["[nights]" => $tbs_pn_nights, "[price]" => $tbs_pn_price]) nofilter}</div>
             {/if}
 
             {* Deposit / balance from the supplier's payment terms — the "Pay in
