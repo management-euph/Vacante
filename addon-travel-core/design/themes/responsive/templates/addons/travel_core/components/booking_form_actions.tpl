@@ -2,9 +2,13 @@
     The booking form's actions row, one for every provider (novoton, sphinx,
     eurosite).
 
-    A new booking: the way back to the results, when the provider has one,
+    A new booking: the way back to the offer, when the provider has one,
     and the main button, which leads to payment, with a lock beside its
-    label and the note that nothing is paid yet under it.
+    label, the total in brackets ("Continue to payment (849 €)") and the
+    note that nothing is paid yet under it. The total is a `.price-total`,
+    so every script that re-prices keeps it in step with the summary's. On
+    a phone the bottom bar's button is the one shown (booking-pages.css);
+    this one stays in the page, because the bar clicks it.
 
     Editing a cart line's guests: "Back to booking details" and "Cancel"
     return, unsaved, to where the booking is shown: the cart, or the
@@ -31,6 +35,7 @@
         </span>
     </div>
 {else}
+    {$fa_total = $travel_booking_sidebar.total|default:""}
     <div class="travel-form-actions travel-form-actions--cta">
         {if $fa_back_url|default:""}
             <a href="{$fa_back_url|fn_url}" class="travel-btn-back">&larr; {$fa_back_label}</a>
@@ -39,7 +44,7 @@
         {/if}
         <button type="submit" class="travel-btn--primary{if $fa_button_class|default:""} {$fa_button_class|escape:html}{/if}"{if $fa_button_id|default:""} id="{$fa_button_id|escape:html}"{/if}>
             <svg class="travel-btn__lock" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false"><rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-            {fn_travel_core_booking_cta_label($fa_addon)} &rarr;
+            {fn_travel_core_booking_cta_label($fa_addon)}{if $fa_total} (<span class="price-total">{$fa_total nofilter}</span>){/if} &rarr;
         </button>
     </div>
     <p class="travel-cta-note">{__("travel_core.cta_note")}</p>

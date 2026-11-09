@@ -1806,6 +1806,14 @@ body.travel-conditions-open {
 /* Edit mode's header: what is being changed, under the title. */
 .travel-booking-page .travel-booking-head__context { margin: 0; font-size: 15px; color: #4b5563; }
 
+/* The total in the main button's label reads as part of the label. */
+.travel-booking-page .travel-btn--primary .price-total { font-size: inherit; font-weight: inherit; color: inherit; }
+/* One main button on a phone: the bottom bar's. The form's own stays in the
+   page, because the bar clicks it, so every check on it still runs. */
+@media (max-width: 900px) {
+    .travel-booking-page:has(.travel-mobile-bar) .travel-form-actions--cta .travel-btn--primary { display: none; }
+}
+
 /* Mobile bottom bar (item 2) */
 .travel-booking-page .travel-mobile-bar { display: none; }
 @media (max-width: 900px) {
