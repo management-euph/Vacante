@@ -557,10 +557,6 @@ return [
         'en' => 'Booking progress',
         'ro' => 'Etapele rezervării',
     ],
-    'travel_core.step_search' => [
-        'en' => 'Search',
-        'ro' => 'Căutare',
-    ],
     'travel_core.step_guest_details' => [
         'en' => 'Guest details',
         'ro' => 'Datele turiștilor',
@@ -568,10 +564,6 @@ return [
     'travel_core.step_checkout' => [
         'en' => 'Checkout',
         'ro' => 'Finalizare comandă',
-    ],
-    'travel_core.step_confirmation' => [
-        'en' => 'Confirmation',
-        'ro' => 'Confirmare',
     ],
     'travel_core.guest_names_hint' => [
         'en' => 'Enter each name exactly as it appears on the guest\'s ID card or passport.',
@@ -639,17 +631,25 @@ return [
         'en' => 'Who is staying?',
         'ro' => 'Cine se cazează?',
     ],
-    'travel_core.step_guests' => [
-        'en' => 'Guests',
-        'ro' => 'Turiști',
+    'travel_core.step_offer' => [
+        'en' => 'Offer',
+        'ro' => 'Ofertă',
+    ],
+    'travel_core.step_offer_back' => [
+        'en' => 'Back to the offer, to change the room or the dates',
+        'ro' => 'Înapoi la ofertă, pentru a schimba camera sau datele',
+    ],
+    'travel_core.step_details' => [
+        'en' => 'Booking details',
+        'ro' => 'Detalii rezervare',
+    ],
+    'travel_core.back_to_offer' => [
+        'en' => 'Back to the offer',
+        'ro' => 'Înapoi la ofertă',
     ],
     'travel_core.step_payment' => [
         'en' => 'Payment',
         'ro' => 'Plată',
-    ],
-    'travel_core.step_search_back' => [
-        'en' => 'Back to your search results',
-        'ro' => 'Înapoi la rezultatele căutării',
     ],
     'travel_core.step_locked_hint' => [
         'en' => 'Enter the guest details first',

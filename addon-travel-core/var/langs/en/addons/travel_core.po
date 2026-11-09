@@ -1450,10 +1450,6 @@ msgctxt "Languages::travel_core.booking_progress"
 msgid "Booking progress"
 msgstr "Booking progress"
 
-msgctxt "Languages::travel_core.step_search"
-msgid "Search"
-msgstr "Search"
-
 msgctxt "Languages::travel_core.step_guest_details"
 msgid "Guest details"
 msgstr "Guest details"
@@ -1461,10 +1457,6 @@ msgstr "Guest details"
 msgctxt "Languages::travel_core.step_checkout"
 msgid "Checkout"
 msgstr "Checkout"
-
-msgctxt "Languages::travel_core.step_confirmation"
-msgid "Confirmation"
-msgstr "Confirmation"
 
 msgctxt "Languages::travel_core.guest_names_hint"
 msgid "Enter each name exactly as it appears on the guest's ID card or passport."
@@ -1526,17 +1518,25 @@ msgctxt "Languages::travel_core.who_is_staying"
 msgid "Who is staying?"
 msgstr "Who is staying?"
 
-msgctxt "Languages::travel_core.step_guests"
-msgid "Guests"
-msgstr "Guests"
+msgctxt "Languages::travel_core.step_offer"
+msgid "Offer"
+msgstr "Offer"
+
+msgctxt "Languages::travel_core.step_offer_back"
+msgid "Back to the offer, to change the room or the dates"
+msgstr "Back to the offer, to change the room or the dates"
+
+msgctxt "Languages::travel_core.step_details"
+msgid "Booking details"
+msgstr "Booking details"
+
+msgctxt "Languages::travel_core.back_to_offer"
+msgid "Back to the offer"
+msgstr "Back to the offer"
 
 msgctxt "Languages::travel_core.step_payment"
 msgid "Payment"
 msgstr "Payment"
-
-msgctxt "Languages::travel_core.step_search_back"
-msgid "Back to your search results"
-msgstr "Back to your search results"
 
 msgctxt "Languages::travel_core.step_locked_hint"
 msgid "Enter the guest details first"

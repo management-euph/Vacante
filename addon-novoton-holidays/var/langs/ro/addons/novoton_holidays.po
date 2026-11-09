@@ -1348,10 +1348,6 @@ msgctxt "Languages::novoton_holidays.board"
 msgid "Board"
 msgstr "Masă"
 
-msgctxt "Languages::novoton_holidays.back_to_results"
-msgid "Back to Results"
-msgstr "Înapoi la rezultate"
-
 msgctxt "Languages::novoton_holidays.stay_nights"
 msgid "Stay: [nights] nights"
 msgstr "Cazare: [nights] nopți"

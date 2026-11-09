@@ -1025,10 +1025,6 @@ return [
         'en' => 'Between [from] - [to]: [value] penalty',
         'ro' => 'Între [from] - [to]: penalizare [value]',
     ],
-    'eurosite.back_to_results' => [
-        'en' => 'Back to Results',
-        'ro' => 'Înapoi la rezultate',
-    ],
     'eurosite.add_to_cart' => [
         'en' => 'Add to Cart',
         'ro' => 'Adaugă în coș',

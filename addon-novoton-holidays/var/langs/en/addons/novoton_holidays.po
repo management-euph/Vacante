@@ -1128,10 +1128,6 @@ msgctxt "Languages::novoton_holidays.terms_and_conditions"
 msgid "Terms and Conditions"
 msgstr "Terms and Conditions"
 
-msgctxt "Languages::novoton_holidays.back_to_results"
-msgid "Back to Results"
-msgstr "Back to Results"
-
 msgctxt "Languages::novoton_holidays.add_to_cart_and_checkout"
 msgid "Add to Cart & Checkout"
 msgstr "Add to Cart & Checkout"

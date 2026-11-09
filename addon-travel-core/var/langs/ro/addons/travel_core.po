@@ -1450,10 +1450,6 @@ msgctxt "Languages::travel_core.booking_progress"
 msgid "Booking progress"
 msgstr "Etapele rezervării"
 
-msgctxt "Languages::travel_core.step_search"
-msgid "Search"
-msgstr "Căutare"
-
 msgctxt "Languages::travel_core.step_guest_details"
 msgid "Guest details"
 msgstr "Datele turiștilor"
@@ -1461,10 +1457,6 @@ msgstr "Datele turiștilor"
 msgctxt "Languages::travel_core.step_checkout"
 msgid "Checkout"
 msgstr "Finalizare comandă"
-
-msgctxt "Languages::travel_core.step_confirmation"
-msgid "Confirmation"
-msgstr "Confirmare"
 
 msgctxt "Languages::travel_core.guest_names_hint"
 msgid "Enter each name exactly as it appears on the guest's ID card or passport."
@@ -1526,17 +1518,25 @@ msgctxt "Languages::travel_core.who_is_staying"
 msgid "Who is staying?"
 msgstr "Cine se cazează?"
 
-msgctxt "Languages::travel_core.step_guests"
-msgid "Guests"
-msgstr "Turiști"
+msgctxt "Languages::travel_core.step_offer"
+msgid "Offer"
+msgstr "Ofertă"
+
+msgctxt "Languages::travel_core.step_offer_back"
+msgid "Back to the offer, to change the room or the dates"
+msgstr "Înapoi la ofertă, pentru a schimba camera sau datele"
+
+msgctxt "Languages::travel_core.step_details"
+msgid "Booking details"
+msgstr "Detalii rezervare"
+
+msgctxt "Languages::travel_core.back_to_offer"
+msgid "Back to the offer"
+msgstr "Înapoi la ofertă"
 
 msgctxt "Languages::travel_core.step_payment"
 msgid "Payment"
 msgstr "Plată"
-
-msgctxt "Languages::travel_core.step_search_back"
-msgid "Back to your search results"
-msgstr "Înapoi la rezultatele căutării"
 
 msgctxt "Languages::travel_core.step_locked_hint"
 msgid "Enter the guest details first"

@@ -144,7 +144,7 @@
                 fa_addon="novoton_holidays"
                 fa_edit_mode=$is_edit_mode|default:false
                 fa_back_url=$nvt_results_url
-                fa_back_label=__("novoton_holidays.back_to_results")
+                fa_back_label=__("travel_core.back_to_offer")
                 fa_button_id="booking-submit-btn"}
 
             {* "What are my booking conditions?" modal (shared; its link sits in

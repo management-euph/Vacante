@@ -1608,48 +1608,41 @@ body.travel-conditions-open {
    "+N more", price detail, cancellation & payment timeline, guest form,
    CTA and mobile bottom bar (one set for sphinx, novoton, eurosite) ═════ */
 
-/* Page header: title left, progress bar centered, one row — replaces the
-   breadcrumb + full-width bar stack so the form starts higher. */
-.travel-booking-page .travel-booking-head {
-    display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center;
-    gap: 12px 24px; margin: 16px 0 22px; padding-bottom: 14px;
-    border-bottom: 1px solid var(--nvt-border, #e8edf3);
-}
+/* Page header: the progress bar, full width, above both columns. A new
+   booking's title is for screen readers only (the bar says where the guest
+   is); editing a cart line shows its title and context instead of the bar. */
+.travel-booking-page .travel-booking-head { margin: 16px 0 24px; }
 .travel-booking-page .travel-booking-head__title {
-    grid-column: 1; margin: 0; font-size: 26px; line-height: 1.2; font-weight: 700;
+    margin: 0; font-size: 26px; line-height: 1.2; font-weight: 700;
     color: #111827; letter-spacing: -0.01em;
 }
-.travel-booking-page .travel-booking-head--no-steps { grid-template-columns: 1fr; }
-/* Mid widths: centering on the whole row would squeeze the title, so the
-   steps center in the space beside it instead. */
-@media (min-width: 901px) and (max-width: 1180px) {
-    .travel-booking-page .travel-booking-head { grid-template-columns: auto minmax(0, 1fr); }
+.travel-booking-page .travel-booking-head--no-steps {
+    display: grid; gap: 4px; padding-bottom: 14px; border-bottom: 1px solid var(--nvt-border, #e8edf3);
 }
 
-/* Progress bar. Only the past step (Search) is a link; the current one is
-   highlighted; future ones are muted and not clickable. */
-.travel-booking-page .travel-steps-nav { grid-column: 2; min-width: 0; }
+/* Progress bar, as tour operators draw it: three equal segments, each
+   underlined, the line green up to the current step. Only the past step
+   (Offer) is a link; the current one is bold; the future one is muted and
+   not clickable. */
 .travel-booking-page .travel-steps {
-    display: flex; justify-content: center; align-items: center; gap: 0;
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
     list-style: none; margin: 0; padding: 0;
 }
 .travel-booking-page .travel-steps__item {
-    display: flex; align-items: center; gap: 8px; white-space: nowrap; font-size: 14px;
+    display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 48px; padding: 0 8px;
+    border-bottom: 4px solid #d5d9de; font-size: 15px; white-space: nowrap;
 }
-.travel-booking-page .travel-steps__item + .travel-steps__item::before {
-    content: ""; width: 36px; height: 2px; margin: 0 12px; background: #d1d5db;
-}
+.travel-booking-page .travel-steps__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .travel-booking-page .travel-steps__badge {
     display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
-    width: 28px; height: 28px; border-radius: 50%; font-size: 13px; font-weight: 700;
+    width: 26px; height: 26px; border-radius: 50%; font-size: 13px; font-weight: 700; box-sizing: border-box;
 }
-/* Done: green circle + check, dark gray text; blue + underline on hover/focus */
-.travel-booking-page .travel-steps__item--done { color: #374151; font-weight: 600; }
-.travel-booking-page .travel-steps__item--done .travel-steps__badge { background: #15803d; border: 1px solid #15803d; color: #fff; font-size: 14px; }
-.travel-booking-page .travel-steps__item--done + .travel-steps__item::before { background: #15803d; }
+/* Done: green line and a green circle with a check */
+.travel-booking-page .travel-steps__item--done { border-bottom-color: #15803d; color: #1a1a1a; font-weight: 600; }
+.travel-booking-page .travel-steps__item--done .travel-steps__badge { background: #15803d; color: #fff; font-size: 14px; }
 .travel-booking-page .travel-steps__link {
-    display: inline-flex; align-items: center; gap: 8px; color: inherit; text-decoration: none;
-    border-radius: 6px; padding: 4px 6px; margin: -4px -6px; cursor: pointer;
+    display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 44px;
+    color: inherit; text-decoration: none; border-radius: 6px; cursor: pointer;
 }
 /* A quiet underline at rest (touch has no hover), full link blue on hover */
 .travel-booking-page .travel-steps__link .travel-steps__label {
@@ -1663,15 +1656,25 @@ body.travel-conditions-open {
 }
 .travel-booking-page .travel-steps__link:focus-visible { outline: 2px solid #1565c0; outline-offset: 2px; }
 .travel-booking-page .travel-steps__link:focus:not(:focus-visible) { outline: none; }
-/* Current: filled dark blue circle, bold dark text */
-.travel-booking-page .travel-steps__item--active { color: #111827; font-weight: 700; }
-.travel-booking-page .travel-steps__item--active .travel-steps__badge {
-    background: var(--nvt-primary, #003580); border: 1px solid var(--nvt-primary, #003580); color: #fff;
-    box-shadow: 0 0 0 4px rgba(0, 53, 128, 0.12);
-}
-/* Upcoming: light gray outline circle, muted text, not clickable */
+/* Current: green line, a dark blue circle, bold dark text */
+.travel-booking-page .travel-steps__item--active { border-bottom-color: #15803d; color: #111827; font-weight: 700; }
+.travel-booking-page .travel-steps__item--active .travel-steps__badge { background: var(--nvt-primary, #003580); color: #fff; }
+/* Upcoming: gray line, an outlined circle, muted text, not clickable */
 .travel-booking-page .travel-steps__item--upcoming { color: #6b7280; font-weight: 500; cursor: not-allowed; }
-.travel-booking-page .travel-steps__item--upcoming .travel-steps__badge { background: #fff; border: 1.5px solid #8a94a3; color: #6b7280; }
+.travel-booking-page .travel-steps__item--upcoming .travel-steps__badge { background: #fff; border: 2px solid #c4cbd6; color: #6b7280; }
+/* Phones: the current step keeps its words; the others keep their circle,
+   their words left for screen readers only. */
+@media (max-width: 640px) {
+    .travel-booking-page .travel-booking-head { margin: 8px 0 16px; }
+    .travel-booking-page .travel-booking-head__title { font-size: 21px; }
+    .travel-booking-page .travel-steps { grid-template-columns: auto minmax(0, 1fr) auto; }
+    .travel-booking-page .travel-steps__item { font-size: 14px; }
+    .travel-booking-page .travel-steps__item--done .travel-steps__label,
+    .travel-booking-page .travel-steps__item--upcoming .travel-steps__label {
+        position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+        clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+}
 /* Screen-reader-only text (step state) */
 .travel-booking-page .travel-sr-only {
     position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
@@ -1792,7 +1795,7 @@ body.travel-conditions-open {
 .travel-booking-page .travel-btn--secondary:hover,
 .travel-booking-page .travel-btn--secondary:focus { border-color: #8a94a3; background: #f8fafc; color: #111827; text-decoration: none; }
 /* Edit mode's header: what is being changed, under the title. */
-.travel-booking-page .travel-booking-head__context { grid-column: 1; margin: -4px 0 0; font-size: 15px; color: #4b5563; }
+.travel-booking-page .travel-booking-head__context { margin: 0; font-size: 15px; color: #4b5563; }
 
 /* Mobile bottom bar (item 2) */
 .travel-booking-page .travel-mobile-bar { display: none; }
@@ -1806,17 +1809,6 @@ body.travel-conditions-open {
     .travel-booking-page .travel-mobile-bar__total strong { font-size: 20px; color: var(--nvt-primary, #003580); }
     .travel-booking-page .travel-mobile-bar .travel-btn--primary { min-height: 48px; padding: 12px 18px; font-size: 15px; font-weight: 700; }
     .travel-booking-page { padding-bottom: 84px; }
-    /* Title above, then all four steps with their labels under the circles */
-    .travel-booking-page .travel-booking-head { grid-template-columns: 1fr; gap: 10px; margin: 10px 0 14px; }
-    .travel-booking-page .travel-booking-head__title { font-size: 21px; }
-    .travel-booking-page .travel-steps-nav { grid-column: 1; width: 100%; }
-    .travel-booking-page .travel-steps { width: 100%; justify-content: space-between; }
-    .travel-booking-page .travel-steps__item,
-    .travel-booking-page .travel-steps__link { flex-direction: column; gap: 4px; font-size: 12px; }
-    .travel-booking-page .travel-steps__item { flex: 1 1 0; position: relative; min-width: 0; white-space: normal; text-align: center; }
-    .travel-booking-page .travel-steps__item + .travel-steps__item::before {
-        position: absolute; top: 13px; right: calc(50% + 22px); width: calc(100% - 44px); margin: 0;
-    }
     .travel-booking-page .travel-form-actions.travel-form-actions--cta { flex-direction: column-reverse; padding: 0; }
     .travel-booking-page .travel-form-actions--cta .travel-btn--primary { width: 100%; }
     .travel-booking-page .travel-cta-note { text-align: center; margin-right: 0; }

@@ -64,7 +64,7 @@
         {include file="addons/travel_core/components/booking_form_actions.tpl"
             fa_addon="eurosite"
             fa_back_url=$eurosite_back_url|default:""
-            fa_back_label=__("eurosite.back_to_results")
+            fa_back_label=__("travel_core.back_to_offer")
             fa_button_class="eurosite-submit-btn"}
 
         {include file="addons/travel_core/components/booking_conditions_modal.tpl"}
