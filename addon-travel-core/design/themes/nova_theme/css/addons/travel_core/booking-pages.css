@@ -103,12 +103,14 @@
     padding: 20px;
     border-bottom: 1px solid var(--nvt-border, #e0e0e0);
 }
+/* Section titles ("Who is staying?") start on the left, above the fields
+   they head, in the booking's navy. */
 .travel-booking-page .travel-form-section > h3 {
-    margin: 0 0 20px;
+    margin: 0 0 16px;
     font-size: 18px;
-    color: var(--nvt-text, #1a1a1a);
-    text-align: center;
-    font-weight: 600;
+    color: var(--nvt-primary, #003580);
+    text-align: left;
+    font-weight: 700;
 }
 .travel-booking-page .travel-info-block {
     margin-bottom: 15px;
@@ -152,13 +154,16 @@
     margin: 0 auto;
 }
 
-/* ── Booking page: 2-column layout (summary sidebar + guest forms) ─────── */
-/* Shared by both providers — components/booking_sidebar.tpl on the left,
-   the guest-name form on the right. Mobile stacks the summary ABOVE the form
-   so the guest confirms what they are paying for before typing names. */
+/* ── Booking page: 2-column layout (guest forms + summary sidebar) ─────── */
+/* Shared by every provider: the guest form on the left, where the eye
+   starts, and components/booking_sidebar.tpl on the right, the booking's
+   details beside it (as tour operators lay it out). The sidebar stays first
+   in the page's order, so a phone still shows the summary ABOVE the form
+   and Novoton's form, which wraps both columns, is unchanged; on a wide
+   screen the grid places it in the right column. */
 .travel-booking-page .travel-booking-layout {
     display: grid;
-    grid-template-columns: 380px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) 380px;
     gap: 24px;
     align-items: start;
 }
@@ -167,6 +172,10 @@
 }
 .travel-booking-page .travel-booking-col-main {
     min-width: 0;
+}
+@media (min-width: 901px) {
+    .travel-booking-page .travel-booking-col-main { grid-column: 1; grid-row: 1; }
+    .travel-booking-page .travel-bsidebar { grid-column: 2; grid-row: 1; }
 }
 /* A short guest form beside a tall summary stays in view with its button
    (booking-conditions.js sets the class only while the whole form fits). */

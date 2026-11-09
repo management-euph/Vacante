@@ -128,14 +128,17 @@ final class BookingFormInitialRecalcTest extends TestCase
         self::assertIsInt($namePos);
         self::assertLessThan($namePos, $starsPos);
 
-        // Two-column grid that collapses with the summary ABOVE the form.
+        // Two-column grid, the form left and the summary right, that
+        // collapses with the summary ABOVE the form.
         $css = (string) file_get_contents(
             dirname(__DIR__, 7) . '/addon-travel-core/design/themes/responsive/css/addons/travel_core/booking-pages.css',
         );
         $start = strpos($css, '.travel-booking-page .travel-booking-layout {');
         self::assertNotFalse($start);
         $rule = substr($css, $start, (int) strpos($css, '}', $start) - $start);
-        self::assertStringContainsString('grid-template-columns: 380px minmax(0, 1fr)', $rule);
+        self::assertStringContainsString('grid-template-columns: minmax(0, 1fr) 380px', $rule);
+        self::assertStringContainsString('.travel-booking-page .travel-bsidebar { grid-column: 2; grid-row: 1; }', $css);
+        self::assertStringContainsString('.travel-booking-page .travel-booking-col-main { grid-column: 1; grid-row: 1; }', $css);
         // Mobile: the sidebar is re-ordered ABOVE the guest form.
         $mqStart = strpos($css, '@media (max-width: 900px)');
         self::assertNotFalse($mqStart);
