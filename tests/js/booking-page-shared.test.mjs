@@ -227,6 +227,10 @@ describe('"same last name as Adult 1"', () => {
         box.checked = true;
         box.dispatchEvent(new Event('change', { bubbles: true }));
     }
+    function untick(box) {
+        box.checked = false;
+        box.dispatchEvent(new Event('change', { bubbles: true }));
+    }
 
     it('is offered only to two guests or more', () => {
         expect(page(1).closest('label').hidden).toBe(true);
@@ -256,6 +260,58 @@ describe('"same last name as Adult 1"', () => {
         expect(box.checked).toBe(false);
         type('last1', 'Ionescu');
         expect(document.getElementById('last2').value).toBe('Ilie');
+    });
+
+    it('takes the copies back when unticked, and gives each guest what they had before', () => {
+        const box = page(4);
+        type('last1', 'Popescu');
+        type('last3', 'Ilie');
+        tick(box);
+        expect(['last2', 'last3', 'last4'].map((id) => document.getElementById(id).value)).toEqual(['Popescu', 'Popescu', 'Popescu']);
+
+        untick(box);
+        expect(document.getElementById('last1').value).toBe('Popescu');
+        expect(['last2', 'last3', 'last4'].map((id) => document.getElementById(id).value)).toEqual(['', 'Ilie', '']);
+    });
+
+    it('takes back the copies Adult 1 kept in step, too', () => {
+        const box = page(3);
+        type('last1', 'Popescu');
+        tick(box);
+        type('last1', 'Ionescu');
+        untick(box);
+
+        expect(document.getElementById('last2').value).toBe('');
+        expect(document.getElementById('last3').value).toBe('');
+    });
+
+    it('keeps the names once a guest typed their own, and a later untick only undoes the later tick', () => {
+        const box = page(3);
+        type('last1', 'Popescu');
+        tick(box);
+        type('last2', 'Marin');
+        expect(box.checked).toBe(false);
+        expect(document.getElementById('last3').value, 'the other copies stay').toBe('Popescu');
+
+        type('last1', 'Ionescu');
+        expect(document.getElementById('last3').value, 'no longer in step').toBe('Popescu');
+
+        tick(box);
+        expect(document.getElementById('last2').value).toBe('Ionescu');
+        untick(box);
+        expect(document.getElementById('last2').value).toBe('Marin');
+        expect(document.getElementById('last3').value).toBe('Popescu');
+    });
+
+    it('lets the validation script see a name taken back', () => {
+        const box = page(2);
+        type('last1', 'Popescu');
+        tick(box);
+        const seen = [];
+        document.getElementById('last2').addEventListener('input', (e) => seen.push(e.target.value));
+        untick(box);
+
+        expect(seen).toEqual(['']);
     });
 });
 

@@ -226,10 +226,17 @@
     });
 
     // ── "Same last name as Adult 1" (booking_guest_hint.tpl) ─────────────
-    // A family's guests take the first guest's last name, kept in step
-    // while the box stays ticked; typing another guest's own last name
-    // unticks it. Shown only where the form has two guests or more.
+    // Ticked: every other guest takes the first guest's last name, kept in
+    // step while the box stays ticked. Unticked: the copies are taken back,
+    // and each guest gets what they had before the tick (usually nothing).
+    // Typing another guest's own last name unticks the box and leaves every
+    // name as it is. Shown only where the form has two guests or more.
     var SURNAME = 'input[autocomplete="family-name"]';
+    // On a guest's last-name input while the box holds it: the name copied
+    // in (data-travel-surname-copy) and the one it replaced
+    // (data-travel-surname-before).
+    var COPY = 'travelSurnameCopy';
+    var BEFORE = 'travelSurnameBefore';
     var copyingSurname = false;
 
     function surnames(form) {
@@ -240,18 +247,48 @@
         return form.querySelector('[data-travel-same-surname] input[type="checkbox"]');
     }
 
+    function setSurname(input, value) {
+        input.value = value;
+        // The validation script clears a "required" message on these.
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
     function copySurname(form) {
         var inputs = surnames(form);
         copyingSurname = true;
         for (var i = 1; i < inputs.length; i++) {
+            if (inputs[i].dataset[COPY] === undefined) {
+                inputs[i].dataset[BEFORE] = inputs[i].value;
+            }
+            inputs[i].dataset[COPY] = inputs[0].value;
             if (inputs[i].value !== inputs[0].value) {
-                inputs[i].value = inputs[0].value;
-                // The validation script clears a "required" message on these.
-                inputs[i].dispatchEvent(new Event('input', { bubbles: true }));
-                inputs[i].dispatchEvent(new Event('change', { bubbles: true }));
+                setSurname(inputs[i], inputs[0].value);
             }
         }
         copyingSurname = false;
+    }
+
+    // The box unticked by the guest: each copy still standing goes back to
+    // what the guest had before the tick.
+    function uncopySurname(form) {
+        var inputs = surnames(form);
+        copyingSurname = true;
+        for (var i = 1; i < inputs.length; i++) {
+            var copied = inputs[i].dataset[COPY];
+            if (copied === undefined) continue;
+            var before = inputs[i].dataset[BEFORE] || '';
+            forgetCopy(inputs[i]);
+            if (inputs[i].value === copied && before !== copied) {
+                setSurname(inputs[i], before);
+            }
+        }
+        copyingSurname = false;
+    }
+
+    function forgetCopy(input) {
+        delete input.dataset[COPY];
+        delete input.dataset[BEFORE];
     }
 
     function armSameSurname(root) {
@@ -264,8 +301,11 @@
 
     document.addEventListener('change', function (e) {
         var box = e.target;
-        if (box.matches && box.matches('[data-travel-same-surname] input[type="checkbox"]') && box.checked && box.form) {
+        if (!box.matches || !box.matches('[data-travel-same-surname] input[type="checkbox"]') || !box.form) return;
+        if (box.checked) {
             copySurname(box.form);
+        } else {
+            uncopySurname(box.form);
         }
     });
 
@@ -277,7 +317,10 @@
         if (surnames(el.form)[0] === el) {
             copySurname(el.form);
         } else {
+            // A last name of their own: the names no longer all match, and
+            // each stays as it is now.
             box.checked = false;
+            surnames(el.form).forEach(forgetCopy);
         }
     });
 
