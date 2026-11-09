@@ -13,6 +13,8 @@ declare(strict_types=1);
  *   offer_terms  — AJAX JSON: cancellation fees + payment terms for an offer
  *   booking_form — guest booking form for a snapshotted offer
  *   add_to_cart  — persist booking + cart line (POST)
+ *   package_dates — AJAX JSON: a departure city's dates on a hotel's page
+ *   package_quote — AJAX JSON: the hotel's packages for one departure
  */
 
 if (!defined('BOOTSTRAP')) {
@@ -24,6 +26,8 @@ $allowed_modes = [
     'offer_terms'  => 'offer_terms.php',
     'booking_form' => 'booking_form.php',
     'add_to_cart'  => 'add_to_cart.php',
+    'package_dates' => 'package_dates.php',
+    'package_quote' => 'package_quote.php',
 ];
 
 $mode_name = is_string($mode ?? null) ? $mode : '';

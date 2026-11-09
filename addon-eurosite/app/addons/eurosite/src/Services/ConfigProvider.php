@@ -153,6 +153,14 @@ class ConfigProvider extends AbstractConfigProvider
         return $nights === [] ? [7, 10, 14] : array_values($nights);
     }
 
+    /** The store's own secret (config.crypt_key), for what Eurosite's pages sign (PackageOfferToken). */
+    public static function getSigningKey(): string
+    {
+        $key = TypeCoerce::toString(\Tygh\Registry::get('config.crypt_key'));
+
+        return $key !== '' ? $key : 'eurosite';
+    }
+
     /** CS-Cart runtime company context — 1 in single-store mode. */
     public static function getCompanyId(): int
     {

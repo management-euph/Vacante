@@ -156,6 +156,12 @@ final class Container
         return self::$packageRoutes ??= new PackageRouteRepository();
     }
 
+    /** What signs and reads the package offers' ids, with the store's key. */
+    public static function packageOfferTokens(): PackageOfferToken
+    {
+        return new PackageOfferToken(ConfigProvider::getSigningKey());
+    }
+
     /**
      * Reset cached singletons (tests / after a settings change).
      */
