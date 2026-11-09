@@ -95,6 +95,24 @@ final class TripBookingPagesTest extends TestCase
         self::assertStringContainsString('fa_back_label=__("travel_core.back_to_offer")', $tpl);
     }
 
+    /** A ticked service moves the total: the page hands the script the total and how the store prints money. */
+    #[DataProvider('trips')]
+    public function testTicketServicesMoveTheTotal(string $mode, string $airline, string $var): void
+    {
+        $tpl = self::template($mode);
+        $php = self::controller($mode);
+
+        self::assertStringContainsString('{$trip_money = $sphinx_trip_money|default:[]}', $tpl);
+        self::assertStringContainsString(' data-travel-extras data-base="{$trip_money.base}" data-money-symbol="{$trip_money.format.symbol|default:""|escape:html}"', $tpl);
+        self::assertStringContainsString('{if $service.display_amount|default:0 > 0} data-amount="{$service.display_amount}"{/if}', $tpl);
+        self::assertStringContainsString('{if $service.display_price|default:""}{$service.display_price|escape:html}', $tpl);
+        self::assertStringContainsString('<p class="travel-sr-only" aria-live="polite" data-travel-extras-live></p>', $tpl);
+
+        self::assertStringContainsString('ServiceRows::withDisplay(', $php);
+        self::assertStringContainsString("\$view->assign('sphinx_trip_money', [", $php);
+        self::assertStringContainsString('->scriptFormat(),', $php);
+    }
+
     #[DataProvider('trips')]
     public function testTheControllerBuildsTheTripsSummary(string $mode, string $airline, string $var): void
     {

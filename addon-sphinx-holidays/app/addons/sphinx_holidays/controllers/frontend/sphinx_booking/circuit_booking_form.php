@@ -132,7 +132,20 @@ try {
 
 
     // Parse additional services (optional/mandatory)
-    $additionalServices = \Tygh\Addons\SphinxHolidays\Helpers\ServiceRows::forShopper($quote['additional_services'] ?? null, Container::getCartService()->applyCommission(...));
+    // The services in the shopper's money, as the total is shown: the booking
+    // page adds a ticked one to the total (booking-conditions.js).
+    $cirMoney = \Tygh\Addons\TravelCore\Services\MoneyFormatter::forStore();
+    $cirToPrimary = static fn (float $amount): float => (new \Tygh\Addons\TravelCore\Services\CurrencyService($quoteCurrency))
+        ->convertFromApiCurrency($amount, defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : $quoteCurrency);
+    $additionalServices = \Tygh\Addons\SphinxHolidays\Helpers\ServiceRows::withDisplay(
+        \Tygh\Addons\SphinxHolidays\Helpers\ServiceRows::forShopper($quote['additional_services'] ?? null, Container::getCartService()->applyCommission(...)),
+        static fn (float $api): float => $cirMoney->toDisplay($cirToPrimary($api)),
+        static fn (float $amount): string => $cirMoney->formatDisplay($amount),
+    );
+    $view->assign('sphinx_trip_money', [
+        'base' => round($cirMoney->toDisplay($cirToPrimary($sellingPrice)), 2),
+        'format' => $cirMoney->scriptFormat(),
+    ]);
 
     $quoteDuration = TypeCoerce::toStringMap($quote['duration'] ?? null);
 

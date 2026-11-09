@@ -81,22 +81,27 @@
            ones turn light green with a "Selectat" badge; a mandatory one is
            ticked and fixed. *}
         {if $sphinx_circuit_booking.additional_services}
-            <section class="travel-form-section travel-extras" aria-labelledby="sphinx-circuit-extras">
+            {* A ticked service moves the total, here and in the summary, the bars
+               and the button (booking-conditions.js): data-base is the total as
+               the page opened, data-money how the store prints it. *}
+            {$trip_money = $sphinx_trip_money|default:[]}
+            <section class="travel-form-section travel-extras" aria-labelledby="sphinx-circuit-extras"{if $trip_money.base|default:0 > 0} data-travel-extras data-base="{$trip_money.base}" data-money-symbol="{$trip_money.format.symbol|default:""|escape:html}" data-money-after="{if $trip_money.format.after|default:false}1{else}0{/if}" data-money-decimals="{$trip_money.format.decimals|default:0}" data-money-decimal="{$trip_money.format.decimal|default:"."|escape:html}" data-money-thousands="{$trip_money.format.thousands|default:""|escape:html}" data-total-label="{__("travel_core.total_price")|escape:html}"{/if}>
                 <h3 id="sphinx-circuit-extras">{__("sphinx_holidays.additional_services")|default:"Additional Services"}</h3>
                 {foreach $sphinx_circuit_booking.additional_services as $service}
                     <label class="travel-extra{if $service.type == 'mandatory'} travel-extra--fixed{/if}">
                         {if $service.type == 'mandatory'}
                             <input type="checkbox" name="services[]" value="{$service.code}" checked disabled>
                         {else}
-                            <input type="checkbox" name="services[]" value="{$service.code}" {if $service.selected}checked{/if}>
+                            <input type="checkbox" name="services[]" value="{$service.code}"{if $service.display_amount|default:0 > 0} data-amount="{$service.display_amount}"{/if} {if $service.selected}checked{/if}>
                         {/if}
                         <span class="travel-extra__text">
                             <span class="travel-extra__name">{$service.title|escape:html}{if $service.type == 'mandatory'}<span class="travel-extra__tag">{__("sphinx_holidays.mandatory")|default:"Mandatory"}</span>{else}<span class="travel-extra__sel">{__("travel_core.option_selected")}</span>{/if}</span>
                             {if $service.description}<span class="travel-extra__note">{$service.description|escape:html}</span>{/if}
                         </span>
-                        <span class="travel-extra__price">{if $service.price > 0}+{$service.price|number_format:2:",":"."} {$service.currency}{/if}</span>
+                        <span class="travel-extra__price">{if $service.display_price|default:""}{$service.display_price|escape:html}{elseif $service.price > 0}+{$service.price|number_format:2:",":"."} {$service.currency}{/if}</span>
                     </label>
                 {/foreach}
+                <p class="travel-sr-only" aria-live="polite" data-travel-extras-live></p>
             </section>
         {/if}
 

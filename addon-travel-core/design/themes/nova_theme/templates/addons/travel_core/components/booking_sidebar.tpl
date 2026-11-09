@@ -226,7 +226,7 @@
             </div>
 
             <div class="travel-bsidebar-total">
-                <span class="travel-price-label">{__("travel_core.total_price")|default:"Total"}</span>
+                <span class="travel-price-label">{__("travel_core.total_price")|default:"Total"}<span class="travel-total-delta" data-travel-total-delta aria-hidden="true"></span></span>
                 <span class="price-total" id="novoton-total-price">{$tbs.total nofilter}</span>
             </div>
 

@@ -40,4 +40,29 @@ final class ServiceRows
 
         return $rows;
     }
+
+    /**
+     * The same rows with the shopper's money: each price as the page's total
+     * is shown (the store's primary currency, then the shopper's), as a number
+     * the booking page adds to the total when the service is ticked
+     * (display_amount), and as text ("+196 €", display_price; '' without a
+     * price). The forms printed "+196,00 EUR" beside a total of "1.240 €".
+     *
+     * @param list<array{code: string, title: string, description: string, type: string, selected: bool, price: float, currency: string}> $rows
+     * @param \Closure(float): float $toDisplay a price in the API currency, in the shopper's
+     * @param \Closure(float): string $format a shopper's amount, as the store prints it
+     * @return list<array{code: string, title: string, description: string, type: string, selected: bool, price: float, currency: string, display_amount: float, display_price: string}>
+     */
+    public static function withDisplay(array $rows, \Closure $toDisplay, \Closure $format): array
+    {
+        $out = [];
+        foreach ($rows as $row) {
+            $amount = $row['price'] > 0 ? round($toDisplay($row['price']), 2) : 0.0;
+            $row['display_amount'] = $amount;
+            $row['display_price'] = $amount > 0 ? '+' . $format($amount) : '';
+            $out[] = $row;
+        }
+
+        return $out;
+    }
 }

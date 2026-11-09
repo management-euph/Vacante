@@ -223,6 +223,20 @@
     .travel-booking-page .travel-extra { transition: none; }
 }
 
+/* A ticked extra moves the total: "+130 €" beside "Preț total" for a moment,
+   and a soft green flash on the totals (booking-conditions.js). */
+.travel-booking-page .travel-total-delta { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; opacity: 0; }
+.travel-booking-page .travel-total-delta--up { color: #0a7a35; background: #e7f6ec; }
+.travel-booking-page .travel-total-delta--down { color: #4b5563; background: #eef1f4; }
+.travel-booking-page .travel-total-delta--show { animation: travelDeltaShow 1.8s ease-out forwards; }
+.travel-booking-page .travel-total--flash { animation: travelTotalFlash 0.9s ease-out; border-radius: 4px; }
+@keyframes travelDeltaShow { 0% { opacity: 0; transform: translateY(4px); } 15% { opacity: 1; transform: none; } 75% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes travelTotalFlash { 0% { background: #e7f6ec; } 100% { background: transparent; } }
+@media (prefers-reduced-motion: reduce) {
+    .travel-booking-page .travel-total-delta--show { animation: none; opacity: 1; }
+    .travel-booking-page .travel-total--flash { animation: none; }
+}
+
 /* ── A trip in the summary (package, circuit): its kind over the name, its
    journeys, and what the price includes and leaves out. ── */
 .travel-booking-page .travel-bsidebar-kind {

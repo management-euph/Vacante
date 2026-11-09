@@ -366,6 +366,96 @@
         layout.classList.toggle('travel-booking-layout--folded', !open);
     });
 
+    // ── A trip's extras move the total (Sphinx's package and circuit pages) ──
+    // Ticking a service adds its price to the total; unticking one the page
+    // opened with ticked takes it off (the page's total includes those). Every
+    // .price-total (summary, bars, button) counts to the new figure, "+130 €"
+    // shows beside "Preț total" for a moment, and screen readers hear the
+    // new total once. A guest who asked for reduced motion gets the figure at
+    // once. The server prices the booking again on submit; this only shows it.
+    function moneyOf(section) {
+        return {
+            symbol: section.getAttribute('data-money-symbol') || '',
+            after: section.getAttribute('data-money-after') === '1',
+            decimals: Math.max(0, parseInt(section.getAttribute('data-money-decimals') || '0', 10) || 0),
+            decimal: section.getAttribute('data-money-decimal') || '.',
+            thousands: section.getAttribute('data-money-thousands') || ''
+        };
+    }
+
+    function formatMoney(amount, money) {
+        var parts = Math.abs(amount).toFixed(money.decimals).split('.');
+        var whole = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, money.thousands);
+        var number = (amount < 0 ? '-' : '') + (money.decimals > 0 ? whole + money.decimal + parts[1] : whole);
+        if (!money.symbol) return number;
+        return money.after ? number + ' ' + money.symbol : money.symbol + number;
+    }
+
+    function extrasTotal(section) {
+        var total = parseFloat(section.getAttribute('data-base')) || 0;
+        var inputs = section.querySelectorAll('input[data-amount]');
+        for (var i = 0; i < inputs.length; i++) {
+            var amount = parseFloat(inputs[i].getAttribute('data-amount')) || 0;
+            if (inputs[i].checked && !inputs[i].defaultChecked) total += amount;
+            if (!inputs[i].checked && inputs[i].defaultChecked) total -= amount;
+        }
+        return Math.round(total * 100) / 100;
+    }
+
+    function showTotals(text) {
+        var totals = document.querySelectorAll('.travel-booking-page .price-total');
+        for (var i = 0; i < totals.length; i++) totals[i].textContent = text;
+    }
+
+    function reducedMotion() {
+        return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    }
+
+    function moveTotal(section) {
+        var money = moneyOf(section);
+        var to = extrasTotal(section);
+        var from = typeof section._travelShown === 'number' ? section._travelShown : (parseFloat(section.getAttribute('data-base')) || 0);
+        var delta = Math.round((to - from) * 100) / 100;
+        section._travelShown = to;
+        if (section._travelFrame && window.cancelAnimationFrame) window.cancelAnimationFrame(section._travelFrame);
+
+        var chip = document.querySelector('[data-travel-total-delta]');
+        if (chip && delta !== 0) {
+            chip.textContent = (delta > 0 ? '+' : '\u2212') + formatMoney(Math.abs(delta), money);
+            chip.className = 'travel-total-delta ' + (delta > 0 ? 'travel-total-delta--up' : 'travel-total-delta--down');
+            void chip.offsetWidth; // restart the animation
+            chip.classList.add('travel-total-delta--show');
+        }
+        var flash = document.querySelectorAll('.travel-booking-page .travel-bsidebar-total');
+        for (var f = 0; f < flash.length; f++) {
+            flash[f].classList.remove('travel-total--flash');
+            void flash[f].offsetWidth;
+            flash[f].classList.add('travel-total--flash');
+        }
+        var live = section.querySelector('[data-travel-extras-live]');
+        if (live) live.textContent = (section.getAttribute('data-total-label') || '') + ': ' + formatMoney(to, money);
+
+        if (reducedMotion() || !window.requestAnimationFrame || delta === 0) {
+            showTotals(formatMoney(to, money));
+            return;
+        }
+        var start = null;
+        var step = function (now) {
+            if (start === null) start = now;
+            var k = Math.min(1, (now - start) / 450);
+            var eased = 1 - Math.pow(1 - k, 3);
+            showTotals(formatMoney(k < 1 ? Math.round(from + (to - from) * eased) : to, money));
+            if (k < 1) section._travelFrame = window.requestAnimationFrame(step);
+        };
+        section._travelFrame = window.requestAnimationFrame(step);
+    }
+
+    document.addEventListener('change', function (e) {
+        var input = e.target;
+        if (!input || !input.matches || !input.matches('[data-travel-extras] input[data-amount]')) return;
+        moveTotal(input.closest('[data-travel-extras]'));
+    });
+
     // ── The guest form beside a tall summary ──────────────────────────────
     // A short form stays in view, with its button, while the summary
     // scrolls past it (booking-pages.css: sticky). Only while the whole
@@ -415,5 +505,7 @@
     window.TravelConditions.fitStickyForm = fitStickyForm;
     window.TravelConditions.armCancelPreview = armCancelPreview;
     window.TravelConditions.armSummaryBar = armSummaryBar;
+    window.TravelConditions.formatMoney = formatMoney;
+    window.TravelConditions.extrasTotal = extrasTotal;
     window.TravelConditions.syncCancelPreview = syncCancelPreview;
 })();

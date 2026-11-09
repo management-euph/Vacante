@@ -93,6 +93,23 @@ try {
         $transportType = 'bus';
     }
 
+    // The services in the shopper's money, as the total is shown: the booking
+    // page adds a ticked one to the total (booking-conditions.js).
+    $pkgCurrency = TypeCoerce::toString($pricing['currency'] ?? '');
+    $pkgCurrency = $pkgCurrency !== '' ? $pkgCurrency : ConfigProvider::getDefaultCurrency();
+    $pkgMoney = \Tygh\Addons\TravelCore\Services\MoneyFormatter::forStore();
+    $pkgToPrimary = static fn (float $amount): float => (new \Tygh\Addons\TravelCore\Services\CurrencyService($pkgCurrency))
+        ->convertFromApiCurrency($amount, defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : $pkgCurrency);
+    $pkgServices = \Tygh\Addons\SphinxHolidays\Helpers\ServiceRows::withDisplay(
+        \Tygh\Addons\SphinxHolidays\Helpers\ServiceRows::forShopper($offer['additional_services'] ?? null, $cartService->applyCommission(...)),
+        static fn (float $api): float => $pkgMoney->toDisplay($pkgToPrimary($api)),
+        static fn (float $amount): string => $pkgMoney->formatDisplay($amount),
+    );
+    $view->assign('sphinx_trip_money', [
+        'base' => round($pkgMoney->toDisplay($pkgToPrimary($sellingPrice)), 2),
+        'format' => $pkgMoney->scriptFormat(),
+    ]);
+
     $pkgRoomsData = CartService::normalizeRoomsForDisplay(
         TypeCoerce::toRowList($hotelRooms), $adults, $children_ages_str
     );
@@ -120,7 +137,7 @@ try {
         'total_price' => $sellingPrice,
         'base_price' => $basePrice,
         'currency' => TypeCoerce::toString($pricing['currency'] ?? ConfigProvider::getDefaultCurrency()),
-        'additional_services' => \Tygh\Addons\SphinxHolidays\Helpers\ServiceRows::forShopper($offer['additional_services'] ?? null, $cartService->applyCommission(...)),
+        'additional_services' => $pkgServices,
         'payment_terms' => $offer['payment_terms'] ?? [],
         'cancellation_fees' => $offer['cancellation_fees'] ?? [],
         'confirmation' => $offer['confirmation'] ?? '',
