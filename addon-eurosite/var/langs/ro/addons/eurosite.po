@@ -804,6 +804,82 @@ msgctxt "Languages::eurosite.dash_tools_intro"
 msgid "Syncing is each job's Run, under Scheduled jobs."
 msgstr "Sincronizările se pornesc cu Rulează, la fiecare job din Joburi programate."
 
+msgctxt "Languages::eurosite.dash_activity_title"
+msgid "Recent sync activity"
+msgstr "Activitate recentă de sincronizare"
+
+msgctxt "Languages::eurosite.dash_activity_filter"
+msgid "Which runs"
+msgstr "Ce rulări"
+
+msgctxt "Languages::eurosite.dash_activity_all"
+msgid "All ([n])"
+msgstr "Toate ([n])"
+
+msgctxt "Languages::eurosite.dash_activity_problems"
+msgid "Problems ([n])"
+msgstr "Probleme ([n])"
+
+msgctxt "Languages::eurosite.dash_activity_col_date"
+msgid "Date"
+msgstr "Data"
+
+msgctxt "Languages::eurosite.dash_activity_col_job"
+msgid "Job"
+msgstr "Job"
+
+msgctxt "Languages::eurosite.dash_activity_col_items"
+msgid "Synced"
+msgstr "Sincronizate"
+
+msgctxt "Languages::eurosite.dash_activity_col_failed"
+msgid "Failed"
+msgstr "Eșuate"
+
+msgctxt "Languages::eurosite.dash_activity_col_status"
+msgid "Status"
+msgstr "Stare"
+
+msgctxt "Languages::eurosite.dash_activity_col_duration"
+msgid "Duration"
+msgstr "Durată"
+
+msgctxt "Languages::eurosite.dash_activity_items"
+msgid "[n] of [total]"
+msgstr "[n] din [total]"
+
+msgctxt "Languages::eurosite.dash_activity_ok"
+msgid "Completed"
+msgstr "Finalizată"
+
+msgctxt "Languages::eurosite.dash_activity_partial"
+msgid "Partly done"
+msgstr "Parțial"
+
+msgctxt "Languages::eurosite.dash_activity_failed"
+msgid "Failed"
+msgstr "Eșuată"
+
+msgctxt "Languages::eurosite.dash_activity_stalled"
+msgid "Never finished"
+msgstr "Neterminată"
+
+msgctxt "Languages::eurosite.dash_activity_running"
+msgid "Running"
+msgstr "În curs"
+
+msgctxt "Languages::eurosite.dash_activity_show_error"
+msgid "Show full error"
+msgstr "Arată eroarea completă"
+
+msgctxt "Languages::eurosite.dash_activity_none"
+msgid "No sync runs logged yet."
+msgstr "Nicio sincronizare înregistrată încă."
+
+msgctxt "Languages::eurosite.dash_activity_no_problems"
+msgid "No problems in the log."
+msgstr "Nicio problemă în jurnal."
+
 msgctxt "Languages::eurosite.hotels"
 msgid "Hotels"
 msgstr "Hoteluri"

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\Eurosite\Repository;
 
+use Tygh\Addons\Eurosite\Services\SyncActivity;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
 
@@ -51,14 +52,25 @@ class SyncLogRepository
     }
 
     /**
+     * One page of the dashboard's Recent sync activity, newest first: every
+     * run, or only the problems (Services\SyncActivity::row()'s rule).
+     *
      * @return list<array<string, mixed>>
      */
-    public function getRecent(int $limit = 10): array
+    public function findPage(int $page, int $perPage, bool $problems, int $now): array
     {
         return self::asRowList(db_get_array(
-            'SELECT * FROM ?:eurosite_sync_log ORDER BY started_at DESC, log_id DESC LIMIT ?i',
-            $limit,
+            'SELECT * FROM ?:eurosite_sync_log ?p ORDER BY started_at DESC, log_id DESC LIMIT ?i OFFSET ?i',
+            self::where($problems, $now),
+            $perPage,
+            (max(1, $page) - 1) * $perPage,
         ));
+    }
+
+    /** How many runs the log holds, or how many of them are problems. */
+    public function count(bool $problems, int $now): int
+    {
+        return TypeCoerce::toInt(db_get_field('SELECT COUNT(*) FROM ?:eurosite_sync_log ?p', self::where($problems, $now)));
     }
 
     /**
@@ -79,6 +91,25 @@ class SyncLogRepository
         }
 
         return $out;
+    }
+
+    /**
+     * The Problems filter, the rule Services\SyncActivity::row() applies to
+     * one run: it failed, it finished with items that failed, or it started
+     * more than SyncActivity::STALL_AFTER ago and never finished. Skipped
+     * items are no problem (Hotel details skips the fresh ones), and the log
+     * does not count them apart, so items_failed decides, not total - synced.
+     */
+    private static function where(bool $problems, int $now): string
+    {
+        if (!$problems) {
+            return '';
+        }
+
+        return db_quote(
+            "WHERE status = 'failed' OR (status = 'completed' AND items_failed > 0) OR (status = 'started' AND started_at < ?s)",
+            date('Y-m-d H:i:s', $now - SyncActivity::STALL_AFTER),
+        );
     }
 
     public function trim(int $keep = 200): void

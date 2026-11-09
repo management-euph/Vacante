@@ -634,6 +634,83 @@ return [
         'en' => 'Syncing is each job\'s Run, under Scheduled jobs.',
         'ro' => 'Sincronizările se pornesc cu Rulează, la fiecare job din Joburi programate.',
     ],
+    // The dashboard's Recent sync activity (Services\SyncActivity, components/activity.tpl).
+    'eurosite.dash_activity_title' => [
+        'en' => 'Recent sync activity',
+        'ro' => 'Activitate recentă de sincronizare',
+    ],
+    'eurosite.dash_activity_filter' => [
+        'en' => 'Which runs',
+        'ro' => 'Ce rulări',
+    ],
+    'eurosite.dash_activity_all' => [
+        'en' => 'All ([n])',
+        'ro' => 'Toate ([n])',
+    ],
+    'eurosite.dash_activity_problems' => [
+        'en' => 'Problems ([n])',
+        'ro' => 'Probleme ([n])',
+    ],
+    'eurosite.dash_activity_col_date' => [
+        'en' => 'Date',
+        'ro' => 'Data',
+    ],
+    'eurosite.dash_activity_col_job' => [
+        'en' => 'Job',
+        'ro' => 'Job',
+    ],
+    'eurosite.dash_activity_col_items' => [
+        'en' => 'Synced',
+        'ro' => 'Sincronizate',
+    ],
+    'eurosite.dash_activity_col_failed' => [
+        'en' => 'Failed',
+        'ro' => 'Eșuate',
+    ],
+    'eurosite.dash_activity_col_status' => [
+        'en' => 'Status',
+        'ro' => 'Stare',
+    ],
+    'eurosite.dash_activity_col_duration' => [
+        'en' => 'Duration',
+        'ro' => 'Durată',
+    ],
+    'eurosite.dash_activity_items' => [
+        'en' => '[n] of [total]',
+        'ro' => '[n] din [total]',
+    ],
+    'eurosite.dash_activity_ok' => [
+        'en' => 'Completed',
+        'ro' => 'Finalizată',
+    ],
+    'eurosite.dash_activity_partial' => [
+        'en' => 'Partly done',
+        'ro' => 'Parțial',
+    ],
+    'eurosite.dash_activity_failed' => [
+        'en' => 'Failed',
+        'ro' => 'Eșuată',
+    ],
+    'eurosite.dash_activity_stalled' => [
+        'en' => 'Never finished',
+        'ro' => 'Neterminată',
+    ],
+    'eurosite.dash_activity_running' => [
+        'en' => 'Running',
+        'ro' => 'În curs',
+    ],
+    'eurosite.dash_activity_show_error' => [
+        'en' => 'Show full error',
+        'ro' => 'Arată eroarea completă',
+    ],
+    'eurosite.dash_activity_none' => [
+        'en' => 'No sync runs logged yet.',
+        'ro' => 'Nicio sincronizare înregistrată încă.',
+    ],
+    'eurosite.dash_activity_no_problems' => [
+        'en' => 'No problems in the log.',
+        'ro' => 'Nicio problemă în jurnal.',
+    ],
     // Eurosite → Hotels, and the product jobs
     'eurosite.hotels' => [
         'en' => 'Hotels',

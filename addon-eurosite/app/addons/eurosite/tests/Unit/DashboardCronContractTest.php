@@ -48,12 +48,13 @@ final class DashboardCronContractTest extends TestCase
         return (string) preg_replace('/\{\*.*?\*\}/s', '', $src);
     }
 
-    /** @return array<string, string> the dashboard and its part of each job's row */
+    /** @return array<string, string> the dashboard, its part of each job's row and its sync activity */
     private static function pages(): array
     {
         return [
             'manage.tpl' => self::template('views/eurosite/manage.tpl'),
             'job_extra.tpl' => self::template('components/job_extra.tpl'),
+            'activity.tpl' => self::template('components/activity.tpl'),
         ];
     }
 
@@ -277,7 +278,7 @@ final class DashboardCronContractTest extends TestCase
     /**
      * The page reads as Sphinx's and Novoton's: at a glance, what needs
      * attention, the tools, the destinations and availability, the jobs and
-     * their commands, then recent bookings.
+     * their commands, recent sync activity, then recent bookings.
      */
     public function testTheSectionsComeInTheProvidersOrder(): void
     {
@@ -291,6 +292,7 @@ final class DashboardCronContractTest extends TestCase
             'availability' => 'components/availability_card.tpl',
             'jobs' => 'components/jobs_card.tpl',
             'commands' => 'components/commands_card.tpl',
+            'activity' => '{include file="addons/eurosite/components/activity.tpl"}',
             'bookings' => 'aria-labelledby="eurosite-bookings-title"',
         ] as $name => $marker) {
             $pos = strpos($tpl, $marker);
@@ -342,6 +344,30 @@ final class DashboardCronContractTest extends TestCase
             self::assertStringContainsString('name="security_hash" value="{$security_hash}"', $form);
         }
         self::assertStringNotContainsString('style="', $tpl, 'Travel Core\'s card classes, not inline styles');
+    }
+
+    /**
+     * Recent sync activity is one paged list: CS-Cart's pagination include
+     * comes as a pair around it, read from $search, which the manage branch
+     * assigns from Services\SyncActivity, as the All / Problems buttons'
+     * counts.
+     */
+    public function testTheSyncActivityIsOnePagedList(): void
+    {
+        $activity = self::pages()['activity.tpl'];
+        self::assertSame(2, substr_count($activity, '{include file="common/pagination.tpl" save_current_page=true}'));
+        self::assertStringContainsString('<section id="eurosite-activity"', $activity);
+        self::assertStringContainsString('{"eurosite.manage?activity=problems"|fn_url}#eurosite-activity', $activity);
+        foreach (['ok', 'partial', 'failed', 'stalled', 'running'] as $state) {
+            self::assertStringContainsString('$run.state == "' . $state . '"', $activity, $state);
+        }
+        self::assertStringContainsString('{$run.error|escape:html}', $activity);
+        self::assertStringContainsString('{$run.error_full|escape:html}', $activity);
+
+        $manage = self::branch("if (\$mode === 'manage' || empty(\$mode)) {");
+        self::assertStringContainsString('$activity = SyncActivity::none();', $manage, 'a log that cannot be read still renders the card');
+        self::assertStringContainsString('$activity = SyncActivity::page($syncLog, $_REQUEST, time());', $manage);
+        self::assertStringContainsString("\$view->assign('search', \$activity['search']);", $manage);
     }
 
     public function testTheWrapperDivIsClosed(): void

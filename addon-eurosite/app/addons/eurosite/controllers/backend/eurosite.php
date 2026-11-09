@@ -8,7 +8,7 @@ declare(strict_types=1);
  *   - manage (default): dashboard — at a glance, needs attention, tools (the
  *     API connection, the availability probe), destinations, availability,
  *     the scheduled jobs (Travel Core's jobs and commands cards), recent
- *     bookings
+ *     sync activity (paged), recent bookings
  *   - whitelist: the destination whitelist (Travel Core's destination picker:
  *     per country Not sold / All cities / Own cities / Only selected)
  *   - whitelist_body (AJAX GET): one country's cities for the picker, as {html}
@@ -39,6 +39,7 @@ use Tygh\Addons\Eurosite\Services\CronPlanBuilder;
 use Tygh\Addons\Eurosite\Services\DashboardSummary;
 use Tygh\Addons\Eurosite\Services\DestinationsPicker;
 use Tygh\Addons\Eurosite\Services\HotelListView;
+use Tygh\Addons\Eurosite\Services\SyncActivity;
 use Tygh\Addons\TravelCore\Cron\CronHealth;
 use Tygh\Addons\TravelCore\Cron\CronRunLog;
 use Tygh\Addons\TravelCore\Cron\CronRunOutput;
@@ -545,6 +546,7 @@ if ($mode === 'manage' || empty($mode)) {
     $destCard = [];
     $destBuilt = ['configured' => false, 'countries' => [], 'totals' => [], 'outside' => []];
     $hotelFigures = ['listed' => 0, 'availability' => [], 'products' => 0, 'hidden' => 0, 'immediate_without' => 0];
+    $activity = SyncActivity::none();
     try {
         $syncLog = Container::syncLog();
         $hotelRepo = Container::hotels();
@@ -580,6 +582,9 @@ if ($mode === 'manage' || empty($mode)) {
         // A job's last run from the sync log, for one the run log has not
         // seen yet (a monthly catalog last synced before it existed).
         $legacyRuns = CronPlanBuilder::legacyRuns($syncLog->getLastPerType());
+
+        // Recent sync activity, All or Problems, paged: $search drives common/pagination.tpl.
+        $activity = SyncActivity::page($syncLog, $_REQUEST, time());
 
         foreach (Container::bookings()->getRecent(10) as $row) {
             $recentBookings[] = [
@@ -652,6 +657,8 @@ if ($mode === 'manage' || empty($mode)) {
     // Its hotels per availability state, from Travel Core's weekly review.
     $view->assign('eurosite_availability_card', \Tygh\Addons\TravelCore\Services\AvailabilityCard::build('eurosite'));
     $view->assign('eurosite_recent_bookings', $recentBookings);
+    $view->assign('eurosite_activity', $activity);
+    $view->assign('search', $activity['search']);
     $view->assign('eurosite_api_url', ConfigProvider::getApiUrl());
     $view->assign('eurosite_api_user', $apiUser);
     $view->assign('eurosite_is_configured', $apiUser !== '' && $apiUser !== 'YourUser');

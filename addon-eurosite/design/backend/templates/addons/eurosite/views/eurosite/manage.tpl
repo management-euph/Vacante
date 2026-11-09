@@ -3,11 +3,11 @@
    Top to bottom: at a glance, what needs attention, the tools (the API
    connection, the probe for dates with offers), the destinations sold and
    the hotels' availability (Travel Core's shared cards), the scheduled jobs
-   in the order they run, every command, recent bookings. Built on Travel
-   Core's travel-cron-* styles, as Sphinx's and Novoton's dashboards are, so
-   the providers' dashboards read alike. No inline scripts: the jobs card
-   loads Travel Core's cron-jobs.js inside this capture, and it serves every
-   Run here. **}
+   in the order they run, every command, recent sync activity (paged),
+   recent bookings. Built on Travel Core's travel-cron-* styles, as Sphinx's
+   and Novoton's dashboards are, so the providers' dashboards read alike. No
+   inline scripts: the jobs card loads Travel Core's cron-jobs.js inside this
+   capture, and it serves every Run here. **}
 
 {capture name="mainbox"}
 
@@ -210,6 +210,10 @@
             key=$eurosite_cron_key
         }
     {/if}
+
+    {** Recent sync activity (components/activity.tpl, its own template: the
+       pagination pair wraps exactly one list). **}
+    {include file="addons/eurosite/components/activity.tpl"}
 
     {** Recent bookings: the last ten, each linked to Travel Core's bookings
        list and its order. **}

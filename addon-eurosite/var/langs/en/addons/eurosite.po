@@ -804,6 +804,82 @@ msgctxt "Languages::eurosite.dash_tools_intro"
 msgid "Syncing is each job's Run, under Scheduled jobs."
 msgstr "Syncing is each job's Run, under Scheduled jobs."
 
+msgctxt "Languages::eurosite.dash_activity_title"
+msgid "Recent sync activity"
+msgstr "Recent sync activity"
+
+msgctxt "Languages::eurosite.dash_activity_filter"
+msgid "Which runs"
+msgstr "Which runs"
+
+msgctxt "Languages::eurosite.dash_activity_all"
+msgid "All ([n])"
+msgstr "All ([n])"
+
+msgctxt "Languages::eurosite.dash_activity_problems"
+msgid "Problems ([n])"
+msgstr "Problems ([n])"
+
+msgctxt "Languages::eurosite.dash_activity_col_date"
+msgid "Date"
+msgstr "Date"
+
+msgctxt "Languages::eurosite.dash_activity_col_job"
+msgid "Job"
+msgstr "Job"
+
+msgctxt "Languages::eurosite.dash_activity_col_items"
+msgid "Synced"
+msgstr "Synced"
+
+msgctxt "Languages::eurosite.dash_activity_col_failed"
+msgid "Failed"
+msgstr "Failed"
+
+msgctxt "Languages::eurosite.dash_activity_col_status"
+msgid "Status"
+msgstr "Status"
+
+msgctxt "Languages::eurosite.dash_activity_col_duration"
+msgid "Duration"
+msgstr "Duration"
+
+msgctxt "Languages::eurosite.dash_activity_items"
+msgid "[n] of [total]"
+msgstr "[n] of [total]"
+
+msgctxt "Languages::eurosite.dash_activity_ok"
+msgid "Completed"
+msgstr "Completed"
+
+msgctxt "Languages::eurosite.dash_activity_partial"
+msgid "Partly done"
+msgstr "Partly done"
+
+msgctxt "Languages::eurosite.dash_activity_failed"
+msgid "Failed"
+msgstr "Failed"
+
+msgctxt "Languages::eurosite.dash_activity_stalled"
+msgid "Never finished"
+msgstr "Never finished"
+
+msgctxt "Languages::eurosite.dash_activity_running"
+msgid "Running"
+msgstr "Running"
+
+msgctxt "Languages::eurosite.dash_activity_show_error"
+msgid "Show full error"
+msgstr "Show full error"
+
+msgctxt "Languages::eurosite.dash_activity_none"
+msgid "No sync runs logged yet."
+msgstr "No sync runs logged yet."
+
+msgctxt "Languages::eurosite.dash_activity_no_problems"
+msgid "No problems in the log."
+msgstr "No problems in the log."
+
 msgctxt "Languages::eurosite.hotels"
 msgid "Hotels"
 msgstr "Hotels"
