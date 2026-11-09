@@ -1,6 +1,6 @@
 {*
-    Shared booking-form summary sidebar — the left column of the 2-column
-    booking page, rendered identically for every provider (2 surfaces x 2
+    Shared booking-form summary sidebar — the right column of the 2-column
+    booking page (a sticky bar above the form on a phone), rendered identically for every provider (2 surfaces x 2
     themes = this file + its nova_theme mirror, synced by `composer mirror`).
 
     Data contract: $travel_booking_sidebar, assigned from
@@ -26,7 +26,24 @@
 *}
 {$tbs = $travel_booking_sidebar}
 {if $tbs}
-<aside class="travel-bsidebar">
+{* ── Phone: the summary folded into one sticky bar ──────────────────── *}
+{* At 900 px and less, a bar with the name, the stay, the guests and the
+   total sticks to the top while the guest fills the form; tapping it opens
+   the cards below. It sits beside the aside, in the layout, so it can stay
+   stuck all the way down the form. booking-conditions.js folds the cards
+   (without it they stay open, as before). The total is a .price-total,
+   kept in step by every re-pricing script. Hidden on wider screens. *}
+{capture assign="tbs_bar_guests"}{__("travel_core.n_adults", [$tbs.adults])}{if $tbs.children > 0}, {__("travel_core.n_children", [$tbs.children])}{/if}{/capture}
+<div class="travel-sumbar">
+    <button type="button" class="travel-sumbar__toggle" aria-expanded="true" aria-controls="travel-bsidebar" data-travel-sumbar>
+        <span class="travel-sumbar__text">
+            <span class="travel-sumbar__name">{$tbs.name|escape:html}</span>
+            <span class="travel-sumbar__meta">{if $tbs.check_in}{$tbs.check_in|escape:html} &ndash; {$tbs.check_out|escape:html} &middot; {/if}{$tbs_bar_guests nofilter}</span>
+        </span>
+        <span class="travel-sumbar__end"><strong class="price-total">{$tbs.total nofilter}</strong><span class="travel-sumbar__chev" aria-hidden="true"></span></span>
+    </button>
+</div>
+<aside class="travel-bsidebar" id="travel-bsidebar">
 
     {* ── 1. Hotel ─────────────────────────────────────────────────────── *}
     <section class="travel-bcard travel-bcard--hotel">

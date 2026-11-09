@@ -343,6 +343,29 @@
         new window.MutationObserver(syncCancelPreview).observe(body, { childList: true });
     }
 
+    // ── Phone: the summary folded into one sticky bar (booking_sidebar.tpl) ──
+    // At 900 px and less the bar (name, stay, guests, total) stays at the top
+    // and the summary's cards fold under it; a tap opens or closes them. The
+    // CSS folds only on a phone, so a wide screen always shows the column.
+    function armSummaryBar(root) {
+        var toggles = (root || document).querySelectorAll('[data-travel-sumbar]');
+        for (var i = 0; i < toggles.length; i++) {
+            var layout = toggles[i].closest('.travel-booking-layout');
+            if (!layout) continue;
+            layout.classList.add('travel-booking-layout--folded');
+            toggles[i].setAttribute('aria-expanded', 'false');
+        }
+    }
+
+    document.addEventListener('click', function (e) {
+        var toggle = e.target.closest ? e.target.closest('[data-travel-sumbar]') : null;
+        var layout = toggle ? toggle.closest('.travel-booking-layout') : null;
+        if (!layout) return;
+        var open = toggle.getAttribute('aria-expanded') !== 'true';
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        layout.classList.toggle('travel-booking-layout--folded', !open);
+    });
+
     // ── The guest form beside a tall summary ──────────────────────────────
     // A short form stays in view, with its button, while the summary
     // scrolls past it (booking-pages.css: sticky). Only while the whole
@@ -378,6 +401,7 @@
         armFeatureLists(document);
         armSameSurname(document);
         armCancelPreview();
+        armSummaryBar(document);
         armStickyForm();
     }
 
@@ -390,5 +414,6 @@
     window.TravelConditions.armSameSurname = armSameSurname;
     window.TravelConditions.fitStickyForm = fitStickyForm;
     window.TravelConditions.armCancelPreview = armCancelPreview;
+    window.TravelConditions.armSummaryBar = armSummaryBar;
     window.TravelConditions.syncCancelPreview = syncCancelPreview;
 })();

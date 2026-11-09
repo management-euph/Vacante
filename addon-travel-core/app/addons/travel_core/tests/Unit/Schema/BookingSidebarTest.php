@@ -482,6 +482,37 @@ final class BookingSidebarTest extends TestCase
         self::assertStringContainsString("refreshLink.style.display = 'block';", $js);
     }
 
+    /**
+     * Phone: the summary folds into one sticky bar (name, stay, guests,
+     * total) that opens the cards. The bar sits beside the aside, in the
+     * layout, so it can stick all the way down the form; its total is a
+     * .price-total the re-price keeps in step. Wide screens never see it,
+     * and only a phone folds the cards.
+     */
+    public function testAPhoneFoldsTheSummaryIntoAStickyBar(): void
+    {
+        $tpl = self::tpl();
+
+        $bar = strpos($tpl, '<div class="travel-sumbar">');
+        self::assertNotFalse($bar);
+        self::assertLessThan(strpos($tpl, '<aside class="travel-bsidebar" id="travel-bsidebar">'), $bar, 'the bar comes before the aside, not inside it');
+        self::assertStringContainsString('<button type="button" class="travel-sumbar__toggle" aria-expanded="true" aria-controls="travel-bsidebar" data-travel-sumbar>', $tpl);
+        self::assertStringContainsString('<span class="travel-sumbar__name">{$tbs.name|escape:html}</span>', $tpl);
+        self::assertStringContainsString('{__("travel_core.n_adults", [$tbs.adults])}', $tpl);
+        self::assertStringContainsString('<strong class="price-total">{$tbs.total nofilter}</strong>', $tpl);
+
+        $css = self::css();
+        self::assertStringContainsString('.travel-booking-page .travel-sumbar { display: none; }', $css);
+        $phone = substr($css, (int) strpos($css, "@media (max-width: 900px) {\n    .travel-booking-page .travel-sumbar {"));
+        $phone = substr($phone, 0, (int) strpos($phone, "\n}\n"));
+        self::assertStringContainsString('display: block; order: -2; position: sticky; top: 0;', $phone);
+        self::assertStringContainsString('.travel-booking-page .travel-booking-layout--folded .travel-bsidebar { display: none; }', $phone);
+        self::assertSame(1, substr_count($css, 'travel-booking-layout--folded'), 'only a phone folds the cards');
+
+        $js = (string) file_get_contents(self::repoRoot() . '/addon-travel-core/js/addons/travel_core/booking-conditions.js');
+        self::assertStringContainsString("layout.classList.add('travel-booking-layout--folded');", $js);
+    }
+
     public function testCancellationCardIsHiddenUntilItHasSomethingToSay(): void
     {
         $tpl = self::tpl();

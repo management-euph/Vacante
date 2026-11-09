@@ -191,6 +191,42 @@
     }
 }
 
+/* ── Phone: the summary folded into one sticky bar (booking_sidebar.tpl) ── */
+/* At 900 px and less: name, stay, guests and total in a bar that sticks to
+   the top while the guest fills the form; tapping it opens the summary's
+   cards under it. booking-conditions.js folds them (the --folded class);
+   without it they stay open. Order -2: above the aside's -1. */
+.travel-booking-page .travel-sumbar { display: none; }
+@media (max-width: 900px) {
+    .travel-booking-page .travel-sumbar {
+        display: block; order: -2; position: sticky; top: 0; z-index: 20; min-width: 0;
+        background: #fff; border: 1px solid #e0e7ef; border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    }
+    .travel-booking-page .travel-sumbar__toggle {
+        display: flex; align-items: center; justify-content: space-between; gap: 10px;
+        width: 100%; min-height: 56px; margin: 0; padding: 6px 14px; border: 0; border-radius: 10px;
+        background: transparent; font: inherit; color: #1a1a1a; text-align: left; cursor: pointer;
+    }
+    .travel-booking-page .travel-sumbar__toggle:focus-visible { outline: 2px solid #1565c0; outline-offset: 2px; }
+    .travel-booking-page .travel-sumbar__text { display: flex; flex-direction: column; min-width: 0; }
+    .travel-booking-page .travel-sumbar__name,
+    .travel-booking-page .travel-sumbar__meta { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .travel-booking-page .travel-sumbar__name { font-size: 14px; font-weight: 700; }
+    .travel-booking-page .travel-sumbar__meta { font-size: 12px; color: #4b5563; }
+    .travel-booking-page .travel-sumbar__end { display: flex; align-items: center; gap: 10px; flex: none; }
+    .travel-booking-page .travel-sumbar .price-total { font-size: 17px; }
+    .travel-booking-page .travel-sumbar__chev {
+        width: 8px; height: 8px; margin-top: -4px; border-right: 2px solid #006ce4; border-bottom: 2px solid #006ce4;
+        transform: rotate(45deg); transition: transform 0.15s;
+    }
+    .travel-booking-page .travel-sumbar__toggle[aria-expanded="true"] .travel-sumbar__chev { transform: rotate(-135deg); margin-top: 4px; }
+    .travel-booking-page .travel-booking-layout--folded .travel-bsidebar { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .travel-booking-page .travel-sumbar__chev { transition: none; }
+}
+
 /* Sidebar cards */
 .travel-booking-page .travel-bcard {
     background: #fff;

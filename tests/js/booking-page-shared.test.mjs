@@ -397,6 +397,35 @@ describe('the cancellation card\'s folded line', () => {
     });
 });
 
+describe('phone: the summary folded into one sticky bar', () => {
+    function page() {
+        document.body.innerHTML = '<div class="travel-booking-page"><div class="travel-booking-layout" id="layout">'
+            + '<div class="travel-sumbar"><button type="button" class="travel-sumbar__toggle" aria-expanded="true" aria-controls="travel-bsidebar" data-travel-sumbar>'
+            + '<span>Adalya Elite Lara</span></button></div>'
+            + '<aside class="travel-bsidebar" id="travel-bsidebar"></aside><div class="travel-booking-col-main"></div></div></div>';
+        window.TravelConditions.armSummaryBar(document);
+        return { layout: document.getElementById('layout'), toggle: document.querySelector('[data-travel-sumbar]') };
+    }
+
+    it('starts folded, and says so', () => {
+        const { layout, toggle } = page();
+
+        expect(layout.classList.contains('travel-booking-layout--folded')).toBe(true);
+        expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('opens and closes the summary on a tap', () => {
+        const { layout, toggle } = page();
+        toggle.click();
+        expect(toggle.getAttribute('aria-expanded')).toBe('true');
+        expect(layout.classList.contains('travel-booking-layout--folded')).toBe(false);
+
+        toggle.querySelector('span').click();
+        expect(toggle.getAttribute('aria-expanded')).toBe('false');
+        expect(layout.classList.contains('travel-booking-layout--folded')).toBe(true);
+    });
+});
+
 describe('guest form kept in view beside a tall summary', () => {
     function page(formHeight, sidebarHeight) {
         document.body.innerHTML = '<div class="travel-booking-page"><div class="travel-booking-layout">'
