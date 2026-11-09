@@ -27,7 +27,7 @@
                     <span><strong>{__("travel_core.check_in")|default:"Check-in"}:</strong> {$sphinx_package_booking.check_in|date_format:"%d.%m.%Y"}</span>
                     <span><strong>{__("travel_core.check_out")|default:"Check-out"}:</strong> {$sphinx_package_booking.check_out|date_format:"%d.%m.%Y"}</span>
                     {if $sphinx_package_booking.meal_type}
-                        <span><strong>{__("travel_core.meal")|default:"Meal"}:</strong> {$sphinx_package_booking.meal_type|escape:html}</span>
+                        <span><strong>{__("travel_core.meal_plan")}:</strong> {$sphinx_package_booking.meal_type|escape:html}</span>
                     {/if}
                 </div>
 

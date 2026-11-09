@@ -4055,4 +4055,32 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Searching…',
         'ro' => 'Se caută…',
     ],
+    // Storefront labels that lived only in the .po files, which CS-Cart reads
+    // at install: on a store installed before them they printed as raw keys
+    // ("_travel_core.total_price"). TemplateLangKeysSeededTest keeps every
+    // travel_core label an add-on's template uses in a seeded source.
+    'travel_core.total_price' => [
+        'en' => 'Total price',
+        'ro' => 'Preț total',
+    ],
+    'travel_core.payment_terms' => [
+        'en' => 'Terms of Payment',
+        'ro' => 'Termeni de plată',
+    ],
+    'travel_core.cancellation_policy' => [
+        'en' => 'Cancellation Policy',
+        'ro' => 'Politica de anulare',
+    ],
+    'travel_core.days' => [
+        'en' => 'days',
+        'ro' => 'zile',
+    ],
+    'travel_core.must_be_under_18' => [
+        'en' => 'Must be under 18 years old.',
+        'ro' => 'Trebuie să aibă sub 18 ani.',
+    ],
+    'travel_core.child_age_mismatch' => [
+        'en' => 'The child [guest] will be [actual] years old at check-in, but the offer was priced for age [declared]. The search was re-run with the correct ages — please choose an offer again.',
+        'ro' => 'Copilul [guest] va avea [actual] ani la check-in, dar oferta a fost calculată pentru [declared] ani. Căutarea a fost refăcută cu vârstele corecte — vă rugăm să alegeți din nou o ofertă.',
+    ],
 ];
