@@ -139,20 +139,51 @@ final class BookingSidebarViewModel
         string $checkOutLabel = '',
         string $fallbackImageUrl = '',
     ): self {
-        $args = get_object_vars($this);
-        if ($args['imageUrl'] === '' && $fallbackImageUrl !== '') {
-            $args['imageUrl'] = $fallbackImageUrl;
-        }
-        $args['checkInLabel'] = $checkInLabel;
-        $args['checkOutLabel'] = $checkOutLabel;
-        $args['kindLabel'] = $kindLabel;
-        $args['legs'] = $legs;
-        $args['includes'] = $includes;
-        $args['excludes'] = $excludes;
-        $args['changeUrl'] = $changeUrl;
-        $args['perNight'] = '';
-
-        return new self(...$args);
+        return new self(
+            imagePair: $this->imagePair,
+            imageUrl: $this->imageUrl === '' && $fallbackImageUrl !== '' ? $fallbackImageUrl : $this->imageUrl,
+            name: $this->name,
+            stars: $this->stars,
+            available: $this->available,
+            locationLine: $this->locationLine,
+            mapUrl: $this->mapUrl,
+            features: $this->features,
+            packageName: $this->packageName,
+            checkIn: $this->checkIn,
+            checkInWeekday: $this->checkInWeekday,
+            checkOut: $this->checkOut,
+            checkOutWeekday: $this->checkOutWeekday,
+            nights: $this->nights,
+            rooms: $this->rooms,
+            adults: $this->adults,
+            children: $this->children,
+            roomLines: $this->roomLines,
+            boardName: $this->boardName,
+            changeUrl: $changeUrl,
+            productId: $this->productId,
+            total: $this->total,
+            oldTotal: $this->oldTotal,
+            cancelLines: $this->cancelLines,
+            cancelFullAmount: $this->cancelFullAmount,
+            cancelFreeUntil: $this->cancelFreeUntil,
+            paymentLines: $this->paymentLines,
+            roomLabel: $this->roomLabel,
+            availabilityStatus: $this->availabilityStatus,
+            availabilityNote: $this->availabilityNote,
+            discountLabel: $this->discountLabel,
+            perNight: '',
+            cancelSteps: $this->cancelSteps,
+            paymentSteps: $this->paymentSteps,
+            paymentSplit: $this->paymentSplit,
+            featuresMax: $this->featuresMax,
+            showWeekday: $this->showWeekday,
+            kindLabel: $kindLabel,
+            legs: $legs,
+            includes: $includes,
+            excludes: $excludes,
+            checkInLabel: $checkInLabel,
+            checkOutLabel: $checkOutLabel,
+        );
     }
 
     /**
