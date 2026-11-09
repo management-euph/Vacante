@@ -424,6 +424,64 @@ final class BookingSidebarTest extends TestCase
         );
     }
 
+    /**
+     * The cancellation card is folded to its title and one line, what
+     * cancelling today costs; the timeline opens under it. Novoton's
+     * swapped-in terms carry their own line (the sidebar copy only), which
+     * booking-conditions.js copies up.
+     */
+    public function testCancellationCardFoldsToOneLineThatSaysWhatCancellingCosts(): void
+    {
+        $tpl = self::tpl();
+        $card = substr($tpl, (int) strpos($tpl, 'id="travel-cancel-card"'));
+
+        self::assertStringContainsString('<details class="travel-cancel-fold">', $card);
+        self::assertStringNotContainsString('<details class="travel-cancel-fold" open', $card, 'folded by default');
+        self::assertStringContainsString('<span id="travel-cancel-preview">{include file="addons/travel_core/components/booking_cancel_preview.tpl" cp=$tbs}</span>', $card);
+        self::assertLessThan(strpos($card, 'id="travel-cancel-body"'), (int) strpos($card, '</summary>'), 'the timeline opens under the title');
+
+        $preview = (string) file_get_contents(self::repoRoot() . '/addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/booking_cancel_preview.tpl');
+        self::assertStringContainsString('{if $cp_step.is_current && !$_cp_done}', $preview);
+        self::assertStringContainsString('travel-cancel-fold__preview--free">&#10003; {if $cp_step.to_label}{__("travel_core.free_cancellation_until")} {$cp_step.to_label|escape:html}', $preview);
+        self::assertStringContainsString('{__("travel_core.cancel_today_costs")} {if $cp_step.approx|default:false}&asymp;&nbsp;{/if}{$cp_step.amount_label nofilter}', $preview);
+        self::assertStringContainsString('{__("travel_core.cancel_you_will_pay")} {$cp.cancel_full_amount nofilter}', $preview);
+
+        self::assertStringContainsString(
+            '{if $_tt_ids}<template class="travel-cancel-preview-src">{include file="addons/travel_core/components/booking_cancel_preview.tpl" cp=$tt}</template>{/if}',
+            self::timelinePartial(),
+        );
+        $js = (string) file_get_contents(self::repoRoot() . '/addon-travel-core/js/addons/travel_core/booking-conditions.js');
+        self::assertStringContainsString("body.querySelector('template.travel-cancel-preview-src')", $js);
+        self::assertStringContainsString('new window.MutationObserver(syncCancelPreview).observe(body, { childList: true });', $js);
+
+        $keys = require self::repoRoot() . '/addon-travel-core/app/addons/travel_core/lang_keys.php';
+        self::assertIsArray($keys);
+        self::assertSame('Dacă anulați azi, plătiți', $keys['travel_core.cancel_today_costs']['ro'] ?? null);
+    }
+
+    /**
+     * A hidden price-state node stays hidden. The unverified badge and the
+     * refresh link start with .travel-is-hidden, and novoton shows them with
+     * an inline display, so their own rules declare none: an inline-block
+     * further down the file beat the hidden state and showed an empty orange
+     * pill under every total. The toggle stays without !important, or
+     * novoton's inline display could not show the price error.
+     */
+    public function testHiddenPriceStatesStayHiddenUntilNovotonShowsThem(): void
+    {
+        $css = self::css();
+
+        self::assertMatchesRegularExpression('/\.travel-booking-page \.travel-is-hidden \{\s*display: none;\s*\}/', $css);
+        foreach (['travel-price-unverified', 'travel-price-refresh'] as $class) {
+            self::assertMatchesRegularExpression('/\.travel-booking-page \.' . $class . ' \{[^}]+\}/', $css);
+            self::assertDoesNotMatchRegularExpression('/\.travel-booking-page \.' . $class . ' \{[^}]*display:/', $css, $class);
+            self::assertStringContainsString('class="' . $class . ' travel-is-hidden"', self::tpl());
+        }
+        $js = (string) file_get_contents(self::repoRoot() . '/addon-novoton-holidays/js/addons/novoton_holidays/booking-form.js');
+        self::assertStringContainsString("unverifiedBadge.style.display = 'inline-block';", $js);
+        self::assertStringContainsString("refreshLink.style.display = 'block';", $js);
+    }
+
     public function testCancellationCardIsHiddenUntilItHasSomethingToSay(): void
     {
         $tpl = self::tpl();

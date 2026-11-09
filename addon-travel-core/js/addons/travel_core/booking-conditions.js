@@ -324,6 +324,25 @@
         }
     });
 
+    // ── The cancellation card's folded line (booking_sidebar.tpl) ────────
+    // The card is folded to its title and one line saying what cancelling
+    // today would cost. Novoton fills the card's body after its price
+    // re-check; the terms it brings carry their own line (a <template> in
+    // booking_terms_timeline.tpl), copied up into the title here.
+    function syncCancelPreview() {
+        var slot = document.getElementById('travel-cancel-preview');
+        var body = document.getElementById('travel-cancel-body');
+        var src = body ? body.querySelector('template.travel-cancel-preview-src') : null;
+        if (!slot || !src) return;
+        slot.replaceChildren(src.content.cloneNode(true));
+    }
+
+    function armCancelPreview() {
+        var body = document.getElementById('travel-cancel-body');
+        if (!body || !window.MutationObserver) return;
+        new window.MutationObserver(syncCancelPreview).observe(body, { childList: true });
+    }
+
     // ── The guest form beside a tall summary ──────────────────────────────
     // A short form stays in view, with its button, while the summary
     // scrolls past it (booking-pages.css: sticky). Only while the whole
@@ -358,6 +377,7 @@
     function ready() {
         armFeatureLists(document);
         armSameSurname(document);
+        armCancelPreview();
         armStickyForm();
     }
 
@@ -369,4 +389,6 @@
     window.TravelConditions.armFeatureLists = armFeatureLists;
     window.TravelConditions.armSameSurname = armSameSurname;
     window.TravelConditions.fitStickyForm = fitStickyForm;
+    window.TravelConditions.armCancelPreview = armCancelPreview;
+    window.TravelConditions.syncCancelPreview = syncCancelPreview;
 })();

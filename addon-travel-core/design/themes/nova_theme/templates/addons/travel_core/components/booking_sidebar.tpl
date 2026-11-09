@@ -219,10 +219,22 @@
        #travel-cancel-body with the same partial, server-rendered, after the
        price re-check that already runs on page load. *}
     <section class="travel-bcard travel-bcard--cancel{if !$tbs.cancel_steps && !$tbs.cancel_lines && !$tbs.cancel_full_amount && !$tbs.cancel_free_until && !$tbs.payment_steps && !$tbs.payment_lines} travel-is-hidden{/if}" id="travel-cancel-card">
-        <h3 class="travel-bcard__title">{__("travel_core.cancel_payment_title")}</h3>
-        <div class="travel-bcard__body" id="travel-cancel-body">
-            {include file="addons/travel_core/components/booking_terms_timeline.tpl" tt=$tbs tt_show_link=true tt_ids=true}
-        </div>
+        {* Folded to its title and one line, what cancelling today costs
+           (booking_cancel_preview.tpl); the timeline opens under it. When
+           novoton swaps the body in, the new terms bring their own line,
+           copied up by booking-conditions.js. *}
+        <details class="travel-cancel-fold">
+            <summary class="travel-bcard__title">
+                <span class="travel-cancel-fold__text">
+                    <span>{__("travel_core.cancel_payment_title")}</span>
+                    <span id="travel-cancel-preview">{include file="addons/travel_core/components/booking_cancel_preview.tpl" cp=$tbs}</span>
+                </span>
+                <span class="travel-cancel-fold__chev" aria-hidden="true"></span>
+            </summary>
+            <div class="travel-bcard__body" id="travel-cancel-body">
+                {include file="addons/travel_core/components/booking_terms_timeline.tpl" tt=$tbs tt_show_link=true tt_ids=true}
+            </div>
+        </details>
     </section>
     </div>
 

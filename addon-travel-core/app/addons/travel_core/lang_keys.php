@@ -463,6 +463,10 @@ return [
         'en' => 'How much will it cost to cancel?',
         'ro' => 'Cât costă să anulez?',
     ],
+    'travel_core.cancel_today_costs' => [
+        'en' => 'If you cancel today, you pay',
+        'ro' => 'Dacă anulați azi, plătiți',
+    ],
     'travel_core.cancel_you_will_pay' => [
         'en' => "If you cancel, you'll pay",
         'ro' => 'Dacă anulați, veți plăti',

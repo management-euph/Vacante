@@ -1362,6 +1362,10 @@ msgctxt "Languages::travel_core.cancel_cost_title"
 msgid "How much will it cost to cancel?"
 msgstr "Cât costă să anulez?"
 
+msgctxt "Languages::travel_core.cancel_today_costs"
+msgid "If you cancel today, you pay"
+msgstr "Dacă anulați azi, plătiți"
+
 msgctxt "Languages::travel_core.cancel_you_will_pay"
 msgid "If you cancel, you'll pay"
 msgstr "Dacă anulați, veți plăti"

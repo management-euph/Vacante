@@ -91,3 +91,7 @@
 {if $_tt_link}
     <a href="#" class="travel-conditions-link" data-travel-conditions-open>{__("travel_core.booking_conditions_link")}</a>
 {/if}
+{* The sidebar copy carries the card's folded line for these terms, which
+   booking-conditions.js copies into the card's title when novoton swaps
+   new terms in. *}
+{if $_tt_ids}<template class="travel-cancel-preview-src">{include file="addons/travel_core/components/booking_cancel_preview.tpl" cp=$tt}</template>{/if}

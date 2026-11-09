@@ -388,7 +388,9 @@
 }
 /* De-inlined display toggle (InlineStyleRatchet): price-state nodes and the
    cancellation card start hidden and are revealed by JS when they have
-   something to say. */
+   something to say, by dropping the class or by an inline display (novoton's
+   price error). So a node that carries it declares no display of its own
+   further down, which would beat it at the same weight. */
 .travel-booking-page .travel-is-hidden {
     display: none;
 }
@@ -601,9 +603,12 @@
     font-weight: 600;
 }
 
-/* Price-box states (unverified badge + refresh link + inline error) */
+/* Price-box states (unverified badge + refresh link + inline error). They
+   start hidden (.travel-is-hidden) and novoton shows them with an inline
+   display, so neither declares one here: a display here beat the hidden
+   state and left an empty orange pill under every total, and an empty,
+   focusable link after it. */
 .travel-booking-page .travel-price-unverified {
-    display: inline-block;
     background: var(--nvt-warning, #f0ad4e);
     color: var(--nvt-warning-dark, #856404);
     font-size: 11px;
@@ -613,7 +618,6 @@
     margin-left: 5px;
 }
 .travel-booking-page .travel-price-refresh {
-    display: inline-block;
     font-size: 12px;
     color: var(--nvt-info, #0071c2);
     margin-top: 5px;
@@ -1755,6 +1759,28 @@ body.travel-conditions-open {
 :is(.travel-booking-page, .travel-ccard) .travel-bsidebar-payment ul { margin: 0; padding-left: 16px; font-size: 14px; color: #1f2937; }
 :is(.travel-booking-page, .travel-ccard) .travel-bsidebar-payment li + li { margin-top: 3px; }
 .travel-booking-page .travel-bcard--cancel .travel-conditions-link { display: inline-block; margin-top: 12px; font-size: 13px; }
+/* Cancellation & payment, folded to its title and one line: what cancelling
+   today would cost, green while it is free. The timeline, the payment terms
+   and the conditions link open under it. */
+.travel-booking-page .travel-cancel-fold > summary {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+    list-style: none; cursor: pointer;
+}
+.travel-booking-page .travel-cancel-fold > summary::-webkit-details-marker { display: none; }
+.travel-booking-page .travel-cancel-fold > summary:focus-visible { outline: 2px solid #1565c0; outline-offset: -2px; }
+.travel-booking-page .travel-cancel-fold:not([open]) > summary { border-bottom: 0; }
+.travel-booking-page .travel-cancel-fold__text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.travel-booking-page .travel-cancel-fold__preview { display: block; font-size: 13px; font-weight: 600; line-height: 1.4; }
+.travel-booking-page .travel-cancel-fold__preview--free { color: #0a7a35; }
+.travel-booking-page .travel-cancel-fold__preview--cost { color: #8a4b00; }
+.travel-booking-page .travel-cancel-fold__chev {
+    flex: 0 0 auto; width: 9px; height: 9px; margin: 5px 4px 0 0;
+    border-right: 2px solid #006ce4; border-bottom: 2px solid #006ce4; transform: rotate(45deg); transition: transform 0.15s;
+}
+.travel-booking-page .travel-cancel-fold[open] .travel-cancel-fold__chev { transform: rotate(-135deg); margin-top: 9px; }
+@media (prefers-reduced-motion: reduce) {
+    .travel-booking-page .travel-cancel-fold__chev { transition: none; }
+}
 
 /* Guest form (items 6, 12) */
 .travel-booking-page .travel-guest-hint {

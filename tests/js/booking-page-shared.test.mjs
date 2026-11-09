@@ -362,6 +362,41 @@ describe('"same last name as Adult 1"', () => {
     });
 });
 
+describe('the cancellation card\'s folded line', () => {
+    function card(bodyHtml) {
+        document.body.innerHTML = '<div class="travel-booking-page"><section id="travel-cancel-card"><details class="travel-cancel-fold">'
+            + '<summary><span id="travel-cancel-preview"></span></summary>'
+            + '<div id="travel-cancel-body">' + bodyHtml + '</div></details></section></div>';
+        window.TravelConditions.armCancelPreview();
+        return document.getElementById('travel-cancel-preview');
+    }
+    const terms = (line) => '<ol class="travel-timeline"></ol><template class="travel-cancel-preview-src">'
+        + '<span class="travel-cancel-fold__preview travel-cancel-fold__preview--cost">' + line + '</span></template>';
+
+    it('takes the line of the terms swapped in after the price re-check', async () => {
+        const slot = card('');
+        document.getElementById('travel-cancel-body').innerHTML = terms('Dacă anulați azi, plătiți 708,50 € (50%)');
+        await Promise.resolve();
+
+        expect(slot.textContent).toBe('Dacă anulați azi, plătiți 708,50 € (50%)');
+        expect(slot.querySelector('.travel-cancel-fold__preview--cost')).not.toBeNull();
+    });
+
+    it('follows a later re-price, and keeps its line when new terms bring none', async () => {
+        const slot = card('');
+        const body = document.getElementById('travel-cancel-body');
+        body.innerHTML = terms('Dacă anulați azi, plătiți 620 € (50%)');
+        await Promise.resolve();
+        body.innerHTML = terms('Dacă anulați azi, plătiți 650 € (50%)');
+        await Promise.resolve();
+        expect(slot.textContent).toBe('Dacă anulați azi, plătiți 650 € (50%)');
+
+        body.innerHTML = '<ul class="travel-bsidebar-cancel"><li>Anulare gratuită până la 1 iunie</li></ul>';
+        await Promise.resolve();
+        expect(slot.textContent).toBe('Dacă anulați azi, plătiți 650 € (50%)');
+    });
+});
+
 describe('guest form kept in view beside a tall summary', () => {
     function page(formHeight, sidebarHeight) {
         document.body.innerHTML = '<div class="travel-booking-page"><div class="travel-booking-layout">'
