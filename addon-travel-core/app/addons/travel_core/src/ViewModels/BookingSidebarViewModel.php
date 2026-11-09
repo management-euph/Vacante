@@ -68,6 +68,8 @@ final class BookingSidebarViewModel
      * @param list<array{title: string, line: string, note: string}> $legs a trip's journeys, in order
      * @param list<string> $includes what the trip's price includes
      * @param list<string> $excludes what it does not
+     * @param string $checkInLabel the first date's own word ("Plecare"); '' = Check-in
+     * @param string $checkOutLabel the last date's own word ("Întoarcere"); '' = Check-out
      */
     public function __construct(
         public readonly array $imagePair = [],
@@ -111,21 +113,38 @@ final class BookingSidebarViewModel
         public readonly array $legs = [],
         public readonly array $includes = [],
         public readonly array $excludes = [],
+        public readonly string $checkInLabel = '',
+        public readonly string $checkOutLabel = '',
     ) {
     }
 
     /**
      * The same summary for a trip (package, circuit): its kind, journeys and
-     * inclusions, where "Change your selection" and the Offer step lead, and
-     * no per-night price, which would spread the flights over the nights.
+     * inclusions, where "Change your selection" and the Offer step lead, the
+     * dates' own words where they are not a stay's ("Plecare", "Întoarcere"),
+     * the trip's own picture when its product has none, and no per-night
+     * price, which would spread the flights over the nights.
      *
      * @param list<array{title: string, line: string, note: string}> $legs
      * @param list<string> $includes
      * @param list<string> $excludes
      */
-    public function withTrip(string $kindLabel, array $legs, array $includes, array $excludes, string $changeUrl): self
-    {
+    public function withTrip(
+        string $kindLabel,
+        array $legs,
+        array $includes,
+        array $excludes,
+        string $changeUrl,
+        string $checkInLabel = '',
+        string $checkOutLabel = '',
+        string $fallbackImageUrl = '',
+    ): self {
         $args = get_object_vars($this);
+        if ($args['imageUrl'] === '' && $fallbackImageUrl !== '') {
+            $args['imageUrl'] = $fallbackImageUrl;
+        }
+        $args['checkInLabel'] = $checkInLabel;
+        $args['checkOutLabel'] = $checkOutLabel;
         $args['kindLabel'] = $kindLabel;
         $args['legs'] = $legs;
         $args['includes'] = $includes;
@@ -200,6 +219,8 @@ final class BookingSidebarViewModel
             'legs' => $this->legs,
             'includes' => $this->includes,
             'excludes' => $this->excludes,
+            'check_in_label' => $this->checkInLabel,
+            'check_out_label' => $this->checkOutLabel,
         ];
     }
 }

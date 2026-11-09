@@ -45,6 +45,22 @@ final class SphinxTripSummaryTest extends TestCase
         self::assertSame([], SphinxBookingSidebarBuilder::tripLegs(null, [], self::WORDS, static fn (int $ts): string => ''));
     }
 
+    /** A circuit's quote gives one flight segment each way, as an object. */
+    public function testACircuitsSingleSegmentsReadTheSame(): void
+    {
+        $flight = [
+            'outbound' => ['departure' => ['name' => 'București (OTP)', 'datetime' => '2027-09-04 06:10'], 'arrival' => ['name' => 'Atena (ATH)', 'datetime' => '2027-09-04 08:05'], 'airline' => ['name' => 'TAROM'], 'flight_number' => 'RO 271'],
+            'inbound' => ['departure' => ['name' => 'Salonic (SKG)'], 'arrival' => ['name' => 'București (OTP)'], 'airline' => ['name' => 'TAROM'], 'flight_number' => 'RO 288'],
+        ];
+
+        $legs = SphinxBookingSidebarBuilder::tripLegs($flight, [], self::WORDS, static fn (int $ts): string => date('d.m.Y', $ts));
+
+        self::assertSame([
+            ['title' => '✈ Dus · 04.09.2027', 'line' => '06:10 București (OTP) → 08:05 Atena (ATH)', 'note' => 'TAROM RO 271'],
+            ['title' => '✈ Retur', 'line' => 'Salonic (SKG) → București (OTP)', 'note' => 'TAROM RO 288'],
+        ], $legs);
+    }
+
     public function testIncludesTheOffersListThenEachTransferItDoesNotNameYet(): void
     {
         $includes = SphinxBookingSidebarBuilder::tripIncludes(

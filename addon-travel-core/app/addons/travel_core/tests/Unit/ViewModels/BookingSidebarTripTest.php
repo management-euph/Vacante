@@ -68,6 +68,27 @@ final class BookingSidebarTripTest extends TestCase
         self::assertSame('177 €', $hotel->toViewArray()['per_night'], 'the hotel summary is untouched');
     }
 
+    /** A circuit: its dates' own words, and its own picture only where its product has none. */
+    public function testATripNamesItsDatesAndFallsBackToItsOwnPicture(): void
+    {
+        $bare = (new BookingSidebarViewModel(name: 'Grecia clasică'))
+            ->withTrip('Circuit', [], [], [], '', 'Plecare', 'Întoarcere', 'https://img/circuit.jpg')
+            ->toViewArray();
+        self::assertSame('Plecare', $bare['check_in_label']);
+        self::assertSame('Întoarcere', $bare['check_out_label']);
+        self::assertSame('https://img/circuit.jpg', $bare['image_url']);
+
+        $withImage = (new BookingSidebarViewModel(name: 'X', imageUrl: 'https://img/product.jpg'))
+            ->withTrip('Circuit', [], [], [], '', '', '', 'https://img/circuit.jpg')
+            ->toViewArray();
+        self::assertSame('https://img/product.jpg', $withImage['image_url']);
+        self::assertSame('', $withImage['check_in_label'], 'a stay keeps Check-in');
+
+        $tpl = self::sidebar();
+        self::assertStringContainsString('{if $tbs.check_in_label|default:""}{$tbs.check_in_label|escape:html}{else}{__("travel_core.check_in")}{/if}', $tpl);
+        self::assertStringContainsString('{if $tbs.check_out_label|default:""}{$tbs.check_out_label|escape:html}{else}{__("travel_core.check_out")}{/if}', $tpl);
+    }
+
     public function testTheSidebarShowsThemOnlyWhenGiven(): void
     {
         $tpl = self::sidebar();

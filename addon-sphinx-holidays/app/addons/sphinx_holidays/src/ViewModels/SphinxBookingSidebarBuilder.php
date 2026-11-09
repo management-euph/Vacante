@@ -315,7 +315,8 @@ final class SphinxBookingSidebarBuilder
      * A bus segment has no times or number in the offer: "Autocar" over its
      * route.
      *
-     * @param array<string, mixed>|null $flight outbound / inbound segment lists
+     * @param array<string, mixed>|null $flight outbound / inbound: a list of
+     *                                          segments (a package), or one (a circuit)
      * @param list<array<string, mixed>> $bus segments
      * @param array{out: string, back: string, bus: string} $words the localized word for each kind
      * @param callable(int): string $formatDate the store's date format
@@ -325,7 +326,12 @@ final class SphinxBookingSidebarBuilder
     {
         $legs = [];
         foreach (['outbound' => $words['out'], 'inbound' => $words['back']] as $key => $word) {
-            foreach (TypeCoerce::toRowList($flight[$key] ?? null) as $segment) {
+            $segments = $flight[$key] ?? null;
+            // A circuit's quote gives one segment each way, as an object.
+            if (is_array($segments) && array_key_exists('departure', $segments)) {
+                $segments = [$segments];
+            }
+            foreach (TypeCoerce::toRowList($segments) as $segment) {
                 $dep = TypeCoerce::toStringMap($segment['departure'] ?? null);
                 $arr = TypeCoerce::toStringMap($segment['arrival'] ?? null);
                 $depTs = (int) strtotime(TypeCoerce::toString($dep['datetime'] ?? ''));

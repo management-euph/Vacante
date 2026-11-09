@@ -682,6 +682,14 @@ return [
         'en' => 'Package',
         'ro' => 'Pachet',
     ],
+    'sphinx_holidays.trip_kind_circuit' => [
+        'en' => 'Circuit',
+        'ro' => 'Circuit',
+    ],
+    'sphinx_holidays.trip_return' => [
+        'en' => 'Return',
+        'ro' => 'Întoarcere',
+    ],
     'sphinx_holidays.outbound' => [
         'en' => 'Outbound',
         'ro' => 'Dus',

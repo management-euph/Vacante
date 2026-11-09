@@ -135,12 +135,12 @@
 
             <div class="travel-bsidebar-dates">
                 <div class="travel-bsidebar-date">
-                    <span>{__("travel_core.check_in")}</span>
+                    <span>{if $tbs.check_in_label|default:""}{$tbs.check_in_label|escape:html}{else}{__("travel_core.check_in")}{/if}</span>
                     <strong>{$tbs.check_in|escape:html}</strong>
                     {if $tbs.check_in_weekday && $tbs.show_weekday|default:true}<em>{$tbs.check_in_weekday|escape:html}</em>{/if}
                 </div>
                 <div class="travel-bsidebar-date">
-                    <span>{__("travel_core.check_out")}</span>
+                    <span>{if $tbs.check_out_label|default:""}{$tbs.check_out_label|escape:html}{else}{__("travel_core.check_out")}{/if}</span>
                     <strong>{$tbs.check_out|escape:html}</strong>
                     {if $tbs.check_out_weekday && $tbs.show_weekday|default:true}<em>{$tbs.check_out_weekday|escape:html}</em>{/if}
                 </div>
