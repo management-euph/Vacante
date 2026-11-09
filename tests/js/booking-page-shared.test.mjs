@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
  * The shared booking page's small behaviours, one set for sphinx, novoton
@@ -117,6 +117,53 @@ describe('named messages and a red state that follows the messages', () => {
         expect(ev.defaultPrevented).toBe(true);
         expect(form.querySelector('.js-dob-basics-msg')).not.toBeNull();
         expect(form.querySelector('input').getAttribute('aria-invalid')).toBe('true');
+    });
+});
+
+describe('the first field to fix is brought to the middle of the screen', () => {
+    let scrolled;
+    beforeEach(async () => {
+        // The `invalid` handler focuses one field per round; let the last round end.
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        scrolled = [];
+        HTMLElement.prototype.scrollIntoView = function (options) {
+            scrolled.push({ id: this.id, options });
+        };
+    });
+    afterEach(() => {
+        delete HTMLElement.prototype.scrollIntoView;
+        delete window.matchMedia;
+    });
+    function page(inner) {
+        document.body.innerHTML = '<div class="travel-booking-page"><form id="f">' + inner + '</form></div>';
+        return document.getElementById('f');
+    }
+
+    it('scrolls only the first missing field to the middle, then focuses it', () => {
+        page('<div class="travel-guest-field"><input id="a" required></div>'
+            + '<div class="travel-guest-field"><input id="b" required></div>');
+        document.getElementById('a').dispatchEvent(new Event('invalid', { cancelable: true }));
+        document.getElementById('b').dispatchEvent(new Event('invalid', { cancelable: true }));
+
+        expect(scrolled).toEqual([{ id: 'a', options: { block: 'center', behavior: 'smooth' } }]);
+        expect(document.activeElement.id).toBe('a');
+    });
+
+    it('jumps without the glide for a guest who asked for reduced motion', () => {
+        window.matchMedia = (query) => ({ matches: query.includes('reduce'), media: query });
+        page('<div class="travel-guest-field"><input id="a" required></div>');
+        document.getElementById('a').dispatchEvent(new Event('invalid', { cancelable: true }));
+
+        expect(scrolled).toEqual([{ id: 'a', options: { block: 'center', behavior: 'auto' } }]);
+    });
+
+    it('does the same for a half-typed date of birth caught on submit', () => {
+        const form = page('<div class="travel-guest-field"><input id="dob" class="js-dob-basics" '
+            + 'name="guests[room1_adult_1][dob]" value="12/05"></div>');
+        form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+
+        expect(scrolled.map((s) => s.id)).toEqual(['dob']);
+        expect(document.activeElement.id).toBe('dob');
     });
 });
 
