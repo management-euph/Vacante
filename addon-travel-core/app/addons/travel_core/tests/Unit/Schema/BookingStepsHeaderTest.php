@@ -186,7 +186,11 @@ final class BookingStepsHeaderTest extends TestCase
     {
         $root = self::root();
         $sidebar = (string) file_get_contents($root . '/addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/booking_sidebar.tpl');
-        self::assertStringContainsString('<div id="travel-price-split"{if $tbs_ps_form} data-deposit-form="{$tbs_ps_form|escape:html}"{/if}>{include file="addons/travel_core/components/booking_payment_split.tpl" ps=$tbs.payment_split', $sidebar);
+        // Information under the total where no choice is offered; the choice lives in the form.
+        self::assertStringContainsString('{if !$tbs_ps_form}<div id="travel-price-split">{include file="addons/travel_core/components/booking_payment_split.tpl" ps=$tbs.payment_split|default:[] ps_form=""}</div>{/if}', $sidebar);
+        $choice = (string) file_get_contents($root . '/addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/booking_pay_choice.tpl');
+        self::assertStringContainsString('id="travel-price-split" data-deposit-form="{$pc_form|escape:html}">{include file="addons/travel_core/components/booking_payment_split.tpl" ps=$pc_tbs.payment_split|default:[] ps_form=$pc_form}', $choice);
+        self::assertStringContainsString('!$is_edit_mode|default:false && fn_travel_core_deposit_offered($pc_addon)', $choice);
 
         $partial = (string) file_get_contents($root . '/addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/booking_payment_split.tpl');
         foreach (['split_deposit', 'split_balance', 'due_by'] as $key) {

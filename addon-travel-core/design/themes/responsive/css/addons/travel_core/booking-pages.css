@@ -946,7 +946,13 @@
     color: #0f172a;
 }
 
-/* "Pay in full" / "Pay a deposit" choice (same partial, with ps_form) */
+/* "Pay in full" / "Pay a deposit" choice (same partial, with ps_form), in the
+   form before its button (booking_pay_choice.tpl): a titled group of
+   whole-row cards. The picked one turns light green with a green border and
+   a "Selected" badge; the radio stays visible for anyone who reads by it. */
+/* A form section like "Who is staying?"; empty until the terms split the
+   price, and then not shown. */
+.travel-booking-page .travel-paychoice:not(:has(.travel-paymode)) { display: none; }
 .travel-booking-page .travel-paymode {
     display: grid;
     gap: 8px;
@@ -955,34 +961,46 @@
     border: 0;
     min-width: 0;
 }
+.travel-booking-page .travel-paychoice .travel-paymode { margin: 0; }
+.travel-booking-page .travel-paymode__legend {
+    float: left; width: 100%; margin: 0 0 4px; padding: 0;
+    font-size: 18px; font-weight: 700; color: var(--nvt-primary, #003580);
+}
+.travel-booking-page .travel-paymode__legend + * { clear: both; }
 .travel-booking-page .travel-paymode__opt {
     display: flex;
-    align-items: flex-start;
-    gap: 10px;
+    align-items: center;
+    gap: 12px;
+    min-height: 56px;
     margin: 0;
-    padding: 10px 12px;
-    border: 1.5px solid #d5deea;
-    border-radius: 10px;
+    padding: 10px 14px;
+    border: 1px solid #c4cbd6;
+    border-radius: 8px;
     background: #fff;
     cursor: pointer;
     font-size: 14px;
     line-height: 1.35;
     color: #1e293b;
     text-align: left;
+    box-sizing: border-box;
+    transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
+.travel-booking-page .travel-paymode__opt:hover { border-color: #7cc296; }
 .travel-booking-page .travel-paymode__opt:has(input:checked) {
-    border-color: #0b5ed7;
-    background: #f0f6ff;
-    box-shadow: 0 0 0 3px rgba(11, 94, 215, .12);
+    border: 2px solid #15803d;
+    padding: 9px 13px;
+    background: #eef8f1;
 }
 .travel-booking-page .travel-paymode__opt:has(input:focus-visible) {
-    outline: 2px solid #0b5ed7;
-    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.35);
 }
 .travel-booking-page .travel-paymode__opt input {
-    margin: 3px 0 0;
-    accent-color: #0b5ed7;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    accent-color: #15803d;
     flex: none;
+    cursor: pointer;
 }
 .travel-booking-page .travel-paymode__text {
     flex: 1;
@@ -993,17 +1011,26 @@
     font-weight: 700;
     font-size: 15px;
 }
+.travel-booking-page .travel-paymode__sel { display: none; }
+.travel-booking-page .travel-paymode__opt:has(input:checked) .travel-paymode__sel {
+    display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px;
+    background: #d7f0de; color: #0a7a35; font-size: 11px; font-weight: 700; vertical-align: 1px;
+}
 .travel-booking-page .travel-paymode__hint {
     display: block;
     margin-top: 2px;
-    font-size: 12px;
-    color: #64748b;
+    font-size: 13px;
+    color: #4b5563;
 }
 .travel-booking-page .travel-paymode__amt {
     flex: none;
     font-weight: 700;
     font-size: 15px;
+    color: var(--nvt-primary, #003580);
     white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+    .travel-booking-page .travel-paymode__opt { transition: none; }
 }
 
 /* Desktop: no inner scrollbar — the page scrolls as one. The aside stretches

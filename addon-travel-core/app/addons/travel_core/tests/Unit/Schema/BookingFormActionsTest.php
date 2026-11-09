@@ -54,6 +54,54 @@ final class BookingFormActionsTest extends TestCase
         );
     }
 
+    /**
+     * "How would you like to pay?" sits in the form, just before the
+     * button, on the pages that offer a deposit, and the summary leaves its
+     * own split box out there, so the page has one #travel-price-split for
+     * Novoton's re-price to refill.
+     */
+    public function testThePaymentChoiceSitsInTheFormBeforeTheButton(): void
+    {
+        foreach ([
+            'addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/booking_form.tpl' => '{include file="addons/travel_core/components/booking_pay_choice.tpl" pc_addon="sphinx_holidays" pc_form="sphinx-booking-form"}',
+            'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/views/novoton_booking/booking_form.tpl' => '{include file="addons/travel_core/components/booking_pay_choice.tpl" pc_addon="novoton_holidays" pc_form="novoton-booking-form"}',
+            'addon-novoton-holidays/design/themes/nova_theme/templates/addons/novoton_holidays/views/novoton_booking/booking_form.tpl' => '{include file="addons/travel_core/components/booking_pay_choice.tpl" pc_addon="novoton_holidays" pc_form="novoton-booking-form"}',
+        ] as $form => $include) {
+            $src = self::read($form);
+            self::assertStringContainsString($include, $src, $form);
+            self::assertLessThan(strpos($src, 'components/booking_form_actions.tpl'), strpos($src, $include), $form . ': before the button');
+        }
+        // Sphinx's guest section is the same form section as the other pages', so they line up.
+        self::assertStringContainsString(
+            '<div class="travel-form-section guest-names-section">',
+            self::read('addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/booking_form.tpl'),
+        );
+        self::assertStringContainsString(
+            "var box = document.getElementById('travel-price-split');",
+            self::read('addon-novoton-holidays/js/addons/novoton_holidays/booking-form.js'),
+        );
+    }
+
+    /** A titled group of whole-row cards; the picked one green, with a "Selected" badge. */
+    public function testThePaymentCardsSayWhichIsPicked(): void
+    {
+        $split = self::read('addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/booking_payment_split.tpl');
+
+        self::assertStringContainsString('<legend class="travel-paymode__legend">{__("travel_core.pay_mode_legend")}</legend>', $split);
+        self::assertSame(2, substr_count($split, '<span class="travel-paymode__sel">{__("travel_core.option_selected")}</span>'));
+        // The balance goes into the hint in <strong>: printed as markup, with the date escaped where it is built.
+        self::assertStringContainsString('{capture assign="ps_due"}{$ps.balance_due|escape:html}{/capture}{__("travel_core.pay_deposit_hint", ["[balance]" => $ps_balance, "[date]" => $ps_due]) nofilter}', $split);
+
+        $css = self::read('addon-travel-core/design/themes/responsive/css/addons/travel_core/booking-pages.css');
+        self::assertMatchesRegularExpression('/\.travel-paymode__opt:has\(input:checked\) \{\s*border: 2px solid #15803d;[^}]*background: #eef8f1;/', $css);
+        self::assertStringContainsString('.travel-booking-page .travel-paymode__opt:has(input:checked) .travel-paymode__sel {', $css);
+        self::assertStringContainsString('.travel-booking-page .travel-paychoice:not(:has(.travel-paymode)) { display: none; }', $css);
+
+        $keys = require dirname(__DIR__, 7) . '/addon-travel-core/app/addons/travel_core/lang_keys.php';
+        self::assertIsArray($keys);
+        self::assertSame('Selectat', $keys['travel_core.option_selected']['ro'] ?? null);
+    }
+
     public function testAPhoneShowsOneMainButton(): void
     {
         $css = self::read('addon-travel-core/design/themes/responsive/css/addons/travel_core/booking-pages.css');

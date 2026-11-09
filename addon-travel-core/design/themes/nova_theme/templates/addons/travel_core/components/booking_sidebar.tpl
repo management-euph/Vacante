@@ -201,12 +201,14 @@
                 <div class="travel-bsidebar-pernight" id="travel-price-pernight">{capture assign="tbs_pn_price"}<span class="travel-price-pernight__value">{$tbs.per_night|escape:html}</span>{/capture}{__("travel_core.per_night_line", ["[nights]" => $tbs_pn_nights, "[price]" => $tbs_pn_price]) nofilter}</div>
             {/if}
 
-            {* Deposit / balance from the supplier's payment terms — the "Pay in
-               full / Pay a deposit" choice where the provider offers one
-               (tbs_deposit_addon + tbs_deposit_form, never in edit mode),
-               else information only. novoton's re-price refills it. *}
+            {* Deposit / balance from the supplier's payment terms, as
+               information. Where the provider offers the "Pay in full / Pay a
+               deposit" choice (tbs_deposit_addon + tbs_deposit_form, never in
+               edit mode), the choice sits in the form instead
+               (booking_pay_choice.tpl), with the page's only
+               #travel-price-split. novoton's re-price refills either. *}
             {if $tbs_deposit_addon|default:"" && !$is_edit_mode|default:false && fn_travel_core_deposit_offered($tbs_deposit_addon)}{$tbs_ps_form = $tbs_deposit_form|default:""}{else}{$tbs_ps_form = ""}{/if}
-            <div id="travel-price-split"{if $tbs_ps_form} data-deposit-form="{$tbs_ps_form|escape:html}"{/if}>{include file="addons/travel_core/components/booking_payment_split.tpl" ps=$tbs.payment_split|default:[] ps_form=$tbs_ps_form}</div>
+            {if !$tbs_ps_form}<div id="travel-price-split">{include file="addons/travel_core/components/booking_payment_split.tpl" ps=$tbs.payment_split|default:[] ps_form=""}</div>{/if}
 
             <span id="price-unverified-badge" class="travel-price-unverified travel-is-hidden"></span>
             <a href="#" id="refresh-price-link" class="travel-price-refresh travel-is-hidden" onclick="if (window.refreshPrice) { refreshPrice(); } return false;"></a>

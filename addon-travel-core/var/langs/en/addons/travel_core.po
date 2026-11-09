@@ -1962,6 +1962,10 @@ msgctxt "Languages::travel_core.split_balance"
 msgid "Balance"
 msgstr "Balance"
 
+msgctxt "Languages::travel_core.option_selected"
+msgid "Selected"
+msgstr "Selected"
+
 msgctxt "Languages::travel_core.pay_mode_legend"
 msgid "How would you like to pay?"
 msgstr "How would you like to pay?"

@@ -138,6 +138,9 @@
                 {/foreach}
             </div>
             
+            {* "How would you like to pay?" where a deposit is offered (shared). *}
+            {include file="addons/travel_core/components/booking_pay_choice.tpl" pc_addon="novoton_holidays" pc_form="novoton-booking-form"}
+
             {* Form actions (shared): back to the results and the payment
                button; editing, back to the booking, Cancel and Save. *}
             {include file="addons/travel_core/components/booking_form_actions.tpl"

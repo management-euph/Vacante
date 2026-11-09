@@ -1074,6 +1074,10 @@ return [
         'ro' => 'Rest de plată',
     ],
     // Booking page: "Pay in full / Pay a deposit" choice (DepositPolicy).
+    'travel_core.option_selected' => [
+        'en' => 'Selected',
+        'ro' => 'Selectat',
+    ],
     'travel_core.pay_mode_legend' => [
         'en' => 'How would you like to pay?',
         'ro' => 'Cum doriți să plătiți?',
