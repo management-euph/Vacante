@@ -776,6 +776,10 @@ msgctxt "Languages::eurosite.package_price_changed"
 msgid "Eurosite's price for this package has changed: it is now [price]."
 msgstr "Eurosite's price for this package has changed: it is now [price]."
 
+msgctxt "Languages::eurosite.package_dob_required"
+msgid "Every traveller needs a date of birth: the airline or the coach operator asks for the passenger list."
+msgstr "Every traveller needs a date of birth: the airline or the coach operator asks for the passenger list."
+
 msgctxt "Languages::eurosite.dash_tile_hotels"
 msgid "Hotels in the destinations sold"
 msgstr "Hotels in the destinations sold"

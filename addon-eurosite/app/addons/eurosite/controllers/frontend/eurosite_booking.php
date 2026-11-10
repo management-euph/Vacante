@@ -16,6 +16,7 @@ declare(strict_types=1);
  *   package_dates — AJAX JSON: a departure city's dates on a hotel's page
  *   package_quote — AJAX JSON: the hotel's packages for one departure
  *   package_booking_form — the booking page of a package chosen there
+ *   package_add_to_cart — keep the package booking + cart line (POST)
  */
 
 if (!defined('BOOTSTRAP')) {
@@ -30,6 +31,7 @@ $allowed_modes = [
     'package_dates' => 'package_dates.php',
     'package_quote' => 'package_quote.php',
     'package_booking_form' => 'package_booking_form.php',
+    'package_add_to_cart' => 'package_add_to_cart.php',
 ];
 
 $mode_name = is_string($mode ?? null) ? $mode : '';

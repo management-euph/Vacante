@@ -74,6 +74,11 @@ final class OrderCardFacts
         if ($supplier > 0) {
             $facts['supplier_price'] = ['amount' => $supplier, 'currency' => strtoupper(TypeCoerce::toString($row['currency'] ?? 'EUR'))];
         }
+        // A package: the card says so, and which way it travels.
+        if (trim(TypeCoerce::toString($row['package_id'] ?? '')) !== '') {
+            $facts['kind'] = 'package';
+            $facts['transport'] = strtolower(TypeCoerce::toString($row['transport'] ?? ''));
+        }
         $facts['not_sent'] = $apiRef === '' && $status === TravelConstants::STATUS_PENDING
             && TypeCoerce::toInt($row['order_id'] ?? 0) > 0;
         if ($status === TravelConstants::STATUS_FAILED) {

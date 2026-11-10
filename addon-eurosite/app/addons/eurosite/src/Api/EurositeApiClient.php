@@ -622,9 +622,12 @@ final class EurositeApiClient
     /**
      * AddBookingRequest — create a hotel booking.
      *
+     * A package also sends its PackageId, where the spec's sample has it:
+     * between the stay and the VariantId.
+     *
      * @param array<string, mixed> $booking {
      *                                      currency?, booking_name, client_id, country_code, city_code,
-     *                                      product_code, variant_id, check_in, check_out, language?,
+     *                                      product_code, variant_id, package_id?, check_in, check_out, language?,
      *                                      booking_agent?, booking_client?,
      *                                      rooms:list<array{code, adults, children:int[],
      *                                      pax:list<array{type,name,gender?,dob?,child_age?}>}>
@@ -970,6 +973,7 @@ final class EurositeApiClient
             . '<CheckIn>' . EurositeXmlBuilder::esc(self::str($b['check_in'] ?? '')) . '</CheckIn>'
             . '<CheckOut>' . EurositeXmlBuilder::esc(self::str($b['check_out'] ?? '')) . '</CheckOut>'
             . '</PeriodOfStay>'
+            . self::packageIdElement($b)
             . '<VariantId>' . EurositeXmlBuilder::esc(self::str($b['variant_id'] ?? '')) . '</VariantId>'
             . '<Rooms>' . $rooms . '</Rooms>'
             . '</HotelItem>'

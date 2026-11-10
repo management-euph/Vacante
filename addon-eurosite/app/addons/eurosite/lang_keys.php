@@ -592,6 +592,10 @@ return [
         'en' => 'Eurosite\'s price for this package has changed: it is now [price].',
         'ro' => 'Prețul Eurosite pentru acest pachet s-a schimbat: acum este [price].',
     ],
+    'eurosite.package_dob_required' => [
+        'en' => 'Every traveller needs a date of birth: the airline or the coach operator asks for the passenger list.',
+        'ro' => 'Fiecare călător are nevoie de data nașterii: compania aeriană sau operatorul de autocar cere lista pasagerilor.',
+    ],
     // The dashboard's At a glance tiles, Needs attention and Tools
     // (Services\DashboardSummary, views/eurosite/manage.tpl).
     'eurosite.dash_tile_hotels' => [
