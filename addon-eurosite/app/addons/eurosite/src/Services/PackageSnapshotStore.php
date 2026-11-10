@@ -20,7 +20,8 @@ use Tygh\Addons\Eurosite\Helpers\SessionAccessor;
  * A snapshot has the hotel snapshot's keys (so the shared booking summary,
  * RoomOccupancy and the booking row read it as they read a hotel's), with
  * kind "package" and the package's own: PackageId, the operator, the
- * departure, the searched date and nights, and its services.
+ * departure, the searched date and nights, its services, and the extras the
+ * page offered (so add-to-cart only ever charges an extra it showed).
  */
 final class PackageSnapshotStore
 {
@@ -32,12 +33,13 @@ final class PackageSnapshotStore
     /**
      * @param array<string, string> $token PackageOfferToken::decode()
      * @param list<array{adults: int, children_ages: list<int>}> $occupancy
+     * @param list<array<string, mixed>> $extras what the page offered (PackageExtras)
      *
      * @return string the snapshot's key
      */
-    public static function remember(PackageOffer $offer, array $token, array $occupancy, int $cartProductId): string
+    public static function remember(PackageOffer $offer, array $token, array $occupancy, int $cartProductId, array $extras = []): string
     {
-        $snapshot = self::snapshot($offer, $token, $occupancy, $cartProductId);
+        $snapshot = self::snapshot($offer, $token, $occupancy, $cartProductId, $extras);
         $key = md5((string) json_encode($snapshot));
         $all = SessionAccessor::getArray(self::SESSION_KEY);
         unset($all[$key]);
@@ -64,10 +66,11 @@ final class PackageSnapshotStore
     /**
      * @param array<string, string> $token
      * @param list<array{adults: int, children_ages: list<int>}> $occupancy
+     * @param list<array<string, mixed>> $extras
      *
      * @return array<string, mixed>
      */
-    public static function snapshot(PackageOffer $offer, array $token, array $occupancy, int $cartProductId): array
+    public static function snapshot(PackageOffer $offer, array $token, array $occupancy, int $cartProductId, array $extras = []): array
     {
         $stay = $offer->hotel;
         $totals = RoomOccupancy::totals($occupancy);
@@ -107,6 +110,8 @@ final class PackageSnapshotStore
             'nights' => (int) ($token['nights'] ?? 0),
             'services' => $offer->services,
             'accept_remarks' => $offer->acceptRemarks,
+            // The extras the page offered, each with the price it showed.
+            'extras' => $extras,
         ];
     }
 }

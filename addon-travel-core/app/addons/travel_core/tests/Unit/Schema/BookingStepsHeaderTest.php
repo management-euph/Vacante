@@ -160,7 +160,14 @@ final class BookingStepsHeaderTest extends TestCase
      * The sidebar never gets its own scrollbar: the page scrolls as one and
      * only the price + cancellation cards stay pinned beside the form.
      */
-    public function testSidebarHasNoInnerScrollbar(): void
+    /**
+     * The whole summary follows the guest down the form: what they are
+     * buying and what it costs stay in view while they fill in the names
+     * and tick the extras. A summary taller than the screen scrolls inside
+     * itself, and the price card pins to the floor of that scroll, so the
+     * running total is never the thing that scrolls away.
+     */
+    public function testTheWholeSummaryFollowsTheGuestDownTheForm(): void
     {
         $sidebar = (string) file_get_contents(
             self::root() . '/addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/booking_sidebar.tpl',
@@ -173,9 +180,21 @@ final class BookingStepsHeaderTest extends TestCase
         $css = (string) file_get_contents(
             self::root() . '/addon-travel-core/design/themes/responsive/css/addons/travel_core/booking-pages.css',
         );
-        self::assertStringNotContainsString('max-height: calc(100vh', $css);
-        self::assertMatchesRegularExpression('/\.travel-bsidebar__sticky \{\s*position: sticky;/', $css);
-        self::assertDoesNotMatchRegularExpression('/\.travel-bsidebar \{[^}]*overflow-y: auto/', $css);
+        // The column itself sticks and holds its own scroll.
+        self::assertMatchesRegularExpression(
+            '/\.travel-booking-page \.travel-bsidebar \{\s*position: sticky;\s*top: 20px;[^}]*max-height: calc\(100vh - 40px\);\s*overflow-y: auto;/',
+            $css,
+        );
+        // The price card pins to the floor of that scroll.
+        self::assertMatchesRegularExpression(
+            '/\.travel-booking-page \.travel-bsidebar \.travel-bcard--price \{\s*position: sticky;\s*bottom: 0;/',
+            $css,
+        );
+        // The wrapper keeps no box, so the card pins against the column and
+        // not against the wrapper (which starts where the card does).
+        self::assertMatchesRegularExpression('/\.travel-bsidebar__sticky \{\s*display: contents;/', $css);
+        // Only at desktop width: a phone keeps the folding bar above the form.
+        self::assertStringContainsString('@media (min-width: 901px)', $css);
     }
 
     /**

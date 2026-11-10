@@ -390,7 +390,7 @@ final class EurositeApiClient
      *                                country_code, city_code, product_code, variant_id, check_in,
      *                                check_out, language?, tourop_code?
      *                                }
-     * @return list<array{type: int, type_name: string, code: string, name: string, has_price: bool, provider: string}>
+     * @return list<array{type: string, type_name: string, code: string, name: string, has_price: bool, charter_id: string, provider: string}>
      */
     public function getHotelServiceTypes(array $p): array
     {
@@ -411,11 +411,14 @@ final class EurositeApiClient
         $out = [];
         foreach ($details->Services->Service ?? [] as $s) {
             $out[] = [
-                'type' => (int) (string) ($s->Type ?? 0),
+                // A string: the search's own service types include "7s".
+                'type' => trim((string) ($s->Type ?? '')),
                 'type_name' => trim((string) ($s->TypeName ?? '')),
                 'code' => trim((string) ($s->Code ?? '')),
                 'name' => trim((string) ($s->Name ?? '')),
                 'has_price' => strtolower(trim((string) ($s->HasPrice ?? ''))) === 'true',
+                // A charter supplement is priced with its charter's id.
+                'charter_id' => trim((string) ($s->CharterId ?? '')),
                 'provider' => trim((string) ($s->Provider ?? '')),
             ];
         }
@@ -428,9 +431,9 @@ final class EurositeApiClient
      * offer/occupancy.
      *
      * @param array<string, mixed> $p {
-     *                                currency?, language?, service_type, service_code, country_code,
-     *                                city_code, product_code, variant_id, check_in, check_out,
-     *                                tourop_code?, pax:list<array{type, name, child_age?}>
+     *                                currency?, language?, service_type, service_code, charter_id?,
+     *                                country_code, city_code, product_code, variant_id, check_in,
+     *                                check_out, tourop_code?, pax:list<array{type, name, child_age?}>
      *                                }
      * @return list<array{type: string, code: string, name: string, price: float, gross: float, net: float, commission: float, currency: string}>
      */
@@ -457,6 +460,7 @@ final class EurositeApiClient
             . '<Services><Service>'
             . '<ServiceType>' . EurositeXmlBuilder::esc(self::str($p['service_type'] ?? '')) . '</ServiceType>'
             . '<ServiceCode>' . EurositeXmlBuilder::esc(self::str($p['service_code'] ?? '')) . '</ServiceCode>'
+            . (($charter = self::str($p['charter_id'] ?? '')) !== '' ? '<CharterId>' . EurositeXmlBuilder::esc($charter) . '</CharterId>' : '')
             . '<PeriodOfStay>'
             . '<CheckIn>' . EurositeXmlBuilder::esc(self::str($p['check_in'] ?? '')) . '</CheckIn>'
             . '<CheckOut>' . EurositeXmlBuilder::esc(self::str($p['check_out'] ?? '')) . '</CheckOut>'
@@ -629,6 +633,7 @@ final class EurositeApiClient
      *                                      currency?, booking_name, client_id, country_code, city_code,
      *                                      product_code, variant_id, package_id?, check_in, check_out, language?,
      *                                      booking_agent?, booking_client?,
+     *                                      supp_services?:list<array{code, type, check_in?, check_out?, pax_ids?:int[]}>,
      *                                      rooms:list<array{code, adults, children:int[],
      *                                      pax:list<array{type,name,gender?,dob?,child_age?}>}>
      *                                      }
@@ -975,6 +980,7 @@ final class EurositeApiClient
             . '</PeriodOfStay>'
             . self::packageIdElement($b)
             . '<VariantId>' . EurositeXmlBuilder::esc(self::str($b['variant_id'] ?? '')) . '</VariantId>'
+            . self::suppServices($b)
             . '<Rooms>' . $rooms . '</Rooms>'
             . '</HotelItem>'
             . '</BookingItem>'
@@ -1049,6 +1055,40 @@ final class EurositeApiClient
             priceNoRedd: (float) (string) ($offer->PriceNoRedd ?? 0),
             offerDescription: trim((string) ($offer->OfferDescription ?? '')),
         );
+    }
+
+    /**
+     * <SuppServices>: the extras the guest chose, each with its code, its
+     * type, the period it covers and the travellers it is for (PaxIds, the
+     * PaxName elements numbered from 1 in the order they are sent). '' when
+     * none was chosen.
+     *
+     * @param array<string, mixed> $b
+     */
+    private static function suppServices(array $b): string
+    {
+        $services = '';
+        foreach (self::rows($b['supp_services'] ?? []) as $service) {
+            $paxIds = '';
+            foreach (self::intList($service['pax_ids'] ?? []) as $paxId) {
+                if ($paxId > 0) {
+                    $paxIds .= '<PaxId>' . $paxId . '</PaxId>';
+                }
+            }
+            $period = '';
+            if (($from = self::str($service['check_in'] ?? '')) !== '' && ($to = self::str($service['check_out'] ?? '')) !== '') {
+                $period = '<PeriodOfStay><CheckIn>' . EurositeXmlBuilder::esc($from) . '</CheckIn>'
+                    . '<CheckOut>' . EurositeXmlBuilder::esc($to) . '</CheckOut></PeriodOfStay>';
+            }
+            $services .= '<Service>'
+                . '<Code>' . EurositeXmlBuilder::esc(self::str($service['code'] ?? '')) . '</Code>'
+                . '<Type>' . EurositeXmlBuilder::esc(self::str($service['type'] ?? '')) . '</Type>'
+                . $period
+                . ($paxIds !== '' ? '<PaxIds>' . $paxIds . '</PaxIds>' : '')
+                . '</Service>';
+        }
+
+        return $services !== '' ? '<SuppServices>' . $services . '</SuppServices>' : '';
     }
 
     /**

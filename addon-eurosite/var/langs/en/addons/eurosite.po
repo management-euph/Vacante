@@ -780,6 +780,10 @@ msgctxt "Languages::eurosite.package_dob_required"
 msgid "Every traveller needs a date of birth: the airline or the coach operator asks for the passenger list."
 msgstr "Every traveller needs a date of birth: the airline or the coach operator asks for the passenger list."
 
+msgctxt "Languages::eurosite.additional_services"
+msgid "Additional services"
+msgstr "Additional services"
+
 msgctxt "Languages::eurosite.dash_tile_hotels"
 msgid "Hotels in the destinations sold"
 msgstr "Hotels in the destinations sold"

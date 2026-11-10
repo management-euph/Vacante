@@ -23,6 +23,7 @@ use Tygh\Addons\Eurosite\Services\ConfigProvider;
 use Tygh\Addons\Eurosite\Services\Container;
 use Tygh\Addons\Eurosite\Services\EurositeProductFactory;
 use Tygh\Addons\Eurosite\Services\PackageDepartures;
+use Tygh\Addons\Eurosite\Services\PackageExtras;
 use Tygh\Addons\Eurosite\Services\PackageQuote;
 use Tygh\Addons\Eurosite\Services\PackageSnapshotStore;
 use Tygh\Addons\Eurosite\Services\PackageTripSummary;
@@ -106,7 +107,18 @@ if ($offer === null) {
 }
 
 $snapshot = PackageSnapshotStore::snapshot($offer, $token, $occupancy, $cartProductId);
-$packageKey = PackageSnapshotStore::remember($offer, $token, $occupancy, $cartProductId);
+
+// "Servicii adiționale": what Eurosite offers for this variant, priced for
+// these travellers. Kept with the snapshot, so add-to-cart only charges an
+// extra this page showed.
+$extras = (new PackageExtras(Container::getApi()))->forPackage(
+    $snapshot,
+    $occupancy,
+    $offer->hotel->currency,
+    ConfigProvider::getDefaultLanguage(),
+);
+$snapshot['extras'] = $extras;
+$packageKey = PackageSnapshotStore::remember($offer, $token, $occupancy, $cartProductId, $extras);
 
 // Offer currency → store primary: the same coefficient the cart line uses.
 $coefficient = TypeCoerce::toFloat(db_get_field(
@@ -209,6 +221,20 @@ $view->assign('eurosite_gender_options', [
 // Display-only, for the shared child-age guard; add-to-cart reads the snapshot.
 $view->assign('eurosite_check_in', $offer->hotel->checkIn);
 $view->assign('eurosite_package_key', $packageKey);
+// The extras as the page shows them, in the shopper's money, and what the
+// shared script needs to move the total when one is ticked
+// (booking-conditions.js: data-travel-extras).
+$extraRows = [];
+foreach ($extras as $extra) {
+    $amount = round($money->toDisplay(EurositeProductFactory::toStorePrice($extra['price'], $coefficient)), 2);
+    // formatDisplay: the amount is already the shopper's, not the store's primary.
+    $extraRows[] = $extra + ['display_amount' => $amount, 'display_price' => $amount > 0 ? '+' . $money->formatDisplay($amount) : ''];
+}
+$view->assign('eurosite_package_extras', $extraRows);
+$view->assign('eurosite_trip_money', [
+    'base' => round($money->toDisplay(EurositeProductFactory::toStorePrice($offer->hotel->price, $coefficient)), 2),
+    'format' => $money->scriptFormat(),
+]);
 $view->assign('eurosite_package_flight', $pageTransport === 'flight');
 $view->assign('eurosite_back_url', $hotelPage);
 $view->assign('eurosite_return_product_id', $cartProductId);

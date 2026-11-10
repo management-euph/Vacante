@@ -63,6 +63,29 @@
             {/foreach}
         </div>
 
+        {* "Servicii adiționale": what Eurosite offers for this variant, as
+           whole-row cards. A ticked one turns green with a "Selectat" badge
+           and moves every total at once (booking-conditions.js reads
+           data-travel-extras: data-base is the total as the page opened,
+           data-money how the store prints money). *}
+        {if $eurosite_package_extras}
+            {$es_money = $eurosite_trip_money|default:[]}
+            <section class="travel-form-section travel-extras" aria-labelledby="eurosite-package-extras"{if $es_money.base|default:0 > 0} data-travel-extras data-base="{$es_money.base}" data-money-symbol="{$es_money.format.symbol|default:""|escape:html}" data-money-after="{if $es_money.format.after|default:false}1{else}0{/if}" data-money-decimals="{$es_money.format.decimals|default:0}" data-money-decimal="{$es_money.format.decimal|default:"."|escape:html}" data-money-thousands="{$es_money.format.thousands|default:""|escape:html}" data-total-label="{__("travel_core.total_price")|escape:html}"{/if}>
+                <h3 id="eurosite-package-extras">{__("eurosite.additional_services")}</h3>
+                {foreach from=$eurosite_package_extras item=es_extra}
+                    <label class="travel-extra">
+                        <input type="checkbox" name="services[]" value="{$es_extra.code|escape:html}"{if $es_extra.display_amount|default:0 > 0} data-amount="{$es_extra.display_amount}"{/if}>
+                        <span class="travel-extra__text">
+                            <span class="travel-extra__name">{$es_extra.title|escape:html}<span class="travel-extra__sel">{__("travel_core.option_selected")}</span></span>
+                            {if $es_extra.note}<span class="travel-extra__note">{$es_extra.note|escape:html}</span>{/if}
+                        </span>
+                        <span class="travel-extra__price">{$es_extra.display_price|escape:html}</span>
+                    </label>
+                {/foreach}
+                <p class="travel-sr-only" aria-live="polite" data-travel-extras-live></p>
+            </section>
+        {/if}
+
         {* The one main button, with the total. The way back leads to the
            hotel's page on this departure. *}
         {include file="addons/travel_core/components/booking_form_actions.tpl"

@@ -24,9 +24,11 @@ final class EurositeApiClientTest extends TestCase
 
     public function testGetCountriesParsesTheResponseList(): void
     {
-        $t = new FakeTransport(self::wrap('getCountryResponse',
+        $t = new FakeTransport(self::wrap(
+            'getCountryResponse',
             '<Country><CountryCode>AL</CountryCode><CountryName>Albania</CountryName></Country>'
-            . '<Country><CountryCode>AD</CountryCode><CountryName>Andorra</CountryName></Country>'));
+            . '<Country><CountryCode>AD</CountryCode><CountryName>Andorra</CountryName></Country>',
+        ));
 
         $countries = $this->client($t)->getCountries();
 
@@ -41,9 +43,11 @@ final class EurositeApiClientTest extends TestCase
     {
         // Canned rows mirror the live shape (2026-08-04): CityId/CountryId
         // extras plus Romanian diacritics must pass through cleanly.
-        $t = new FakeTransport(self::wrap('getCityResponse',
+        $t = new FakeTransport(self::wrap(
+            'getCityResponse',
             '<City><CountryCode>RO</CountryCode><CountryId>1</CountryId>'
-            . '<CityCode>ROBH</CityCode><CityId>101</CityId><CityName>Băile Herculane</CityName></City>'));
+            . '<CityCode>ROBH</CityCode><CityId>101</CityId><CityName>Băile Herculane</CityName></City>',
+        ));
 
         $cities = $this->client($t)->getCities('RO');
 
@@ -58,13 +62,15 @@ final class EurositeApiClientTest extends TestCase
         // Live shape (Albena, 2026-08-04): Touropcode rides along ("LA" on the
         // Laguna platform), room codes use a lowercase `code` attribute, and a
         // hotel may carry an empty <Rooms/>.
-        $t = new FakeTransport(self::wrap('getOwnHotelsResponse',
+        $t = new FakeTransport(self::wrap(
+            'getOwnHotelsResponse',
             '<Hotel><Touropcode>LA</Touropcode><HotelCode>BG0005</HotelCode><HotelName>MALIBU ALBENA</HotelName>'
             . '<CountryCode>BG</CountryCode><CityCode>BGALB</CityCode><CityName>Albena</CityName>'
             . '<Rooms><Room code="1">Single</Room><Room code="2892">Dubla</Room></Rooms></Hotel>'
             . '<Hotel><Touropcode>LA</Touropcode><HotelCode>BG0006</HotelCode><HotelName>KALIAKRA BEACH</HotelName>'
             . '<CountryCode>BG</CountryCode><CityCode>BGALB</CityCode><CityName>Albena</CityName>'
-            . '<Rooms/></Hotel>'));
+            . '<Rooms/></Hotel>',
+        ));
 
         $hotels = $this->client($t)->getOwnHotels('BGALB');
 
@@ -81,8 +87,10 @@ final class EurositeApiClientTest extends TestCase
     {
         // The spec's getRoomResponse uses a capital-C Code attribute (live
         // matches, 2026-08-04); the mapper hedges Code/code.
-        $t = new FakeTransport(self::wrap('getRoomResponse',
-            '<Room Code="AP">apartament</Room><Room Code="DB">double</Room>'));
+        $t = new FakeTransport(self::wrap(
+            'getRoomResponse',
+            '<Room Code="AP">apartament</Room><Room Code="DB">double</Room>',
+        ));
 
         $rooms = $this->client($t)->getRoomTypes();
 
@@ -112,9 +120,11 @@ final class EurositeApiClientTest extends TestCase
     {
         // Canned rows mirror the live catalog (verified 2026-08-04): one list
         // across all countries, CountryCode per row.
-        $t = new FakeTransport(self::wrap('getOwnCityResponse',
+        $t = new FakeTransport(self::wrap(
+            'getOwnCityResponse',
             '<City><CountryCode>BG</CountryCode><CityCode>BGALB</CityCode><CityName>Albena</CityName></City>'
-            . '<City><CountryCode>RO</CountryCode><CityCode>ROMM</CityCode><CityName>Mamaia</CityName></City>'));
+            . '<City><CountryCode>RO</CountryCode><CityCode>ROMM</CityCode><CityName>Mamaia</CityName></City>',
+        ));
 
         $cities = $this->client($t)->getOwnCities();
 
@@ -127,9 +137,11 @@ final class EurositeApiClientTest extends TestCase
 
     public function testGetTagOffersParsesTagsAndToleratesAnEmptyCatalog(): void
     {
-        $t = new FakeTransport(self::wrap('getTagOffersResponse',
+        $t = new FakeTransport(self::wrap(
+            'getTagOffersResponse',
             '<Tag><TagCode>2</TagCode><TagName>1 Mai</TagName></Tag>'
-            . '<Tag><TagCode>5</TagCode><TagName>Craciun</TagName></Tag>'));
+            . '<Tag><TagCode>5</TagCode><TagName>Craciun</TagName></Tag>',
+        ));
 
         $tags = $this->client($t)->getTagOffers();
 
@@ -147,16 +159,19 @@ final class EurositeApiClientTest extends TestCase
         // The live service returns more fields than the spec examples show
         // (CountryId, DirectivaEuropeana, CityId — seen 2026-08-04); mapping
         // must pass them by without breaking.
-        $t = new FakeTransport(self::wrap('getCountryResponse',
+        $t = new FakeTransport(self::wrap(
+            'getCountryResponse',
             '<Country><CountryCode>AL</CountryCode><CountryId>4</CountryId>'
-            . '<CountryName>Albania</CountryName><DirectivaEuropeana/></Country>'));
+            . '<CountryName>Albania</CountryName><DirectivaEuropeana/></Country>',
+        ));
 
         self::assertSame([['code' => 'AL', 'name' => 'Albania']], $this->client($t)->getCountries());
     }
 
     public function testSearchHotelsBuildsThePayloadAndMapsAnOffer(): void
     {
-        $t = new FakeTransport(self::wrap('getHotelPriceResponse',
+        $t = new FakeTransport(self::wrap(
+            'getHotelPriceResponse',
             '<Hotel><Product>'
             . '<TourOpCode>EU</TourOpCode><CountryCode>RO</CountryCode><CityCode>ROMM</CityCode>'
             . '<CityName>Mamaia</CityName><ProductCode>RO0099</ProductCode><ProductName>Condor</ProductName>'
@@ -168,14 +183,15 @@ final class EurositeApiClientTest extends TestCase
             . '<GrilaName>Standard</GrilaName><PackageVariantId>0|1065487_1874_2</PackageVariantId>'
             . '<BookingRoomTypes><Room Code="40" GCode="DB" Quantity="1" ServicePrice="125.795">Double Room</Room></BookingRoomTypes>'
             . '<Meals><Meal Type="2" Code="11" ServicePrice="230.4">Mic dejun</Meal></Meals>'
-            . '</Offer></Offers></Hotel>'));
+            . '</Offer></Offers></Hotel>',
+        ));
 
         $offers = $this->client($t)->searchHotels([
             'country_code' => 'RO',
-            'city_code'    => 'ROMM',
-            'check_in'     => '2012-09-14',
-            'check_out'    => '2012-09-21',
-            'rooms'        => [['code' => 'DB', 'adults' => 2, 'children' => [8]]],
+            'city_code' => 'ROMM',
+            'check_in' => '2012-09-14',
+            'check_out' => '2012-09-21',
+            'rooms' => [['code' => 'DB', 'adults' => 2, 'children' => [8]]],
         ]);
 
         self::assertCount(1, $offers);
@@ -202,19 +218,21 @@ final class EurositeApiClientTest extends TestCase
     /** The Code attribute decides, whatever language the element's text is in. */
     public function testAStopSaleOfferIsReadFromTheCodeAttribute(): void
     {
-        $t = new FakeTransport(self::wrap('getHotelPriceResponse',
+        $t = new FakeTransport(self::wrap(
+            'getHotelPriceResponse',
             '<Hotel><Product><CountryCode>RO</CountryCode><CityCode>ROMM</CityCode>'
             . '<ProductCode>RO0099</ProductCode><ProductName>Condor</ProductName></Product>'
             . '<Offers><Offer CurrencyCode="EUR"><Availability Code="ST">Oprit la vanzare</Availability>'
             . '<PeriodOfStay><CheckIn>2026-10-24</CheckIn><CheckOut>2026-10-31</CheckOut></PeriodOfStay>'
-            . '<ProductPrice>100</ProductPrice></Offer></Offers></Hotel>'));
+            . '<ProductPrice>100</ProductPrice></Offer></Offers></Hotel>',
+        ));
 
         $offers = $this->client($t)->searchHotels([
             'country_code' => 'RO',
-            'city_code'    => 'ROMM',
-            'check_in'     => '2026-10-24',
-            'check_out'    => '2026-10-31',
-            'rooms'        => [['code' => 'DB', 'adults' => 2, 'children' => []]],
+            'city_code' => 'ROMM',
+            'check_in' => '2026-10-24',
+            'check_out' => '2026-10-31',
+            'rooms' => [['code' => 'DB', 'adults' => 2, 'children' => []]],
         ]);
 
         self::assertSame('ST', $offers[0]->availabilityCode);
@@ -223,13 +241,15 @@ final class EurositeApiClientTest extends TestCase
 
     public function testIsProductInfoUpdatableReadsTheFlag(): void
     {
-        $t = new FakeTransport(self::wrap('getProductInfoUpdateResponse',
-            '<UpdateList><IsUpdatable>N</IsUpdatable></UpdateList>'));
+        $t = new FakeTransport(self::wrap(
+            'getProductInfoUpdateResponse',
+            '<UpdateList><IsUpdatable>N</IsUpdatable></UpdateList>',
+        ));
 
         $updatable = $this->client($t)->isProductInfoUpdatable([
-            'country_code'     => 'BG',
-            'city_code'        => 'BGNSPDAR',
-            'product_code'     => 'BG0063',
+            'country_code' => 'BG',
+            'city_code' => 'BGNSPDAR',
+            'product_code' => 'BG0063',
             'last_update_date' => '2012-09-05',
             'last_update_time' => '16:10:56',
         ]);
@@ -244,20 +264,25 @@ final class EurositeApiClientTest extends TestCase
     public function testGetHotelServiceTypesParsesTheServiceList(): void
     {
         // Canned from the spec example (getHotelServiceTypesResponse).
-        $t = new FakeTransport(self::wrap('getHotelServiceTypesResponse',
+        $t = new FakeTransport(self::wrap(
+            'getHotelServiceTypesResponse',
             '<Services><Service><Type>2</Type><TypeName>Masa</TypeName><Code>1094</Code>'
             . '<Name>Supliment all inclusive</Name><HasPrice>true</HasPrice>'
             . '<CharterId></CharterId><Provider>NumeFurnizor</Provider><VATNumber>111111111</VATNumber>'
-            . '</Service></Services>'));
+            . '</Service></Services>',
+        ));
 
         $services = $this->client($t)->getHotelServiceTypes([
             'country_code' => 'BG', 'city_code' => 'BGNSPDAR', 'product_code' => 'BG0063',
             'variant_id' => '0|1065798_1447_0', 'check_in' => '2012-09-14', 'check_out' => '2012-09-21',
         ]);
 
+        // The type stays a string (the search's own types include "7s") and
+        // the charter id rides along: a charter supplement is priced with it.
         self::assertSame([[
-            'type' => 2, 'type_name' => 'Masa', 'code' => '1094',
-            'name' => 'Supliment all inclusive', 'has_price' => true, 'provider' => 'NumeFurnizor',
+            'type' => '2', 'type_name' => 'Masa', 'code' => '1094',
+            'name' => 'Supliment all inclusive', 'has_price' => true, 'charter_id' => '',
+            'provider' => 'NumeFurnizor',
         ]], $services);
         $req = $t->lastRequest;
         self::assertStringContainsString('RequestType="getHotelServiceTypesRequest"', $req);
@@ -267,11 +292,13 @@ final class EurositeApiClientTest extends TestCase
     public function testGetHotelServicePricesBuildsSpecPayloadAndParsesPrices(): void
     {
         // Canned from the spec example (getHotelServicePriceResponse).
-        $t = new FakeTransport(self::wrap('getHotelServicePriceResponse',
+        $t = new FakeTransport(self::wrap(
+            'getHotelServicePriceResponse',
             '<Services><Service CurrencyCode="EUR"><Type>2</Type><Code>1094</Code>'
             . '<Name>Supliment all inclusive</Name><HasPrice>true</HasPrice>'
             . '<Price>315</Price><Gross>315</Gross><NET>262.5</NET><Commission>42.34</Commission>'
-            . '</Service></Services>'));
+            . '</Service></Services>',
+        ));
 
         $prices = $this->client($t)->getHotelServicePrices([
             'country_code' => 'BG', 'city_code' => 'BGNSPDAR', 'product_code' => 'BG0063',
@@ -300,11 +327,13 @@ final class EurositeApiClientTest extends TestCase
     public function testGetItemFeesParsesTheCancellationScheduleWithPlaceholderPax(): void
     {
         // Canned from the spec example (getItemFeesResponse) — absolute values.
-        $t = new FakeTransport(self::wrap('getItemFeesResponse',
+        $t = new FakeTransport(self::wrap(
+            'getItemFeesResponse',
             '<ItemFees><ItemFee><Fees>'
             . '<Fee Type="cancellation"><FromDate>2012-09-06</FromDate><ToDate>2012-09-12</ToDate><Value Procent="false">104</Value></Fee>'
             . '<Fee Type="cancellation"><FromDate>2012-09-13</FromDate><ToDate>2012-09-18</ToDate><Value Procent="true">80</Value></Fee>'
-            . '</Fees></ItemFee></ItemFees>'));
+            . '</Fees></ItemFee></ItemFees>',
+        ));
 
         $fees = $this->client($t)->getItemFees([
             'country_code' => 'BG', 'city_code' => 'BGNSPDAR', 'product_code' => 'BG0069',
@@ -330,7 +359,8 @@ final class EurositeApiClientTest extends TestCase
     public function testGetBookingFeesParsesPerItemFeeSchedules(): void
     {
         // Canned from the spec example (getBookingFeesResponse) — Price rows.
-        $t = new FakeTransport(self::wrap('getBookingFeesResponse',
+        $t = new FakeTransport(self::wrap(
+            'getBookingFeesResponse',
             '<BookingReferences>'
             . '<BookingReference Source="api">EU_XML_12898</BookingReference>'
             . '<BookingReference Source="client">int1234</BookingReference>'
@@ -340,7 +370,8 @@ final class EurositeApiClientTest extends TestCase
             . '<Fees>'
             . '<Fee Type="cancellation"><FromDate>2012-08-24</FromDate><ToDate>2012-09-02</ToDate><Price CurrencyCode="EUR">42.48</Price></Fee>'
             . '<Fee Type="cancellation"><FromDate>2012-09-03</FromDate><ToDate>2012-09-12</ToDate><Price CurrencyCode="EUR">106.2</Price></Fee>'
-            . '</Fees></BookingItemFee></BookingFees>'));
+            . '</Fees></BookingItemFee></BookingFees>',
+        ));
 
         $res = $this->client($t)->getBookingFees('int1234');
 
@@ -356,11 +387,13 @@ final class EurositeApiClientTest extends TestCase
 
     public function testSearchHotelsCapturesTheSeriesId(): void
     {
-        $t = new FakeTransport(self::wrap('getHotelPriceResponse',
+        $t = new FakeTransport(self::wrap(
+            'getHotelPriceResponse',
             '<Hotel><Product><ProductCode>RO0099</ProductCode><ProductName>Condor</ProductName></Product>'
             . '<Offers><Offer CurrencyCode="EUR"><SeriesId>1874</SeriesId>'
             . '<ProductPrice>100</ProductPrice><PackageVariantId>0|1_2_3</PackageVariantId>'
-            . '</Offer></Offers></Hotel>'));
+            . '</Offer></Offers></Hotel>',
+        ));
 
         $offers = $this->client($t)->searchHotels([
             'country_code' => 'RO', 'city_code' => 'ROMM',
@@ -374,24 +407,26 @@ final class EurositeApiClientTest extends TestCase
 
     public function testAddBookingExtractsTheApiReference(): void
     {
-        $t = new FakeTransport(self::wrap('AddBookingResponse',
+        $t = new FakeTransport(self::wrap(
+            'AddBookingResponse',
             '<BookingReferences>'
             . '<BookingReference Source="api">EU_XML_12898</BookingReference>'
             . '<BookingReference Source="client">int1234</BookingReference>'
-            . '</BookingReferences>'));
+            . '</BookingReferences>',
+        ));
 
         $res = $this->client($t)->addBooking([
             'booking_name' => 'int1234',
-            'client_id'    => 'int1234',
+            'client_id' => 'int1234',
             'country_code' => 'BG',
-            'city_code'    => 'BGNSPDAR',
+            'city_code' => 'BGNSPDAR',
             'product_code' => 'BG0069',
-            'variant_id'   => '0|1067879_1453_1',
-            'check_in'     => '2012-09-22',
-            'check_out'    => '2012-09-29',
-            'rooms'        => [[
+            'variant_id' => '0|1067879_1453_1',
+            'check_in' => '2012-09-22',
+            'check_out' => '2012-09-29',
+            'rooms' => [[
                 'code' => '817', 'adults' => 2,
-                'pax'  => [
+                'pax' => [
                     ['type' => 'adult', 'name' => 'TEST / TEST', 'gender' => 'B', 'dob' => '1980-08-24'],
                     ['type' => 'child', 'name' => 'kid / kid', 'gender' => 'C', 'child_age' => '5', 'dob' => '2019-07-05'],
                 ],
@@ -413,13 +448,15 @@ final class EurositeApiClientTest extends TestCase
     /** The status is the booking item's ItemStatus code (the spec's getBookingResponse example). */
     public function testGetBookingReadsTheItemStatusCode(): void
     {
-        $t = new FakeTransport(self::wrap('getBookingResponse',
+        $t = new FakeTransport(self::wrap(
+            'getBookingResponse',
             '<BookingReferences><BookingReference Source="api">EU_XML_12898</BookingReference>'
             . '<BookingReference Source="client">int1234</BookingReference></BookingReferences>'
             . '<BookingItems><BookingItem><ItemClientId>1</ItemClientId>'
             . '<ItemReference Source="api">EU_XMLEU_12890</ItemReference><TourOpCode>EU</TourOpCode>'
             . '<ProductCode>BG0069</ProductCode><ItemStatus Code="CP">Confirmation pending</ItemStatus>'
-            . '<Confirmation>12520</Confirmation></BookingItem></BookingItems>'));
+            . '<Confirmation>12520</Confirmation></BookingItem></BookingItems>',
+        ));
 
         $booking = $this->client($t)->getBooking('int1234');
 
@@ -455,10 +492,12 @@ final class EurositeApiClientTest extends TestCase
      */
     public function testGetProductInfoParsesFacilitiesFromTheProductDescription(): void
     {
-        $t = new FakeTransport(self::wrap('getProductInfoResponse',
+        $t = new FakeTransport(self::wrap(
+            'getProductInfoResponse',
             '<Product><ProductCode>RO0451</ProductCode><ProductName>SCANDINAVIA CM</ProductName>'
             . '<DescriptionDet>Hotel.&amp;lt;br&amp;gt;Facilitati: aer conditionat, bar, Wi-fi.&amp;lt;br&amp;gt;Camere</DescriptionDet>'
-            . '</Product>'));
+            . '</Product>',
+        ));
         $info = $this->client($t)->getProductInfo('RO', 'ROMM', 'RO0451', 'hotel', 'LA');
 
         self::assertSame(['Aer conditionat', 'Bar', 'Wi-fi'], $info['facilities']);
@@ -471,14 +510,16 @@ final class EurositeApiClientTest extends TestCase
      */
     public function testGetProductInfoReadsTheLiveNestedProduct(): void
     {
-        $t = new FakeTransport(self::wrap('getProductInfoResponse',
+        $t = new FakeTransport(self::wrap(
+            'getProductInfoResponse',
             '<Product><TourOpCode>LA</TourOpCode><ProductCode>RO0451</ProductCode><ProductName>SCANDINAVIA CM</ProductName>'
             . '<Latitude>44.25</Latitude><Longitude>28.62</Longitude><ProductCategory>4</ProductCategory>'
             . '<Description>&amp;lt;br&amp;gt;</Description>'
             . '<DescriptionDet>Hotel Scandinavia, situat pe malul lacului Siutghiol.&amp;lt;br&amp;gt;&amp;lt;br&amp;gt;Facilitati: bar, terasa.</DescriptionDet>'
             . '<Pictures><Picture Name="Unitate" Description="">https://img/a.jpg</Picture>'
             . '<Picture Name="Unitate" Description="">https://img/b.jpg</Picture></Pictures>'
-            . '</Product>'));
+            . '</Product>',
+        ));
         $info = $this->client($t)->getProductInfo('RO', 'ROMM', 'RO0451', 'hotel', 'LA');
 
         self::assertSame('RO0451', $info['product_code']);

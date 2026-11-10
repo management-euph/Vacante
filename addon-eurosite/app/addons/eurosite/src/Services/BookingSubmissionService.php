@@ -107,6 +107,28 @@ class BookingSubmissionService
     }
 
     /**
+     * The extras a booking row kept, as the page offered and the guest chose
+     * them.
+     *
+     * @param array<string, mixed> $booking
+     *
+     * @return list<array{code: string, type: string}>
+     */
+    private static function extras(array $booking): array
+    {
+        $decoded = json_decode(TypeCoerce::toString($booking['extras_json'] ?? '[]'), true);
+        $out = [];
+        foreach (TypeCoerce::toRowList(is_array($decoded) ? $decoded : null) as $extra) {
+            $code = TypeCoerce::toString($extra['code'] ?? '');
+            if ($code !== '') {
+                $out[] = ['code' => $code, 'type' => TypeCoerce::toString($extra['type'] ?? '')];
+            }
+        }
+
+        return $out;
+    }
+
+    /**
      * @param array<string, mixed> $booking
      */
     private function submitBooking(int $bookingId, array $booking): bool
@@ -148,6 +170,8 @@ class BookingSubmissionService
                 'variant_id' => TypeCoerce::toString($booking['variant_id'] ?? ''),
                 // A package books on its PackageId too; a stay has none.
                 'package_id' => TypeCoerce::toString($booking['package_id'] ?? ''),
+                // The extras the guest chose, for every traveller.
+                'supp_services' => PackageExtras::suppServices(self::extras($booking), $booking, count($pax)),
                 'check_in' => TypeCoerce::toString($booking['check_in'] ?? ''),
                 'check_out' => TypeCoerce::toString($booking['check_out'] ?? ''),
                 'tourop_code' => $tourop,
