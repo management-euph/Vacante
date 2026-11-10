@@ -93,7 +93,10 @@ final class BookingFormActionsTest extends TestCase
         self::assertStringContainsString('{capture assign="ps_due"}{$ps.balance_due|escape:html}{/capture}{__("travel_core.pay_deposit_hint", ["[balance]" => $ps_balance, "[date]" => $ps_due]) nofilter}', $split);
 
         $css = self::read('addon-travel-core/design/themes/responsive/css/addons/travel_core/booking-pages.css');
-        self::assertMatchesRegularExpression('/\.travel-paymode__opt:has\(input:checked\) \{\s*border: 2px solid #15803d;[^}]*background: #eef8f1;/', $css);
+        // Chosen reads the same all over the page: the brand's blue, a
+        // bolder border and a light tint, as a ticked extra has.
+        self::assertMatchesRegularExpression('/\.travel-paymode__opt:has\(input:checked\) \{\s*border: 2px solid var\(--nvt-primary, #003580\);[^}]*background: #eaf1fa;/', $css);
+        self::assertMatchesRegularExpression('/\.travel-extra:has\(input:checked\) \{ border: 2px solid var\(--nvt-primary, #003580\);[^}]*background: #eaf1fa; \}/', $css);
         self::assertStringContainsString('.travel-booking-page .travel-paymode__opt:has(input:checked) .travel-paymode__sel {', $css);
         self::assertStringContainsString('.travel-booking-page .travel-paychoice:not(:has(.travel-paymode)) { display: none; }', $css);
 

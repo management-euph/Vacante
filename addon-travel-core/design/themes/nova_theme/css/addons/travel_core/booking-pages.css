@@ -192,8 +192,10 @@
 }
 
 /* ── A trip's optional services (package, circuit), in the form: whole-row
-   checkbox cards. A ticked one turns light green with a green border and a
-   "Selected" badge; a mandatory one is ticked, fixed and tagged. ── */
+   checkbox cards. A ticked one turns light blue with a bolder border in the
+   brand's blue and a "Selected" badge, the same state the way to pay uses
+   (.travel-paymode__opt), so "chosen" reads the same all over the page; a
+   mandatory one is ticked, fixed and tagged. ── */
 .travel-booking-page .travel-extras { display: flex; flex-direction: column; gap: 8px; }
 .travel-booking-page .travel-extras > h3 { margin-bottom: 8px; }
 .travel-booking-page .travel-extra {
@@ -202,11 +204,11 @@
     font-size: 14px; line-height: 1.35; color: #1e293b; text-align: left;
     transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
-.travel-booking-page .travel-extra:hover { border-color: #7cc296; }
-.travel-booking-page .travel-extra:has(input:checked) { border: 2px solid #15803d; padding: 9px 13px; background: #eef8f1; }
-.travel-booking-page .travel-extra:has(input:focus-visible) { box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.35); }
+.travel-booking-page .travel-extra:hover { border-color: #7da0c4; }
+.travel-booking-page .travel-extra:has(input:checked) { border: 2px solid var(--nvt-primary, #003580); padding: 9px 13px; background: #eaf1fa; }
+.travel-booking-page .travel-extra:has(input:focus-visible) { box-shadow: 0 0 0 3px rgba(0, 53, 128, 0.3); }
 .travel-booking-page .travel-extra--fixed { cursor: default; }
-.travel-booking-page .travel-extra input { width: 20px; height: 20px; margin: 0; flex: none; accent-color: #15803d; cursor: inherit; }
+.travel-booking-page .travel-extra input { width: 20px; height: 20px; margin: 0; flex: none; accent-color: var(--nvt-primary, #003580); cursor: inherit; }
 .travel-booking-page .travel-extra__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .travel-booking-page .travel-extra__name { font-size: 15px; font-weight: 700; }
 .travel-booking-page .travel-extra__note { font-size: 13px; color: #4b5563; }
@@ -217,7 +219,7 @@
     display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px;
     font-size: 11px; font-weight: 700; vertical-align: 1px;
 }
-.travel-booking-page .travel-extra:has(input:checked) .travel-extra__sel { background: #d7f0de; color: #0a7a35; }
+.travel-booking-page .travel-extra:has(input:checked) .travel-extra__sel { background: #d6e4f5; color: var(--nvt-primary, #003580); }
 .travel-booking-page .travel-extra__tag { background: #eef1f4; color: #4b5563; }
 @media (prefers-reduced-motion: reduce) {
     .travel-booking-page .travel-extra { transition: none; }
@@ -252,9 +254,10 @@
 .travel-booking-page .travel-bsidebar-legs__note { display: block; font-size: 12px; font-weight: 400; color: #4b5563; }
 .travel-booking-page .travel-bsidebar-incl { margin: 10px 0 0; font-size: 13px; font-weight: 600; color: #0a7a35; }
 .travel-booking-page .travel-bsidebar-excl { margin: 4px 0 0; font-size: 13px; color: #4b5563; }
-/* The guest hint for a trip with a flight: amber, names go to the airline. */
-.travel-booking-page .travel-guest-hint.travel-guest-hint--airline { background: #fff8e6; border: 1px solid #f5d9a8; color: #1a1a1a; }
-.travel-booking-page .travel-guest-hint--airline .travel-guest-hint__icon { color: #8a4b00; }
+/* The guest hint for a trip with a flight says more (the names reach the
+   airline, a correction costs), but it is the SAME calm box as a hotel's:
+   one styling everywhere, so a page does not shout at the guest. Only its
+   icon differs — the template draws a warning triangle. */
 
 /* ── Phone: the summary folded into one sticky bar (booking_sidebar.tpl) ── */
 /* At 900 px and less: name, stay, guests and total in a bar that sticks to
@@ -1086,20 +1089,20 @@
     box-sizing: border-box;
     transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
-.travel-booking-page .travel-paymode__opt:hover { border-color: #7cc296; }
+.travel-booking-page .travel-paymode__opt:hover { border-color: #7da0c4; }
 .travel-booking-page .travel-paymode__opt:has(input:checked) {
-    border: 2px solid #15803d;
+    border: 2px solid var(--nvt-primary, #003580);
     padding: 9px 13px;
-    background: #eef8f1;
+    background: #eaf1fa;
 }
 .travel-booking-page .travel-paymode__opt:has(input:focus-visible) {
-    box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.35);
+    box-shadow: 0 0 0 3px rgba(0, 53, 128, 0.3);
 }
 .travel-booking-page .travel-paymode__opt input {
     width: 20px;
     height: 20px;
     margin: 0;
-    accent-color: #15803d;
+    accent-color: var(--nvt-primary, #003580);
     flex: none;
     cursor: pointer;
 }
@@ -1115,7 +1118,7 @@
 .travel-booking-page .travel-paymode__sel { display: none; }
 .travel-booking-page .travel-paymode__opt:has(input:checked) .travel-paymode__sel {
     display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px;
-    background: #d7f0de; color: #0a7a35; font-size: 11px; font-weight: 700; vertical-align: 1px;
+    background: #d6e4f5; color: var(--nvt-primary, #003580); font-size: 11px; font-weight: 700; vertical-align: 1px;
 }
 .travel-booking-page .travel-paymode__hint {
     display: block;
@@ -1134,27 +1137,43 @@
     .travel-booking-page .travel-paymode__opt { transition: none; }
 }
 
-/* Desktop: no inner scrollbar — the page scrolls as one. The aside stretches
-   to the form's height and only its price + cancellation cards
-   (.travel-bsidebar__sticky) stay pinned beside the form while the guest
-   fills it; the hotel and summary cards scroll away with the page. When the
-   form is shorter than the sidebar there is nothing to pin and the page just
-   scrolls. Sticky needs no overflow other than visible/clip on the
-   ancestors. The modal is NOT inside it (it would be trapped in this
-   stacking context). */
+/* Desktop: the WHOLE summary follows the guest down the form — what they
+   are buying and what it costs stay in view while they fill in the names
+   and tick the extras. A summary taller than the screen scrolls inside
+   itself (nothing is ever out of reach), and one shorter than it simply
+   sticks. The conditions modal is NOT inside the aside, so it is not
+   trapped in this stacking context. */
 @media (min-width: 901px) {
     .travel-booking-page .travel-booking-layout {
-        align-items: stretch;
+        align-items: start;
     }
     .travel-booking-page .travel-bsidebar {
-        position: static;
-        max-height: none;
-        overflow: visible;
-    }
-    .travel-booking-page .travel-bsidebar__sticky {
         position: sticky;
         top: 20px;
         z-index: 1;
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+    }
+    /* The price and cancellation cards used to pin on their own; the whole
+       column does it now. The wrapper keeps no box of its own, so the price
+       card below can pin against the column's own scroll rather than
+       against this wrapper (which starts where the card does, and could
+       therefore never hold it in view). */
+    .travel-booking-page .travel-bsidebar__sticky {
+        display: contents;
+    }
+    /* A summary taller than the screen scrolls inside itself, and the total
+       must not be what scrolls out of sight: the price card stays on the
+       floor of that scroll, the hotel and the details sliding behind it.
+       Nothing pins while the summary fits (there is no overflow to pin
+       against), so a short hotel summary looks exactly as it did. */
+    .travel-booking-page .travel-bsidebar .travel-bcard--price {
+        position: sticky;
+        bottom: 0;
+        z-index: 2;
+        background: #fff;
     }
 }
 
@@ -1847,12 +1866,30 @@ body.travel-conditions-open {
 .travel-booking-page .travel-bsidebar-selected__value { font-size: 15px; color: #111827; }
 .travel-booking-page .travel-bsidebar-rooms, .travel-booking-page .travel-bsidebar-board { font-size: 14px; color: #374151; }
 
-/* Price clarity (item 3) */
+/* Price clarity (item 3): the offer's own text and the price it beat are
+   one tinted block — the badge sits directly over the struck-through price,
+   so the saving reads at a glance — and the total stands alone under it,
+   the biggest figure in the summary. Each row still hides on its own
+   (.travel-is-hidden, which novoton's re-price toggles), so the block
+   closes itself when only one of the two is there. */
 .travel-booking-page .travel-bsidebar-pricetop { margin-bottom: 8px; text-align: left; }
+.travel-booking-page .travel-bsidebar-pricetop:not(.travel-is-hidden) {
+    margin-bottom: 10px; padding: 8px 10px; background: #fffaf5; border: 1px solid #fed7aa; border-radius: 10px;
+}
+.travel-booking-page .travel-bsidebar-pricetop:not(.travel-is-hidden):has(+ .travel-bsidebar-pricerow:not(.travel-is-hidden)) {
+    margin-bottom: 0; padding-bottom: 6px; border-bottom: 0; border-radius: 10px 10px 0 0;
+}
+.travel-booking-page .travel-bsidebar-pricetop:not(.travel-is-hidden) + .travel-bsidebar-pricerow:not(.travel-is-hidden) {
+    margin-bottom: 10px; padding: 0 10px 8px; background: #fffaf5; border: 1px solid #fed7aa; border-top: 0; border-radius: 0 0 10px 10px; align-items: baseline;
+}
 .travel-booking-page .travel-bsidebar-deal {
-    display: inline-block; font-size: 12px; line-height: 1.35; font-weight: 600; color: #9a3412; background: #ffedd5; border-radius: 4px; padding: 3px 8px; text-align: left;
+    display: inline-block; font-size: 12px; line-height: 1.35; font-weight: 700; color: #9a3412; background: #ffedd5; border-radius: 4px; padding: 3px 8px; text-align: left;
 }
 .travel-booking-page .travel-bsidebar-oldprice { color: #6b7280; text-decoration: line-through; font-size: 14px; }
+/* The total: bigger than anything around it, and its label quiet beside it. */
+.travel-booking-page .travel-bsidebar-total { margin-top: 2px; }
+.travel-booking-page .travel-bsidebar-total .price-total { font-size: 30px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.1; }
+.travel-booking-page .travel-bsidebar-total .travel-price-label { font-size: 13px; font-weight: 600; color: #4b5563; }
 .travel-booking-page .travel-bsidebar-pernight { font-size: 13px; color: #4b5563; margin-top: 6px; }
 
 /* Cancellation & payment timeline (items 1, 7, 11) */
