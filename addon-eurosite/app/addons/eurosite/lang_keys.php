@@ -564,6 +564,34 @@ return [
         'en' => 'No package routes yet. Sync now fetches them from Eurosite; if none come back, ask Eurosite to enable packages (Pachete) for your XML user.',
         'ro' => 'Încă nu există rute de pachete. „Sincronizează acum” le aduce de la Eurosite; dacă nu vine niciuna, cereți Eurosite să activeze pachetele (Pachete) pentru utilizatorul XML.',
     ],
+    'eurosite.package_kind_flight' => [
+        'en' => 'Package · flight + hotel',
+        'ro' => 'Pachet · avion + hotel',
+    ],
+    'eurosite.package_kind_bus' => [
+        'en' => 'Package · coach + hotel',
+        'ro' => 'Pachet · autocar + hotel',
+    ],
+    'eurosite.package_outbound' => [
+        'en' => 'Outbound',
+        'ro' => 'Dus',
+    ],
+    'eurosite.package_return' => [
+        'en' => 'Return',
+        'ro' => 'Retur',
+    ],
+    'eurosite.package_coach' => [
+        'en' => 'Coach',
+        'ro' => 'Autocar',
+    ],
+    'eurosite.package_unavailable' => [
+        'en' => 'Eurosite no longer has this package as it was offered. Please choose a departure again.',
+        'ro' => 'Eurosite nu mai are acest pachet așa cum a fost oferit. Vă rugăm să alegeți din nou o plecare.',
+    ],
+    'eurosite.package_price_changed' => [
+        'en' => 'Eurosite\'s price for this package has changed: it is now [price].',
+        'ro' => 'Prețul Eurosite pentru acest pachet s-a schimbat: acum este [price].',
+    ],
     // The dashboard's At a glance tiles, Needs attention and Tools
     // (Services\DashboardSummary, views/eurosite/manage.tpl).
     'eurosite.dash_tile_hotels' => [

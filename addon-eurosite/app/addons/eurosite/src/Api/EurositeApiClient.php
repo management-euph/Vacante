@@ -488,9 +488,12 @@ final class EurositeApiClient
      * booking (pre-booking; feeds the "Conditii de Anulare" modal). The
      * payload reuses the AddBooking BookingItems shape.
      *
+     * A package also sends its PackageId (the spec's sample: between the
+     * stay and the VariantId).
+     *
      * @param array<string, mixed> $p {
      *                                currency?, country_code, city_code, product_code, variant_id,
-     *                                check_in, check_out, tourop_code?,
+     *                                package_id? (a package's), check_in, check_out, tourop_code?,
      *                                rooms:list<array{code, adults, children:int[], pax?:list<array{type,name,child_age?}>}>
      *                                }
      * @return list<array{type: string, from_date: string, to_date: string, value: float, is_percent: bool}>
@@ -544,6 +547,7 @@ final class EurositeApiClient
             . '<CheckIn>' . EurositeXmlBuilder::esc(self::str($p['check_in'] ?? '')) . '</CheckIn>'
             . '<CheckOut>' . EurositeXmlBuilder::esc(self::str($p['check_out'] ?? '')) . '</CheckOut>'
             . '</PeriodOfStay>'
+            . self::packageIdElement($p)
             . '<VariantId>' . EurositeXmlBuilder::esc(self::str($p['variant_id'] ?? '')) . '</VariantId>'
             . '<Rooms>' . $rooms . '</Rooms>'
             . '</HotelItem>'
@@ -1041,6 +1045,18 @@ final class EurositeApiClient
             priceNoRedd: (float) (string) ($offer->PriceNoRedd ?? 0),
             offerDescription: trim((string) ($offer->OfferDescription ?? '')),
         );
+    }
+
+    /**
+     * A package's <PackageId>, '' for a hotel booking.
+     *
+     * @param array<string, mixed> $p
+     */
+    private static function packageIdElement(array $p): string
+    {
+        $packageId = self::str($p['package_id'] ?? '');
+
+        return $packageId !== '' ? '<PackageId>' . EurositeXmlBuilder::esc($packageId) . '</PackageId>' : '';
     }
 
     private static function str(mixed $v): string

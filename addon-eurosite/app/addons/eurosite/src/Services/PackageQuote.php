@@ -118,6 +118,48 @@ final class PackageQuote
         return $blocks;
     }
 
+    /**
+     * The offer a token names, asked of Eurosite again for the same
+     * departure, stay and rooms (the booking form, before anything is
+     * booked): the same hotel, PackageId and VariantId, still bookable.
+     * Null when Eurosite no longer has it, or the token names no package.
+     *
+     * @param array<string, string> $token PackageOfferToken::decode()
+     * @param list<array{adults: int, children_ages: list<int>}> $occupancy
+     */
+    public function find(array $token, array $occupancy, string $language): ?PackageOffer
+    {
+        $transport = $token['transport'] ?? '';
+        $productCode = $token['product_code'] ?? '';
+        $packageId = $token['package_id'] ?? '';
+        $variantId = $token['variant_id'] ?? '';
+        $date = $token['departure_date'] ?? '';
+        if (!in_array($transport, ['plane', 'bus'], true) || $productCode === '' || $packageId === '' || $variantId === '' || self::checkOut($date, (int) ($token['nights'] ?? 0)) === '') {
+            return null;
+        }
+        $offers = $this->api->searchPackages([
+            'country_code' => $token['country_code'] ?? '',
+            'city_code' => $token['city_code'] ?? '',
+            'dep_country_code' => $token['dep_country_code'] ?? '',
+            'dep_city_code' => $token['dep_city_code'] ?? '',
+            'transport' => $transport,
+            'tourop_code' => $token['tourop_code'] ?? '',
+            'currency' => ($token['currency'] ?? '') !== '' ? $token['currency'] : 'EUR',
+            'language' => $language,
+            'check_in' => $date,
+            'check_out' => self::checkOut($date, (int) ($token['nights'] ?? 0)),
+            'days' => 1,
+            'rooms' => RoomOccupancy::searchPayload($occupancy),
+        ]);
+        foreach ($offers as $offer) {
+            if (self::belongs($offer, $productCode) && $offer->packageId === $packageId && $offer->variantId() === $variantId) {
+                return $offer;
+            }
+        }
+
+        return null;
+    }
+
     /** The guest picker's limits per room (PackageBar.jsx): adults, then children. */
     public const int MAX_ADULTS = 9;
 

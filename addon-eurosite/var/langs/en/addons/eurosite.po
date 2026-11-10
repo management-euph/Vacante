@@ -748,6 +748,34 @@ msgctxt "Languages::eurosite.no_package_routes"
 msgid "No package routes yet. Sync now fetches them from Eurosite; if none come back, ask Eurosite to enable packages (Pachete) for your XML user."
 msgstr "No package routes yet. Sync now fetches them from Eurosite; if none come back, ask Eurosite to enable packages (Pachete) for your XML user."
 
+msgctxt "Languages::eurosite.package_kind_flight"
+msgid "Package · flight + hotel"
+msgstr "Package · flight + hotel"
+
+msgctxt "Languages::eurosite.package_kind_bus"
+msgid "Package · coach + hotel"
+msgstr "Package · coach + hotel"
+
+msgctxt "Languages::eurosite.package_outbound"
+msgid "Outbound"
+msgstr "Outbound"
+
+msgctxt "Languages::eurosite.package_return"
+msgid "Return"
+msgstr "Return"
+
+msgctxt "Languages::eurosite.package_coach"
+msgid "Coach"
+msgstr "Coach"
+
+msgctxt "Languages::eurosite.package_unavailable"
+msgid "Eurosite no longer has this package as it was offered. Please choose a departure again."
+msgstr "Eurosite no longer has this package as it was offered. Please choose a departure again."
+
+msgctxt "Languages::eurosite.package_price_changed"
+msgid "Eurosite's price for this package has changed: it is now [price]."
+msgstr "Eurosite's price for this package has changed: it is now [price]."
+
 msgctxt "Languages::eurosite.dash_tile_hotels"
 msgid "Hotels in the destinations sold"
 msgstr "Hotels in the destinations sold"
