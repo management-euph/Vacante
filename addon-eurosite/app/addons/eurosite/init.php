@@ -147,6 +147,12 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
         'eurosite',
         new \Tygh\Addons\Eurosite\Providers\EurositeHotelProductProvider(),
     );
+    // The hotel's packages (board 16.2): "Cu autocarul" / "Cu avionul" on its
+    // page, from the package routes to its city.
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setPackageModesProvider(
+        'eurosite',
+        new \Tygh\Addons\Eurosite\Providers\EurositePackageModesProvider(),
+    );
     // What Eurosite records for Travel Core's hotel availability rules.
     \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setAvailabilitySource(
         'eurosite',

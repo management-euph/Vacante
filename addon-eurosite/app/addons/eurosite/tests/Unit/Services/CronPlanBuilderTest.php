@@ -34,6 +34,7 @@ final class CronPlanBuilderTest extends TestCase
         'full' => 'Run every static-data sync in order',
         'hotels' => 'Sync own hotels + rooms',
         'own_cities' => 'Sync cities with own offers',
+        'package_routes' => 'Sync the package routes',
         'probe_availability' => 'Read-only: search the next months',
         'product_info' => 'Warm the product-details cache',
         'room_types' => 'Sync the room-type catalog',
@@ -81,7 +82,7 @@ final class CronPlanBuilderTest extends TestCase
         self::assertSame([1, 2, 3, 4], array_column($stages, 'number'));
         self::assertSame(
             [
-                ['full', 'countries', 'own_cities', 'cities', 'hotels', 'room_types', 'tags'],
+                ['full', 'countries', 'own_cities', 'cities', 'hotels', 'package_routes', 'room_types', 'tags'],
                 ['product_info', 'availability'],
                 ['add_products', 'update_products'],
                 ['booking_status', 'cleanup'],
@@ -183,6 +184,8 @@ final class CronPlanBuilderTest extends TestCase
         self::assertSame(['travel_core.jobs_sched_monthly', ['[day]' => '1', '[time]' => '01:00']], [$rows['countries']['schedule_key'], $rows['countries']['schedule_params']]);
         self::assertSame(['travel_core.jobs_sched_monthly', ['[day]' => '1', '[time]' => '03:45']], [$rows['tags']['schedule_key'], $rows['tags']['schedule_params']]);
         self::assertSame(['travel_core.jobs_sched_weekly_sun', ['[time]' => '03:00']], [$rows['hotels']['schedule_key'], $rows['hotels']['schedule_params']]);
+        // The package routes right after the hotel lists, weekly too.
+        self::assertSame(['travel_core.jobs_sched_weekly_sun', ['[time]' => '03:30']], [$rows['package_routes']['schedule_key'], $rows['package_routes']['schedule_params']]);
         self::assertSame(['travel_core.jobs_sched_daily', ['[time]' => '04:00']], [$rows['product_info']['schedule_key'], $rows['product_info']['schedule_params']]);
         self::assertSame(['travel_core.jobs_sched_every_minutes', ['[n]' => '15']], [$rows['booking_status']['schedule_key'], $rows['booking_status']['schedule_params']]);
         self::assertSame(['travel_core.jobs_sched_weekly_sun', ['[time]' => '05:00']], [$rows['cleanup']['schedule_key'], $rows['cleanup']['schedule_params']]);
@@ -327,7 +330,7 @@ final class CronPlanBuilderTest extends TestCase
     public function testThePerCatalogPlanSchedulesEachCatalogAndNotFull(): void
     {
         self::assertSame(
-            ['countries', 'own_cities', 'cities', 'hotels', 'room_types', 'tags', 'product_info', 'availability', 'add_products', 'update_products', 'booking_status', 'cleanup'],
+            ['countries', 'own_cities', 'cities', 'hotels', 'package_routes', 'room_types', 'tags', 'product_info', 'availability', 'add_products', 'update_products', 'booking_status', 'cleanup'],
             self::scheduled(self::plan()->crontabFor('per', self::MODES, 'cli')),
         );
     }
@@ -336,7 +339,7 @@ final class CronPlanBuilderTest extends TestCase
     {
         $lines = explode("\n", self::plan()->crontabFor('full', self::MODES, 'cli', '2026-11-08, server time Europe/Bucharest'));
 
-        self::assertSame('# Eurosite Touring: the catalogs in one nightly run (each only when due: monthly, hotels weekly), then the other jobs', $lines[0]);
+        self::assertSame('# Eurosite Touring: the catalogs in one nightly run (each only when due: monthly; hotels and package routes weekly), then the other jobs', $lines[0]);
         self::assertSame('# generated 2026-11-08, server time Europe/Bucharest', $lines[1]);
         self::assertSame('# 1. Catalogs', $lines[2]);
         self::assertSame('0 1 * * *  php app/addons/eurosite/cron.php access_key=abc123 mode=full', $lines[3]);

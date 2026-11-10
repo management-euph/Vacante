@@ -6,12 +6,14 @@ namespace Tygh\Addons\SphinxHolidays\ViewModels;
 
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\TermsFormatter;
+use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\DateHelper;
 use Tygh\Addons\TravelCore\Services\MoneyFormatter;
 use Tygh\Addons\TravelCore\Services\TravelCoreConfig;
 use Tygh\Addons\TravelCore\ViewModels\BookingSidebarFactory;
 use Tygh\Addons\TravelCore\ViewModels\BookingSidebarViewModel;
+use Tygh\Addons\TravelCore\ViewModels\HotelHeaderFactory;
 use Tygh\Addons\TravelCore\ViewModels\HotelHeaderViewModel;
 use Tygh\Addons\TravelCore\ViewModels\TermsTimelineFactory;
 
@@ -271,5 +273,115 @@ final class SphinxBookingSidebarBuilder
             'cancel_lines' => TypeCoerce::toStringList($extra['cancellation_fees'] ?? []),
             'payment_lines' => TypeCoerce::toStringList($extra['payment_terms'] ?? []),
         ];
+    }
+
+    /**
+     * The hotel's identity (name, stars, place, map link) from its
+     * ?:sphinx_hotels row, as the hotel booking page builds it: city and
+     * country from the address, else from the destination. No row, the bare
+     * header (name and product only).
+     *
+     * @param array<string, mixed>|null $hotelRow
+     */
+    public static function headerFromRow(string $hotelId, string $name, ?array $hotelRow, int $productId): HotelHeaderViewModel
+    {
+        if ($hotelRow === null) {
+            return HotelHeaderFactory::bare($name, 0, $productId);
+        }
+        $city = trim(TypeCoerce::toString($hotelRow['address_city'] ?? ''));
+        $country = trim(TypeCoerce::toString($hotelRow['address_country'] ?? ''));
+
+        return HotelHeaderFactory::fromSeo(
+            new HotelSeoData(
+                hotelId: $hotelId,
+                providerName: 'sphinx',
+                name: $name !== '' ? $name : TypeCoerce::toString($hotelRow['name'] ?? ''),
+                city: $city !== '' ? $city : TypeCoerce::toString($hotelRow['destination_name'] ?? ''),
+                region: TypeCoerce::toString($hotelRow['region_name'] ?? ''),
+                country: $country !== '' ? $country : TypeCoerce::toString($hotelRow['country_name'] ?? ''),
+                latitude: TypeCoerce::toFloat($hotelRow['latitude'] ?? 0),
+                longitude: TypeCoerce::toFloat($hotelRow['longitude'] ?? 0),
+                address: TypeCoerce::toString($hotelRow['address'] ?? ''),
+            ),
+            TypeCoerce::toInt($hotelRow['classification'] ?? 0),
+            $productId,
+        );
+    }
+
+    /**
+     * A trip's journeys for the summary, in order: each flight segment out,
+     * then each one back, then each bus segment.
+     *   "✈ Dus · 17.07.2027" / "15:40 București (OTP) → 17:35 Heraklion (HER)" / "TAROM RO 271"
+     * A bus segment has no times or number in the offer: "Autocar" over its
+     * route.
+     *
+     * @param array<string, mixed>|null $flight outbound / inbound: a list of
+     *                                          segments (a package), or one (a circuit)
+     * @param list<array<string, mixed>> $bus segments
+     * @param array{out: string, back: string, bus: string} $words the localized word for each kind
+     * @param callable(int): string $formatDate the store's date format
+     * @return list<array{title: string, line: string, note: string}>
+     */
+    public static function tripLegs(?array $flight, array $bus, array $words, callable $formatDate): array
+    {
+        $legs = [];
+        foreach (['outbound' => $words['out'], 'inbound' => $words['back']] as $key => $word) {
+            $segments = $flight[$key] ?? null;
+            // A circuit's quote gives one segment each way, as an object.
+            if (is_array($segments) && array_key_exists('departure', $segments)) {
+                $segments = [$segments];
+            }
+            foreach (TypeCoerce::toRowList($segments) as $segment) {
+                $dep = TypeCoerce::toStringMap($segment['departure'] ?? null);
+                $arr = TypeCoerce::toStringMap($segment['arrival'] ?? null);
+                $depTs = (int) strtotime(TypeCoerce::toString($dep['datetime'] ?? ''));
+                $arrTs = (int) strtotime(TypeCoerce::toString($arr['datetime'] ?? ''));
+                $from = trim(($depTs > 0 ? date('H:i', $depTs) . ' ' : '') . TypeCoerce::toString($dep['name'] ?? ''));
+                $to = trim(($arrTs > 0 ? date('H:i', $arrTs) . ' ' : '') . TypeCoerce::toString($arr['name'] ?? ''));
+                $airline = TypeCoerce::toString(TypeCoerce::toStringMap($segment['airline'] ?? null)['name'] ?? '');
+                $legs[] = [
+                    'title' => '✈ ' . $word . ($depTs > 0 ? ' · ' . $formatDate($depTs) : ''),
+                    'line' => $from . ' → ' . $to,
+                    'note' => trim($airline . ' ' . TypeCoerce::toString($segment['flight_number'] ?? '')),
+                ];
+            }
+        }
+        foreach ($bus as $segment) {
+            $from = TypeCoerce::toString(TypeCoerce::toStringMap($segment['departure'] ?? null)['name'] ?? '');
+            $to = TypeCoerce::toString(TypeCoerce::toStringMap($segment['arrival'] ?? null)['name'] ?? '');
+            if ($from === '' && $to === '') {
+                continue;
+            }
+            $legs[] = ['title' => $words['bus'], 'line' => $from . ' → ' . $to, 'note' => ''];
+        }
+
+        return $legs;
+    }
+
+    /**
+     * What the summary lists as included: the offer's own list, then each
+     * transfer it does not already name.
+     *
+     * @param list<string> $included
+     * @param list<array<string, mixed>> $transfers
+     * @return list<string>
+     */
+    public static function tripIncludes(array $included, array $transfers): array
+    {
+        $out = [];
+        foreach ($included as $item) {
+            $item = trim($item);
+            if ($item !== '' && !in_array($item, $out, true)) {
+                $out[] = $item;
+            }
+        }
+        foreach ($transfers as $transfer) {
+            $title = trim(TypeCoerce::toString($transfer['title'] ?? ''));
+            if ($title !== '' && !in_array($title, $out, true)) {
+                $out[] = $title;
+            }
+        }
+
+        return $out;
     }
 }

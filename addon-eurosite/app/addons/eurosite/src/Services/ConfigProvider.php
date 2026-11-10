@@ -124,6 +124,43 @@ class ConfigProvider extends AbstractConfigProvider
         return $n >= 1 && $n <= 21 ? $n : 7;
     }
 
+    /**
+     * The stays a hotel's package search offers ("Packages: nights offered").
+     *
+     * @return list<int>
+     */
+    public static function getPackageNights(): array
+    {
+        return self::parseNights(TypeCoerce::toString(self::getSetting('package_nights', '7, 10, 14')));
+    }
+
+    /**
+     * Nights from the setting's text: whole numbers from 1 to 30, in order,
+     * once each. Nothing usable gives 7, 10 and 14.
+     *
+     * @return list<int>
+     */
+    public static function parseNights(string $text): array
+    {
+        $nights = [];
+        foreach (preg_split('/[\s,;]+/', $text) ?: [] as $part) {
+            if (ctype_digit($part) && (int) $part >= 1 && (int) $part <= 30) {
+                $nights[(int) $part] = (int) $part;
+            }
+        }
+        ksort($nights);
+
+        return $nights === [] ? [7, 10, 14] : array_values($nights);
+    }
+
+    /** The store's own secret (config.crypt_key), for what Eurosite's pages sign (PackageOfferToken). */
+    public static function getSigningKey(): string
+    {
+        $key = TypeCoerce::toString(\Tygh\Registry::get('config.crypt_key'));
+
+        return $key !== '' ? $key : 'eurosite';
+    }
+
     /** CS-Cart runtime company context — 1 in single-store mode. */
     public static function getCompanyId(): int
     {

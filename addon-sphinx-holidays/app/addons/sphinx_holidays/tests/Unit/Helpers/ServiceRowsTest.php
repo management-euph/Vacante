@@ -38,10 +38,12 @@ final class ServiceRowsTest extends TestCase
     {
         foreach (['package_booking_form', 'circuit_booking_form'] as $form) {
             $template = (string) file_get_contents(dirname(__DIR__, 6) . "/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/{$form}.tpl");
-            self::assertStringContainsString('{if $service.price > 0}+{$service.price|number_format:2:",":"."} {$service.currency}{/if}', $template, $form);
+            // The price as the store prints money ("+196 €"), else as the supplier gave it.
+            self::assertStringContainsString('{if $service.display_price|default:""}{$service.display_price|escape:html}{elseif $service.price > 0}+{$service.price|number_format:2:",":"."} {$service.currency}{/if}', $template, $form);
             self::assertStringNotContainsString('service.pricing', $template, $form);
             $controller = (string) file_get_contents(dirname(__DIR__, 3) . "/controllers/frontend/sphinx_booking/{$form}.php");
             self::assertStringContainsString('ServiceRows::forShopper(', $controller, $form);
+            self::assertStringContainsString('ServiceRows::withDisplay(', $controller, $form);
         }
     }
 }

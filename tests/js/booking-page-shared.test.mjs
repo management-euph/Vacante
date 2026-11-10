@@ -426,6 +426,76 @@ describe('phone: the summary folded into one sticky bar', () => {
     });
 });
 
+describe('a trip\'s extras move the total', () => {
+    afterEach(() => {
+        delete window.matchMedia;
+    });
+    function page() {
+        window.matchMedia = (query) => ({ matches: query.includes('reduce'), media: query });
+        document.body.innerHTML = '<div class="travel-booking-page">'
+            + '<div class="travel-bsidebar-total"><span class="travel-price-label">Preț total<span data-travel-total-delta></span></span>'
+            + '<span class="price-total">1.490 €</span></div>'
+            + '<div class="travel-mobile-bar"><strong class="price-total">1.490 €</strong></div>'
+            + '<section data-travel-extras data-base="1490" data-money-symbol="€" data-money-after="1" data-money-decimals="0"'
+            + ' data-money-decimal="," data-money-thousands="." data-total-label="Preț total">'
+            + '<input type="checkbox" id="cruise" data-amount="130">'
+            + '<input type="checkbox" id="dinner" data-amount="60" checked>'
+            + '<input type="checkbox" id="fixed" checked disabled>'
+            + '<p data-travel-extras-live></p></section></div>';
+    }
+    function toggle(id) {
+        const input = document.getElementById(id);
+        input.checked = !input.checked;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    const totals = () => [...document.querySelectorAll('.price-total')].map((el) => el.textContent);
+
+    it('adds a ticked service to every total and says so', () => {
+        page();
+        toggle('cruise');
+
+        expect(totals()).toEqual(['1.620 €', '1.620 €']);
+        const chip = document.querySelector('[data-travel-total-delta]');
+        expect(chip.textContent).toBe('+130 €');
+        expect(chip.classList.contains('travel-total-delta--up')).toBe(true);
+        expect(document.querySelector('[data-travel-extras-live]').textContent).toBe('Preț total: 1.620 €');
+    });
+
+    it('takes off a service the page opened with ticked, which the total included', () => {
+        page();
+        toggle('cruise');
+        toggle('dinner');
+
+        expect(totals()).toEqual(['1.560 €', '1.560 €']);
+        const chip = document.querySelector('[data-travel-total-delta]');
+        expect(chip.textContent).toBe('\u221260 €');
+        expect(chip.classList.contains('travel-total-delta--down')).toBe(true);
+    });
+
+    it('counts up to the new total when motion is fine', () => {
+        page();
+        window.matchMedia = (query) => ({ matches: false, media: query });
+        const frames = [];
+        window.requestAnimationFrame = (cb) => { frames.push(cb); return frames.length; };
+        toggle('cruise');
+        frames.shift()(1000);
+        frames.shift()(1225);
+        const midway = totals()[0];
+        frames.shift()(1460);
+
+        expect(midway).not.toBe('1.490 €');
+        expect(midway).not.toBe('1.620 €');
+        expect(totals()).toEqual(['1.620 €', '1.620 €']);
+        delete window.requestAnimationFrame;
+    });
+
+    it('prints money as the store does', () => {
+        const usd = { symbol: '$', after: false, decimals: 2, decimal: '.', thousands: ',' };
+        expect(window.TravelConditions.formatMoney(1234.5, usd)).toBe('$1,234.50');
+        expect(window.TravelConditions.formatMoney(1620, { symbol: '€', after: true, decimals: 0, decimal: ',', thousands: '.' })).toBe('1.620 €');
+    });
+});
+
 describe('guest form kept in view beside a tall summary', () => {
     function page(formHeight, sidebarHeight) {
         document.body.innerHTML = '<div class="travel-booking-page"><div class="travel-booking-layout">'

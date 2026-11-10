@@ -132,9 +132,26 @@ try {
 
 
     // Parse additional services (optional/mandatory)
-    $additionalServices = \Tygh\Addons\SphinxHolidays\Helpers\ServiceRows::forShopper($quote['additional_services'] ?? null, Container::getCartService()->applyCommission(...));
+    // The services in the shopper's money, as the total is shown: the booking
+    // page adds a ticked one to the total (booking-conditions.js).
+    $cirMoney = \Tygh\Addons\TravelCore\Services\MoneyFormatter::forStore();
+    $cirToPrimary = static fn (float $amount): float => (new \Tygh\Addons\TravelCore\Services\CurrencyService($quoteCurrency))
+        ->convertFromApiCurrency($amount, defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : $quoteCurrency);
+    $additionalServices = \Tygh\Addons\SphinxHolidays\Helpers\ServiceRows::withDisplay(
+        \Tygh\Addons\SphinxHolidays\Helpers\ServiceRows::forShopper($quote['additional_services'] ?? null, Container::getCartService()->applyCommission(...)),
+        static fn (float $api): float => $cirMoney->toDisplay($cirToPrimary($api)),
+        static fn (float $amount): string => $cirMoney->formatDisplay($amount),
+    );
+    $view->assign('sphinx_trip_money', [
+        'base' => round($cirMoney->toDisplay($cirToPrimary($sellingPrice)), 2),
+        'format' => $cirMoney->scriptFormat(),
+    ]);
 
     $quoteDuration = TypeCoerce::toStringMap($quote['duration'] ?? null);
+
+    $cirRoomsData = \Tygh\Addons\SphinxHolidays\Services\CartService::normalizeRoomsForDisplay(
+        $rooms, $adults, $children_ages_str
+    );
 
     $view->assign('sphinx_circuit_booking', [
         'offer_id' => $offer_id,
@@ -151,9 +168,7 @@ try {
         'rooms' => $rooms,
         // Canonical shape for the shared guest-cards partial (synthesizes one
         // room from booking-level occupancy when the quote carries none).
-        'rooms_data' => \Tygh\Addons\SphinxHolidays\Services\CartService::normalizeRoomsForDisplay(
-            $rooms, $adults, $children_ages_str
-        ),
+        'rooms_data' => $cirRoomsData,
         'meal_type' => TypeCoerce::toString($quote['meal_type_name'] ?? ''),
         'adults' => $adults,
         'children' => $children,
@@ -184,6 +199,72 @@ try {
         date('Y-m-d'),
         \Tygh\Addons\TravelCore\Services\TravelCoreConfig::getDateFormat(),
     ));
+
+    // The shared booking page's summary (travel_core booking_sidebar.tpl), as
+    // the package page builds it: the circuit's title and picture (its
+    // product's, else the quote's), the departure and return dates, the rooms
+    // and meal plan, the flights, what the price includes, the price and the
+    // terms. "Ofertă" and "Schimbați-vă opțiunea" lead back to the circuit's
+    // page, where its bar picks the departure.
+    $cirProductId = Container::getCartService()->resolveCircuitProductId($circuit_id, 0);
+    $cirNights = TypeCoerce::toInt($quoteDuration['nights'] ?? 0);
+    $cirDepartTs = (int) strtotime($departure_date);
+    $cirReturn = $cirDepartTs > 0 ? date('Y-m-d', (int) strtotime('+' . $cirNights . ' days', $cirDepartTs)) : '';
+    $cirFirstRoom = $rooms[0] ?? [];
+    $cirFlight = $quote['flight'] ?? null;
+    $cirSidebar = \Tygh\Addons\SphinxHolidays\ViewModels\SphinxBookingSidebarBuilder::build(
+        [
+            'product_id' => $cirProductId,
+            'rooms_data' => $cirRoomsData,
+            'room_name' => TypeCoerce::toString($cirFirstRoom['name'] ?? ''),
+            'check_in' => $departure_date,
+            'check_out' => $cirReturn,
+            'nights' => $cirNights,
+            'num_rooms' => max(1, count($occupancy)),
+            'adults' => $adults,
+            'children' => $children,
+            'children_ages' => $children_ages_str,
+            'board_name' => TypeCoerce::toString($quote['meal_type_name'] ?? ''),
+        ],
+        \Tygh\Addons\TravelCore\ViewModels\HotelHeaderFactory::bare(TypeCoerce::toString($quote['title'] ?? ''), 0, $cirProductId),
+        null,
+        number_format($sellingPrice, 2, ',', '.') . ' ' . $quoteCurrency,
+        $quote['cancellation_fees'] ?? null,
+        true,
+        defined('CART_LANGUAGE') ? TypeCoerce::toString(CART_LANGUAGE) : 'en',
+        \Tygh\Addons\TravelCore\Services\MoneyFormatter::forStore(),
+        (new \Tygh\Addons\TravelCore\Services\CurrencyService($quoteCurrency))
+            ->convertFromApiCurrency($sellingPrice, defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : $quoteCurrency),
+        0.0,
+        '',
+        TypeCoerce::toString($quote['confirmation'] ?? ''),
+        $quote['payment_terms'] ?? null,
+        date('Y-m-d'),
+        \Tygh\Addons\TravelCore\Services\TravelCoreConfig::getDateFormat(),
+        \Tygh\Addons\TravelCore\Services\TravelCoreConfig::getBookingSidebarMaxFeatures(),
+    )->withTrip(
+        TypeCoerce::toString(__('sphinx_holidays.trip_kind_circuit')),
+        \Tygh\Addons\SphinxHolidays\ViewModels\SphinxBookingSidebarBuilder::tripLegs(
+            is_array($cirFlight) ? TypeCoerce::toStringMap($cirFlight) : null,
+            [],
+            [
+                'out' => TypeCoerce::toString(__('sphinx_holidays.outbound')),
+                'back' => TypeCoerce::toString(__('sphinx_holidays.return')),
+                'bus' => TypeCoerce::toString(__('sphinx_holidays.bus_transport')),
+            ],
+            static fn (int $ts): string => \Tygh\Addons\TravelCore\Services\DateHelper::formatStoreDate($ts),
+        ),
+        \Tygh\Addons\SphinxHolidays\ViewModels\SphinxBookingSidebarBuilder::tripIncludes(
+            TypeCoerce::toStringList($quote['included_services'] ?? null),
+            [],
+        ),
+        TypeCoerce::toStringList($quote['not_included_services'] ?? null),
+        \Tygh\Addons\TravelCore\ViewModels\BookingSidebarFactory::changeSelectionUrl($cirProductId, []),
+        TypeCoerce::toString(__('sphinx_holidays.departure')),
+        TypeCoerce::toString(__('sphinx_holidays.trip_return')),
+        TypeCoerce::toString($quote['image'] ?? ''),
+    );
+    $view->assign('travel_booking_sidebar', $cirSidebar->toViewArray());
 
     $view->assign('sphinx_provider', 'sphinx');
     // circuits/book wants every traveller's gender (m or f), children too.

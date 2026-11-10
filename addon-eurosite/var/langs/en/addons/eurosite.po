@@ -192,6 +192,18 @@ msgctxt "SettingsTooltips::eurosite::hide_unavailable_products"
 msgid "Shown again when an Immediate offer returns. A product you hid or disabled by hand is never shown automatically. A hidden product you activate or disable by hand stays as you set it until the hotel has an Immediate offer again."
 msgstr "Shown again when an Immediate offer returns. A product you hid or disabled by hand is never shown automatically. A hidden product you activate or disable by hand stays as you set it until the hotel has an Immediate offer again."
 
+msgctxt "SettingsOptions::eurosite::packages_header"
+msgid "Packages"
+msgstr "Packages"
+
+msgctxt "SettingsOptions::eurosite::package_nights"
+msgid "Packages: nights offered"
+msgstr "Packages: nights offered"
+
+msgctxt "SettingsTooltips::eurosite::package_nights"
+msgid "The stays a hotel's package search offers, in nights, comma separated (e.g. 7, 10, 14). An offer Eurosite returns for a slightly different stay keeps its own dates."
+msgstr "The stays a hotel's package search offers, in nights, comma separated (e.g. 7, 10, 14). An offer Eurosite returns for a slightly different stay keeps its own dates."
+
 msgctxt "Languages::eurosite.addon_name"
 msgid "Eurosite Touring"
 msgstr "Eurosite Touring"
@@ -485,8 +497,8 @@ msgid "All catalogs, each when due"
 msgstr "All catalogs, each when due"
 
 msgctxt "Languages::eurosite.jobs_job_full_desc"
-msgid "Runs the six catalogs below in order, each only when it is due: the monthly ones on the 1st, the hotels once a week. One nightly line instead of six."
-msgstr "Runs the six catalogs below in order, each only when it is due: the monthly ones on the 1st, the hotels once a week. One nightly line instead of six."
+msgid "Runs the seven catalogs below in order, each only when it is due: the monthly ones on the 1st, the hotels and the package routes once a week. One nightly line instead of seven."
+msgstr "Runs the seven catalogs below in order, each only when it is due: the monthly ones on the 1st, the hotels and the package routes once a week. One nightly line instead of seven."
 
 msgctxt "Languages::eurosite.jobs_job_countries"
 msgid "Countries"
@@ -519,6 +531,14 @@ msgstr "Hotels"
 msgctxt "Languages::eurosite.jobs_job_hotels_desc"
 msgid "The operator's hotels and their rooms, in the whitelisted destinations."
 msgstr "The operator's hotels and their rooms, in the whitelisted destinations."
+
+msgctxt "Languages::eurosite.jobs_job_package_routes"
+msgid "Package routes"
+msgstr "Package routes"
+
+msgctxt "Languages::eurosite.jobs_job_package_routes_desc"
+msgid "Coach and plane routes for packages: destinations, departure cities and their dates."
+msgstr "Coach and plane routes for packages: destinations, departure cities and their dates."
 
 msgctxt "Languages::eurosite.jobs_job_room_types"
 msgid "Room types"
@@ -632,6 +652,10 @@ msgctxt "Languages::eurosite.jobs_count_hotels"
 msgid "Hotels: [n]"
 msgstr "Hotels: [n]"
 
+msgctxt "Languages::eurosite.jobs_count_package_routes"
+msgid "Package routes: [n]"
+msgstr "Package routes: [n]"
+
 msgctxt "Languages::eurosite.jobs_count_room_types"
 msgid "Room types: [n]"
 msgstr "Room types: [n]"
@@ -651,6 +675,110 @@ msgstr "Hotels with an Immediate offer: [n]"
 msgctxt "Languages::eurosite.jobs_count_products"
 msgid "Products: [n]"
 msgstr "Products: [n]"
+
+msgctxt "Languages::eurosite.package_routes"
+msgid "Package routes"
+msgstr "Package routes"
+
+msgctxt "Languages::eurosite.package_routes_title"
+msgid "Eurosite — Package routes"
+msgstr "Eurosite — Package routes"
+
+msgctxt "Languages::eurosite.routes_count"
+msgid "[n] package routes"
+msgstr "[n] package routes"
+
+msgctxt "Languages::eurosite.sync_now"
+msgid "Sync now"
+msgstr "Sync now"
+
+msgctxt "Languages::eurosite.transport"
+msgid "Transport"
+msgstr "Transport"
+
+msgctxt "Languages::eurosite.all_transports"
+msgid "All"
+msgstr "All"
+
+msgctxt "Languages::eurosite.transport_plane"
+msgid "Plane"
+msgstr "Plane"
+
+msgctxt "Languages::eurosite.transport_bus"
+msgid "Coach"
+msgstr "Coach"
+
+msgctxt "Languages::eurosite.departure"
+msgid "Departure"
+msgstr "Departure"
+
+msgctxt "Languages::eurosite.arrival"
+msgid "Arrival"
+msgstr "Arrival"
+
+msgctxt "Languages::eurosite.duration"
+msgid "Duration"
+msgstr "Duration"
+
+msgctxt "Languages::eurosite.available_dates"
+msgid "Available dates"
+msgstr "Available dates"
+
+msgctxt "Languages::eurosite.routes_nights"
+msgid "[nights] nights"
+msgstr "[nights] nights"
+
+msgctxt "Languages::eurosite.routes_nights_from_setting"
+msgid "from the settings"
+msgstr "from the settings"
+
+msgctxt "Languages::eurosite.routes_more_dates"
+msgid "+[n] more"
+msgstr "+[n] more"
+
+msgctxt "Languages::eurosite.routes_no_dates_ahead"
+msgid "No dates ahead"
+msgstr "No dates ahead"
+
+msgctxt "Languages::eurosite.no_routes_match"
+msgid "No route matches this search."
+msgstr "No route matches this search."
+
+msgctxt "Languages::eurosite.no_package_routes"
+msgid "No package routes yet. Sync now fetches them from Eurosite; if none come back, ask Eurosite to enable packages (Pachete) for your XML user."
+msgstr "No package routes yet. Sync now fetches them from Eurosite; if none come back, ask Eurosite to enable packages (Pachete) for your XML user."
+
+msgctxt "Languages::eurosite.package_kind_flight"
+msgid "Package · flight + hotel"
+msgstr "Package · flight + hotel"
+
+msgctxt "Languages::eurosite.package_kind_bus"
+msgid "Package · coach + hotel"
+msgstr "Package · coach + hotel"
+
+msgctxt "Languages::eurosite.package_outbound"
+msgid "Outbound"
+msgstr "Outbound"
+
+msgctxt "Languages::eurosite.package_return"
+msgid "Return"
+msgstr "Return"
+
+msgctxt "Languages::eurosite.package_coach"
+msgid "Coach"
+msgstr "Coach"
+
+msgctxt "Languages::eurosite.package_unavailable"
+msgid "Eurosite no longer has this package as it was offered. Please choose a departure again."
+msgstr "Eurosite no longer has this package as it was offered. Please choose a departure again."
+
+msgctxt "Languages::eurosite.package_price_changed"
+msgid "Eurosite's price for this package has changed: it is now [price]."
+msgstr "Eurosite's price for this package has changed: it is now [price]."
+
+msgctxt "Languages::eurosite.package_dob_required"
+msgid "Every traveller needs a date of birth: the airline or the coach operator asks for the passenger list."
+msgstr "Every traveller needs a date of birth: the airline or the coach operator asks for the passenger list."
 
 msgctxt "Languages::eurosite.dash_tile_hotels"
 msgid "Hotels in the destinations sold"

@@ -1,159 +1,35 @@
 {*
  * Sphinx Package Booking Form
  *
- * Shows verified package details (hotel, transport, services),
- * optional services selection, and guest entry form.
- * Styled by travel_core's booking-pages.css (.travel-booking-page contract).
+ * The shared booking page (travel_core booking-pages.css), as a hotel's:
+ * the three-step bar; the guest form on the left; on the right the shared
+ * summary (travel_booking_sidebar, built by the controller): the hotel, the
+ * trip's kind, the dates, room and board, the flights or coach, what the
+ * price includes and leaves out, the price, and the cancellation and
+ * payment terms. A phone folds the summary into a bar at the top and keeps
+ * one button in the bar at the bottom.
  *
  * @package SphinxHolidays
  * @since 1.2.0
  *}
 
-
-
 {if $sphinx_package_booking}
+
+{* Client strings for the shared booking JS (inline field messages, DOB
+   checks): without them the messages fell back to English. *}
+{include file="addons/travel_core/components/travel_i18n.tpl"}
 
 <div class="travel-booking-page sphinx-booking-form-page sphinx-package-booking">
 
-    {* Package summary *}
-    <div class="travel-booking-summary sphinx-booking-summary">
-        <div class="travel-booking-row">
-            <div class="travel-booking-main">
-                <h2>{$sphinx_package_booking.hotel_name|escape:html}</h2>
-                {if $sphinx_package_booking.destination_name}
-                    <div class="travel-booking-sub">{$sphinx_package_booking.destination_name|escape:html}</div>
-                {/if}
-                <div class="travel-booking-meta">
-                    <span><strong>{__("travel_core.check_in")|default:"Check-in"}:</strong> {$sphinx_package_booking.check_in|date_format:"%d.%m.%Y"}</span>
-                    <span><strong>{__("travel_core.check_out")|default:"Check-out"}:</strong> {$sphinx_package_booking.check_out|date_format:"%d.%m.%Y"}</span>
-                    {if $sphinx_package_booking.meal_type}
-                        <span><strong>{__("travel_core.meal_plan")}:</strong> {$sphinx_package_booking.meal_type|escape:html}</span>
-                    {/if}
-                </div>
+    {include file="addons/travel_core/components/booking_steps.tpl"}
 
-                {* Room list *}
-                {if $sphinx_package_booking.rooms}
-                    <div class="travel-booking-roomlist">
-                        {foreach $sphinx_package_booking.rooms as $room}
-                            <span>{$room.name|escape:html}</span>{if !$room@last}, {/if}
-                        {/foreach}
-                    </div>
-                {/if}
+    <div class="travel-booking-layout">
+        {* The deposit choice, where offered, is the form's (booking_pay_choice.tpl):
+           the summary leaves its own split box out. *}
+        {include file="addons/travel_core/components/booking_sidebar.tpl" tbs_deposit_addon="sphinx_holidays" tbs_deposit_form="sphinx-package-booking-form"}
 
-                {* Labels *}
-                {if $sphinx_package_booking.labels}
-                    <div class="travel-booking-roomlist">
-                        {foreach $sphinx_package_booking.labels as $label}
-                            <span class="travel-label-chip">{$label.name|escape:html}</span>
-                        {/foreach}
-                    </div>
-                {/if}
-            </div>
-            <div class="travel-booking-price-col">
-                <div class="travel-price-total">
-                    {$sphinx_package_booking.total_price|number_format:2:",":"."} {$sphinx_package_booking.currency}
-                </div>
-                <div class="travel-price-label">{__("sphinx_holidays.total_price")|default:"Total price"}</div>
-                {if $sphinx_package_booking.confirmation == 'immediate'}
-                    <div class="travel-instant-note">{__("sphinx_holidays.instant_confirmation")|default:"Instant confirmation"}</div>
-                {/if}
-            </div>
-        </div>
-    </div>
+        <div class="travel-booking-col-main">
 
-    {* Flight info *}
-    {if $sphinx_package_booking.flight && ($sphinx_package_booking.flight.outbound || $sphinx_package_booking.flight.inbound)}
-        <div class="travel-info-card sphinx-flight-info">
-            <h3 class="travel-section-title"><i class="icon-plane"></i> {__("sphinx_holidays.flight_info")|default:"Flight Information"}</h3>
-            <div class="travel-info-grid">
-                {if $sphinx_package_booking.flight.outbound}
-                    <div class="travel-info-col">
-                        <strong>{__("sphinx_holidays.outbound")|default:"Outbound"}</strong>
-                        {foreach $sphinx_package_booking.flight.outbound as $segment}
-                            <div>{$segment.departure.name|escape:html} &rarr; {$segment.arrival.name|escape:html}</div>
-                            <div class="travel-info-detail">
-                                {$segment.airline.name|escape:html} {$segment.flight_number}
-                                {if $segment.departure.datetime} &mdash; {$segment.departure.datetime|date_format:"%d.%m %H:%M"}{/if}
-                            </div>
-                        {/foreach}
-                    </div>
-                {/if}
-                {if $sphinx_package_booking.flight.inbound}
-                    <div class="travel-info-col">
-                        <strong>{__("sphinx_holidays.return")|default:"Return"}</strong>
-                        {foreach $sphinx_package_booking.flight.inbound as $segment}
-                            <div>{$segment.departure.name|escape:html} &rarr; {$segment.arrival.name|escape:html}</div>
-                            <div class="travel-info-detail">
-                                {$segment.airline.name|escape:html} {$segment.flight_number}
-                                {if $segment.departure.datetime} &mdash; {$segment.departure.datetime|date_format:"%d.%m %H:%M"}{/if}
-                            </div>
-                        {/foreach}
-                    </div>
-                {/if}
-            </div>
-        </div>
-    {/if}
-
-    {* Bus info *}
-    {if $sphinx_package_booking.bus}
-        <div class="travel-info-card">
-            <h3 class="travel-section-title"><i class="icon-truck"></i> {__("sphinx_holidays.bus_transport")|default:"Bus Transport"}</h3>
-            {foreach $sphinx_package_booking.bus as $bus_segment}
-                <div>{$bus_segment.departure.name|escape:html} &rarr; {$bus_segment.arrival.name|escape:html}</div>
-            {/foreach}
-        </div>
-    {/if}
-
-    {* Transfers *}
-    {if $sphinx_package_booking.transfers}
-        <div class="travel-info-card">
-            <h3 class="travel-section-title">{__("sphinx_holidays.transfers")|default:"Transfers"}</h3>
-            {foreach $sphinx_package_booking.transfers as $transfer}
-                <div class="travel-booking-sub">
-                    <strong>{$transfer.title|escape:html}</strong>
-                    <span class="travel-info-detail">({$transfer.from|escape:html} &rarr; {$transfer.to|escape:html})</span>
-                </div>
-            {/foreach}
-        </div>
-    {/if}
-
-    {* Included / not included services *}
-    {if $sphinx_package_booking.included_services || $sphinx_package_booking.not_included_services}
-        <div class="travel-included-row">
-            {if $sphinx_package_booking.included_services}
-                <div class="travel-included-panel">
-                    <h4>{__("sphinx_holidays.included")|default:"Included"}</h4>
-                    <ul>
-                        {foreach $sphinx_package_booking.included_services as $svc}
-                            <li>{$svc|escape:html}</li>
-                        {/foreach}
-                    </ul>
-                </div>
-            {/if}
-            {if $sphinx_package_booking.not_included_services}
-                <div class="travel-included-panel travel-included-panel--negative">
-                    <h4>{__("sphinx_holidays.not_included")|default:"Not Included"}</h4>
-                    <ul>
-                        {foreach $sphinx_package_booking.not_included_services as $svc}
-                            <li>{$svc|escape:html}</li>
-                        {/foreach}
-                    </ul>
-                </div>
-            {/if}
-        </div>
-    {/if}
-
-    {* Cancellation and payment: the same timeline as a hotel's booking page
-       (travel_core booking_terms_timeline.tpl), from this offer's own terms
-       (SphinxBookingSidebarBuilder::tripTerms()). *}
-    {if $sphinx_trip_terms.cancel_steps || $sphinx_trip_terms.payment_steps || $sphinx_trip_terms.cancel_lines || $sphinx_trip_terms.payment_lines}
-        <div class="travel-info-card sphinx-trip-terms">
-            <h3 class="travel-section-title">{__("travel_core.cancel_payment_title")}</h3>
-            {include file="addons/travel_core/components/booking_terms_timeline.tpl" tt=$sphinx_trip_terms}
-        </div>
-    {/if}
-
-    {* Guest entry form *}
     <form action="{"sphinx_booking.package_add_to_cart"|fn_url}" method="post" id="sphinx-package-booking-form">
         <input type="hidden" name="offer_id" value="{$sphinx_package_booking.offer_id}">
         <input type="hidden" name="hotel_id" value="{$sphinx_package_booking.hotel_id}">
@@ -177,35 +53,12 @@
         {/if}
         <input type="hidden" name="board_name" value="{$sphinx_package_booking.meal_type|escape:html}">
 
-        {* Optional services *}
-        {if $sphinx_package_booking.additional_services}
-            <div class="travel-services sphinx-services-section">
-                <h3 class="travel-section-title"><i class="icon-cog"></i> {__("sphinx_holidays.additional_services")|default:"Additional Services"}</h3>
-                {foreach $sphinx_package_booking.additional_services as $service}
-                    <div class="travel-service-row">
-                        {if $service.type == 'mandatory'}
-                            <input type="checkbox" name="services[]" value="{$service.code}" checked disabled>
-                            <span class="travel-service-mandatory">({__("sphinx_holidays.mandatory")|default:"Mandatory"})</span>
-                        {else}
-                            <input type="checkbox" name="services[]" value="{$service.code}" {if $service.selected}checked{/if}>
-                        {/if}
-                        <div class="travel-service-body">
-                            <strong>{$service.title|escape:html}</strong>
-                            {if $service.description}
-                                <div class="travel-service-desc">{$service.description|escape:html}</div>
-                            {/if}
-                        </div>
-                        <div class="travel-service-price">
-                            {if $service.price > 0}+{$service.price|number_format:2:",":"."} {$service.currency}{/if}
-                        </div>
-                    </div>
-                {/foreach}
-            </div>
-        {/if}
-
         {* Guest details per room *}
-        <div class="guest-names-section">
-            <h3 class="travel-section-title"><i class="icon-user"></i> {__("travel_core.who_is_staying")}</h3>
+        <div class="travel-form-section guest-names-section">
+            <h3>{__("travel_core.who_is_staying")}</h3>
+            {* With a flight, the names go to the airline: the amber warning. *}
+            {$pkg_airline = $sphinx_package_booking.transport_type == "flight"}
+            {include file="addons/travel_core/components/booking_guest_hint.tpl" gh_airline=$pkg_airline}
 
             {* Guest name + DOB cards — shared travel_core component (same markup
                contract all sphinx forms post: guests[room{N}_{type}_{i}][...]).
@@ -228,29 +81,61 @@
                      guest_child_gender_options=$sphinx_gender_options}
         </div>
 
+        {* Optional services, as whole-row cards: the picked ones turn green
+           with a "Selectat" badge; a mandatory one is ticked and fixed. *}
+        {if $sphinx_package_booking.additional_services}
+            {* A ticked service moves the total, here and in the summary, the bars
+               and the button (booking-conditions.js): data-base is the total as
+               the page opened, data-money how the store prints it. *}
+            {$trip_money = $sphinx_trip_money|default:[]}
+            <section class="travel-form-section travel-extras" aria-labelledby="sphinx-package-extras"{if $trip_money.base|default:0 > 0} data-travel-extras data-base="{$trip_money.base}" data-money-symbol="{$trip_money.format.symbol|default:""|escape:html}" data-money-after="{if $trip_money.format.after|default:false}1{else}0{/if}" data-money-decimals="{$trip_money.format.decimals|default:0}" data-money-decimal="{$trip_money.format.decimal|default:"."|escape:html}" data-money-thousands="{$trip_money.format.thousands|default:""|escape:html}" data-total-label="{__("travel_core.total_price")|escape:html}"{/if}>
+                <h3 id="sphinx-package-extras">{__("sphinx_holidays.additional_services")|default:"Additional Services"}</h3>
+                {foreach $sphinx_package_booking.additional_services as $service}
+                    <label class="travel-extra{if $service.type == 'mandatory'} travel-extra--fixed{/if}">
+                        {if $service.type == 'mandatory'}
+                            <input type="checkbox" name="services[]" value="{$service.code}" checked disabled>
+                        {else}
+                            <input type="checkbox" name="services[]" value="{$service.code}"{if $service.display_amount|default:0 > 0} data-amount="{$service.display_amount}"{/if} {if $service.selected}checked{/if}>
+                        {/if}
+                        <span class="travel-extra__text">
+                            <span class="travel-extra__name">{$service.title|escape:html}{if $service.type == 'mandatory'}<span class="travel-extra__tag">{__("sphinx_holidays.mandatory")|default:"Mandatory"}</span>{else}<span class="travel-extra__sel">{__("travel_core.option_selected")}</span>{/if}</span>
+                            {if $service.description}<span class="travel-extra__note">{$service.description|escape:html}</span>{/if}
+                        </span>
+                        <span class="travel-extra__price">{if $service.display_price|default:""}{$service.display_price|escape:html}{elseif $service.price > 0}+{$service.price|number_format:2:",":"."} {$service.currency}{/if}</span>
+                    </label>
+                {/foreach}
+                <p class="travel-sr-only" aria-live="polite" data-travel-extras-live></p>
+            </section>
+        {/if}
+
         {* Contact (email/phone) is NOT collected here: CS-Cart checkout already
            collects it, and the booking submission reads it from the order. *}
 
-        {* Pay in full or a deposit, as on a hotel's booking page, where the
-           store offers deposits (travel_core DepositPolicy) and the offer's
-           payment terms allow one (payment_split): the radios post only
-           pay_mode; add-to-cart works the deposit out again from the terms
-           of what is booked. *}
-        {if $sphinx_trip_terms.payment_split && fn_travel_core_deposit_offered("sphinx_holidays")}
-            <div class="travel-info-card sphinx-pay-mode">
-                {* The choice's own legend, "How would you like to pay?", is its title. *}
-                {include file="addons/travel_core/components/booking_payment_split.tpl" ps=$sphinx_trip_terms.payment_split ps_form="sphinx-package-booking-form"}
-            </div>
-        {/if}
+        {* "How would you like to pay?" where the store offers deposits
+           (travel_core DepositPolicy) and the offer's payment terms allow one:
+           the radios post only pay_mode; add-to-cart works the deposit out
+           again from the terms of what is booked. *}
+        {include file="addons/travel_core/components/booking_pay_choice.tpl" pc_addon="sphinx_holidays" pc_form="sphinx-package-booking-form"}
 
-        {* Submit *}
-        <div class="travel-booking-submit sphinx-booking-submit">
-            <button type="submit" class="travel-offer-book-btn sphinx-offer-book-btn">
-                {fn_travel_core_booking_cta_label("sphinx_holidays", "sphinx_holidays.add_to_cart_btn")}
-            </button>
-        </div>
+        {* The one main button, with the total; "Adaugă în coș" unless the store
+           skips the cart. The way back leads to the hotel's page on this
+           package's departure. *}
+        {include file="addons/travel_core/components/booking_form_actions.tpl"
+            fa_addon="sphinx_holidays"
+            fa_label_key="sphinx_holidays.add_to_cart_btn"
+            fa_back_url=$travel_booking_sidebar.change_url|default:""
+            fa_back_label=__("travel_core.back_to_offer")
+            fa_button_class="sphinx-offer-book-btn"}
+
+        {* "What are my booking conditions?" (its link sits in the summary's
+           cancellation card). *}
+        {include file="addons/travel_core/components/booking_conditions_modal.tpl"}
     </form>
 
+        </div>{* /travel-booking-col-main *}
+    </div>{* /travel-booking-layout *}
+
+    {include file="addons/travel_core/components/booking_mobile_bar.tpl" mb_form_id="sphinx-package-booking-form" mb_label=fn_travel_core_booking_cta_label("sphinx_holidays", "sphinx_holidays.add_to_cart_btn")}
 </div>
 
 {/if}

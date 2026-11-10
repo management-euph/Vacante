@@ -18,6 +18,11 @@ $tabs = [
         'text'     => __('eurosite.hotels', ['[default]' => 'Hotels']),
         'position' => 150,
     ],
+    'eurosite_package_routes' => [
+        'href'     => 'eurosite.package_routes',
+        'text'     => __('eurosite.package_routes', ['[default]' => 'Package routes']),
+        'position' => 175,
+    ],
     'eurosite_whitelist' => [
         'href'     => 'eurosite.whitelist',
         'text'     => __('eurosite.destination_whitelist', ['[default]' => 'Destination whitelist']),
@@ -30,7 +35,7 @@ $tabs = [
     ],
 ];
 
-foreach (['eurosite.manage', 'eurosite.hotels', 'eurosite.whitelist', 'eurosite.seo_templates'] as $page) {
+foreach (['eurosite.manage', 'eurosite.hotels', 'eurosite.package_routes', 'eurosite.whitelist', 'eurosite.seo_templates'] as $page) {
     $schema[$page] = array_merge($schema[$page] ?? [], $tabs);
 }
 

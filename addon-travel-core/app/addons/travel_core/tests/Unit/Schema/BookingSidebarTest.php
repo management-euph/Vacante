@@ -513,6 +513,18 @@ final class BookingSidebarTest extends TestCase
         self::assertStringContainsString("layout.classList.add('travel-booking-layout--folded');", $js);
     }
 
+    /** The summary's total row has room for "+130 €" when a trip's extra moves the total (booking-conditions.js). */
+    public function testTheTotalRowHasRoomForTheChange(): void
+    {
+        self::assertStringContainsString(
+            '<span class="travel-price-label">{__("travel_core.total_price")|default:"Total"}<span class="travel-total-delta" data-travel-total-delta aria-hidden="true"></span></span>',
+            self::tpl(),
+        );
+        $js = (string) file_get_contents(self::repoRoot() . '/addon-travel-core/js/addons/travel_core/booking-conditions.js');
+        self::assertStringContainsString("document.querySelector('[data-travel-total-delta]')", $js);
+        self::assertStringContainsString("input.matches('[data-travel-extras] input[data-amount]')", $js);
+    }
+
     public function testCancellationCardIsHiddenUntilItHasSomethingToSay(): void
     {
         $tpl = self::tpl();

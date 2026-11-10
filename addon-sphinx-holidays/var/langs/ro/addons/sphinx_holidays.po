@@ -1204,6 +1204,26 @@ msgctxt "Languages::sphinx_holidays.offer_unavailable"
 msgid "This offer is no longer available."
 msgstr "Această ofertă nu mai este disponibilă."
 
+msgctxt "Languages::sphinx_holidays.trip_kind_flight"
+msgid "Package · flight + hotel"
+msgstr "Pachet · avion + hotel"
+
+msgctxt "Languages::sphinx_holidays.trip_kind_bus"
+msgid "Package · coach + hotel"
+msgstr "Pachet · autocar + hotel"
+
+msgctxt "Languages::sphinx_holidays.trip_kind_hotel"
+msgid "Package"
+msgstr "Pachet"
+
+msgctxt "Languages::sphinx_holidays.trip_kind_circuit"
+msgid "Circuit"
+msgstr "Circuit"
+
+msgctxt "Languages::sphinx_holidays.trip_return"
+msgid "Return"
+msgstr "Întoarcere"
+
 msgctxt "Languages::sphinx_holidays.outbound"
 msgid "Outbound"
 msgstr "Dus"

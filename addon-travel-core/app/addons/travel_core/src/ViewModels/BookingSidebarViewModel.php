@@ -64,6 +64,12 @@ final class BookingSidebarViewModel
      * @param int $featuresMax chips shown before "+N more" (admin setting)
      * @param bool $showWeekday false when the store date format already
      *                          prints the weekday
+     * @param string $kindLabel a trip's kind, over its name ("Pachet · avion + hotel"); '' for a hotel
+     * @param list<array{title: string, line: string, note: string}> $legs a trip's journeys, in order
+     * @param list<string> $includes what the trip's price includes
+     * @param list<string> $excludes what it does not
+     * @param string $checkInLabel the first date's own word ("Plecare"); '' = Check-in
+     * @param string $checkOutLabel the last date's own word ("Întoarcere"); '' = Check-out
      */
     public function __construct(
         public readonly array $imagePair = [],
@@ -103,7 +109,81 @@ final class BookingSidebarViewModel
         public readonly array $paymentSplit = [],
         public readonly int $featuresMax = 6,
         public readonly bool $showWeekday = true,
+        public readonly string $kindLabel = '',
+        public readonly array $legs = [],
+        public readonly array $includes = [],
+        public readonly array $excludes = [],
+        public readonly string $checkInLabel = '',
+        public readonly string $checkOutLabel = '',
     ) {
+    }
+
+    /**
+     * The same summary for a trip (package, circuit): its kind, journeys and
+     * inclusions, where "Change your selection" and the Offer step lead, the
+     * dates' own words where they are not a stay's ("Plecare", "Întoarcere"),
+     * the trip's own picture when its product has none, and no per-night
+     * price, which would spread the flights over the nights.
+     *
+     * @param list<array{title: string, line: string, note: string}> $legs
+     * @param list<string> $includes
+     * @param list<string> $excludes
+     */
+    public function withTrip(
+        string $kindLabel,
+        array $legs,
+        array $includes,
+        array $excludes,
+        string $changeUrl,
+        string $checkInLabel = '',
+        string $checkOutLabel = '',
+        string $fallbackImageUrl = '',
+    ): self {
+        return new self(
+            imagePair: $this->imagePair,
+            imageUrl: $this->imageUrl === '' && $fallbackImageUrl !== '' ? $fallbackImageUrl : $this->imageUrl,
+            name: $this->name,
+            stars: $this->stars,
+            available: $this->available,
+            locationLine: $this->locationLine,
+            mapUrl: $this->mapUrl,
+            features: $this->features,
+            packageName: $this->packageName,
+            checkIn: $this->checkIn,
+            checkInWeekday: $this->checkInWeekday,
+            checkOut: $this->checkOut,
+            checkOutWeekday: $this->checkOutWeekday,
+            nights: $this->nights,
+            rooms: $this->rooms,
+            adults: $this->adults,
+            children: $this->children,
+            roomLines: $this->roomLines,
+            boardName: $this->boardName,
+            changeUrl: $changeUrl,
+            productId: $this->productId,
+            total: $this->total,
+            oldTotal: $this->oldTotal,
+            cancelLines: $this->cancelLines,
+            cancelFullAmount: $this->cancelFullAmount,
+            cancelFreeUntil: $this->cancelFreeUntil,
+            paymentLines: $this->paymentLines,
+            roomLabel: $this->roomLabel,
+            availabilityStatus: $this->availabilityStatus,
+            availabilityNote: $this->availabilityNote,
+            discountLabel: $this->discountLabel,
+            perNight: '',
+            cancelSteps: $this->cancelSteps,
+            paymentSteps: $this->paymentSteps,
+            paymentSplit: $this->paymentSplit,
+            featuresMax: $this->featuresMax,
+            showWeekday: $this->showWeekday,
+            kindLabel: $kindLabel,
+            legs: $legs,
+            includes: $includes,
+            excludes: $excludes,
+            checkInLabel: $checkInLabel,
+            checkOutLabel: $checkOutLabel,
+        );
     }
 
     /**
@@ -166,6 +246,12 @@ final class BookingSidebarViewModel
             'features_max' => max(1, $this->featuresMax),
             'features_extra' => max(0, count($this->features) - max(1, $this->featuresMax)),
             'show_weekday' => $this->showWeekday,
+            'kind_label' => $this->kindLabel,
+            'legs' => $this->legs,
+            'includes' => $this->includes,
+            'excludes' => $this->excludes,
+            'check_in_label' => $this->checkInLabel,
+            'check_out_label' => $this->checkOutLabel,
         ];
     }
 }

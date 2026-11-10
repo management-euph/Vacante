@@ -155,10 +155,18 @@ final class RoomOccupancyTest extends TestCase
             self::assertStringContainsString("'rooms'        => RoomOccupancy::itemRooms(\$snapshot),", $read($file), $file);
         }
 
-        $cart = $read('controllers/frontend/eurosite_booking/add_to_cart.php');
-        self::assertStringContainsString("'room'       => max(1, TypeCoerce::toInt(\$guest['room'] ?? 1)),", $cart);
-        self::assertStringContainsString("'num_rooms'     => count(\$roomsData),", $cart);
-        self::assertStringContainsString('$roomsMatch', $cart);
+        // Both add-to-carts read the travellers and their rooms the same way.
+        foreach (['add_to_cart.php', 'package_add_to_cart.php'] as $file) {
+            $cart = $read('controllers/frontend/eurosite_booking/' . $file);
+            self::assertStringContainsString('BookingGuests::roomsMatch($guests, $occupancy)', $cart, $file);
+            self::assertStringContainsString('RoomOccupancy::displayRooms($snapshot)', $cart, $file);
+            self::assertStringContainsString('count($roomsData)', $cart, $file);
+        }
+        // The travellers keep the room they sleep in, for each room's <PaxNames>.
+        self::assertStringContainsString(
+            "'room' => max(1, TypeCoerce::toInt(\$guest['room'] ?? 1)),",
+            $read('src/Services/BookingGuests.php'),
+        );
 
         self::assertStringContainsString(
             "'rooms' => RoomOccupancy::bookingRooms(\$booking, \$pax),",

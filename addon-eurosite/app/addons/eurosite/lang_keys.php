@@ -313,8 +313,8 @@ return [
         'ro' => 'Toate cataloagele, fiecare când îi vine rândul',
     ],
     'eurosite.jobs_job_full_desc' => [
-        'en' => 'Runs the six catalogs below in order, each only when it is due: the monthly ones on the 1st, the hotels once a week. One nightly line instead of six.',
-        'ro' => 'Rulează în ordine cele șase cataloage de mai jos, fiecare doar când îi vine rândul: cele lunare pe 1, hotelurile o dată pe săptămână. O singură linie pe noapte în loc de șase.',
+        'en' => 'Runs the seven catalogs below in order, each only when it is due: the monthly ones on the 1st, the hotels and the package routes once a week. One nightly line instead of seven.',
+        'ro' => 'Rulează în ordine cele șapte cataloage de mai jos, fiecare doar când îi vine rândul: cele lunare pe 1, hotelurile și rutele pachetelor o dată pe săptămână. O singură linie pe noapte în loc de șapte.',
     ],
     'eurosite.jobs_job_countries' => [
         'en' => 'Countries',
@@ -347,6 +347,14 @@ return [
     'eurosite.jobs_job_hotels_desc' => [
         'en' => 'The operator\'s hotels and their rooms, in the whitelisted destinations.',
         'ro' => 'Hotelurile operatorului și camerele lor, din destinațiile din listă.',
+    ],
+    'eurosite.jobs_job_package_routes' => [
+        'en' => 'Package routes',
+        'ro' => 'Rutele pachetelor',
+    ],
+    'eurosite.jobs_job_package_routes_desc' => [
+        'en' => 'Coach and plane routes for packages: destinations, departure cities and their dates.',
+        'ro' => 'Rutele cu autocarul și cu avionul pentru pachete: destinațiile, orașele de plecare și datele lor.',
     ],
     'eurosite.jobs_job_room_types' => [
         'en' => 'Room types',
@@ -460,6 +468,10 @@ return [
         'en' => 'Hotels: [n]',
         'ro' => 'Hoteluri: [n]',
     ],
+    'eurosite.jobs_count_package_routes' => [
+        'en' => 'Package routes: [n]',
+        'ro' => 'Rute de pachete: [n]',
+    ],
     'eurosite.jobs_count_room_types' => [
         'en' => 'Room types: [n]',
         'ro' => 'Tipuri de cameră: [n]',
@@ -479,6 +491,110 @@ return [
     'eurosite.jobs_count_products' => [
         'en' => 'Products: [n]',
         'ro' => 'Produse: [n]',
+    ],
+    'eurosite.package_routes' => [
+        'en' => 'Package routes',
+        'ro' => 'Rutele pachetelor',
+    ],
+    'eurosite.package_routes_title' => [
+        'en' => 'Eurosite — Package routes',
+        'ro' => 'Eurosite — Rutele pachetelor',
+    ],
+    'eurosite.routes_count' => [
+        'en' => '[n] package routes',
+        'ro' => '[n] rute de pachete',
+    ],
+    'eurosite.sync_now' => [
+        'en' => 'Sync now',
+        'ro' => 'Sincronizează acum',
+    ],
+    'eurosite.transport' => [
+        'en' => 'Transport',
+        'ro' => 'Transport',
+    ],
+    'eurosite.all_transports' => [
+        'en' => 'All',
+        'ro' => 'Toate',
+    ],
+    'eurosite.transport_plane' => [
+        'en' => 'Plane',
+        'ro' => 'Avion',
+    ],
+    'eurosite.transport_bus' => [
+        'en' => 'Coach',
+        'ro' => 'Autocar',
+    ],
+    'eurosite.departure' => [
+        'en' => 'Departure',
+        'ro' => 'Plecare',
+    ],
+    'eurosite.arrival' => [
+        'en' => 'Arrival',
+        'ro' => 'Sosire',
+    ],
+    'eurosite.duration' => [
+        'en' => 'Duration',
+        'ro' => 'Durată',
+    ],
+    'eurosite.available_dates' => [
+        'en' => 'Available dates',
+        'ro' => 'Date disponibile',
+    ],
+    'eurosite.routes_nights' => [
+        'en' => '[nights] nights',
+        'ro' => '[nights] nopți',
+    ],
+    'eurosite.routes_nights_from_setting' => [
+        'en' => 'from the settings',
+        'ro' => 'din setări',
+    ],
+    'eurosite.routes_more_dates' => [
+        'en' => '+[n] more',
+        'ro' => '+încă [n]',
+    ],
+    'eurosite.routes_no_dates_ahead' => [
+        'en' => 'No dates ahead',
+        'ro' => 'Nicio dată de acum înainte',
+    ],
+    'eurosite.no_routes_match' => [
+        'en' => 'No route matches this search.',
+        'ro' => 'Nicio rută nu se potrivește acestei căutări.',
+    ],
+    'eurosite.no_package_routes' => [
+        'en' => 'No package routes yet. Sync now fetches them from Eurosite; if none come back, ask Eurosite to enable packages (Pachete) for your XML user.',
+        'ro' => 'Încă nu există rute de pachete. „Sincronizează acum” le aduce de la Eurosite; dacă nu vine niciuna, cereți Eurosite să activeze pachetele (Pachete) pentru utilizatorul XML.',
+    ],
+    'eurosite.package_kind_flight' => [
+        'en' => 'Package · flight + hotel',
+        'ro' => 'Pachet · avion + hotel',
+    ],
+    'eurosite.package_kind_bus' => [
+        'en' => 'Package · coach + hotel',
+        'ro' => 'Pachet · autocar + hotel',
+    ],
+    'eurosite.package_outbound' => [
+        'en' => 'Outbound',
+        'ro' => 'Dus',
+    ],
+    'eurosite.package_return' => [
+        'en' => 'Return',
+        'ro' => 'Retur',
+    ],
+    'eurosite.package_coach' => [
+        'en' => 'Coach',
+        'ro' => 'Autocar',
+    ],
+    'eurosite.package_unavailable' => [
+        'en' => 'Eurosite no longer has this package as it was offered. Please choose a departure again.',
+        'ro' => 'Eurosite nu mai are acest pachet așa cum a fost oferit. Vă rugăm să alegeți din nou o plecare.',
+    ],
+    'eurosite.package_price_changed' => [
+        'en' => 'Eurosite\'s price for this package has changed: it is now [price].',
+        'ro' => 'Prețul Eurosite pentru acest pachet s-a schimbat: acum este [price].',
+    ],
+    'eurosite.package_dob_required' => [
+        'en' => 'Every traveller needs a date of birth: the airline or the coach operator asks for the passenger list.',
+        'ro' => 'Fiecare călător are nevoie de data nașterii: compania aeriană sau operatorul de autocar cere lista pasagerilor.',
     ],
     // The dashboard's At a glance tiles, Needs attention and Tools
     // (Services\DashboardSummary, views/eurosite/manage.tpl).

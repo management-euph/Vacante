@@ -135,8 +135,8 @@ final class CartSkipPolicyTest extends TestCase
         yield 'novoton responsive' => ['addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/views/novoton_booking/booking_form.tpl', 'fn_travel_core_booking_cta_label("novoton_holidays")', 1, 'novoton_holidays'];
         yield 'novoton nova_theme' => ['addon-novoton-holidays/design/themes/nova_theme/templates/addons/novoton_holidays/views/novoton_booking/booking_form.tpl', 'fn_travel_core_booking_cta_label("novoton_holidays")', 1, 'novoton_holidays'];
         yield 'sphinx hotel' => ['addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/booking_form.tpl', 'fn_travel_core_booking_cta_label("sphinx_holidays")', 1, 'sphinx_holidays'];
-        yield 'sphinx circuit' => ['addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/circuit_booking_form.tpl', 'fn_travel_core_booking_cta_label("sphinx_holidays", "sphinx_holidays.add_to_cart_btn")', 1, ''];
-        yield 'sphinx package' => ['addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/package_booking_form.tpl', 'fn_travel_core_booking_cta_label("sphinx_holidays", "sphinx_holidays.add_to_cart_btn")', 1, ''];
+        yield 'sphinx circuit' => ['addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/circuit_booking_form.tpl', 'fn_travel_core_booking_cta_label("sphinx_holidays", "sphinx_holidays.add_to_cart_btn")', 1, 'sphinx_holidays'];
+        yield 'sphinx package' => ['addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/package_booking_form.tpl', 'fn_travel_core_booking_cta_label("sphinx_holidays", "sphinx_holidays.add_to_cart_btn")', 1, 'sphinx_holidays'];
         yield 'eurosite' => ['addon-eurosite/design/themes/responsive/templates/addons/eurosite/views/eurosite_booking/booking_form.tpl', 'fn_travel_core_booking_cta_label("eurosite")', 1, 'eurosite'];
     }
 

@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The spec's getPackageNVPriceResponse sample (Specificatii API Eurosite,
+     "Cautare Pachete"), complete; the lines the document's layout wrapped
+     are joined again. -->
+<Response ResponseType="getPackageNVPriceResponse">
+  <AuditInfo>
+    <ResponseId>12992343</ResponseId>
+    <RequestId>13001910</RequestId>
+    <ResponseTime>2012-09-06T15:14:11</ResponseTime>
+  </AuditInfo>
+  <ResponseDetails>
+    <getPackageNVPriceResponse>
+      <Hotel>
+        <Product>
+          <TourOpCode>EU</TourOpCode>
+          <CountryCode>TR</CountryCode>
+          <CityCode>TRALN</CityCode>
+          <CityName>Alanya</CityName>
+          <ProductCode>TR0012</ProductCode>
+          <ProductName>AYDINBEY GOLD DREAMS</ProductName>
+          <FirstImage>http://rezervari.....ro/img_of/ 9449.jpg</FirstImage>
+          <ProductCategory>5</ProductCategory>
+          <ClassId>1</ClassId>
+          <Class>Hotel</Class>
+          <AcceptRemarks>true</AcceptRemarks>
+        </Product>
+        <Offers>
+          <Offer CurrencyCode="EUR">
+            <OfferType>Package</OfferType>
+            <Availability Code="OR">OnRequest</Availability>
+            <PeriodOfStay>
+              <CheckIn>2012-09-21</CheckIn>
+              <CheckOut>2012-09-28</CheckOut>
+            </PeriodOfStay>
+            <Visible>true</Visible>
+            <ProductPrice>1321.6</ProductPrice>
+            <PriceNoRedd>1529</PriceNoRedd>
+            <Gross>1417</Gross>
+            <OfferDescription>Reducere inscriere timpurie valabila pana la 31.10.2012</OfferDescription>
+            <GrilaName>standard EB</GrilaName>
+            <PackageId>4</PackageId>
+            <PackageVariantId>1|1068746_669_1</PackageVariantId>
+            <BookingRoomTypes>
+              <Room Code="274" GCode="DB" Quantity="1" ExtraBed="false" ServicePrice="448" Provider="ProviderName" VATNumber="111111111">STANDARD ROOM</Room>
+            </BookingRoomTypes>
+            <Meals>
+              <Meal Type="2" Code="265" CheckIn="2012-09-21" CheckOut="2012-09-28" ServicePrice="0" Provider="ProviderName" VATNumber="111111111">UAI</Meal>
+            </Meals>
+            <PriceDetails>
+              <Services>
+                <Service>
+                  <Type>6</Type>
+                  <Code>548</Code>
+                  <Name>transfer aeroport - hotel - aeroport</Name>
+                  <Availability Code="OR">OnRequest</Availability>
+                  <PeriodOfStay>
+                    <CheckIn>2012-09-21</CheckIn>
+                    <CheckOut>2012-09-28</CheckOut>
+                  </PeriodOfStay>
+                  <ServicePrice>54</ServicePrice>
+                  <Provider>ProviderName</Provider>
+                  <VATNumber>111111111</VATNumber>
+                </Service>
+                <Service>
+                  <Type>7</Type>
+                  <Code>90</Code>
+                  <Name>Transport Avion OTOPENI - ANTALYA , vineri Bucuresti - Antalya</Name>
+                  <Transport>plane</Transport>
+                  <Availability Code="IM">Immediate</Availability>
+                  <PeriodOfStay>
+                    <CheckIn>2012-09-21 07:05:00</CheckIn>
+                    <CheckOut>2012-09-21 08:50:00</CheckOut>
+                  </PeriodOfStay>
+                  <Seats>27</Seats>
+                  <ServicePrice>210</ServicePrice>
+                  <Provider>ProviderName</Provider>
+                  <VATNumber>111111111</VATNumber>
+                </Service>
+                <Service>
+                  <Type>7s</Type>
+                  <Code>1</Code>
+                  <Name>TAXA DE AEROPORT</Name>
+                  <Transport>plane</Transport>
+                  <Availability Code="IM">Immediate</Availability>
+                  <PeriodOfStay>
+                    <CheckIn>2012-09-21</CheckIn>
+                    <CheckOut>2012-09-28</CheckOut>
+                  </PeriodOfStay>
+                  <ServicePrice>285</ServicePrice>
+                  <Provider>ProviderName</Provider>
+                  <VATNumber>111111111</VATNumber>
+                </Service>
+                <Service>
+                  <Type>7</Type>
+                  <Code>91</Code>
+                  <Name>Transport Avion ANTALYA - OTOPENI, vineri Antalya - Bucuresti</Name>
+                  <Transport>plane</Transport>
+                  <Availability Code="IM">Immediate</Availability>
+                  <PeriodOfStay>
+                    <CheckIn>2012-09-28 09:40:00</CheckIn>
+                    <CheckOut>2012-09-28 11:25:00</CheckOut>
+                  </PeriodOfStay>
+                  <Seats>23</Seats>
+                  <ServicePrice>210</ServicePrice>
+                  <Provider>ProviderName</Provider>
+                  <VATNumber>111111111</VATNumber>
+                </Service>
+                <Service>
+                  <Type>8</Type>
+                  <Code>1</Code>
+                  <Name>Comision pachet</Name>
+                  <Availability Code="IM">Immediate</Availability>
+                  <PeriodOfStay>
+                    <CheckIn>2012-09-21</CheckIn>
+                    <CheckOut>2012-09-28</CheckOut>
+                  </PeriodOfStay>
+                  <ServicePrice>114.6</ServicePrice>
+                  <Provider>ProviderName</Provider>
+                  <VATNumber>111111111</VATNumber>
+                </Service>
+              </Services>
+            </PriceDetails>
+          </Offer>
+          <Offer CurrencyCode="EUR">
+            <OfferType>Package</OfferType>
+            <Availability Code="OR">OnRequest</Availability>
+            <PeriodOfStay>
+              <CheckIn>2012-09-21</CheckIn>
+              <CheckOut>2012-09-28</CheckOut>
+            </PeriodOfStay>
+            <Visible>true</Visible>
+            <ProductPrice>1422.4</ProductPrice>
+            <PriceNoRedd>1529</PriceNoRedd>
+            <Gross>1529</Gross>
+            <GrilaName>standard EB</GrilaName>
+            <PackageId>4</PackageId>
+            <PackageVariantId>1|1068746_669_0</PackageVariantId>
+            <BookingRoomTypes>
+              <Room Code="274" GCode="DB" Quantity="1" ExtraBed="false" ServicePrice="560" Provider="ProviderName" VATNumber="111111111">STANDARD ROOM</Room>
+            </BookingRoomTypes>
+            <Meals>
+              <Meal Type="2" Code="265" CheckIn="2012-09-21" CheckOut="2012-09-28" ServicePrice="0" Provider="ProviderName" VATNumber="111111111">UAI</Meal>
+            </Meals>
+            <PriceDetails>
+              <Services>
+                <Service>
+                  <Type>6</Type>
+                  <Code>548</Code>
+                  <Name>transfer aeroport - hotel - aeroport</Name>
+                  <Availability Code="OR">OnRequest</Availability>
+                  <PeriodOfStay>
+                    <CheckIn>2012-09-21</CheckIn>
+                    <CheckOut>2012-09-28</CheckOut>
+                  </PeriodOfStay>
+                  <ServicePrice>54</ServicePrice>
+                  <Provider>ProviderName</Provider>
+                  <VATNumber>111111111</VATNumber>
+                </Service>
+                <Service>
+                  <Type>7</Type>
+                  <Code>90</Code>
+                  <Name>Transport Avion OTOPENI - ANTALYA , vineri Bucuresti - Antalya</Name>
+                  <Transport>plane</Transport>
+                  <Availability Code="IM">Immediate</Availability>
+                  <PeriodOfStay>
+                    <CheckIn>2012-09-21 07:05:00</CheckIn>
+                    <CheckOut>2012-09-21 08:50:00</CheckOut>
+                  </PeriodOfStay>
+                  <Seats>27</Seats>
+                  <ServicePrice>210</ServicePrice>
+                  <Provider>ProviderName</Provider>
+                  <VATNumber>111111111</VATNumber>
+                </Service>
+                <Service>
+                  <Type>7s</Type>
+                  <Code>1</Code>
+                  <Name>TAXA DE AEROPORT</Name>
+                  <Transport>plane</Transport>
+                  <Availability Code="IM">Immediate</Availability>
+                  <PeriodOfStay>
+                    <CheckIn>2012-09-21</CheckIn>
+                    <CheckOut>2012-09-28</CheckOut>
+                  </PeriodOfStay>
+                  <ServicePrice>285</ServicePrice>
+                  <Provider>ProviderName</Provider>
+                  <VATNumber>111111111</VATNumber>
+                </Service>
+                <Service>
+                  <Type>7</Type>
+                  <Code>91</Code>
+                  <Name>Transport Avion ANTALYA - OTOPENI, vineri Antalya - Bucuresti</Name>
+                  <Transport>plane</Transport>
+                  <Availability Code="IM">Immediate</Availability>
+                  <PeriodOfStay>
+                    <CheckIn>2012-09-28 09:40:00</CheckIn>
+                    <CheckOut>2012-09-28 11:25:00</CheckOut>
+                  </PeriodOfStay>
+                  <Seats>23</Seats>
+                  <ServicePrice>210</ServicePrice>
+                  <Provider>ProviderName</Provider>
+                  <VATNumber>111111111</VATNumber>
+                </Service>
+                <Service>
+                  <Type>8</Type>
+                  <Code>1</Code>
+                  <Name>Comision pachet</Name>
+                  <Availability Code="IM">Immediate</Availability>
+                  <PeriodOfStay>
+                    <CheckIn>2012-09-21</CheckIn>
+                    <CheckOut>2012-09-28</CheckOut>
+                  </PeriodOfStay>
+                  <ServicePrice>103.4</ServicePrice>
+                  <Provider>ProviderName</Provider>
+                  <VATNumber>111111111</VATNumber>
+                </Service>
+              </Services>
+            </PriceDetails>
+          </Offer>
+        </Offers>
+      </Hotel>
+    </getPackageNVPriceResponse>
+  </ResponseDetails>
+</Response>

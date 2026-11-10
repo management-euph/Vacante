@@ -670,6 +670,26 @@ return [
         'en' => 'This offer is no longer available.',
         'ro' => 'Această ofertă nu mai este disponibilă.',
     ],
+    'sphinx_holidays.trip_kind_flight' => [
+        'en' => 'Package · flight + hotel',
+        'ro' => 'Pachet · avion + hotel',
+    ],
+    'sphinx_holidays.trip_kind_bus' => [
+        'en' => 'Package · coach + hotel',
+        'ro' => 'Pachet · autocar + hotel',
+    ],
+    'sphinx_holidays.trip_kind_hotel' => [
+        'en' => 'Package',
+        'ro' => 'Pachet',
+    ],
+    'sphinx_holidays.trip_kind_circuit' => [
+        'en' => 'Circuit',
+        'ro' => 'Circuit',
+    ],
+    'sphinx_holidays.trip_return' => [
+        'en' => 'Return',
+        'ro' => 'Întoarcere',
+    ],
     'sphinx_holidays.outbound' => [
         'en' => 'Outbound',
         'ro' => 'Dus',

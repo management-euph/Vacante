@@ -146,6 +146,8 @@ class BookingSubmissionService
                 'city_code' => TypeCoerce::toString($booking['city_code'] ?? ''),
                 'product_code' => TypeCoerce::toString($booking['product_code'] ?? ''),
                 'variant_id' => TypeCoerce::toString($booking['variant_id'] ?? ''),
+                // A package books on its PackageId too; a stay has none.
+                'package_id' => TypeCoerce::toString($booking['package_id'] ?? ''),
                 'check_in' => TypeCoerce::toString($booking['check_in'] ?? ''),
                 'check_out' => TypeCoerce::toString($booking['check_out'] ?? ''),
                 'tourop_code' => $tourop,

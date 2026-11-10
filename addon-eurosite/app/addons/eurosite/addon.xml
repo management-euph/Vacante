@@ -182,6 +182,20 @@ Diferența de 70% cu 21 de zile înainte de check-in.</default_value>
                         <variants/>
                     </item>
 
+                    <!-- ── Packages (a hotel with the flight or the coach) ── -->
+                    <item id="packages_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <!-- The stays a hotel's package search offers. A plain
+                         input, comma separated, for the same reason as the
+                         availability dates above. -->
+                    <item id="package_nights">
+                        <type>input</type>
+                        <default_value>7, 10, 14</default_value>
+                        <variants/>
+                    </item>
+
                     <!-- ── Resilience ── -->
                     <item id="resilience_header">
                         <type>header</type>
@@ -264,6 +278,10 @@ Diferența de 70% cu 21 de zile înainte de check-in.</default_value>
                 `board_id`        VARCHAR(32)  NOT NULL DEFAULT '' COMMENT 'meal/board service code',
                 `meal_name`       VARCHAR(255) NOT NULL DEFAULT '',
                 `series_id`       VARCHAR(32)  NOT NULL DEFAULT '' COMMENT 'SeriesId from the offer',
+                `package_id`      VARCHAR(32)  NOT NULL DEFAULT '' COMMENT 'PackageId: a package booking',
+                `transport`       VARCHAR(8)   NOT NULL DEFAULT '' COMMENT 'flight or bus, on a package',
+                `dep_city_code`   VARCHAR(16)  NOT NULL DEFAULT '' COMMENT 'the city the package leaves from',
+                `departure_date`  DATE         DEFAULT NULL COMMENT 'the day the package leaves',
                 `guest_name`      VARCHAR(500) NOT NULL DEFAULT '',
                 `guest_email`     VARCHAR(255) NOT NULL DEFAULT '',
                 `guest_phone`     VARCHAR(100) NOT NULL DEFAULT '',
@@ -403,6 +421,32 @@ Diferența de 70% cu 21 de zile înainte de check-in.</default_value>
                 PRIMARY KEY (`tourop_code`, `product_code`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         </item>
+        <!-- Where the packages go, from where and on which dates
+             (getPackageNVRoutesRequest, the weekly package_routes job). The
+             spec: fetch them now and then and keep them in a local cache. -->
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:eurosite_package_routes` (
+                `transport`        VARCHAR(8)   NOT NULL COMMENT 'plane or bus: what the routes were asked for',
+                `city_code`        VARCHAR(16)  NOT NULL COMMENT 'destination city',
+                `dep_city_code`    VARCHAR(16)  NOT NULL COMMENT 'departure city',
+                `country_code`     VARCHAR(4)   NOT NULL DEFAULT '',
+                `country_name`     VARCHAR(128) NOT NULL DEFAULT '',
+                `city_name`        VARCHAR(128) NOT NULL DEFAULT '',
+                `zone_code`        VARCHAR(16)  NOT NULL DEFAULT '',
+                `zone_name`        VARCHAR(128) NOT NULL DEFAULT '',
+                `dep_country_code` VARCHAR(4)   NOT NULL DEFAULT '',
+                `dep_country_name` VARCHAR(128) NOT NULL DEFAULT '',
+                `dep_city_name`    VARCHAR(128) NOT NULL DEFAULT '',
+                `dates_json`       JSON         DEFAULT NULL COMMENT 'departure dates, Y-m-d, in order',
+                `first_date`       DATE         NOT NULL,
+                `last_date`        DATE         NOT NULL,
+                `dates_count`      SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+                `last_synced_at`   DATETIME     DEFAULT NULL,
+                PRIMARY KEY (`transport`, `city_code`, `dep_city_code`),
+                KEY `idx_city` (`city_code`),
+                KEY `idx_country` (`country_code`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
 
         <!-- Clean up on uninstall, the same way the sibling addons do: drop
              the addon's own table and its language values. Without these the
@@ -416,6 +460,7 @@ Diferența de 70% cu 21 de zile înainte de check-in.</default_value>
         <item for="uninstall">DROP TABLE IF EXISTS `?:eurosite_destination_whitelist`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:eurosite_sync_log`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:eurosite_product_info_cache`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:eurosite_package_routes`</item>
         <!-- This addon's labels ship as .po msgctxt keys (Addons::name::eurosite,
              SettingsOptions::eurosite::api_url, …), NOT the dot-prefixed
              "<addon>.%" keys the lang_keys.php-based siblings clean up — so

@@ -21,6 +21,7 @@ declare(strict_types=1);
  */
 
 use Tygh\Addons\Eurosite\Services\BookingCartProduct;
+use Tygh\Addons\Eurosite\Services\BookingGuests;
 use Tygh\Addons\Eurosite\Services\BookingReturnUrl;
 use Tygh\Addons\Eurosite\Services\ConfigProvider;
 use Tygh\Addons\Eurosite\Services\Container;
@@ -29,7 +30,6 @@ use Tygh\Addons\Eurosite\Services\OfferContextStore;
 use Tygh\Addons\Eurosite\Services\RoomOccupancy;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
-use Tygh\Addons\TravelCore\Services\DateHelper;
 use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\TravelCore\ViewModels\BookingSidebarFactory;
 use Tygh\Tygh;
@@ -80,58 +80,12 @@ if (TypeCoerce::toString($snapshot['availability_code'] ?? '') === 'ST') {
     return [CONTROLLER_STATUS_REDIRECT, BookingReturnUrl::forSnapshot($snapshot, $cartProductId)];
 }
 
-// ── Guests ──
-$rawGuests = is_array($_POST['guests'] ?? null) ? $_POST['guests'] : [];
-$guests = [];
-$holderName = '';
-$invalid = false;
-foreach ($rawGuests as $key => $guest) {
-    if (!is_array($guest)) {
-        continue;
-    }
-    $first = trim(TypeCoerce::toString($guest['first_name'] ?? ''));
-    $last = trim(TypeCoerce::toString($guest['last_name'] ?? ''));
-    $type = TypeCoerce::toString($guest['type'] ?? 'adult') === 'child' ? 'child' : 'adult';
-    // The shared guest cards mask DOB as DD/MM/YYYY; the API wants Y-m-d.
-    $rawDob = trim(TypeCoerce::toString($guest['dob'] ?? ''));
-    $dob = $rawDob !== '' ? (DateHelper::parseDate($rawDob) ?? '') : '';
-    if ($first === '' || $last === '' || ($rawDob !== '' && $dob === '') || ($type === 'child' && $dob === '')) {
-        $invalid = true;
-        break;
-    }
-    $gender = strtoupper(trim(TypeCoerce::toString($guest['gender'] ?? '')));
-    $entry = [
-        'type'       => $type,
-        'first_name' => $first,
-        'last_name'  => $last,
-        'name'       => $last . ' / ' . $first,
-        'gender'     => $type === 'child' ? 'C' : (in_array($gender, ['B', 'F'], true) ? $gender : 'B'),
-        'dob'        => $dob,
-        'room'       => max(1, TypeCoerce::toInt($guest['room'] ?? 1)),
-    ];
-    if ($type === 'child') {
-        $entry['age'] = TypeCoerce::toInt($guest['age'] ?? 0);
-    }
-    if (!empty($guest['is_holder']) || $holderName === '') {
-        $holderName = $entry['name'];
-    }
-    $guests[] = $entry;
-}
-
-// Every room must hold exactly the adults and children it was priced for.
+// ── Guests ── (BookingGuests: the same reading the package form uses)
+$parsed = BookingGuests::parse($_POST['guests'] ?? null);
+$guests = $parsed['guests'];
+$holderName = $parsed['holder'];
 $occupancy = RoomOccupancy::fromSnapshot($snapshot);
-$perRoom = [];
-foreach ($guests as $g) {
-    $perRoom[$g['room']][$g['type']] = ($perRoom[$g['room']][$g['type']] ?? 0) + 1;
-}
-$roomsMatch = count($perRoom) === count($occupancy);
-foreach ($occupancy as $i => $room) {
-    $got = $perRoom[$i + 1] ?? [];
-    if (($got['adult'] ?? 0) !== $room['adults'] || ($got['child'] ?? 0) !== count($room['children_ages'])) {
-        $roomsMatch = false;
-    }
-}
-if ($invalid || !$roomsMatch) {
+if ($parsed['invalid'] || !BookingGuests::roomsMatch($guests, $occupancy)) {
     fn_set_notification('E', __('error'), __('eurosite.guests_invalid', [
         '[default]' => 'Please fill in every guest (children need a date of birth).',
     ]));
@@ -140,40 +94,19 @@ if ($invalid || !$roomsMatch) {
 }
 
 // Price guard (as sphinx): the offer is priced for the searched child ages,
-// so a DOB implying another age at check-in re-runs the search with the
-// corrected ages instead of booking a wrong-price stay.
-// Calendar dates compared in one timezone, so a birthday on the check-in
-// day counts (no DST hour between two local midnights).
-$checkInDate = DateHelper::parseDate(TypeCoerce::toString($snapshot['check_in']));
-$ageMismatch = null;
-$correctedRooms = array_map(
-    static fn (array $room): array => ['adults' => $room['adults'], 'children_ages' => []],
-    $occupancy,
-);
-foreach ($guests as $g) {
-    if ($g['type'] !== 'child') {
-        continue;
-    }
-    $atCheckIn = $checkInDate !== null
-        ? (new \DateTimeImmutable($g['dob']))->diff(new \DateTimeImmutable($checkInDate))->y
-        : TypeCoerce::toInt($g['age'] ?? 0);
-    if (isset($correctedRooms[$g['room'] - 1])) {
-        $correctedRooms[$g['room'] - 1]['children_ages'][] = $atCheckIn;
-    }
-    if ($ageMismatch === null && $atCheckIn !== TypeCoerce::toInt($g['age'] ?? 0)) {
-        $ageMismatch = ['name' => $g['name'], 'declared' => TypeCoerce::toInt($g['age'] ?? 0), 'actual' => $atCheckIn];
-    }
-}
-if ($ageMismatch !== null) {
+// so a date of birth implying another age at check-in re-runs the search
+// with the corrected ages instead of booking a wrong-price stay.
+$ages = BookingGuests::ageCheck($guests, TypeCoerce::toString($snapshot['check_in']), $occupancy);
+if ($ages['mismatch'] !== null) {
     fn_set_notification('E', __('error'), __('travel_core.child_age_mismatch', [
-        '[guest]' => $ageMismatch['name'],
-        '[declared]' => $ageMismatch['declared'],
-        '[actual]' => $ageMismatch['actual'],
+        '[guest]' => $ages['mismatch']['name'],
+        '[declared]' => $ages['mismatch']['declared'],
+        '[actual]' => $ages['mismatch']['actual'],
         '[default]' => 'The child [guest] will be [actual] years old at check-in, but the offer was priced for age [declared]. The search was re-run with the correct ages — please choose an offer again.',
     ]));
 
     // The product page re-runs the search with the corrected ages.
-    return [CONTROLLER_STATUS_REDIRECT, BookingReturnUrl::forSnapshot($snapshot, $cartProductId, $correctedRooms)];
+    return [CONTROLLER_STATUS_REDIRECT, BookingReturnUrl::forSnapshot($snapshot, $cartProductId, $ages['corrected'])];
 }
 
 // Contact comes from CS-Cart checkout (as for sphinx/novoton): the booking

@@ -20,6 +20,7 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
+use Tygh\Addons\SphinxHolidays\ViewModels\SphinxBookingSidebarBuilder;
 
 /** @var \Smarty $view */
 $view = Tygh::$app['view'];
@@ -92,6 +93,27 @@ try {
         $transportType = 'bus';
     }
 
+    // The services in the shopper's money, as the total is shown: the booking
+    // page adds a ticked one to the total (booking-conditions.js).
+    $pkgCurrency = TypeCoerce::toString($pricing['currency'] ?? '');
+    $pkgCurrency = $pkgCurrency !== '' ? $pkgCurrency : ConfigProvider::getDefaultCurrency();
+    $pkgMoney = \Tygh\Addons\TravelCore\Services\MoneyFormatter::forStore();
+    $pkgToPrimary = static fn (float $amount): float => (new \Tygh\Addons\TravelCore\Services\CurrencyService($pkgCurrency))
+        ->convertFromApiCurrency($amount, defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : $pkgCurrency);
+    $pkgServices = \Tygh\Addons\SphinxHolidays\Helpers\ServiceRows::withDisplay(
+        \Tygh\Addons\SphinxHolidays\Helpers\ServiceRows::forShopper($offer['additional_services'] ?? null, $cartService->applyCommission(...)),
+        static fn (float $api): float => $pkgMoney->toDisplay($pkgToPrimary($api)),
+        static fn (float $amount): string => $pkgMoney->formatDisplay($amount),
+    );
+    $view->assign('sphinx_trip_money', [
+        'base' => round($pkgMoney->toDisplay($pkgToPrimary($sellingPrice)), 2),
+        'format' => $pkgMoney->scriptFormat(),
+    ]);
+
+    $pkgRoomsData = CartService::normalizeRoomsForDisplay(
+        TypeCoerce::toRowList($hotelRooms), $adults, $children_ages_str
+    );
+
     $view->assign('sphinx_package_booking', [
         'offer_id' => TypeCoerce::toString($offer['offer_id'] ?? $offer_id),
         'destination_name' => TypeCoerce::toString($offer['destination_name'] ?? ''),
@@ -102,9 +124,7 @@ try {
         'rooms' => $hotelRooms,
         // Canonical shape for the shared guest-cards partial (synthesizes one
         // room from booking-level occupancy when the quote carries none).
-        'rooms_data' => \Tygh\Addons\SphinxHolidays\Services\CartService::normalizeRoomsForDisplay(
-            TypeCoerce::toRowList($hotelRooms), $adults, $children_ages_str
-        ),
+        'rooms_data' => $pkgRoomsData,
         'meal_type' => TypeCoerce::toString($hotel['meal_type_name'] ?? ''),
         'transport_type' => $transportType,
         'flight' => $flight,
@@ -117,7 +137,7 @@ try {
         'total_price' => $sellingPrice,
         'base_price' => $basePrice,
         'currency' => TypeCoerce::toString($pricing['currency'] ?? ConfigProvider::getDefaultCurrency()),
-        'additional_services' => \Tygh\Addons\SphinxHolidays\Helpers\ServiceRows::forShopper($offer['additional_services'] ?? null, $cartService->applyCommission(...)),
+        'additional_services' => $pkgServices,
         'payment_terms' => $offer['payment_terms'] ?? [],
         'cancellation_fees' => $offer['cancellation_fees'] ?? [],
         'confirmation' => $offer['confirmation'] ?? '',
@@ -143,6 +163,90 @@ try {
         date('Y-m-d'),
         \Tygh\Addons\TravelCore\Services\TravelCoreConfig::getDateFormat(),
     ));
+
+    // The shared booking page's summary (travel_core booking_sidebar.tpl), as
+    // the hotel page builds it, with the trip's own parts: its kind, its
+    // journeys and what the price includes. "Ofertă" and "Schimbați-vă
+    // opțiunea" lead back to the hotel's page in this package's mode, on the
+    // same departure date and nights.
+    $pkgHotelId = TypeCoerce::toString($hotel['id'] ?? '');
+    $pkgHotelName = TypeCoerce::toString($hotel['name'] ?? '');
+    $pkgProductId = $cartService->resolveProductId(CartService::packageHotelId($verifyResult));
+    $pkgHotelRow = $pkgHotelId !== '' ? Container::getHotelRepository()->findById($pkgHotelId) : null;
+    $pkgCheckIn = TypeCoerce::toString($hotel['check_in'] ?? '');
+    $pkgCheckOut = TypeCoerce::toString($hotel['check_out'] ?? '');
+    $pkgNights = max(0, (int) round(((int) strtotime($pkgCheckOut) - (int) strtotime($pkgCheckIn)) / 86400));
+    $pkgFirstRoom = TypeCoerce::toRowList($hotelRooms)[0] ?? [];
+    $pkgLabels = [];
+    foreach (TypeCoerce::toRowList($offer['labels'] ?? null) as $pkgLabel) {
+        $pkgLabelName = trim(TypeCoerce::toString($pkgLabel['name'] ?? ''));
+        if ($pkgLabelName !== '') {
+            $pkgLabels[] = $pkgLabelName;
+        }
+    }
+    $pkgPrimaryTotal = (new \Tygh\Addons\TravelCore\Services\CurrencyService($packageCurrency))
+        ->convertFromApiCurrency($sellingPrice, defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : $packageCurrency);
+    $pkgSidebar = SphinxBookingSidebarBuilder::build(
+        [
+            'product_id' => $pkgProductId,
+            'rooms_data' => $pkgRoomsData,
+            'room_name' => TypeCoerce::toString($pkgFirstRoom['name'] ?? ''),
+            'check_in' => $pkgCheckIn,
+            'check_out' => $pkgCheckOut,
+            'nights' => $pkgNights,
+            'num_rooms' => $rooms,
+            'adults' => $adults,
+            'children' => $children,
+            'children_ages' => $children_ages_str,
+            'board_name' => TypeCoerce::toString($hotel['meal_type_name'] ?? ''),
+        ],
+        SphinxBookingSidebarBuilder::headerFromRow($pkgHotelId, $pkgHotelName, $pkgHotelRow, $pkgProductId),
+        $pkgHotelRow,
+        number_format($sellingPrice, 2, ',', '.') . ' ' . TypeCoerce::toString($pricing['currency'] ?? ''),
+        $offer['cancellation_fees'] ?? null,
+        true,
+        defined('CART_LANGUAGE') ? TypeCoerce::toString(CART_LANGUAGE) : 'en',
+        \Tygh\Addons\TravelCore\Services\MoneyFormatter::forStore(),
+        $pkgPrimaryTotal,
+        0.0,
+        implode(' · ', $pkgLabels),
+        TypeCoerce::toString($offer['confirmation'] ?? ''),
+        $offer['payment_terms'] ?? null,
+        date('Y-m-d'),
+        \Tygh\Addons\TravelCore\Services\TravelCoreConfig::getDateFormat(),
+        \Tygh\Addons\TravelCore\Services\TravelCoreConfig::getBookingSidebarMaxFeatures(),
+    )->withTrip(
+        match ($transportType) {
+            'flight' => TypeCoerce::toString(__('sphinx_holidays.trip_kind_flight')),
+            'bus' => TypeCoerce::toString(__('sphinx_holidays.trip_kind_bus')),
+            default => TypeCoerce::toString(__('sphinx_holidays.trip_kind_hotel')),
+        },
+        SphinxBookingSidebarBuilder::tripLegs(
+            $flight,
+            TypeCoerce::toRowList($bus),
+            [
+                'out' => TypeCoerce::toString(__('sphinx_holidays.outbound')),
+                'back' => TypeCoerce::toString(__('sphinx_holidays.return')),
+                'bus' => TypeCoerce::toString(__('sphinx_holidays.bus_transport')),
+            ],
+            static fn (int $ts): string => \Tygh\Addons\TravelCore\Services\DateHelper::formatStoreDate($ts),
+        ),
+        SphinxBookingSidebarBuilder::tripIncludes(
+            TypeCoerce::toStringList($offer['included_services'] ?? null),
+            TypeCoerce::toRowList($transfers),
+        ),
+        TypeCoerce::toStringList($offer['not_included_services'] ?? null),
+        \Tygh\Addons\TravelCore\ViewModels\BookingSidebarFactory::changeSelectionUrl($pkgProductId, [
+            'transport' => $transportType === 'hotel-only' ? '' : $transportType,
+            'departure_date' => $pkgCheckIn,
+            'nights' => $pkgNights,
+            'adults' => $adults,
+            'children' => $children,
+            'children_ages' => $children_ages_str,
+            'rooms' => $rooms,
+        ]),
+    );
+    $view->assign('travel_booking_sidebar', $pkgSidebar->toViewArray());
 
     $view->assign('sphinx_provider', 'sphinx');
     // packages/book wants every traveller's gender (m or f), children too.

@@ -192,6 +192,18 @@ msgctxt "SettingsTooltips::eurosite::hide_unavailable_products"
 msgid "Shown again when an Immediate offer returns. A product you hid or disabled by hand is never shown automatically. A hidden product you activate or disable by hand stays as you set it until the hotel has an Immediate offer again."
 msgstr "Reafișat când revine o ofertă Imediată. Un produs ascuns sau dezactivat manual nu este niciodată afișat automat. Un produs ascuns pe care îl activați sau dezactivați manual rămâne așa până când hotelul are din nou o ofertă Imediată."
 
+msgctxt "SettingsOptions::eurosite::packages_header"
+msgid "Packages"
+msgstr "Pachete"
+
+msgctxt "SettingsOptions::eurosite::package_nights"
+msgid "Packages: nights offered"
+msgstr "Pachete: nopți oferite"
+
+msgctxt "SettingsTooltips::eurosite::package_nights"
+msgid "The stays a hotel's package search offers, in nights, comma separated (e.g. 7, 10, 14). An offer Eurosite returns for a slightly different stay keeps its own dates."
+msgstr "Duratele sejurului oferite la căutarea unui pachet pe pagina hotelului, în nopți, separate prin virgulă (ex. 7, 10, 14). O ofertă pe care Eurosite o întoarce pentru un sejur puțin diferit își păstrează datele ei."
+
 msgctxt "Languages::eurosite.addon_name"
 msgid "Eurosite Touring"
 msgstr "Eurosite Touring"
@@ -485,8 +497,8 @@ msgid "All catalogs, each when due"
 msgstr "Toate cataloagele, fiecare când îi vine rândul"
 
 msgctxt "Languages::eurosite.jobs_job_full_desc"
-msgid "Runs the six catalogs below in order, each only when it is due: the monthly ones on the 1st, the hotels once a week. One nightly line instead of six."
-msgstr "Rulează în ordine cele șase cataloage de mai jos, fiecare doar când îi vine rândul: cele lunare pe 1, hotelurile o dată pe săptămână. O singură linie pe noapte în loc de șase."
+msgid "Runs the seven catalogs below in order, each only when it is due: the monthly ones on the 1st, the hotels and the package routes once a week. One nightly line instead of seven."
+msgstr "Rulează în ordine cele șapte cataloage de mai jos, fiecare doar când îi vine rândul: cele lunare pe 1, hotelurile și rutele pachetelor o dată pe săptămână. O singură linie pe noapte în loc de șapte."
 
 msgctxt "Languages::eurosite.jobs_job_countries"
 msgid "Countries"
@@ -519,6 +531,14 @@ msgstr "Hoteluri"
 msgctxt "Languages::eurosite.jobs_job_hotels_desc"
 msgid "The operator's hotels and their rooms, in the whitelisted destinations."
 msgstr "Hotelurile operatorului și camerele lor, din destinațiile din listă."
+
+msgctxt "Languages::eurosite.jobs_job_package_routes"
+msgid "Package routes"
+msgstr "Rutele pachetelor"
+
+msgctxt "Languages::eurosite.jobs_job_package_routes_desc"
+msgid "Coach and plane routes for packages: destinations, departure cities and their dates."
+msgstr "Rutele cu autocarul și cu avionul pentru pachete: destinațiile, orașele de plecare și datele lor."
 
 msgctxt "Languages::eurosite.jobs_job_room_types"
 msgid "Room types"
@@ -632,6 +652,10 @@ msgctxt "Languages::eurosite.jobs_count_hotels"
 msgid "Hotels: [n]"
 msgstr "Hoteluri: [n]"
 
+msgctxt "Languages::eurosite.jobs_count_package_routes"
+msgid "Package routes: [n]"
+msgstr "Rute de pachete: [n]"
+
 msgctxt "Languages::eurosite.jobs_count_room_types"
 msgid "Room types: [n]"
 msgstr "Tipuri de cameră: [n]"
@@ -651,6 +675,110 @@ msgstr "Hoteluri cu ofertă Imediat: [n]"
 msgctxt "Languages::eurosite.jobs_count_products"
 msgid "Products: [n]"
 msgstr "Produse: [n]"
+
+msgctxt "Languages::eurosite.package_routes"
+msgid "Package routes"
+msgstr "Rutele pachetelor"
+
+msgctxt "Languages::eurosite.package_routes_title"
+msgid "Eurosite — Package routes"
+msgstr "Eurosite — Rutele pachetelor"
+
+msgctxt "Languages::eurosite.routes_count"
+msgid "[n] package routes"
+msgstr "[n] rute de pachete"
+
+msgctxt "Languages::eurosite.sync_now"
+msgid "Sync now"
+msgstr "Sincronizează acum"
+
+msgctxt "Languages::eurosite.transport"
+msgid "Transport"
+msgstr "Transport"
+
+msgctxt "Languages::eurosite.all_transports"
+msgid "All"
+msgstr "Toate"
+
+msgctxt "Languages::eurosite.transport_plane"
+msgid "Plane"
+msgstr "Avion"
+
+msgctxt "Languages::eurosite.transport_bus"
+msgid "Coach"
+msgstr "Autocar"
+
+msgctxt "Languages::eurosite.departure"
+msgid "Departure"
+msgstr "Plecare"
+
+msgctxt "Languages::eurosite.arrival"
+msgid "Arrival"
+msgstr "Sosire"
+
+msgctxt "Languages::eurosite.duration"
+msgid "Duration"
+msgstr "Durată"
+
+msgctxt "Languages::eurosite.available_dates"
+msgid "Available dates"
+msgstr "Date disponibile"
+
+msgctxt "Languages::eurosite.routes_nights"
+msgid "[nights] nights"
+msgstr "[nights] nopți"
+
+msgctxt "Languages::eurosite.routes_nights_from_setting"
+msgid "from the settings"
+msgstr "din setări"
+
+msgctxt "Languages::eurosite.routes_more_dates"
+msgid "+[n] more"
+msgstr "+încă [n]"
+
+msgctxt "Languages::eurosite.routes_no_dates_ahead"
+msgid "No dates ahead"
+msgstr "Nicio dată de acum înainte"
+
+msgctxt "Languages::eurosite.no_routes_match"
+msgid "No route matches this search."
+msgstr "Nicio rută nu se potrivește acestei căutări."
+
+msgctxt "Languages::eurosite.no_package_routes"
+msgid "No package routes yet. Sync now fetches them from Eurosite; if none come back, ask Eurosite to enable packages (Pachete) for your XML user."
+msgstr "Încă nu există rute de pachete. „Sincronizează acum” le aduce de la Eurosite; dacă nu vine niciuna, cereți Eurosite să activeze pachetele (Pachete) pentru utilizatorul XML."
+
+msgctxt "Languages::eurosite.package_kind_flight"
+msgid "Package · flight + hotel"
+msgstr "Pachet · avion + hotel"
+
+msgctxt "Languages::eurosite.package_kind_bus"
+msgid "Package · coach + hotel"
+msgstr "Pachet · autocar + hotel"
+
+msgctxt "Languages::eurosite.package_outbound"
+msgid "Outbound"
+msgstr "Dus"
+
+msgctxt "Languages::eurosite.package_return"
+msgid "Return"
+msgstr "Retur"
+
+msgctxt "Languages::eurosite.package_coach"
+msgid "Coach"
+msgstr "Autocar"
+
+msgctxt "Languages::eurosite.package_unavailable"
+msgid "Eurosite no longer has this package as it was offered. Please choose a departure again."
+msgstr "Eurosite nu mai are acest pachet așa cum a fost oferit. Vă rugăm să alegeți din nou o plecare."
+
+msgctxt "Languages::eurosite.package_price_changed"
+msgid "Eurosite's price for this package has changed: it is now [price]."
+msgstr "Prețul Eurosite pentru acest pachet s-a schimbat: acum este [price]."
+
+msgctxt "Languages::eurosite.package_dob_required"
+msgid "Every traveller needs a date of birth: the airline or the coach operator asks for the passenger list."
+msgstr "Fiecare călător are nevoie de data nașterii: compania aeriană sau operatorul de autocar cere lista pasagerilor."
 
 msgctxt "Languages::eurosite.dash_tile_hotels"
 msgid "Hotels in the destinations sold"

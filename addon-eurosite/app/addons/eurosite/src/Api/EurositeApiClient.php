@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\Eurosite\Api;
 
 use Tygh\Addons\Eurosite\Dto\HotelOffer;
+use Tygh\Addons\Eurosite\Dto\PackageOffer;
 use Tygh\Addons\Eurosite\EurositeTransportInterface;
 use Tygh\Addons\Eurosite\EurositeXmlBuilder;
 use Tygh\Addons\Eurosite\EurositeXmlParser;
@@ -22,12 +23,15 @@ use Tygh\Addons\Eurosite\Services\RoomTypeNames;
  * returning plain arrays / DTOs so callers never touch SimpleXMLElement. Maps
  * 1:1 to the spec sections in Documentation/Specificatii_API_Eurosite.pdf.
  *
- * Not yet ported (spec covers them; deferred past the MVP): supplementary
- * services, item fees / cancellation penalties, packages, transport, circuits,
+ * Packages (Pachete): the routes and the search. Booking a package is still
+ * to come. Not yet ported (the spec covers them): transport, circuits,
  * excursions, pax modification.
  */
 final class EurositeApiClient
 {
+    /** The Transport values of the package calls: every package, coach, plane. */
+    public const array PACKAGE_TRANSPORTS = ['search', 'bus', 'plane'];
+
     private int $requestSeq = 0;
 
     public function __construct(
@@ -187,6 +191,97 @@ final class EurositeApiClient
             $product = $hotel->Product ?? null;
             foreach ($hotel->Offers->Offer ?? [] as $offer) {
                 $offers[] = $this->mapOffer($product, $offer);
+            }
+        }
+
+        return $offers;
+    }
+
+    // ── Packages (Pachete: a hotel with the flight or the coach) ────────────
+
+    /**
+     * getPackageNVRoutesRequest — where the packages go, where they leave
+     * from and on which days: one row per destination city and departure
+     * city, with its departure dates in order.
+     *
+     * The answer does not say how a package travels, so each row carries the
+     * $transport it was asked for: 'plane' and 'bus' tell flights from coach
+     * trips; 'search' (every package) does not.
+     *
+     * @return list<array{transport: string, country_code: string, country_name: string, city_code: string, city_name: string, zone_code: string, zone_name: string, dep_country_code: string, dep_country_name: string, dep_city_code: string, dep_city_name: string, dates: list<string>}>
+     *
+     * @throws \InvalidArgumentException for a transport other than PACKAGE_TRANSPORTS
+     */
+    public function getPackageRoutes(string $transport = 'search'): array
+    {
+        self::assertPackageTransport($transport);
+        $details = $this->call(
+            'getPackageNVRoutesRequest',
+            '<getPackageNVRoutesRequest><Transport>' . EurositeXmlBuilder::esc($transport) . '</Transport></getPackageNVRoutesRequest>',
+        );
+
+        $rows = [];
+        foreach ($details->Country ?? [] as $country) {
+            foreach ($country->Destinations->Destination ?? [] as $destination) {
+                foreach ($destination->Departures->Departure ?? [] as $departure) {
+                    $cityCode = self::childText($destination, 'CityCode');
+                    $depCityCode = self::childText($departure, 'CityCode');
+                    if ($cityCode === '' || $depCityCode === '') {
+                        continue;
+                    }
+                    // A pair listed twice keeps one row, with both lists of dates.
+                    $key = $cityCode . '|' . $depCityCode;
+                    $dates = array_values(array_unique(array_merge($rows[$key]['dates'] ?? [], self::routeDates($departure))));
+                    sort($dates);
+                    $rows[$key] = [
+                        'transport' => $transport,
+                        'country_code' => self::childText($country, 'CountryCode'),
+                        'country_name' => self::childText($country, 'CountryName'),
+                        'city_code' => $cityCode,
+                        'city_name' => self::childText($destination, 'CityName'),
+                        'zone_code' => self::childText($destination, 'ZoneCode'),
+                        'zone_name' => self::childText($destination, 'ZoneName'),
+                        'dep_country_code' => self::childText($departure, 'CountryCode'),
+                        'dep_country_name' => self::childText($departure, 'CountryName'),
+                        'dep_city_code' => $depCityCode,
+                        'dep_city_name' => self::childText($departure, 'CityName'),
+                        'dates' => $dates,
+                    ];
+                }
+            }
+        }
+
+        return array_values($rows);
+    }
+
+    /**
+     * getPackageNVPriceRequest — package offers (a hotel, the journey and the
+     * services included) for a destination, a departure city and a stay.
+     *
+     * TourOpCode is sent only when given: the spec leaves it optional here,
+     * and the packages' operator need not be the one the hotels default to.
+     *
+     * @param array<string, mixed> $params {
+     *                                     country_code, city_code, zone?, dep_country_code, dep_city_code,
+     *                                     transport (PACKAGE_TRANSPORTS), check_in, check_out,
+     *                                     days? (the dates' margin, 1-3, default 1), currency?, language?,
+     *                                     tourop_code?, product_name?, product_category?, offer_type?,
+     *                                     meals?:int[], facilities?:int[],
+     *                                     rooms:list<array{code,adults,children:int[]}>
+     *                                     }
+     * @return list<PackageOffer>
+     *
+     * @throws \InvalidArgumentException for a transport other than PACKAGE_TRANSPORTS
+     */
+    public function searchPackages(array $params): array
+    {
+        $details = $this->call('getPackageNVPriceRequest', $this->buildPackagePricePayload($params));
+
+        $offers = [];
+        foreach ($details->Hotel ?? [] as $hotel) {
+            $product = $hotel->Product ?? null;
+            foreach ($hotel->Offers->Offer ?? [] as $offer) {
+                $offers[] = $this->mapPackageOffer($product, $offer);
             }
         }
 
@@ -393,9 +488,12 @@ final class EurositeApiClient
      * booking (pre-booking; feeds the "Conditii de Anulare" modal). The
      * payload reuses the AddBooking BookingItems shape.
      *
+     * A package also sends its PackageId (the spec's sample: between the
+     * stay and the VariantId).
+     *
      * @param array<string, mixed> $p {
      *                                currency?, country_code, city_code, product_code, variant_id,
-     *                                check_in, check_out, tourop_code?,
+     *                                package_id? (a package's), check_in, check_out, tourop_code?,
      *                                rooms:list<array{code, adults, children:int[], pax?:list<array{type,name,child_age?}>}>
      *                                }
      * @return list<array{type: string, from_date: string, to_date: string, value: float, is_percent: bool}>
@@ -449,6 +547,7 @@ final class EurositeApiClient
             . '<CheckIn>' . EurositeXmlBuilder::esc(self::str($p['check_in'] ?? '')) . '</CheckIn>'
             . '<CheckOut>' . EurositeXmlBuilder::esc(self::str($p['check_out'] ?? '')) . '</CheckOut>'
             . '</PeriodOfStay>'
+            . self::packageIdElement($p)
             . '<VariantId>' . EurositeXmlBuilder::esc(self::str($p['variant_id'] ?? '')) . '</VariantId>'
             . '<Rooms>' . $rooms . '</Rooms>'
             . '</HotelItem>'
@@ -523,9 +622,12 @@ final class EurositeApiClient
     /**
      * AddBookingRequest — create a hotel booking.
      *
+     * A package also sends its PackageId, where the spec's sample has it:
+     * between the stay and the VariantId.
+     *
      * @param array<string, mixed> $booking {
      *                                      currency?, booking_name, client_id, country_code, city_code,
-     *                                      product_code, variant_id, check_in, check_out, language?,
+     *                                      product_code, variant_id, package_id?, check_in, check_out, language?,
      *                                      booking_agent?, booking_client?,
      *                                      rooms:list<array{code, adults, children:int[],
      *                                      pax:list<array{type,name,gender?,dob?,child_age?}>}>
@@ -654,9 +756,73 @@ final class EurositeApiClient
      */
     private function buildHotelPricePayload(array $params): string
     {
-        $currency = self::str($params['currency'] ?? '') ?: 'EUR';
-        $language = self::str($params['language'] ?? '') ?: 'RO';
+        $search = $this->searchParts($params);
 
+        return '<getHotelPriceRequest>'
+            . '<CountryCode>' . EurositeXmlBuilder::esc(self::str($params['country_code'] ?? '')) . '</CountryCode>'
+            . '<CityCode>' . EurositeXmlBuilder::esc(self::str($params['city_code'] ?? '')) . '</CityCode>'
+            . '<TourOpCode>' . EurositeXmlBuilder::esc(self::str($params['tourop_code'] ?? '') ?: $this->tourOpCode) . '</TourOpCode>'
+            . $search['product']
+            . $search['currency']
+            . $search['meals_facilities']
+            . $search['language_offer_type']
+            . $search['period']
+            . $search['rooms']
+            . '</getHotelPriceRequest>';
+    }
+
+    /**
+     * The package search, in the order of the spec's sample.
+     *
+     * @param array<string, mixed> $params
+     *
+     * @throws \InvalidArgumentException for a transport other than PACKAGE_TRANSPORTS
+     */
+    private function buildPackagePricePayload(array $params): string
+    {
+        $transport = self::str($params['transport'] ?? '');
+        self::assertPackageTransport($transport);
+        $search = $this->searchParts($params);
+        $zone = self::str($params['zone'] ?? '');
+        $tourop = self::str($params['tourop_code'] ?? '');
+        // The margin, in days, around the dates: 1 to 3. The spec asks for 1,
+        // as each day more slows the search a lot.
+        $days = min(3, max(1, (int) self::str($params['days'] ?? 1)));
+
+        return '<getPackageNVPriceRequest>'
+            . '<CountryCode>' . EurositeXmlBuilder::esc(self::str($params['country_code'] ?? '')) . '</CountryCode>'
+            . '<CityCode>' . EurositeXmlBuilder::esc(self::str($params['city_code'] ?? '')) . '</CityCode>'
+            . ($zone !== '' ? '<Zone>' . EurositeXmlBuilder::esc($zone) . '</Zone>' : '')
+            . '<DepCountryCode>' . EurositeXmlBuilder::esc(self::str($params['dep_country_code'] ?? '')) . '</DepCountryCode>'
+            . '<DepCityCode>' . EurositeXmlBuilder::esc(self::str($params['dep_city_code'] ?? '')) . '</DepCityCode>'
+            . '<Transport>' . EurositeXmlBuilder::esc($transport) . '</Transport>'
+            . ($tourop !== '' ? '<TourOpCode>' . EurositeXmlBuilder::esc($tourop) . '</TourOpCode>' : '')
+            . $search['product']
+            . $search['currency']
+            . $search['meals_facilities']
+            . $search['language_offer_type']
+            . $search['period']
+            . '<Days>' . $days . '</Days>'
+            . $search['rooms']
+            . '</getPackageNVPriceRequest>';
+    }
+
+    /**
+     * The elements the hotel and the package searches share, each ready to
+     * print; an optional one left out is ''.
+     *
+     * @param array<string, mixed> $params
+     * @return array{product: string, currency: string, meals_facilities: string, language_offer_type: string, period: string, rooms: string}
+     */
+    private function searchParts(array $params): array
+    {
+        $product = '';
+        if (($pn = self::str($params['product_name'] ?? '')) !== '') {
+            $product .= '<ProductName>' . EurositeXmlBuilder::esc($pn) . '</ProductName>';
+        }
+        if (($pc = self::str($params['product_category'] ?? '')) !== '') {
+            $product .= '<ProductCategory>' . EurositeXmlBuilder::esc($pc) . '</ProductCategory>';
+        }
         $meals = '';
         foreach (self::intList($params['meals'] ?? []) as $m) {
             $meals .= '<Meal>' . $m . '</Meal>';
@@ -670,30 +836,84 @@ final class EurositeApiClient
             $rooms .= $this->builder->roomElement($room);
         }
 
-        $optional = '';
-        if (($pn = self::str($params['product_name'] ?? '')) !== '') {
-            $optional .= '<ProductName>' . EurositeXmlBuilder::esc($pn) . '</ProductName>';
+        return [
+            'product' => $product,
+            'currency' => '<CurrencyCode>' . EurositeXmlBuilder::esc(self::str($params['currency'] ?? '') ?: 'EUR') . '</CurrencyCode>',
+            'meals_facilities' => ($meals !== '' ? '<MealTypes>' . $meals . '</MealTypes>' : '')
+                . ($facilities !== '' ? '<Facilities>' . $facilities . '</Facilities>' : ''),
+            'language_offer_type' => '<Language>' . EurositeXmlBuilder::esc(self::str($params['language'] ?? '') ?: 'RO') . '</Language>'
+                . '<OfferType>' . EurositeXmlBuilder::esc(self::str($params['offer_type'] ?? 'TOATE')) . '</OfferType>',
+            'period' => '<PeriodOfStay>'
+                . '<CheckIn>' . EurositeXmlBuilder::esc(self::str($params['check_in'] ?? '')) . '</CheckIn>'
+                . '<CheckOut>' . EurositeXmlBuilder::esc(self::str($params['check_out'] ?? '')) . '</CheckOut>'
+                . '</PeriodOfStay>',
+            'rooms' => '<Rooms>' . $rooms . '</Rooms>',
+        ];
+    }
+
+    /**
+     * @throws \InvalidArgumentException for a transport other than PACKAGE_TRANSPORTS
+     */
+    private static function assertPackageTransport(string $transport): void
+    {
+        if (!in_array($transport, self::PACKAGE_TRANSPORTS, true)) {
+            throw new \InvalidArgumentException('Eurosite packages travel by ' . implode(', ', self::PACKAGE_TRANSPORTS) . '; got "' . $transport . '".');
         }
-        if (($pc = self::str($params['product_category'] ?? '')) !== '') {
-            $optional .= '<ProductCategory>' . EurositeXmlBuilder::esc($pc) . '</ProductCategory>';
+    }
+
+    /**
+     * A route's departure dates, those that read as YYYY-MM-DD.
+     *
+     * @return list<string>
+     */
+    private static function routeDates(\SimpleXMLElement $departure): array
+    {
+        $dates = [];
+        foreach ($departure->Dates->Date ?? [] as $date) {
+            $value = trim((string) $date);
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) === 1) {
+                $dates[] = $value;
+            }
         }
 
-        return '<getHotelPriceRequest>'
-            . '<CountryCode>' . EurositeXmlBuilder::esc(self::str($params['country_code'] ?? '')) . '</CountryCode>'
-            . '<CityCode>' . EurositeXmlBuilder::esc(self::str($params['city_code'] ?? '')) . '</CityCode>'
-            . '<TourOpCode>' . EurositeXmlBuilder::esc(self::str($params['tourop_code'] ?? '') ?: $this->tourOpCode) . '</TourOpCode>'
-            . $optional
-            . '<CurrencyCode>' . EurositeXmlBuilder::esc($currency) . '</CurrencyCode>'
-            . ($meals !== '' ? '<MealTypes>' . $meals . '</MealTypes>' : '')
-            . ($facilities !== '' ? '<Facilities>' . $facilities . '</Facilities>' : '')
-            . '<Language>' . EurositeXmlBuilder::esc($language) . '</Language>'
-            . '<OfferType>' . EurositeXmlBuilder::esc(self::str($params['offer_type'] ?? 'TOATE')) . '</OfferType>'
-            . '<PeriodOfStay>'
-            . '<CheckIn>' . EurositeXmlBuilder::esc(self::str($params['check_in'] ?? '')) . '</CheckIn>'
-            . '<CheckOut>' . EurositeXmlBuilder::esc(self::str($params['check_out'] ?? '')) . '</CheckOut>'
-            . '</PeriodOfStay>'
-            . '<Rooms>' . $rooms . '</Rooms>'
-            . '</getHotelPriceRequest>';
+        return $dates;
+    }
+
+    /**
+     * Map one <Product>/<Offer> pair of the package search: the hotel offer
+     * as the hotel search maps it, and what makes it a package.
+     */
+    private function mapPackageOffer(?\SimpleXMLElement $product, \SimpleXMLElement $offer): PackageOffer
+    {
+        $services = [];
+        foreach ($offer->PriceDetails->Services->Service ?? [] as $s) {
+            $seats = self::childText($s, 'Seats');
+            $services[] = [
+                // "6", "7", "7s", "8": a string, as one of them is not a number.
+                'type' => self::childText($s, 'Type'),
+                'code' => self::childText($s, 'Code'),
+                'name' => trim((string) preg_replace('/\s+/u', ' ', self::childText($s, 'Name'))),
+                'transport' => strtolower(self::childText($s, 'Transport')),
+                'availability_code' => HotelOffer::normalizeAvailability(
+                    (string) ($s->Availability['Code'] ?? ''),
+                    (string) ($s->Availability ?? ''),
+                ),
+                // A date, or "YYYY-MM-DD HH:MM:SS" on a journey.
+                'start' => trim((string) ($s->PeriodOfStay->CheckIn ?? '')),
+                'end' => trim((string) ($s->PeriodOfStay->CheckOut ?? '')),
+                'seats' => ctype_digit($seats) ? (int) $seats : null,
+                'price' => (float) self::childText($s, 'ServicePrice'),
+            ];
+        }
+
+        return new PackageOffer(
+            hotel: $this->mapOffer($product, $offer),
+            packageId: self::childText($offer, 'PackageId'),
+            tourOpCode: $product !== null ? self::childText($product, 'TourOpCode') : '',
+            services: $services,
+            acceptRemarks: $product !== null && strtolower(self::childText($product, 'AcceptRemarks')) === 'true',
+            visible: strtolower(self::childText($offer, 'Visible')) !== 'false',
+        );
     }
 
     /**
@@ -753,6 +973,7 @@ final class EurositeApiClient
             . '<CheckIn>' . EurositeXmlBuilder::esc(self::str($b['check_in'] ?? '')) . '</CheckIn>'
             . '<CheckOut>' . EurositeXmlBuilder::esc(self::str($b['check_out'] ?? '')) . '</CheckOut>'
             . '</PeriodOfStay>'
+            . self::packageIdElement($b)
             . '<VariantId>' . EurositeXmlBuilder::esc(self::str($b['variant_id'] ?? '')) . '</VariantId>'
             . '<Rooms>' . $rooms . '</Rooms>'
             . '</HotelItem>'
@@ -828,6 +1049,18 @@ final class EurositeApiClient
             priceNoRedd: (float) (string) ($offer->PriceNoRedd ?? 0),
             offerDescription: trim((string) ($offer->OfferDescription ?? '')),
         );
+    }
+
+    /**
+     * A package's <PackageId>, '' for a hotel booking.
+     *
+     * @param array<string, mixed> $p
+     */
+    private static function packageIdElement(array $p): string
+    {
+        $packageId = self::str($p['package_id'] ?? '');
+
+        return $packageId !== '' ? '<PackageId>' . EurositeXmlBuilder::esc($packageId) . '</PackageId>' : '';
     }
 
     private static function str(mixed $v): string
