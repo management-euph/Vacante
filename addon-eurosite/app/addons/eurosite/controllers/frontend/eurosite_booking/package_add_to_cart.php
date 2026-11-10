@@ -10,6 +10,10 @@ declare(strict_types=1);
  * POST; the travellers are read the same way both Eurosite forms read them
  * (BookingGuests).
  *
+ * Only an extra the booking page itself offered can be charged: what the
+ * guest ticked is matched against the snapshot's list, at the price it was
+ * shown at.
+ *
  * The line goes on the hotel's own product, with the package's facts beside
  * the stay's, so the cart, the checkout and the order show a package and not
  * a room: which way it travels, the day it leaves and where from. The
@@ -27,6 +31,7 @@ use Tygh\Addons\Eurosite\Services\ConfigProvider;
 use Tygh\Addons\Eurosite\Services\Container;
 use Tygh\Addons\Eurosite\Services\DesignARates;
 use Tygh\Addons\Eurosite\Services\PackageDepartures;
+use Tygh\Addons\Eurosite\Services\PackageExtras;
 use Tygh\Addons\Eurosite\Services\PackageSnapshotStore;
 use Tygh\Addons\Eurosite\Services\RoomOccupancy;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
@@ -122,6 +127,10 @@ if ($ages['mismatch'] !== null) {
     return [CONTROLLER_STATUS_REDIRECT, $backUrl];
 }
 
+// ── The extras ── only ones this page offered, at the price it showed.
+$extras = PackageExtras::chosen(TypeCoerce::toRowList($snapshot['extras'] ?? null), $_POST['services'] ?? null);
+$extrasTotal = PackageExtras::total($extras);
+
 // ── The booking row ──
 $checkIn = TypeCoerce::toString($snapshot['check_in']);
 $checkOut = TypeCoerce::toString($snapshot['check_out']);
@@ -166,8 +175,10 @@ $bookingId = Container::bookings()->create([
     'guest_email' => '',
     'guest_phone' => '',
     'currency' => TypeCoerce::toString($snapshot['currency']),
-    'total_price' => TypeCoerce::toFloat($snapshot['price']),
+    'total_price' => round(TypeCoerce::toFloat($snapshot['price']) + $extrasTotal, 2),
     'guests_json' => (string) json_encode($guests, JSON_UNESCAPED_UNICODE),
+    // What the guest ticked: sent to Eurosite as SuppServices with the booking.
+    'extras_json' => (string) json_encode($extras, JSON_UNESCAPED_UNICODE),
     'status' => TravelConstants::STATUS_PENDING,
 ]);
 
@@ -176,7 +187,7 @@ $coefficient = TypeCoerce::toFloat(db_get_field(
     'SELECT coefficient FROM ?:currencies WHERE currency_code = ?s',
     TypeCoerce::toString($snapshot['currency']),
 ));
-$price = TypeCoerce::toFloat($snapshot['price']);
+$price = round(TypeCoerce::toFloat($snapshot['price']) + $extrasTotal, 2);
 $cartPrice = $coefficient > 0 ? round($price * $coefficient, 2) : $price;
 
 /** @var array<string, mixed> $session_ref */
@@ -214,6 +225,11 @@ $cart['products'][$cartId] = [
         'children_ages' => implode(',', $childrenAges),
         'guests_data' => (string) json_encode($guests, JSON_UNESCAPED_UNICODE),
         'holder_name' => $parsed['holder'],
+        // The extras on the cart, the checkout and the order.
+        'services' => array_map(
+            static fn (array $extra): array => ['name' => $extra['title'], 'price' => $extra['price'], 'currency' => $extra['currency']],
+            $extras,
+        ),
         // The payment terms the page showed, kept with the line.
         'payment_terms' => BookingSidebarFactory::termLines(ConfigProvider::getPaymentTermsText()),
     ],

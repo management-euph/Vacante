@@ -596,6 +596,10 @@ return [
         'en' => 'Every traveller needs a date of birth: the airline or the coach operator asks for the passenger list.',
         'ro' => 'Fiecare călător are nevoie de data nașterii: compania aeriană sau operatorul de autocar cere lista pasagerilor.',
     ],
+    'eurosite.additional_services' => [
+        'en' => 'Additional services',
+        'ro' => 'Servicii adiționale',
+    ],
     // The dashboard's At a glance tiles, Needs attention and Tools
     // (Services\DashboardSummary, views/eurosite/manage.tpl).
     'eurosite.dash_tile_hotels' => [

@@ -288,6 +288,7 @@ Diferența de 70% cu 21 de zile înainte de check-in.</default_value>
                 `currency`        VARCHAR(4)   NOT NULL DEFAULT 'EUR',
                 `total_price`     DECIMAL(12,2) NOT NULL DEFAULT 0.00,
                 `guests_json`     JSON         DEFAULT NULL,
+                `extras_json`     JSON         DEFAULT NULL COMMENT 'the extras chosen (AddBooking SuppServices)',
                 `status`          VARCHAR(24)  NOT NULL DEFAULT 'pending',
                 `cancellation_fees_json` JSON  DEFAULT NULL COMMENT 'getBookingFees snapshot',
                 `api_request`     MEDIUMTEXT   DEFAULT NULL,

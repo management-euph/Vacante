@@ -179,7 +179,7 @@ final class PackageAddToCartTest extends TestCase
         self::assertStringContainsString("if (\$_SERVER['REQUEST_METHOD'] !== 'POST')", $src, 'a GET books nothing');
         self::assertStringContainsString('PackageSnapshotStore::get($packageKey)', $src);
         // The price and the ids are the snapshot's, never the POST's.
-        self::assertStringContainsString("'total_price' => TypeCoerce::toFloat(\$snapshot['price']),", $src);
+        self::assertStringContainsString("'total_price' => round(TypeCoerce::toFloat(\$snapshot['price']) + \$extrasTotal, 2),", $src);
         self::assertStringContainsString("'package_id' => TypeCoerce::toString(\$snapshot['package_id']),", $src);
         self::assertStringNotContainsString('RequestCoerce::float', $src);
         // The cart line is a package's.
