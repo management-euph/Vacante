@@ -29,12 +29,15 @@
          when booking_form_position is after_description) — either way it
          renders directly under the photos, and the inline results land
          under the bar, above the tabs
-    #40. Compact search summary, shown by pdp-design-a.js once the bar has
-         scrolled away after a search
+    #40. Sticky header, two lines, shown by pdp-design-a.js: line 1 (name,
+         stars, map pin, "Alege datele" / "Alege cameră", favourites) once
+         the hero has scrolled off, line 2 (the product's tabs) once the
+         page's tab strip has been passed
     #45. A circuit's program, hotels, things to know and inclusions (board
          16.3), under its rooms: components/circuit_details.tpl, first in
          the tabs hook so it follows the bar its pre-hook renders
-    #50. Product tabs ("Descriere" first, as ordered in Design → Product tabs)
+    #50. Product tabs ("Descriere" first, as ordered in Design → Product tabs),
+         their panels shown one under another by pdp-design-a.js
 
     No short description, price column, options or quantity: a hotel's price
     is date-driven and comes from the search (see travelcore_template.tpl).
@@ -277,31 +280,68 @@
         {$smarty.capture.popupsbox_content nofilter}
     {/if}
 
-    {* #40. Compact search summary *}
+    {* #40. Sticky header, two lines (pdp-design-a.js shows it; it stays
+       hidden without the script).
+       Line 1, once the hero has scrolled off (the title row, the photos and
+       the booking box: the bar and its departure chips, not the offers): the
+       name (cut with "…" when it does not fit; hover or focus shows it whole
+       with the address; a click goes back to the top), the stars or a
+       circuit's length, the map pin, then "Alege datele" ("Alege data
+       plecării" for a circuit or a package by coach or plane) before a search
+       or "Alege cameră" after it, each shown only while what it leads to is
+       off screen, and the favourites heart (the title row's wishlist button,
+       clicked for the visitor).
+       Line 2, once the page's own tab strip has gone under the header (line 2
+       then covers it): the product's CS-Cart tabs, built from that strip,
+       following the section in view. *}
     {if $product}
-        <div class="travel-pdpa-compact" data-travel-pdpa-compact hidden
+        <div class="travel-pdpa-sticky" data-travel-pdpa-sticky hidden
              role="region"
-             aria-label="{__("travel_core.pdpa_summary_label")|escape:html}"
-             data-label-adult="{__("travel_core.adult")|escape:html}"
-             data-label-adults="{__("travel_core.adults")|escape:html}"
-             data-label-child="{__("travel_core.child")|escape:html}"
-             data-label-children="{__("travel_core.children")|escape:html}"
-             data-label-room="{__("travel_core.room")|escape:html}"
-             data-label-rooms="{__("travel_core.rooms")|escape:html}">
-            <div class="travel-pdpa-compact__inner">
-                <p class="travel-pdpa-compact__hotel">
-                    <bdi>{$product.product nofilter}</bdi>
-                    {if $travel_pdp_stars > 0}
-                        <span class="travel-pdpa-stars" aria-hidden="true">{"★"|str_repeat:$travel_pdp_stars}</span>
-                    {/if}
-                </p>
-                <p class="travel-pdpa-compact__summary" data-travel-pdpa-summary></p>
-                <button type="button" class="travel-pdpa-compact__link travel-pdpa-compact__link--change" data-travel-open-dates>{__("travel_core.pdpa_change")}</button>
-                <button type="button" class="travel-pdpa-compact__link travel-pdpa-compact__link--rooms" data-travel-goto-results>{__("travel_core.pdpa_rooms_link")}</button>
+             aria-label="{__("travel_core.pdpa_sticky_label")|escape:html}">
+            <div class="travel-pdpa-sticky__line">
+                <div class="travel-pdpa-sticky__inner">
+                    <div class="travel-pdpa-sticky__id">
+                        <span class="travel-pdpa-sticky__namebox">
+                            <button type="button" class="travel-pdpa-sticky__name" data-travel-pdpa-top aria-describedby="travel-pdpa-sticky-tip-{$product.product_id}"><bdi>{$product.product nofilter}</bdi><span class="travel-pdpa-sr">, {__("travel_core.pdpa_back_to_top")}</span></button>
+                            <span class="travel-pdpa-sticky__tip" id="travel-pdpa-sticky-tip-{$product.product_id}" role="tooltip">
+                                <span class="travel-pdpa-sticky__tip-name"><bdi>{$product.product nofilter}</bdi>{if $travel_pdp_stars > 0} · {$travel_pdp_stars} ★{/if}</span>
+                                {if $travel_hotel_location_line}
+                                    <span class="travel-pdpa-sticky__tip-line">{$travel_hotel_location_line|escape:html}</span>
+                                {elseif $travel_circuit_facts.route_line}
+                                    <span class="travel-pdpa-sticky__tip-line">{__("travel_core.circuit_route")}: {$travel_circuit_facts.route_line|escape:html}</span>
+                                {/if}
+                            </span>
+                        </span>
+                        {if $travel_pdp_stars > 0}
+                            <span class="travel-pdpa-sticky__stars" role="img" aria-label="{__("travel_core.stars_rating", ["[rating]" => $travel_pdp_stars])|escape:html}">{$travel_pdp_stars}<span aria-hidden="true"> ★</span></span>
+                        {elseif $travel_circuit_facts.days > 0}
+                            <span class="travel-pdpa-sticky__days">{__("travel_core.circuit_days_`$travel_circuit_facts.days_form`", ["[n]" => $travel_circuit_facts.days])}</span>
+                        {/if}
+                        {if $travel_hotel_map_url}
+                            <a href="{$travel_hotel_map_url|escape:html}" target="_blank" rel="noopener" class="travel-pdpa-sticky__map" title="{__("travel_core.pdpa_show_map")|escape:html}" aria-label="{__("travel_core.pdpa_show_map_new_tab")|escape:html}"></a>
+                        {/if}
+                    </div>
+                    <div class="travel-pdpa-sticky__side">
+                        {* Before a search: "Alege datele", or the title row's "Alege data
+                           plecării" for a circuit (and, set by the script, for a
+                           package by coach or plane); after it "Alege cameră". *}
+                        <button type="button" class="travel-pdpa-sticky__cta" data-travel-pdpa-cta
+                                data-label-dates="{if $travel_circuit_facts}{__("travel_core.choose_departure_date")|escape:html}{else}{__("travel_core.pdpa_check_availability")|escape:html}{/if}"
+                                data-label-departure="{__("travel_core.choose_departure_date")|escape:html}"
+                                data-label-room="{__("travel_core.pdpa_choose_room")|escape:html}">{if $travel_circuit_facts}{__("travel_core.choose_departure_date")}{else}{__("travel_core.pdpa_check_availability")}{/if}</button>
+                        <button type="button" class="travel-pdpa-sticky__fav" data-travel-pdpa-fav aria-pressed="false"
+                                aria-label="{__("travel_core.pdpa_add_favourite")|escape:html}"
+                                title="{__("travel_core.pdpa_add_favourite")|escape:html}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></button>
+                    </div>
+                </div>
             </div>
+            <nav class="travel-pdpa-sticky__tabs" data-travel-pdpa-sticky-tabs hidden
+                 aria-label="{__("travel_core.pdpa_sections_label")|escape:html}">
+                <div class="travel-pdpa-sticky__tablist" data-travel-pdpa-sticky-tablist></div>
+            </nav>
         </div>
     {/if}
-    {* /Compact search summary *}
+    {* /Sticky header *}
 
     {* #50. Product tabs (the booking form mount renders in its pre-hook) *}
     {if $show_product_tabs}
@@ -316,14 +356,20 @@
                 smarty=$smarty
             }
 
-            {if $blocks.$tabs_block_id.properties.wrapper}
-                {include file=$blocks.$tabs_block_id.properties.wrapper
-                    content=$smarty.capture.tabsbox_content
-                    title=$blocks.$tabs_block_id.description
-                }
-            {else}
-                {$smarty.capture.tabsbox_content nofilter}
-            {/if}
+            {* The tabs' strip and panels: pdp-design-a.js shows the panels one
+               under another, each under its tab's title, so line 2 of the
+               sticky header can follow them; without the script they stay
+               CS-Cart's tabs. *}
+            <div class="travel-pdpa-tabs" data-travel-pdpa-tabs>
+                {if $blocks.$tabs_block_id.properties.wrapper}
+                    {include file=$blocks.$tabs_block_id.properties.wrapper
+                        content=$smarty.capture.tabsbox_content
+                        title=$blocks.$tabs_block_id.description
+                    }
+                {else}
+                    {$smarty.capture.tabsbox_content nofilter}
+                {/if}
+            </div>
         {/hook}
     {/if}
     {* /Product tabs *}

@@ -218,6 +218,101 @@ final class DesignAProductTemplateTest extends TestCase
         self::assertStringContainsString('.travel-pdpa .travel-pdp-location {', self::css());
     }
 
+    /**
+     * The owner's two-line sticky header (#40): line 1 holds the name, the
+     * stars (or a circuit's length), the map pin, "Alege datele" /
+     * "Alege cameră" and the favourites heart, no dates · guests summary and
+     * no "Rezervă"; line 2 is built by the script from the product's tabs.
+     * Without the script nothing of it shows.
+     */
+    public function testStickyHeaderHoldsTheOwnersTwoLines(): void
+    {
+        $src = self::template();
+
+        $header = strpos($src, '<div class="travel-pdpa-sticky" data-travel-pdpa-sticky hidden');
+        $name = strpos($src, 'data-travel-pdpa-top');
+        $stars = strpos($src, 'class="travel-pdpa-sticky__stars"');
+        $pin = strpos($src, '<a href="{$travel_hotel_map_url|escape:html}" target="_blank" rel="noopener" class="travel-pdpa-sticky__map"');
+        $cta = strpos($src, 'data-travel-pdpa-cta');
+        $heart = strpos($src, 'data-travel-pdpa-fav aria-pressed="false"');
+        $line2 = strpos($src, '<nav class="travel-pdpa-sticky__tabs" data-travel-pdpa-sticky-tabs hidden');
+        foreach ([$header, $name, $stars, $pin, $cta, $heart, $line2] as $at) {
+            self::assertIsInt($at);
+        }
+        self::assertLessThan($name, $header);
+        self::assertLessThan($stars, $name, 'the name, then "5 ★"');
+        self::assertLessThan($pin, $stars, 'then the title row\'s own map link');
+        self::assertLessThan($cta, $pin, 'then the button');
+        self::assertLessThan($heart, $cta, 'then the heart');
+        self::assertLessThan($line2, $heart, 'line 2 under line 1');
+        self::assertStringContainsString('data-travel-pdpa-sticky-tablist></div>', $src, 'line 2 is built from the page\'s tab strip');
+
+        // One button: before a search "Alege datele", or the title row's
+        // "Alege data plecării" for a circuit or a package by coach or plane;
+        // after it "Alege cameră".
+        self::assertStringContainsString('data-label-dates="{if $travel_circuit_facts}{__("travel_core.choose_departure_date")|escape:html}{else}{__("travel_core.pdpa_check_availability")|escape:html}{/if}"', $src);
+        self::assertStringContainsString('data-label-departure="{__("travel_core.choose_departure_date")|escape:html}"', $src);
+        self::assertStringContainsString('data-label-room="{__("travel_core.pdpa_choose_room")|escape:html}"', $src);
+        $langKeys = require dirname(__DIR__, 3) . '/lang_keys.php';
+        self::assertIsArray($langKeys);
+        self::assertSame(['en' => 'Check availability', 'ro' => 'Alege datele'], $langKeys['travel_core.pdpa_check_availability'] ?? null);
+        self::assertSame(['en' => 'Select a room', 'ro' => 'Alege cameră'], $langKeys['travel_core.pdpa_choose_room'] ?? null);
+
+        // The earlier summary strip is gone with its dates · guests and "Rezervă".
+        foreach (['data-travel-pdpa-compact', 'travel_core.pdpa_summary_label', 'data-travel-goto-results'] as $gone) {
+            self::assertStringNotContainsString($gone, $src);
+        }
+        self::assertArrayNotHasKey('travel_core.pdpa_summary_label', $langKeys);
+
+        // After the hero and its booking hooks, before the tabs it follows.
+        $detailBottom = strpos($src, '{hook name="products:product_detail_bottom"}');
+        $tabs = strpos($src, '{hook name="products:product_tabs"}');
+        self::assertIsInt($detailBottom);
+        self::assertIsInt($tabs);
+        self::assertLessThan($header, $detailBottom);
+        self::assertLessThan($tabs, $header);
+    }
+
+    /** The script finds the product's tab strip and panels inside their own box. */
+    public function testProductTabsSitInTheBoxTheStickyHeaderFollows(): void
+    {
+        $src = self::template();
+
+        $include = strpos($src, 'views/tabs/components/product_tabs.tpl');
+        $box = strpos($src, '<div class="travel-pdpa-tabs" data-travel-pdpa-tabs>');
+        $content = strpos($src, '{$smarty.capture.tabsbox_content nofilter}');
+        $wrapper = strpos($src, 'content=$smarty.capture.tabsbox_content');
+        self::assertIsInt($include);
+        self::assertIsInt($box);
+        self::assertIsInt($content);
+        self::assertIsInt($wrapper);
+        self::assertLessThan($box, $include);
+        self::assertLessThan($wrapper, $box, 'the block wrapper inside the box');
+        self::assertLessThan($content, $box, 'the bare tabs inside the box');
+        $close = strpos($src, '</div>', $content);
+        self::assertIsInt($close);
+        self::assertLessThan(strpos($src, '{/hook}', $content), $close);
+    }
+
+    /**
+     * The script stops its scrolls under the header from the stylesheet's
+     * line heights; its fallbacks are the same, and the header stays under
+     * the booking popups and the phone's sheets (1000, 1001).
+     */
+    public function testStickyHeaderStylesMatchTheScript(): void
+    {
+        $css = self::css();
+        $script = (string) file_get_contents(self::repoAddonRoot() . '/js/addons/travel_core/pdp-design-a.js');
+
+        self::assertSame(1, preg_match('/\.travel-pdpa \{[^}]*--travel-pdpa-sticky-line1: (\d+)px;\s*--travel-pdpa-sticky-line2: (\d+)px;/', $css, $lines));
+        self::assertStringContainsString('var LINE1_FALLBACK = ' . $lines[1] . ';', $script);
+        self::assertStringContainsString('var LINE2_FALLBACK = ' . $lines[2] . ';', $script);
+        self::assertSame(1, preg_match('/\n\.travel-pdpa-sticky \{[^}]*z-index: (\d+);/', $css, $z));
+        self::assertLessThan(1000, (int) $z[1]);
+        self::assertStringContainsString('.travel-pdpa-sticky.is-shown {', $css);
+        self::assertStringContainsString('.travel-pdpa--stacked .travel-pdpa-tabs [data-travel-pdpa-panel] {', $css);
+    }
+
     public function testPageScriptIsLoadedAndShipped(): void
     {
         self::assertStringContainsString('{script src="js/addons/travel_core/pdp-design-a.js"}', self::template());

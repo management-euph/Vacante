@@ -2465,17 +2465,35 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'All photos ([n])',
         'ro' => 'Toate fotografiile ([n])',
     ],
-    'travel_core.pdpa_summary_label' => [
-        'en' => 'Search summary',
-        'ro' => 'Rezumatul căutării',
+    // Sticky header, two lines (#40): line 1 once the hero has scrolled off,
+    // line 2 (the product's tabs) once the page's own tab strip has passed.
+    'travel_core.pdpa_sticky_label' => [
+        'en' => 'Quick navigation',
+        'ro' => 'Navigare rapidă',
     ],
-    'travel_core.pdpa_change' => [
-        'en' => 'Change',
-        'ro' => 'Modifică',
+    'travel_core.pdpa_back_to_top' => [
+        'en' => 'back to the top',
+        'ro' => 'înapoi sus',
     ],
-    'travel_core.pdpa_rooms_link' => [
-        'en' => 'Rooms',
-        'ro' => 'Camere',
+    'travel_core.pdpa_show_map_new_tab' => [
+        'en' => 'Show on map (opens in a new tab)',
+        'ro' => 'Vezi pe hartă (se deschide într-o filă nouă)',
+    ],
+    'travel_core.pdpa_check_availability' => [
+        'en' => 'Check availability',
+        'ro' => 'Alege datele',
+    ],
+    'travel_core.pdpa_choose_room' => [
+        'en' => 'Select a room',
+        'ro' => 'Alege cameră',
+    ],
+    'travel_core.pdpa_add_favourite' => [
+        'en' => 'Add to favourites',
+        'ro' => 'Adaugă la favorite',
+    ],
+    'travel_core.pdpa_sections_label' => [
+        'en' => 'Sections of the page',
+        'ro' => 'Secțiunile paginii',
     ],
     // Design A search bar and calendar (React engine, design=a booking config).
     'travel_core.add_date' => [

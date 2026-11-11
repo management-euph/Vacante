@@ -5,10 +5,18 @@
  *  - Photo mosaic: a tile opens the theme's image previewer through the
  *    matching link of the stock gallery the template keeps out of sight.
  *    With no previewer link the tile keeps its own href (the photo itself).
- *  - "Alege datele" / "Modifică": scroll to the search bar and open the
- *    calendar.
- *  - Compact search summary: after a search, once the bar has scrolled away,
- *    a fixed strip shows the dates and guests with "Modifică" and "Camere".
+ *  - "Alege datele": scroll to the search bar and open the calendar.
+ *  - Sticky header, two lines (#40). Line 1 once the hero (title row,
+ *    photos, booking box) has scrolled off: the name (a click goes back to
+ *    the top), the stars or a circuit's length, the map pin, "Alege datele"
+ *    ("Alege data plecării" for a circuit or a package by coach or plane)
+ *    before a search or "Alege cameră" after it (each only while what it
+ *    leads to is off screen) and the favourites heart (it clicks the title
+ *    row's wishlist button). Line 2 once the page's own tab strip has gone
+ *    under the header: the product's CS-Cart tabs, built from that strip,
+ *    following the section in view. The tabs' panels show one under
+ *    another, each under its tab's title, and every scroll the page makes
+ *    lands under the header.
  *  - Photo height: the photos give way so the search bar ends on the first
  *    screen, whatever the theme's header takes (design-a.css carries a
  *    CSS-only estimate; phones keep their own layout).
@@ -50,105 +58,219 @@
         return isNaN(n) || n < 0 ? 0 : n;
     }
 
-    /** 'YYYY-MM-DD' as a local date, or null. */
-    function parseDay(value) {
-        var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || '');
-        if (!m) {
-            return null;
-        }
-        var day = new Date(+m[1], +m[2] - 1, +m[3]);
-        return day.getMonth() === +m[2] - 1 ? day : null;
-    }
-
-    function formatDates(checkIn, checkOut, locale, today) {
-        var start = parseDay(checkIn);
-        var end = parseDay(checkOut);
-        if (!start || !end || end <= start) {
-            return '';
-        }
-        var options = { day: 'numeric', month: 'short' };
-        var thisYear = (today || new Date()).getFullYear();
-        if (start.getFullYear() !== thisYear || end.getFullYear() !== thisYear) {
-            options.year = 'numeric';
-        }
-        var format;
-        try {
-            format = new Intl.DateTimeFormat(locale || undefined, options);
-        } catch (e) {
-            format = new Intl.DateTimeFormat(undefined, options);
-        }
-        if (typeof format.formatRange === 'function') {
-            return format.formatRange(start, end);
-        }
-        return format.format(start) + ' – ' + format.format(end);
-    }
-
-    function counted(n, one, many) {
-        return n + ' ' + String(n === 1 ? one : many).toLowerCase();
-    }
-
-    /** Guests from rooms_data when present (the engine's source of truth), else the totals. */
-    function guestTotals(params) {
-        var totals = {
-            adults: toInt(params.get('adults')),
-            children: toInt(params.get('children')),
-            rooms: Math.max(1, toInt(params.get('rooms'))),
-        };
-        var raw = params.get('rooms_data');
-        if (!raw) {
-            return totals;
-        }
-        try {
-            var rooms = JSON.parse(raw);
-            if (Array.isArray(rooms) && rooms.length > 0) {
-                totals = { adults: 0, children: 0, rooms: rooms.length };
-                rooms.forEach(function (room) {
-                    totals.adults += toInt(room && room.adults);
-                    totals.children += toInt(room && room.children);
-                });
-            }
-        } catch (e) {
-            // malformed rooms_data: keep the flat totals
-        }
-        return totals;
-    }
-
-    /**
-     * "26–31 oct. · 2 adulți · 1 copil · 2 camere" from a search's URL
-     * parameters; '' when the dates are missing or invalid.
-     *
-     * @param {URLSearchParams} params
-     * @param {{adult: string, adults: string, child: string, children: string, room: string, rooms: string}} labels
-     * @param {string} [locale]
-     * @param {Date} [today]
-     */
-    function formatSummary(params, labels, locale, today) {
-        var dates = formatDates(params.get('check_in'), params.get('check_out'), locale, today);
-        if (dates === '') {
-            return '';
-        }
-        var guests = guestTotals(params);
-        var parts = [dates];
-        if (guests.adults > 0) {
-            parts.push(counted(guests.adults, labels.adult, labels.adults));
-        }
-        if (guests.children > 0) {
-            parts.push(counted(guests.children, labels.child, labels.children));
-        }
-        if (guests.rooms > 1) {
-            parts.push(counted(guests.rooms, labels.room, labels.rooms));
-        }
-        return parts.join(' · ');
-    }
-
     function prefersReducedMotion() {
         return typeof window.matchMedia === 'function'
             && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     }
 
+    // ---- Sticky header, two lines (#40) -------------------------------------
+
+    // A section a click brings into view stops this far under the header.
+    var HEADER_GAP = 8;
+    // The header's lines when the stylesheet's --travel-pdpa-sticky-line1 /
+    // --travel-pdpa-sticky-line2 cannot be read.
+    var LINE1_FALLBACK = 56;
+    var LINE2_FALLBACK = 48;
+    // The hero has scrolled off once its end is this far above the window's
+    // top: a scroll that lands exactly on it (the inline search lands 20 px
+    // over its results, right on the bar's end) keeps the header away.
+    var HERO_SLACK = 2;
+    // The room options a visitor chooses from: Design A's room cards, the
+    // classic offer cards, a package's room types, a circuit's rooms.
+    var ROOM_OPTIONS = '[data-travel-room], .travel-offer-card, .travel-package-room, .travel-circuit-rooms .travel-circuit-offer';
+    // A search's room list (Design A): its filters may hide every room.
+    var ROOM_RESULTS = '[data-travel-results]';
+    // The booking box's popups count as the booking box while open.
+    var BOOKING_POPUPS = '.nvt-calendar-popup, .nvt-guest-popup';
+    // A tab's scroll that has not arrived by then was cut short (ms).
+    var LOCK_WAIT = 1500;
+
+    /**
+     * What the sticky header shows, from where things are on screen (px from
+     * the window's top, as getBoundingClientRect gives them).
+     *
+     *  - Line 1 only once the hero (title row, photos, booking box) has
+     *    scrolled off; line 2 only once the page's tab strip has gone under
+     *    the header (its end where line 2 ends, or higher): line 2 takes its
+     *    place, never with a part of it showing.
+     *  - The button only while what it leads to is off screen: the room
+     *    options after a search ("Alege cameră"), the booking box before it
+     *    ("Alege datele").
+     *  - The active tab, while line 2 shows: the one clicked last until the
+     *    visitor scrolls by hand (locked), else the section crossing the
+     *    middle of the visible area under the header, the last one at the very
+     *    bottom of the page, none above the first section.
+     *
+     * @param {{heroBottom: number, stripBottom: (number|null), line1: number, line2: number,
+     *          viewport: number, searched: boolean,
+     *          rooms: Array<{top: number, bottom: number}>,
+     *          booking: Array<{top: number, bottom: number}>,
+     *          panels: Array<{id: string, top: number}>,
+     *          atBottom: boolean, locked: (string|null)}} m
+     * @return {{show: boolean, dock: boolean, cta: boolean, active: (string|null)}}
+     */
+    function headerState(m) {
+        // no hero measured (the block is not displayed): no header
+        var show = isFinite(m.heroBottom) && m.heroBottom < -HERO_SLACK;
+        var dock = show && m.stripBottom !== null && m.stripBottom <= m.line1 + m.line2;
+        var from = show ? m.line1 + (dock ? m.line2 : 0) : 0;
+        var onScreen = function (box) {
+            return box.bottom > from && box.top < m.viewport;
+        };
+        var cta = show && !(m.searched ? m.rooms : m.booking).some(onScreen);
+        var active = null;
+        if (dock && m.panels.length > 0) {
+            if (m.locked !== null) {
+                active = m.locked;
+            } else if (m.atBottom) {
+                active = m.panels[m.panels.length - 1].id;
+            } else {
+                var middle = from + (m.viewport - from) / 2;
+                m.panels.forEach(function (panel) {
+                    if (panel.top <= middle) {
+                        active = panel.id;
+                    }
+                });
+            }
+        }
+        return { show: show, dock: dock, cta: cta, active: active };
+    }
+
+    /**
+     * The window scroll (document px) that brings an element's top into view
+     * under the sticky header as it will be there: no header while the hero
+     * shows (SCROLL_GAP, as before the header), line 1 above the page's tab
+     * strip, both lines past it, never above where line 2 docks (a section
+     * right under the strip then sits right under line 2). An element too
+     * close under the hero to sit under line 1 lands with the hero's end
+     * still on screen, so no header covers it.
+     *
+     * @param {{top: number, heroEnd: number, stripBottom: (number|null), line1: number, line2: number}} m
+     * @return {number}
+     */
+    function landingY(m) {
+        var y = m.top - SCROLL_GAP;
+        if (y <= m.heroEnd + HERO_SLACK) {
+            return Math.max(0, y);
+        }
+        y = m.top - m.line1 - HEADER_GAP;
+        var dockAt = m.stripBottom === null ? Infinity : m.stripBottom - m.line1 - m.line2;
+        if (y >= dockAt) {
+            // rounded up: a window scrolled in whole pixels still docks line 2
+            y = Math.max(m.top - m.line1 - m.line2 - HEADER_GAP, Math.ceil(dockAt));
+        }
+        return y <= m.heroEnd + HERO_SLACK ? Math.max(0, m.heroEnd) : y;
+    }
+
+    /** The heights of the header's two lines (the stylesheet's, read on the page). */
+    function headerLines(page) {
+        var style = typeof window.getComputedStyle === 'function' ? window.getComputedStyle(page) : null;
+        var line1 = style ? parseFloat(style.getPropertyValue('--travel-pdpa-sticky-line1')) : NaN;
+        var line2 = style ? parseFloat(style.getPropertyValue('--travel-pdpa-sticky-line2')) : NaN;
+        return {
+            line1: line1 > 0 ? line1 : LINE1_FALLBACK,
+            line2: line2 > 0 ? line2 : LINE2_FALLBACK,
+        };
+    }
+
+    /** Where the elements matching a selector are (px from the window's top); hidden ones left out. */
+    function boxes(root, selector) {
+        var list = [];
+        each(root, selector, function (el) {
+            var rect = el.getBoundingClientRect();
+            if (rect.width > 0 || rect.height > 0) {
+                list.push({ top: rect.top, bottom: rect.bottom });
+            }
+        });
+        return list;
+    }
+
+    /**
+     * The booking box: the mount's wrapper (the bar; a stay's results come
+     * after it). A package or a circuit renders its offers inside the same
+     * wrapper, after the departure chips: there the box ends with the chips.
+     */
+    function bookingBoxes(page) {
+        var wrapper = page.querySelector('.travel-pdp-results .travel-search-form-wrapper');
+        var rect = wrapper ? wrapper.getBoundingClientRect() : null;
+        if (!rect || (rect.width === 0 && rect.height === 0)) {
+            return [];
+        }
+        var chips = boxes(wrapper, '.travel-circuit-dates');
+        return [{
+            top: rect.top,
+            bottom: chips.length > 0 ? Math.max.apply(null, chips.map(function (box) { return box.bottom; })) : rect.bottom,
+        }];
+    }
+
+    /** The room options on show, else the room lists a filter has emptied. */
+    function roomTargets(page) {
+        var rooms = [];
+        each(page, ROOM_OPTIONS, function (el) {
+            rooms.push(el);
+        });
+        each(page, ROOM_RESULTS, function (el) {
+            rooms.push(el);
+        });
+        var shown = rooms.filter(function (el) {
+            var rect = el.getBoundingClientRect();
+            return rect.width > 0 || rect.height > 0;
+        });
+        var options = shown.filter(function (el) {
+            return !el.matches(ROOM_RESULTS);
+        });
+        return options.length > 0 ? options : shown;
+    }
+
+    /** The booking box with its calendar or guests popup while one is open. */
+    function bookingArea(page) {
+        return bookingBoxes(page).concat(boxes(page, BOOKING_POPUPS));
+    }
+
+    /** The hero's end, px from the window's top: the title row, the photos, the booking box. */
+    function heroBottom(page) {
+        return boxes(page, '.travel-pdpa-head, .travel-pdpa-gallery').concat(bookingArea(page))
+            .reduce(function (end, box) { return Math.max(end, box.bottom); }, -Infinity);
+    }
+
+    // The sticky header of each Design A block on the page.
+    var headers = [];
+
+    function headerOf(page) {
+        for (var i = 0; i < headers.length; i += 1) {
+            if (headers[i].page === page) {
+                return headers[i];
+            }
+        }
+        return null;
+    }
+
+    /** landingY for an element of a Design A block, in this window's scroll. */
+    function landingFor(page, el) {
+        var scroll = window.pageYOffset;
+        var top = el.getBoundingClientRect().top + scroll;
+        var h = page ? headerOf(page) : null;
+        if (!h) {
+            return top - SCROLL_GAP;
+        }
+        var lines = h.lines || headerLines(page);
+        var strip = h.tabs ? h.tabs.strip.getBoundingClientRect() : null;
+        return landingY({
+            top: top,
+            heroEnd: heroBottom(page) + scroll,
+            stripBottom: strip && strip.height > 0 ? strip.bottom + scroll : null,
+            line1: lines.line1,
+            line2: lines.line2,
+        });
+    }
+
+    /** Brings an element into view under the sticky header; returns where the window stops. */
     function scrollToElement(el) {
-        var top = el.getBoundingClientRect().top + window.pageYOffset - SCROLL_GAP;
-        window.scrollTo({ top: Math.max(0, top), behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+        var page = el.closest ? el.closest('.travel-pdpa') : null;
+        var top = Math.max(0, landingFor(page, el));
+        window.scrollTo({ top: top, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+        var end = document.documentElement.scrollHeight - (window.innerHeight || 0);
+        return end > 0 ? Math.min(top, end) : top;
     }
 
     /** The theme previewer's links, in gallery order (main photo first). */
@@ -183,20 +305,272 @@
         return true;
     }
 
-    /** The first node the inline search swapped in after the bar, or null. */
-    function firstResult(page) {
-        var bar = page.querySelector('.travel-pdp-results .travel-search-form-wrapper');
-        return bar ? bar.nextElementSibling : null;
+    /**
+     * The product's CS-Cart tabs inside [data-travel-pdpa-tabs]: their strip
+     * (the theme's tab list) and, for each tab it lists, its title and panel
+     * (#content_ + the tab's id). CS-Cart lists only the tabs with content.
+     */
+    function productTabs(page) {
+        var box = page.querySelector('[data-travel-pdpa-tabs]');
+        var strip = box ? box.querySelector('.ty-tabs, .cm-j-tabs') : null;
+        if (!strip) {
+            return null;
+        }
+        var tabs = [];
+        each(strip, 'li[id]', function (li) {
+            // a tab the theme loads on demand (none of a product's, as CS-Cart
+            // ships them) stays the theme's: its panel is empty until clicked
+            if (li.classList.contains('cm-ajax') || li.classList.contains('cm-ajax-onclick')) {
+                return;
+            }
+            var panel = document.getElementById('content_' + li.id);
+            if (!panel || !box.contains(panel)) {
+                return;
+            }
+            var link = li.querySelector('a') || li;
+            tabs.push({ id: li.id, title: link.textContent.trim(), li: li, panel: panel });
+        });
+        return tabs.length > 0 ? { strip: strip, tabs: tabs } : null;
     }
 
-    function gotoResults(page) {
-        // A package mode's offers are under its bar, inside the mount.
-        var offers = page.querySelector('.travel-pdp-results--package .travel-package-rooms');
-        if (offers) {
-            scrollToElement(offers);
-            return true;
+    /**
+     * Every panel shows, one under another, under its tab's title, so line 2
+     * can follow them; a click on the page's own strip brings the panel into
+     * view instead of switching to it. Clicks this script or the theme
+     * sends, and clicks on a tab line 2 leaves out, still reach CS-Cart. On
+     * a phone the theme would turn the strip into an accordion (responsive.js,
+     * after the page has loaded): its opt-out classes keep the strip and the
+     * panels.
+     */
+    function stackTabs(page, info) {
+        info.strip.classList.add('cm-j-tabs-disable-convertation');
+        // the strip's own panels box: the first one after it, as the theme finds it
+        for (var next = info.strip.nextElementSibling; next; next = next.nextElementSibling) {
+            if (next.classList.contains('cm-tabs-content')) {
+                next.classList.add('cm-j-content-disable-convertation');
+                break;
+            }
         }
-        var first = firstResult(page);
+        info.tabs.forEach(function (tab) {
+            tab.panel.setAttribute('data-travel-pdpa-panel', tab.id);
+            if (!tab.panel.querySelector('.travel-pdpa-tabs__title')) {
+                var title = document.createElement('h2');
+                title.className = 'travel-pdpa-tabs__title';
+                title.textContent = tab.title;
+                tab.panel.insertBefore(title, tab.panel.firstChild);
+            }
+        });
+        page.classList.add('travel-pdpa--stacked');
+        info.strip.addEventListener('click', function (event) {
+            var li = event.isTrusted && event.target instanceof Element ? event.target.closest('li[id]') : null;
+            var ours = info.tabs.some(function (tab) {
+                return tab.li === li;
+            });
+            if (!ours) {
+                return;
+            }
+            event.preventDefault();
+            event.stopPropagation();
+            goTab(page, li.id);
+        }, true);
+    }
+
+    /** Line 2: one button per tab of the page's strip, in its order and with its title. */
+    function buildTabs(h) {
+        h.tabs.tabs.forEach(function (tab) {
+            var button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'travel-pdpa-sticky__tab';
+            button.setAttribute('data-travel-pdpa-tab', tab.id);
+            button.textContent = tab.title;
+            h.list.appendChild(button);
+        });
+        h.list.addEventListener('scroll', function () {
+            fadeTabs(h);
+        }, { passive: true });
+    }
+
+    /** A phone's line 2 scrolls sideways: its edges fade while more tabs hide there. */
+    function fadeTabs(h) {
+        var list = h.list;
+        var more = list.scrollWidth - list.clientWidth;
+        h.nav.classList.toggle('is-fade-start', list.scrollLeft > 2);
+        h.nav.classList.toggle('is-fade-end', more > 2 && list.scrollLeft < more - 2);
+    }
+
+    function markTabs(h, active) {
+        each(h.list, '[data-travel-pdpa-tab]', function (button) {
+            var on = button.getAttribute('data-travel-pdpa-tab') === active;
+            button.classList.toggle('is-active', on);
+            if (on) {
+                button.setAttribute('aria-current', 'true');
+                // bring it into view on a phone's sideways line
+                var left = button.offsetLeft - (h.list.clientWidth - button.offsetWidth) / 2;
+                h.list.scrollLeft = Math.max(0, left);
+            } else {
+                button.removeAttribute('aria-current');
+            }
+        });
+        // The page's own strip shows the same tab, its first one above the sections.
+        var shown = active || h.tabs.tabs[0].id;
+        h.tabs.tabs.forEach(function (tab) {
+            tab.li.classList.toggle('active', tab.id === shown);
+        });
+        fadeTabs(h);
+    }
+
+    function wishlistButton(page) {
+        return page.querySelector('.travel-pdpa-head__actions .ty-add-to-wish, .travel-pdpa-head__actions [id^="button_wishlist_"]');
+    }
+
+    /**
+     * The tab clicked last holds line 2 while its scroll runs and once it has
+     * arrived, until the page moves on: by the scrollbar here, by a wheel, a
+     * touch or a key in releaseTabs. A scroll cut short lets go too.
+     */
+    function holdTab(h) {
+        if (h.locked === null) {
+            return;
+        }
+        if (Math.abs(window.pageYOffset - h.lockY) <= 2) {
+            h.lockArrived = true;
+        } else if (h.lockArrived || Date.now() - h.lockAt > LOCK_WAIT) {
+            h.locked = null;
+        }
+    }
+
+    function updateHeader(h) {
+        var page = h.page;
+        var view = window.innerHeight || document.documentElement.clientHeight || 0;
+        holdTab(h);
+        // read once per window size (the phone's lines are shorter)
+        var lines = h.lines || (h.lines = headerLines(page));
+        var strip = h.tabs ? h.tabs.strip.getBoundingClientRect() : null;
+        var rooms = roomTargets(page).map(function (el) {
+            var rect = el.getBoundingClientRect();
+            return { top: rect.top, bottom: rect.bottom };
+        });
+        var state = headerState({
+            heroBottom: heroBottom(page),
+            stripBottom: strip && strip.height > 0 ? strip.bottom : null,
+            line1: lines.line1,
+            line2: lines.line2,
+            viewport: view,
+            searched: rooms.length > 0,
+            rooms: rooms,
+            booking: bookingArea(page),
+            panels: h.tabs ? h.tabs.tabs.map(function (tab) {
+                return { id: tab.id, top: tab.panel.getBoundingClientRect().top };
+            }) : [],
+            atBottom: window.pageYOffset + view >= document.documentElement.scrollHeight - 4,
+            locked: h.locked,
+        });
+        var before = h.state;
+        state.searched = rooms.length > 0;
+        h.state = state;
+        h.header.classList.toggle('is-shown', state.show);
+        h.header.classList.toggle('is-docked', state.dock);
+        if (h.nav && h.nav.hidden === state.dock) {
+            h.nav.hidden = !state.dock;
+        }
+        if (h.cta) {
+            // a package by coach or plane (board 16.2) chooses a departure, as a circuit does
+            var key = state.searched ? 'data-label-room'
+                : (page.querySelector('.travel-pdp-results--package') ? 'data-label-departure' : 'data-label-dates');
+            var label = h.cta.getAttribute(key) || '';
+            if (label !== '' && h.cta.textContent !== label) {
+                h.cta.textContent = label;
+            }
+            h.cta.classList.toggle('is-away', !state.cta);
+        }
+        if (h.tabs && h.list && (!before || before.active !== state.active || before.dock !== state.dock)) {
+            markTabs(h, state.active);
+        }
+    }
+
+    function updateHeaders() {
+        headers.forEach(updateHeader);
+    }
+
+    var headersFrame = 0;
+
+    /** One update per frame, whatever asks for it (scroll, resize, new results). */
+    function scheduleHeaders() {
+        if (headersFrame !== 0 || headers.length === 0) {
+            return;
+        }
+        var run = function () {
+            headersFrame = 0;
+            updateHeaders();
+        };
+        headersFrame = typeof window.requestAnimationFrame === 'function'
+            ? window.requestAnimationFrame(run)
+            : setTimeout(run, 16);
+    }
+
+    function initHeader(page) {
+        var header = page.querySelector('[data-travel-pdpa-sticky]');
+        if (!header) {
+            return;
+        }
+        var h = {
+            page: page,
+            header: header,
+            nav: header.querySelector('[data-travel-pdpa-sticky-tabs]'),
+            list: header.querySelector('[data-travel-pdpa-sticky-tablist]'),
+            cta: header.querySelector('[data-travel-pdpa-cta]'),
+            fav: header.querySelector('[data-travel-pdpa-fav]'),
+            tabs: productTabs(page),
+            // the tab clicked last, where its scroll stops, when, and whether it got there
+            locked: null,
+            lockY: 0,
+            lockAt: 0,
+            lockArrived: false,
+            lines: null,
+            state: null,
+        };
+        if (h.tabs && h.nav && h.list) {
+            stackTabs(page, h.tabs);
+            buildTabs(h);
+        } else {
+            h.tabs = null;
+        }
+        // No booking form on this product: no dates to choose, no rooms.
+        if (h.cta && !document.getElementById('travel-booking-root')) {
+            h.cta.hidden = true;
+        }
+        // The heart clicks the title row's own wishlist button: none, no heart.
+        if (h.fav && !wishlistButton(page)) {
+            h.fav.hidden = true;
+        }
+        headers.push(h);
+        header.hidden = false;
+        updateHeader(h);
+        // The booking box grows as the engine draws it (mode switch, chips),
+        // the results come and go: the hero's end moves without a scroll.
+        if (typeof window.ResizeObserver === 'function') {
+            new window.ResizeObserver(scheduleHeaders).observe(page);
+        }
+    }
+
+    /** A tab of line 2 or of the page's strip: its section, under the header. */
+    function goTab(page, id) {
+        var panel = page.querySelector('[data-travel-pdpa-panel="' + id + '"]');
+        var h = headerOf(page);
+        if (!panel || !h) {
+            return false;
+        }
+        h.locked = id;
+        h.lockY = scrollToElement(panel);
+        h.lockAt = Date.now();
+        h.lockArrived = false;
+        updateHeader(h);
+        return true;
+    }
+
+    /** "Alege cameră": the first room option (or the emptied list), under line 1. */
+    function goRooms(page) {
+        var first = roomTargets(page)[0];
         if (!first) {
             return false;
         }
@@ -204,46 +578,58 @@
         return true;
     }
 
-    function labelsOf(compact) {
-        return {
-            adult: compact.getAttribute('data-label-adult') || 'adult',
-            adults: compact.getAttribute('data-label-adults') || 'adults',
-            child: compact.getAttribute('data-label-child') || 'child',
-            children: compact.getAttribute('data-label-children') || 'children',
-            room: compact.getAttribute('data-label-room') || 'room',
-            rooms: compact.getAttribute('data-label-rooms') || 'rooms',
-        };
-    }
-
-    function refreshSummary(compact) {
-        var summary = compact.querySelector('[data-travel-pdpa-summary]');
-        if (!summary) {
+    function addFavourite(page, fav) {
+        var button = wishlistButton(page);
+        if (!button) {
             return;
         }
-        var locale = document.documentElement.getAttribute('lang') || undefined;
-        summary.textContent = formatSummary(new URLSearchParams(window.location.search), labelsOf(compact), locale);
+        button.click();
+        fav.setAttribute('aria-pressed', 'true');
+        fav.classList.add('is-saved');
     }
 
-    function initCompact(page) {
-        var compact = page.querySelector('[data-travel-pdpa-compact]');
-        var bar = page.querySelector('.travel-pdp-results .travel-search-form-wrapper');
-        if (!compact || !bar || typeof window.IntersectionObserver !== 'function') {
-            return;
+    /** A click in the sticky header; true when it was the header's to handle. */
+    function stickyClick(page, target) {
+        var h = headerOf(page);
+        if (!h || !target.closest('[data-travel-pdpa-sticky]')) {
+            return false;
         }
-        var barAway = false;
-        var update = function () {
-            var show = barAway && firstResult(page) !== null;
-            if (show) {
-                refreshSummary(compact);
+        if (target.closest('[data-travel-pdpa-top]')) {
+            h.locked = null;
+            window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+            return true;
+        }
+        if (target.closest('[data-travel-pdpa-cta]')) {
+            if (!(h.state && h.state.searched && goRooms(page))) {
+                openDates();
             }
-            compact.hidden = !show;
-        };
-        new window.IntersectionObserver(function (entries) {
-            var entry = entries[entries.length - 1];
-            barAway = !entry.isIntersecting && entry.boundingClientRect.top < 0;
-            update();
-        }).observe(bar);
-        document.addEventListener('travel:results-swapped', update);
+            return true;
+        }
+        var fav = target.closest('[data-travel-pdpa-fav]');
+        if (fav) {
+            addFavourite(page, fav);
+            return true;
+        }
+        var tab = target.closest('[data-travel-pdpa-tab]');
+        if (tab) {
+            goTab(page, tab.getAttribute('data-travel-pdpa-tab'));
+            return true;
+        }
+        return false;
+    }
+
+    /** The visitor scrolls by hand: the clicked tab no longer holds line 2. */
+    function releaseTabs() {
+        var released = false;
+        headers.forEach(function (h) {
+            if (h.locked !== null) {
+                h.locked = null;
+                released = true;
+            }
+        });
+        if (released) {
+            scheduleHeaders();
+        }
     }
 
     /** Sizes the photos so the bar ends on the first screen (desktop). */
@@ -921,7 +1307,7 @@
                     button.hidden = true;
                 });
             }
-            initCompact(page);
+            initHeader(page);
             fitGallery(page);
             fitPhotos(page);
         });
@@ -941,6 +1327,12 @@
         if (sheetClick(target) || resultsClick(target)) {
             return;
         }
+        if (stickyClick(page, target)) {
+            if (!target.closest('a[href]')) {
+                event.preventDefault();
+            }
+            return;
+        }
         var tile = target.closest('[data-travel-gallery-index]');
         if (tile) {
             if (openPhoto(page, toInt(tile.getAttribute('data-travel-gallery-index')))) {
@@ -948,13 +1340,7 @@
             }
             return;
         }
-        if (target.closest('[data-travel-open-dates]')) {
-            if (openDates()) {
-                event.preventDefault();
-            }
-            return;
-        }
-        if (target.closest('[data-travel-goto-results]') && gotoResults(page)) {
+        if (target.closest('[data-travel-open-dates]') && openDates()) {
             event.preventDefault();
         }
     });
@@ -1016,6 +1402,27 @@
     // Results swapped in by the inline search may keep arriving.
     document.addEventListener('travel:results-swapped', armLiveResults);
 
+    // The sticky header follows the scroll, the window's size and the results.
+    window.addEventListener('scroll', scheduleHeaders, { passive: true });
+    window.addEventListener('resize', function () {
+        headers.forEach(function (h) {
+            h.lines = null;
+        });
+        scheduleHeaders();
+    });
+    window.addEventListener('load', scheduleHeaders);
+    document.addEventListener('travel:results-swapped', scheduleHeaders);
+    document.addEventListener('travel:live-done', scheduleHeaders);
+    // Scrolling by hand releases a tab clicked on line 2.
+    window.addEventListener('wheel', releaseTabs, { passive: true });
+    window.addEventListener('touchstart', releaseTabs, { passive: true });
+    document.addEventListener('keydown', function (event) {
+        if (/^(ArrowUp|ArrowDown|PageUp|PageDown|Home|End| )$/.test(event.key)
+            && !(event.target instanceof Element && event.target.closest('input, textarea, select, [contenteditable="true"]'))) {
+            releaseTabs();
+        }
+    });
+
     var resizeTimer = null;
     window.addEventListener('resize', function () {
         clearTimeout(resizeTimer);
@@ -1034,7 +1441,9 @@
 
     window.TravelPdpDesignA = {
         init: init,
-        formatSummary: formatSummary,
+        headerState: headerState,
+        landingY: landingY,
+        updateHeaders: updateHeaders,
         fitGallery: fitGallery,
         fitPhotos: fitPhotos,
         showsWhole: showsWhole,

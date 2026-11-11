@@ -410,9 +410,42 @@ an internal code.
   - The booking form's re-check, the cart and order cards show the same
     list (deadline hour, arrival, exact nights); an order whose stay began
     names no "today" in the admin's schedule.
+- 11 Nov 2026 — **sticky header on two lines (#40)**, the owner's mockup
+  ("Sticky bar mockup", desktop frames and anatomy board) for hotels,
+  packages and circuits; it replaces the compact search summary:
+  - Line 1 slides down only once the whole hero has scrolled off (title
+    row, photos, booking box with its departure chips or an open calendar):
+    the name (cut with "…" past 640 px or the room left; hover or keyboard
+    focus shows it whole with the address; a click goes back to the top),
+    "5 ★" (a circuit: its length), the title row's map pin (Google Maps in a
+    new tab), the button and a red heart.
+  - The button: "Alege datele" / "Check availability" before a search ("Alege
+    data plecării" for a circuit or a package by coach or plane), "Alege
+    cameră" / "Select a room" once rooms show; only while what it leads to
+    (the booking box, the rooms) is off screen. The heart clicks the title
+    row's wishlist button (no heart without one) and fills.
+  - Line 2 docks under line 1 once the page's tab strip has gone under the
+    header (line 2 covers it whole): the product's CS-Cart tabs (popup tabs
+    and tabs loaded on demand excluded), following the section
+    across the middle of the screen; a clicked tab holds until the page
+    moves on. The tabs' panels now show one under another, each under its
+    tab's title (`travel-pdpa--stacked`); a click on the page's strip
+    scrolls instead of switching; phones keep the strip (the theme's
+    accordion is opted out).
+  - Every scroll the page makes stops under the header (8 px gap): tabs,
+    "Alege cameră", the circuit menu, the several rooms' "see the room
+    types", the package and circuit bars' offers.
+  - Phones get the same two lines, shorter (52 + 44 px), line 2 scrolling
+    sideways with fading edges.
+  - Tests: `tests/js/pdp-design-a.test.mjs` (what shows when, where scrolls
+    stop, the page wiring), `DesignAProductTemplateTest`.
+  - **To check on the dev store**: a theme sticky header (the header is
+    fixed at the top, z-index 990, under the booking popups); the store's
+    "Product details in tab" setting must be on (without a tab strip there
+    is no line 2); the heart cannot show a hotel saved on an earlier visit
+    (the store's wishlist button keeps no such state either).
 - Next: the combined list of several rooms' terms in the bar (board 14.5);
   Novoton rows through `RoomOfferRows`;
   the title row's after-search state ("10–17 iul. · de la 1.485 €", "Vezi
-  camerele") and the compact summary's price (the section carries
-  `data-cheapest`); the room facts the board shows beyond capacity (area,
-  bed) once a source exists.
+  camerele"); the room facts the board shows beyond capacity (area, bed)
+  once a source exists.

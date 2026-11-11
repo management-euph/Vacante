@@ -3294,17 +3294,33 @@ msgctxt "Languages::travel_core.pdpa_all_photos"
 msgid "All photos ([n])"
 msgstr "Toate fotografiile ([n])"
 
-msgctxt "Languages::travel_core.pdpa_summary_label"
-msgid "Search summary"
-msgstr "Rezumatul căutării"
+msgctxt "Languages::travel_core.pdpa_sticky_label"
+msgid "Quick navigation"
+msgstr "Navigare rapidă"
 
-msgctxt "Languages::travel_core.pdpa_change"
-msgid "Change"
-msgstr "Modifică"
+msgctxt "Languages::travel_core.pdpa_back_to_top"
+msgid "back to the top"
+msgstr "înapoi sus"
 
-msgctxt "Languages::travel_core.pdpa_rooms_link"
-msgid "Rooms"
-msgstr "Camere"
+msgctxt "Languages::travel_core.pdpa_show_map_new_tab"
+msgid "Show on map (opens in a new tab)"
+msgstr "Vezi pe hartă (se deschide într-o filă nouă)"
+
+msgctxt "Languages::travel_core.pdpa_check_availability"
+msgid "Check availability"
+msgstr "Alege datele"
+
+msgctxt "Languages::travel_core.pdpa_choose_room"
+msgid "Select a room"
+msgstr "Alege cameră"
+
+msgctxt "Languages::travel_core.pdpa_add_favourite"
+msgid "Add to favourites"
+msgstr "Adaugă la favorite"
+
+msgctxt "Languages::travel_core.pdpa_sections_label"
+msgid "Sections of the page"
+msgstr "Secțiunile paginii"
 
 msgctxt "Languages::travel_core.add_date"
 msgid "Add date"

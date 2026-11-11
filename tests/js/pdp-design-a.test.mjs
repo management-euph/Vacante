@@ -1,36 +1,25 @@
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
  * Behavioral tests for the hotel page Design A script
  * (addon-travel-core/js/addons/travel_core/pdp-design-a.js): the photo
  * mosaic opening the theme previewer, "Alege datele" opening the calendar,
- * and the compact search summary.
+ * the two-line sticky header and the rooms.
  */
-
-const LABELS = { adult: 'adult', adults: 'Adulți', child: 'copil', children: 'Copii', room: 'Cameră', rooms: 'camere' };
-const TODAY = new Date(2026, 9, 25);
-
-let observe = null;
-
-class FakeIntersectionObserver {
-    constructor(callback) {
-        observe = (entry) => callback([entry]);
-    }
-
-    observe() {}
-}
 
 function page() {
     return document.querySelector('.travel-pdpa');
 }
 
 beforeAll(async () => {
-    window.IntersectionObserver = FakeIntersectionObserver;
     window.scrollTo = vi.fn();
     document.documentElement.setAttribute('lang', 'ro');
     document.body.innerHTML = `
         <div class="travel-pdpa" data-travel-design="a">
             <div class="travel-pdpa-head">
+                <div class="travel-pdpa-head__actions">
+                    <button type="button" id="button_wishlist_7" class="ty-btn ty-btn__tertiary ty-btn-icon ty-add-to-wish" title="Adaugă la favorite"></button>
+                </div>
                 <a href="#travel-booking-root" class="travel-pdpa-head__dates" data-travel-open-dates>Alege datele</a>
             </div>
             <div class="travel-pdpa-gallery" data-travel-gallery>
@@ -53,12 +42,44 @@ beforeAll(async () => {
                     </div>
                 </div>
             </div>
-            <div class="travel-pdpa-compact" data-travel-pdpa-compact hidden
-                 data-label-adult="adult" data-label-adults="Adulți" data-label-child="copil"
-                 data-label-children="Copii" data-label-room="Cameră" data-label-rooms="camere">
-                <p data-travel-pdpa-summary></p>
-                <button type="button" data-travel-open-dates id="compact-change">Modifică</button>
-                <button type="button" data-travel-goto-results id="compact-rooms">Camere</button>
+            <div class="travel-pdpa-sticky" data-travel-pdpa-sticky hidden role="region" aria-label="Navigare rapidă">
+                <div class="travel-pdpa-sticky__line">
+                    <div class="travel-pdpa-sticky__inner">
+                        <div class="travel-pdpa-sticky__id">
+                            <span class="travel-pdpa-sticky__namebox">
+                                <button type="button" class="travel-pdpa-sticky__name" data-travel-pdpa-top><bdi>Hotel Admiral</bdi></button>
+                            </span>
+                            <span class="travel-pdpa-sticky__stars" role="img" aria-label="5 stele">5<span aria-hidden="true"> ★</span></span>
+                            <a href="https://www.google.com/maps/search/?api=1&amp;query=43.2,28.0" target="_blank" rel="noopener" class="travel-pdpa-sticky__map" id="sticky-map"></a>
+                        </div>
+                        <div class="travel-pdpa-sticky__side">
+                            <button type="button" class="travel-pdpa-sticky__cta" data-travel-pdpa-cta
+                                    data-label-dates="Alege datele" data-label-departure="Alege data plecării"
+                                    data-label-room="Alege cameră">Alege datele</button>
+                            <button type="button" class="travel-pdpa-sticky__fav" data-travel-pdpa-fav aria-pressed="false" aria-label="Adaugă la favorite"></button>
+                        </div>
+                    </div>
+                </div>
+                <nav class="travel-pdpa-sticky__tabs" data-travel-pdpa-sticky-tabs hidden aria-label="Secțiunile paginii">
+                    <div class="travel-pdpa-sticky__tablist" data-travel-pdpa-sticky-tablist></div>
+                </nav>
+            </div>
+            <div class="travel-pdpa-tabs" data-travel-pdpa-tabs>
+                <div class="ty-tabs cm-j-tabs clearfix">
+                    <ul class="ty-tabs__list">
+                        <li id="description" class="ty-tabs__item cm-js active"><a class="ty-tabs__a">Descriere</a></li>
+                        <li id="features" class="ty-tabs__item cm-js"><a class="ty-tabs__a">Facilități</a></li>
+                        <li id="policies" class="ty-tabs__item cm-js"><a class="ty-tabs__a">Informații utile</a></li>
+                        <li id="discussion" class="ty-tabs__item cm-js cm-ajax"><a class="ty-tabs__a">Recenzii</a></li>
+                    </ul>
+                </div>
+                <div class="cm-tabs-content ty-tabs__content clearfix" id="tabs_content">
+                    <div id="content_description" class="ty-wysiwyg-content content-description"><p>Plajă privată.</p></div>
+                    <div id="content_features" class="ty-wysiwyg-content content-features hidden"><p>Wi-Fi</p></div>
+                    <div id="content_policies" class="ty-wysiwyg-content content-policies hidden"><p>Check-in 14:00</p></div>
+                    <div id="content_discussion" class="ty-wysiwyg-content content-discussion hidden"></div>
+                    <div id="content_attachments" class="ty-wysiwyg-content content-attachments"></div>
+                </div>
             </div>
         </div>`;
     await import('../../addon-travel-core/js/addons/travel_core/pdp-design-a.js');
@@ -74,49 +95,6 @@ function click(el) {
     el.dispatchEvent(event);
     return event;
 }
-
-describe('formatSummary', () => {
-    const params = (query) => new URLSearchParams(query);
-
-    it('reads dates and guests from the search URL', () => {
-        expect(window.TravelPdpDesignA.formatSummary(
-            params('check_in=2026-10-26&check_out=2026-10-31&adults=2&children=0&rooms=1'),
-            LABELS,
-            'ro',
-            TODAY,
-        )).toBe('26–31 oct. · 2 adulți');
-    });
-
-    it('counts guests from rooms_data and names the rooms when there are several', () => {
-        const roomsData = JSON.stringify([
-            { adults: 2, children: 1, childrenAges: [7] },
-            { adults: 2, children: 0, childrenAges: [] },
-        ]);
-        expect(window.TravelPdpDesignA.formatSummary(
-            params('check_in=2026-10-26&check_out=2026-11-02&adults=9&rooms_data=' + encodeURIComponent(roomsData)),
-            LABELS,
-            'ro',
-            TODAY,
-        // Intl puts thin spaces (U+2009) around the range dash.
-        )).toBe('26 oct.\u2009–\u20092 nov. · 4 adulți · 1 copil · 2 camere');
-    });
-
-    it('adds the year for a stay outside the current year', () => {
-        expect(window.TravelPdpDesignA.formatSummary(
-            params('check_in=2027-01-03&check_out=2027-01-08&adults=1'),
-            LABELS,
-            'ro',
-            TODAY,
-        )).toBe('3–8 ian. 2027 · 1 adult');
-    });
-
-    it('is empty without a valid stay', () => {
-        const format = window.TravelPdpDesignA.formatSummary;
-        expect(format(params('adults=2'), LABELS, 'ro', TODAY)).toBe('');
-        expect(format(params('check_in=2026-10-31&check_out=2026-10-26'), LABELS, 'ro', TODAY)).toBe('');
-        expect(format(params('check_in=2026-02-30&check_out=2026-03-02'), LABELS, 'ro', TODAY)).toBe('');
-    });
-});
 
 describe('photo mosaic', () => {
     it('opens the theme previewer through the matching stock link', () => {
@@ -199,44 +177,344 @@ describe('"Alege datele"', () => {
     });
 });
 
-describe('compact search summary', () => {
-    const compact = () => page().querySelector('[data-travel-pdpa-compact]');
-    const away = { isIntersecting: false, boundingClientRect: { top: -200 } };
-    const inView = { isIntersecting: true, boundingClientRect: { top: 300 } };
+describe('sticky header: what shows when (#40)', () => {
+    // Scrolled past the hero, above the tab strip, before a search.
+    const BASE = {
+        heroBottom: -100, stripBottom: 400, line1: 56, line2: 48, viewport: 800, searched: false,
+        rooms: [], booking: [{ top: -300, bottom: -100 }], panels: [], atBottom: false, locked: null,
+    };
+    const state = (m) => window.TravelPdpDesignA.headerState({ ...BASE, ...m });
 
-    it('stays hidden before a search, even with the bar scrolled away', () => {
-        observe(away);
-        expect(compact().hidden).toBe(true);
+    it('shows line 1 only once the whole hero has scrolled off', () => {
+        expect(state({ heroBottom: 120 }).show).toBe(false); // the booking box still on screen
+        expect(state({ heroBottom: -1 }).show).toBe(false); // a scroll that lands on its very end
+        expect(state({ heroBottom: -3 }).show).toBe(true);
+        expect(state({ heroBottom: -Infinity }).show).toBe(false); // nothing measured: the block is not displayed
     });
 
-    it('shows the stay once results are under the bar and the bar has scrolled away', () => {
-        window.history.pushState({}, '', '/hotel-admiral?check_in=2026-10-26&check_out=2026-10-31&adults=2&children=0&rooms=1');
-        const results = document.createElement('div');
-        results.className = 'room-results';
-        page().querySelector('.travel-pdp-results').appendChild(results);
-        document.dispatchEvent(new CustomEvent('travel:results-swapped'));
-
-        expect(compact().hidden).toBe(false);
-        expect(compact().querySelector('[data-travel-pdpa-summary]').textContent).toBe('26–31 oct. · 2 adulți');
+    it('docks line 2 once the page\'s tab strip has gone under the header, never without line 1', () => {
+        expect(state({ stripBottom: 105 }).dock).toBe(false); // its end still in view under line 1
+        expect(state({ stripBottom: 104 }).dock).toBe(true); // line 2 (56–104 px) covers it whole
+        expect(state({ stripBottom: -900 }).dock).toBe(true);
+        expect(state({ stripBottom: null }).dock).toBe(false); // no tabs
+        expect(state({ heroBottom: 10, stripBottom: -900 }).dock).toBe(false);
     });
 
-    it('hides again when the bar is back in view', () => {
-        observe(inView);
-        expect(compact().hidden).toBe(true);
-        observe(away);
-        expect(compact().hidden).toBe(false);
+    it('before a search, the button shows only while the booking box is off screen', () => {
+        expect(state({}).cta).toBe(true);
+        expect(state({ booking: [{ top: -100, bottom: 40 }] }).cta).toBe(true); // only under line 1
+        expect(state({ booking: [{ top: 100, bottom: 164 }] }).cta).toBe(false);
+        expect(state({ heroBottom: 50 }).cta).toBe(false); // no header, no button
     });
 
-    it('"Camere" scrolls to the results and "Modifică" opens the calendar', () => {
-        click(document.getElementById('compact-rooms'));
-        expect(window.scrollTo).toHaveBeenCalledTimes(1);
+    it('after a search, it shows only while no room option is on screen', () => {
+        const rooms = (top, bottom, more = {}) => state({ searched: true, rooms: [{ top, bottom }], ...more });
+        expect(rooms(300, 700).cta).toBe(false); // the rooms in view
+        expect(rooms(-900, -200).cta).toBe(true); // scrolled past them
+        expect(rooms(900, 1300).cta).toBe(true); // not reached yet
+        expect(rooms(-300, 50).cta).toBe(true); // only under line 1
+        expect(rooms(-300, 90, { stripBottom: 0 }).cta).toBe(true); // only under both lines (104 px)
+        expect(rooms(-300, 120, { stripBottom: 0 }).cta).toBe(false);
+    });
+
+    it('marks the section across the middle of what the header leaves in view', () => {
+        const panels = [{ id: 'description', top: -500 }, { id: 'features', top: 300 }, { id: 'policies', top: 700 }];
+        // under both lines (104 px) of an 800 px window, the middle is at 452 px
+        expect(state({ stripBottom: -600, panels }).active).toBe('features');
+        expect(state({ stripBottom: -600, panels: panels.map((p) => ({ ...p, top: p.top + 1000 })) }).active).toBe(null); // above the first
+        expect(state({ stripBottom: -600, panels, atBottom: true }).active).toBe('policies'); // a last section too short to reach the middle
+        expect(state({ stripBottom: -600, panels, locked: 'description' }).active).toBe('description'); // the tab clicked last
+        expect(state({ stripBottom: 300, panels }).active).toBe(null); // line 2 not docked
+    });
+});
+
+describe('sticky header: where a scroll stops (#40)', () => {
+    // The hero ends at 1000 px, the tab strip at 3000 px (document px): line 2
+    // docks from a scroll of 3000 - 56 - 48 = 2896.
+    const land = (top) => window.TravelPdpDesignA.landingY({ top, heroEnd: 1000, stripBottom: 3000, line1: 56, line2: 48 });
+
+    it('in the hero, 16 px from the top as before: no header there', () => {
+        expect(land(900)).toBe(884);
+        expect(land(10)).toBe(0);
+    });
+
+    it('between the hero and the tab strip, 8 px under line 1', () => {
+        expect(land(2000)).toBe(2000 - 56 - 8);
+    });
+
+    it('once line 2 will show, 8 px under both lines', () => {
+        expect(land(4000)).toBe(4000 - 56 - 48 - 8);
+    });
+
+    it('a section right under the strip, right under line 2, never above where it docks', () => {
+        expect(land(3000)).toBe(2896); // line 2 over the strip, the section right under it
+        expect(land(3010)).toBe(3010 - 56 - 48 - 8);
+        expect(land(2958)).toBe(2958 - 56 - 8); // the strip itself: under line 1, in view
+    });
+
+    it('just under the hero, with the hero\'s end at the top, so no header covers it', () => {
+        expect(land(1040)).toBe(1000);
+    });
+});
+
+describe('sticky header on the page (#40)', () => {
+    const header = () => page().querySelector('[data-travel-pdpa-sticky]');
+    const nav = () => header().querySelector('[data-travel-pdpa-sticky-tabs]');
+    const cta = () => header().querySelector('[data-travel-pdpa-cta]');
+    const fav = () => header().querySelector('[data-travel-pdpa-fav]');
+    const tabs = () => Array.from(header().querySelectorAll('[data-travel-pdpa-tab]'));
+    const active = () => tabs().filter((b) => b.classList.contains('is-active')).map((b) => b.getAttribute('data-travel-pdpa-tab'));
+    const stubbed = new Set();
+    const at = (el, top, height) => {
+        el.getBoundingClientRect = () => ({ top, bottom: top + height, left: 0, right: 1024, x: 0, y: top, width: 1024, height });
+        stubbed.add(el);
+    };
+    let room = null;
+    // The page scrolled `y` px: title row 100–220, photos 240–720, the bar
+    // 740–804 (the hero's end), a room 900–1200 once searched, the tab strip
+    // at 1500, the sections from 1560, 600 px each.
+    const scrolled = (y) => {
+        Object.defineProperty(window, 'pageYOffset', { value: y, configurable: true, writable: true });
+        at(page().querySelector('.travel-pdpa-head'), 100 - y, 120);
+        at(page().querySelector('.travel-pdpa-gallery'), 240 - y, 480);
+        at(page().querySelector('.travel-pdp-results .travel-search-form-wrapper'), 740 - y, 64);
+        at(page().querySelector('[data-travel-pdpa-tabs] .ty-tabs'), 1500 - y, 48);
+        ['description', 'features', 'policies'].forEach((id, i) => at(document.getElementById('content_' + id), 1560 + i * 600 - y, 600));
+        if (room) {
+            at(room, 900 - y, 300);
+        }
+        window.TravelPdpDesignA.updateHeaders();
+    };
+    const addRoom = () => {
+        room = document.createElement('div');
+        room.setAttribute('data-travel-room', '');
+        page().querySelector('.travel-pdp-results').appendChild(room);
+    };
+
+    beforeAll(() => {
+        window.innerHeight = 800;
+        Object.defineProperty(document.documentElement, 'scrollHeight', { value: 3400, configurable: true });
+    });
+
+    afterAll(() => {
+        stubbed.forEach((el) => delete el.getBoundingClientRect);
+        Object.defineProperty(window, 'pageYOffset', { value: 0, configurable: true, writable: true });
+        delete document.documentElement.scrollHeight;
+        if (room) {
+            room.remove();
+            room = null;
+        }
+    });
+
+    it('builds line 2 from the page\'s tab strip and shows every panel under its title', () => {
+        expect(header().hidden).toBe(false);
+        expect(tabs().map((b) => [b.getAttribute('data-travel-pdpa-tab'), b.textContent]))
+            .toEqual([['description', 'Descriere'], ['features', 'Facilități'], ['policies', 'Informații utile']]);
+        expect(page().classList.contains('travel-pdpa--stacked')).toBe(true);
+        ['description', 'features', 'policies'].forEach((id) => {
+            const panel = document.getElementById('content_' + id);
+            expect(panel.getAttribute('data-travel-pdpa-panel')).toBe(id);
+            expect(panel.firstElementChild.matches('h2.travel-pdpa-tabs__title')).toBe(true);
+        });
+        expect(document.getElementById('content_features').firstElementChild.textContent).toBe('Facilități');
+        // a panel the strip does not list (no content) stays as it is, and so
+        // does a tab the theme loads on demand (empty until clicked)
+        expect(document.getElementById('content_attachments').hasAttribute('data-travel-pdpa-panel')).toBe(false);
+        expect(document.getElementById('content_discussion').hasAttribute('data-travel-pdpa-panel')).toBe(false);
+        // the theme keeps its strip on a phone instead of an accordion
+        expect(page().querySelector('.ty-tabs').classList.contains('cm-j-tabs-disable-convertation')).toBe(true);
+        expect(document.getElementById('tabs_content').classList.contains('cm-j-content-disable-convertation')).toBe(true);
+    });
+
+    it('stays away while the hero shows; line 1 once it has gone; line 2 once the tab strip has gone under it', () => {
+        scrolled(0);
+        expect(header().classList.contains('is-shown')).toBe(false);
+        scrolled(805); // the bar's end 1 px above the top: a scroll that lands on it
+        expect(header().classList.contains('is-shown')).toBe(false);
+        scrolled(810);
+        expect(header().classList.contains('is-shown')).toBe(true);
+        expect(nav().hidden).toBe(true);
+        expect(header().classList.contains('is-docked')).toBe(false);
+        scrolled(1450); // the strip at 50 px, under line 1
+        expect(nav().hidden).toBe(false);
+        expect(header().classList.contains('is-docked')).toBe(true);
+        scrolled(500);
+        expect(header().classList.contains('is-shown')).toBe(false);
+        expect(nav().hidden).toBe(true);
+    });
+
+    it('follows the page\'s scroll, once a frame', async () => {
+        Object.defineProperty(window, 'pageYOffset', { value: 1000, configurable: true, writable: true });
+        stubbed.forEach((el) => {
+            const box = el.getBoundingClientRect();
+            at(el, box.top - 500, box.height);
+        });
+        window.dispatchEvent(new Event('scroll'));
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        expect(header().classList.contains('is-shown')).toBe(true);
+    });
+
+    it('"Alege datele" before a search opens the calendar; it gives way while the booking box shows', () => {
+        scrolled(1000);
+        expect(cta().textContent).toBe('Alege datele');
+        expect(cta().classList.contains('is-away')).toBe(false);
 
         const trigger = document.getElementById('date-trigger');
         const opened = vi.fn();
         trigger.addEventListener('click', opened);
-        click(document.getElementById('compact-change'));
+        const event = click(cta());
+        expect(event.defaultPrevented).toBe(true);
+        expect(window.scrollTo).toHaveBeenCalledTimes(1);
         expect(opened).toHaveBeenCalledTimes(1);
         trigger.removeEventListener('click', opened);
+    });
+
+    it('a package by coach or plane chooses a departure: "Alege data plecării"', () => {
+        const results = page().querySelector('.travel-pdp-results');
+        results.classList.add('travel-pdp-results--package');
+        scrolled(1000);
+        expect(cta().textContent).toBe('Alege data plecării');
+        results.classList.remove('travel-pdp-results--package');
+        scrolled(1000);
+        expect(cta().textContent).toBe('Alege datele');
+    });
+
+    it('"Alege cameră" once rooms show, only while none is on screen; it brings the first under line 1', () => {
+        addRoom();
+        scrolled(1000); // the room at -100–200: in view under line 1
+        expect(cta().textContent).toBe('Alege cameră');
+        expect(cta().classList.contains('is-away')).toBe(true);
+        scrolled(1300); // scrolled past it
+        expect(cta().classList.contains('is-away')).toBe(false);
+
+        click(cta());
+        // the room at 900 px stops 8 px under line 1
+        expect(window.scrollTo).toHaveBeenCalledWith({ top: 900 - 56 - 8, behavior: 'smooth' });
+    });
+
+    it('a filter that hides every room keeps "Alege cameră", which then leads to the list', () => {
+        const list = document.createElement('section');
+        list.setAttribute('data-travel-results', '');
+        page().querySelector('.travel-pdp-results').appendChild(list);
+        room.hidden = true;
+        stubbed.add(list);
+        const empty = (y) => {
+            scrolled(y);
+            room.getBoundingClientRect = () => ({ top: 0, bottom: 0, left: 0, right: 0, x: 0, y: 0, width: 0, height: 0 }); // hidden by the filter
+            at(list, 900 - y, 120);
+            window.TravelPdpDesignA.updateHeaders();
+        };
+        empty(950); // the list at -50–70 px, its end in view under line 1
+        expect(cta().textContent).toBe('Alege cameră');
+        expect(cta().classList.contains('is-away')).toBe(true);
+        empty(1300);
+        expect(cta().classList.contains('is-away')).toBe(false);
+        click(cta());
+        expect(window.scrollTo).toHaveBeenCalledWith({ top: 900 - 56 - 8, behavior: 'smooth' });
+        room.hidden = false;
+        list.remove();
+        stubbed.delete(list);
+    });
+
+    it('the name goes back to the top; the pin keeps its own link', () => {
+        const event = click(header().querySelector('[data-travel-pdpa-top]'));
+        expect(event.defaultPrevented).toBe(true);
+        expect(window.scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' });
+
+        // A listener after the script's sees the pin's click untouched (then stops jsdom navigating).
+        let prevented = null;
+        const after = (e) => {
+            prevented = e.defaultPrevented;
+            e.preventDefault();
+        };
+        document.addEventListener('click', after);
+        click(document.getElementById('sticky-map'));
+        document.removeEventListener('click', after);
+        expect(prevented).toBe(false); // Google Maps opens in a new tab
+        expect(window.scrollTo).toHaveBeenCalledTimes(1);
+    });
+
+    it('a tab of line 2 brings its section under both lines and stays marked until the visitor scrolls', () => {
+        scrolled(1800);
+        expect(active()).toEqual(['features']); // 1560 + 600 - 1800 = 360 px, above the middle (452 px)
+        expect(page().querySelector('#features').classList.contains('active')).toBe(true);
+
+        click(tabs()[2]);
+        expect(window.scrollTo).toHaveBeenCalledWith({ top: 2760 - 56 - 48 - 8, behavior: 'smooth' });
+        expect(active()).toEqual(['policies']);
+        expect(tabs()[2].getAttribute('aria-current')).toBe('true');
+        expect(page().querySelector('#policies').classList.contains('active')).toBe(true);
+        expect(page().querySelector('#features').classList.contains('active')).toBe(false);
+
+        scrolled(1800); // the smooth scroll still on its way
+        expect(active()).toEqual(['policies']);
+        window.dispatchEvent(new Event('wheel'));
+        scrolled(1800);
+        expect(active()).toEqual(['features']);
+        expect(tabs()[2].hasAttribute('aria-current')).toBe(false);
+    });
+
+    it('once the tab\'s scroll has arrived, any move of the page lets it go (the scrollbar too)', () => {
+        scrolled(1800);
+        click(tabs()[2]); // its section stops at the page's end, 2600
+        scrolled(2600);
+        expect(active()).toEqual(['policies']);
+        scrolled(1800); // dragged back up, no wheel, no key
+        expect(active()).toEqual(['features']);
+    });
+
+    it('marks the first section as line 2 docks, the last one at the very bottom of the page', () => {
+        scrolled(1450); // the strip at 50 px, the first section right under it
+        expect(active()).toEqual(['description']);
+        expect(page().querySelector('#description').classList.contains('active')).toBe(true);
+        scrolled(2600); // the window's end at the page's end (3400)
+        expect(active()).toEqual(['policies']);
+    });
+
+    it('a click the script or the theme sends to the page\'s strip still reaches the theme', () => {
+        const theme = vi.fn();
+        const li = page().querySelector('#features');
+        li.addEventListener('click', theme);
+        click(li.querySelector('a'));
+        expect(theme).toHaveBeenCalledTimes(1);
+        expect(window.scrollTo).not.toHaveBeenCalled();
+        li.removeEventListener('click', theme);
+    });
+
+    it('the heart clicks the title row\'s wishlist button and turns red', () => {
+        const wishlist = document.getElementById('button_wishlist_7');
+        const added = vi.fn();
+        wishlist.addEventListener('click', added);
+
+        const event = click(fav());
+
+        expect(event.defaultPrevented).toBe(true);
+        expect(added).toHaveBeenCalledTimes(1);
+        expect(fav().getAttribute('aria-pressed')).toBe('true');
+        expect(fav().classList.contains('is-saved')).toBe(true);
+        wishlist.removeEventListener('click', added);
+    });
+
+    it('no booking form: no button; no wishlist button: no heart; no tabs: no line 2', () => {
+        const root = document.getElementById('travel-booking-root');
+        const parent = root.parentNode;
+        parent.removeChild(root);
+        const other = document.createElement('div');
+        other.className = 'travel-pdpa';
+        other.innerHTML = header().outerHTML.replace(/ data-travel-pdpa-tab="[^"]*"/g, '');
+        other.querySelector('[data-travel-pdpa-sticky-tablist]').innerHTML = '';
+        other.querySelector('[data-travel-pdpa-sticky]').hidden = true;
+        document.body.appendChild(other);
+
+        window.TravelPdpDesignA.init();
+
+        expect(other.querySelector('[data-travel-pdpa-sticky]').hidden).toBe(false);
+        expect(other.querySelector('[data-travel-pdpa-cta]').hidden).toBe(true);
+        expect(other.querySelector('[data-travel-pdpa-fav]').hidden).toBe(true);
+        expect(other.querySelector('[data-travel-pdpa-tab]')).toBeNull();
+        expect(other.querySelector('[data-travel-pdpa-sticky-tabs]').hidden).toBe(true);
+        other.remove();
+        parent.appendChild(root);
     });
 });
 
