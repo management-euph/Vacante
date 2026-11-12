@@ -79,6 +79,6 @@ final class PackageModesWiringTest extends TestCase
 
         self::assertStringContainsString("if (root.closest('.travel-pdp-results--package')) {", $page, '"Alege datele" does not open the hidden hotel calendar');
         // The sticky header's "Alege cameră" counts a package's room types among the rooms.
-        self::assertStringContainsString("var ROOM_OPTIONS = '[data-travel-room], .travel-offer-card, .travel-package-room, .travel-circuit-rooms .travel-circuit-offer';", $page);
+        self::assertStringContainsString("var ROOM_OPTIONS = '[data-travel-room], .travel-offer-card:not(.travel-skeleton-card), .travel-package-room, .travel-circuit-rooms .travel-circuit-offer';", $page);
     }
 }

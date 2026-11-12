@@ -641,7 +641,10 @@
     text-overflow: ellipsis;
     cursor: pointer;
 }
-/* The whole name and the address, on hover or keyboard focus. */
+/* The whole name and the address, on hover or keyboard focus. The pointer
+   can move onto it (a bridge over the gap) and Esc closes it until the
+   pointer leaves the name or the focus moves on (pdp-design-a.js), as WCAG
+   1.4.13 asks; a pointer only passing over the name does not open it. */
 .travel-pdpa-sticky__tip {
     position: absolute;
     top: calc(100% + 12px);
@@ -661,8 +664,15 @@
     opacity: 0;
     visibility: hidden;
     transform: translateY(-4px);
-    transition: opacity 0.12s ease, transform 0.12s ease, visibility 0.12s;
-    pointer-events: none;
+    transition: opacity 0.12s ease, transform 0.12s ease, visibility 0s linear 0.12s;
+}
+.travel-pdpa-sticky__tip::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    bottom: 100%;
+    left: 0;
+    height: 12px;
 }
 .travel-pdpa-sticky__tip::before {
     content: "";
@@ -678,13 +688,20 @@
     opacity: 1;
     visibility: visible;
     transform: none;
+    transition: opacity 0.12s ease, transform 0.12s ease, visibility 0s;
 }
 @media (hover: hover) {
     .travel-pdpa-sticky__namebox:hover .travel-pdpa-sticky__tip {
         opacity: 1;
         visibility: visible;
         transform: none;
+        transition: opacity 0.12s ease 0.3s, transform 0.12s ease 0.3s, visibility 0s linear 0.3s;
     }
+}
+.travel-pdpa-sticky__namebox.is-tip-off .travel-pdpa-sticky__tip {
+    opacity: 0;
+    visibility: hidden;
+    transition: none;
 }
 .travel-pdpa-sticky__tip-name {
     display: block;
@@ -886,10 +903,12 @@
 
 /* Line 2 follows the sections, so every tab's panel shows, under its
    title, whatever the theme's tabs hid (its .hidden, an inline display);
-   the page's strip stays, its active tab following the section in view. */
+   the page's strip stays, its active tab following the section in view.
+   Scrolls the page does not make itself (a link to #content_…, the focus)
+   stop under the header through the root's scroll-padding, which the
+   script sets to what the header covers. */
 .travel-pdpa--stacked .travel-pdpa-tabs [data-travel-pdpa-panel] {
     display: block !important;
-    scroll-margin-top: calc(var(--travel-pdpa-sticky-line1) + var(--travel-pdpa-sticky-line2) + 8px);
 }
 .travel-pdpa--stacked .travel-pdpa-tabs [data-travel-pdpa-panel] ~ [data-travel-pdpa-panel] {
     margin-top: 32px;
@@ -902,14 +921,6 @@
     font-size: 20px;
     font-weight: 700;
     line-height: 1.3;
-}
-
-/* The page's own scrolls to the rooms stop under line 1: the several rooms'
-   "see the room types" (pdp-design-a-rooms.js), the offers a package's or a
-   circuit's bar brings into view (PackageBar.jsx, CircuitBar.jsx). */
-.travel-pdpa [data-travel-room-list],
-.travel-pdpa div:has(> .travel-circuit-rooms) {
-    scroll-margin-top: calc(var(--travel-pdpa-sticky-line1) + 8px);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -928,6 +939,20 @@
 @media print {
     .travel-pdpa-sticky {
         display: none !important;
+    }
+}
+/* Forced colours (a Windows contrast theme) drop the white pill and the
+   pin's painted mask: an outline marks the section, the pin keeps the link
+   colour. */
+@media (forced-colors: active) {
+    .travel-pdpa .travel-pdpa-sticky__tab.is-active {
+        outline: 2px solid CanvasText;
+        outline-offset: -4px;
+        text-decoration: underline;
+    }
+    .travel-pdpa-sticky__map::before {
+        background: LinkText;
+        forced-color-adjust: none;
     }
 }
 
@@ -2224,7 +2249,10 @@
         pointer-events: none;
     }
 
-    /* The sticky header: shorter lines; the name gives way first. */
+    /* The sticky header: shorter lines. The name gives way, down to a few
+       letters; nothing slides under the button (the name, the stars and the
+       pin sit in line 1 itself), and a label too long for the narrowest
+       phones ends with "…" rather than push the heart out. */
     .travel-pdpa {
         --travel-pdpa-sticky-line1: 52px;
         --travel-pdpa-sticky-line2: 44px;
@@ -2234,7 +2262,11 @@
         padding: 0 12px;
     }
     .travel-pdpa-sticky__id {
-        gap: 4px;
+        display: contents;
+    }
+    .travel-pdpa-sticky__namebox {
+        flex: 0 1 auto;
+        min-width: 44px;
     }
     .travel-pdpa .travel-pdpa-sticky__name {
         font-size: 15px;
@@ -2243,8 +2275,11 @@
         gap: 8px;
     }
     .travel-pdpa .travel-pdpa-sticky__cta {
+        max-width: calc(100vw - 124px);
         padding: 0 12px;
         font-size: 14px;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     .travel-pdpa-sticky__tablist {
         padding: 0 12px;
@@ -2253,6 +2288,19 @@
         height: 32px;
         padding: 0 12px;
         font-size: 14px;
+    }
+}
+/* The narrowest phones keep the name, the button and the heart: the stars
+   (or a circuit's length) go first, then the pin; both are in the title row. */
+@media (max-width: 389px) {
+    .travel-pdpa-sticky__stars,
+    .travel-pdpa-sticky__days {
+        display: none;
+    }
+}
+@media (max-width: 359px) {
+    .travel-pdpa .travel-pdpa-sticky__map {
+        display: none;
     }
 }
 
@@ -2940,11 +2988,10 @@
     gap: 24px 40px;
     align-items: start;
 }
-/* The menu's links stop the section under line 1 of the sticky header (#40). */
 .travel-pdpa .travel-circuit-program,
 .travel-pdpa .travel-circuit-card,
 .travel-pdpa .travel-circuit-include {
-    scroll-margin-top: calc(var(--travel-pdpa-sticky-line1) + 8px);
+    scroll-margin-top: 16px;
 }
 /* The program: each day's number on a line down the days. */
 .travel-pdpa .travel-circuit-days {

@@ -17,6 +17,7 @@ beforeAll(async () => {
     document.body.innerHTML = `
         <div class="travel-pdpa" data-travel-design="a">
             <div class="travel-pdpa-head">
+                <h1 class="ty-product-block-title travel-pdpa-head__title"><bdi>Hotel Admiral</bdi></h1>
                 <div class="travel-pdpa-head__actions">
                     <button type="button" id="button_wishlist_7" class="ty-btn ty-btn__tertiary ty-btn-icon ty-add-to-wish" title="Adaugă la favorite"></button>
                 </div>
@@ -90,6 +91,11 @@ beforeEach(() => {
     window.scrollTo.mockClear();
 });
 
+// A few frames (requestAnimationFrame or its stand-in).
+function frames(n = 2) {
+    return new Promise((resolve) => setTimeout(resolve, 20 * n));
+}
+
 function click(el) {
     const event = new MouseEvent('click', { bubbles: true, cancelable: true });
     el.dispatchEvent(event);
@@ -133,17 +139,30 @@ describe('photo mosaic', () => {
 });
 
 describe('"Alege datele"', () => {
-    it('scrolls to the bar and opens the calendar', () => {
+    it('opens the calendar, then scrolls to the bar once the calendar has the focus', async () => {
         const trigger = document.getElementById('date-trigger');
-        const opened = vi.fn();
+        // the calendar takes the focus as it opens (and the browser jumps to it)
+        const opened = vi.fn(() => trigger.focus());
         trigger.addEventListener('click', opened);
 
         const event = click(page().querySelector('.travel-pdpa-head__dates'));
 
         expect(event.defaultPrevented).toBe(true);
-        expect(window.scrollTo).toHaveBeenCalledTimes(1);
         expect(opened).toHaveBeenCalledTimes(1);
+        expect(window.scrollTo).not.toHaveBeenCalled(); // not yet: the jump would cut it short
+        await frames(1);
+        expect(window.scrollTo).toHaveBeenCalledTimes(1);
         trigger.removeEventListener('click', opened);
+        trigger.blur();
+    });
+
+    it('scrolls anyway when the calendar takes no focus', () => {
+        vi.useFakeTimers();
+        click(page().querySelector('.travel-pdpa-head__dates'));
+        expect(window.scrollTo).not.toHaveBeenCalled();
+        vi.advanceTimersByTime(400);
+        expect(window.scrollTo).toHaveBeenCalledTimes(1);
+        vi.useRealTimers();
     });
 
     it('does not toggle a calendar that is already open', () => {
@@ -192,6 +211,13 @@ describe('sticky header: what shows when (#40)', () => {
         expect(state({ heroBottom: -Infinity }).show).toBe(false); // nothing measured: the block is not displayed
     });
 
+    it('keeps line 2 away in a window under 480 px tall, and the whole header under 300 px', () => {
+        expect(state({ viewport: 479, stripBottom: -900 }).dock).toBe(false);
+        expect(state({ viewport: 479, stripBottom: -900 }).show).toBe(true);
+        expect(state({ viewport: 299 }).show).toBe(false);
+        expect(state({ viewport: 480, stripBottom: -900 }).dock).toBe(true);
+    });
+
     it('docks line 2 once the page\'s tab strip has gone under the header, never without line 1', () => {
         expect(state({ stripBottom: 105 }).dock).toBe(false); // its end still in view under line 1
         expect(state({ stripBottom: 104 }).dock).toBe(true); // line 2 (56–104 px) covers it whole
@@ -225,6 +251,29 @@ describe('sticky header: what shows when (#40)', () => {
         expect(state({ stripBottom: -600, panels, atBottom: true }).active).toBe('policies'); // a last section too short to reach the middle
         expect(state({ stripBottom: -600, panels, locked: 'description' }).active).toBe('description'); // the tab clicked last
         expect(state({ stripBottom: 300, panels }).active).toBe(null); // line 2 not docked
+    });
+});
+
+describe('sticky header: a link to a tab (#40)', () => {
+    const tab = (id, on) => {
+        const li = document.createElement('li');
+        li.id = id;
+        if (on) {
+            li.className = 'active';
+        }
+        return { id, li };
+    };
+    const info = (on) => ({ tabs: ['description', 'features', 'policies'].map((id) => tab(id, id === on)) });
+
+    it('opens on the tab the address names, else on the one the theme marks when not the first', () => {
+        const { requestedTab } = window.TravelPdpDesignA;
+        expect(requestedTab(info('description'))).toBe(null);
+        expect(requestedTab(info('policies'))).toBe('policies'); // ?selected_section=policies
+        window.history.replaceState({}, '', '#content_features');
+        expect(requestedTab(info('description'))).toBe('features');
+        window.history.replaceState({}, '', '#features');
+        expect(requestedTab(info('policies'))).toBe('features');
+        window.history.replaceState({}, '', window.location.pathname + window.location.search);
     });
 });
 
@@ -354,19 +403,69 @@ describe('sticky header on the page (#40)', () => {
         expect(header().classList.contains('is-shown')).toBe(true);
     });
 
-    it('"Alege datele" before a search opens the calendar; it gives way while the booking box shows', () => {
+    it('"Alege datele" before a search opens the calendar; it gives way while the booking box shows', async () => {
         scrolled(1000);
         expect(cta().textContent).toBe('Alege datele');
         expect(cta().classList.contains('is-away')).toBe(false);
 
         const trigger = document.getElementById('date-trigger');
-        const opened = vi.fn();
+        const opened = vi.fn(() => trigger.focus());
         trigger.addEventListener('click', opened);
         const event = click(cta());
         expect(event.defaultPrevented).toBe(true);
-        expect(window.scrollTo).toHaveBeenCalledTimes(1);
         expect(opened).toHaveBeenCalledTimes(1);
+        await frames(1);
+        expect(window.scrollTo).toHaveBeenCalledTimes(1);
         trigger.removeEventListener('click', opened);
+        trigger.blur();
+    });
+
+    it('tells the browser and CS-Cart what the header covers, so their own scrolls stop under it', () => {
+        const store = {};
+        window.jQuery = () => ({
+            data: (key, value) => {
+                if (value === undefined) {
+                    return store[key];
+                }
+                store[key] = value;
+                return undefined;
+            },
+        });
+        window.innerHeight = 400; // a short window: line 1 only
+        scrolled(1000);
+        expect(document.documentElement.style.scrollPaddingTop).toBe('64px');
+        expect(store.caScrollToElmOffset).toBe(64);
+        window.innerHeight = 800;
+        scrolled(1000);
+        expect(document.documentElement.style.scrollPaddingTop).toBe('112px'); // 56 + 48 + 8
+        expect(store.caScrollToElmOffset).toBe(112);
+        delete window.jQuery;
+    });
+
+    it('a short window keeps line 2, then the whole header, away', () => {
+        window.innerHeight = 400; // a phone held sideways, a zoomed page
+        scrolled(1800);
+        expect(header().classList.contains('is-shown')).toBe(true);
+        expect(nav().hidden).toBe(true);
+        window.innerHeight = 250;
+        scrolled(1800);
+        expect(header().classList.contains('is-shown')).toBe(false);
+        window.innerHeight = 800;
+        scrolled(1800);
+        expect(nav().hidden).toBe(false);
+    });
+
+    it('Sphinx\'s grey placeholders while it searches are not rooms', () => {
+        const skeleton = document.createElement('div');
+        skeleton.className = 'travel-offer-card sphinx-offer-card travel-skeleton-card sphinx-skeleton-card';
+        skeleton.setAttribute('aria-hidden', 'true');
+        page().querySelector('.travel-pdp-results').appendChild(skeleton);
+        stubbed.add(skeleton);
+        at(skeleton, 900 - 1300, 200);
+        window.TravelPdpDesignA.updateHeaders();
+        expect(cta().textContent).toBe('Alege datele');
+        skeleton.remove();
+        stubbed.delete(skeleton);
     });
 
     it('a package by coach or plane chooses a departure: "Alege data plecării"', () => {
@@ -388,8 +487,42 @@ describe('sticky header on the page (#40)', () => {
         expect(cta().classList.contains('is-away')).toBe(false);
 
         click(cta());
-        // the room at 900 px stops 8 px under line 1
+        // the room at 900 px stops 8 px under line 1, the focus on it
         expect(window.scrollTo).toHaveBeenCalledWith({ top: 900 - 56 - 8, behavior: 'smooth' });
+        expect(document.activeElement).toBe(room);
+        expect(room.getAttribute('tabindex')).toBe('-1');
+    });
+
+    it('after an inline search, the results come into view again once the engine\'s "searching" row has gone', async () => {
+        const wrapper = page().querySelector('.travel-pdp-results .travel-search-form-wrapper');
+        const loading = document.createElement('div');
+        loading.className = 'nvt-search-loading';
+        wrapper.appendChild(loading);
+        scrolled(1000);
+        window.scrollTo.mockClear();
+
+        document.dispatchEvent(new CustomEvent('travel:results-swapped'));
+        await frames(2);
+        expect(window.scrollTo).not.toHaveBeenCalled(); // the row still takes room
+        loading.remove();
+        await frames(2);
+        // the first result (the room, at 900 px) under line 1
+        expect(window.scrollTo).toHaveBeenCalledWith({ top: 900 - 56 - 8, behavior: 'smooth' });
+    });
+
+    it('…but not when the visitor has scrolled meanwhile', async () => {
+        const wrapper = page().querySelector('.travel-pdp-results .travel-search-form-wrapper');
+        const loading = document.createElement('div');
+        loading.className = 'nvt-search-loading';
+        wrapper.appendChild(loading);
+        window.scrollTo.mockClear();
+
+        document.dispatchEvent(new CustomEvent('travel:results-swapped'));
+        await frames(1);
+        window.dispatchEvent(new WheelEvent('wheel', { deltaY: 200 }));
+        loading.remove();
+        await frames(2);
+        expect(window.scrollTo).not.toHaveBeenCalled();
     });
 
     it('a filter that hides every room keeps "Alege cameră", which then leads to the list', () => {
@@ -416,10 +549,11 @@ describe('sticky header on the page (#40)', () => {
         stubbed.delete(list);
     });
 
-    it('the name goes back to the top; the pin keeps its own link', () => {
+    it('the name goes back to the top, the focus on the title; the pin keeps its own link', () => {
         const event = click(header().querySelector('[data-travel-pdpa-top]'));
         expect(event.defaultPrevented).toBe(true);
         expect(window.scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' });
+        expect(document.activeElement).toBe(page().querySelector('.travel-pdpa-head__title'));
 
         // A listener after the script's sees the pin's click untouched (then stops jsdom navigating).
         let prevented = null;
@@ -441,6 +575,7 @@ describe('sticky header on the page (#40)', () => {
 
         click(tabs()[2]);
         expect(window.scrollTo).toHaveBeenCalledWith({ top: 2760 - 56 - 48 - 8, behavior: 'smooth' });
+        expect(document.activeElement).toBe(document.querySelector('#content_policies .travel-pdpa-tabs__title'));
         expect(active()).toEqual(['policies']);
         expect(tabs()[2].getAttribute('aria-current')).toBe('true');
         expect(page().querySelector('#policies').classList.contains('active')).toBe(true);
@@ -448,10 +583,44 @@ describe('sticky header on the page (#40)', () => {
 
         scrolled(1800); // the smooth scroll still on its way
         expect(active()).toEqual(['policies']);
-        window.dispatchEvent(new Event('wheel'));
+        window.dispatchEvent(new WheelEvent('wheel', { deltaY: 120 }));
         scrolled(1800);
         expect(active()).toEqual(['features']);
         expect(tabs()[2].hasAttribute('aria-current')).toBe(false);
+    });
+
+    it('a wheel that does not move the page, or a touch on the header, keeps the clicked tab; a touch on the page lets it go', () => {
+        scrolled(1800);
+        click(tabs()[2]);
+        scrolled(1800);
+        window.dispatchEvent(new WheelEvent('wheel', { deltaX: 80 })); // sideways
+        header().dispatchEvent(new Event('touchstart', { bubbles: true })); // swiping line 2
+        scrolled(1800);
+        expect(active()).toEqual(['policies']);
+        document.body.dispatchEvent(new Event('touchstart', { bubbles: true }));
+        scrolled(1800);
+        expect(active()).toEqual(['features']);
+    });
+
+    it('a scroll cut short and gone still lets the tab go, with no wheel, touch or key', () => {
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+        scrolled(1800);
+        click(tabs()[2]);
+        scrolled(1700); // the scrollbar took over before it arrived
+        expect(active()).toEqual(['policies']);
+        vi.advanceTimersByTime(1600); // nothing else happens: the check comes on its own
+        expect(active()).toEqual(['description']);
+        vi.useRealTimers();
+    });
+
+    it('Esc closes the name\'s tooltip until the focus moves on', () => {
+        const name = header().querySelector('[data-travel-pdpa-top]');
+        const box = name.closest('.travel-pdpa-sticky__namebox');
+        name.focus();
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        expect(box.classList.contains('is-tip-off')).toBe(true);
+        name.blur();
+        expect(box.classList.contains('is-tip-off')).toBe(false);
     });
 
     it('once the tab\'s scroll has arrived, any move of the page lets it go (the scrollbar too)', () => {

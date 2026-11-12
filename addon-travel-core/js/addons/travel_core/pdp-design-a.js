@@ -77,13 +77,20 @@
     var HERO_SLACK = 2;
     // The room options a visitor chooses from: Design A's room cards, the
     // classic offer cards, a package's room types, a circuit's rooms.
-    var ROOM_OPTIONS = '[data-travel-room], .travel-offer-card, .travel-package-room, .travel-circuit-rooms .travel-circuit-offer';
+    // (Sphinx's grey placeholders while it searches are not rooms.)
+    var ROOM_OPTIONS = '[data-travel-room], .travel-offer-card:not(.travel-skeleton-card), .travel-package-room, .travel-circuit-rooms .travel-circuit-offer';
     // A search's room list (Design A): its filters may hide every room.
     var ROOM_RESULTS = '[data-travel-results]';
     // The booking box's popups count as the booking box while open.
     var BOOKING_POPUPS = '.nvt-calendar-popup, .nvt-guest-popup';
     // A tab's scroll that has not arrived by then was cut short (ms).
     var LOCK_WAIT = 1500;
+    // "Alege datele" scrolls once the calendar has taken the focus, or after this (ms).
+    var CALENDAR_WAIT = 400;
+    // Short windows (a phone held sideways, a zoomed page): below these
+    // heights line 2, then the whole header, stay away, leaving room to read.
+    var LINE2_MIN_VIEW = 480;
+    var HEADER_MIN_VIEW = 300;
 
     /**
      * What the sticky header shows, from where things are on screen (px from
@@ -92,7 +99,8 @@
      *  - Line 1 only once the hero (title row, photos, booking box) has
      *    scrolled off; line 2 only once the page's tab strip has gone under
      *    the header (its end where line 2 ends, or higher): line 2 takes its
-     *    place, never with a part of it showing.
+     *    place, never with a part of it showing. A short window keeps line 2
+     *    (under LINE2_MIN_VIEW px), then the header (HEADER_MIN_VIEW), away.
      *  - The button only while what it leads to is off screen: the room
      *    options after a search ("Alege cameră"), the booking box before it
      *    ("Alege datele").
@@ -111,8 +119,8 @@
      */
     function headerState(m) {
         // no hero measured (the block is not displayed): no header
-        var show = isFinite(m.heroBottom) && m.heroBottom < -HERO_SLACK;
-        var dock = show && m.stripBottom !== null && m.stripBottom <= m.line1 + m.line2;
+        var show = isFinite(m.heroBottom) && m.heroBottom < -HERO_SLACK && m.viewport >= HEADER_MIN_VIEW;
+        var dock = show && m.viewport >= LINE2_MIN_VIEW && m.stripBottom !== null && m.stripBottom <= m.line1 + m.line2;
         var from = show ? m.line1 + (dock ? m.line2 : 0) : 0;
         var onScreen = function (box) {
             return box.bottom > from && box.top < m.viewport;
@@ -214,7 +222,7 @@
         });
         var shown = rooms.filter(function (el) {
             var rect = el.getBoundingClientRect();
-            return rect.width > 0 || rect.height > 0;
+            return (rect.width > 0 || rect.height > 0) && !el.closest('[aria-hidden="true"]');
         });
         var options = shown.filter(function (el) {
             return !el.matches(ROOM_RESULTS);
@@ -245,16 +253,29 @@
         return null;
     }
 
+    function viewHeight() {
+        return window.innerHeight || document.documentElement.clientHeight || 0;
+    }
+
+    /** How many of the header's lines a window this tall can show. */
+    function linesFor(view) {
+        if (view < HEADER_MIN_VIEW) {
+            return 0;
+        }
+        return view < LINE2_MIN_VIEW ? 1 : 2;
+    }
+
     /** landingY for an element of a Design A block, in this window's scroll. */
     function landingFor(page, el) {
         var scroll = window.pageYOffset;
         var top = el.getBoundingClientRect().top + scroll;
         var h = page ? headerOf(page) : null;
-        if (!h) {
+        var shape = linesFor(viewHeight());
+        if (!h || shape === 0) {
             return top - SCROLL_GAP;
         }
         var lines = h.lines || headerLines(page);
-        var strip = h.tabs ? h.tabs.strip.getBoundingClientRect() : null;
+        var strip = h.tabs && shape === 2 ? h.tabs.strip.getBoundingClientRect() : null;
         return landingY({
             top: top,
             heroEnd: heroBottom(page) + scroll,
@@ -264,13 +285,31 @@
         });
     }
 
-    /** Brings an element into view under the sticky header; returns where the window stops. */
-    function scrollToElement(el) {
+    /**
+     * Brings an element into view under the sticky header (at once when
+     * instant, or with reduced motion); returns where the window stops.
+     */
+    function scrollToElement(el, instant) {
         var page = el.closest ? el.closest('.travel-pdpa') : null;
         var top = Math.max(0, landingFor(page, el));
-        window.scrollTo({ top: top, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+        window.scrollTo({ top: top, behavior: instant || prefersReducedMotion() ? 'auto' : 'smooth' });
         var end = document.documentElement.scrollHeight - (window.innerHeight || 0);
         return end > 0 ? Math.min(top, end) : top;
+    }
+
+    /**
+     * The focus goes where a button of the header took the visitor (a
+     * heading, a room), without a second scroll: the next Tab carries on
+     * from there, and no focus is left in a header about to hide.
+     */
+    function focusOn(el) {
+        if (!el) {
+            return;
+        }
+        if (!el.matches('a[href], button, input, select, textarea, [tabindex]')) {
+            el.setAttribute('tabindex', '-1');
+        }
+        el.focus({ preventScroll: true });
     }
 
     /** The theme previewer's links, in gallery order (main photo first). */
@@ -293,15 +332,34 @@
         if (!root) {
             return false;
         }
-        scrollToElement(root.closest('.travel-search-form-wrapper') || root);
+        var box = root.closest('.travel-search-form-wrapper') || root;
         // A package mode (board 16.2) has its own bar: the dates are its chips.
         if (root.closest('.travel-pdp-results--package')) {
+            scrollToElement(box);
+            focusOn(box.querySelector('.travel-circuit-dates__list button'));
             return true;
         }
         var trigger = root.querySelector('.nvt-field--date .nvt-field-input');
-        if (trigger && trigger.getAttribute('aria-expanded') !== 'true') {
-            trigger.click();
+        if (!trigger || trigger.getAttribute('aria-expanded') === 'true') {
+            scrollToElement(box);
+            return true;
         }
+        // The calendar takes the focus as it opens, and the browser's own jump
+        // to it would cut a smooth scroll short: scroll once it has.
+        var landed = false;
+        var land = function () {
+            if (!landed) {
+                landed = true;
+                root.removeEventListener('focusin', focused);
+                scrollToElement(box);
+            }
+        };
+        var focused = function () {
+            setTimeout(land, 0);
+        };
+        root.addEventListener('focusin', focused);
+        setTimeout(land, CALENDAR_WAIT);
+        trigger.click();
         return true;
     }
 
@@ -336,11 +394,12 @@
     /**
      * Every panel shows, one under another, under its tab's title, so line 2
      * can follow them; a click on the page's own strip brings the panel into
-     * view instead of switching to it. Clicks this script or the theme
-     * sends, and clicks on a tab line 2 leaves out, still reach CS-Cart. On
-     * a phone the theme would turn the strip into an accordion (responsive.js,
-     * after the page has loaded): its opt-out classes keep the strip and the
-     * panels.
+     * view (the theme still switches to it, unseen: its panel shows anyway,
+     * and what listens for the switch hears it; the click goes on to the
+     * page). Clicks this script or the theme sends, and clicks on a tab line 2
+     * leaves out, are the theme's alone. On a phone the theme would turn the
+     * strip into an accordion (responsive.js, after the page has loaded): its
+     * opt-out classes keep the strip and the panels.
      */
     function stackTabs(page, info) {
         info.strip.classList.add('cm-j-tabs-disable-convertation');
@@ -356,6 +415,7 @@
             if (!tab.panel.querySelector('.travel-pdpa-tabs__title')) {
                 var title = document.createElement('h2');
                 title.className = 'travel-pdpa-tabs__title';
+                title.setAttribute('tabindex', '-1');
                 title.textContent = tab.title;
                 tab.panel.insertBefore(title, tab.panel.firstChild);
             }
@@ -370,7 +430,6 @@
                 return;
             }
             event.preventDefault();
-            event.stopPropagation();
             goTab(page, li.id);
         }, true);
     }
@@ -419,6 +478,29 @@
         fadeTabs(h);
     }
 
+    /**
+     * A link to one of the tabs (CS-Cart's selected_section, or #<tab> /
+     * #content_<tab>): the tab the theme marks active when it is not the
+     * first, or the one the address names.
+     */
+    function requestedTab(info) {
+        var hash = window.location.hash.replace(/^#(content_)?/, '');
+        var named = null;
+        var marked = null;
+        info.tabs.forEach(function (tab) {
+            if (hash !== '' && tab.id === hash) {
+                named = tab.id;
+            }
+            if (marked === null && tab.li.classList.contains('active')) {
+                marked = tab.id;
+            }
+        });
+        if (named !== null) {
+            return named;
+        }
+        return marked !== null && marked !== info.tabs[0].id ? marked : null;
+    }
+
     function wishlistButton(page) {
         return page.querySelector('.travel-pdpa-head__actions .ty-add-to-wish, .travel-pdpa-head__actions [id^="button_wishlist_"]');
     }
@@ -439,12 +521,39 @@
         }
     }
 
+    /**
+     * What the header covers at most, for the scrolls the page does not make
+     * itself: the browser's (focus, #links, paging) through the root's
+     * scroll-padding, CS-Cart's ($.scrollToElm: a link to a tab, a form's
+     * first error) through the offset it reads on the body (a theme's own,
+     * if larger, kept).
+     */
+    function syncCover(h, view) {
+        var shape = linesFor(view);
+        var cover = shape === 0 ? 0 : h.lines.line1 + (shape === 2 ? h.lines.line2 : 0) + HEADER_GAP;
+        if (h.cover === cover) {
+            return;
+        }
+        h.cover = cover;
+        document.documentElement.style.scrollPaddingTop = cover > 0 ? cover + 'px' : '';
+        var jq = window.Tygh && window.Tygh.$ ? window.Tygh.$ : window.jQuery;
+        if (typeof jq === 'function' && document.body) {
+            var body = jq(document.body);
+            if (h.themeOffset === null) {
+                h.themeOffset = Number(body.data('caScrollToElmOffset')) || 0;
+            }
+            body.data('caScrollToElmOffset', Math.max(h.themeOffset, cover));
+        }
+    }
+
     function updateHeader(h) {
         var page = h.page;
-        var view = window.innerHeight || document.documentElement.clientHeight || 0;
+        var view = viewHeight();
         holdTab(h);
         // read once per window size (the phone's lines are shorter)
+        var resized = h.lines === null;
         var lines = h.lines || (h.lines = headerLines(page));
+        syncCover(h, view);
         var strip = h.tabs ? h.tabs.strip.getBoundingClientRect() : null;
         var rooms = roomTargets(page).map(function (el) {
             var rect = el.getBoundingClientRect();
@@ -483,7 +592,8 @@
             }
             h.cta.classList.toggle('is-away', !state.cta);
         }
-        if (h.tabs && h.list && (!before || before.active !== state.active || before.dock !== state.dock)) {
+        // (a new window size: line 2's edges and its centred tab again)
+        if (h.tabs && h.list && (resized || !before || before.active !== state.active || before.dock !== state.dock)) {
             markTabs(h, state.active);
         }
     }
@@ -527,11 +637,22 @@
             lockAt: 0,
             lockArrived: false,
             lines: null,
+            // what it covers (syncCover), and the theme's own CS-Cart offset
+            cover: null,
+            themeOffset: null,
             state: null,
         };
+        var requested = null;
         if (h.tabs && h.nav && h.list) {
+            requested = requestedTab(h.tabs);
             stackTabs(page, h.tabs);
             buildTabs(h);
+            // a late web font can widen the tabs: line 2's edges again
+            if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(function () {
+                    fadeTabs(h);
+                });
+            }
         } else {
             h.tabs = null;
         }
@@ -551,30 +672,51 @@
         if (typeof window.ResizeObserver === 'function') {
             new window.ResizeObserver(scheduleHeaders).observe(page);
         }
+        // A link to a tab: its section, under the header, once laid out.
+        if (requested !== null) {
+            var go = function () {
+                goTab(page, requested, true);
+            };
+            if (document.readyState === 'complete') {
+                setTimeout(go, 0);
+            } else {
+                window.addEventListener('load', go);
+            }
+        }
     }
 
-    /** A tab of line 2 or of the page's strip: its section, under the header. */
-    function goTab(page, id) {
+    /**
+     * A tab of line 2 or of the page's strip: its section under the header,
+     * the focus on its title (instant: a link to the tab, as the page opens).
+     */
+    function goTab(page, id, instant) {
         var panel = page.querySelector('[data-travel-pdpa-panel="' + id + '"]');
         var h = headerOf(page);
         if (!panel || !h) {
             return false;
         }
         h.locked = id;
-        h.lockY = scrollToElement(panel);
+        h.lockY = scrollToElement(panel, instant);
         h.lockAt = Date.now();
         h.lockArrived = false;
+        focusOn(panel.querySelector('.travel-pdpa-tabs__title') || panel);
         updateHeader(h);
+        // a scroll cut short by one that is not a wheel, a touch or a key
+        // (the scrollbar) and done by then: line 2 follows the page again
+        setTimeout(function () {
+            updateHeader(h);
+        }, LOCK_WAIT + 50);
         return true;
     }
 
-    /** "Alege cameră": the first room option (or the emptied list), under line 1. */
+    /** "Alege cameră": the first room option (or the emptied list) under line 1, the focus on it. */
     function goRooms(page) {
         var first = roomTargets(page)[0];
         if (!first) {
             return false;
         }
         scrollToElement(first);
+        focusOn(first.matches('[data-travel-room]') ? first.querySelector('.travel-pdpa-rcard__name') || first : first);
         return true;
     }
 
@@ -597,6 +739,7 @@
         if (target.closest('[data-travel-pdpa-top]')) {
             h.locked = null;
             window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+            focusOn(page.querySelector('.travel-pdpa-head__title'));
             return true;
         }
         if (target.closest('[data-travel-pdpa-cta]')) {
@@ -618,8 +761,89 @@
         return false;
     }
 
-    /** The visitor scrolls by hand: the clicked tab no longer holds line 2. */
-    function releaseTabs() {
+    // When the visitor last scrolled by hand (a wheel, a touch, a key).
+    var lastInput = 0;
+
+    /**
+     * Esc closes the name's tooltip while the pointer or the focus keeps it
+     * open, until the pointer leaves the name or the focus moves on (WCAG
+     * 1.4.13). True when one was open.
+     */
+    function closeStickyTips() {
+        var closed = false;
+        each(document, '.travel-pdpa-sticky__namebox', function (box) {
+            var name = box.querySelector('.travel-pdpa-sticky__name');
+            var open = box.matches(':hover') || (name !== null && name === document.activeElement);
+            if (!open || box.classList.contains('is-tip-off')) {
+                return;
+            }
+            box.classList.add('is-tip-off');
+            var reset = function () {
+                box.classList.remove('is-tip-off');
+                box.removeEventListener('mouseleave', reset);
+                if (name) {
+                    name.removeEventListener('blur', reset);
+                }
+            };
+            box.addEventListener('mouseleave', reset);
+            if (name) {
+                name.addEventListener('blur', reset);
+            }
+            closed = true;
+        });
+        return closed;
+    }
+
+    /**
+     * After an inline search the engine scrolls to its results while its
+     * "searching" row still takes room in the bar: the row goes, the results
+     * move up and the window stops past the bar's end, line 1 over the
+     * results' heading. Once the row has gone, the results come into view
+     * again (no header there: the bar's end stays in view). A package's
+     * hidden stay results are left alone.
+     */
+    function relandResults() {
+        var since = Date.now();
+        var nextFrame = typeof window.requestAnimationFrame === 'function'
+            ? function (fn) { window.requestAnimationFrame(fn); }
+            : function (fn) { setTimeout(fn, 16); };
+        headers.forEach(function (h) {
+            var wrapper = h.page.querySelector('.travel-pdp-results .travel-search-form-wrapper');
+            var first = wrapper ? wrapper.nextElementSibling : null;
+            if (!first) {
+                return;
+            }
+            var frames = 0;
+            var check = function () {
+                frames += 1;
+                if (wrapper.querySelector('.nvt-search-loading') && frames < 90) {
+                    nextFrame(check);
+                    return;
+                }
+                var rect = first.getBoundingClientRect();
+                // (not when the visitor has scrolled meanwhile)
+                if (first.isConnected && (rect.width > 0 || rect.height > 0) && lastInput < since) {
+                    scrollToElement(first);
+                }
+            };
+            nextFrame(check);
+        });
+    }
+
+    /**
+     * The visitor scrolls by hand: the clicked tab no longer holds line 2.
+     * Not for a touch or a wheel on the header (swiping line 2 sideways) nor
+     * a sideways wheel: they do not move the page.
+     */
+    function releaseTabs(event) {
+        var target = event && event.target instanceof Element ? event.target : null;
+        if (target && target.closest('[data-travel-pdpa-sticky]')) {
+            return;
+        }
+        if (event && event.type === 'wheel' && !event.deltaY) {
+            return;
+        }
+        lastInput = Date.now();
         var released = false;
         headers.forEach(function (h) {
             if (h.locked !== null) {
@@ -1365,6 +1589,9 @@
         if (event.key !== 'Escape') {
             return;
         }
+        if (closeStickyTips()) {
+            return;
+        }
         var sheet = isPhone() ? document.querySelector('.travel-pdpa .travel-pdpa-terms[open]') : null;
         if (sheet) {
             sheet.open = false;
@@ -1412,6 +1639,7 @@
     });
     window.addEventListener('load', scheduleHeaders);
     document.addEventListener('travel:results-swapped', scheduleHeaders);
+    document.addEventListener('travel:results-swapped', relandResults);
     document.addEventListener('travel:live-done', scheduleHeaders);
     // Scrolling by hand releases a tab clicked on line 2.
     window.addEventListener('wheel', releaseTabs, { passive: true });
@@ -1419,7 +1647,7 @@
     document.addEventListener('keydown', function (event) {
         if (/^(ArrowUp|ArrowDown|PageUp|PageDown|Home|End| )$/.test(event.key)
             && !(event.target instanceof Element && event.target.closest('input, textarea, select, [contenteditable="true"]'))) {
-            releaseTabs();
+            releaseTabs(event);
         }
     });
 
@@ -1443,6 +1671,7 @@
         init: init,
         headerState: headerState,
         landingY: landingY,
+        requestedTab: requestedTab,
         updateHeaders: updateHeaders,
         fitGallery: fitGallery,
         fitPhotos: fitPhotos,

@@ -444,6 +444,34 @@ an internal code.
     "Product details in tab" setting must be on (without a tab strip there
     is no line 2); the heart cannot show a hotel saved on an earlier visit
     (the store's wishlist button keeps no such state either).
+- 12 Nov 2026 — **sticky header, after a review** (six lenses: the header's
+  logic, CS-Cart, the booking engine, layout and accessibility, template and
+  tests, the owner's brief; each fix checked in Chromium on the real CSS
+  and JS):
+  - Scrolls the page does not make itself stop under the header too: the
+    script gives the root a `scroll-padding-top` of what the header covers
+    (focus moving by keyboard, #links, paging) and CS-Cart the same offset
+    for `$.scrollToElm` (a "N reviews" link to its tab, a form's first
+    error); the per-element scroll margins went.
+  - "Alege datele" opens the calendar first and scrolls once the calendar
+    has taken the focus: its focus trap used to cut the scroll short and
+    leave "Vezi prețurile" below the fold. After an inline search the
+    results come into view again once the engine's "searching" row has gone
+    (the engine measures with it, so line 1 used to cover the results'
+    heading and meal filter), unless the visitor has scrolled meanwhile.
+  - The focus follows: a tab to its section's title, "Alege cameră" to the
+    room, the name to the page title.
+  - A link to a tab (`selected_section`, `#tab`) opens on that section; a
+    click on the page's strip goes on to CS-Cart (its dropdowns close) and
+    the theme switches tabs unseen; Sphinx's placeholders are not rooms.
+  - A clicked tab lets go once its scroll is cut short and idle, not on a
+    touch or a sideways wheel on line 2; line 2's fades follow a rotation.
+  - Short windows (a phone held sideways, a zoomed page): no line 2 under
+    480 px of height, no header under 300 px. Phones under 390 px drop the
+    stars (a circuit's length), under 360 px the pin; nothing overlaps and
+    the name keeps a few letters.
+  - The name's tooltip can be hovered and Esc closes it (WCAG 1.4.13);
+    forced colours outline the active tab and keep the pin.
 - Next: the combined list of several rooms' terms in the bar (board 14.5);
   Novoton rows through `RoomOfferRows`;
   the title row's after-search state ("10–17 iul. · de la 1.485 €", "Vezi
