@@ -35,7 +35,7 @@ final class CircuitFeatureAssigner
     /** @var array<int, string> feature_id => feature_type */
     private array $types = [];
 
-    /** @var array<int, array<string, int>> feature_id => variant name => variant_id */
+    /** @var array<int, array<int|string, int>> feature_id => variant name => variant_id (a numeric name such as "7" is an int key in PHP) */
     private array $variants = [];
 
     /**
@@ -106,7 +106,7 @@ final class CircuitFeatureAssigner
      * The value of a list feature that stands for $nights: the one whose
      * name starts with that number ("7", "7 nights", "7 nopți").
      *
-     * @param array<string, int> $variants variant name => variant_id
+     * @param array<int|string, int> $variants variant name => variant_id
      */
     public static function nightsVariant(int $nights, array $variants): int
     {
@@ -241,7 +241,7 @@ final class CircuitFeatureAssigner
     }
 
     /**
-     * @return array<string, int> the feature's values, name => variant_id (every language)
+     * @return array<int|string, int> the feature's values, name => variant_id (every language)
      */
     private function variantNames(int $featureId): array
     {
