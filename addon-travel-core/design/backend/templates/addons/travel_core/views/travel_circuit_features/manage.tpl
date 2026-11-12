@@ -11,7 +11,7 @@
 
 <p class="travel-fm-intro">{__("travel_core.fmc_intro")}</p>
 
-<form action="{"travel_feature_mappings.update_circuits"|fn_url}" method="post" name="circuit_features_form" class="form-horizontal">
+<form action="{"travel_circuit_features.update"|fn_url}" method="post" name="circuit_features_form" class="form-horizontal">
     <input type="hidden" name="security_hash" value="{$security_hash}">
 
     <div class="control-group">
@@ -104,7 +104,7 @@
     </div>
 </form>
 
-<form action="{"travel_feature_mappings.apply_circuits"|fn_url}" method="post" class="form-inline" style="margin-top: 15px;">
+<form action="{"travel_circuit_features.apply"|fn_url}" method="post" class="form-inline" style="margin-top: 15px;">
     <input type="hidden" name="security_hash" value="{$security_hash}">
     <button type="submit" class="btn" onclick="return confirm('{__("travel_core.fmc_apply_confirm")|escape:"javascript"}');">
         <i class="icon-magic"></i> {__("travel_core.fmc_apply")}

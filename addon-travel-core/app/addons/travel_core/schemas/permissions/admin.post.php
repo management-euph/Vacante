@@ -21,4 +21,8 @@ $schema['travel_booking_styles'] = [
     'permissions' => ['GET', 'POST'],
 ];
 
+$schema['travel_circuit_features'] = [
+    'permissions' => ['GET', 'POST'],
+];
+
 return $schema;
