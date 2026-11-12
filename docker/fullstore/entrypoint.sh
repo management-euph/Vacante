@@ -154,6 +154,22 @@ enable_dev_mode() {
     fi
 }
 
+patch_core_php83() {
+    # CS-Cart 4.21.2 core assigns an undeclared Breadcrumbs::$_has_history_links,
+    # which PHP 8.2+ reports as "Deprecated: Creation of dynamic property" and
+    # DEVELOPMENT mode prints at the top of admin pages. Declare the property
+    # (idempotent; a no-op once core ships the fix).
+    local f="$DOCROOT/app/Tygh/Navigation/Breadcrumbs.php"
+    if [ -f "$f" ] && ! grep -q '\$_has_history_links;' "$f"; then
+        sed -i '0,/^{[[:space:]]*$/{s//{\n    public $_has_history_links;/}' "$f"
+        if grep -q '\$_has_history_links;' "$f"; then
+            log "Declared Breadcrumbs::\$_has_history_links (PHP 8.3 deprecation)."
+        else
+            log "Could not patch Breadcrumbs.php; the dynamic-property deprecation will still show."
+        fi
+    fi
+}
+
 serve_own_url() {
     # CS-Cart's SEO add-on checks URL rewriting by fetching its own URL
     # (http://${HTTP_HOST}/check_url_rewrite.html) from INSIDE this container
@@ -237,5 +253,8 @@ else
     log "Already provisioned; re-linking addons for freshness."
     DOCROOT="$DOCROOT" REPO=/repo bash "$LINK_ADDONS" || true
 fi
+
+# Every start, not just first run: an already-provisioned store needs it too.
+patch_core_php83
 
 exec "$@"
