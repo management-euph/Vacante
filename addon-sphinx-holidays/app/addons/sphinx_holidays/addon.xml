@@ -368,6 +368,7 @@
                 `destination_names` VARCHAR(1000) DEFAULT NULL,
                 `departure_ids`     JSON DEFAULT NULL COMMENT 'Array of departure IDs',
                 `departure_names`   VARCHAR(1000) DEFAULT NULL,
+                `departure_months`  VARCHAR(255) DEFAULT NULL COMMENT 'Months (Y-m, JSON list) with a departure still priced (circuits/rates)',
                 `image_url`         VARCHAR(500) DEFAULT NULL,
                 `itinerary_json`    JSON DEFAULT NULL COMMENT 'Full itinerary from API',
                 `details_json`      JSON DEFAULT NULL COMMENT 'Included, not included, things to know, group size and age (static API)',
@@ -740,6 +741,15 @@
                 ADD COLUMN `details_json` JSON DEFAULT NULL
                 COMMENT 'Included, not included, things to know, group size and age (static API)'
                 AFTER `itinerary_json`;
+        </item>
+
+        <!-- The months a circuit still leaves in (circuits/rates): the
+             "departure month" feature of its product (Feature Mappings › Circuits). -->
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_circuits`
+                ADD COLUMN `departure_months` VARCHAR(255) DEFAULT NULL
+                COMMENT 'Months (Y-m, JSON list) with a departure still priced (circuits/rates)'
+                AFTER `departure_names`;
         </item>
 
         <!-- A circuit Sphinx no longer prices: the sync hides its product and

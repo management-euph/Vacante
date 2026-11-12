@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Helpers;
 
 use Tygh\Addons\SphinxHolidays\Repository\CircuitRepository;
+use Tygh\Addons\SphinxHolidays\Services\CircuitFeatures;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
@@ -131,6 +132,8 @@ class CircuitProductFactory
         }
 
         $this->circuitRepo->linkToProduct($circuitId, $productId);
+        // Its features, as mapped in Feature Mappings › Circuits.
+        (new CircuitFeatures($this->circuitRepo))->applyTo($circuitId);
 
         return ['status' => 'added', 'product_id' => $productId, 'reason' => ''];
     }

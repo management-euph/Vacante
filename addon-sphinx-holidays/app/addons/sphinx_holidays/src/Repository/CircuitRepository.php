@@ -63,6 +63,78 @@ class CircuitRepository
         }
     }
 
+    /**
+     * What the rates say of each circuit (BookableCircuits::facts()): the
+     * cities it leaves from and the months it still leaves in. The static
+     * list has neither, so the circuits sync writes them here.
+     *
+     * @param array<int, array{months: list<string>, departures: array<int, string>}> $facts by circuit id
+     */
+    public function saveDepartureFacts(array $facts): void
+    {
+        foreach ($facts as $circuitId => $fact) {
+            $this->update((int) $circuitId, [
+                'departure_ids' => $fact['departures'] !== [] ? json_encode(array_keys($fact['departures'])) : null,
+                'departure_names' => $fact['departures'] !== [] ? implode(', ', $fact['departures']) : null,
+                'departure_months' => $fact['months'] !== [] ? json_encode($fact['months']) : null,
+            ]);
+        }
+    }
+
+    /**
+     * The active circuits that have a product, with what their product's
+     * features are made of (CircuitFeatures).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findLinkedForFeatures(): array
+    {
+        return TypeCoerce::toRowList(db_get_array(
+            "SELECT circuit_id, product_id, transport_type, duration_nights, destination_ids,
+                    departure_names, departure_months, tags_json
+             FROM ?:sphinx_circuits
+             WHERE product_id > 0 AND sync_status = 'active'
+             ORDER BY circuit_id",
+        ));
+    }
+
+    /**
+     * One linked circuit's row for its features; [] when it has no product.
+     *
+     * @return array<string, mixed>
+     */
+    public function findForFeatures(int $circuitId): array
+    {
+        return TypeCoerce::toStringMap(db_get_row(
+            'SELECT circuit_id, product_id, transport_type, duration_nights, destination_ids,
+                    departure_names, departure_months, tags_json
+             FROM ?:sphinx_circuits WHERE circuit_id = ?i',
+            $circuitId,
+        ));
+    }
+
+    /**
+     * The countries of a circuit's destinations: each destination of the
+     * static tree rolled up to its country, by name, each once.
+     *
+     * @param list<int> $destinationIds
+     *
+     * @return list<string>
+     */
+    public function countryNames(array $destinationIds): array
+    {
+        if ($destinationIds === []) {
+            return [];
+        }
+
+        return array_values(array_unique(array_filter(TypeCoerce::toStringList(db_get_fields(
+            "SELECT DISTINCT c.name FROM ?:sphinx_destinations d
+             JOIN ?:sphinx_destinations c ON c.country_code = d.country_code AND c.type = 'country'
+             WHERE d.destination_id IN (?n) ORDER BY c.name",
+            $destinationIds,
+        )))));
+    }
+
     /** Total number of stored circuits (for the grid's freshness line). */
     public function countAll(): int
     {

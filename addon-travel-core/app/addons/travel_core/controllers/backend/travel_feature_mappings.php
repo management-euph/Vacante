@@ -14,6 +14,8 @@ use Tygh\Tygh;
 use Tygh\Registry;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Services\CircuitFeatureConfig;
+use Tygh\Addons\TravelCore\Services\CircuitFeatureMappingsPage;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
 use Tygh\Addons\TravelCore\TravelConstants;
@@ -37,6 +39,26 @@ $validFeatureTypes = array_merge(FeatureMapper::STRICT_FEATURE_TYPES, FeatureMap
 
 // ── POST actions ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    // Circuits tab: save which feature each circuit fact goes to
+    if ($mode === 'update_circuits') {
+        CircuitFeatureConfig::save(is_array($_REQUEST['circuit_features'] ?? null) ? $_REQUEST['circuit_features'] : []);
+        fn_set_notification('N', __('notice'), __('travel_core.fmc_saved'));
+
+        return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.circuits'];
+    }
+
+    // Circuits tab: write the mapped features to every circuit product now
+    if ($mode === 'apply_circuits') {
+        if (CircuitFeatureConfig::isEmpty(CircuitFeatureConfig::load())) {
+            fn_set_notification('W', __('warning'), __('travel_core.fmc_nothing_mapped'));
+        } else {
+            $written = TravelProviderRegistry::applyCircuitFeatures();
+            fn_set_notification('N', __('notice'), __('travel_core.fmc_applied', ['[count]' => $written]));
+        }
+
+        return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.circuits'];
+    }
 
     // Update mapping
     if ($mode === 'update') {
@@ -643,4 +665,25 @@ if ($mode === 'get_variants') {
         fn_echo(json_encode($variants));
         exit;
     }
+}
+
+// ── GET: Circuits tab — one feature per circuit fact ──
+if ($mode === 'circuits') {
+    $lang = TypeCoerce::toString(DESCR_SL);
+    $config = CircuitFeatureConfig::load();
+    $features = CircuitFeatureMappingsPage::features($config['group_id'], $lang);
+
+    $view->assign('fm_tab', 'circuits');
+    $view->assign('circuit_config', $config);
+    $view->assign('circuit_fields', CircuitFeatureConfig::FIELDS);
+    $view->assign('circuit_transports', CircuitFeatureConfig::TRANSPORTS);
+    $view->assign('circuit_groups', CircuitFeatureMappingsPage::groups($lang));
+    $view->assign('circuit_feature_list', $features);
+    $view->assign('transport_variants', CircuitFeatureMappingsPage::variants($config['features']['transport'], $lang));
+    $view->assign('month_variants', CircuitFeatureMappingsPage::variants($config['features']['month'], $lang));
+}
+
+// ── GET: Packages tab — nothing to map yet ──
+if ($mode === 'packages') {
+    $view->assign('fm_tab', 'packages');
 }

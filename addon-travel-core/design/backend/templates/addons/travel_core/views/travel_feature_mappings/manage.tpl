@@ -10,6 +10,8 @@
 
 {capture name="mainbox"}
 
+{include file="addons/travel_core/views/travel_feature_mappings/tabs.tpl"}
+
 {if $view_mode == 'dashboard'}
 
     {* ══════════════════════════ DASHBOARD MODE ══════════════════════════ *}

@@ -55,6 +55,9 @@ class TravelProviderRegistry
     /** @var array<string, PackageModesProviderInterface> provider name => a hotel's package modes */
     private static array $packageModes = [];
 
+    /** @var array<string, callable(): int> provider name => re-applies the circuit feature mapping to its circuit products */
+    private static array $circuitFeatureAppliers = [];
+
     /**
      * Register a travel provider.
      */
@@ -207,6 +210,36 @@ class TravelProviderRegistry
         $details = $provider?->circuitDetails($circuit->circuitId);
 
         return $details !== null && !$details->isEmpty() ? $details : null;
+    }
+
+    /**
+     * Register what re-applies the circuit feature mapping (Feature Mappings
+     * › Circuits) to a provider's circuit products: the provider holds the
+     * circuits' facts. Ignored unless register() ran first.
+     *
+     * @param callable(): int $applier returns how many products it wrote
+     */
+    public static function setCircuitFeatureApplier(string $name, callable $applier): void
+    {
+        if (isset(self::$providers[$name])) {
+            self::$circuitFeatureAppliers[$name] = $applier;
+        }
+    }
+
+    /**
+     * Re-apply the circuit feature mapping to every provider's circuit
+     * products ("Apply to all circuits").
+     *
+     * @return int how many products were written
+     */
+    public static function applyCircuitFeatures(): int
+    {
+        $written = 0;
+        foreach (array_intersect_key(self::$circuitFeatureAppliers, self::$providers) as $applier) {
+            $written += $applier();
+        }
+
+        return $written;
     }
 
     /**
@@ -576,5 +609,6 @@ class TravelProviderRegistry
         self::$indicativePrices = [];
         self::$circuits = [];
         self::$packageModes = [];
+        self::$circuitFeatureAppliers = [];
     }
 }

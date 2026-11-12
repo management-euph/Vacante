@@ -114,7 +114,10 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
             array_map(static fn (array $circuit): int => TypeCoerce::toInt($circuit['circuit_id'] ?? 0), $allCircuits),
             (new CircuitRepository())->allIds(),
         );
-        $bookable = (new BookableCircuits($this->api))->ids(date('Y-m-d'), $candidates);
+        // Every month is read: the rates also say each circuit's departure
+        // cities and months (the static list has neither).
+        $rates = new BookableCircuits($this->api);
+        $bookable = $rates->ids(date('Y-m-d'), $candidates, true);
         $past = 0;
         if ($bookable === null) {
             $this->output('WARNING: the circuit rates could not be read; no circuit is left out or removed this run.');
@@ -138,6 +141,17 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
         if ($bookable !== null && TypeCoerce::toString($stats['error']) === '') {
             $pruned = (new CircuitRepository())->pruneUnbookable($bookable);
             $pruneMsg = ", {$past} skipped (no rate from today on), {$pruned['removed']} stored ones removed, {$pruned['deactivated']} set inactive (they have a product; {$pruned['hidden']} products hidden), {$pruned['shown']} products on sale again";
+        }
+
+        // The departure cities and months of the circuits on sale, then
+        // their products' features (Feature Mappings › Circuits): the months
+        // change as departures pass, so every run writes them again.
+        if ($bookable !== null) {
+            (new CircuitRepository())->saveDepartureFacts(array_intersect_key($rates->facts(), array_flip($bookable)));
+            $withFeatures = (new CircuitFeatures())->applyAll();
+            if ($withFeatures > 0) {
+                $this->output("Features written for {$withFeatures} circuit products.");
+            }
         }
 
         $stats['success'] = true;
@@ -251,7 +265,15 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
         $duration = TypeCoerce::toStringMap($raw['duration'] ?? []);
         $pricing = TypeCoerce::toStringMap($raw['pricing'] ?? []);
 
-        return [
+        // The static list's departures are dates with no city, so the two
+        // columns are written only when it does name cities: otherwise they
+        // keep what the rates gave (saveDepartureFacts), not NULL.
+        $departureColumns = $depIds !== [] ? [
+            'departure_ids' => json_encode($depIds),
+            'departure_names' => $depNames !== [] ? implode(', ', $depNames) : null,
+        ] : [];
+
+        return $departureColumns + [
             'circuit_id' => $id,
             'name' => $name,
             'summary' => TypeCoerce::toString($raw['summary'] ?? ''),
@@ -261,8 +283,6 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
             'transport_type' => TypeCoerce::toString($raw['transport_type'] ?? ''),
             'destination_ids' => !empty($destIds) ? json_encode($destIds) : null,
             'destination_names' => !empty($destNames) ? implode(', ', $destNames) : null,
-            'departure_ids' => !empty($depIds) ? json_encode($depIds) : null,
-            'departure_names' => !empty($depNames) ? implode(', ', $depNames) : null,
             'image_url' => TypeCoerce::toString($raw['image'] ?? $raw['image_url'] ?? ''),
             'itinerary_json' => !empty($raw['itinerary']) ? json_encode($raw['itinerary']) : null,
             'details_json' => self::details($raw),
