@@ -4103,4 +4103,221 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'The child [guest] will be [actual] years old at check-in, but the offer was priced for age [declared]. The search was re-run with the correct ages — please choose an offer again.',
         'ro' => 'Copilul [guest] va avea [actual] ani la check-in, dar oferta a fost calculată pentru [declared] ani. Căutarea a fost refăcută cu vârstele corecte — vă rugăm să alegeți din nou o ofertă.',
     ],
+    // Feature Mappings › Circuits tab (the circuit facts mapped to CS-Cart features).
+    'travel_core.fmc_tab_hotels' => [
+        'en' => 'Hotels',
+        'ro' => 'Hoteluri',
+    ],
+    'travel_core.fmc_tab_circuits' => [
+        'en' => 'Circuits',
+        'ro' => 'Circuite',
+    ],
+    'travel_core.fmc_tab_packages' => [
+        'en' => 'Packages',
+        'ro' => 'Pachete',
+    ],
+    'travel_core.fmc_packages_soon' => [
+        'en' => 'Nothing to map for packages yet.',
+        'ro' => 'Nimic de mapat pentru pachete deocamdată.',
+    ],
+    'travel_core.fmc_intro' => [
+        'en' => 'Choose the CS-Cart feature each circuit detail is written to. The feature keeps its own style (number, text or a list of values), so the storefront filters stay the ones you set up in CS-Cart.',
+        'ro' => 'Alegeți caracteristica CS-Cart în care se scrie fiecare detaliu al circuitului. Caracteristica își păstrează stilul (număr, text sau listă de valori), deci filtrele din magazin rămân cele configurate în CS-Cart.',
+    ],
+    'travel_core.fmc_group' => [
+        'en' => 'Feature group for circuits',
+        'ro' => 'Grupul de caracteristici pentru circuite',
+    ],
+    'travel_core.fmc_group_any' => [
+        'en' => 'Any group (all features)',
+        'ro' => 'Orice grup (toate caracteristicile)',
+    ],
+    'travel_core.fmc_group_hint' => [
+        'en' => 'Only the features of this group are offered below. Save after changing it.',
+        'ro' => 'Mai jos apar doar caracteristicile acestui grup. Salvați după ce îl schimbați.',
+    ],
+    'travel_core.fmc_col_fact' => [
+        'en' => 'Circuit detail',
+        'ro' => 'Detaliu circuit',
+    ],
+    'travel_core.fmc_col_feature' => [
+        'en' => 'CS-Cart feature',
+        'ro' => 'Caracteristică CS-Cart',
+    ],
+    'travel_core.fmc_col_type' => [
+        'en' => 'Feature style',
+        'ro' => 'Stilul caracteristicii',
+    ],
+    'travel_core.fmc_col_rule' => [
+        'en' => 'How the value is made',
+        'ro' => 'Cum se formează valoarea',
+    ],
+    'travel_core.fmc_not_mapped' => [
+        'en' => 'Not mapped',
+        'ro' => 'Nemapat',
+    ],
+    'travel_core.fmc_not_linked' => [
+        'en' => 'Not linked',
+        'ro' => 'Nelegat',
+    ],
+    'travel_core.fmc_field_transport' => [
+        'en' => 'Transport',
+        'ro' => 'Transport',
+    ],
+    'travel_core.fmc_field_duration' => [
+        'en' => 'Duration (nights)',
+        'ro' => 'Durată (nopți)',
+    ],
+    'travel_core.fmc_field_countries' => [
+        'en' => 'Countries visited',
+        'ro' => 'Țări vizitate',
+    ],
+    'travel_core.fmc_field_month' => [
+        'en' => 'Departure month',
+        'ro' => 'Luna plecării',
+    ],
+    'travel_core.fmc_field_departure_city' => [
+        'en' => 'Departure city',
+        'ro' => 'Oraș de plecare',
+    ],
+    'travel_core.fmc_field_tags' => [
+        'en' => 'Tags',
+        'ro' => 'Etichete',
+    ],
+    'travel_core.fmc_rule_transport' => [
+        'en' => 'The value you link below to flight and to bus. An unlinked one is left out.',
+        'ro' => 'Valoarea pe care o legați mai jos de flight și de bus. Una nelegată este lăsată deoparte.',
+    ],
+    'travel_core.fmc_rule_duration' => [
+        'en' => 'The number of nights, in the feature\'s own style: the number for a Number feature, the matching value of a list (e.g. "7 nights"; created when missing).',
+        'ro' => 'Numărul de nopți, în stilul caracteristicii: numărul pentru o caracteristică Număr, valoarea potrivită dintr-o listă (ex. „7 nopți”; creată dacă lipsește).',
+    ],
+    'travel_core.fmc_rule_countries' => [
+        'en' => 'Each destination is looked up in the static destinations and rolled up to its country. A missing value is created.',
+        'ro' => 'Fiecare destinație este căutată în destinațiile statice și ridicată la țara ei. O valoare lipsă este creată.',
+    ],
+    'travel_core.fmc_rule_month' => [
+        'en' => 'The months with a departure still on sale, as the values you link below. Refreshed on each circuits sync.',
+        'ro' => 'Lunile cu o plecare încă la vânzare, ca valorile pe care le legați mai jos. Actualizate la fiecare sincronizare a circuitelor.',
+    ],
+    'travel_core.fmc_rule_departure_city' => [
+        'en' => 'The cities the circuit leaves from, as the provider prices them. A missing value is created.',
+        'ro' => 'Orașele din care pleacă circuitul, așa cum le tarifează furnizorul. O valoare lipsă este creată.',
+    ],
+    'travel_core.fmc_rule_tags' => [
+        'en' => 'The provider\'s tags, by name. A missing value is created.',
+        'ro' => 'Etichetele furnizorului, după nume. O valoare lipsă este creată.',
+    ],
+    'travel_core.fmc_type_S' => [
+        'en' => 'List, one value',
+        'ro' => 'Listă, o valoare',
+    ],
+    'travel_core.fmc_type_N' => [
+        'en' => 'Number list, one value',
+        'ro' => 'Listă de numere, o valoare',
+    ],
+    'travel_core.fmc_type_E' => [
+        'en' => 'List, one value',
+        'ro' => 'Listă, o valoare',
+    ],
+    'travel_core.fmc_type_M' => [
+        'en' => 'Checkboxes, several values',
+        'ro' => 'Căsuțe, mai multe valori',
+    ],
+    'travel_core.fmc_type_O' => [
+        'en' => 'Number',
+        'ro' => 'Număr',
+    ],
+    'travel_core.fmc_type_T' => [
+        'en' => 'Text',
+        'ro' => 'Text',
+    ],
+    'travel_core.fmc_transport_values' => [
+        'en' => 'Transport values',
+        'ro' => 'Valori pentru transport',
+    ],
+    'travel_core.fmc_month_values' => [
+        'en' => 'Month values',
+        'ro' => 'Valori pentru lună',
+    ],
+    'travel_core.fmc_month_hint' => [
+        'en' => 'Link each calendar month to one of the values you filled in on the feature (e.g. "May" or "May 2027").',
+        'ro' => 'Legați fiecare lună calendaristică de una dintre valorile completate la caracteristică (ex. „Mai” sau „Mai 2027”).',
+    ],
+    'travel_core.fmc_values_first' => [
+        'en' => 'Choose its feature above and save; the feature\'s values then appear here to be linked.',
+        'ro' => 'Alegeți caracteristica mai sus și salvați; valorile ei apar apoi aici pentru a fi legate.',
+    ],
+    'travel_core.fmc_saved' => [
+        'en' => 'The circuit feature mapping was saved.',
+        'ro' => 'Maparea caracteristicilor de circuit a fost salvată.',
+    ],
+    'travel_core.fmc_apply' => [
+        'en' => 'Apply to all circuits',
+        'ro' => 'Aplică tuturor circuitelor',
+    ],
+    'travel_core.fmc_apply_hint' => [
+        'en' => 'Writes the mapped features to every circuit product now. The circuits sync does it too.',
+        'ro' => 'Scrie acum caracteristicile mapate la fiecare produs de circuit. O face și sincronizarea circuitelor.',
+    ],
+    'travel_core.fmc_apply_confirm' => [
+        'en' => 'Write the mapped features to every circuit product now?',
+        'ro' => 'Scrieți acum caracteristicile mapate la fiecare produs de circuit?',
+    ],
+    'travel_core.fmc_applied' => [
+        'en' => 'Features written for [count] circuit products.',
+        'ro' => 'Caracteristici scrise pentru [count] produse de circuit.',
+    ],
+    'travel_core.fmc_nothing_mapped' => [
+        'en' => 'No feature is mapped yet: choose at least one and save.',
+        'ro' => 'Nicio caracteristică nu este mapată încă: alegeți cel puțin una și salvați.',
+    ],
+    'travel_core.fmc_month_1' => [
+        'en' => 'January',
+        'ro' => 'Ianuarie',
+    ],
+    'travel_core.fmc_month_2' => [
+        'en' => 'February',
+        'ro' => 'Februarie',
+    ],
+    'travel_core.fmc_month_3' => [
+        'en' => 'March',
+        'ro' => 'Martie',
+    ],
+    'travel_core.fmc_month_4' => [
+        'en' => 'April',
+        'ro' => 'Aprilie',
+    ],
+    'travel_core.fmc_month_5' => [
+        'en' => 'May',
+        'ro' => 'Mai',
+    ],
+    'travel_core.fmc_month_6' => [
+        'en' => 'June',
+        'ro' => 'Iunie',
+    ],
+    'travel_core.fmc_month_7' => [
+        'en' => 'July',
+        'ro' => 'Iulie',
+    ],
+    'travel_core.fmc_month_8' => [
+        'en' => 'August',
+        'ro' => 'August',
+    ],
+    'travel_core.fmc_month_9' => [
+        'en' => 'September',
+        'ro' => 'Septembrie',
+    ],
+    'travel_core.fmc_month_10' => [
+        'en' => 'October',
+        'ro' => 'Octombrie',
+    ],
+    'travel_core.fmc_month_11' => [
+        'en' => 'November',
+        'ro' => 'Noiembrie',
+    ],
+    'travel_core.fmc_month_12' => [
+        'en' => 'December',
+        'ro' => 'Decembrie',
+    ],
 ];

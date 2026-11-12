@@ -4877,3 +4877,219 @@ msgstr "Vezi joburile ↓"
 msgctxt "Languages::travel_core.package_searching"
 msgid "Searching…"
 msgstr "Se caută…"
+
+msgctxt "Languages::travel_core.fmc_tab_hotels"
+msgid "Hotels"
+msgstr "Hoteluri"
+
+msgctxt "Languages::travel_core.fmc_tab_circuits"
+msgid "Circuits"
+msgstr "Circuite"
+
+msgctxt "Languages::travel_core.fmc_tab_packages"
+msgid "Packages"
+msgstr "Pachete"
+
+msgctxt "Languages::travel_core.fmc_packages_soon"
+msgid "Nothing to map for packages yet."
+msgstr "Nimic de mapat pentru pachete deocamdată."
+
+msgctxt "Languages::travel_core.fmc_intro"
+msgid "Choose the CS-Cart feature each circuit detail is written to. The feature keeps its own style (number, text or a list of values), so the storefront filters stay the ones you set up in CS-Cart."
+msgstr "Alegeți caracteristica CS-Cart în care se scrie fiecare detaliu al circuitului. Caracteristica își păstrează stilul (număr, text sau listă de valori), deci filtrele din magazin rămân cele configurate în CS-Cart."
+
+msgctxt "Languages::travel_core.fmc_group"
+msgid "Feature group for circuits"
+msgstr "Grupul de caracteristici pentru circuite"
+
+msgctxt "Languages::travel_core.fmc_group_any"
+msgid "Any group (all features)"
+msgstr "Orice grup (toate caracteristicile)"
+
+msgctxt "Languages::travel_core.fmc_group_hint"
+msgid "Only the features of this group are offered below. Save after changing it."
+msgstr "Mai jos apar doar caracteristicile acestui grup. Salvați după ce îl schimbați."
+
+msgctxt "Languages::travel_core.fmc_col_fact"
+msgid "Circuit detail"
+msgstr "Detaliu circuit"
+
+msgctxt "Languages::travel_core.fmc_col_feature"
+msgid "CS-Cart feature"
+msgstr "Caracteristică CS-Cart"
+
+msgctxt "Languages::travel_core.fmc_col_type"
+msgid "Feature style"
+msgstr "Stilul caracteristicii"
+
+msgctxt "Languages::travel_core.fmc_col_rule"
+msgid "How the value is made"
+msgstr "Cum se formează valoarea"
+
+msgctxt "Languages::travel_core.fmc_not_mapped"
+msgid "Not mapped"
+msgstr "Nemapat"
+
+msgctxt "Languages::travel_core.fmc_not_linked"
+msgid "Not linked"
+msgstr "Nelegat"
+
+msgctxt "Languages::travel_core.fmc_field_transport"
+msgid "Transport"
+msgstr "Transport"
+
+msgctxt "Languages::travel_core.fmc_field_duration"
+msgid "Duration (nights)"
+msgstr "Durată (nopți)"
+
+msgctxt "Languages::travel_core.fmc_field_countries"
+msgid "Countries visited"
+msgstr "Țări vizitate"
+
+msgctxt "Languages::travel_core.fmc_field_month"
+msgid "Departure month"
+msgstr "Luna plecării"
+
+msgctxt "Languages::travel_core.fmc_field_departure_city"
+msgid "Departure city"
+msgstr "Oraș de plecare"
+
+msgctxt "Languages::travel_core.fmc_field_tags"
+msgid "Tags"
+msgstr "Etichete"
+
+msgctxt "Languages::travel_core.fmc_rule_transport"
+msgid "The value you link below to flight and to bus. An unlinked one is left out."
+msgstr "Valoarea pe care o legați mai jos de flight și de bus. Una nelegată este lăsată deoparte."
+
+msgctxt "Languages::travel_core.fmc_rule_duration"
+msgid "The number of nights, in the feature's own style: the number for a Number feature, the matching value of a list (e.g. \"7 nights\"; created when missing)."
+msgstr "Numărul de nopți, în stilul caracteristicii: numărul pentru o caracteristică Număr, valoarea potrivită dintr-o listă (ex. „7 nopți”; creată dacă lipsește)."
+
+msgctxt "Languages::travel_core.fmc_rule_countries"
+msgid "Each destination is looked up in the static destinations and rolled up to its country. A missing value is created."
+msgstr "Fiecare destinație este căutată în destinațiile statice și ridicată la țara ei. O valoare lipsă este creată."
+
+msgctxt "Languages::travel_core.fmc_rule_month"
+msgid "The months with a departure still on sale, as the values you link below. Refreshed on each circuits sync."
+msgstr "Lunile cu o plecare încă la vânzare, ca valorile pe care le legați mai jos. Actualizate la fiecare sincronizare a circuitelor."
+
+msgctxt "Languages::travel_core.fmc_rule_departure_city"
+msgid "The cities the circuit leaves from, as the provider prices them. A missing value is created."
+msgstr "Orașele din care pleacă circuitul, așa cum le tarifează furnizorul. O valoare lipsă este creată."
+
+msgctxt "Languages::travel_core.fmc_rule_tags"
+msgid "The provider's tags, by name. A missing value is created."
+msgstr "Etichetele furnizorului, după nume. O valoare lipsă este creată."
+
+msgctxt "Languages::travel_core.fmc_type_S"
+msgid "List, one value"
+msgstr "Listă, o valoare"
+
+msgctxt "Languages::travel_core.fmc_type_N"
+msgid "Number list, one value"
+msgstr "Listă de numere, o valoare"
+
+msgctxt "Languages::travel_core.fmc_type_E"
+msgid "List, one value"
+msgstr "Listă, o valoare"
+
+msgctxt "Languages::travel_core.fmc_type_M"
+msgid "Checkboxes, several values"
+msgstr "Căsuțe, mai multe valori"
+
+msgctxt "Languages::travel_core.fmc_type_O"
+msgid "Number"
+msgstr "Număr"
+
+msgctxt "Languages::travel_core.fmc_type_T"
+msgid "Text"
+msgstr "Text"
+
+msgctxt "Languages::travel_core.fmc_transport_values"
+msgid "Transport values"
+msgstr "Valori pentru transport"
+
+msgctxt "Languages::travel_core.fmc_month_values"
+msgid "Month values"
+msgstr "Valori pentru lună"
+
+msgctxt "Languages::travel_core.fmc_month_hint"
+msgid "Link each calendar month to one of the values you filled in on the feature (e.g. \"May\" or \"May 2027\")."
+msgstr "Legați fiecare lună calendaristică de una dintre valorile completate la caracteristică (ex. „Mai” sau „Mai 2027”)."
+
+msgctxt "Languages::travel_core.fmc_values_first"
+msgid "Choose its feature above and save; the feature's values then appear here to be linked."
+msgstr "Alegeți caracteristica mai sus și salvați; valorile ei apar apoi aici pentru a fi legate."
+
+msgctxt "Languages::travel_core.fmc_saved"
+msgid "The circuit feature mapping was saved."
+msgstr "Maparea caracteristicilor de circuit a fost salvată."
+
+msgctxt "Languages::travel_core.fmc_apply"
+msgid "Apply to all circuits"
+msgstr "Aplică tuturor circuitelor"
+
+msgctxt "Languages::travel_core.fmc_apply_hint"
+msgid "Writes the mapped features to every circuit product now. The circuits sync does it too."
+msgstr "Scrie acum caracteristicile mapate la fiecare produs de circuit. O face și sincronizarea circuitelor."
+
+msgctxt "Languages::travel_core.fmc_apply_confirm"
+msgid "Write the mapped features to every circuit product now?"
+msgstr "Scrieți acum caracteristicile mapate la fiecare produs de circuit?"
+
+msgctxt "Languages::travel_core.fmc_applied"
+msgid "Features written for [count] circuit products."
+msgstr "Caracteristici scrise pentru [count] produse de circuit."
+
+msgctxt "Languages::travel_core.fmc_nothing_mapped"
+msgid "No feature is mapped yet: choose at least one and save."
+msgstr "Nicio caracteristică nu este mapată încă: alegeți cel puțin una și salvați."
+
+msgctxt "Languages::travel_core.fmc_month_1"
+msgid "January"
+msgstr "Ianuarie"
+
+msgctxt "Languages::travel_core.fmc_month_2"
+msgid "February"
+msgstr "Februarie"
+
+msgctxt "Languages::travel_core.fmc_month_3"
+msgid "March"
+msgstr "Martie"
+
+msgctxt "Languages::travel_core.fmc_month_4"
+msgid "April"
+msgstr "Aprilie"
+
+msgctxt "Languages::travel_core.fmc_month_5"
+msgid "May"
+msgstr "Mai"
+
+msgctxt "Languages::travel_core.fmc_month_6"
+msgid "June"
+msgstr "Iunie"
+
+msgctxt "Languages::travel_core.fmc_month_7"
+msgid "July"
+msgstr "Iulie"
+
+msgctxt "Languages::travel_core.fmc_month_8"
+msgid "August"
+msgstr "August"
+
+msgctxt "Languages::travel_core.fmc_month_9"
+msgid "September"
+msgstr "Septembrie"
+
+msgctxt "Languages::travel_core.fmc_month_10"
+msgid "October"
+msgstr "Octombrie"
+
+msgctxt "Languages::travel_core.fmc_month_11"
+msgid "November"
+msgstr "Noiembrie"
+
+msgctxt "Languages::travel_core.fmc_month_12"
+msgid "December"
+msgstr "Decembrie"

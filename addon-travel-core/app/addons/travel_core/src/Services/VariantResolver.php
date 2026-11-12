@@ -193,7 +193,7 @@ class VariantResolver implements VariantResolverInterface
      * The same 3-pass match over an already-loaded name => id list (the admin
      * "Auto-resolve variants" batch): exact, case-insensitive, normalized.
      *
-     * @param array<string, int> $variantNameToId
+     * @param array<int|string, int> $variantNameToId (a numeric name such as "7" is an int key in PHP)
      */
     public static function matchName(string $name, array $variantNameToId): ?int
     {

@@ -52,6 +52,8 @@ $pages = [
     'travel_hotel_availability.manage',
     'travel_feature_mappings.manage',
     'travel_feature_mappings.edit',
+    'travel_circuit_features.manage',
+    'travel_circuit_features.packages',
     'travel_booking_styles.manage',
     'travel_tools.manage',
 ];

@@ -34,17 +34,42 @@ final class BookableCircuits
     /** A stop for a runaway listing, per request. */
     private const int MAX_PAGES = 200;
 
+    /** @var array<int, array{months: array<string, true>, departures: array<int, string>}> what the rates read so far say of each circuit */
+    private array $facts = [];
+
     public function __construct(private readonly SphinxApi $api)
     {
     }
 
     /**
+     * What the rates read by ids() say of each priced circuit: the months
+     * (Y-m) with a departure from today on, and the cities it leaves from
+     * (the static list has neither: its departures are dates with no city).
+     * Complete only after ids() ran with $everyMonth.
+     *
+     * @return array<int, array{months: list<string>, departures: array<int, string>}> by circuit id
+     */
+    public function facts(): array
+    {
+        $facts = [];
+        foreach ($this->facts as $id => $fact) {
+            $months = array_keys($fact['months']);
+            sort($months);
+            $facts[$id] = ['months' => $months, 'departures' => $fact['departures']];
+        }
+
+        return $facts;
+    }
+
+    /**
      * @param string $today Y-m-d
      * @param list<int> $candidates the circuits to check (from the static list and the store)
+     * @param bool $everyMonth read every month even once all candidates are found: facts() then knows each circuit's every month and departure city
      * @return list<int>|null those with a rate from $today on; null when unknown
      */
-    public function ids(string $today, array $candidates): ?array
+    public function ids(string $today, array $candidates, bool $everyMonth = false): ?array
     {
+        $this->facts = [];
         $remaining = array_values(array_unique(array_filter($candidates, static fn (int $id): bool => $id > 0)));
         if ($remaining === []) {
             return null;
@@ -58,7 +83,7 @@ final class BookableCircuits
             }
             $found += array_fill_keys(array_values(array_intersect($priced, $remaining)), true);
             $remaining = array_values(array_filter($remaining, static fn (int $id): bool => !isset($found[$id])));
-            if ($remaining === []) {
+            if ($remaining === [] && !$everyMonth) {
                 break;
             }
         }
@@ -89,6 +114,15 @@ final class BookableCircuits
                 $date = TypeCoerce::toString($rate['departure_date'] ?? '');
                 if ($id > 0 && ($date === '' || $date >= $today)) {
                     $ids[$id] = true;
+                    $this->facts[$id] ??= ['months' => [], 'departures' => []];
+                    $this->facts[$id]['months'][$date !== '' ? substr($date, 0, 7) : $month] = true;
+                    foreach (TypeCoerce::toRowList($rate['departures'] ?? []) as $departure) {
+                        $departureId = TypeCoerce::toInt($departure['id'] ?? 0);
+                        $name = trim(TypeCoerce::toString($departure['name'] ?? ''));
+                        if ($departureId > 0 && $name !== '') {
+                            $this->facts[$id]['departures'][$departureId] = $name;
+                        }
+                    }
                 }
             }
             $lastPage = TypeCoerce::toInt(TypeCoerce::toStringMap($response['meta'] ?? null)['last_page'] ?? 0);

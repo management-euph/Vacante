@@ -179,7 +179,7 @@ final class BookableCircuitsTest extends TestCase
     {
         $sync = (string) file_get_contents(dirname(__DIR__, 3) . '/src/Services/CircuitSyncService.php');
 
-        $ask = strpos($sync, '$bookable = (new BookableCircuits($this->api))->ids(date(\'Y-m-d\'), $candidates);');
+        $ask = strpos($sync, '$bookable = $rates->ids(date(\'Y-m-d\'), $candidates, true);');
         self::assertNotFalse($ask);
         self::assertLessThan(strpos($sync, '$this->upsertBatch($batch)'), $ask, 'before the circuits are saved');
         self::assertStringContainsString('[$allCircuits, $past] = self::bookableOnly($allCircuits, $bookable);', $sync);

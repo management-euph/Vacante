@@ -4877,3 +4877,219 @@ msgstr "See the jobs ↓"
 msgctxt "Languages::travel_core.package_searching"
 msgid "Searching…"
 msgstr "Searching…"
+
+msgctxt "Languages::travel_core.fmc_tab_hotels"
+msgid "Hotels"
+msgstr "Hotels"
+
+msgctxt "Languages::travel_core.fmc_tab_circuits"
+msgid "Circuits"
+msgstr "Circuits"
+
+msgctxt "Languages::travel_core.fmc_tab_packages"
+msgid "Packages"
+msgstr "Packages"
+
+msgctxt "Languages::travel_core.fmc_packages_soon"
+msgid "Nothing to map for packages yet."
+msgstr "Nothing to map for packages yet."
+
+msgctxt "Languages::travel_core.fmc_intro"
+msgid "Choose the CS-Cart feature each circuit detail is written to. The feature keeps its own style (number, text or a list of values), so the storefront filters stay the ones you set up in CS-Cart."
+msgstr "Choose the CS-Cart feature each circuit detail is written to. The feature keeps its own style (number, text or a list of values), so the storefront filters stay the ones you set up in CS-Cart."
+
+msgctxt "Languages::travel_core.fmc_group"
+msgid "Feature group for circuits"
+msgstr "Feature group for circuits"
+
+msgctxt "Languages::travel_core.fmc_group_any"
+msgid "Any group (all features)"
+msgstr "Any group (all features)"
+
+msgctxt "Languages::travel_core.fmc_group_hint"
+msgid "Only the features of this group are offered below. Save after changing it."
+msgstr "Only the features of this group are offered below. Save after changing it."
+
+msgctxt "Languages::travel_core.fmc_col_fact"
+msgid "Circuit detail"
+msgstr "Circuit detail"
+
+msgctxt "Languages::travel_core.fmc_col_feature"
+msgid "CS-Cart feature"
+msgstr "CS-Cart feature"
+
+msgctxt "Languages::travel_core.fmc_col_type"
+msgid "Feature style"
+msgstr "Feature style"
+
+msgctxt "Languages::travel_core.fmc_col_rule"
+msgid "How the value is made"
+msgstr "How the value is made"
+
+msgctxt "Languages::travel_core.fmc_not_mapped"
+msgid "Not mapped"
+msgstr "Not mapped"
+
+msgctxt "Languages::travel_core.fmc_not_linked"
+msgid "Not linked"
+msgstr "Not linked"
+
+msgctxt "Languages::travel_core.fmc_field_transport"
+msgid "Transport"
+msgstr "Transport"
+
+msgctxt "Languages::travel_core.fmc_field_duration"
+msgid "Duration (nights)"
+msgstr "Duration (nights)"
+
+msgctxt "Languages::travel_core.fmc_field_countries"
+msgid "Countries visited"
+msgstr "Countries visited"
+
+msgctxt "Languages::travel_core.fmc_field_month"
+msgid "Departure month"
+msgstr "Departure month"
+
+msgctxt "Languages::travel_core.fmc_field_departure_city"
+msgid "Departure city"
+msgstr "Departure city"
+
+msgctxt "Languages::travel_core.fmc_field_tags"
+msgid "Tags"
+msgstr "Tags"
+
+msgctxt "Languages::travel_core.fmc_rule_transport"
+msgid "The value you link below to flight and to bus. An unlinked one is left out."
+msgstr "The value you link below to flight and to bus. An unlinked one is left out."
+
+msgctxt "Languages::travel_core.fmc_rule_duration"
+msgid "The number of nights, in the feature's own style: the number for a Number feature, the matching value of a list (e.g. \"7 nights\"; created when missing)."
+msgstr "The number of nights, in the feature's own style: the number for a Number feature, the matching value of a list (e.g. \"7 nights\"; created when missing)."
+
+msgctxt "Languages::travel_core.fmc_rule_countries"
+msgid "Each destination is looked up in the static destinations and rolled up to its country. A missing value is created."
+msgstr "Each destination is looked up in the static destinations and rolled up to its country. A missing value is created."
+
+msgctxt "Languages::travel_core.fmc_rule_month"
+msgid "The months with a departure still on sale, as the values you link below. Refreshed on each circuits sync."
+msgstr "The months with a departure still on sale, as the values you link below. Refreshed on each circuits sync."
+
+msgctxt "Languages::travel_core.fmc_rule_departure_city"
+msgid "The cities the circuit leaves from, as the provider prices them. A missing value is created."
+msgstr "The cities the circuit leaves from, as the provider prices them. A missing value is created."
+
+msgctxt "Languages::travel_core.fmc_rule_tags"
+msgid "The provider's tags, by name. A missing value is created."
+msgstr "The provider's tags, by name. A missing value is created."
+
+msgctxt "Languages::travel_core.fmc_type_S"
+msgid "List, one value"
+msgstr "List, one value"
+
+msgctxt "Languages::travel_core.fmc_type_N"
+msgid "Number list, one value"
+msgstr "Number list, one value"
+
+msgctxt "Languages::travel_core.fmc_type_E"
+msgid "List, one value"
+msgstr "List, one value"
+
+msgctxt "Languages::travel_core.fmc_type_M"
+msgid "Checkboxes, several values"
+msgstr "Checkboxes, several values"
+
+msgctxt "Languages::travel_core.fmc_type_O"
+msgid "Number"
+msgstr "Number"
+
+msgctxt "Languages::travel_core.fmc_type_T"
+msgid "Text"
+msgstr "Text"
+
+msgctxt "Languages::travel_core.fmc_transport_values"
+msgid "Transport values"
+msgstr "Transport values"
+
+msgctxt "Languages::travel_core.fmc_month_values"
+msgid "Month values"
+msgstr "Month values"
+
+msgctxt "Languages::travel_core.fmc_month_hint"
+msgid "Link each calendar month to one of the values you filled in on the feature (e.g. \"May\" or \"May 2027\")."
+msgstr "Link each calendar month to one of the values you filled in on the feature (e.g. \"May\" or \"May 2027\")."
+
+msgctxt "Languages::travel_core.fmc_values_first"
+msgid "Choose its feature above and save; the feature's values then appear here to be linked."
+msgstr "Choose its feature above and save; the feature's values then appear here to be linked."
+
+msgctxt "Languages::travel_core.fmc_saved"
+msgid "The circuit feature mapping was saved."
+msgstr "The circuit feature mapping was saved."
+
+msgctxt "Languages::travel_core.fmc_apply"
+msgid "Apply to all circuits"
+msgstr "Apply to all circuits"
+
+msgctxt "Languages::travel_core.fmc_apply_hint"
+msgid "Writes the mapped features to every circuit product now. The circuits sync does it too."
+msgstr "Writes the mapped features to every circuit product now. The circuits sync does it too."
+
+msgctxt "Languages::travel_core.fmc_apply_confirm"
+msgid "Write the mapped features to every circuit product now?"
+msgstr "Write the mapped features to every circuit product now?"
+
+msgctxt "Languages::travel_core.fmc_applied"
+msgid "Features written for [count] circuit products."
+msgstr "Features written for [count] circuit products."
+
+msgctxt "Languages::travel_core.fmc_nothing_mapped"
+msgid "No feature is mapped yet: choose at least one and save."
+msgstr "No feature is mapped yet: choose at least one and save."
+
+msgctxt "Languages::travel_core.fmc_month_1"
+msgid "January"
+msgstr "January"
+
+msgctxt "Languages::travel_core.fmc_month_2"
+msgid "February"
+msgstr "February"
+
+msgctxt "Languages::travel_core.fmc_month_3"
+msgid "March"
+msgstr "March"
+
+msgctxt "Languages::travel_core.fmc_month_4"
+msgid "April"
+msgstr "April"
+
+msgctxt "Languages::travel_core.fmc_month_5"
+msgid "May"
+msgstr "May"
+
+msgctxt "Languages::travel_core.fmc_month_6"
+msgid "June"
+msgstr "June"
+
+msgctxt "Languages::travel_core.fmc_month_7"
+msgid "July"
+msgstr "July"
+
+msgctxt "Languages::travel_core.fmc_month_8"
+msgid "August"
+msgstr "August"
+
+msgctxt "Languages::travel_core.fmc_month_9"
+msgid "September"
+msgstr "September"
+
+msgctxt "Languages::travel_core.fmc_month_10"
+msgid "October"
+msgstr "October"
+
+msgctxt "Languages::travel_core.fmc_month_11"
+msgid "November"
+msgstr "November"
+
+msgctxt "Languages::travel_core.fmc_month_12"
+msgid "December"
+msgstr "December"

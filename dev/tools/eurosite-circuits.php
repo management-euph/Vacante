@@ -431,6 +431,12 @@ if ($ck_resp !== null && $ck_raw) {
 }
 if ($ck_cities === []) {
     echo "No circuit city came back", $ck_why !== '' ? " ({$ck_why})" : '', ".\n";
+    if ($ck_resp !== null) {
+        // An empty list and a shape we do not read look the same: show what the API said.
+        echo "What the API answered (the account is not in it):\n", ck_xml($ck_resp, 3000), "\n";
+        echo "\nAn empty <CircuitSearchCityResponse> means this Eurosite account has no circuits enabled\n",
+            "(ask Eurosite to enable the Circuite module for this user); anything else is a shape to adapt to.\n";
+    }
 } else {
     $ck_by_country = [];
     foreach ($ck_cities as $c) {
@@ -627,6 +633,11 @@ echo sprintf("  with more than one destination:     %d  (a multi-country circuit
 echo sprintf("  with no destination at all:         %d\n", $ck_summary['no_dest']);
 echo sprintf("  with no day-by-day program:         %d\n", $ck_summary['no_days']);
 echo sprintf("  with no price:                      %d\n", $ck_summary['no_price']);
+if ($ck_summary['circuits'] === 0) {
+    echo "\nNothing to judge: no circuit was answered (see step 1 above).\n";
+
+    return;
+}
 echo "\nRead against the plan: the search returns the program, destinations and variants with price, so a\n";
 echo "sync can be built on CircuitSearch alone; getProductInfo adds the pictures. Paste this page (the\n";
 echo "account is never printed) to settle the open questions: price by departure, multi-destination,\n";
