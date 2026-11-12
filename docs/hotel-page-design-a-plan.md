@@ -42,9 +42,12 @@ their current layout.
    before dates are chosen, no price/reserve column next to the gallery.
 3. **Results on the same page, under the bar, above the tabs** (where the
    inline search already inserts them).
-4. **Real CS-Cart product tabs**, "Descriere" open by default.
-5. **Compact sticky bar after a search** — a region named "Rezumatul
-   căutării": dates · guests · "Schimbă".
+4. **Real CS-Cart product tabs**, kept as the theme's strip; their panels
+   show one under another, each under its tab's title (11 Nov 2026).
+5. **Sticky header on two lines** (11 Nov 2026, replacing the compact
+   "Rezumatul căutării" bar): line 1 once the hero has scrolled off (name,
+   "5 ★", map pin, "Alege datele" / "Alege cameră", favourites heart), line 2
+   the product's tabs once the page's strip has gone under it.
 6. **Room-first results** — the owner's board 13b (29 Oct 2026), which
    replaced the first cards (rate rows per meal group, R1–R3, best 4):
    one card per room type on three columns from 1101 px — the room | its
@@ -472,6 +475,13 @@ an internal code.
     the name keeps a few letters.
   - The name's tooltip can be hovered and Esc closes it (WCAG 1.4.13);
     forced colours outline the active tab and keep the pin.
+  - "Alege cameră" on a package or circuit brings the flight (or coach)
+    into view above its rooms, or, with several that day, the rooms' note;
+    Novoton's "Hotel Prices" tab (a pointer back to the search form) is off
+    line 2 and the strip; the name's tooltip adds a circuit's length,
+    transport and departure city, and screen readers hear the name once.
+  - Open: the page's own tab strip keeps the theme's look (the mockup drew
+    it as the navy band); to restyle it as the band if the owner wants.
 - Next: the combined list of several rooms' terms in the bar (board 14.5);
   Novoton rows through `RoomOfferRows`;
   the title row's after-search state ("10–17 iul. · de la 1.485 €", "Vezi

@@ -83,6 +83,8 @@
     var ROOM_RESULTS = '[data-travel-results]';
     // The booking box's popups count as the booking box while open.
     var BOOKING_POPUPS = '.nvt-calendar-popup, .nvt-guest-popup';
+    // Product tabs whose panel only points back to the search form.
+    var PLACEHOLDER_TABS = '.novoton-hotel-prices';
     // A tab's scroll that has not arrived by then was cut short (ms).
     var LOCK_WAIT = 1500;
     // "Alege datele" scrolls once the calendar has taken the focus, or after this (ms).
@@ -102,8 +104,8 @@
      *    place, never with a part of it showing. A short window keeps line 2
      *    (under LINE2_MIN_VIEW px), then the header (HEADER_MIN_VIEW), away.
      *  - The button only while what it leads to is off screen: the room
-     *    options after a search ("Alege cameră"), the booking box before it
-     *    ("Alege datele").
+     *    options after a search ("Alege cameră"); before it ("Alege datele")
+     *    whenever line 1 shows, the booking box being part of the hero.
      *  - The active tab, while line 2 shows: the one clicked last until the
      *    visitor scrolls by hand (locked), else the section crossing the
      *    middle of the visible area under the header, the last one at the very
@@ -112,7 +114,6 @@
      * @param {{heroBottom: number, stripBottom: (number|null), line1: number, line2: number,
      *          viewport: number, searched: boolean,
      *          rooms: Array<{top: number, bottom: number}>,
-     *          booking: Array<{top: number, bottom: number}>,
      *          panels: Array<{id: string, top: number}>,
      *          atBottom: boolean, locked: (string|null)}} m
      * @return {{show: boolean, dock: boolean, cta: boolean, active: (string|null)}}
@@ -125,7 +126,7 @@
         var onScreen = function (box) {
             return box.bottom > from && box.top < m.viewport;
         };
-        var cta = show && !(m.searched ? m.rooms : m.booking).some(onScreen);
+        var cta = show && !(m.searched && m.rooms.some(onScreen));
         var active = null;
         if (dock && m.panels.length > 0) {
             if (m.locked !== null) {
@@ -385,6 +386,12 @@
             if (!panel || !box.contains(panel)) {
                 return;
             }
+            // a tab that only points back to the search (Novoton's "Hotel
+            // Prices" placeholder) is no section: off line 2 and the strip
+            if (panel.querySelector(PLACEHOLDER_TABS)) {
+                li.hidden = true;
+                return;
+            }
             var link = li.querySelector('a') || li;
             tabs.push({ id: li.id, title: link.textContent.trim(), li: li, panel: panel });
         });
@@ -567,7 +574,6 @@
             viewport: view,
             searched: rooms.length > 0,
             rooms: rooms,
-            booking: bookingArea(page),
             panels: h.tabs ? h.tabs.tabs.map(function (tab) {
                 return { id: tab.id, top: tab.panel.getBoundingClientRect().top };
             }) : [],
@@ -709,13 +715,21 @@
         return true;
     }
 
-    /** "Alege cameră": the first room option (or the emptied list) under line 1, the focus on it. */
+    /**
+     * "Alege cameră": the first room option (or the emptied list) under line
+     * 1, the focus on it. A package's or a circuit's rooms sit under their
+     * flight or coach: that block comes into view whole, or, with several
+     * that day, the rooms' section with its "choose under the flight" note.
+     */
     function goRooms(page) {
         var first = roomTargets(page)[0];
         if (!first) {
             return false;
         }
-        scrollToElement(first);
+        var block = first.closest('.travel-circuit-block');
+        var section = block ? block.closest('.travel-circuit-rooms') : null;
+        var several = section ? section.querySelectorAll('.travel-circuit-block').length > 1 : false;
+        scrollToElement(several ? section : block || first);
         focusOn(first.matches('[data-travel-room]') ? first.querySelector('.travel-pdpa-rcard__name') || first : first);
         return true;
     }

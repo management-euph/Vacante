@@ -72,6 +72,7 @@ beforeAll(async () => {
                         <li id="features" class="ty-tabs__item cm-js"><a class="ty-tabs__a">Facilități</a></li>
                         <li id="policies" class="ty-tabs__item cm-js"><a class="ty-tabs__a">Informații utile</a></li>
                         <li id="discussion" class="ty-tabs__item cm-js cm-ajax"><a class="ty-tabs__a">Recenzii</a></li>
+                        <li id="product_tab_9" class="ty-tabs__item cm-js"><a class="ty-tabs__a">Hotel Prices</a></li>
                     </ul>
                 </div>
                 <div class="cm-tabs-content ty-tabs__content clearfix" id="tabs_content">
@@ -79,6 +80,7 @@ beforeAll(async () => {
                     <div id="content_features" class="ty-wysiwyg-content content-features hidden"><p>Wi-Fi</p></div>
                     <div id="content_policies" class="ty-wysiwyg-content content-policies hidden"><p>Check-in 14:00</p></div>
                     <div id="content_discussion" class="ty-wysiwyg-content content-discussion hidden"></div>
+                    <div id="content_product_tab_9" class="ty-wysiwyg-content content-product_tab_9 hidden"><div class="novoton-hotel-prices"><p>Folosiți formularul de căutare de mai sus.</p></div></div>
                     <div id="content_attachments" class="ty-wysiwyg-content content-attachments"></div>
                 </div>
             </div>
@@ -200,7 +202,7 @@ describe('sticky header: what shows when (#40)', () => {
     // Scrolled past the hero, above the tab strip, before a search.
     const BASE = {
         heroBottom: -100, stripBottom: 400, line1: 56, line2: 48, viewport: 800, searched: false,
-        rooms: [], booking: [{ top: -300, bottom: -100 }], panels: [], atBottom: false, locked: null,
+        rooms: [], panels: [], atBottom: false, locked: null,
     };
     const state = (m) => window.TravelPdpDesignA.headerState({ ...BASE, ...m });
 
@@ -226,11 +228,9 @@ describe('sticky header: what shows when (#40)', () => {
         expect(state({ heroBottom: 10, stripBottom: -900 }).dock).toBe(false);
     });
 
-    it('before a search, the button shows only while the booking box is off screen', () => {
+    it('before a search, the button shows with line 1: the booking box is part of the hero', () => {
         expect(state({}).cta).toBe(true);
-        expect(state({ booking: [{ top: -100, bottom: 40 }] }).cta).toBe(true); // only under line 1
-        expect(state({ booking: [{ top: 100, bottom: 164 }] }).cta).toBe(false);
-        expect(state({ heroBottom: 50 }).cta).toBe(false); // no header, no button
+        expect(state({ heroBottom: 50 }).cta).toBe(false); // the booking box in view: no header, no button
     });
 
     it('after a search, it shows only while no room option is on screen', () => {
@@ -247,6 +247,8 @@ describe('sticky header: what shows when (#40)', () => {
         const panels = [{ id: 'description', top: -500 }, { id: 'features', top: 300 }, { id: 'policies', top: 700 }];
         // under both lines (104 px) of an 800 px window, the middle is at 452 px
         expect(state({ stripBottom: -600, panels }).active).toBe('features');
+        // 430 px: above that middle, though under the window's own (400 px)
+        expect(state({ stripBottom: -600, panels: [{ id: 'description', top: -500 }, { id: 'features', top: 430 }] }).active).toBe('features');
         expect(state({ stripBottom: -600, panels: panels.map((p) => ({ ...p, top: p.top + 1000 })) }).active).toBe(null); // above the first
         expect(state({ stripBottom: -600, panels, atBottom: true }).active).toBe('policies'); // a last section too short to reach the middle
         expect(state({ stripBottom: -600, panels, locked: 'description' }).active).toBe('description'); // the tab clicked last
@@ -370,6 +372,9 @@ describe('sticky header on the page (#40)', () => {
         // does a tab the theme loads on demand (empty until clicked)
         expect(document.getElementById('content_attachments').hasAttribute('data-travel-pdpa-panel')).toBe(false);
         expect(document.getElementById('content_discussion').hasAttribute('data-travel-pdpa-panel')).toBe(false);
+        // a tab that only points back to the search form is no section
+        expect(document.getElementById('content_product_tab_9').hasAttribute('data-travel-pdpa-panel')).toBe(false);
+        expect(page().querySelector('#product_tab_9').hidden).toBe(true);
         // the theme keeps its strip on a phone instead of an accordion
         expect(page().querySelector('.ty-tabs').classList.contains('cm-j-tabs-disable-convertation')).toBe(true);
         expect(document.getElementById('tabs_content').classList.contains('cm-j-content-disable-convertation')).toBe(true);
@@ -393,6 +398,7 @@ describe('sticky header on the page (#40)', () => {
     });
 
     it('follows the page\'s scroll, once a frame', async () => {
+        scrolled(500);
         Object.defineProperty(window, 'pageYOffset', { value: 1000, configurable: true, writable: true });
         stubbed.forEach((el) => {
             const box = el.getBoundingClientRect();
@@ -453,6 +459,60 @@ describe('sticky header on the page (#40)', () => {
         window.innerHeight = 800;
         scrolled(1800);
         expect(nav().hidden).toBe(false);
+    });
+
+    it('the hero ends with a package\'s or circuit\'s departure chips, or an open calendar', () => {
+        const wrapper = page().querySelector('.travel-pdp-results .travel-search-form-wrapper');
+        const chips = document.createElement('div');
+        chips.className = 'travel-circuit-dates';
+        wrapper.appendChild(chips);
+        stubbed.add(chips);
+        scrolled(1000);
+        at(wrapper, 740 - 1000, 1200); // its offers still fill the window
+        at(chips, 760 - 1000, 60); // the chips gone above it
+        window.TravelPdpDesignA.updateHeaders();
+        expect(header().classList.contains('is-shown')).toBe(true);
+        chips.remove();
+        stubbed.delete(chips);
+
+        const pop = document.createElement('div');
+        pop.className = 'nvt-calendar-popup';
+        wrapper.appendChild(pop);
+        stubbed.add(pop);
+        scrolled(1000);
+        at(pop, 100, 400); // the bar gone, its calendar still open in view
+        window.TravelPdpDesignA.updateHeaders();
+        expect(header().classList.contains('is-shown')).toBe(false);
+        pop.remove();
+        stubbed.delete(pop);
+        scrolled(1000);
+        expect(header().classList.contains('is-shown')).toBe(true);
+    });
+
+    it('"Alege cameră" on a package or circuit brings the flight above the rooms into view', () => {
+        const wrapper = page().querySelector('.travel-pdp-results .travel-search-form-wrapper');
+        const section = document.createElement('section');
+        section.className = 'travel-circuit-rooms';
+        const block = '<div class="travel-circuit-block"><p>Zbor 07:10</p><ul><li class="travel-circuit-offer">Cameră</li></ul></div>';
+        section.innerHTML = block;
+        wrapper.appendChild(section);
+        const lay = () => {
+            scrolled(1500);
+            const blocks = section.querySelectorAll('.travel-circuit-block');
+            [section, ...blocks, ...section.querySelectorAll('.travel-circuit-offer')].forEach((el) => stubbed.add(el));
+            at(section, 980 - 1500, 600);
+            blocks.forEach((el, i) => at(el, 1000 + i * 300 - 1500, 280));
+            section.querySelectorAll('.travel-circuit-offer').forEach((el, i) => at(el, 1060 + i * 300 - 1500, 100));
+            window.TravelPdpDesignA.updateHeaders();
+        };
+        lay();
+        click(cta());
+        expect(window.scrollTo).toHaveBeenLastCalledWith({ top: 1000 - 56 - 8, behavior: 'smooth' }); // the flight, then its rooms
+        section.innerHTML = block + block; // two flights that day
+        lay();
+        click(cta());
+        expect(window.scrollTo).toHaveBeenLastCalledWith({ top: 980 - 56 - 8, behavior: 'smooth' }); // the note, then both
+        section.remove();
     });
 
     it('Sphinx\'s grey placeholders while it searches are not rooms', () => {
@@ -526,6 +586,9 @@ describe('sticky header on the page (#40)', () => {
     });
 
     it('a filter that hides every room keeps "Alege cameră", which then leads to the list', () => {
+        if (!room) {
+            addRoom();
+        }
         const list = document.createElement('section');
         list.setAttribute('data-travel-results', '');
         page().querySelector('.travel-pdp-results').appendChild(list);
@@ -638,6 +701,11 @@ describe('sticky header on the page (#40)', () => {
         expect(page().querySelector('#description').classList.contains('active')).toBe(true);
         scrolled(2600); // the window's end at the page's end (3400)
         expect(active()).toEqual(['policies']);
+        // a page ending sooner: the last section's top (560 px) below the middle, still marked
+        Object.defineProperty(document.documentElement, 'scrollHeight', { value: 3000, configurable: true });
+        scrolled(2200);
+        expect(active()).toEqual(['policies']);
+        Object.defineProperty(document.documentElement, 'scrollHeight', { value: 3400, configurable: true });
     });
 
     it('a click the script or the theme sends to the page\'s strip still reaches the theme', () => {

@@ -302,14 +302,24 @@
                 <div class="travel-pdpa-sticky__inner">
                     <div class="travel-pdpa-sticky__id">
                         <span class="travel-pdpa-sticky__namebox">
-                            <button type="button" class="travel-pdpa-sticky__name" data-travel-pdpa-top aria-describedby="travel-pdpa-sticky-tip-{$product.product_id}"><bdi>{$product.product nofilter}</bdi><span class="travel-pdpa-sr">, {__("travel_core.pdpa_back_to_top")}</span></button>
-                            <span class="travel-pdpa-sticky__tip" id="travel-pdpa-sticky-tip-{$product.product_id}" role="tooltip">
-                                <span class="travel-pdpa-sticky__tip-name"><bdi>{$product.product nofilter}</bdi>{if $travel_pdp_stars > 0} · {$travel_pdp_stars} ★{/if}</span>
-                                {if $travel_hotel_location_line}
-                                    <span class="travel-pdpa-sticky__tip-line">{$travel_hotel_location_line|escape:html}</span>
-                                {elseif $travel_circuit_facts.route_line}
-                                    <span class="travel-pdpa-sticky__tip-line">{__("travel_core.circuit_route")}: {$travel_circuit_facts.route_line|escape:html}</span>
-                                {/if}
+                            {* Screen readers get the name once (the button) and, as its
+                               description, only what the tooltip adds: the address, or a
+                               circuit's route and length, transport and departure city. *}
+                            <button type="button" class="travel-pdpa-sticky__name" data-travel-pdpa-top{if $travel_hotel_location_line || $travel_circuit_facts} aria-describedby="travel-pdpa-sticky-tip-{$product.product_id}"{/if}><bdi>{$product.product nofilter}</bdi><span class="travel-pdpa-sr">, {__("travel_core.pdpa_back_to_top")}</span></button>
+                            <span class="travel-pdpa-sticky__tip" role="tooltip">
+                                <span class="travel-pdpa-sticky__tip-name" aria-hidden="true"><bdi>{$product.product nofilter}</bdi>{if $travel_pdp_stars > 0} · {$travel_pdp_stars} ★{/if}</span>
+                                <span id="travel-pdpa-sticky-tip-{$product.product_id}">
+                                    {if $travel_hotel_location_line}
+                                        <span class="travel-pdpa-sticky__tip-line">{$travel_hotel_location_line|escape:html}</span>
+                                    {elseif $travel_circuit_facts}
+                                        {if $travel_circuit_facts.route_line}
+                                            <span class="travel-pdpa-sticky__tip-line">{__("travel_core.circuit_route")}: {$travel_circuit_facts.route_line|escape:html}</span>
+                                        {/if}
+                                        {if $travel_circuit_facts.days > 0 || $travel_circuit_facts.nights > 0 || $travel_circuit_facts.transport || $travel_circuit_facts.from_city}
+                                            <span class="travel-pdpa-sticky__tip-line">{if $travel_circuit_facts.days > 0}{__("travel_core.circuit_days_`$travel_circuit_facts.days_form`", ["[n]" => $travel_circuit_facts.days])}{/if}{if $travel_circuit_facts.days > 0 && $travel_circuit_facts.nights > 0} / {/if}{if $travel_circuit_facts.nights > 0}{__("travel_core.circuit_nights_`$travel_circuit_facts.nights_form`", ["[n]" => $travel_circuit_facts.nights])}{/if}{if ($travel_circuit_facts.days > 0 || $travel_circuit_facts.nights > 0) && ($travel_circuit_facts.transport || $travel_circuit_facts.from_city)} · {/if}{if $travel_circuit_facts.transport == "flight"}{if $travel_circuit_facts.from_city}{__("travel_core.circuit_flight_from", ["[city]" => $travel_circuit_facts.from_city|escape:html])}{else}{__("travel_core.circuit_flight")}{/if}{elseif $travel_circuit_facts.transport == "bus"}{if $travel_circuit_facts.from_city}{__("travel_core.circuit_bus_from", ["[city]" => $travel_circuit_facts.from_city|escape:html])}{else}{__("travel_core.circuit_bus")}{/if}{elseif $travel_circuit_facts.from_city}{__("travel_core.circuit_departs_from", ["[city]" => $travel_circuit_facts.from_city|escape:html])}{/if}</span>
+                                        {/if}
+                                    {/if}
+                                </span>
                             </span>
                         </span>
                         {if $travel_pdp_stars > 0}
