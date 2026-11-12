@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Tests\Unit\Services;
 
 use PHPUnit\Framework\TestCase;
+use Tygh\Addons\SphinxHolidays\Helpers\CircuitProductFactory;
 use Tygh\Addons\SphinxHolidays\Services\CircuitSyncService;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
 use Tygh\Addons\SphinxHolidays\Tests\Support\DbStub;
@@ -97,5 +98,68 @@ final class CircuitSyncServiceTest extends TestCase
             implode("\n", $queries),
             'full sync must not consult the incremental watermark',
         );
+    }
+    /**
+     * @param array<string, mixed> $raw
+     *
+     * @return array<string, mixed>
+     */
+    private function normalize(array $raw): array
+    {
+        $sync = new CircuitSyncService($this->createMock(SphinxApi::class));
+        $normalize = new \ReflectionMethod($sync, 'normalizeCircuit');
+
+        /** @var array<string, mixed> $row */
+        $row = $normalize->invoke($sync, $raw);
+
+        return $row;
+    }
+
+    public function testDestinationIdsAreReadAndNamedFromTheStaticDestinations(): void
+    {
+        // The live static/circuits API lists destinations as plain ids.
+        DbStub::$getHashSingleArray = static fn (string $q, array $fields, ...$p): array => [2440 => 'Malta', 122417 => 'Bugibba'];
+
+        $row = $this->normalize(['id' => 1, 'title' => 'Malta', 'destinations' => [122417, 122428, 2440]]);
+
+        self::assertSame('[122417,122428,2440]', $row['destination_ids']);
+        self::assertSame('Bugibba, Malta', $row['destination_names'], 'named from sphinx_destinations, in id order; 122428 is not stored, so it has no name');
+    }
+
+    public function testDestinationObjectsAreStillRead(): void
+    {
+        DbStub::$getHashSingleArray = static fn (string $q, array $fields, ...$p): array => [];
+
+        $row = $this->normalize(['id' => 2, 'title' => 'Grecia', 'destinations' => [['id' => 7, 'name' => 'Atena'], ['id' => 8, 'name' => 'Roma']]]);
+
+        self::assertSame('[7,8]', $row['destination_ids']);
+        self::assertSame('Atena, Roma', $row['destination_names']);
+    }
+
+    public function testACircuitWithoutDestinationsKeepsNullColumns(): void
+    {
+        $row = $this->normalize(['id' => 3, 'title' => 'Fara', 'destinations' => []]);
+
+        self::assertNull($row['destination_ids']);
+        self::assertNull($row['destination_names']);
+    }
+
+    public function testCircuitsAreNotFilteredByTheDestinationWhitelist(): void
+    {
+        $sync = (string) file_get_contents(dirname(__DIR__, 3) . '/src/Services/CircuitSyncService.php');
+
+        self::assertStringNotContainsString('getAllowedDestinationIds', $sync, 'the whitelist is for hotels; every active circuit syncs');
+    }
+
+    public function testTheFullDescriptionIsTheSummaryThenTheDescription(): void
+    {
+        $html = CircuitProductFactory::fullDescription("Pregateste-te.\nO aventura \"de 7 zile\".", 'Iti spunem <b>Bine ai venit</b>.');
+
+        self::assertSame(
+            "<p>Pregateste-te.<br>\nO aventura &quot;de 7 zile&quot;.</p>\n<p>Iti spunem &lt;b&gt;Bine ai venit&lt;/b&gt;.</p>",
+            $html,
+        );
+        self::assertSame('<p>Doar descrierea</p>', CircuitProductFactory::fullDescription('  ', 'Doar descrierea'), 'an empty part is left out');
+        self::assertSame('', CircuitProductFactory::fullDescription('', ''));
     }
 }

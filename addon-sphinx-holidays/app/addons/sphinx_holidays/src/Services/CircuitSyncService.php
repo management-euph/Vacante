@@ -13,7 +13,7 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  * Fetches circuits from the Sphinx static API and syncs them into the local DB.
  *
  * Simpler than HotelSyncService — circuits are a flat catalog without
- * country-based partitioning.
+ * country-based partitioning, and the destination whitelist does not apply.
  *
  * @since 1.2.0
  */
@@ -62,23 +62,17 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
     #[\Override]
     protected function doSync(bool $fullSync, array $stats, array $context): array
     {
-        $allowedDestIds = ConfigProvider::getAllowedDestinationIds();
-        if (empty($allowedDestIds)) {
-            $stats['error'] = 'No sync targets configured. Configure destinations in Sphinx Holidays > Whitelist.';
-            $this->output('ERROR: ' . $stats['error']);
-            return $stats;
-        }
-
+        // Every active circuit is synced: the destination whitelist is for
+        // hotels; circuits are not filtered by it (decided 2026-11).
         $updatedSince = TypeCoerce::toString($context['updated_since'] ?? '');
         if ($updatedSince !== '') {
             $stats['sync_mode'] = 'incremental';
-            $this->output('Circuit sync starting incrementally (updated since ' . $updatedSince . ', filtering by ' . count($allowedDestIds) . ' allowed destinations)...');
+            $this->output('Circuit sync starting incrementally (updated since ' . $updatedSince . ')...');
         } else {
-            $this->output('Circuit sync starting (filtering by ' . count($allowedDestIds) . ' allowed destinations)...');
+            $this->output('Circuit sync starting...');
         }
 
         $allCircuits = [];
-        $filtered = 0;
         $page = 1;
 
         while (true) {
@@ -100,20 +94,11 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
                     continue;
                 }
 
-                // Client-side filtering: skip circuits outside sync targets
-                $circuitDestIds = !empty($normalized['destination_ids'])
-                    ? TypeCoerce::toIntList(json_decode(TypeCoerce::toString($normalized['destination_ids']), true) ?: [])
-                    : [];
-                if (!empty($circuitDestIds) && empty(array_intersect($circuitDestIds, $allowedDestIds))) {
-                    $filtered++;
-                    continue;
-                }
-
                 $allCircuits[] = $normalized;
                 $stats['total'] = TypeCoerce::toInt($stats['total']) + 1;
             }
 
-            if (!$this->hasMorePages($response, $page, self::PER_PAGE, TypeCoerce::toInt($stats['total']) + TypeCoerce::toInt($stats['failed']) + $filtered)) {
+            if (!$this->hasMorePages($response, $page, self::PER_PAGE, TypeCoerce::toInt($stats['total']) + TypeCoerce::toInt($stats['failed']))) {
                 break;
             }
             $page++;
@@ -156,11 +141,10 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
         }
 
         $stats['success'] = true;
-        $filterMsg = $filtered > 0 ? ", {$filtered} filtered (outside sync targets)" : '';
         $synced = TypeCoerce::toInt($stats['synced']);
         $total = TypeCoerce::toInt($stats['total']);
         $failed = TypeCoerce::toInt($stats['failed']);
-        $this->output("Circuit sync complete: {$synced}/{$total} synced, {$failed} failed{$filterMsg}{$pruneMsg}.");
+        $this->output("Circuit sync complete: {$synced}/{$total} synced, {$failed} failed{$pruneMsg}.");
 
         return $stats;
     }
@@ -184,6 +168,56 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
         return [$kept, count($circuits) - count($kept)];
     }
 
+    /** @var array<int, string> destination_id => name, filled as circuits are read */
+    private array $destinationNames = [];
+
+    /**
+     * The destinations of one circuit. The static API lists them as plain
+     * ids (`[122417, 2440]`, ids of the static destinations); an object
+     * `{id, name}` is read as well. Names come from the stored destination
+     * tree (sphinx_destinations); an id not stored yet keeps no name.
+     *
+     * @return array{0: list<int>, 1: list<string>} ids, names
+     */
+    private function destinations(mixed $raw): array
+    {
+        $ids = [];
+        $names = [];
+        foreach (is_array($raw) ? $raw : [] as $dest) {
+            if (is_array($dest)) {
+                $id = TypeCoerce::toInt($dest['id'] ?? 0);
+                if ($id > 0) {
+                    $ids[] = $id;
+                    if (isset($dest['name']) && TypeCoerce::toString($dest['name']) !== '') {
+                        $this->destinationNames[$id] = TypeCoerce::toString($dest['name']);
+                    }
+                }
+            } elseif (is_numeric($dest) && (int) $dest > 0) {
+                $ids[] = (int) $dest;
+            }
+        }
+        $ids = array_values(array_unique($ids));
+
+        $missing = array_values(array_filter($ids, fn (int $id): bool => !isset($this->destinationNames[$id])));
+        if ($missing !== []) {
+            foreach ((array) db_get_hash_single_array(
+                'SELECT destination_id, name FROM ?:sphinx_destinations WHERE destination_id IN (?n)',
+                ['destination_id', 'name'],
+                $missing,
+            ) as $id => $name) {
+                $this->destinationNames[(int) $id] = TypeCoerce::toString($name);
+            }
+        }
+        foreach ($ids as $id) {
+            $name = $this->destinationNames[$id] ?? '';
+            if ($name !== '') {
+                $names[] = $name;
+            }
+        }
+
+        return [$ids, $names];
+    }
+
     /**
      * @param array<string, mixed> $raw
      * @return array<string, mixed>|null
@@ -200,17 +234,7 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
             return null;
         }
 
-        $destinations = $raw['destinations'] ?? $raw['destinatons'] ?? [];
-        $destIds = [];
-        $destNames = [];
-        foreach (TypeCoerce::toRowList($destinations) as $dest) {
-            if (isset($dest['id'])) {
-                $destIds[] = TypeCoerce::toInt($dest['id']);
-            }
-            if (isset($dest['name'])) {
-                $destNames[] = TypeCoerce::toString($dest['name']);
-            }
-        }
+        [$destIds, $destNames] = $this->destinations($raw['destinations'] ?? $raw['destinatons'] ?? []);
 
         $departures = $raw['departures'] ?? [];
         $depIds = [];

@@ -28,6 +28,25 @@ class CircuitProductFactory
     }
 
     /**
+     * The product's Full description: the API's summary, then its
+     * description, each a paragraph. Both are plain text (line breaks,
+     * quotes), so they are escaped and the breaks kept; a part the API leaves
+     * empty is left out.
+     */
+    public static function fullDescription(string $summary, string $description): string
+    {
+        $paragraphs = [];
+        foreach ([$summary, $description] as $text) {
+            $text = trim($text);
+            if ($text !== '') {
+                $paragraphs[] = '<p>' . nl2br(htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), false) . '</p>';
+            }
+        }
+
+        return implode("\n", $paragraphs);
+    }
+
+    /**
      * @param array<string, mixed> $circuit Row from sphinx_circuits
      * @return array{status: string, product_id: int, reason: string}
      */
@@ -73,7 +92,10 @@ class CircuitProductFactory
             'main_category' => $categoryId,
             'category_ids' => [$categoryId],
             'short_description' => TypeCoerce::toString($circuit['summary'] ?? ''),
-            'full_description' => TypeCoerce::toString($circuit['description'] ?? ''),
+            'full_description' => self::fullDescription(
+                TypeCoerce::toString($circuit['summary'] ?? ''),
+                TypeCoerce::toString($circuit['description'] ?? ''),
+            ),
         ];
 
         $configuredLanguages = ConfigProvider::getProductLanguages();
