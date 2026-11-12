@@ -71,6 +71,21 @@ and heal the store itself:
   `&raw=1`. Nothing is booked or written; the store's circuit breaker is not
   touched; neither the API address nor the account is printed, errors
   included. `http://localhost:8080/dev/tools/eurosite-packages.php`
+- `tools/eurosite-circuits.php` — what the store's Eurosite account returns for
+  circuits (spec "Circuite"; the add-on has no circuit support yet), READ-ONLY.
+  (1) CircuitSearchCityRequest: countries, cities and their departure cities.
+  (2) CircuitSearchRequest (Month=13 = the next year) for the first cities, from
+  Bucharest: each circuit's name, period, description, day-by-day program,
+  destinations (one or several) and variants (dates, availability, price,
+  services). (3) The same circuit searched from each of its departure cities,
+  to see whether the price depends on the departure. (4) getProductInfoRequest
+  with ProductType=circuit: pictures and destinations. (5) The first circuit's
+  optional services (CircuitSearchServiceRequest) and cancellation fees
+  (CircuitFeesRequest). (6) A summary. Params: `?country=…&city=…&dep=…`,
+  `&month=13&year=27`, `&name=…`, `&sample=3`, `&circuits=5`, `&adults=2`,
+  `&children=8,5`, `&currency=EUR|RON`, `&prices=0`, `&info=0`, `&extras=0`,
+  `&raw=1`. Nothing is booked or written; neither the API address nor the
+  account is printed. `http://localhost:8080/dev/tools/eurosite-circuits.php`
 
 Each folder has a shared `_*_client.php` (the standalone HTTP client +
 pretty-printer) plus one probe file per API feature. This mirrors the existing
