@@ -42,9 +42,12 @@ their current layout.
    before dates are chosen, no price/reserve column next to the gallery.
 3. **Results on the same page, under the bar, above the tabs** (where the
    inline search already inserts them).
-4. **Real CS-Cart product tabs**, "Descriere" open by default.
-5. **Compact sticky bar after a search** — a region named "Rezumatul
-   căutării": dates · guests · "Schimbă".
+4. **Real CS-Cart product tabs**, kept as the theme's strip; their panels
+   show one under another, each under its tab's title (11 Nov 2026).
+5. **Sticky header on two lines** (11 Nov 2026, replacing the compact
+   "Rezumatul căutării" bar): line 1 once the hero has scrolled off (name,
+   "5 ★", map pin, "Alege datele" / "Alege cameră", favourites heart), line 2
+   the product's tabs once the page's strip has gone under it.
 6. **Room-first results** — the owner's board 13b (29 Oct 2026), which
    replaced the first cards (rate rows per meal group, R1–R3, best 4):
    one card per room type on three columns from 1101 px — the room | its
@@ -410,9 +413,77 @@ an internal code.
   - The booking form's re-check, the cart and order cards show the same
     list (deadline hour, arrival, exact nights); an order whose stay began
     names no "today" in the admin's schedule.
+- 11 Nov 2026 — **sticky header on two lines (#40)**, the owner's mockup
+  ("Sticky bar mockup", desktop frames and anatomy board) for hotels,
+  packages and circuits; it replaces the compact search summary:
+  - Line 1 slides down only once the whole hero has scrolled off (title
+    row, photos, booking box with its departure chips or an open calendar):
+    the name (cut with "…" past 640 px or the room left; hover or keyboard
+    focus shows it whole with the address; a click goes back to the top),
+    "5 ★" (a circuit: its length), the title row's map pin (Google Maps in a
+    new tab), the button and a red heart.
+  - The button: "Alege datele" / "Check availability" before a search ("Alege
+    data plecării" for a circuit or a package by coach or plane), "Alege
+    cameră" / "Select a room" once rooms show; only while what it leads to
+    (the booking box, the rooms) is off screen. The heart clicks the title
+    row's wishlist button (no heart without one) and fills.
+  - Line 2 docks under line 1 once the page's tab strip has gone under the
+    header (line 2 covers it whole): the product's CS-Cart tabs (popup tabs
+    and tabs loaded on demand excluded), following the section
+    across the middle of the screen; a clicked tab holds until the page
+    moves on. The tabs' panels now show one under another, each under its
+    tab's title (`travel-pdpa--stacked`); a click on the page's strip
+    scrolls instead of switching; phones keep the strip (the theme's
+    accordion is opted out).
+  - Every scroll the page makes stops under the header (8 px gap): tabs,
+    "Alege cameră", the circuit menu, the several rooms' "see the room
+    types", the package and circuit bars' offers.
+  - Phones get the same two lines, shorter (52 + 44 px), line 2 scrolling
+    sideways with fading edges.
+  - Tests: `tests/js/pdp-design-a.test.mjs` (what shows when, where scrolls
+    stop, the page wiring), `DesignAProductTemplateTest`.
+  - **To check on the dev store**: a theme sticky header (the header is
+    fixed at the top, z-index 990, under the booking popups); the store's
+    "Product details in tab" setting must be on (without a tab strip there
+    is no line 2); the heart cannot show a hotel saved on an earlier visit
+    (the store's wishlist button keeps no such state either).
+- 12 Nov 2026 — **sticky header, after a review** (six lenses: the header's
+  logic, CS-Cart, the booking engine, layout and accessibility, template and
+  tests, the owner's brief; each fix checked in Chromium on the real CSS
+  and JS):
+  - Scrolls the page does not make itself stop under the header too: the
+    script gives the root a `scroll-padding-top` of what the header covers
+    (focus moving by keyboard, #links, paging) and CS-Cart the same offset
+    for `$.scrollToElm` (a "N reviews" link to its tab, a form's first
+    error); the per-element scroll margins went.
+  - "Alege datele" opens the calendar first and scrolls once the calendar
+    has taken the focus: its focus trap used to cut the scroll short and
+    leave "Vezi prețurile" below the fold. After an inline search the
+    results come into view again once the engine's "searching" row has gone
+    (the engine measures with it, so line 1 used to cover the results'
+    heading and meal filter), unless the visitor has scrolled meanwhile.
+  - The focus follows: a tab to its section's title, "Alege cameră" to the
+    room, the name to the page title.
+  - A link to a tab (`selected_section`, `#tab`) opens on that section; a
+    click on the page's strip goes on to CS-Cart (its dropdowns close) and
+    the theme switches tabs unseen; Sphinx's placeholders are not rooms.
+  - A clicked tab lets go once its scroll is cut short and idle, not on a
+    touch or a sideways wheel on line 2; line 2's fades follow a rotation.
+  - Short windows (a phone held sideways, a zoomed page): no line 2 under
+    480 px of height, no header under 300 px. Phones under 390 px drop the
+    stars (a circuit's length), under 360 px the pin; nothing overlaps and
+    the name keeps a few letters.
+  - The name's tooltip can be hovered and Esc closes it (WCAG 1.4.13);
+    forced colours outline the active tab and keep the pin.
+  - "Alege cameră" on a package or circuit brings the flight (or coach)
+    into view above its rooms, or, with several that day, the rooms' note;
+    Novoton's "Hotel Prices" tab (a pointer back to the search form) is off
+    line 2 and the strip; the name's tooltip adds a circuit's length,
+    transport and departure city, and screen readers hear the name once.
+  - Open: the page's own tab strip keeps the theme's look (the mockup drew
+    it as the navy band); to restyle it as the band if the owner wants.
 - Next: the combined list of several rooms' terms in the bar (board 14.5);
   Novoton rows through `RoomOfferRows`;
   the title row's after-search state ("10–17 iul. · de la 1.485 €", "Vezi
-  camerele") and the compact summary's price (the section carries
-  `data-cheapest`); the room facts the board shows beyond capacity (area,
-  bed) once a source exists.
+  camerele"); the room facts the board shows beyond capacity (area, bed)
+  once a source exists.

@@ -22,6 +22,10 @@
     --travel-pdpa-muted: #595959;
     --travel-pdpa-tile: #e5e9f0;
     --travel-pdpa-radius: 8px;
+    /* The sticky header's lines (#40); pdp-design-a.js reads them to stop
+       its scrolls under the header. */
+    --travel-pdpa-sticky-line1: 56px;
+    --travel-pdpa-sticky-line2: 48px;
 }
 
 /* The page stacks its rows (title, photos) full width, whatever layout the
@@ -549,67 +553,407 @@
     }
 }
 
-/* ── #40 Compact search summary (shown by pdp-design-a.js) ───────────── */
+/* ── #40 Sticky header, two lines (shown by pdp-design-a.js) ─────────── */
 
-.travel-pdpa-compact {
+/* Line 1 slides down once the hero (title row, photos, booking box) has
+   scrolled off: the name, the stars or a circuit's length, the map pin,
+   "Alege datele" / "Alege cameră" and the favourites heart. Line 2, the
+   product's tabs, docks under it once the page's own tab strip has gone
+   under the header. The script reads the lines' heights from the custom
+   properties above (.travel-pdpa), so every scroll it makes stops under
+   them. Under the booking popups and the phone's sheets (1000, 1001). */
+.travel-pdpa-sticky {
     position: fixed;
     top: 0;
     right: 0;
     left: 0;
-    z-index: 1000;
-    background: #fff;
-    border-bottom: 1px solid #e3e7ee;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    z-index: 990;
+    color: var(--travel-pdpa-text);
+    font-size: 14px;
+    line-height: 1.3;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transform: translateY(-100%);
+    visibility: hidden;
+    transition: transform 0.25s ease, visibility 0s linear 0.25s;
 }
-.travel-pdpa-compact[hidden] {
+.travel-pdpa-sticky.is-shown {
+    transform: none;
+    visibility: visible;
+    transition: transform 0.25s ease, visibility 0s;
+}
+.travel-pdpa-sticky[hidden] {
     display: none;
 }
-.travel-pdpa-compact__inner {
+.travel-pdpa-sticky *,
+.travel-pdpa-sticky *::before,
+.travel-pdpa-sticky *::after {
     box-sizing: border-box;
+}
+/* Line 1 stays over line 2 (its tooltip too) while line 2 slides in. */
+.travel-pdpa-sticky__line {
+    position: relative;
+    z-index: 1;
+    height: var(--travel-pdpa-sticky-line1);
+    border-bottom: 1px solid #e3e7ee;
+    background: rgba(255, 255, 255, 0.97);
+    -webkit-backdrop-filter: saturate(180%) blur(10px);
+    backdrop-filter: saturate(180%) blur(10px);
+}
+.travel-pdpa-sticky__inner {
     display: flex;
     align-items: center;
-    gap: 8px 20px;
+    gap: 16px;
     max-width: 1180px;
+    height: 100%;
     margin: 0 auto;
-    padding: 12px 24px;
+    padding: 0 24px;
 }
-.travel-pdpa-compact__hotel {
+/* The name takes what is left once the stars, the pin, the button and the
+   heart have their room; past that it ends with "…". */
+.travel-pdpa-sticky__id {
+    display: flex;
     flex: 1 1 auto;
+    align-items: center;
+    gap: 8px;
     min-width: 0;
+}
+.travel-pdpa-sticky__namebox {
+    position: relative;
+    display: flex;
+    min-width: 0;
+}
+.travel-pdpa .travel-pdpa-sticky__name {
+    display: block;
+    min-width: 0;
+    max-width: 640px;
     margin: 0;
-    overflow: hidden;
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--travel-pdpa-text);
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
-.travel-pdpa-compact__hotel .travel-pdpa-stars {
-    font-size: 13px;
-}
-.travel-pdpa-compact__summary {
-    margin: 0;
-    font-size: 14px;
-    color: var(--travel-pdpa-text);
-    white-space: nowrap;
-}
-.travel-pdpa .travel-pdpa-compact__link {
-    min-height: 44px;
-    padding: 0 4px;
+    padding: 6px 0;
     border: 0;
-    background: none;
+    background: transparent;
+    color: var(--travel-pdpa-text);
+    font: inherit;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.3;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+/* The whole name and the address, on hover or keyboard focus. The pointer
+   can move onto it (a bridge over the gap) and Esc closes it until the
+   pointer leaves the name or the focus moves on (pdp-design-a.js), as WCAG
+   1.4.13 asks; a pointer only passing over the name does not open it. */
+.travel-pdpa-sticky__tip {
+    position: absolute;
+    top: calc(100% + 12px);
+    left: 0;
+    z-index: 2;
+    display: block;
+    width: max-content;
+    max-width: min(420px, calc(100vw - 32px));
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #1f2937;
+    color: #fff;
+    font-size: 13px;
+    line-height: 1.45;
+    white-space: normal;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: opacity 0.12s ease, transform 0.12s ease, visibility 0s linear 0.12s;
+}
+.travel-pdpa-sticky__tip::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    bottom: 100%;
+    left: 0;
+    height: 12px;
+}
+.travel-pdpa-sticky__tip::before {
+    content: "";
+    position: absolute;
+    top: -5px;
+    left: 22px;
+    width: 10px;
+    height: 10px;
+    background: #1f2937;
+    transform: rotate(45deg);
+}
+.travel-pdpa-sticky__name:focus-visible + .travel-pdpa-sticky__tip {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition: opacity 0.12s ease, transform 0.12s ease, visibility 0s;
+}
+@media (hover: hover) {
+    .travel-pdpa-sticky__namebox:hover .travel-pdpa-sticky__tip {
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        transition: opacity 0.12s ease 0.3s, transform 0.12s ease 0.3s, visibility 0s linear 0.3s;
+    }
+}
+.travel-pdpa-sticky__namebox.is-tip-off .travel-pdpa-sticky__tip {
+    opacity: 0;
+    visibility: hidden;
+    transition: none;
+}
+.travel-pdpa-sticky__tip-name {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+}
+.travel-pdpa-sticky__tip-line {
+    display: block;
+    margin-top: 4px;
+    color: #e5e7eb;
+}
+.travel-pdpa-sticky__stars {
+    flex: none;
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.travel-pdpa-sticky__stars > span {
+    color: var(--nvt-stars, #f5a623);
+}
+.travel-pdpa-sticky__days {
+    flex: none;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #eaf2fc;
+    color: var(--travel-pdpa-navy);
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+/* The map pin: the title row's "Vezi pe hartă" (Google Maps, new tab). */
+.travel-pdpa .travel-pdpa-sticky__map {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 6px;
     color: var(--travel-pdpa-link);
+    text-decoration: none;
+}
+.travel-pdpa .travel-pdpa-sticky__map:hover {
+    background: #ebf3ff;
+}
+.travel-pdpa-sticky__map::before {
+    content: "";
+    width: 18px;
+    height: 18px;
+    background: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.travel-pdpa-sticky__side {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+}
+.travel-pdpa .travel-pdpa-sticky__cta {
+    height: 40px;
+    margin: 0;
+    padding: 0 20px;
+    border: 1px solid var(--travel-pdpa-blue);
+    border-radius: 6px;
+    background: var(--travel-pdpa-blue);
+    color: #fff;
+    font: inherit;
     font-size: 15px;
     font-weight: 700;
-    cursor: pointer;
     white-space: nowrap;
+    cursor: pointer;
+    transition: opacity 0.15s ease, visibility 0.15s;
 }
-.travel-pdpa .travel-pdpa-compact__link:hover {
-    text-decoration: underline;
+.travel-pdpa .travel-pdpa-sticky__cta:hover {
+    filter: brightness(0.92);
 }
-.travel-pdpa .travel-pdpa-compact__link:focus-visible {
+/* What the button leads to is on screen: it gives way, keeping its place so
+   the heart does not move. */
+.travel-pdpa .travel-pdpa-sticky__cta.is-away {
+    opacity: 0;
+    visibility: hidden;
+}
+.travel-pdpa .travel-pdpa-sticky__fav {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #c9d0da;
+    border-radius: 999px;
+    background: #fff;
+    color: #e11d48;
+    cursor: pointer;
+}
+.travel-pdpa .travel-pdpa-sticky__fav:hover {
+    background: #fff1f2;
+}
+.travel-pdpa .travel-pdpa-sticky__fav.is-saved svg {
+    fill: currentColor;
+}
+.travel-pdpa .travel-pdpa-sticky__cta[hidden],
+.travel-pdpa .travel-pdpa-sticky__fav[hidden] {
+    display: none;
+}
+.travel-pdpa .travel-pdpa-sticky__name:focus-visible,
+.travel-pdpa .travel-pdpa-sticky__map:focus-visible,
+.travel-pdpa .travel-pdpa-sticky__cta:focus-visible,
+.travel-pdpa .travel-pdpa-sticky__fav:focus-visible {
     outline: 3px solid var(--travel-pdpa-navy);
     outline-offset: 2px;
+}
+/* Line 2: a navy band, the section in view in white. On a phone it scrolls
+   sideways, its edges fading while more tabs hide there. */
+.travel-pdpa-sticky__tabs {
+    position: relative;
+    height: var(--travel-pdpa-sticky-line2);
+    background: var(--travel-pdpa-navy);
+    animation: travel-pdpa-sticky-drop 0.2s ease;
+}
+.travel-pdpa-sticky__tabs[hidden] {
+    display: none;
+}
+@keyframes travel-pdpa-sticky-drop {
+    from {
+        transform: translateY(-100%);
+    }
+}
+.travel-pdpa-sticky__tablist {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 1180px;
+    height: 100%;
+    margin: 0 auto;
+    padding: 0 24px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.travel-pdpa-sticky__tablist::-webkit-scrollbar {
+    display: none;
+}
+.travel-pdpa-sticky__tabs::before,
+.travel-pdpa-sticky__tabs::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 1;
+    width: 32px;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    pointer-events: none;
+}
+.travel-pdpa-sticky__tabs::before {
+    left: 0;
+    background: linear-gradient(to right, var(--travel-pdpa-navy), rgba(0, 53, 128, 0));
+}
+.travel-pdpa-sticky__tabs::after {
+    right: 0;
+    background: linear-gradient(to left, var(--travel-pdpa-navy), rgba(0, 53, 128, 0));
+}
+.travel-pdpa-sticky__tabs.is-fade-start::before,
+.travel-pdpa-sticky__tabs.is-fade-end::after {
+    opacity: 1;
+}
+.travel-pdpa .travel-pdpa-sticky__tab {
+    flex: none;
+    height: 34px;
+    margin: 0;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #fff;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+}
+.travel-pdpa .travel-pdpa-sticky__tab:hover {
+    background: rgba(255, 255, 255, 0.16);
+}
+.travel-pdpa .travel-pdpa-sticky__tab.is-active {
+    background: #fff;
+    color: var(--travel-pdpa-navy);
+}
+.travel-pdpa .travel-pdpa-sticky__tab:focus-visible {
+    outline: 3px solid var(--travel-pdpa-yellow);
+    outline-offset: -3px;
+}
+
+/* ── #50 Product tabs, one under another (pdp-design-a.js) ─────────────── */
+
+/* Line 2 follows the sections, so every tab's panel shows, under its
+   title, whatever the theme's tabs hid (its .hidden, an inline display);
+   the page's strip stays, its active tab following the section in view.
+   Scrolls the page does not make itself (a link to #content_…, the focus)
+   stop under the header through the root's scroll-padding, which the
+   script sets to what the header covers. */
+.travel-pdpa--stacked .travel-pdpa-tabs [data-travel-pdpa-panel] {
+    display: block !important;
+}
+.travel-pdpa--stacked .travel-pdpa-tabs [data-travel-pdpa-panel] ~ [data-travel-pdpa-panel] {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid #e3e7ee;
+}
+.travel-pdpa--stacked .travel-pdpa-tabs__title {
+    margin: 0 0 12px;
+    color: var(--travel-pdpa-text);
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .travel-pdpa-sticky,
+    .travel-pdpa-sticky.is-shown,
+    .travel-pdpa-sticky__tip,
+    .travel-pdpa-sticky__tabs::before,
+    .travel-pdpa-sticky__tabs::after,
+    .travel-pdpa .travel-pdpa-sticky__cta {
+        transition: none;
+    }
+    .travel-pdpa-sticky__tabs {
+        animation: none;
+    }
+}
+@media print {
+    .travel-pdpa-sticky {
+        display: none !important;
+    }
+}
+/* Forced colours (a Windows contrast theme) drop the white pill and the
+   pin's painted mask: an outline marks the section, the pin keeps the link
+   colour. */
+@media (forced-colors: active) {
+    .travel-pdpa .travel-pdpa-sticky__tab.is-active {
+        outline: 2px solid CanvasText;
+        outline-offset: -4px;
+        text-decoration: underline;
+    }
+    .travel-pdpa-sticky__map::before {
+        background: LinkText;
+        forced-color-adjust: none;
+    }
 }
 
 /* ── #60 Room-first results (components/design_a_results.tpl) ────────── */
@@ -1905,19 +2249,58 @@
         pointer-events: none;
     }
 
-    .travel-pdpa-compact__inner {
-        flex-wrap: wrap;
-        gap: 0 12px;
-        padding: 8px 16px;
+    /* The sticky header: shorter lines. The name gives way, down to a few
+       letters; nothing slides under the button (the name, the stars and the
+       pin sit in line 1 itself), and a label too long for the narrowest
+       phones ends with "…" rather than push the heart out. */
+    .travel-pdpa {
+        --travel-pdpa-sticky-line1: 52px;
+        --travel-pdpa-sticky-line2: 44px;
     }
-    .travel-pdpa-compact__hotel {
-        flex: 1 1 100%;
+    .travel-pdpa-sticky__inner {
+        gap: 8px;
+        padding: 0 12px;
+    }
+    .travel-pdpa-sticky__id {
+        display: contents;
+    }
+    .travel-pdpa-sticky__namebox {
+        flex: 0 1 auto;
+        min-width: 44px;
+    }
+    .travel-pdpa .travel-pdpa-sticky__name {
         font-size: 15px;
     }
-    .travel-pdpa-compact__summary {
-        flex: 1 1 auto;
+    .travel-pdpa-sticky__side {
+        gap: 8px;
+    }
+    .travel-pdpa .travel-pdpa-sticky__cta {
+        max-width: calc(100vw - 124px);
+        padding: 0 12px;
+        font-size: 14px;
         overflow: hidden;
         text-overflow: ellipsis;
+    }
+    .travel-pdpa-sticky__tablist {
+        padding: 0 12px;
+    }
+    .travel-pdpa .travel-pdpa-sticky__tab {
+        height: 32px;
+        padding: 0 12px;
+        font-size: 14px;
+    }
+}
+/* The narrowest phones keep the name, the button and the heart: the stars
+   (or a circuit's length) go first, then the pin; both are in the title row. */
+@media (max-width: 389px) {
+    .travel-pdpa-sticky__stars,
+    .travel-pdpa-sticky__days {
+        display: none;
+    }
+}
+@media (max-width: 359px) {
+    .travel-pdpa .travel-pdpa-sticky__map {
+        display: none;
     }
 }
 

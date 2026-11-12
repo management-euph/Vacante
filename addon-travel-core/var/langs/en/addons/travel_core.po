@@ -3294,17 +3294,33 @@ msgctxt "Languages::travel_core.pdpa_all_photos"
 msgid "All photos ([n])"
 msgstr "All photos ([n])"
 
-msgctxt "Languages::travel_core.pdpa_summary_label"
-msgid "Search summary"
-msgstr "Search summary"
+msgctxt "Languages::travel_core.pdpa_sticky_label"
+msgid "Quick navigation"
+msgstr "Quick navigation"
 
-msgctxt "Languages::travel_core.pdpa_change"
-msgid "Change"
-msgstr "Change"
+msgctxt "Languages::travel_core.pdpa_back_to_top"
+msgid "back to the top"
+msgstr "back to the top"
 
-msgctxt "Languages::travel_core.pdpa_rooms_link"
-msgid "Rooms"
-msgstr "Rooms"
+msgctxt "Languages::travel_core.pdpa_show_map_new_tab"
+msgid "Show on map (opens in a new tab)"
+msgstr "Show on map (opens in a new tab)"
+
+msgctxt "Languages::travel_core.pdpa_check_availability"
+msgid "Check availability"
+msgstr "Check availability"
+
+msgctxt "Languages::travel_core.pdpa_choose_room"
+msgid "Select a room"
+msgstr "Select a room"
+
+msgctxt "Languages::travel_core.pdpa_add_favourite"
+msgid "Add to favourites"
+msgstr "Add to favourites"
+
+msgctxt "Languages::travel_core.pdpa_sections_label"
+msgid "Sections of the page"
+msgstr "Sections of the page"
 
 msgctxt "Languages::travel_core.add_date"
 msgid "Add date"
