@@ -233,7 +233,6 @@ provision() {
     DOCROOT="$DOCROOT" REPO=/repo bash "$LINK_ADDONS"
 
     enable_dev_mode
-    patch_core_php83
 
     log "Clearing the template/cache dir..."
     rm -rf "${DOCROOT:?}/var/cache/"* 2>/dev/null || true
@@ -254,5 +253,8 @@ else
     log "Already provisioned; re-linking addons for freshness."
     DOCROOT="$DOCROOT" REPO=/repo bash "$LINK_ADDONS" || true
 fi
+
+# Every start, not just first run: an already-provisioned store needs it too.
+patch_core_php83
 
 exec "$@"
