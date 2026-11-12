@@ -65,11 +65,10 @@ function _novoton_enrich_hotel_row(array $hotel, ?array $packages = null): array
                 $hotel['rooms'] = [$hotel['rooms']];
             }
         }
-        if (isset($hotelInfo['boards'])) {
-            $hotel['boards'] = $hotelInfo['boards'];
-            if (is_array($hotel['boards']) && isset($hotel['boards']['IdBoard'])) {
-                $hotel['boards'] = [$hotel['boards']];
-            }
+        // The stored copy keeps Novoton's element name, `board` (not `boards`).
+        $boards = \Tygh\Addons\NovotonHolidays\Services\StoredHotelBoards::fromHotelInfo($hotelInfo);
+        if ($boards !== []) {
+            $hotel['boards'] = $boards;
         }
         if (isset($hotelInfo['ages'])) {
             $hotel['ages'] = $hotelInfo['ages'];
