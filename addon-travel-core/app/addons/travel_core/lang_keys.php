@@ -4342,4 +4342,20 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Ungrouped features',
         'ro' => 'Caracteristici fără grup',
     ],
+    'travel_core.fmc_field_included' => [
+        'en' => 'Included in the price',
+        'ro' => 'Inclus în preț',
+    ],
+    'travel_core.fmc_field_not_included' => [
+        'en' => 'Not included in the price',
+        'ro' => 'Neinclus în preț',
+    ],
+    'travel_core.fmc_rule_included' => [
+        'en' => 'Each "included" item of the circuit, by its title, as one value of the feature (use a checkbox feature). A missing value is created; a title is cut at 255 letters.',
+        'ro' => 'Fiecare element „inclus” al circuitului, după titlu, ca o valoare a caracteristicii (folosiți o caracteristică cu căsuțe). O valoare lipsă este creată; un titlu este tăiat la 255 de litere.',
+    ],
+    'travel_core.fmc_rule_not_included' => [
+        'en' => 'Each "not included" item of the circuit, by its title, as one value of the feature (use a checkbox feature). A missing value is created; a title is cut at 255 letters.',
+        'ro' => 'Fiecare element „neinclus” al circuitului, după titlu, ca o valoare a caracteristicii (folosiți o caracteristică cu căsuțe). O valoare lipsă este creată; un titlu este tăiat la 255 de litere.',
+    ],
 ];

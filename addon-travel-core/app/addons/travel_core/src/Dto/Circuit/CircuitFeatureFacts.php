@@ -19,6 +19,8 @@ final readonly class CircuitFeatureFacts
      * @param list<int> $months the calendar months (1–12) with a departure still on sale
      * @param list<string> $departureCities the cities it leaves from, by name
      * @param list<string> $tags the provider's tags, by name
+     * @param list<string> $included what the price includes, one entry per item
+     * @param list<string> $notIncluded what it does not include, one entry per item
      */
     public function __construct(
         public string $transport = '',
@@ -27,6 +29,8 @@ final readonly class CircuitFeatureFacts
         public array $months = [],
         public array $departureCities = [],
         public array $tags = [],
+        public array $included = [],
+        public array $notIncluded = [],
     ) {
     }
 }

@@ -18,7 +18,7 @@ final class CircuitFeatureConfig
     public const string STORAGE_KEY = 'travel_core_circuit_features';
 
     /** The facts that can be mapped, in the order the page lists them. */
-    public const array FIELDS = ['transport', 'duration', 'countries', 'month', 'departure_city', 'tags'];
+    public const array FIELDS = ['transport', 'duration', 'countries', 'month', 'departure_city', 'tags', 'included', 'not_included'];
 
     /** The transport codes a provider sends. */
     public const array TRANSPORTS = ['flight', 'bus'];
