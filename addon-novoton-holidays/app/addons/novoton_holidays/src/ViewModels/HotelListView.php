@@ -37,6 +37,7 @@ final class HotelListView
             $out[] = [
                 'id' => TypeCoerce::toString($row['hotel_id'] ?? ''),
                 'id_url' => rawurlencode(TypeCoerce::toString($row['hotel_id'] ?? '')),
+                'dom_id' => 'nvt_error_' . md5(TypeCoerce::toString($row['hotel_id'] ?? '')),
                 'name' => TypeCoerce::toString($row['hotel_name'] ?? ''),
                 'city' => TypeCoerce::toString($row['city'] ?? ''),
                 'area' => self::area(TypeCoerce::toString($row['region'] ?? ''), TypeCoerce::toString($row['country'] ?? ''), TypeCoerce::toString($row['city'] ?? '')),
@@ -49,6 +50,7 @@ final class HotelListView
                 'synced_days' => self::daysAgo($synced, $now),
                 // Shown only when the last request got no answer.
                 'tried_at' => $status === 'error' ? self::when($tried) : '',
+                'tried_raw' => $tried,
                 // Queued for a re-sync the cron has not run yet.
                 'queued' => $due !== '' && ($synced === '' || $due > $synced),
                 'product_id' => $productId,
@@ -60,6 +62,21 @@ final class HotelListView
         }
 
         return $out;
+    }
+
+    /**
+     * A stored answer as the error panel shows it: pretty JSON, cut so the
+     * panel stays readable; '' when there is none.
+     */
+    public static function answerExcerpt(string $json, int $max = 4000): string
+    {
+        if (trim($json) === '') {
+            return '';
+        }
+        $decoded = json_decode($json, true);
+        $pretty = $decoded !== null ? (string) json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : $json;
+
+        return mb_strlen($pretty) > $max ? mb_substr($pretty, 0, $max) . "\n…" : $pretty;
     }
 
     /** "Region, Country", without repeating the city or an empty part. */

@@ -4659,3 +4659,55 @@ msgstr "Motel"
 msgctxt "Languages::novoton_holidays.hotels_type_cabin"
 msgid "Cabin"
 msgstr "Căsuță"
+
+msgctxt "Languages::novoton_holidays.hotels_confirm_disable_n"
+msgid "Disable the products of [n] selected hotels? [on_sale] of them are on sale now and disappear from the storefront: customers can no longer find or book them. Bookings already made are not affected."
+msgstr "Dezactivați produsele celor [n] hoteluri selectate? [on_sale] dintre ele sunt acum la vânzare și dispar din magazin: clienții nu le mai pot găsi sau rezerva. Rezervările deja făcute nu sunt afectate."
+
+msgctxt "Languages::novoton_holidays.hotels_confirm_disable_one"
+msgid "Disable the product of [hotel]? It disappears from the storefront: customers can no longer find or book it."
+msgstr "Dezactivați produsul hotelului [hotel]? Dispare din magazin: clienții nu îl mai pot găsi sau rezerva."
+
+msgctxt "Languages::novoton_holidays.hotels_disable_product"
+msgid "Disable product"
+msgstr "Dezactivează produsul"
+
+msgctxt "Languages::novoton_holidays.hotels_enable_product"
+msgid "Enable product"
+msgstr "Activează produsul"
+
+msgctxt "Languages::novoton_holidays.hotels_queue_retry"
+msgid "Queue a retry"
+msgstr "Pune în așteptare o reîncercare"
+
+msgctxt "Languages::novoton_holidays.hotels_err_last_request"
+msgid "Last request"
+msgstr "Ultima cerere"
+
+msgctxt "Languages::novoton_holidays.hotels_err_no_answer"
+msgid "no answer"
+msgstr "fără răspuns"
+
+msgctxt "Languages::novoton_holidays.hotels_err_last_success"
+msgid "Last successful sync"
+msgstr "Ultima sincronizare reușită"
+
+msgctxt "Languages::novoton_holidays.hotels_err_next_try"
+msgid "Next automatic try"
+msgstr "Următoarea încercare automată"
+
+msgctxt "Languages::novoton_holidays.hotels_err_no_answer_note"
+msgid "Novoton sent no answer to the last request, so there is no response to show for it. Below is the last answer it did send."
+msgstr "Novoton nu a răspuns la ultima cerere, deci nu există un răspuns de afișat. Mai jos este ultimul răspuns trimis."
+
+msgctxt "Languages::novoton_holidays.hotels_err_last_answer"
+msgid "Last stored answer"
+msgstr "Ultimul răspuns salvat"
+
+msgctxt "Languages::novoton_holidays.hotels_sync_tip"
+msgid "Hotel list: last synced [list], runs every 3 days at 01:30. Hotel details: last synced [info], runs as often as the server cron calls it (suggested every 5 minutes)."
+msgstr "Lista de hoteluri: ultima sincronizare [list], rulează la 3 zile la 01:30. Detaliile hotelurilor: ultima sincronizare [info], rulează cât de des o apelează cronul serverului (sugerat la 5 minute)."
+
+msgctxt "Languages::novoton_holidays.hotels_run_details_sync"
+msgid "Run details sync"
+msgstr "Rulează sincronizarea detaliilor"

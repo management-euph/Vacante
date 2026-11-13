@@ -296,6 +296,31 @@ final class HotelListingRepository
     }
 
     /**
+     * The last answer Novoton sent for each of these hotels (hotel_data, the
+     * hotelinfo JSON), for the API error panel: a failed request leaves no
+     * answer, so this is the one before it.
+     *
+     * @param list<string> $hotelIds
+     *
+     * @return array<string, string> hotel_id => JSON ('' when none)
+     */
+    public function lastAnswers(array $hotelIds): array
+    {
+        if ($hotelIds === []) {
+            return [];
+        }
+        $answers = [];
+        foreach (self::asRowList(db_get_array(
+            'SELECT hotel_id, hotel_data FROM ?:novoton_hotels WHERE hotel_id IN (?a)',
+            $hotelIds,
+        )) as $row) {
+            $answers[TypeCoerce::toString($row['hotel_id'] ?? '')] = TypeCoerce::toString($row['hotel_data'] ?? '');
+        }
+
+        return $answers;
+    }
+
+    /**
      * The existing CS-Cart products of these hotels.
      *
      * @param list<string> $hotelIds

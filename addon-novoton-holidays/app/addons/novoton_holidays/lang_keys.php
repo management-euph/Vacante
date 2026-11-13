@@ -1310,4 +1310,56 @@ return [
         'en' => 'Cabin',
         'ro' => 'Căsuță',
     ],
+    'novoton_holidays.hotels_confirm_disable_n' => [
+        'en' => 'Disable the products of [n] selected hotels? [on_sale] of them are on sale now and disappear from the storefront: customers can no longer find or book them. Bookings already made are not affected.',
+        'ro' => 'Dezactivați produsele celor [n] hoteluri selectate? [on_sale] dintre ele sunt acum la vânzare și dispar din magazin: clienții nu le mai pot găsi sau rezerva. Rezervările deja făcute nu sunt afectate.',
+    ],
+    'novoton_holidays.hotels_confirm_disable_one' => [
+        'en' => 'Disable the product of [hotel]? It disappears from the storefront: customers can no longer find or book it.',
+        'ro' => 'Dezactivați produsul hotelului [hotel]? Dispare din magazin: clienții nu îl mai pot găsi sau rezerva.',
+    ],
+    'novoton_holidays.hotels_disable_product' => [
+        'en' => 'Disable product',
+        'ro' => 'Dezactivează produsul',
+    ],
+    'novoton_holidays.hotels_enable_product' => [
+        'en' => 'Enable product',
+        'ro' => 'Activează produsul',
+    ],
+    'novoton_holidays.hotels_queue_retry' => [
+        'en' => 'Queue a retry',
+        'ro' => 'Pune în așteptare o reîncercare',
+    ],
+    'novoton_holidays.hotels_err_last_request' => [
+        'en' => 'Last request',
+        'ro' => 'Ultima cerere',
+    ],
+    'novoton_holidays.hotels_err_no_answer' => [
+        'en' => 'no answer',
+        'ro' => 'fără răspuns',
+    ],
+    'novoton_holidays.hotels_err_last_success' => [
+        'en' => 'Last successful sync',
+        'ro' => 'Ultima sincronizare reușită',
+    ],
+    'novoton_holidays.hotels_err_next_try' => [
+        'en' => 'Next automatic try',
+        'ro' => 'Următoarea încercare automată',
+    ],
+    'novoton_holidays.hotels_err_no_answer_note' => [
+        'en' => 'Novoton sent no answer to the last request, so there is no response to show for it. Below is the last answer it did send.',
+        'ro' => 'Novoton nu a răspuns la ultima cerere, deci nu există un răspuns de afișat. Mai jos este ultimul răspuns trimis.',
+    ],
+    'novoton_holidays.hotels_err_last_answer' => [
+        'en' => 'Last stored answer',
+        'ro' => 'Ultimul răspuns salvat',
+    ],
+    'novoton_holidays.hotels_sync_tip' => [
+        'en' => 'Hotel list: last synced [list], runs every 3 days at 01:30. Hotel details: last synced [info], runs as often as the server cron calls it (suggested every 5 minutes).',
+        'ro' => 'Lista de hoteluri: ultima sincronizare [list], rulează la 3 zile la 01:30. Detaliile hotelurilor: ultima sincronizare [info], rulează cât de des o apelează cronul serverului (sugerat la 5 minute).',
+    ],
+    'novoton_holidays.hotels_run_details_sync' => [
+        'en' => 'Run details sync',
+        'ro' => 'Rulează sincronizarea detaliilor',
+    ],
 ];

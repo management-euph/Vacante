@@ -4659,3 +4659,55 @@ msgstr "Motel"
 msgctxt "Languages::novoton_holidays.hotels_type_cabin"
 msgid "Cabin"
 msgstr "Cabin"
+
+msgctxt "Languages::novoton_holidays.hotels_confirm_disable_n"
+msgid "Disable the products of [n] selected hotels? [on_sale] of them are on sale now and disappear from the storefront: customers can no longer find or book them. Bookings already made are not affected."
+msgstr "Disable the products of [n] selected hotels? [on_sale] of them are on sale now and disappear from the storefront: customers can no longer find or book them. Bookings already made are not affected."
+
+msgctxt "Languages::novoton_holidays.hotels_confirm_disable_one"
+msgid "Disable the product of [hotel]? It disappears from the storefront: customers can no longer find or book it."
+msgstr "Disable the product of [hotel]? It disappears from the storefront: customers can no longer find or book it."
+
+msgctxt "Languages::novoton_holidays.hotels_disable_product"
+msgid "Disable product"
+msgstr "Disable product"
+
+msgctxt "Languages::novoton_holidays.hotels_enable_product"
+msgid "Enable product"
+msgstr "Enable product"
+
+msgctxt "Languages::novoton_holidays.hotels_queue_retry"
+msgid "Queue a retry"
+msgstr "Queue a retry"
+
+msgctxt "Languages::novoton_holidays.hotels_err_last_request"
+msgid "Last request"
+msgstr "Last request"
+
+msgctxt "Languages::novoton_holidays.hotels_err_no_answer"
+msgid "no answer"
+msgstr "no answer"
+
+msgctxt "Languages::novoton_holidays.hotels_err_last_success"
+msgid "Last successful sync"
+msgstr "Last successful sync"
+
+msgctxt "Languages::novoton_holidays.hotels_err_next_try"
+msgid "Next automatic try"
+msgstr "Next automatic try"
+
+msgctxt "Languages::novoton_holidays.hotels_err_no_answer_note"
+msgid "Novoton sent no answer to the last request, so there is no response to show for it. Below is the last answer it did send."
+msgstr "Novoton sent no answer to the last request, so there is no response to show for it. Below is the last answer it did send."
+
+msgctxt "Languages::novoton_holidays.hotels_err_last_answer"
+msgid "Last stored answer"
+msgstr "Last stored answer"
+
+msgctxt "Languages::novoton_holidays.hotels_sync_tip"
+msgid "Hotel list: last synced [list], runs every 3 days at 01:30. Hotel details: last synced [info], runs as often as the server cron calls it (suggested every 5 minutes)."
+msgstr "Hotel list: last synced [list], runs every 3 days at 01:30. Hotel details: last synced [info], runs as often as the server cron calls it (suggested every 5 minutes)."
+
+msgctxt "Languages::novoton_holidays.hotels_run_details_sync"
+msgid "Run details sync"
+msgstr "Run details sync"

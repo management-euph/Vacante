@@ -21,6 +21,7 @@ use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Repository\HotelListingRepository;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\ViewModels\HotelListView;
+use Tygh\Addons\NovotonHolidays\ViewModels\HotelSearchFilters;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Tygh;
@@ -312,10 +313,18 @@ if ($mode === 'check_packages') {
 // ════════════════════════════════════════════════════════════════════
 
 /** The list to come back to after an action: the filters, sort and page the form carried. */
-$nvtHotelsBack = static fn (): string => 'novoton_hotels.manage?' . HotelListView::query(
-    (new HotelListingRepository())->normalize($_REQUEST),
-    true,
-);
+$nvtHotelsBack = static function (): string {
+    // The bulk form posts the list's query; a row link carries it in its URL.
+    // Either way it is read back through normalize(), never passed on as is.
+    $params = $_REQUEST;
+    $posted = RequestCoerce::string($_REQUEST, 'redirect_query');
+    if ($posted !== '') {
+        parse_str($posted, $fromForm);
+        $params = $fromForm + $params;
+    }
+
+    return 'novoton_hotels.manage?' . HotelListView::query((new HotelListingRepository())->normalize($params), true);
+};
 
 /** @return list<string> the hotel ids a request names (one row's, or the checked ones) */
 $nvtHotelsSelected = static function (): array {
@@ -410,6 +419,20 @@ if ($mode === 'manage') {
         $rows[$i]['main_pair'] = is_array($pair) ? $pair : [];
     }
 
+    // The API error panel: the last answer Novoton did send, per failed hotel.
+    $errorIds = array_values(array_map(
+        static fn (array $row): string => TypeCoerce::toString($row['id']),
+        array_filter($rows, static fn (array $row): bool => $row['status'] === 'error'),
+    ));
+    $answers = $errorIds !== [] ? $listing->lastAnswers($errorIds) : [];
+    foreach ($rows as $i => $row) {
+        $rows[$i]['answer'] = $row['status'] === 'error' ? HotelListView::answerExcerpt($answers[$row['id']] ?? '') : '';
+        // When an automatic retry is due: a day after the failed request (ChangedHotelDetector).
+        $rows[$i]['next_try'] = $row['status'] === 'error' && $row['tried_raw'] !== ''
+            ? HotelListView::when(date('Y-m-d H:i:s', (int) strtotime($row['tried_raw']) + \Tygh\Addons\NovotonHolidays\Helpers\ChangedHotelDetector::RETRY_AFTER))
+            : '';
+    }
+
     /** @var \Smarty $nvtView */
     $nvtView = Tygh::$app['view'];
     $nvtView->assign('novoton_hotels', $rows);
@@ -423,4 +446,12 @@ if ($mode === 'manage') {
     $nvtView->assign('novoton_hotels_back', HotelListView::query($search, true));
     $nvtView->assign('novoton_last_hotel_list', HotelListView::when($lastSyncs['hotel_list']));
     $nvtView->assign('novoton_last_hotelinfo', HotelListView::when($lastSyncs['hotelinfo']));
+    $nvtView->assign('novoton_search_filters', HotelSearchFilters::build(
+        $search,
+        $countries,
+        static fn (string $key, array $params = []): string => TypeCoerce::toString(__($key, $params)),
+    ));
+    $nvtView->assign('novoton_hotels_count', TypeCoerce::toInt($search['total_items'] ?? 0));
+    // The status pills keep every other filter and set only the status.
+    $nvtView->assign('novoton_hotels_query_status', HotelListView::query(['sync_status' => ''] + $search));
 }
