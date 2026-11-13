@@ -156,17 +156,15 @@ final class HotelsGridBulkBarTest extends TestCase
         $tpl = self::template();
         $head = self::between($tpl, '<thead data-ca-bulkedit-default-object', '</thead>');
 
-        // One wrapper per header cell that carries text: 10 sort links + the
-        // one plain label. The checkbox cell holds inputs, which collapse on
-        // their own. ("<th " / "<th>" so the <thead> tag is not counted.)
-        $cells = substr_count($head, '<th ') + substr_count($head, '<th>');
-        self::assertSame(
-            $cells - 1,
-            substr_count($head, 'class="th-text-overflow"'),
-            'every header cell but the checkbox one wraps its text so it can collapse',
-        );
+        // Every header label is wrapped: 10 sort links + the one plain label
+        // ("Product"). Only two cells carry no label of their own — the
+        // checkbox and the thumbnail — and their contents collapse anyway.
         self::assertSame(10, substr_count($head, '<a class="th-text-overflow" href='));
-        self::assertStringContainsString('<span class="th-text-overflow">', $head);
+        self::assertSame(1, substr_count($head, '<span class="th-text-overflow">'));
+        self::assertSame(11, substr_count($head, 'class="th-text-overflow"'));
+
+        $cells = substr_count($head, '<th ') + substr_count($head, '<th>');
+        self::assertSame(12, $cells, 'checkbox, thumbnail, name/ID, and nine more');
 
         // Not the core's companion class: on this grid's pixel widths it
         // squeezes the columns until the labels ellipsise.
@@ -181,6 +179,40 @@ final class HotelsGridBulkBarTest extends TestCase
         self::assertIsInt($end, "missing: {$to}");
 
         return substr($haystack, $start, $end - $start);
+    }
+
+    /**
+     * The name used to be squeezed next to its thumbnail while the ID had a
+     * column to itself. It is laid out as CS-Cart's Products list now: the
+     * picture in its own titleless column, then one column carrying the name
+     * with its ID beneath, under a "Name / ID" header where both still sort.
+     */
+    public function testNameAndIdShareOneColumnBesideTheThumbnail(): void
+    {
+        $tpl = self::template();
+        $head = self::between($tpl, '<thead data-ca-bulkedit-default-object', '</thead>');
+        $body = self::between($tpl, '<tbody>', '</tbody>');
+
+        // Header: a titleless column for the picture, then both sort links
+        // inside the wrapper that draws the "/" between them.
+        self::assertStringContainsString('<th width="50" class="table__column-without-title"></th>', $head);
+        $nameTh = self::between($head, '<th width="30%">', '</th>');
+        self::assertStringContainsString('sort_by=name', $nameTh);
+        self::assertStringContainsString('sort_by=hotel_id', $nameTh);
+        self::assertSame(1, substr_count($head, '<div class="th-text-overflow-wrapper">'));
+
+        // Body: the picture alone in its cell, the ID under the name.
+        $nameTd = self::between($body, '<td class="wrap-word">', '</td>');
+        self::assertStringContainsString('$hotel.name', $nameTd);
+        self::assertStringContainsString('$hotel.hotel_id', $nameTd);
+        self::assertStringContainsString('muted', $nameTd, 'the ID reads as secondary under the name');
+
+        // The ID no longer has a column of its own.
+        self::assertSame(
+            1,
+            substr_count($body, '$hotel.hotel_id|escape:html|truncate:18'),
+            'the ID is printed once, under the name',
+        );
     }
 
     public function testOldHandRolledBarIsGone(): void

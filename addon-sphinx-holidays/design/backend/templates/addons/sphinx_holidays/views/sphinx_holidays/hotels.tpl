@@ -239,24 +239,28 @@
                        data-ca-bulkedit-enable="[data-ca-bulkedit-expanded-object=true]" />
             </th>
 
-            {* ID — sortable *}
-            <th width="100">
-                <a class="th-text-overflow" href="{"`$sort_url_base`&sort_by=hotel_id&sort_order=`$search.sort_order_toggle`"|fn_url}">
-                    ID
-                    {if $search.sort_by == 'hotel_id'}
-                        {if $search.sort_order == 'asc'}&#9650;{else}&#9660;{/if}
-                    {/if}
-                </a>
-            </th>
+            {* The thumbnail's own column, titleless, as the Products list
+               has it (views/products/manage.tpl). *}
+            <th width="50" class="table__column-without-title"></th>
 
-            {* Name — sortable *}
-            <th>
-                <a class="th-text-overflow" href="{"`$sort_url_base`&sort_by=name&sort_order=`$search.sort_order_toggle`"|fn_url}">
-                    {__("name")}
-                    {if $search.sort_by == 'name'}
-                        {if $search.sort_order == 'asc'}&#9650;{else}&#9660;{/if}
-                    {/if}
-                </a>
+            {* Name / ID in one column, both sortable — the "Name / CODE"
+               pairing of CS-Cart's Products list. The wrapper draws the "/"
+               between them (.th-text-overflow-wrapper in tables.less). *}
+            <th width="30%">
+                <div class="th-text-overflow-wrapper">
+                    <a class="th-text-overflow" href="{"`$sort_url_base`&sort_by=name&sort_order=`$search.sort_order_toggle`"|fn_url}">
+                        {__("name")}
+                        {if $search.sort_by == 'name'}
+                            {if $search.sort_order == 'asc'}&#9650;{else}&#9660;{/if}
+                        {/if}
+                    </a>
+                    <a class="th-text-overflow" href="{"`$sort_url_base`&sort_by=hotel_id&sort_order=`$search.sort_order_toggle`"|fn_url}">
+                        ID
+                        {if $search.sort_by == 'hotel_id'}
+                            {if $search.sort_order == 'asc'}&#9650;{else}&#9660;{/if}
+                        {/if}
+                    </a>
+                </div>
             </th>
 
             {* Classification — sortable *}
@@ -367,22 +371,23 @@
                 <input type="checkbox" name="hotel_ids[]" value="{$hotel.hotel_id|escape:html}" class="cm-item" />
             </td>
 
-            {* Hotel ID *}
-            <td>
-                <code style="font-size: 11px;">{$hotel.hotel_id|escape:html|truncate:18}</code>
+            {* Thumbnail — its own column, so the name gets the full width *}
+            <td style="width:50px;">
+                {if $hotel.image_url}
+                    <img src="{$hotel.image_url|escape:html}" alt="" style="width:40px; height:40px; object-fit:cover; border-radius:3px; display:block;" loading="lazy" />
+                {else}
+                    <div class="no-image" style="width:40px; height:40px; margin:0;">
+                        <span class="cs-icon glyph-image" title="{__("no_image")}"></span>
+                    </div>
+                {/if}
             </td>
 
-            {* Name + thumbnail *}
-            <td>
-                <div style="display:flex; align-items:center; gap:8px;">
-                    {if $hotel.image_url}
-                        <img src="{$hotel.image_url|escape:html}" alt="" style="width:40px; height:40px; object-fit:cover; border-radius:3px; flex-shrink:0;" loading="lazy" />
-                    {else}
-                        <div class="no-image" style="width:40px; height:40px; flex-shrink:0; margin:0;">
-                            <span class="cs-icon glyph-image" title="{__("no_image")}"></span>
-                        </div>
-                    {/if}
-                    <span>{$hotel.name|escape:html}</span>
+            {* Name, with the hotel's ID beneath it — the Products list's
+               name-over-code pairing *}
+            <td class="wrap-word">
+                {$hotel.name|escape:html}
+                <div class="muted" style="margin-top:2px;">
+                    <code style="font-size: 11px;">{$hotel.hotel_id|escape:html|truncate:18}</code>
                 </div>
             </td>
 
