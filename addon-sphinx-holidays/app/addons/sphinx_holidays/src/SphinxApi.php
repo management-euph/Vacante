@@ -144,6 +144,17 @@ class SphinxApi
     }
 
     /**
+     * One circuit of the static catalog, as Sphinx sends it
+     * (GET /api/v1/static/circuits/:id; the circuit is under "data").
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getCircuit(int $circuitId): ?array
+    {
+        return $this->client->get('/api/v1/static/circuits/' . $circuitId);
+    }
+
+    /**
      * Get all experiences (paginated).
      * @return array<string, mixed>|null
      */

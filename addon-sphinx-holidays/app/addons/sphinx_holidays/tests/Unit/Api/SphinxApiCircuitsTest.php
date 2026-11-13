@@ -42,4 +42,17 @@ final class SphinxApiCircuitsTest extends TestCase
         $api = new SphinxApi($client);
         $api->getCircuits(1, 1000, '2026-07-01 08:30:00');
     }
+
+    public function testGetCircuitAsksForOneCircuitById(): void
+    {
+        $client = $this->createMock(SphinxHttpClient::class);
+        $client->expects(self::once())
+            ->method('get')
+            ->with('/api/v1/static/circuits/1674')
+            ->willReturn(['data' => ['id' => 1674]]);
+
+        $api = new SphinxApi($client);
+
+        self::assertSame(['data' => ['id' => 1674]], $api->getCircuit(1674));
+    }
 }

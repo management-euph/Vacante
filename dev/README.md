@@ -71,6 +71,17 @@ and heal the store itself:
   `&raw=1`. Nothing is booked or written; the store's circuit breaker is not
   touched; neither the API address nor the account is printed, errors
   included. `http://localhost:8080/dev/tools/eurosite-packages.php`
+- `tools/sphinx-circuit.php` — what Sphinx sends for ONE circuit, and what the
+  store keeps of it, READ-ONLY, with the store's own API key (never printed).
+  (1) The static API answer, `GET /api/v1/static/circuits/:id`, as JSON.
+  (2) The stored `sphinx_circuits` row (long JSON columns decoded) and its
+  product. (3) The facts its product's features are made of (the same code the
+  sync uses): an empty one says why a feature stays empty. (4) With `&rates=1`,
+  the departure months and cities from `circuits/rates` (18 calls: slow).
+  `?circuit=641` or `?product=1649` (the circuit of a CS-Cart product),
+  `&only=included,not_included` (only these keys of the answer),
+  `&api=0` / `&stored=0` / `&facts=0`.
+  `http://localhost:8080/dev/tools/sphinx-circuit.php?circuit=641`
 - `tools/eurosite-circuits.php` — what the store's Eurosite account returns for
   circuits (spec "Circuite"; the add-on has no circuit support yet), READ-ONLY.
   (1) CircuitSearchCityRequest: countries, cities and their departure cities.
