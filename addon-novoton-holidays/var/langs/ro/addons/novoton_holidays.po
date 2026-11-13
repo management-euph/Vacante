@@ -4407,3 +4407,191 @@ msgstr "Am primit plata comenzii: nu mai ai nimic de făcut."
 msgctxt "Languages::novoton_holidays.request_confirmed_thanks"
 msgid "Thank you, and have a lovely stay!"
 msgstr "Îți mulțumim și îți dorim un sejur minunat!"
+
+msgctxt "Languages::novoton_holidays.hotels_title"
+msgid "Hotels"
+msgstr "Hoteluri"
+
+msgctxt "Languages::novoton_holidays.hotels_page_title"
+msgid "Novoton — Hotels"
+msgstr "Novoton — Hoteluri"
+
+msgctxt "Languages::novoton_holidays.hotels_intro"
+msgid "Every hotel Novoton lists, with when its details were last synced and its CS-Cart product. Hotel data is not edited here: the syncs write it. You can queue hotels for a re-sync and enable or disable their products."
+msgstr "Fiecare hotel listat de Novoton, cu data ultimei sincronizări a detaliilor și produsul său CS-Cart. Datele hotelului nu se editează aici: le scriu sincronizările. Puteți pune hoteluri în așteptare pentru resincronizare și activa sau dezactiva produsele lor."
+
+msgctxt "Languages::novoton_holidays.hotels_summary"
+msgid "Summary"
+msgstr "Sumar"
+
+msgctxt "Languages::novoton_holidays.hotels_total"
+msgid "Hotels"
+msgstr "Hoteluri"
+
+msgctxt "Languages::novoton_holidays.hotels_last_list"
+msgid "Last hotel list sync"
+msgstr "Ultima sincronizare a listei de hoteluri"
+
+msgctxt "Languages::novoton_holidays.hotels_last_info"
+msgid "Last hotel details sync"
+msgstr "Ultima sincronizare a detaliilor de hotel"
+
+msgctxt "Languages::novoton_holidays.hotels_search_placeholder"
+msgid "Hotel name or Novoton ID"
+msgstr "Numele hotelului sau ID-ul Novoton"
+
+msgctxt "Languages::novoton_holidays.hotels_city_or_region"
+msgid "City or region"
+msgstr "Oraș sau regiune"
+
+msgctxt "Languages::novoton_holidays.hotels_not_synced_in"
+msgid "Not synced in the last"
+msgstr "Nesincronizat în ultimele"
+
+msgctxt "Languages::novoton_holidays.hotels_any_time"
+msgid "Any time"
+msgstr "Oricând"
+
+msgctxt "Languages::novoton_holidays.hotels_n_days"
+msgid "[n] days"
+msgstr "[n] zile"
+
+msgctxt "Languages::novoton_holidays.hotels_col_hotel"
+msgid "Hotel"
+msgstr "Hotel"
+
+msgctxt "Languages::novoton_holidays.hotels_col_destination"
+msgid "Destination"
+msgstr "Destinație"
+
+msgctxt "Languages::novoton_holidays.hotels_col_stars"
+msgid "Stars"
+msgstr "Stele"
+
+msgctxt "Languages::novoton_holidays.hotels_col_synced"
+msgid "Last sync"
+msgstr "Ultima sincronizare"
+
+msgctxt "Languages::novoton_holidays.hotels_col_status"
+msgid "Sync status"
+msgstr "Stare sincronizare"
+
+msgctxt "Languages::novoton_holidays.hotels_status_active"
+msgid "Active"
+msgstr "Activ"
+
+msgctxt "Languages::novoton_holidays.hotels_status_pending"
+msgid "Waiting for sync"
+msgstr "În așteptarea sincronizării"
+
+msgctxt "Languages::novoton_holidays.hotels_status_error"
+msgid "API error"
+msgstr "Eroare API"
+
+msgctxt "Languages::novoton_holidays.hotels_status_unmapped"
+msgid "Missing mapping"
+msgstr "Fără produs"
+
+msgctxt "Languages::novoton_holidays.hotels_status_active_hint"
+msgid "Its details were synced and it has a CS-Cart product."
+msgstr "Detaliile au fost sincronizate și are un produs CS-Cart."
+
+msgctxt "Languages::novoton_holidays.hotels_status_pending_hint"
+msgid "Its details were never fetched, or it is queued for a re-sync: the next hotel details run fetches it."
+msgstr "Detaliile nu au fost preluate niciodată sau este în așteptare pentru resincronizare: următoarea rulare a detaliilor de hotel îl preia."
+
+msgctxt "Languages::novoton_holidays.hotels_status_error_hint"
+msgid "The last request for its details got no answer from Novoton. It is asked again within a day."
+msgstr "Ultima cerere pentru detalii nu a primit răspuns de la Novoton. Se cere din nou în cel mult o zi."
+
+msgctxt "Languages::novoton_holidays.hotels_status_unmapped_hint"
+msgid "It has no CS-Cart product: none was created for it, or the product was deleted."
+msgstr "Nu are produs CS-Cart: nu a fost creat sau produsul a fost șters."
+
+msgctxt "Languages::novoton_holidays.hotels_days_ago"
+msgid "[n] days ago"
+msgstr "acum [n] zile"
+
+msgctxt "Languages::novoton_holidays.hotels_never_synced"
+msgid "Never synced"
+msgstr "Nesincronizat niciodată"
+
+msgctxt "Languages::novoton_holidays.hotels_tried"
+msgid "No answer on"
+msgstr "Fără răspuns la"
+
+msgctxt "Languages::novoton_holidays.hotels_queued"
+msgid "Queued for re-sync"
+msgstr "În așteptare pentru resincronizare"
+
+msgctxt "Languages::novoton_holidays.hotels_product_deleted"
+msgid "Product deleted"
+msgstr "Produs șters"
+
+msgctxt "Languages::novoton_holidays.hotels_product_disabled"
+msgid "Product disabled"
+msgstr "Produs dezactivat"
+
+msgctxt "Languages::novoton_holidays.hotels_product_hidden"
+msgid "Product hidden"
+msgstr "Produs ascuns"
+
+msgctxt "Languages::novoton_holidays.hotels_with_selected"
+msgid "With selected"
+msgstr "Cu cele selectate"
+
+msgctxt "Languages::novoton_holidays.hotels_select_page"
+msgid "Select this page"
+msgstr "Selectează această pagină"
+
+msgctxt "Languages::novoton_holidays.hotels_resync"
+msgid "Force re-sync"
+msgstr "Forțează resincronizarea"
+
+msgctxt "Languages::novoton_holidays.hotels_resync_hint"
+msgid "A re-sync is queued: the next hotel details run fetches the hotel from Novoton."
+msgstr "Resincronizarea se pune în așteptare: următoarea rulare a detaliilor de hotel preia hotelul de la Novoton."
+
+msgctxt "Languages::novoton_holidays.hotels_enable_products"
+msgid "Enable products"
+msgstr "Activează produsele"
+
+msgctxt "Languages::novoton_holidays.hotels_disable_products"
+msgid "Disable products"
+msgstr "Dezactivează produsele"
+
+msgctxt "Languages::novoton_holidays.hotels_open_product"
+msgid "Open the CS-Cart product"
+msgstr "Deschide produsul CS-Cart"
+
+msgctxt "Languages::novoton_holidays.hotels_confirm_resync"
+msgid "Queue the selected hotels for a re-sync?"
+msgstr "Puneți hotelurile selectate în așteptare pentru resincronizare?"
+
+msgctxt "Languages::novoton_holidays.hotels_confirm_enable"
+msgid "Enable the products of the selected hotels?"
+msgstr "Activați produsele hotelurilor selectate?"
+
+msgctxt "Languages::novoton_holidays.hotels_confirm_disable"
+msgid "Disable the products of the selected hotels?"
+msgstr "Dezactivați produsele hotelurilor selectate?"
+
+msgctxt "Languages::novoton_holidays.hotels_resync_queued"
+msgid "[n] hotels queued for re-sync. The next hotel details run fetches them."
+msgstr "[n] hoteluri puse în așteptare pentru resincronizare. Următoarea rulare a detaliilor de hotel le preia."
+
+msgctxt "Languages::novoton_holidays.hotels_none_selected"
+msgid "No hotel was selected."
+msgstr "Niciun hotel selectat."
+
+msgctxt "Languages::novoton_holidays.hotels_products_enabled"
+msgid "[n] products enabled."
+msgstr "[n] produse activate."
+
+msgctxt "Languages::novoton_holidays.hotels_products_disabled"
+msgid "[n] products disabled."
+msgstr "[n] produse dezactivate."
+
+msgctxt "Languages::novoton_holidays.hotels_no_products_selected"
+msgid "None of the selected hotels has a product."
+msgstr "Niciunul dintre hotelurile selectate nu are produs."

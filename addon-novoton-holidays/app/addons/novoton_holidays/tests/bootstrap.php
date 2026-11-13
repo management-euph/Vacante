@@ -138,7 +138,7 @@ if (!function_exists('db_quote')) {
         $i = 0;
 
         return (string) preg_replace_callback(
-            '/\?[sidanp]/',
+            '/\?[sidanpl]/',
             static function (array $m) use (&$i, $params): string {
                 $value = $params[$i] ?? null;
                 $i++;
