@@ -13,8 +13,14 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  */
 final class CircuitFeatureMappingsPage
 {
-    /** CS-Cart feature types a circuit fact can be written to. */
-    private const array USABLE_TYPES = ['S', 'N', 'E', 'M', 'O', 'T'];
+    /**
+     * The feature styles the page names (CS-Cart's feature_type). A circuit
+     * detail is written only to S, N, E, M (a list of values) and O, T (a
+     * number or a text); C (one yes/no checkbox) and D (a date) cannot hold
+     * these values, but are still listed — a feature that vanished from the
+     * dropdown looked like a bug — and marked as unsupported.
+     */
+    private const array KNOWN_TYPES = ['S', 'N', 'E', 'M', 'O', 'T', 'C', 'D'];
 
     /**
      * @return array<int, string> group feature_id => name
@@ -25,13 +31,15 @@ final class CircuitFeatureMappingsPage
     }
 
     /**
-     * The features a fact can be mapped to: those of the group when one is
-     * chosen, every feature otherwise.
+     * The features offered for a fact: those of the group when one is
+     * chosen, every feature otherwise (the groups themselves apart). Each
+     * carries 'style', a key of the Feature style labels: its type, or
+     * 'other' for a style this page does not name.
      *
      * Each carries its group's name ('' when ungrouped): features of the
      * same name in different groups are told apart by it.
      *
-     * @return array<int, array{name: string, type: string, group: string}>
+     * @return array<int, array{name: string, type: string, style: string, group: string}>
      */
     public static function features(int $groupId, string $lang): array
     {
@@ -39,17 +47,19 @@ final class CircuitFeatureMappingsPage
             'SELECT f.feature_id, f.feature_type, d.description, g.description AS group_name FROM ?:product_features f'
             . ' LEFT JOIN ?:product_features_descriptions d ON d.feature_id = f.feature_id AND d.lang_code = ?s'
             . ' LEFT JOIN ?:product_features_descriptions g ON g.feature_id = f.parent_id AND f.parent_id > 0 AND g.lang_code = ?s'
-            . ' WHERE f.feature_type IN (?a) ?p ORDER BY d.description, g.description',
+            . ' WHERE f.feature_type <> ?s ?p ORDER BY d.description, g.description',
             $lang,
             $lang,
-            self::USABLE_TYPES,
+            'G',
             $groupId > 0 ? db_quote('AND f.parent_id = ?i', $groupId) : '',
         ));
         $features = [];
         foreach ($rows as $row) {
+            $type = TypeCoerce::toString($row['feature_type'] ?? '');
             $features[TypeCoerce::toInt($row['feature_id'] ?? 0)] = [
                 'name' => TypeCoerce::toString($row['description'] ?? ''),
-                'type' => TypeCoerce::toString($row['feature_type'] ?? ''),
+                'type' => $type,
+                'style' => in_array($type, self::KNOWN_TYPES, true) ? $type : 'other',
                 'group' => TypeCoerce::toString($row['group_name'] ?? ''),
             ];
         }

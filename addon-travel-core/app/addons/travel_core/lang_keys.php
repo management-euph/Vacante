@@ -4358,4 +4358,16 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Each "not included" item of the circuit, by its title, as one value of the feature (use a checkbox feature). A missing value is created; a title is cut at 255 letters.',
         'ro' => 'Fiecare element „neinclus” al circuitului, după titlu, ca o valoare a caracteristicii (folosiți o caracteristică cu căsuțe). O valoare lipsă este creată; un titlu este tăiat la 255 de litere.',
     ],
+    'travel_core.fmc_type_C' => [
+        'en' => 'Single checkbox (yes/no): cannot hold these values',
+        'ro' => 'O singură căsuță (da/nu): nu poate păstra aceste valori',
+    ],
+    'travel_core.fmc_type_D' => [
+        'en' => 'Date: cannot hold these values',
+        'ro' => 'Dată: nu poate păstra aceste valori',
+    ],
+    'travel_core.fmc_type_other' => [
+        'en' => 'Style not supported here',
+        'ro' => 'Stil nesuportat aici',
+    ],
 ];

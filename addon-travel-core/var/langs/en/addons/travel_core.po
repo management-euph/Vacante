@@ -5129,3 +5129,15 @@ msgstr "Each \"included\" item of the circuit, by its title, as one value of the
 msgctxt "Languages::travel_core.fmc_rule_not_included"
 msgid "Each \"not included\" item of the circuit, by its title, as one value of the feature (use a checkbox feature). A missing value is created; a title is cut at 255 letters."
 msgstr "Each \"not included\" item of the circuit, by its title, as one value of the feature (use a checkbox feature). A missing value is created; a title is cut at 255 letters."
+
+msgctxt "Languages::travel_core.fmc_type_C"
+msgid "Single checkbox (yes/no): cannot hold these values"
+msgstr "Single checkbox (yes/no): cannot hold these values"
+
+msgctxt "Languages::travel_core.fmc_type_D"
+msgid "Date: cannot hold these values"
+msgstr "Date: cannot hold these values"
+
+msgctxt "Languages::travel_core.fmc_type_other"
+msgid "Style not supported here"
+msgstr "Style not supported here"

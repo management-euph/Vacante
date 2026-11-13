@@ -5129,3 +5129,15 @@ msgstr "Fiecare element „inclus” al circuitului, după titlu, ca o valoare a
 msgctxt "Languages::travel_core.fmc_rule_not_included"
 msgid "Each \"not included\" item of the circuit, by its title, as one value of the feature (use a checkbox feature). A missing value is created; a title is cut at 255 letters."
 msgstr "Fiecare element „neinclus” al circuitului, după titlu, ca o valoare a caracteristicii (folosiți o caracteristică cu căsuțe). O valoare lipsă este creată; un titlu este tăiat la 255 de litere."
+
+msgctxt "Languages::travel_core.fmc_type_C"
+msgid "Single checkbox (yes/no): cannot hold these values"
+msgstr "O singură căsuță (da/nu): nu poate păstra aceste valori"
+
+msgctxt "Languages::travel_core.fmc_type_D"
+msgid "Date: cannot hold these values"
+msgstr "Dată: nu poate păstra aceste valori"
+
+msgctxt "Languages::travel_core.fmc_type_other"
+msgid "Style not supported here"
+msgstr "Stil nesuportat aici"
