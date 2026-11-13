@@ -1362,4 +1362,12 @@ return [
         'en' => 'Run details sync',
         'ro' => 'Rulează sincronizarea detaliilor',
     ],
+    'novoton_holidays.hotels_confirm_disable_bulk' => [
+        'en' => 'Disable the products of the selected hotels? Products on sale disappear from the storefront: customers can no longer find or book them. Bookings already made are not affected.',
+        'ro' => 'Dezactivați produsele hotelurilor selectate? Produsele la vânzare dispar din magazin: clienții nu le mai pot găsi sau rezerva. Rezervările deja făcute nu sunt afectate.',
+    ],
+    'novoton_holidays.hotels_city_type_to_search' => [
+        'en' => 'Type to search a city or region',
+        'ro' => 'Scrieți pentru a căuta un oraș sau o regiune',
+    ],
 ];

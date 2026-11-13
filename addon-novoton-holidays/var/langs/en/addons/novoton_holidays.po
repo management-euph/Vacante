@@ -4711,3 +4711,11 @@ msgstr "Hotel list: last synced [list], runs every 3 days at 01:30. Hotel detail
 msgctxt "Languages::novoton_holidays.hotels_run_details_sync"
 msgid "Run details sync"
 msgstr "Run details sync"
+
+msgctxt "Languages::novoton_holidays.hotels_confirm_disable_bulk"
+msgid "Disable the products of the selected hotels? Products on sale disappear from the storefront: customers can no longer find or book them. Bookings already made are not affected."
+msgstr "Disable the products of the selected hotels? Products on sale disappear from the storefront: customers can no longer find or book them. Bookings already made are not affected."
+
+msgctxt "Languages::novoton_holidays.hotels_city_type_to_search"
+msgid "Type to search a city or region"
+msgstr "Type to search a city or region"
