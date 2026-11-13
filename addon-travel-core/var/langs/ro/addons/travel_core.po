@@ -5141,3 +5141,7 @@ msgstr "Dată: nu poate păstra aceste valori"
 msgctxt "Languages::travel_core.fmc_type_other"
 msgid "Style not supported here"
 msgstr "Stil nesuportat aici"
+
+msgctxt "Languages::travel_core.fmc_not_written"
+msgid "Some mapped features were not written"
+msgstr "Unele caracteristici mapate nu au fost scrise"

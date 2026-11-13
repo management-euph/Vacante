@@ -100,7 +100,7 @@ class CircuitProductFactory
 
     /**
      * @param array<string, mixed> $circuit Row from sphinx_circuits
-     * @return array{status: string, product_id: int, reason: string}
+     * @return array{status: string, product_id: int, reason: string, features?: string} features: why mapped features were not written ('' when all were)
      */
     public function createFromCircuit(array $circuit): array
     {
@@ -184,8 +184,9 @@ class CircuitProductFactory
 
         $this->circuitRepo->linkToProduct($circuitId, $productId);
         // Its features, as mapped in Feature Mappings › Circuits.
-        (new CircuitFeatures($this->circuitRepo))->applyTo($circuitId);
+        $features = new CircuitFeatures($this->circuitRepo);
+        $features->applyTo($circuitId);
 
-        return ['status' => 'added', 'product_id' => $productId, 'reason' => ''];
+        return ['status' => 'added', 'product_id' => $productId, 'reason' => '', 'features' => implode('; ', $features->notes())];
     }
 }

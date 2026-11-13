@@ -84,6 +84,9 @@ class AddCircuitProductsCommand extends AbstractSyncCommand
 
             $suffix = $result['reason'] !== '' ? " ({$result['reason']})" : " -> product #{$result['product_id']}";
             $this->output("  {$circuitId} | {$name}: {$status}{$suffix}");
+            if (($result['features'] ?? '') !== '') {
+                $this->output('      features not written: ' . $result['features']);
+            }
         }
 
         $this->output('');

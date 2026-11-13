@@ -4370,4 +4370,8 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Style not supported here',
         'ro' => 'Stil nesuportat aici',
     ],
+    'travel_core.fmc_not_written' => [
+        'en' => 'Some mapped features were not written',
+        'ro' => 'Unele caracteristici mapate nu au fost scrise',
+    ],
 ];

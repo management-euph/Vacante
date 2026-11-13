@@ -71,7 +71,12 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
     // Feature Mappings › Circuits, "Apply to all circuits": Sphinx holds the circuits' facts.
     \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setCircuitFeatureApplier(
         'sphinx',
-        static fn (): int => (new \Tygh\Addons\SphinxHolidays\Services\CircuitFeatures())->applyAll(),
+        static function (): array {
+            $features = new \Tygh\Addons\SphinxHolidays\Services\CircuitFeatures();
+            $written = $features->applyAll();
+
+            return ['written' => $written, 'notes' => $features->summary()];
+        },
     );
     // A hotel's packages: its page gets "Cu autocarul" / "Cu avionul" (board 16.2).
     \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setPackageModesProvider(

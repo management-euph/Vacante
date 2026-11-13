@@ -32,6 +32,12 @@ final class CircuitFeatures
 
     private readonly CircuitRepository $circuits;
 
+    /** @var array<string, int> "fact: reason" => how many circuits (every circuit applied by this object) */
+    private array $reasons = [];
+
+    /** @var list<string> "fact: reason" of the last circuit applied */
+    private array $lastNotes = [];
+
     public function __construct(?CircuitRepository $circuits = null, private ?CircuitFeatureAssigner $assigner = null)
     {
         $this->circuits = $circuits ?? new CircuitRepository();
@@ -80,7 +86,43 @@ final class CircuitFeatures
         $facts = self::facts($row, $this->circuits->countryNames($destinationIds), date('Y-m'));
         $this->assigner ??= new CircuitFeatureAssigner();
 
-        return $this->assigner->assign($productId, $facts) > 0;
+        $written = $this->assigner->assign($productId, $facts);
+        $this->lastNotes = [];
+        foreach ($this->assigner->report() as $field => $result) {
+            if ($result !== CircuitFeatureAssigner::REPORT_WRITTEN) {
+                $note = $field . ': ' . $result;
+                $this->lastNotes[] = $note;
+                $this->reasons[$note] = ($this->reasons[$note] ?? 0) + 1;
+            }
+        }
+
+        return $written > 0;
+    }
+
+    /**
+     * Why mapped features were not written, over every circuit applied by
+     * this object: "countries: no data from the provider (89 circuits)".
+     *
+     * @return list<string>
+     */
+    public function summary(): array
+    {
+        $lines = [];
+        foreach ($this->reasons as $note => $count) {
+            $lines[] = $note . ' (' . $count . ($count === 1 ? ' circuit)' : ' circuits)');
+        }
+
+        return $lines;
+    }
+
+    /**
+     * Why the last circuit applied (applyTo) lacks some mapped features.
+     *
+     * @return list<string>
+     */
+    public function notes(): array
+    {
+        return $this->lastNotes;
     }
 
     /**

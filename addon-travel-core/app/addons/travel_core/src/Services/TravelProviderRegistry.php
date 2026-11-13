@@ -55,7 +55,7 @@ class TravelProviderRegistry
     /** @var array<string, PackageModesProviderInterface> provider name => a hotel's package modes */
     private static array $packageModes = [];
 
-    /** @var array<string, callable(): int> provider name => re-applies the circuit feature mapping to its circuit products */
+    /** @var array<string, callable(): array{written: int, notes: list<string>}> provider name => re-applies the circuit feature mapping to its circuit products */
     private static array $circuitFeatureAppliers = [];
 
     /**
@@ -217,7 +217,7 @@ class TravelProviderRegistry
      * › Circuits) to a provider's circuit products: the provider holds the
      * circuits' facts. Ignored unless register() ran first.
      *
-     * @param callable(): int $applier returns how many products it wrote
+     * @param callable(): array{written: int, notes: list<string>} $applier how many products it wrote, and why some features were not written
      */
     public static function setCircuitFeatureApplier(string $name, callable $applier): void
     {
@@ -230,16 +230,19 @@ class TravelProviderRegistry
      * Re-apply the circuit feature mapping to every provider's circuit
      * products ("Apply to all circuits").
      *
-     * @return int how many products were written
+     * @return array{written: int, notes: list<string>} how many products were written, and why some features were not
      */
-    public static function applyCircuitFeatures(): int
+    public static function applyCircuitFeatures(): array
     {
         $written = 0;
+        $notes = [];
         foreach (array_intersect_key(self::$circuitFeatureAppliers, self::$providers) as $applier) {
-            $written += $applier();
+            $result = $applier();
+            $written += $result['written'];
+            $notes = array_merge($notes, $result['notes']);
         }
 
-        return $written;
+        return ['written' => $written, 'notes' => $notes];
     }
 
     /**
