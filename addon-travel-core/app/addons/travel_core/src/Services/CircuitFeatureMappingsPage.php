@@ -28,14 +28,19 @@ final class CircuitFeatureMappingsPage
      * The features a fact can be mapped to: those of the group when one is
      * chosen, every feature otherwise.
      *
-     * @return array<int, array{name: string, type: string}>
+     * Each carries its group's name ('' when ungrouped): features of the
+     * same name in different groups are told apart by it.
+     *
+     * @return array<int, array{name: string, type: string, group: string}>
      */
     public static function features(int $groupId, string $lang): array
     {
         $rows = TypeCoerce::toRowList(db_get_array(
-            'SELECT f.feature_id, f.feature_type, d.description FROM ?:product_features f'
+            'SELECT f.feature_id, f.feature_type, d.description, g.description AS group_name FROM ?:product_features f'
             . ' LEFT JOIN ?:product_features_descriptions d ON d.feature_id = f.feature_id AND d.lang_code = ?s'
-            . ' WHERE f.feature_type IN (?a) ?p ORDER BY d.description',
+            . ' LEFT JOIN ?:product_features_descriptions g ON g.feature_id = f.parent_id AND f.parent_id > 0 AND g.lang_code = ?s'
+            . ' WHERE f.feature_type IN (?a) ?p ORDER BY d.description, g.description',
+            $lang,
             $lang,
             self::USABLE_TYPES,
             $groupId > 0 ? db_quote('AND f.parent_id = ?i', $groupId) : '',
@@ -45,6 +50,7 @@ final class CircuitFeatureMappingsPage
             $features[TypeCoerce::toInt($row['feature_id'] ?? 0)] = [
                 'name' => TypeCoerce::toString($row['description'] ?? ''),
                 'type' => TypeCoerce::toString($row['feature_type'] ?? ''),
+                'group' => TypeCoerce::toString($row['group_name'] ?? ''),
             ];
         }
 

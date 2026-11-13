@@ -4338,4 +4338,8 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'December',
         'ro' => 'Decembrie',
     ],
+    'travel_core.fmc_ungrouped' => [
+        'en' => 'Ungrouped features',
+        'ro' => 'Caracteristici fără grup',
+    ],
 ];

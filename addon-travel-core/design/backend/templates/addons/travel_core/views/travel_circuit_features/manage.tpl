@@ -46,7 +46,7 @@
                     <select name="circuit_features[features][{$field}]" aria-label="{__("travel_core.fmc_field_`$field`")}">
                         <option value="0">{__("travel_core.fmc_not_mapped")}</option>
                         {foreach $circuit_feature_list as $feature_id => $feature}
-                            <option value="{$feature_id}"{if $selected == $feature_id} selected="selected"{/if}>{$feature.name}</option>
+                            <option value="{$feature_id}"{if $selected == $feature_id} selected="selected"{/if}>{$feature.name} {if $feature.group}– {$feature.group}{else}({__("travel_core.fmc_ungrouped")}){/if}</option>
                         {/foreach}
                     </select>
                 </td>
