@@ -46,6 +46,12 @@ final class ImageFingerprint
         if ($size === false || $size[0] < 1 || $size[1] < 1 || $size[0] * $size[1] > self::MAX_PIXELS) {
             return null;
         }
+        // GD holds the whole picture decoded (about 5 bytes a pixel) while it
+        // shrinks it: skip it when that would not fit in the memory left, so a
+        // very large photo cannot end the run (the bytes still compare by sha1).
+        if (self::decodeCost($size[0], $size[1], strlen($bytes)) > self::headroom()) {
+            return null;
+        }
         $image = @imagecreatefromstring($bytes);
         $small = imagecreatetruecolor(9, 8);
         if ($image === false || $small === false
@@ -68,6 +74,37 @@ final class ImageFingerprint
         }
 
         return bin2hex($hash);
+    }
+
+    /** Bytes GD needs to decode a picture of this size (a margin included). */
+    public static function decodeCost(int $width, int $height, int $fileBytes): int
+    {
+        return $width * $height * 5 + $fileBytes * 2;
+    }
+
+    /** Memory left under memory_limit, in bytes; PHP_INT_MAX when there is no limit. */
+    public static function headroom(): int
+    {
+        $limit = self::bytes((string) ini_get('memory_limit'));
+
+        return $limit < 0 ? PHP_INT_MAX : max(0, $limit - memory_get_usage(true));
+    }
+
+    /** A php.ini size ("512M", "1G", "-1") in bytes; -1 for no limit. */
+    public static function bytes(string $value): int
+    {
+        $value = trim($value);
+        if ($value === '' || $value === '-1') {
+            return -1;
+        }
+        $number = (int) $value;
+
+        return match (strtolower(substr($value, -1))) {
+            'g' => $number * 1024 * 1024 * 1024,
+            'm' => $number * 1024 * 1024,
+            'k' => $number * 1024,
+            default => $number,
+        };
     }
 
     /** Bits two difference hashes differ by; 64 when either is missing or malformed. */
