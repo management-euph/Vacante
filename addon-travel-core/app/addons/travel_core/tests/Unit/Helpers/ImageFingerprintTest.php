@@ -115,4 +115,40 @@ final class ImageFingerprintTest extends TestCase
         self::assertSame(0, ImageFingerprint::distance('00ff00ff00ff00ff', '00ff00ff00ff00ff'));
         self::assertSame(8, ImageFingerprint::distance('00ff00ff00ff00ff', '00ff00ff00ff0000'));
     }
+
+    public function testAnIniSizeIsReadInBytes(): void
+    {
+        self::assertSame(512 * 1024 * 1024, ImageFingerprint::bytes('512M'));
+        self::assertSame(1024 * 1024 * 1024, ImageFingerprint::bytes('1G'));
+        self::assertSame(64 * 1024, ImageFingerprint::bytes('64k'));
+        self::assertSame(1000, ImageFingerprint::bytes('1000'));
+        self::assertSame(-1, ImageFingerprint::bytes('-1'), 'no limit');
+    }
+
+    public function testTheDecodeCostGrowsWithThePicture(): void
+    {
+        self::assertSame(6000 * 4000 * 5 + 2 * 3_000_000, ImageFingerprint::decodeCost(6000, 4000, 3_000_000));
+        self::assertGreaterThan(ImageFingerprint::decodeCost(1200, 800, 300_000), ImageFingerprint::decodeCost(6000, 4000, 300_000));
+    }
+
+    public function testAPictureThatWouldNotFitIsNotDecoded(): void
+    {
+        if (!function_exists('imagecreatetruecolor')) {
+            self::markTestSkipped('GD is not available');
+        }
+        $limit = (string) ini_get('memory_limit');
+        $image = imagecreatetruecolor(400, 300);
+        ob_start();
+        imagepng($image);
+        $png = (string) ob_get_clean();
+        try {
+            // A limit just above what is used now: no room to decode it.
+            ini_set('memory_limit', (string) (memory_get_usage(true) + 64 * 1024));
+            self::assertSame('', ImageFingerprint::of($png)['dhash'], 'skipped: compared by its bytes only');
+            self::assertSame(sha1($png), ImageFingerprint::of($png)['sha1']);
+        } finally {
+            ini_set('memory_limit', $limit);
+        }
+        self::assertNotSame('', ImageFingerprint::of($png)['dhash'], 'with room, it is decoded');
+    }
 }

@@ -11,6 +11,8 @@
 
 {$status_labels = ["active" => "label-success", "pending" => "label-warning", "error" => "label-important", "unmapped" => ""]}
 {$counts = $novoton_hotel_counts}
+{$nvt_check_statuses = []}
+{foreach from=$novoton_hotel_statuses item=st}{$nvt_check_statuses[$st] = __("novoton_holidays.hotels_status_`$st`")}{/foreach}
 {$back = $novoton_hotels_back}
 {capture name="nvt_error_label"}{__("novoton_holidays.hotels_status_error")} ›{/capture}
 {$nvt_error_label = $smarty.capture.nvt_error_label}
@@ -18,6 +20,10 @@
 {capture name="mainbox"}
 
 <p class="muted">{__("novoton_holidays.hotels_intro")}</p>
+<p class="muted" title="{__("novoton_holidays.hotels_sync_tip", ["[list]" => $novoton_last_hotel_list|default:"—", "[info]" => $novoton_last_hotelinfo|default:"—"])|escape:html}">
+    {__("novoton_holidays.hotels_last_info")}: <strong>{$novoton_last_hotelinfo|default:"—"}</strong>
+    · {__("novoton_holidays.hotels_last_list")}: {$novoton_last_hotel_list|default:"—"}
+</p>
 
 {include file="common/pagination.tpl" save_current_page=true save_current_url=true}
 
@@ -39,34 +45,26 @@
     {* The list to come back to: the filters, the sort and the page. *}
     <input type="hidden" name="redirect_query" value="{$back|escape:html}" />
 
-    {if $novoton_hotels}
-    <div class="well well-small" style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
-        <strong>{__("novoton_holidays.hotels_with_selected")}:</strong>
-        <button type="submit" class="btn btn-primary cm-submit" name="dispatch[novoton_hotels.resync]">
-            <i class="icon-refresh"></i> {__("novoton_holidays.hotels_resync")}
-        </button>
-        <button type="submit" class="btn cm-submit" name="dispatch[novoton_hotels.enable_products]">
-            {__("novoton_holidays.hotels_enable_products")}
-        </button>
-        <span style="width: 1px; height: 20px; background: #ccc; margin: 0 4px;"></span>
-        {* The disable is the risky one: set apart, in red, and confirmed
-           with the number of products on sale it takes off. *}
-        <button type="submit" class="btn text-error" name="dispatch[novoton_hotels.disable_products]" id="nvt_disable_btn"
-                data-nvt-confirm="{__("novoton_holidays.hotels_confirm_disable_n")|escape:html}"
-                data-nvt-none="{__("novoton_holidays.hotels_none_selected")|escape:html}">
-            <i class="icon-warning-sign"></i> {__("novoton_holidays.hotels_disable_products")}…
-        </button>
-    </div>
-    {/if}
 
     {if $novoton_hotels}
-    <div class="table-responsive-wrapper">
-    <table width="100%" class="table table-middle table--relative table-responsive">
-        <thead>
+    {capture name="nvt_hotels_table"}
+    <div class="table-responsive-wrapper longtap-selection">
+    <table width="100%" class="table table-middle table--relative table-responsive table--show-checkbox nvt-hotels-table" data-ca-main-content>
+        <thead class="thead--overflow-hidden" data-ca-bulkedit-default-object="true" data-target=".nvt-hotels-table" data-ca-bulkedit-component="defaultObject">
             <tr>
-                <th width="1%">
-                    <input type="checkbox" aria-label="{__("novoton_holidays.hotels_select_page")|escape:html}"
-                           onclick="var boxes = document.querySelectorAll('.nvt-row-check'); for (var i = 0; i < boxes.length; i++) {ldelim} boxes[i].checked = this.checked; {rdelim}" />
+                <th width="3%" class="left mobile-hide table__check-items-column table__check-items-column--show-checkbox">
+                    {* CS-Cart's check-all, with "select by sync status". *}
+                    {include file="common/check_items.tpl"
+                        show_checkbox=true
+                        check_statuses=$nvt_check_statuses
+                        meta="table__check-items table__check-items--show-checkbox"
+                        class="check-items--show-checkbox"
+                    }
+                    <input type="checkbox"
+                        class="bulkedit-toggler hide"
+                        data-ca-bulkedit-disable="[data-ca-bulkedit-default-object=true]"
+                        data-ca-bulkedit-enable="[data-ca-bulkedit-expanded-object=true]"
+                    />
                 </th>
                 <th width="6%"></th>
                 {foreach from=["name" => "novoton_holidays.hotels_col_hotel", "destination" => "novoton_holidays.hotels_col_destination", "stars" => "novoton_holidays.hotels_col_stars", "synced" => "novoton_holidays.hotels_col_synced", "status" => "novoton_holidays.hotels_col_status", "product" => "novoton_holidays.hotels_col_product"] key=sortKey item=colLabel}
@@ -82,10 +80,12 @@
         <tbody>
             {foreach from=$novoton_hotels item=h}
                 {$st = $h.status}
-                <tr>
-                    <td>
-                        <input type="checkbox" name="hotel_ids[]" value="{$h.id|escape:html}" class="cm-item nvt-row-check"
-                               data-nvt-on-sale="{if $h.product_id && $h.product_status == "A"}1{else}0{/if}"
+                <tr class="cm-longtap-target"
+                    data-ca-longtap-action="setCheckBox"
+                    data-ca-longtap-target="input.cm-item"
+                    data-ca-id="{$h.id|escape:html}">
+                    <td width="3%" class="left mobile-hide table__check-items-cell table__check-items-cell--show-checkbox">
+                        <input type="checkbox" name="hotel_ids[]" value="{$h.id|escape:html}" class="cm-item cm-item-status-{$st}"
                                aria-label="{$h.name|escape:html}" />
                     </td>
                     <td class="products-list__image">
@@ -102,7 +102,11 @@
                         }
                     </td>
                     <td data-th="{__("novoton_holidays.hotels_col_hotel")}">
-                        <strong>{$h.name|escape:html}</strong>
+                        {if $h.product_id}
+                            <a href="{"products.update?product_id=`$h.product_id`"|fn_url}" class="row-status">{$h.name|escape:html}</a>
+                        {else}
+                            <span class="row-status">{$h.name|escape:html}</span>
+                        {/if}
                         <div class="muted">
                             ID {$h.id|escape:html}
                             {if $h.property_type}
@@ -198,24 +202,49 @@
         </tbody>
     </table>
     </div>
+    {/capture}
+
+    {* CS-Cart's bulk bar (schemas/context_menu/novoton_hotels.php): it shows
+       when hotels are checked — Status, Actions — as on the Products page. *}
+    {include file="common/context_menu_wrapper.tpl"
+        form="nvt_hotels_form"
+        object="novoton_hotels"
+        items=$smarty.capture.nvt_hotels_table
+        is_check_all_shown=true
+    }
     {else}
         <p class="no-items">{__("no_data")}</p>
     {/if}
 </form>
 
-{* Inside the capture: admin AJAX navigation only runs scripts placed here.
-   The disable confirmation counts the checked hotels whose product is on sale. *}
-{script src="js/addons/novoton_holidays/hotels-monitor.js"}
+
 
 {include file="common/pagination.tpl"}
 
 {/capture}
 
+{capture name="nvt_city_picker"}
+    {* CS-Cart's object picker (Select2): type, and it lists the matching
+       cities and regions (novoton_hotels.places); picking one filters. *}
+    <div class="object-picker">
+        <select name="city"
+                class="cm-object-picker object-picker__select"
+                data-ca-object-picker-ajax-url="{"novoton_hotels.places"|fn_url}"
+                data-ca-object-picker-ajax-delay="250"
+                data-ca-object-picker-escape-html="false"
+                data-ca-object-picker-allow-clear="true"
+                data-ca-object-picker-placeholder="{__("novoton_holidays.hotels_city_type_to_search")|escape:"javascript"}"
+                data-ca-object-picker-placeholder-value=""
+                data-ca-object-picker-width="100%"
+                data-ca-search-filters="field">
+            <option value="">{__("novoton_holidays.hotels_city_type_to_search")}</option>
+            {if $search.city}<option value="{$search.city|escape:html}" selected="selected">{$search.city|escape:html}</option>{/if}
+        </select>
+    </div>
+{/capture}
+{$novoton_search_filters.data.city.content = $smarty.capture.nvt_city_picker}
+
 {capture name="buttons"}
-    <span class="label label-success" style="padding: 6px 10px; margin-right: 6px;"
-          title="{__("novoton_holidays.hotels_sync_tip", ["[list]" => $novoton_last_hotel_list|default:"—", "[info]" => $novoton_last_hotelinfo|default:"—"])|escape:html}">
-        {__("novoton_holidays.hotels_last_info")}: {$novoton_last_hotelinfo|default:"—"}
-    </span>
     {include file="addons/travel_core/components/run_job.tpl" run_dispatch="novoton_holidays.run_job" job="hotel_info_batched" label=__("novoton_holidays.hotels_run_details_sync") class="btn"}
     <a href="{"novoton_holidays.manage"|fn_url}" class="btn">{__("novoton_holidays.actions.novoton_dashboard")}</a>
 {/capture}

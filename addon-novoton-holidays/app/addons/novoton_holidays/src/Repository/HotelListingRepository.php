@@ -146,7 +146,8 @@ final class HotelListingRepository
         }
         $city = TypeCoerce::toString($search['city'] ?? '');
         if ($city !== '') {
-            $sql .= db_quote(' AND (h.city LIKE ?l OR h.region LIKE ?l)', '%' . $city . '%', '%' . $city . '%');
+            // The picker sends a name it listed: that city, or every hotel of that region.
+            $sql .= db_quote(' AND (h.city = ?s OR h.region = ?s)', $city, $city);
         }
         $stars = TypeCoerce::toIntList($search['stars'] ?? []);
         $noStars = ($search['stars_none'] ?? false) === true;
@@ -251,6 +252,31 @@ final class HotelListingRepository
         return array_values(array_filter(TypeCoerce::toStringList(db_get_fields(
             "SELECT DISTINCT country FROM ?:novoton_hotels WHERE country IS NOT NULL AND country <> '' ORDER BY country",
         ))));
+    }
+
+    /**
+     * Cities and regions matching what an admin types (the "City or region"
+     * filter's search), each once, by name; a city before a region of the
+     * same name.
+     *
+     * @return list<string>
+     */
+    public function places(string $typed, int $limit = 30): array
+    {
+        $typed = trim($typed);
+        $like = '%' . $typed . '%';
+        $names = TypeCoerce::toStringList(db_get_fields(
+            "SELECT name FROM (
+                SELECT DISTINCT city AS name FROM ?:novoton_hotels WHERE city IS NOT NULL AND city <> '' AND city LIKE ?l
+                UNION
+                SELECT DISTINCT region AS name FROM ?:novoton_hotels WHERE region IS NOT NULL AND region <> '' AND region LIKE ?l
+             ) places ORDER BY name LIMIT ?i",
+            $like,
+            $like,
+            $limit,
+        ));
+
+        return array_values(array_unique(array_filter($names, static fn (string $n): bool => $n !== '')));
     }
 
     /**

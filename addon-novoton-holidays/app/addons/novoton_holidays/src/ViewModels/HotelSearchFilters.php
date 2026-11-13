@@ -97,12 +97,16 @@ final class HotelSearchFilters
                     'label' => $t('novoton_holidays.hotels_col_stars'),
                     'nested_data' => $starItems,
                 ],
+                // Type-to-search: the template puts CS-Cart's object picker in
+                // 'content' (it needs Smarty); the value is the city or region.
                 'city' => [
                     'id' => 'city',
-                    'type' => 'input',
+                    'type' => 'dropdown',
                     'category' => 'primary',
+                    'size' => 'large',
                     'label' => $t('novoton_holidays.hotels_city_or_region'),
                     'value' => TypeCoerce::toString($search['city'] ?? ''),
+                    'content' => '',
                 ],
                 'not_synced_days' => self::radio('not_synced_days', 'primary', $t('novoton_holidays.hotels_not_synced_in'), array_merge(
                     [['value' => false, 'label' => $t('novoton_holidays.hotels_any_time')]],

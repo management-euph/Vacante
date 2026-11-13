@@ -165,7 +165,7 @@ class AddProductsCommand extends AbstractCronCommand
                         fn_log_event('general', 'runtime', ['message' => "Novoton: Failed to assign features for hotel {$hotel_id}", 'error' => $e->getMessage()]);
                     }
 
-                    $this->output('LINKED');
+                    $this->output('LINKED ' . self::memory());
                     continue;
                 }
 
@@ -261,7 +261,7 @@ class AddProductsCommand extends AbstractCronCommand
                     }
 
                     $added++;
-                    $this->output("ADDED (ID: {$product_id})");
+                    $this->output("ADDED (ID: {$product_id}) " . self::memory());
                 } else {
                     fn_log_event('general', 'runtime', [
                         'message' => 'Novoton: fn_update_product() returned 0 — product not created',
@@ -410,5 +410,14 @@ class AddProductsCommand extends AbstractCronCommand
         }
 
         return array_values(array_filter(array_map('trim', $extra), static fn (string $n): bool => $n !== ''));
+    }
+
+    /**
+     * The run's memory now and at its peak, after each hotel: a hotel that
+     * takes much of the memory limit shows where it happens.
+     */
+    private static function memory(): string
+    {
+        return sprintf('[memory %d MB, peak %d MB]', intdiv(memory_get_usage(true), 1048576), intdiv(memory_get_peak_usage(true), 1048576));
     }
 }
