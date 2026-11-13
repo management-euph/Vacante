@@ -48,6 +48,57 @@ class CircuitProductFactory
     }
 
     /**
+     * Brings the descriptions of the circuits' products up to date with what
+     * Sphinx says now: the short description is the summary, the full one the
+     * summary then the description (fullDescription()), in every language the
+     * product was made in. Only the two description fields: name, price,
+     * category and images are not touched. A circuit whose summary and
+     * description are both empty keeps its product's text (a bad answer must
+     * not blank a page), and a product already up to date is not written.
+     *
+     * @param list<array<string, mixed>> $circuits normalized rows (circuit_id, summary, description)
+     * @param list<string> $languages the languages the products have descriptions in
+     *
+     * @return int how many products' descriptions changed
+     */
+    public function refreshDescriptions(array $circuits, array $languages): int
+    {
+        if ($circuits === [] || $languages === []) {
+            return 0;
+        }
+        $productIds = $this->circuitRepo->productIds(array_map(
+            static fn (array $circuit): int => TypeCoerce::toInt($circuit['circuit_id'] ?? 0),
+            $circuits,
+        ));
+        $changed = 0;
+        foreach ($circuits as $circuit) {
+            $productId = $productIds[TypeCoerce::toInt($circuit['circuit_id'] ?? 0)] ?? 0;
+            $summary = TypeCoerce::toString($circuit['summary'] ?? '');
+            $description = TypeCoerce::toString($circuit['description'] ?? '');
+            if ($productId <= 0 || (trim($summary) === '' && trim($description) === '')) {
+                continue;
+            }
+            $full = self::fullDescription($summary, $description);
+            $affected = TypeCoerce::toInt(db_query(
+                'UPDATE ?:product_descriptions SET short_description = ?s, full_description = ?s'
+                . ' WHERE product_id = ?i AND lang_code IN (?a)'
+                . ' AND NOT (short_description <=> ?s AND full_description <=> ?s)',
+                $summary,
+                $full,
+                $productId,
+                $languages,
+                $summary,
+                $full,
+            ));
+            if ($affected > 0) {
+                $changed++;
+            }
+        }
+
+        return $changed;
+    }
+
+    /**
      * @param array<string, mixed> $circuit Row from sphinx_circuits
      * @return array{status: string, product_id: int, reason: string}
      */

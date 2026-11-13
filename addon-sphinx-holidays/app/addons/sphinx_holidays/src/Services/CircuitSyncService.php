@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\SphinxHolidays\Contracts\CircuitSyncServiceInterface;
+use Tygh\Addons\SphinxHolidays\Helpers\CircuitProductFactory;
 use Tygh\Addons\SphinxHolidays\Repository\CircuitRepository;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
@@ -141,6 +142,16 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
         if ($bookable !== null && TypeCoerce::toString($stats['error']) === '') {
             $pruned = (new CircuitRepository())->pruneUnbookable($bookable);
             $pruneMsg = ", {$past} skipped (no rate from today on), {$pruned['removed']} stored ones removed, {$pruned['deactivated']} set inactive (they have a product; {$pruned['hidden']} products hidden), {$pruned['shown']} products on sale again";
+        }
+
+        // The products of the circuits just read follow Sphinx's text: an
+        // incremental run reads only the changed circuits, a full one all.
+        if (!empty($allCircuits)) {
+            $languages = TypeCoerce::toStringList(ConfigProvider::getProductLanguages());
+            $refreshed = (new CircuitProductFactory(new CircuitRepository()))->refreshDescriptions($allCircuits, $languages !== [] ? $languages : [TypeCoerce::toString(CART_LANGUAGE)]);
+            if ($refreshed > 0) {
+                $this->output("Descriptions updated on {$refreshed} circuit products.");
+            }
         }
 
         // The departure cities and months of the circuits on sale, then
