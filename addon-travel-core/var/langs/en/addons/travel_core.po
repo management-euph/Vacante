@@ -5109,3 +5109,7 @@ msgstr "November"
 msgctxt "Languages::travel_core.fmc_month_12"
 msgid "December"
 msgstr "December"
+
+msgctxt "Languages::travel_core.fmc_ungrouped"
+msgid "Ungrouped features"
+msgstr "Ungrouped features"
