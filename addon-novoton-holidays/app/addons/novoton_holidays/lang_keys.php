@@ -1246,4 +1246,68 @@ return [
         'en' => 'None of the selected hotels has a product.',
         'ro' => 'Niciunul dintre hotelurile selectate nu are produs.',
     ],
+    'novoton_holidays.hotels_n_stars' => [
+        'en' => '[n] stars',
+        'ro' => '[n] stele',
+    ],
+    'novoton_holidays.hotels_no_stars' => [
+        'en' => 'No stars (Apart, Villa…)',
+        'ro' => 'Fără stele (Apart, Vilă…)',
+    ],
+    'novoton_holidays.hotels_property_type' => [
+        'en' => 'Property type',
+        'ro' => 'Tip proprietate',
+    ],
+    'novoton_holidays.hotels_col_product' => [
+        'en' => 'Product',
+        'ro' => 'Produs',
+    ],
+    'novoton_holidays.hotels_product_with' => [
+        'en' => 'Has a product',
+        'ro' => 'Are produs',
+    ],
+    'novoton_holidays.hotels_product_without' => [
+        'en' => 'No product',
+        'ro' => 'Fără produs',
+    ],
+    'novoton_holidays.hotels_type_hotel' => [
+        'en' => 'Hotel',
+        'ro' => 'Hotel',
+    ],
+    'novoton_holidays.hotels_type_apartment' => [
+        'en' => 'Apartment',
+        'ro' => 'Apartament',
+    ],
+    'novoton_holidays.hotels_type_villa' => [
+        'en' => 'Villa',
+        'ro' => 'Vilă',
+    ],
+    'novoton_holidays.hotels_type_resort' => [
+        'en' => 'Resort',
+        'ro' => 'Resort',
+    ],
+    'novoton_holidays.hotels_type_guest_house' => [
+        'en' => 'Guest house',
+        'ro' => 'Pensiune',
+    ],
+    'novoton_holidays.hotels_type_boarding_house' => [
+        'en' => 'Boarding house',
+        'ro' => 'Casă de oaspeți',
+    ],
+    'novoton_holidays.hotels_type_chalet' => [
+        'en' => 'Chalet',
+        'ro' => 'Cabană',
+    ],
+    'novoton_holidays.hotels_type_hostel' => [
+        'en' => 'Hostel',
+        'ro' => 'Hostel',
+    ],
+    'novoton_holidays.hotels_type_motel' => [
+        'en' => 'Motel',
+        'ro' => 'Motel',
+    ],
+    'novoton_holidays.hotels_type_cabin' => [
+        'en' => 'Cabin',
+        'ro' => 'Căsuță',
+    ],
 ];

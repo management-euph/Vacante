@@ -4595,3 +4595,67 @@ msgstr "[n] produse dezactivate."
 msgctxt "Languages::novoton_holidays.hotels_no_products_selected"
 msgid "None of the selected hotels has a product."
 msgstr "Niciunul dintre hotelurile selectate nu are produs."
+
+msgctxt "Languages::novoton_holidays.hotels_n_stars"
+msgid "[n] stars"
+msgstr "[n] stele"
+
+msgctxt "Languages::novoton_holidays.hotels_no_stars"
+msgid "No stars (Apart, Villa…)"
+msgstr "Fără stele (Apart, Vilă…)"
+
+msgctxt "Languages::novoton_holidays.hotels_property_type"
+msgid "Property type"
+msgstr "Tip proprietate"
+
+msgctxt "Languages::novoton_holidays.hotels_col_product"
+msgid "Product"
+msgstr "Produs"
+
+msgctxt "Languages::novoton_holidays.hotels_product_with"
+msgid "Has a product"
+msgstr "Are produs"
+
+msgctxt "Languages::novoton_holidays.hotels_product_without"
+msgid "No product"
+msgstr "Fără produs"
+
+msgctxt "Languages::novoton_holidays.hotels_type_hotel"
+msgid "Hotel"
+msgstr "Hotel"
+
+msgctxt "Languages::novoton_holidays.hotels_type_apartment"
+msgid "Apartment"
+msgstr "Apartament"
+
+msgctxt "Languages::novoton_holidays.hotels_type_villa"
+msgid "Villa"
+msgstr "Vilă"
+
+msgctxt "Languages::novoton_holidays.hotels_type_resort"
+msgid "Resort"
+msgstr "Resort"
+
+msgctxt "Languages::novoton_holidays.hotels_type_guest_house"
+msgid "Guest house"
+msgstr "Pensiune"
+
+msgctxt "Languages::novoton_holidays.hotels_type_boarding_house"
+msgid "Boarding house"
+msgstr "Casă de oaspeți"
+
+msgctxt "Languages::novoton_holidays.hotels_type_chalet"
+msgid "Chalet"
+msgstr "Cabană"
+
+msgctxt "Languages::novoton_holidays.hotels_type_hostel"
+msgid "Hostel"
+msgstr "Hostel"
+
+msgctxt "Languages::novoton_holidays.hotels_type_motel"
+msgid "Motel"
+msgstr "Motel"
+
+msgctxt "Languages::novoton_holidays.hotels_type_cabin"
+msgid "Cabin"
+msgstr "Căsuță"

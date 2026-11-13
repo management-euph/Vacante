@@ -4595,3 +4595,67 @@ msgstr "[n] products disabled."
 msgctxt "Languages::novoton_holidays.hotels_no_products_selected"
 msgid "None of the selected hotels has a product."
 msgstr "None of the selected hotels has a product."
+
+msgctxt "Languages::novoton_holidays.hotels_n_stars"
+msgid "[n] stars"
+msgstr "[n] stars"
+
+msgctxt "Languages::novoton_holidays.hotels_no_stars"
+msgid "No stars (Apart, Villa…)"
+msgstr "No stars (Apart, Villa…)"
+
+msgctxt "Languages::novoton_holidays.hotels_property_type"
+msgid "Property type"
+msgstr "Property type"
+
+msgctxt "Languages::novoton_holidays.hotels_col_product"
+msgid "Product"
+msgstr "Product"
+
+msgctxt "Languages::novoton_holidays.hotels_product_with"
+msgid "Has a product"
+msgstr "Has a product"
+
+msgctxt "Languages::novoton_holidays.hotels_product_without"
+msgid "No product"
+msgstr "No product"
+
+msgctxt "Languages::novoton_holidays.hotels_type_hotel"
+msgid "Hotel"
+msgstr "Hotel"
+
+msgctxt "Languages::novoton_holidays.hotels_type_apartment"
+msgid "Apartment"
+msgstr "Apartment"
+
+msgctxt "Languages::novoton_holidays.hotels_type_villa"
+msgid "Villa"
+msgstr "Villa"
+
+msgctxt "Languages::novoton_holidays.hotels_type_resort"
+msgid "Resort"
+msgstr "Resort"
+
+msgctxt "Languages::novoton_holidays.hotels_type_guest_house"
+msgid "Guest house"
+msgstr "Guest house"
+
+msgctxt "Languages::novoton_holidays.hotels_type_boarding_house"
+msgid "Boarding house"
+msgstr "Boarding house"
+
+msgctxt "Languages::novoton_holidays.hotels_type_chalet"
+msgid "Chalet"
+msgstr "Chalet"
+
+msgctxt "Languages::novoton_holidays.hotels_type_hostel"
+msgid "Hostel"
+msgstr "Hostel"
+
+msgctxt "Languages::novoton_holidays.hotels_type_motel"
+msgid "Motel"
+msgstr "Motel"
+
+msgctxt "Languages::novoton_holidays.hotels_type_cabin"
+msgid "Cabin"
+msgstr "Cabin"
