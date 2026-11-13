@@ -46,16 +46,18 @@ final class HotelListingRepositoryTest extends TestCase
         self::assertSame('desc', $search['sort_order']);
         self::assertSame('asc', $search['sort_order_rev']);
         self::assertSame('Beach', $search['q']);
-        self::assertSame(0, $search['stars']);
+        self::assertSame([], $search['stars'], 'a rating outside 1-5 is not a filter');
         self::assertSame('', $search['sync_status']);
         self::assertSame(0, $search['not_synced_days'], 'only the offered ages');
     }
 
     public function testTheOfferedFiltersAreKept(): void
     {
-        $search = (new HotelListingRepository())->normalize(['stars' => '4', 'sync_status' => 'error', 'not_synced_days' => '30', 'sort_by' => 'synced']);
+        $search = (new HotelListingRepository())->normalize(['stars_5' => 'Y', 'stars_4' => 'Y', 'stars_2' => 'N', 'sync_status' => 'error', 'not_synced_days' => '30', 'sort_by' => 'synced', 'product' => 'deleted', 'property_type_villa' => 'Y', 'property_type_castle' => 'Y']);
 
-        self::assertSame(4, $search['stars']);
+        self::assertSame([4, 5], $search['stars'], 'several stars at once, in order');
+        self::assertSame('deleted', $search['product']);
+        self::assertSame(['villa'], $search['property_types'], 'only the known types');
         self::assertSame('error', $search['sync_status']);
         self::assertSame(30, $search['not_synced_days']);
         self::assertSame('synced', $search['sort_by']);
@@ -71,10 +73,10 @@ final class HotelListingRepositoryTest extends TestCase
         $repo = new HotelListingRepository();
 
         $sql = HotelListingRepository::condition($repo->normalize(['q' => 'Beach', 'country' => 'Bulgaria', 'city' => 'Varna', 'stars' => 4]), self::NOW);
+        self::assertStringContainsString('(h.star_rating IN (4))', $sql, 'an older stars=4 link still works');
         self::assertStringContainsString("(h.hotel_name LIKE '%Beach%' OR h.hotel_id LIKE '%Beach%')", $sql);
         self::assertStringContainsString("h.country = 'Bulgaria'", $sql);
         self::assertStringContainsString("(h.city LIKE '%Varna%' OR h.region LIKE '%Varna%')", $sql);
-        self::assertStringContainsString('h.star_rating = 4', $sql);
 
         $sql = HotelListingRepository::condition($repo->normalize(['sync_status' => 'unmapped']), self::NOW);
         self::assertStringContainsString("END = 'unmapped'", $sql);
@@ -143,5 +145,29 @@ final class HotelListingRepositoryTest extends TestCase
         DbStub::$getArray = static fn (): array => [['sync_status' => 'active', 'n' => '12'], ['sync_status' => 'other', 'n' => '3']];
 
         self::assertSame(['active' => 12, 'pending' => 0, 'error' => 0, 'unmapped' => 0], (new HotelListingRepository())->statusCounts());
+    }
+
+    public function testStarsAndNoStarsCombine(): void
+    {
+        $sql = HotelListingRepository::condition((new HotelListingRepository())->normalize(['stars_4' => 'Y', 'stars_5' => 'Y', 'stars_none' => 'Y']), self::NOW);
+
+        self::assertStringContainsString('(h.star_rating IN (4,5) OR (h.star_rating IS NULL OR h.star_rating = 0))', $sql);
+    }
+
+    public function testTheProductFilter(): void
+    {
+        $repo = new HotelListingRepository();
+
+        self::assertStringContainsString('p.product_id IS NOT NULL', HotelListingRepository::condition($repo->normalize(['product' => 'with']), self::NOW));
+        self::assertStringContainsString('(h.product_id IS NULL OR h.product_id = 0)', HotelListingRepository::condition($repo->normalize(['product' => 'without']), self::NOW));
+        self::assertStringContainsString('h.product_id > 0 AND p.product_id IS NULL', HotelListingRepository::condition($repo->normalize(['product' => 'deleted']), self::NOW));
+        self::assertSame('', HotelListingRepository::condition($repo->normalize(['product' => 'nope']), self::NOW));
+    }
+
+    public function testThePropertyTypeFilter(): void
+    {
+        $sql = HotelListingRepository::condition((new HotelListingRepository())->normalize(['property_type_apartment' => 'Y', 'property_type_villa' => 'Y']), self::NOW);
+
+        self::assertStringContainsString("h.property_type IN ('apartment', 'villa')", $sql);
     }
 }

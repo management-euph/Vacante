@@ -47,10 +47,17 @@ final class HotelListingRepository
         'stars' => ['h.star_rating', 'h.hotel_name'],
         'synced' => ['h.hotelinfo_synced_at', 'h.hotel_name'],
         'status' => ["FIELD(" . self::STATUS_SQL . ", 'error', 'unmapped', 'pending', 'active')", 'h.hotel_name'],
+        'product' => ['(p.product_id IS NULL)', 'h.product_id', 'h.hotel_name'],
     ];
 
     /** "Not synced in the last N days" choices. */
     public const array SYNC_AGES = [7, 30, 90];
+
+    /** The property types the hotel sync detects (novoton_hotels.property_type). */
+    public const array PROPERTY_TYPES = ['hotel', 'apartment', 'villa', 'resort', 'guest-house', 'boarding-house', 'chalet', 'hostel', 'motel', 'cabin'];
+
+    /** The product filter: has a live product, has none, or its product was deleted. */
+    public const array PRODUCT_FILTERS = ['with', 'without', 'deleted'];
 
     private const string JOINS = 'LEFT JOIN ?:products p ON p.product_id = h.product_id AND h.product_id > 0';
 
@@ -69,8 +76,28 @@ final class HotelListingRepository
         $sortBy = isset(self::SORTS[$sortBy]) ? $sortBy : 'name';
         $order = strtolower(TypeCoerce::toString($params['sort_order'] ?? '')) === 'desc' ? 'desc' : 'asc';
         $status = TypeCoerce::toString($params['sync_status'] ?? '');
-        $stars = TypeCoerce::toInt($params['stars'] ?? 0);
         $age = TypeCoerce::toInt($params['not_synced_days'] ?? 0);
+        $product = TypeCoerce::toString($params['product'] ?? '');
+
+        // Stars: several at once (stars_4=Y&stars_5=Y, the filter's checkboxes),
+        // or one (stars=4, an older link); "none" is a hotel without a rating.
+        $stars = [];
+        for ($n = 1; $n <= 5; $n++) {
+            if (TypeCoerce::toString($params['stars_' . $n] ?? '') === 'Y') {
+                $stars[] = $n;
+            }
+        }
+        $one = TypeCoerce::toInt($params['stars'] ?? 0);
+        if ($one >= 1 && $one <= 5 && !in_array($one, $stars, true)) {
+            $stars[] = $one;
+        }
+        sort($stars);
+        $types = [];
+        foreach (self::PROPERTY_TYPES as $type) {
+            if (TypeCoerce::toString($params['property_type_' . $type] ?? '') === 'Y') {
+                $types[] = $type;
+            }
+        }
 
         return [
             'page' => max(1, TypeCoerce::toInt($params['page'] ?? 1)),
@@ -81,7 +108,10 @@ final class HotelListingRepository
             'q' => trim(TypeCoerce::toString($params['q'] ?? '')),
             'country' => trim(TypeCoerce::toString($params['country'] ?? '')),
             'city' => trim(TypeCoerce::toString($params['city'] ?? '')),
-            'stars' => $stars >= 1 && $stars <= 5 ? $stars : 0,
+            'stars' => $stars,
+            'stars_none' => TypeCoerce::toString($params['stars_none'] ?? '') === 'Y',
+            'property_types' => $types,
+            'product' => in_array($product, self::PRODUCT_FILTERS, true) ? $product : '',
             'sync_status' => in_array($status, self::STATUSES, true) ? $status : '',
             'not_synced_days' => in_array($age, self::SYNC_AGES, true) ? $age : 0,
         ];
@@ -118,10 +148,28 @@ final class HotelListingRepository
         if ($city !== '') {
             $sql .= db_quote(' AND (h.city LIKE ?l OR h.region LIKE ?l)', '%' . $city . '%', '%' . $city . '%');
         }
-        $stars = TypeCoerce::toInt($search['stars'] ?? 0);
-        if ($stars > 0) {
-            $sql .= db_quote(' AND h.star_rating = ?i', $stars);
+        $stars = TypeCoerce::toIntList($search['stars'] ?? []);
+        $noStars = ($search['stars_none'] ?? false) === true;
+        if ($stars !== [] || $noStars) {
+            $parts = [];
+            if ($stars !== []) {
+                $parts[] = db_quote('h.star_rating IN (?n)', $stars);
+            }
+            if ($noStars) {
+                $parts[] = '(h.star_rating IS NULL OR h.star_rating = 0)';
+            }
+            $sql .= ' AND (' . implode(' OR ', $parts) . ')';
         }
+        $types = array_values(array_intersect(TypeCoerce::toStringList($search['property_types'] ?? []), self::PROPERTY_TYPES));
+        if ($types !== []) {
+            $sql .= db_quote(' AND h.property_type IN (?a)', $types);
+        }
+        $sql .= match (TypeCoerce::toString($search['product'] ?? '')) {
+            'with' => ' AND p.product_id IS NOT NULL',
+            'without' => ' AND (h.product_id IS NULL OR h.product_id = 0)',
+            'deleted' => ' AND h.product_id > 0 AND p.product_id IS NULL',
+            default => '',
+        };
         $status = TypeCoerce::toString($search['sync_status'] ?? '');
         if (in_array($status, self::STATUSES, true)) {
             $sql .= db_quote(' AND ' . self::STATUS_SQL . ' = ?s', $status);
@@ -156,7 +204,7 @@ final class HotelListingRepository
 
         // Not h.*: hotel_data and calendar_prices_raw are large JSON no row shows.
         $rows = db_get_array(
-            'SELECT h.hotel_id, h.hotel_name, h.city, h.region, h.country, h.hotel_type, h.star_rating,
+            'SELECT h.hotel_id, h.hotel_name, h.city, h.region, h.country, h.hotel_type, h.star_rating, h.property_type,
                     h.product_id, h.hotelinfo_synced_at, h.hotelinfo_tried_at, h.hotelinfo_due_at,
                     h.hotel_list_synced_at, h.last_price_check, h.images_checked_at,
                     p.product_id AS live_product_id, p.status AS product_status, '

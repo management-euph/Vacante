@@ -14,8 +14,8 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  */
 final class HotelListView
 {
-    /** Filters a list URL carries (page and sort apart). */
-    private const array FILTERS = ['q', 'country', 'city', 'stars', 'sync_status', 'not_synced_days', 'items_per_page'];
+    /** Plain filters a list URL carries (page, sort and the multi-choice ones apart). */
+    private const array FILTERS = ['q', 'country', 'city', 'product', 'sync_status', 'not_synced_days', 'items_per_page'];
 
     /**
      * @param list<array<string, mixed>> $rows HotelListingRepository::getListing()
@@ -43,6 +43,7 @@ final class HotelListView
                 'stars' => $stars >= 1 && $stars <= 5 ? $stars : 0,
                 'stars_text' => $stars >= 1 && $stars <= 5 ? str_repeat('★', $stars) : '',
                 'type' => TypeCoerce::toString($row['hotel_type'] ?? ''),
+                'property_type' => TypeCoerce::toString($row['property_type'] ?? ''),
                 'status' => in_array($status, HotelListingRepository::STATUSES, true) ? $status : 'pending',
                 'synced_at' => self::when($synced),
                 'synced_days' => self::daysAgo($synced, $now),
@@ -111,6 +112,16 @@ final class HotelListView
             if ($value !== '' && $value !== '0') {
                 $params[$key] = $value;
             }
+        }
+        // The multi-choice filters, as their checkboxes send them.
+        foreach (TypeCoerce::toIntList($search['stars'] ?? []) as $n) {
+            $params['stars_' . $n] = 'Y';
+        }
+        if (($search['stars_none'] ?? false) === true) {
+            $params['stars_none'] = 'Y';
+        }
+        foreach (TypeCoerce::toStringList($search['property_types'] ?? []) as $type) {
+            $params['property_type_' . $type] = 'Y';
         }
 
         return http_build_query($params);

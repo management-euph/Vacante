@@ -108,4 +108,11 @@ final class HotelListViewTest extends TestCase
         self::assertSame('q=Beach&sync_status=error&sort_by=synced&sort_order=asc&page=3', HotelListView::query($search, true));
         self::assertSame('', HotelListView::query([]));
     }
+
+    public function testAListUrlCarriesTheMultiChoiceFiltersAsTheirCheckboxes(): void
+    {
+        $search = ['stars' => [4, 5], 'stars_none' => true, 'property_types' => ['villa'], 'product' => 'without'];
+
+        self::assertSame('product=without&stars_4=Y&stars_5=Y&stars_none=Y&property_type_villa=Y', HotelListView::query($search));
+    }
 }
