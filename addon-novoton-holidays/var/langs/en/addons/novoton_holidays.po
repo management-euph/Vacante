@@ -4407,3 +4407,307 @@ msgstr "We have received the payment for your order: there is nothing more to do
 msgctxt "Languages::novoton_holidays.request_confirmed_thanks"
 msgid "Thank you, and have a lovely stay!"
 msgstr "Thank you, and have a lovely stay!"
+
+msgctxt "Languages::novoton_holidays.hotels_title"
+msgid "Hotels"
+msgstr "Hotels"
+
+msgctxt "Languages::novoton_holidays.hotels_page_title"
+msgid "Novoton — Hotels"
+msgstr "Novoton — Hotels"
+
+msgctxt "Languages::novoton_holidays.hotels_intro"
+msgid "Every hotel Novoton lists, with when its details were last synced and its CS-Cart product. Hotel data is not edited here: the syncs write it. You can queue hotels for a re-sync and enable or disable their products."
+msgstr "Every hotel Novoton lists, with when its details were last synced and its CS-Cart product. Hotel data is not edited here: the syncs write it. You can queue hotels for a re-sync and enable or disable their products."
+
+msgctxt "Languages::novoton_holidays.hotels_summary"
+msgid "Summary"
+msgstr "Summary"
+
+msgctxt "Languages::novoton_holidays.hotels_total"
+msgid "Hotels"
+msgstr "Hotels"
+
+msgctxt "Languages::novoton_holidays.hotels_last_list"
+msgid "Last hotel list sync"
+msgstr "Last hotel list sync"
+
+msgctxt "Languages::novoton_holidays.hotels_last_info"
+msgid "Last hotel details sync"
+msgstr "Last hotel details sync"
+
+msgctxt "Languages::novoton_holidays.hotels_search_placeholder"
+msgid "Hotel name or Novoton ID"
+msgstr "Hotel name or Novoton ID"
+
+msgctxt "Languages::novoton_holidays.hotels_city_or_region"
+msgid "City or region"
+msgstr "City or region"
+
+msgctxt "Languages::novoton_holidays.hotels_not_synced_in"
+msgid "Not synced in the last"
+msgstr "Not synced in the last"
+
+msgctxt "Languages::novoton_holidays.hotels_any_time"
+msgid "Any time"
+msgstr "Any time"
+
+msgctxt "Languages::novoton_holidays.hotels_n_days"
+msgid "[n] days"
+msgstr "[n] days"
+
+msgctxt "Languages::novoton_holidays.hotels_col_hotel"
+msgid "Hotel"
+msgstr "Hotel"
+
+msgctxt "Languages::novoton_holidays.hotels_col_destination"
+msgid "Destination"
+msgstr "Destination"
+
+msgctxt "Languages::novoton_holidays.hotels_col_stars"
+msgid "Stars"
+msgstr "Stars"
+
+msgctxt "Languages::novoton_holidays.hotels_col_synced"
+msgid "Last sync"
+msgstr "Last sync"
+
+msgctxt "Languages::novoton_holidays.hotels_col_status"
+msgid "Sync status"
+msgstr "Sync status"
+
+msgctxt "Languages::novoton_holidays.hotels_status_active"
+msgid "Active"
+msgstr "Active"
+
+msgctxt "Languages::novoton_holidays.hotels_status_pending"
+msgid "Waiting for sync"
+msgstr "Waiting for sync"
+
+msgctxt "Languages::novoton_holidays.hotels_status_error"
+msgid "API error"
+msgstr "API error"
+
+msgctxt "Languages::novoton_holidays.hotels_status_unmapped"
+msgid "Missing mapping"
+msgstr "Missing mapping"
+
+msgctxt "Languages::novoton_holidays.hotels_status_active_hint"
+msgid "Its details were synced and it has a CS-Cart product."
+msgstr "Its details were synced and it has a CS-Cart product."
+
+msgctxt "Languages::novoton_holidays.hotels_status_pending_hint"
+msgid "Its details were never fetched, or it is queued for a re-sync: the next hotel details run fetches it."
+msgstr "Its details were never fetched, or it is queued for a re-sync: the next hotel details run fetches it."
+
+msgctxt "Languages::novoton_holidays.hotels_status_error_hint"
+msgid "The last request for its details got no answer from Novoton. It is asked again within a day."
+msgstr "The last request for its details got no answer from Novoton. It is asked again within a day."
+
+msgctxt "Languages::novoton_holidays.hotels_status_unmapped_hint"
+msgid "It has no CS-Cart product: none was created for it, or the product was deleted."
+msgstr "It has no CS-Cart product: none was created for it, or the product was deleted."
+
+msgctxt "Languages::novoton_holidays.hotels_days_ago"
+msgid "[n] days ago"
+msgstr "[n] days ago"
+
+msgctxt "Languages::novoton_holidays.hotels_never_synced"
+msgid "Never synced"
+msgstr "Never synced"
+
+msgctxt "Languages::novoton_holidays.hotels_tried"
+msgid "No answer on"
+msgstr "No answer on"
+
+msgctxt "Languages::novoton_holidays.hotels_queued"
+msgid "Queued for re-sync"
+msgstr "Queued for re-sync"
+
+msgctxt "Languages::novoton_holidays.hotels_product_deleted"
+msgid "Product deleted"
+msgstr "Product deleted"
+
+msgctxt "Languages::novoton_holidays.hotels_product_disabled"
+msgid "Product disabled"
+msgstr "Product disabled"
+
+msgctxt "Languages::novoton_holidays.hotels_product_hidden"
+msgid "Product hidden"
+msgstr "Product hidden"
+
+msgctxt "Languages::novoton_holidays.hotels_with_selected"
+msgid "With selected"
+msgstr "With selected"
+
+msgctxt "Languages::novoton_holidays.hotels_select_page"
+msgid "Select this page"
+msgstr "Select this page"
+
+msgctxt "Languages::novoton_holidays.hotels_resync"
+msgid "Force re-sync"
+msgstr "Force re-sync"
+
+msgctxt "Languages::novoton_holidays.hotels_resync_hint"
+msgid "A re-sync is queued: the next hotel details run fetches the hotel from Novoton."
+msgstr "A re-sync is queued: the next hotel details run fetches the hotel from Novoton."
+
+msgctxt "Languages::novoton_holidays.hotels_enable_products"
+msgid "Enable products"
+msgstr "Enable products"
+
+msgctxt "Languages::novoton_holidays.hotels_disable_products"
+msgid "Disable products"
+msgstr "Disable products"
+
+msgctxt "Languages::novoton_holidays.hotels_open_product"
+msgid "Open the CS-Cart product"
+msgstr "Open the CS-Cart product"
+
+msgctxt "Languages::novoton_holidays.hotels_confirm_resync"
+msgid "Queue the selected hotels for a re-sync?"
+msgstr "Queue the selected hotels for a re-sync?"
+
+msgctxt "Languages::novoton_holidays.hotels_confirm_enable"
+msgid "Enable the products of the selected hotels?"
+msgstr "Enable the products of the selected hotels?"
+
+msgctxt "Languages::novoton_holidays.hotels_confirm_disable"
+msgid "Disable the products of the selected hotels?"
+msgstr "Disable the products of the selected hotels?"
+
+msgctxt "Languages::novoton_holidays.hotels_resync_queued"
+msgid "[n] hotels queued for re-sync. The next hotel details run fetches them."
+msgstr "[n] hotels queued for re-sync. The next hotel details run fetches them."
+
+msgctxt "Languages::novoton_holidays.hotels_none_selected"
+msgid "No hotel was selected."
+msgstr "No hotel was selected."
+
+msgctxt "Languages::novoton_holidays.hotels_products_enabled"
+msgid "[n] products enabled."
+msgstr "[n] products enabled."
+
+msgctxt "Languages::novoton_holidays.hotels_products_disabled"
+msgid "[n] products disabled."
+msgstr "[n] products disabled."
+
+msgctxt "Languages::novoton_holidays.hotels_no_products_selected"
+msgid "None of the selected hotels has a product."
+msgstr "None of the selected hotels has a product."
+
+msgctxt "Languages::novoton_holidays.hotels_n_stars"
+msgid "[n] stars"
+msgstr "[n] stars"
+
+msgctxt "Languages::novoton_holidays.hotels_no_stars"
+msgid "No stars (Apart, Villa…)"
+msgstr "No stars (Apart, Villa…)"
+
+msgctxt "Languages::novoton_holidays.hotels_property_type"
+msgid "Property type"
+msgstr "Property type"
+
+msgctxt "Languages::novoton_holidays.hotels_col_product"
+msgid "Product"
+msgstr "Product"
+
+msgctxt "Languages::novoton_holidays.hotels_product_with"
+msgid "Has a product"
+msgstr "Has a product"
+
+msgctxt "Languages::novoton_holidays.hotels_product_without"
+msgid "No product"
+msgstr "No product"
+
+msgctxt "Languages::novoton_holidays.hotels_type_hotel"
+msgid "Hotel"
+msgstr "Hotel"
+
+msgctxt "Languages::novoton_holidays.hotels_type_apartment"
+msgid "Apartment"
+msgstr "Apartment"
+
+msgctxt "Languages::novoton_holidays.hotels_type_villa"
+msgid "Villa"
+msgstr "Villa"
+
+msgctxt "Languages::novoton_holidays.hotels_type_resort"
+msgid "Resort"
+msgstr "Resort"
+
+msgctxt "Languages::novoton_holidays.hotels_type_guest_house"
+msgid "Guest house"
+msgstr "Guest house"
+
+msgctxt "Languages::novoton_holidays.hotels_type_boarding_house"
+msgid "Boarding house"
+msgstr "Boarding house"
+
+msgctxt "Languages::novoton_holidays.hotels_type_chalet"
+msgid "Chalet"
+msgstr "Chalet"
+
+msgctxt "Languages::novoton_holidays.hotels_type_hostel"
+msgid "Hostel"
+msgstr "Hostel"
+
+msgctxt "Languages::novoton_holidays.hotels_type_motel"
+msgid "Motel"
+msgstr "Motel"
+
+msgctxt "Languages::novoton_holidays.hotels_type_cabin"
+msgid "Cabin"
+msgstr "Cabin"
+
+msgctxt "Languages::novoton_holidays.hotels_confirm_disable_n"
+msgid "Disable the products of [n] selected hotels? [on_sale] of them are on sale now and disappear from the storefront: customers can no longer find or book them. Bookings already made are not affected."
+msgstr "Disable the products of [n] selected hotels? [on_sale] of them are on sale now and disappear from the storefront: customers can no longer find or book them. Bookings already made are not affected."
+
+msgctxt "Languages::novoton_holidays.hotels_confirm_disable_one"
+msgid "Disable the product of [hotel]? It disappears from the storefront: customers can no longer find or book it."
+msgstr "Disable the product of [hotel]? It disappears from the storefront: customers can no longer find or book it."
+
+msgctxt "Languages::novoton_holidays.hotels_disable_product"
+msgid "Disable product"
+msgstr "Disable product"
+
+msgctxt "Languages::novoton_holidays.hotels_enable_product"
+msgid "Enable product"
+msgstr "Enable product"
+
+msgctxt "Languages::novoton_holidays.hotels_queue_retry"
+msgid "Queue a retry"
+msgstr "Queue a retry"
+
+msgctxt "Languages::novoton_holidays.hotels_err_last_request"
+msgid "Last request"
+msgstr "Last request"
+
+msgctxt "Languages::novoton_holidays.hotels_err_no_answer"
+msgid "no answer"
+msgstr "no answer"
+
+msgctxt "Languages::novoton_holidays.hotels_err_last_success"
+msgid "Last successful sync"
+msgstr "Last successful sync"
+
+msgctxt "Languages::novoton_holidays.hotels_err_next_try"
+msgid "Next automatic try"
+msgstr "Next automatic try"
+
+msgctxt "Languages::novoton_holidays.hotels_err_no_answer_note"
+msgid "Novoton sent no answer to the last request, so there is no response to show for it. Below is the last answer it did send."
+msgstr "Novoton sent no answer to the last request, so there is no response to show for it. Below is the last answer it did send."
+
+msgctxt "Languages::novoton_holidays.hotels_err_last_answer"
+msgid "Last stored answer"
+msgstr "Last stored answer"
+
+msgctxt "Languages::novoton_holidays.hotels_sync_tip"
+msgid "Hotel list: last synced [list], runs every 3 days at 01:30. Hotel details: last synced [info], runs as often as the server cron calls it (suggested every 5 minutes)."
+msgstr "Hotel list: last synced [list], runs every 3 days at 01:30. Hotel details: last synced [info], runs as often as the server cron calls it (suggested every 5 minutes)."
+
+msgctxt "Languages::novoton_holidays.hotels_run_details_sync"
+msgid "Run details sync"
+msgstr "Run details sync"

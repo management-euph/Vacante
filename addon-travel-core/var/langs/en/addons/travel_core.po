@@ -5141,3 +5141,7 @@ msgstr "Date: cannot hold these values"
 msgctxt "Languages::travel_core.fmc_type_other"
 msgid "Style not supported here"
 msgstr "Style not supported here"
+
+msgctxt "Languages::travel_core.fmc_not_written"
+msgid "Some mapped features were not written"
+msgstr "Some mapped features were not written"

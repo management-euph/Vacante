@@ -17,6 +17,11 @@ $tabs = [
         'text'     => __('novoton_holidays.actions.novoton_dashboard'),
         'position' => 50,
     ],
+    'novoton_hotels' => [
+        'href'     => 'novoton_hotels.manage',
+        'text'     => __('novoton_holidays.hotels_title'),
+        'position' => 75,
+    ],
     'novoton_destinations' => [
         'href'     => 'novoton_destinations.manage',
         'text'     => __('novoton_holidays.dest_title'),
@@ -36,6 +41,7 @@ $tabs = [
 
 $pages = [
     'novoton_holidays.manage',
+    'novoton_hotels.manage',
     'novoton_destinations.manage',
     'novoton_holidays.list_facilities',
     'novoton_seo_templates.manage',

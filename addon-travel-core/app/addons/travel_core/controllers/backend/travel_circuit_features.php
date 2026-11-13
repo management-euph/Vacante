@@ -39,8 +39,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (CircuitFeatureConfig::isEmpty(CircuitFeatureConfig::load())) {
             fn_set_notification('W', __('warning'), __('travel_core.fmc_nothing_mapped'));
         } else {
-            $written = TravelProviderRegistry::applyCircuitFeatures();
-            fn_set_notification('N', __('notice'), __('travel_core.fmc_applied', ['[count]' => $written]));
+            $result = TravelProviderRegistry::applyCircuitFeatures();
+            fn_set_notification('N', __('notice'), __('travel_core.fmc_applied', ['[count]' => $result['written']]));
+            if ($result['notes'] !== []) {
+                // Why some mapped features were not written: one line each, never silent.
+                fn_set_notification('W', __('warning'), TypeCoerce::toString(__('travel_core.fmc_not_written')) . ': ' . implode('; ', $result['notes']));
+            }
         }
     }
 

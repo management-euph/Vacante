@@ -18,9 +18,13 @@ declare(strict_types=1);
  */
 
 use Tygh\Addons\NovotonHolidays\NovotonApi;
+use Tygh\Addons\NovotonHolidays\Repository\HotelListingRepository;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\NovotonHolidays\ViewModels\HotelListView;
+use Tygh\Addons\NovotonHolidays\ViewModels\HotelSearchFilters;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
+use Tygh\Tygh;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -299,4 +303,157 @@ if ($mode === 'check_packages') {
 
     fn_novoton_holidays_stream_page_close();
     exit;
+}
+
+// ════════════════════════════════════════════════════════════════════
+// Novoton → Hotels: the sync monitor (novoton_hotels.manage)
+//
+// Read-only on the hotel data (the syncs own it). What an admin can do:
+// queue hotels for a re-sync, and enable / disable their products.
+// ════════════════════════════════════════════════════════════════════
+
+/** The list to come back to after an action: the filters, sort and page the form carried. */
+$nvtHotelsBack = static function (): string {
+    // The bulk form posts the list's query; a row link carries it in its URL.
+    // Either way it is read back through normalize(), never passed on as is.
+    $params = $_REQUEST;
+    $posted = RequestCoerce::string($_REQUEST, 'redirect_query');
+    if ($posted !== '') {
+        parse_str($posted, $fromForm);
+        $params = $fromForm + $params;
+    }
+
+    return 'novoton_hotels.manage?' . HotelListView::query((new HotelListingRepository())->normalize($params), true);
+};
+
+/** @return list<string> the hotel ids a request names (one row's, or the checked ones) */
+$nvtHotelsSelected = static function (): array {
+    $ids = TypeCoerce::toStringList($_REQUEST['hotel_ids'] ?? []);
+    $one = RequestCoerce::string($_REQUEST, 'hotel_id');
+    if ($one !== '') {
+        $ids[] = $one;
+    }
+
+    return array_values(array_unique(array_filter($ids, static fn (string $id): bool => $id !== '')));
+};
+
+/**
+ * Mode: resync — queue the selected hotels: the next hotelinfo run fetches them.
+ */
+if ($mode === 'resync' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
+        return [CONTROLLER_STATUS_DENIED];
+    }
+    $queued = (new HotelListingRepository())->queueResync($nvtHotelsSelected(), date('Y-m-d H:i:s'));
+    if ($queued > 0) {
+        fn_set_notification('N', __('notice'), __('novoton_holidays.hotels_resync_queued', ['[n]' => $queued]));
+    } else {
+        fn_set_notification('W', __('warning'), __('novoton_holidays.hotels_none_selected'));
+    }
+
+    return [CONTROLLER_STATUS_REDIRECT, $nvtHotelsBack()];
+}
+
+/**
+ * Modes: enable_products / disable_products — the products of the selected hotels.
+ */
+if (($mode === 'enable_products' || $mode === 'disable_products') && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
+        return [CONTROLLER_STATUS_DENIED];
+    }
+    $status = $mode === 'enable_products' ? 'A' : 'D';
+    $productIds = (new HotelListingRepository())->productIds($nvtHotelsSelected());
+    foreach ($productIds as $productId) {
+        fn_tools_update_status([
+            'table' => 'products',
+            'status' => $status,
+            'id_name' => 'product_id',
+            'id' => $productId,
+            'show_error_notification' => false,
+        ]);
+    }
+    if ($productIds !== []) {
+        fn_set_notification('N', __('notice'), __(
+            $status === 'A' ? 'novoton_holidays.hotels_products_enabled' : 'novoton_holidays.hotels_products_disabled',
+            ['[n]' => count($productIds)],
+        ));
+    } else {
+        fn_set_notification('W', __('warning'), __('novoton_holidays.hotels_no_products_selected'));
+    }
+
+    return [CONTROLLER_STATUS_REDIRECT, $nvtHotelsBack()];
+}
+
+/**
+ * Mode: manage — the hotels, their sync state and their products.
+ */
+if ($mode === 'manage') {
+    $perPageRaw = \Tygh\Registry::get('settings.Appearance.admin_elements_per_page');
+    $listing = new HotelListingRepository(is_numeric($perPageRaw) && (int) $perPageRaw > 0 ? (int) $perPageRaw : 50);
+    $now = date('Y-m-d H:i:s');
+    $rows = [];
+    $search = $listing->normalize($_REQUEST) + ['total_items' => 0];
+    $counts = array_fill_keys(HotelListingRepository::STATUSES, 0);
+    $countries = [];
+    $lastSyncs = ['hotel_list' => '', 'hotelinfo' => ''];
+    try {
+        [$found, $search] = $listing->getListing($_REQUEST, $now);
+        $rows = HotelListView::rows($found, $now);
+        $counts = $listing->statusCounts();
+        $countries = $listing->countries();
+        $lastSyncs = $listing->lastSyncs();
+    } catch (\Throwable $e) {
+        fn_set_notification('E', __('error'), 'Novoton hotel list unavailable: ' . $e->getMessage());
+    }
+
+    // The thumbnail is the linked product's own main image (already on this
+    // store): one query for the page, no request to Novoton.
+    $productIds = array_values(array_filter(array_map(static fn (array $row): int => TypeCoerce::toInt($row['product_id']), $rows)));
+    $pairs = $productIds !== [] ? fn_get_image_pairs($productIds, 'product', 'M', true, true, TypeCoerce::toString(DESCR_SL)) : [];
+    foreach ($rows as $i => $row) {
+        $pair = is_array($pairs) ? ($pairs[TypeCoerce::toInt($row['product_id'])] ?? []) : [];
+        // By product id: the pair itself, or a list holding it.
+        if (is_array($pair) && !isset($pair['pair_id']) && $pair !== []) {
+            $pair = reset($pair);
+        }
+        $rows[$i]['main_pair'] = is_array($pair) ? $pair : [];
+    }
+
+    // The API error panel: the last answer Novoton did send, per failed hotel.
+    $errorIds = array_values(array_map(
+        static fn (array $row): string => TypeCoerce::toString($row['id']),
+        array_filter($rows, static fn (array $row): bool => $row['status'] === 'error'),
+    ));
+    $answers = $errorIds !== [] ? $listing->lastAnswers($errorIds) : [];
+    foreach ($rows as $i => $row) {
+        $hotelId = TypeCoerce::toString($row['id']);
+        $triedRaw = TypeCoerce::toString($row['tried_raw']);
+        $rows[$i]['answer'] = $row['status'] === 'error' ? HotelListView::answerExcerpt($answers[$hotelId] ?? '') : '';
+        // When an automatic retry is due: a day after the failed request (ChangedHotelDetector).
+        $rows[$i]['next_try'] = $row['status'] === 'error' && $triedRaw !== ''
+            ? HotelListView::when(date('Y-m-d H:i:s', (int) strtotime($triedRaw) + \Tygh\Addons\NovotonHolidays\Helpers\ChangedHotelDetector::RETRY_AFTER))
+            : '';
+    }
+
+    /** @var \Smarty $nvtView */
+    $nvtView = Tygh::$app['view'];
+    $nvtView->assign('novoton_hotels', $rows);
+    $nvtView->assign('search', $search);
+    $nvtView->assign('novoton_hotel_counts', $counts);
+    $nvtView->assign('novoton_hotel_total', array_sum($counts));
+    $nvtView->assign('novoton_hotel_countries', $countries);
+    $nvtView->assign('novoton_hotel_statuses', HotelListingRepository::STATUSES);
+    $nvtView->assign('novoton_hotel_ages', HotelListingRepository::SYNC_AGES);
+    $nvtView->assign('novoton_hotels_query', HotelListView::query($search));
+    $nvtView->assign('novoton_hotels_back', HotelListView::query($search, true));
+    $nvtView->assign('novoton_last_hotel_list', HotelListView::when($lastSyncs['hotel_list']));
+    $nvtView->assign('novoton_last_hotelinfo', HotelListView::when($lastSyncs['hotelinfo']));
+    $nvtView->assign('novoton_search_filters', HotelSearchFilters::build(
+        $search,
+        $countries,
+        static fn (string $key, array $params = []): string => TypeCoerce::toString(__($key, $params)),
+    ));
+    $nvtView->assign('novoton_hotels_count', TypeCoerce::toInt($search['total_items'] ?? 0));
+    // The status pills keep every other filter and set only the status.
+    $nvtView->assign('novoton_hotels_query_status', HotelListView::query(['sync_status' => ''] + $search));
 }

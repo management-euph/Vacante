@@ -1057,4 +1057,309 @@ return [
         'en' => 'Thank you, and have a lovely stay!',
         'ro' => 'Îți mulțumim și îți dorim un sejur minunat!',
     ],
+    // Novoton → Hotels: the sync monitor page (novoton_hotels.manage).
+    'novoton_holidays.hotels_title' => [
+        'en' => 'Hotels',
+        'ro' => 'Hoteluri',
+    ],
+    'novoton_holidays.hotels_page_title' => [
+        'en' => 'Novoton — Hotels',
+        'ro' => 'Novoton — Hoteluri',
+    ],
+    'novoton_holidays.hotels_intro' => [
+        'en' => 'Every hotel Novoton lists, with when its details were last synced and its CS-Cart product. Hotel data is not edited here: the syncs write it. You can queue hotels for a re-sync and enable or disable their products.',
+        'ro' => 'Fiecare hotel listat de Novoton, cu data ultimei sincronizări a detaliilor și produsul său CS-Cart. Datele hotelului nu se editează aici: le scriu sincronizările. Puteți pune hoteluri în așteptare pentru resincronizare și activa sau dezactiva produsele lor.',
+    ],
+    'novoton_holidays.hotels_summary' => [
+        'en' => 'Summary',
+        'ro' => 'Sumar',
+    ],
+    'novoton_holidays.hotels_total' => [
+        'en' => 'Hotels',
+        'ro' => 'Hoteluri',
+    ],
+    'novoton_holidays.hotels_last_list' => [
+        'en' => 'Last hotel list sync',
+        'ro' => 'Ultima sincronizare a listei de hoteluri',
+    ],
+    'novoton_holidays.hotels_last_info' => [
+        'en' => 'Last hotel details sync',
+        'ro' => 'Ultima sincronizare a detaliilor de hotel',
+    ],
+    'novoton_holidays.hotels_search_placeholder' => [
+        'en' => 'Hotel name or Novoton ID',
+        'ro' => 'Numele hotelului sau ID-ul Novoton',
+    ],
+    'novoton_holidays.hotels_city_or_region' => [
+        'en' => 'City or region',
+        'ro' => 'Oraș sau regiune',
+    ],
+    'novoton_holidays.hotels_not_synced_in' => [
+        'en' => 'Not synced in the last',
+        'ro' => 'Nesincronizat în ultimele',
+    ],
+    'novoton_holidays.hotels_any_time' => [
+        'en' => 'Any time',
+        'ro' => 'Oricând',
+    ],
+    'novoton_holidays.hotels_n_days' => [
+        'en' => '[n] days',
+        'ro' => '[n] zile',
+    ],
+    'novoton_holidays.hotels_col_hotel' => [
+        'en' => 'Hotel',
+        'ro' => 'Hotel',
+    ],
+    'novoton_holidays.hotels_col_destination' => [
+        'en' => 'Destination',
+        'ro' => 'Destinație',
+    ],
+    'novoton_holidays.hotels_col_stars' => [
+        'en' => 'Stars',
+        'ro' => 'Stele',
+    ],
+    'novoton_holidays.hotels_col_synced' => [
+        'en' => 'Last sync',
+        'ro' => 'Ultima sincronizare',
+    ],
+    'novoton_holidays.hotels_col_status' => [
+        'en' => 'Sync status',
+        'ro' => 'Stare sincronizare',
+    ],
+    'novoton_holidays.hotels_status_active' => [
+        'en' => 'Active',
+        'ro' => 'Activ',
+    ],
+    'novoton_holidays.hotels_status_pending' => [
+        'en' => 'Waiting for sync',
+        'ro' => 'În așteptarea sincronizării',
+    ],
+    'novoton_holidays.hotels_status_error' => [
+        'en' => 'API error',
+        'ro' => 'Eroare API',
+    ],
+    'novoton_holidays.hotels_status_unmapped' => [
+        'en' => 'Missing mapping',
+        'ro' => 'Fără produs',
+    ],
+    'novoton_holidays.hotels_status_active_hint' => [
+        'en' => 'Its details were synced and it has a CS-Cart product.',
+        'ro' => 'Detaliile au fost sincronizate și are un produs CS-Cart.',
+    ],
+    'novoton_holidays.hotels_status_pending_hint' => [
+        'en' => 'Its details were never fetched, or it is queued for a re-sync: the next hotel details run fetches it.',
+        'ro' => 'Detaliile nu au fost preluate niciodată sau este în așteptare pentru resincronizare: următoarea rulare a detaliilor de hotel îl preia.',
+    ],
+    'novoton_holidays.hotels_status_error_hint' => [
+        'en' => 'The last request for its details got no answer from Novoton. It is asked again within a day.',
+        'ro' => 'Ultima cerere pentru detalii nu a primit răspuns de la Novoton. Se cere din nou în cel mult o zi.',
+    ],
+    'novoton_holidays.hotels_status_unmapped_hint' => [
+        'en' => 'It has no CS-Cart product: none was created for it, or the product was deleted.',
+        'ro' => 'Nu are produs CS-Cart: nu a fost creat sau produsul a fost șters.',
+    ],
+    'novoton_holidays.hotels_days_ago' => [
+        'en' => '[n] days ago',
+        'ro' => 'acum [n] zile',
+    ],
+    'novoton_holidays.hotels_never_synced' => [
+        'en' => 'Never synced',
+        'ro' => 'Nesincronizat niciodată',
+    ],
+    'novoton_holidays.hotels_tried' => [
+        'en' => 'No answer on',
+        'ro' => 'Fără răspuns la',
+    ],
+    'novoton_holidays.hotels_queued' => [
+        'en' => 'Queued for re-sync',
+        'ro' => 'În așteptare pentru resincronizare',
+    ],
+    'novoton_holidays.hotels_product_deleted' => [
+        'en' => 'Product deleted',
+        'ro' => 'Produs șters',
+    ],
+    'novoton_holidays.hotels_product_disabled' => [
+        'en' => 'Product disabled',
+        'ro' => 'Produs dezactivat',
+    ],
+    'novoton_holidays.hotels_product_hidden' => [
+        'en' => 'Product hidden',
+        'ro' => 'Produs ascuns',
+    ],
+    'novoton_holidays.hotels_with_selected' => [
+        'en' => 'With selected',
+        'ro' => 'Cu cele selectate',
+    ],
+    'novoton_holidays.hotels_select_page' => [
+        'en' => 'Select this page',
+        'ro' => 'Selectează această pagină',
+    ],
+    'novoton_holidays.hotels_resync' => [
+        'en' => 'Force re-sync',
+        'ro' => 'Forțează resincronizarea',
+    ],
+    'novoton_holidays.hotels_resync_hint' => [
+        'en' => 'A re-sync is queued: the next hotel details run fetches the hotel from Novoton.',
+        'ro' => 'Resincronizarea se pune în așteptare: următoarea rulare a detaliilor de hotel preia hotelul de la Novoton.',
+    ],
+    'novoton_holidays.hotels_enable_products' => [
+        'en' => 'Enable products',
+        'ro' => 'Activează produsele',
+    ],
+    'novoton_holidays.hotels_disable_products' => [
+        'en' => 'Disable products',
+        'ro' => 'Dezactivează produsele',
+    ],
+    'novoton_holidays.hotels_open_product' => [
+        'en' => 'Open the CS-Cart product',
+        'ro' => 'Deschide produsul CS-Cart',
+    ],
+    'novoton_holidays.hotels_confirm_resync' => [
+        'en' => 'Queue the selected hotels for a re-sync?',
+        'ro' => 'Puneți hotelurile selectate în așteptare pentru resincronizare?',
+    ],
+    'novoton_holidays.hotels_confirm_enable' => [
+        'en' => 'Enable the products of the selected hotels?',
+        'ro' => 'Activați produsele hotelurilor selectate?',
+    ],
+    'novoton_holidays.hotels_confirm_disable' => [
+        'en' => 'Disable the products of the selected hotels?',
+        'ro' => 'Dezactivați produsele hotelurilor selectate?',
+    ],
+    'novoton_holidays.hotels_resync_queued' => [
+        'en' => '[n] hotels queued for re-sync. The next hotel details run fetches them.',
+        'ro' => '[n] hoteluri puse în așteptare pentru resincronizare. Următoarea rulare a detaliilor de hotel le preia.',
+    ],
+    'novoton_holidays.hotels_none_selected' => [
+        'en' => 'No hotel was selected.',
+        'ro' => 'Niciun hotel selectat.',
+    ],
+    'novoton_holidays.hotels_products_enabled' => [
+        'en' => '[n] products enabled.',
+        'ro' => '[n] produse activate.',
+    ],
+    'novoton_holidays.hotels_products_disabled' => [
+        'en' => '[n] products disabled.',
+        'ro' => '[n] produse dezactivate.',
+    ],
+    'novoton_holidays.hotels_no_products_selected' => [
+        'en' => 'None of the selected hotels has a product.',
+        'ro' => 'Niciunul dintre hotelurile selectate nu are produs.',
+    ],
+    'novoton_holidays.hotels_n_stars' => [
+        'en' => '[n] stars',
+        'ro' => '[n] stele',
+    ],
+    'novoton_holidays.hotels_no_stars' => [
+        'en' => 'No stars (Apart, Villa…)',
+        'ro' => 'Fără stele (Apart, Vilă…)',
+    ],
+    'novoton_holidays.hotels_property_type' => [
+        'en' => 'Property type',
+        'ro' => 'Tip proprietate',
+    ],
+    'novoton_holidays.hotels_col_product' => [
+        'en' => 'Product',
+        'ro' => 'Produs',
+    ],
+    'novoton_holidays.hotels_product_with' => [
+        'en' => 'Has a product',
+        'ro' => 'Are produs',
+    ],
+    'novoton_holidays.hotels_product_without' => [
+        'en' => 'No product',
+        'ro' => 'Fără produs',
+    ],
+    'novoton_holidays.hotels_type_hotel' => [
+        'en' => 'Hotel',
+        'ro' => 'Hotel',
+    ],
+    'novoton_holidays.hotels_type_apartment' => [
+        'en' => 'Apartment',
+        'ro' => 'Apartament',
+    ],
+    'novoton_holidays.hotels_type_villa' => [
+        'en' => 'Villa',
+        'ro' => 'Vilă',
+    ],
+    'novoton_holidays.hotels_type_resort' => [
+        'en' => 'Resort',
+        'ro' => 'Resort',
+    ],
+    'novoton_holidays.hotels_type_guest_house' => [
+        'en' => 'Guest house',
+        'ro' => 'Pensiune',
+    ],
+    'novoton_holidays.hotels_type_boarding_house' => [
+        'en' => 'Boarding house',
+        'ro' => 'Casă de oaspeți',
+    ],
+    'novoton_holidays.hotels_type_chalet' => [
+        'en' => 'Chalet',
+        'ro' => 'Cabană',
+    ],
+    'novoton_holidays.hotels_type_hostel' => [
+        'en' => 'Hostel',
+        'ro' => 'Hostel',
+    ],
+    'novoton_holidays.hotels_type_motel' => [
+        'en' => 'Motel',
+        'ro' => 'Motel',
+    ],
+    'novoton_holidays.hotels_type_cabin' => [
+        'en' => 'Cabin',
+        'ro' => 'Căsuță',
+    ],
+    'novoton_holidays.hotels_confirm_disable_n' => [
+        'en' => 'Disable the products of [n] selected hotels? [on_sale] of them are on sale now and disappear from the storefront: customers can no longer find or book them. Bookings already made are not affected.',
+        'ro' => 'Dezactivați produsele celor [n] hoteluri selectate? [on_sale] dintre ele sunt acum la vânzare și dispar din magazin: clienții nu le mai pot găsi sau rezerva. Rezervările deja făcute nu sunt afectate.',
+    ],
+    'novoton_holidays.hotels_confirm_disable_one' => [
+        'en' => 'Disable the product of [hotel]? It disappears from the storefront: customers can no longer find or book it.',
+        'ro' => 'Dezactivați produsul hotelului [hotel]? Dispare din magazin: clienții nu îl mai pot găsi sau rezerva.',
+    ],
+    'novoton_holidays.hotels_disable_product' => [
+        'en' => 'Disable product',
+        'ro' => 'Dezactivează produsul',
+    ],
+    'novoton_holidays.hotels_enable_product' => [
+        'en' => 'Enable product',
+        'ro' => 'Activează produsul',
+    ],
+    'novoton_holidays.hotels_queue_retry' => [
+        'en' => 'Queue a retry',
+        'ro' => 'Pune în așteptare o reîncercare',
+    ],
+    'novoton_holidays.hotels_err_last_request' => [
+        'en' => 'Last request',
+        'ro' => 'Ultima cerere',
+    ],
+    'novoton_holidays.hotels_err_no_answer' => [
+        'en' => 'no answer',
+        'ro' => 'fără răspuns',
+    ],
+    'novoton_holidays.hotels_err_last_success' => [
+        'en' => 'Last successful sync',
+        'ro' => 'Ultima sincronizare reușită',
+    ],
+    'novoton_holidays.hotels_err_next_try' => [
+        'en' => 'Next automatic try',
+        'ro' => 'Următoarea încercare automată',
+    ],
+    'novoton_holidays.hotels_err_no_answer_note' => [
+        'en' => 'Novoton sent no answer to the last request, so there is no response to show for it. Below is the last answer it did send.',
+        'ro' => 'Novoton nu a răspuns la ultima cerere, deci nu există un răspuns de afișat. Mai jos este ultimul răspuns trimis.',
+    ],
+    'novoton_holidays.hotels_err_last_answer' => [
+        'en' => 'Last stored answer',
+        'ro' => 'Ultimul răspuns salvat',
+    ],
+    'novoton_holidays.hotels_sync_tip' => [
+        'en' => 'Hotel list: last synced [list], runs every 3 days at 01:30. Hotel details: last synced [info], runs as often as the server cron calls it (suggested every 5 minutes).',
+        'ro' => 'Lista de hoteluri: ultima sincronizare [list], rulează la 3 zile la 01:30. Detaliile hotelurilor: ultima sincronizare [info], rulează cât de des o apelează cronul serverului (sugerat la 5 minute).',
+    ],
+    'novoton_holidays.hotels_run_details_sync' => [
+        'en' => 'Run details sync',
+        'ro' => 'Rulează sincronizarea detaliilor',
+    ],
 ];

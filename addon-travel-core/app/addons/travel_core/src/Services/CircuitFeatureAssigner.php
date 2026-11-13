@@ -49,11 +49,33 @@ final class CircuitFeatureAssigner
     {
     }
 
+    /** @var array<string, string> field => what became of it, for the last assign() (REPORT_* values) */
+    private array $report = [];
+
+    public const string REPORT_WRITTEN = 'written';
+    public const string REPORT_NO_DATA = 'no data stored for the circuit (run a full circuits sync)';
+    public const string REPORT_NOT_LINKED = 'value not linked';
+    public const string REPORT_STYLE = 'feature style cannot hold values';
+    public const string REPORT_NO_MONTHS = 'no departure on sale in a month you linked';
+
+    /**
+     * What became of each MAPPED fact in the last assign(): REPORT_WRITTEN,
+     * or why nothing was written. A fact with no feature chosen is not
+     * listed: it is not a problem.
+     *
+     * @return array<string, string> field => REPORT_*
+     */
+    public function report(): array
+    {
+        return $this->report;
+    }
+
     /**
      * @return int how many features were written for the product
      */
     public function assign(int $productId, CircuitFeatureFacts $facts): int
     {
+        $this->report = [];
         $config = $this->config ??= CircuitFeatureConfig::load();
         if ($productId <= 0 || CircuitFeatureConfig::isEmpty($config)) {
             return 0;
@@ -61,26 +83,71 @@ final class CircuitFeatureAssigner
         $features = $config['features'];
         $written = 0;
 
-        $transportVariant = $config['values']['transport'][$facts->transport] ?? 0;
-        if ($features['transport'] > 0 && $transportVariant > 0) {
-            $written += $this->setVariants($productId, $features['transport'], [$transportVariant]);
-        }
-
-        if ($features['duration'] > 0 && $facts->nights > 0) {
-            $written += $this->setDuration($productId, $features['duration'], $facts->nights);
-        }
-
-        foreach (['countries' => $facts->countries, 'departure_city' => $facts->departureCities, 'tags' => $facts->tags, 'included' => $facts->included, 'not_included' => $facts->notIncluded] as $field => $names) {
-            if ($features[$field] > 0 && $names !== []) {
-                $written += $this->setVariants($productId, $features[$field], $this->variantIds($features[$field], $names));
+        if ($features['transport'] > 0) {
+            $transportVariant = $config['values']['transport'][$facts->transport] ?? 0;
+            if ($facts->transport === '') {
+                $this->report['transport'] = self::REPORT_NO_DATA;
+            } elseif ($transportVariant <= 0) {
+                $this->report['transport'] = self::REPORT_NOT_LINKED;
+            } else {
+                $written += $this->note('transport', $this->setVariants($productId, $features['transport'], [$transportVariant]));
             }
         }
 
-        if ($features['month'] > 0 && array_filter($config['values']['month']) !== []) {
-            $written += $this->setVariants($productId, $features['month'], self::monthVariants($facts->months, $config['values']['month']), true);
+        if ($features['duration'] > 0) {
+            if ($facts->nights <= 0) {
+                $this->report['duration'] = self::REPORT_NO_DATA;
+            } else {
+                $written += $this->note('duration', $this->setDuration($productId, $features['duration'], $facts->nights));
+            }
+        }
+
+        foreach (['countries' => $facts->countries, 'departure_city' => $facts->departureCities, 'tags' => $facts->tags, 'included' => $facts->included, 'not_included' => $facts->notIncluded] as $field => $names) {
+            if ($features[$field] <= 0) {
+                continue;
+            }
+            if ($names === []) {
+                $this->report[$field] = self::REPORT_NO_DATA;
+            } elseif (!$this->holdsValues($features[$field])) {
+                // Checked before the values are made: no stray values on a feature that cannot hold them.
+                $this->report[$field] = self::REPORT_STYLE;
+            } else {
+                $written += $this->note($field, $this->setVariants($productId, $features[$field], $this->variantIds($features[$field], $names)));
+            }
+        }
+
+        if ($features['month'] > 0) {
+            if (array_filter($config['values']['month']) === []) {
+                $this->report['month'] = self::REPORT_NOT_LINKED;
+            } elseif (!$this->holdsValues($features['month'])) {
+                $this->report['month'] = self::REPORT_STYLE;
+            } else {
+                $variants = self::monthVariants($facts->months, $config['values']['month']);
+                if ($variants === []) {
+                    // None on sale, or none in a linked month: the product keeps no month.
+                    $this->setVariants($productId, $features['month'], [], true);
+                    $this->report['month'] = self::REPORT_NO_MONTHS;
+                } else {
+                    $written += $this->note('month', $this->setVariants($productId, $features['month'], $variants, true));
+                }
+            }
         }
 
         return $written;
+    }
+
+    /** Records REPORT_WRITTEN (or REPORT_STYLE when nothing could be written) for a field; returns $written. */
+    private function note(string $field, int $written): int
+    {
+        $this->report[$field] = $written > 0 ? self::REPORT_WRITTEN : self::REPORT_STYLE;
+
+        return $written;
+    }
+
+    /** Whether the feature has a list of values (S, N, E, M). */
+    private function holdsValues(int $featureId): bool
+    {
+        return in_array($this->type($featureId), self::VARIANT_TYPES, true);
     }
 
     /**

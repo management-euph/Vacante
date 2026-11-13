@@ -159,9 +159,13 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
         // change as departures pass, so every run writes them again.
         if ($bookable !== null) {
             (new CircuitRepository())->saveDepartureFacts(array_intersect_key($rates->facts(), array_flip($bookable)));
-            $withFeatures = (new CircuitFeatures())->applyAll();
+            $features = new CircuitFeatures();
+            $withFeatures = $features->applyAll();
             if ($withFeatures > 0) {
                 $this->output("Features written for {$withFeatures} circuit products.");
+            }
+            foreach ($features->summary() as $line) {
+                $this->output('Features not written: ' . $line);
             }
         }
 
