@@ -34,6 +34,30 @@ class CircuitRepository
         return $val === '' ? null : $val;
     }
 
+    private static bool $columnsChecked = false;
+
+    /**
+     * Adds departure_months when the table lacks it. The schema self-heal
+     * (SchemaMigrator, once per deployed version, and stamped even when it
+     * failed) is not something this code may count on: a store where it did
+     * not run died with "Unknown column 'departure_months'". Checked once per
+     * request; a no-op once the column is there.
+     */
+    public function ensureColumns(): void
+    {
+        if (self::$columnsChecked) {
+            return;
+        }
+        self::$columnsChecked = true;
+        $have = db_get_row("SHOW COLUMNS FROM ?:sphinx_circuits LIKE 'departure_months'");
+        if (empty($have)) {
+            db_query(
+                "ALTER TABLE ?:sphinx_circuits ADD COLUMN `departure_months` VARCHAR(255) DEFAULT NULL"
+                . " COMMENT 'Months (Y-m, JSON list) with a departure still priced (circuits/rates)' AFTER `departure_names`",
+            );
+        }
+    }
+
     /**
      * @param array<string, mixed> $data
      */
@@ -72,6 +96,7 @@ class CircuitRepository
      */
     public function saveDepartureFacts(array $facts): void
     {
+        $this->ensureColumns();
         foreach ($facts as $circuitId => $fact) {
             $this->update((int) $circuitId, [
                 'departure_ids' => $fact['departures'] !== [] ? json_encode(array_keys($fact['departures'])) : null,
@@ -89,6 +114,7 @@ class CircuitRepository
      */
     public function findLinkedForFeatures(): array
     {
+        $this->ensureColumns();
         return TypeCoerce::toRowList(db_get_array(
             "SELECT circuit_id, product_id, transport_type, duration_nights, destination_ids,
                     departure_names, departure_months, tags_json
@@ -105,6 +131,7 @@ class CircuitRepository
      */
     public function findForFeatures(int $circuitId): array
     {
+        $this->ensureColumns();
         return TypeCoerce::toStringMap(db_get_row(
             'SELECT circuit_id, product_id, transport_type, duration_nights, destination_ids,
                     departure_names, departure_months, tags_json
@@ -133,6 +160,30 @@ class CircuitRepository
              WHERE d.destination_id IN (?n) ORDER BY c.name",
             $destinationIds,
         )))));
+    }
+
+    /**
+     * The CS-Cart product of each of these circuits that has one.
+     *
+     * @param list<int> $circuitIds
+     *
+     * @return array<int, int> circuit_id => product_id
+     */
+    public function productIds(array $circuitIds): array
+    {
+        if ($circuitIds === []) {
+            return [];
+        }
+        $ids = [];
+        foreach ((array) db_get_hash_single_array(
+            'SELECT circuit_id, product_id FROM ?:sphinx_circuits WHERE circuit_id IN (?n) AND product_id > 0',
+            ['circuit_id', 'product_id'],
+            $circuitIds,
+        ) as $circuitId => $productId) {
+            $ids[(int) $circuitId] = TypeCoerce::toInt($productId);
+        }
+
+        return $ids;
     }
 
     /** Total number of stored circuits (for the grid's freshness line). */
