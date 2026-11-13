@@ -102,7 +102,13 @@
 
 {* $sort_url_base is built in the controller with proper URL encoding *}
 
-<form action="{"sphinx_holidays.bulk_update_hotels"|fn_url}" method="post" name="sphinx_bulk_form" id="sphinx_bulk_form">
+{* No dispatch in the action, exactly as every CS-Cart grid posts
+   (views/products/manage.tpl, views/orders/manage.tpl,
+   views/countries/manage.tpl all use action="{""|fn_url}"). A dispatch
+   in the query string wins over the dispatch[...] the clicked action
+   puts in the body, so naming one here sent every action — Delete
+   included — to that one handler. *}
+<form action="{""|fn_url}" method="post" name="sphinx_bulk_form" id="sphinx_bulk_form">
 <input type="hidden" name="security_hash" value="{$security_hash}" />
 <input type="hidden" name="bulk_status" value="active" id="sphinx_bulk_action" />
 
@@ -207,6 +213,17 @@
 
 <div class="longtap-selection">
 <table class="table table-middle table-striped sphinx-hotels-table" data-ca-main-content>
+    {* The th-text-overflow wrappers below are what let
+       bulk-edit__thead--collapse actually collapse this header when the bar
+       appears, as views/products/manage.tpl does: the core's rule is
+       `th * { height: 0 }`, which does nothing to bare inline content, so
+       every header cell wraps its text the way the core's do.
+
+       The core's companion class thead--overflow-hidden is deliberately NOT
+       used here: it sets max-width:0 on every th, which on this grid's
+       pixel widths squeezes the columns until the labels ellipsise
+       ("Clasi…", "Reg…"). Measured both ways — it changes no column width,
+       only truncates — so the header keeps wrapping instead. *}
     <thead data-ca-bulkedit-default-object="true"
            data-ca-bulkedit-component="defaultObject"
            data-target=".sphinx-hotels-table">
@@ -222,29 +239,33 @@
                        data-ca-bulkedit-enable="[data-ca-bulkedit-expanded-object=true]" />
             </th>
 
-            {* ID — sortable *}
-            <th width="100">
-                <a href="{"`$sort_url_base`&sort_by=hotel_id&sort_order=`$search.sort_order_toggle`"|fn_url}">
-                    ID
-                    {if $search.sort_by == 'hotel_id'}
-                        {if $search.sort_order == 'asc'}&#9650;{else}&#9660;{/if}
-                    {/if}
-                </a>
-            </th>
+            {* The thumbnail's own column, titleless, as the Products list
+               has it (views/products/manage.tpl). *}
+            <th width="50" class="table__column-without-title"></th>
 
-            {* Name — sortable *}
-            <th>
-                <a href="{"`$sort_url_base`&sort_by=name&sort_order=`$search.sort_order_toggle`"|fn_url}">
-                    {__("name")}
-                    {if $search.sort_by == 'name'}
-                        {if $search.sort_order == 'asc'}&#9650;{else}&#9660;{/if}
-                    {/if}
-                </a>
+            {* Name / ID in one column, both sortable — the "Name / CODE"
+               pairing of CS-Cart's Products list. The wrapper draws the "/"
+               between them (.th-text-overflow-wrapper in tables.less). *}
+            <th width="30%">
+                <div class="th-text-overflow-wrapper">
+                    <a class="th-text-overflow" href="{"`$sort_url_base`&sort_by=name&sort_order=`$search.sort_order_toggle`"|fn_url}">
+                        {__("name")}
+                        {if $search.sort_by == 'name'}
+                            {if $search.sort_order == 'asc'}&#9650;{else}&#9660;{/if}
+                        {/if}
+                    </a>
+                    <a class="th-text-overflow" href="{"`$sort_url_base`&sort_by=hotel_id&sort_order=`$search.sort_order_toggle`"|fn_url}">
+                        ID
+                        {if $search.sort_by == 'hotel_id'}
+                            {if $search.sort_order == 'asc'}&#9650;{else}&#9660;{/if}
+                        {/if}
+                    </a>
+                </div>
             </th>
 
             {* Classification — sortable *}
             <th width="100">
-                <a href="{"`$sort_url_base`&sort_by=classification&sort_order=`$search.sort_order_toggle`"|fn_url}">
+                <a class="th-text-overflow" href="{"`$sort_url_base`&sort_by=classification&sort_order=`$search.sort_order_toggle`"|fn_url}">
                     {__("sphinx_holidays.classification")}
                     {if $search.sort_by == 'classification'}
                         {if $search.sort_order == 'asc'}&#9650;{else}&#9660;{/if}
@@ -254,7 +275,7 @@
 
             {* Country — sortable *}
             <th width="80">
-                <a href="{"`$sort_url_base`&sort_by=country_code&sort_order=`$search.sort_order_toggle`"|fn_url}">
+                <a class="th-text-overflow" href="{"`$sort_url_base`&sort_by=country_code&sort_order=`$search.sort_order_toggle`"|fn_url}">
                     {__("sphinx_holidays.country_code")}
                     {if $search.sort_by == 'country_code'}
                         {if $search.sort_order == 'asc'}&#9650;{else}&#9660;{/if}
@@ -265,7 +286,7 @@
             {* City — the RESOLVED city (what the product's City feature uses),
                not the raw API address city; sortable *}
             <th width="140">
-                <a href="{"`$sort_url_base`&sort_by=destination_name&sort_order=`$search.sort_order_toggle`"|fn_url}">
+                <a class="th-text-overflow" href="{"`$sort_url_base`&sort_by=destination_name&sort_order=`$search.sort_order_toggle`"|fn_url}">
                     {__("sphinx_holidays.city")}
                     {if $search.sort_by == 'destination_name'}
                         {if $search.sort_order == 'asc'}&#9650;{else}&#9660;{/if}
@@ -275,7 +296,7 @@
 
             {* Region — the RESOLVED region (product's Region feature), sortable *}
             <th width="140">
-                <a href="{"`$sort_url_base`&sort_by=region_name&sort_order=`$search.sort_order_toggle`"|fn_url}">
+                <a class="th-text-overflow" href="{"`$sort_url_base`&sort_by=region_name&sort_order=`$search.sort_order_toggle`"|fn_url}">
                     {__("sphinx_holidays.region")}
                     {if $search.sort_by == 'region_name'}
                         {if $search.sort_order == 'asc'}&#9650;{else}&#9660;{/if}
@@ -285,7 +306,7 @@
 
             {* Country — from the hotel API address, sortable *}
             <th width="120">
-                <a href="{"`$sort_url_base`&sort_by=address_country&sort_order=`$search.sort_order_toggle`"|fn_url}">
+                <a class="th-text-overflow" href="{"`$sort_url_base`&sort_by=address_country&sort_order=`$search.sort_order_toggle`"|fn_url}">
                     {__("sphinx_holidays.country")}
                     {if $search.sort_by == 'address_country'}
                         {if $search.sort_order == 'asc'}&#9650;{else}&#9660;{/if}
@@ -295,7 +316,7 @@
 
             {* Type — sortable *}
             <th width="90">
-                <a href="{"`$sort_url_base`&sort_by=property_type&sort_order=`$search.sort_order_toggle`"|fn_url}">
+                <a class="th-text-overflow" href="{"`$sort_url_base`&sort_by=property_type&sort_order=`$search.sort_order_toggle`"|fn_url}">
                     {__("sphinx_holidays.property_type")}
                     {if $search.sort_by == 'property_type'}
                         {if $search.sort_order == 'asc'}&#9650;{else}&#9660;{/if}
@@ -304,11 +325,11 @@
             </th>
 
             {* Product link *}
-            <th width="80">{__("sphinx_holidays.product")}</th>
+            <th width="80"><span class="th-text-overflow">{__("sphinx_holidays.product")}</span></th>
 
             {* Status — sortable *}
             <th width="80">
-                <a href="{"`$sort_url_base`&sort_by=sync_status&sort_order=`$search.sort_order_toggle`"|fn_url}">
+                <a class="th-text-overflow" href="{"`$sort_url_base`&sort_by=sync_status&sort_order=`$search.sort_order_toggle`"|fn_url}">
                     {__("sphinx_holidays.sync_status")}
                     {if $search.sort_by == 'sync_status'}
                         {if $search.sort_order == 'asc'}&#9650;{else}&#9660;{/if}
@@ -318,7 +339,7 @@
 
             {* Last Synced — sortable *}
             <th width="140">
-                <a href="{"`$sort_url_base`&sort_by=last_synced_at&sort_order=`$search.sort_order_toggle`"|fn_url}">
+                <a class="th-text-overflow" href="{"`$sort_url_base`&sort_by=last_synced_at&sort_order=`$search.sort_order_toggle`"|fn_url}">
                     {__("sphinx_holidays.last_synced")}
                     {if $search.sort_by == 'last_synced_at'}
                         {if $search.sort_order == 'asc'}&#9650;{else}&#9660;{/if}
@@ -350,22 +371,23 @@
                 <input type="checkbox" name="hotel_ids[]" value="{$hotel.hotel_id|escape:html}" class="cm-item" />
             </td>
 
-            {* Hotel ID *}
-            <td>
-                <code style="font-size: 11px;">{$hotel.hotel_id|escape:html|truncate:18}</code>
+            {* Thumbnail — its own column, so the name gets the full width *}
+            <td style="width:50px;">
+                {if $hotel.image_url}
+                    <img src="{$hotel.image_url|escape:html}" alt="" style="width:40px; height:40px; object-fit:cover; border-radius:3px; display:block;" loading="lazy" />
+                {else}
+                    <div class="no-image" style="width:40px; height:40px; margin:0;">
+                        <span class="cs-icon glyph-image" title="{__("no_image")}"></span>
+                    </div>
+                {/if}
             </td>
 
-            {* Name + thumbnail *}
-            <td>
-                <div style="display:flex; align-items:center; gap:8px;">
-                    {if $hotel.image_url}
-                        <img src="{$hotel.image_url|escape:html}" alt="" style="width:40px; height:40px; object-fit:cover; border-radius:3px; flex-shrink:0;" loading="lazy" />
-                    {else}
-                        <div class="no-image" style="width:40px; height:40px; flex-shrink:0; margin:0;">
-                            <span class="cs-icon glyph-image" title="{__("no_image")}"></span>
-                        </div>
-                    {/if}
-                    <span>{$hotel.name|escape:html}</span>
+            {* Name, with the hotel's ID beneath it — the Products list's
+               name-over-code pairing *}
+            <td class="wrap-word">
+                {$hotel.name|escape:html}
+                <div class="muted" style="margin-top:2px;">
+                    <code style="font-size: 11px;">{$hotel.hotel_id|escape:html|truncate:18}</code>
                 </div>
             </td>
 

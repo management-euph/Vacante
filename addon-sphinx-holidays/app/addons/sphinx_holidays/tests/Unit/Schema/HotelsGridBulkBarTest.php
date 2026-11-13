@@ -118,6 +118,103 @@ final class HotelsGridBulkBarTest extends TestCase
         self::assertStringContainsString('cm-confirm', $tpl, 'delete keeps a confirmation step');
     }
 
+    /**
+     * The bug that made Delete silently run the UPDATE handler: a dispatch in
+     * the form's action URL wins over the dispatch[...] the clicked action
+     * puts in the POST body, so every action went to whatever the action
+     * named. Every CS-Cart grid posts to an empty dispatch for this reason
+     * (views/products/manage.tpl, views/orders/manage.tpl,
+     * views/countries/manage.tpl).
+     */
+    public function testTheBulkFormNamesNoDispatchInItsAction(): void
+    {
+        $tpl = self::template();
+
+        self::assertStringContainsString(
+            '<form action="{""|fn_url}" method="post" name="sphinx_bulk_form"',
+            $tpl,
+            'the bulk form posts to an empty dispatch, as every CS-Cart grid does',
+        );
+        self::assertStringNotContainsString(
+            'action="{"sphinx_holidays.bulk_update_hotels"|fn_url}"',
+            $tpl,
+            'a dispatch in the action beats the clicked action\'s dispatch[...] in the body',
+        );
+    }
+
+    /**
+     * The real header has to vanish under the bar, not peek out from behind
+     * it. The core collapses it with `th * { height: 0 }`
+     * (bulk-edit__thead--collapse, added by bulkedit.js), which does nothing
+     * to bare inline content — so each header cell wraps its text in the
+     * core's inline-block .th-text-overflow, as views/products/manage.tpl
+     * does. Measured in a browser against the core's compiled bulk_edit.css:
+     * the header goes 57px -> 13px and the bar stops overlapping it.
+     */
+    public function testEveryHeaderCellCollapsesUnderTheBar(): void
+    {
+        $tpl = self::template();
+        $head = self::between($tpl, '<thead data-ca-bulkedit-default-object', '</thead>');
+
+        // Every header label is wrapped: 10 sort links + the one plain label
+        // ("Product"). Only two cells carry no label of their own — the
+        // checkbox and the thumbnail — and their contents collapse anyway.
+        self::assertSame(10, substr_count($head, '<a class="th-text-overflow" href='));
+        self::assertSame(1, substr_count($head, '<span class="th-text-overflow">'));
+        self::assertSame(11, substr_count($head, 'class="th-text-overflow"'));
+
+        $cells = substr_count($head, '<th ') + substr_count($head, '<th>');
+        self::assertSame(12, $cells, 'checkbox, thumbnail, name/ID, and nine more');
+
+        // Not the core's companion class: on this grid's pixel widths it
+        // squeezes the columns until the labels ellipsise.
+        self::assertStringNotContainsString('thead--overflow-hidden', $head);
+    }
+
+    private static function between(string $haystack, string $from, string $to): string
+    {
+        $start = strpos($haystack, $from);
+        self::assertIsInt($start, "missing: {$from}");
+        $end = strpos($haystack, $to, $start);
+        self::assertIsInt($end, "missing: {$to}");
+
+        return substr($haystack, $start, $end - $start);
+    }
+
+    /**
+     * The name used to be squeezed next to its thumbnail while the ID had a
+     * column to itself. It is laid out as CS-Cart's Products list now: the
+     * picture in its own titleless column, then one column carrying the name
+     * with its ID beneath, under a "Name / ID" header where both still sort.
+     */
+    public function testNameAndIdShareOneColumnBesideTheThumbnail(): void
+    {
+        $tpl = self::template();
+        $head = self::between($tpl, '<thead data-ca-bulkedit-default-object', '</thead>');
+        $body = self::between($tpl, '<tbody>', '</tbody>');
+
+        // Header: a titleless column for the picture, then both sort links
+        // inside the wrapper that draws the "/" between them.
+        self::assertStringContainsString('<th width="50" class="table__column-without-title"></th>', $head);
+        $nameTh = self::between($head, '<th width="30%">', '</th>');
+        self::assertStringContainsString('sort_by=name', $nameTh);
+        self::assertStringContainsString('sort_by=hotel_id', $nameTh);
+        self::assertSame(1, substr_count($head, '<div class="th-text-overflow-wrapper">'));
+
+        // Body: the picture alone in its cell, the ID under the name.
+        $nameTd = self::between($body, '<td class="wrap-word">', '</td>');
+        self::assertStringContainsString('$hotel.name', $nameTd);
+        self::assertStringContainsString('$hotel.hotel_id', $nameTd);
+        self::assertStringContainsString('muted', $nameTd, 'the ID reads as secondary under the name');
+
+        // The ID no longer has a column of its own.
+        self::assertSame(
+            1,
+            substr_count($body, '$hotel.hotel_id|escape:html|truncate:18'),
+            'the ID is printed once, under the name',
+        );
+    }
+
     public function testOldHandRolledBarIsGone(): void
     {
         $tpl = self::template();
