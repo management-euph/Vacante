@@ -144,74 +144,76 @@
                 }
             </li>
 
+            {* A short list of actions is a plain dropdown menu, as the
+               orders grid's status menu is. Each item posts the form through
+               the core's cm-process-items + cm-submit: the dispatch rides on
+               data-ca-dispatch, so it still arrives when cm-confirm submits
+               the form itself (a <button name="dispatch[…]"> loses its name
+               that way, which is why Delete did nothing). The status goes in
+               the hidden sphinx_bulk_action, set by the item's own click
+               before the core's handler runs. *}
             <li class="btn bulk-edit__btn bulk-edit__btn--status dropleft-mod">
-                <span class="bulk-edit__btn-content bulk-edit-toggle bulk-edit__btn-content--status"
-                      data-toggle=".bulk-edit__content--status">
+                <span class="bulk-edit__btn-content dropdown-toggle" data-toggle="dropdown">
                     {__("status")}
                     <span class="caret mobile-hide"></span>
                 </span>
-                <div class="bulk-edit--reset-dropdown-menu bulk-edit__content bulk-edit__content--status">
-                    <div class="bulk-edit-inner bulk-edit-inner--status">
-                        <div class="bulk-edit-inner__header"><span>{__("status")}</span></div>
-                        <div class="bulk-edit-inner__body">
-                            {* The form posts the ticked hotel_ids[] with the
-                               status in sphinx_bulk_action, as the controller
-                               reads them. *}
-                            <button type="submit" class="btn btn-link bulk-edit__btn-link" name="dispatch[sphinx_holidays.bulk_update_hotels]"
-                                    onclick="document.getElementById('sphinx_bulk_action').value='active';">
-                                {__("sphinx_holidays.bulk_change_to_active")}
-                            </button>
-                            <button type="submit" class="btn btn-link bulk-edit__btn-link" name="dispatch[sphinx_holidays.bulk_update_hotels]"
-                                    onclick="document.getElementById('sphinx_bulk_action').value='inactive';">
-                                {__("sphinx_holidays.bulk_change_to_disabled")}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="bulk-edit--overlay"></div>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="cm-process-items cm-submit"
+                           data-ca-target-form="sphinx_bulk_form"
+                           data-ca-dispatch="dispatch[sphinx_holidays.bulk_update_hotels]"
+                           onclick="document.getElementById('sphinx_bulk_action').value='active';">
+                            {__("sphinx_holidays.bulk_change_to_active")}
+                        </a>
+                    </li>
+                    <li>
+                        <a class="cm-process-items cm-submit"
+                           data-ca-target-form="sphinx_bulk_form"
+                           data-ca-dispatch="dispatch[sphinx_holidays.bulk_update_hotels]"
+                           onclick="document.getElementById('sphinx_bulk_action').value='inactive';">
+                            {__("sphinx_holidays.bulk_change_to_disabled")}
+                        </a>
+                    </li>
+                </ul>
             </li>
 
             <li class="btn bulk-edit__btn bulk-edit__btn--actions dropleft-mod">
-                <span class="bulk-edit__btn-content bulk-edit-toggle bulk-edit__btn-content--actions"
-                      data-toggle=".bulk-edit__content--actions">
+                <span class="bulk-edit__btn-content dropdown-toggle" data-toggle="dropdown">
                     {__("sphinx_holidays.bulk_actions")}
                     <span class="caret mobile-hide"></span>
                 </span>
-                <div class="bulk-edit--reset-dropdown-menu bulk-edit__content bulk-edit__content--actions">
-                    <div class="bulk-edit-inner bulk-edit-inner--actions">
-                        <div class="bulk-edit-inner__header"><span>{__("sphinx_holidays.bulk_actions")}</span></div>
-                        <div class="bulk-edit-inner__body">
-                            <button type="submit" class="btn btn-link bulk-edit__btn-link" name="dispatch[sphinx_holidays.bulk_sync_images]">
-                                {__("sphinx_holidays.bulk_sync_images")}
-                            </button>
-                            <button type="submit" class="btn btn-link bulk-edit__btn-link cm-confirm" name="dispatch[sphinx_holidays.bulk_delete_hotels]"
-                                    data-ca-confirm-text="{__("sphinx_holidays.bulk_delete_confirm")|escape:html}">
-                                {__("sphinx_holidays.bulk_delete")}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="bulk-edit--overlay"></div>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="cm-process-items cm-submit"
+                           data-ca-target-form="sphinx_bulk_form"
+                           data-ca-dispatch="dispatch[sphinx_holidays.bulk_sync_images]">
+                            {__("sphinx_holidays.bulk_sync_images")}
+                        </a>
+                    </li>
+                    <li>
+                        <a class="cm-process-items cm-submit cm-confirm"
+                           data-ca-target-form="sphinx_bulk_form"
+                           data-ca-dispatch="dispatch[sphinx_holidays.bulk_delete_hotels]"
+                           data-ca-confirm-text="{__("sphinx_holidays.bulk_delete_confirm")|escape:html}">
+                            {__("sphinx_holidays.bulk_delete")}
+                        </a>
+                    </li>
+                </ul>
             </li>
         </ul>
     </div>
 
-<div class="table-responsive-wrapper longtap-selection">
-<table width="100%" class="table table-middle table-striped table--relative table-responsive table--show-checkbox sphinx-hotels-table" data-ca-main-content>
-    <thead class="thead--overflow-hidden"
-           data-ca-bulkedit-default-object="true"
+<div class="longtap-selection">
+<table class="table table-middle table-striped sphinx-hotels-table" data-ca-main-content>
+    <thead data-ca-bulkedit-default-object="true"
            data-ca-bulkedit-component="defaultObject"
            data-target=".sphinx-hotels-table">
         <tr>
             {* The header's check-all, and the hidden toggler bulkedit.js
                clicks to raise the bar. *}
-            <th width="30" class="left mobile-hide table__check-items-column table__check-items-column--show-checkbox">
-                {include file="common/check_items.tpl"
-                    show_checkbox=true
-                    meta="table__check-items table__check-items--show-checkbox"
-                    class="check-items--show-checkbox"
-                    elms_container="#sphinx_hotels_cm"
-                }
+            <th width="30">
+                <input type="checkbox" name="check_all" value="Y" class="cm-check-items"
+                       title="{__("check_uncheck_all")}" data-ca-container="#sphinx_hotels_cm" />
                 <input type="checkbox"
                        class="bulkedit-toggler hide"
                        data-ca-bulkedit-disable="[data-ca-bulkedit-default-object=true]"
@@ -434,7 +436,7 @@
         {/foreach}
     </tbody>
 </table>
-</div>{* /table-responsive-wrapper *}
+</div>{* /longtap-selection *}
 </div>{* /#sphinx_hotels_cm *}
 
 {else}

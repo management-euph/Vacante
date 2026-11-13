@@ -46,12 +46,19 @@ final class HotelsGridBulkBarTest extends TestCase
             'data-ca-bulkedit-expanded-object="true"',
             'class="bulk-edit clearfix hidden"',
             'class="btn-group bulk-edit__wrapper"',
+            // The grid keeps its own table classes: the core's
+            // table-responsive turns rows into blocks and
+            // table--show-checkbox restyles a checkbox column this grid
+            // does not build — together they threw the rows out of line.
+            'class="table table-middle table-striped sphinx-hotels-table"',
             // The toggler is hidden and clicked by the longtap driver.
             'class="bulkedit-toggler hide"',
             'bulkedit-disabler',
             'data-ca-longtap-selected-counter="true"',
-            // Check all / check none come from the core's own include.
+            // Check all / check none in the bar come from the core's include.
             'common/check_items.tpl',
+            // The header keeps a plain check-all, scoped to this grid.
+            'data-ca-container="#sphinx_hotels_cm"',
             'data-ca-longtap-action="setCheckBox"',
             'data-ca-longtap-target="input.cm-item"',
             'class="cm-item"',
@@ -82,6 +89,11 @@ final class HotelsGridBulkBarTest extends TestCase
         self::assertStringNotContainsString('<thead class="hidden"', $tpl);
         // The header collapses rather than hiding, so the columns keep their widths.
         self::assertStringContainsString('data-target=".sphinx-hotels-table"', $tpl);
+        // None of the core's own table layout classes: this grid does not
+        // build the markup they expect.
+        foreach (['table-responsive', 'table--show-checkbox', 'table--relative', 'table__check-items'] as $coreClass) {
+            self::assertStringNotContainsString($coreClass, $tpl, "{$coreClass} reshapes rows this grid does not build");
+        }
     }
 
     public function testActionsPostToTheUnchangedHandlers(): void
@@ -95,11 +107,14 @@ final class HotelsGridBulkBarTest extends TestCase
         self::assertStringContainsString('name="bulk_status"', $tpl);
         self::assertSame(
             2,
-            substr_count($tpl, 'name="dispatch[sphinx_holidays.bulk_update_hotels]"'),
+            substr_count($tpl, 'data-ca-dispatch="dispatch[sphinx_holidays.bulk_update_hotels]"'),
             'Activate + Deactivate both post to bulk_update_hotels (bulk_status disambiguates)',
         );
-        self::assertStringContainsString('name="dispatch[sphinx_holidays.bulk_sync_images]"', $tpl);
-        self::assertStringContainsString('name="dispatch[sphinx_holidays.bulk_delete_hotels]"', $tpl);
+        self::assertStringContainsString('data-ca-dispatch="dispatch[sphinx_holidays.bulk_sync_images]"', $tpl);
+        self::assertStringContainsString('data-ca-dispatch="dispatch[sphinx_holidays.bulk_delete_hotels]"', $tpl);
+        // The status still rides in the hidden field the handler reads, set
+        // by the item's own click before the core's submit handler runs.
+        self::assertSame(2, substr_count($tpl, "getElementById('sphinx_bulk_action').value="));
         self::assertStringContainsString('cm-confirm', $tpl, 'delete keeps a confirmation step');
     }
 
@@ -121,11 +136,24 @@ final class HotelsGridBulkBarTest extends TestCase
     {
         $bar = self::expandedBar();
 
-        // Each button is a core bulk-edit button; the two menus are core
-        // dropdowns (bulk-edit-toggle opens them, bulkedit.js line ~293).
+        // Each button is a core bulk-edit button, and a short action list is
+        // a plain dropdown menu, as the orders grid's status menu is — NOT
+        // the core's big .bulk-edit__content panel (the category picker, the
+        // price editor), which rendered a two-item list as a wide white box
+        // over the rows.
         self::assertSame(3, substr_count($bar, 'class="btn bulk-edit__btn'), 'counter + Status + Actions');
-        self::assertSame(2, substr_count($bar, 'bulk-edit-toggle'), 'Status and Actions are dropdowns');
-        self::assertSame(2, substr_count($bar, 'bulk-edit--overlay'), 'each dropdown closes on its overlay');
+        self::assertSame(3, substr_count($bar, 'dropdown-toggle'), 'counter + two menus');
+        self::assertSame(2, substr_count($bar, '<ul class="dropdown-menu">'), 'Status and Actions are plain menus');
+        self::assertStringNotContainsString('bulk-edit__content', $bar, 'the big panel is for pickers, not action lists');
+        self::assertStringNotContainsString('bulk-edit-inner', $bar);
+
+        // Every action posts the form through the core's own mechanism: the
+        // dispatch rides on data-ca-dispatch, so it survives cm-confirm
+        // re-submitting the form (a <button name="dispatch[…]"> does not,
+        // which is why Delete did nothing).
+        self::assertSame(4, substr_count($bar, 'class="cm-process-items cm-submit'), 'two statuses + two actions');
+        self::assertSame(4, substr_count($bar, 'data-ca-target-form="sphinx_bulk_form"'));
+        self::assertStringNotContainsString('<button type="submit"', $bar, 'actions are links, not submit buttons');
         self::assertStringContainsString('bulk-edit__btn--status', $bar);
         self::assertStringContainsString('bulk-edit__btn--actions', $bar);
 
@@ -156,7 +184,8 @@ final class HotelsGridBulkBarTest extends TestCase
 
         $start = strpos($tpl, 'class="bulk-edit clearfix hidden"');
         self::assertIsInt($start);
-        $end = strpos($tpl, '</ul>', $start);
+        // Everything up to the table belongs to the bar.
+        $end = strpos($tpl, '<table', $start);
         self::assertIsInt($end);
 
         return substr($tpl, $start, $end - $start);
