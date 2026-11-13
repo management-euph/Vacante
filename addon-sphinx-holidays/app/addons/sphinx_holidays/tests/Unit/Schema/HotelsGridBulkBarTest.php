@@ -118,6 +118,71 @@ final class HotelsGridBulkBarTest extends TestCase
         self::assertStringContainsString('cm-confirm', $tpl, 'delete keeps a confirmation step');
     }
 
+    /**
+     * The bug that made Delete silently run the UPDATE handler: a dispatch in
+     * the form's action URL wins over the dispatch[...] the clicked action
+     * puts in the POST body, so every action went to whatever the action
+     * named. Every CS-Cart grid posts to an empty dispatch for this reason
+     * (views/products/manage.tpl, views/orders/manage.tpl,
+     * views/countries/manage.tpl).
+     */
+    public function testTheBulkFormNamesNoDispatchInItsAction(): void
+    {
+        $tpl = self::template();
+
+        self::assertStringContainsString(
+            '<form action="{""|fn_url}" method="post" name="sphinx_bulk_form"',
+            $tpl,
+            'the bulk form posts to an empty dispatch, as every CS-Cart grid does',
+        );
+        self::assertStringNotContainsString(
+            'action="{"sphinx_holidays.bulk_update_hotels"|fn_url}"',
+            $tpl,
+            'a dispatch in the action beats the clicked action\'s dispatch[...] in the body',
+        );
+    }
+
+    /**
+     * The real header has to vanish under the bar, not peek out from behind
+     * it. The core collapses it with `th * { height: 0 }`
+     * (bulk-edit__thead--collapse, added by bulkedit.js), which does nothing
+     * to bare inline content — so each header cell wraps its text in the
+     * core's inline-block .th-text-overflow, as views/products/manage.tpl
+     * does. Measured in a browser against the core's compiled bulk_edit.css:
+     * the header goes 57px -> 13px and the bar stops overlapping it.
+     */
+    public function testEveryHeaderCellCollapsesUnderTheBar(): void
+    {
+        $tpl = self::template();
+        $head = self::between($tpl, '<thead data-ca-bulkedit-default-object', '</thead>');
+
+        // One wrapper per header cell that carries text: 10 sort links + the
+        // one plain label. The checkbox cell holds inputs, which collapse on
+        // their own. ("<th " / "<th>" so the <thead> tag is not counted.)
+        $cells = substr_count($head, '<th ') + substr_count($head, '<th>');
+        self::assertSame(
+            $cells - 1,
+            substr_count($head, 'class="th-text-overflow"'),
+            'every header cell but the checkbox one wraps its text so it can collapse',
+        );
+        self::assertSame(10, substr_count($head, '<a class="th-text-overflow" href='));
+        self::assertStringContainsString('<span class="th-text-overflow">', $head);
+
+        // Not the core's companion class: on this grid's pixel widths it
+        // squeezes the columns until the labels ellipsise.
+        self::assertStringNotContainsString('thead--overflow-hidden', $head);
+    }
+
+    private static function between(string $haystack, string $from, string $to): string
+    {
+        $start = strpos($haystack, $from);
+        self::assertIsInt($start, "missing: {$from}");
+        $end = strpos($haystack, $to, $start);
+        self::assertIsInt($end, "missing: {$to}");
+
+        return substr($haystack, $start, $end - $start);
+    }
+
     public function testOldHandRolledBarIsGone(): void
     {
         $tpl = self::template();
