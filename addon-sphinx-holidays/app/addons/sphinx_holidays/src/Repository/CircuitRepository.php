@@ -117,7 +117,7 @@ class CircuitRepository
         $this->ensureColumns();
         return TypeCoerce::toRowList(db_get_array(
             "SELECT circuit_id, product_id, transport_type, duration_nights, destination_ids,
-                    departure_names, departure_months, tags_json
+                    departure_names, departure_months, tags_json, details_json
              FROM ?:sphinx_circuits
              WHERE product_id > 0 AND sync_status = 'active'
              ORDER BY circuit_id",
@@ -134,7 +134,7 @@ class CircuitRepository
         $this->ensureColumns();
         return TypeCoerce::toStringMap(db_get_row(
             'SELECT circuit_id, product_id, transport_type, duration_nights, destination_ids,
-                    departure_names, departure_months, tags_json
+                    departure_names, departure_months, tags_json, details_json
              FROM ?:sphinx_circuits WHERE circuit_id = ?i',
             $circuitId,
         ));

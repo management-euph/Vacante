@@ -76,4 +76,29 @@ final class CircuitFeatureMappingTest extends TestCase
         self::assertSame('7 nopți', CircuitFeatureAssigner::nightsLabel(7, 'ro'));
         self::assertSame('1 noapte', CircuitFeatureAssigner::nightsLabel(1, 'ro'));
     }
+
+    public function testIncludedAndNotIncludedAreCircuitDetailsToMap(): void
+    {
+        self::assertContains('included', CircuitFeatureConfig::FIELDS);
+        self::assertContains('not_included', CircuitFeatureConfig::FIELDS);
+
+        $config = CircuitFeatureConfig::normalize(['features' => ['included' => '41', 'not_included' => '42']]);
+
+        self::assertSame(41, $config['features']['included']);
+        self::assertSame(42, $config['features']['not_included']);
+    }
+
+    public function testAValueNameFitsTheVariantNameColumn(): void
+    {
+        self::assertSame('Mic dejun si cina', CircuitFeatureAssigner::fit("  Mic dejun\n si   cina \t"), 'one line, trimmed');
+        self::assertSame('', CircuitFeatureAssigner::fit('   '));
+
+        $long = str_repeat('ă', 300);
+        $fit = CircuitFeatureAssigner::fit($long);
+
+        self::assertSame(255, mb_strlen($fit), 'cut to 255 characters, not bytes');
+        self::assertStringEndsWith('…', $fit);
+        self::assertNotSame($long, $fit);
+        self::assertSame('x', CircuitFeatureAssigner::fit('x'), 'a short name is left as it is');
+    }
 }

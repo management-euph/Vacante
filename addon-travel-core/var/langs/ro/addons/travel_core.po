@@ -5113,3 +5113,19 @@ msgstr "Decembrie"
 msgctxt "Languages::travel_core.fmc_ungrouped"
 msgid "Ungrouped features"
 msgstr "Caracteristici fără grup"
+
+msgctxt "Languages::travel_core.fmc_field_included"
+msgid "Included in the price"
+msgstr "Inclus în preț"
+
+msgctxt "Languages::travel_core.fmc_field_not_included"
+msgid "Not included in the price"
+msgstr "Neinclus în preț"
+
+msgctxt "Languages::travel_core.fmc_rule_included"
+msgid "Each \"included\" item of the circuit, by its title, as one value of the feature (use a checkbox feature). A missing value is created; a title is cut at 255 letters."
+msgstr "Fiecare element „inclus” al circuitului, după titlu, ca o valoare a caracteristicii (folosiți o caracteristică cu căsuțe). O valoare lipsă este creată; un titlu este tăiat la 255 de litere."
+
+msgctxt "Languages::travel_core.fmc_rule_not_included"
+msgid "Each \"not included\" item of the circuit, by its title, as one value of the feature (use a checkbox feature). A missing value is created; a title is cut at 255 letters."
+msgstr "Fiecare element „neinclus” al circuitului, după titlu, ca o valoare a caracteristicii (folosiți o caracteristică cu căsuțe). O valoare lipsă este creată; un titlu este tăiat la 255 de litere."

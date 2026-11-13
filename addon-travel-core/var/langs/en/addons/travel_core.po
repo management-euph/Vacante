@@ -5113,3 +5113,19 @@ msgstr "December"
 msgctxt "Languages::travel_core.fmc_ungrouped"
 msgid "Ungrouped features"
 msgstr "Ungrouped features"
+
+msgctxt "Languages::travel_core.fmc_field_included"
+msgid "Included in the price"
+msgstr "Included in the price"
+
+msgctxt "Languages::travel_core.fmc_field_not_included"
+msgid "Not included in the price"
+msgstr "Not included in the price"
+
+msgctxt "Languages::travel_core.fmc_rule_included"
+msgid "Each \"included\" item of the circuit, by its title, as one value of the feature (use a checkbox feature). A missing value is created; a title is cut at 255 letters."
+msgstr "Each \"included\" item of the circuit, by its title, as one value of the feature (use a checkbox feature). A missing value is created; a title is cut at 255 letters."
+
+msgctxt "Languages::travel_core.fmc_rule_not_included"
+msgid "Each \"not included\" item of the circuit, by its title, as one value of the feature (use a checkbox feature). A missing value is created; a title is cut at 255 letters."
+msgstr "Each \"not included\" item of the circuit, by its title, as one value of the feature (use a checkbox feature). A missing value is created; a title is cut at 255 letters."

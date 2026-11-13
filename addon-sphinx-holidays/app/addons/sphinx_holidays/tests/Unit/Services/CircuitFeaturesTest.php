@@ -80,4 +80,32 @@ final class CircuitFeaturesTest extends TestCase
         self::assertSame(['2026-12'], $facts[8]['months']);
         self::assertSame([], $facts[8]['departures']);
     }
+
+    public function testWhatThePriceIncludesAndDoesNotBecomesFacts(): void
+    {
+        $facts = CircuitFeatures::facts([
+            'details_json' => json_encode([
+                'included' => [
+                    ['title' => '7 nopti cazare la hotel 3*', 'description' => ''],
+                    ['title' => ' Mic dejun si cina ', 'description' => 'x'],
+                    ['title' => '7 nopti cazare la hotel 3*', 'description' => ''],
+                    ['title' => '', 'description' => 'only a description'],
+                ],
+                'not_included' => [['title' => 'Excursiile optionale', 'description' => '']],
+            ]),
+        ], [], '2026-11');
+
+        self::assertSame(['7 nopti cazare la hotel 3*', 'Mic dejun si cina'], $facts->included, 'each once, empty titles left out');
+        self::assertSame(['Excursiile optionale'], $facts->notIncluded);
+    }
+
+    public function testACircuitWithNoDetailsHasNoIncludedFacts(): void
+    {
+        foreach ([[], ['details_json' => null], ['details_json' => 'not json']] as $row) {
+            $facts = CircuitFeatures::facts($row, [], '2026-11');
+
+            self::assertSame([], $facts->included);
+            self::assertSame([], $facts->notIncluded);
+        }
+    }
 }

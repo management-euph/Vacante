@@ -22,6 +22,8 @@ use Tygh\Addons\TravelCore\Services\CircuitFeatureConfig;
  *  - months, departure cities: from the rates (the static list's departures
  *    are dates with no city, and keep past dates)
  *  - tags: the tag names
+ *  - included, not included: the titles of what the price includes and does
+ *    not (details_json, saved from the static list)
  */
 final class CircuitFeatures
 {
@@ -96,6 +98,9 @@ final class CircuitFeatures
             }
         }
 
+        $details = json_decode(TypeCoerce::toString($row['details_json'] ?? ''), true);
+        $details = is_array($details) ? $details : [];
+
         return new CircuitFeatureFacts(
             transport: strtolower(trim(TypeCoerce::toString($row['transport_type'] ?? ''))),
             nights: TypeCoerce::toInt($row['duration_nights'] ?? 0),
@@ -103,7 +108,28 @@ final class CircuitFeatures
             months: self::months(TypeCoerce::toStringList(json_decode(TypeCoerce::toString($row['departure_months'] ?? ''), true) ?: []), $thisMonth),
             departureCities: array_values(array_filter(array_map('trim', explode(',', TypeCoerce::toString($row['departure_names'] ?? ''))), static fn (string $name): bool => $name !== '')),
             tags: array_values(array_unique($tags)),
+            included: self::titles($details['included'] ?? []),
+            notIncluded: self::titles($details['not_included'] ?? []),
         );
+    }
+
+    /**
+     * The titles of a details list ("included", "not_included"): each once,
+     * the empty ones left out.
+     *
+     * @return list<string>
+     */
+    public static function titles(mixed $items): array
+    {
+        $titles = [];
+        foreach (TypeCoerce::toRowList($items) as $item) {
+            $title = trim(TypeCoerce::toString($item['title'] ?? ''));
+            if ($title !== '') {
+                $titles[] = $title;
+            }
+        }
+
+        return array_values(array_unique($titles));
     }
 
     /**

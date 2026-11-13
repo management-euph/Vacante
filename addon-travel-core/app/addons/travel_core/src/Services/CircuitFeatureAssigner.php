@@ -18,8 +18,9 @@ use Tygh\Addons\TravelCore\Traits\CsCartFeatureAssignment;
  *
  *  - transport, month: only the values the admin linked; an unlinked one
  *    is left out.
- *  - countries, departure city, tags: open lists; a value the feature does
- *    not have yet is created.
+ *  - countries, departure city, tags, included, not included: open lists; a
+ *    value the feature does not have yet is created (cut to the 255 letters a
+ *    value name holds).
  *  - duration: the nights, in the feature's own style.
  *
  * A fact the provider does not know leaves its feature as it is, except
@@ -31,6 +32,9 @@ final class CircuitFeatureAssigner
 
     /** CS-Cart feature types holding a list of values (variants). */
     private const array VARIANT_TYPES = ['S', 'N', 'E', 'M'];
+
+    /** The width of a variant's name in the database. */
+    private const int MAX_NAME = 255;
 
     /** @var array<int, string> feature_id => feature_type */
     private array $types = [];
@@ -66,7 +70,7 @@ final class CircuitFeatureAssigner
             $written += $this->setDuration($productId, $features['duration'], $facts->nights);
         }
 
-        foreach (['countries' => $facts->countries, 'departure_city' => $facts->departureCities, 'tags' => $facts->tags] as $field => $names) {
+        foreach (['countries' => $facts->countries, 'departure_city' => $facts->departureCities, 'tags' => $facts->tags, 'included' => $facts->included, 'not_included' => $facts->notIncluded] as $field => $names) {
             if ($features[$field] > 0 && $names !== []) {
                 $written += $this->setVariants($productId, $features[$field], $this->variantIds($features[$field], $names));
             }
@@ -117,6 +121,17 @@ final class CircuitFeatureAssigner
         }
 
         return 0;
+    }
+
+    /**
+     * A value name as a feature value can hold it: one line, trimmed, and at
+     * most 255 characters (the width of a variant's name), cut with "…".
+     */
+    public static function fit(string $name): string
+    {
+        $name = trim(preg_replace('/\s+/u', ' ', $name) ?? $name);
+
+        return mb_strlen($name) > self::MAX_NAME ? rtrim(mb_substr($name, 0, self::MAX_NAME - 1)) . '…' : $name;
     }
 
     /** "7 nights" / "7 nopți": the value made when a list feature has none for the nights. */
@@ -220,7 +235,7 @@ final class CircuitFeatureAssigner
         $known = $this->variantNames($featureId);
         $ids = [];
         foreach ($names as $name) {
-            $name = trim($name);
+            $name = self::fit($name);
             if ($name === '') {
                 continue;
             }
