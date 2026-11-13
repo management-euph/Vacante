@@ -146,8 +146,10 @@ final class LocationChainReachabilityTest extends TestCase
         ] as $key) {
             self::assertStringContainsString($key, $tpl);
         }
-        // The bulk bar spans the widened row (checkbox + 11 columns).
-        self::assertStringContainsString('<th colspan="11">', $tpl);
+        // The bulk bar no longer lives in the table (it is the sticky block
+        // above it, as CS-Cart builds it), so it spans no row and cannot
+        // cover these columns; HotelsGridBulkBarTest pins that layout.
+        self::assertStringNotContainsString('<th colspan=', $tpl);
 
         // Both new columns are sortable, which requires the allowlist entries.
         $repo = self::src('src/Repository/HotelAdminListingRepository.php');
