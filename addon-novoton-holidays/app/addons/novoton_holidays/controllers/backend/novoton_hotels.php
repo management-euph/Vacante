@@ -348,9 +348,9 @@ if ($mode === 'places') {
         'text' => $name,
         'data' => ['id' => $name, 'name' => $name, 'text' => $name],
     ], $names);
-    if (defined('AJAX_REQUEST')) {
-        /** @var \Tygh\Ajax $nvtAjax */
-        $nvtAjax = Tygh::$app['ajax'];
+    // As the other controllers reach CS-Cart's Ajax object (not in the analysis stubs).
+    $nvtAjax = defined('AJAX_REQUEST') ? Tygh::$app['ajax'] : null;
+    if (is_object($nvtAjax) && method_exists($nvtAjax, 'assign')) {
         $nvtAjax->assign('objects', $objects);
         $nvtAjax->assign('total_objects', count($objects));
     }
