@@ -51,7 +51,7 @@
                     </select>
                 </td>
                 <td data-th="{__("travel_core.fmc_col_type")}">
-                    {if $selected && $circuit_feature_list.$selected}{$feature_type = $circuit_feature_list.$selected.type}{__("travel_core.fmc_type_`$feature_type`")}{else}<span class="muted">—</span>{/if}
+                    {if $selected && $circuit_feature_list.$selected}{$feature_style = $circuit_feature_list.$selected.style}{__("travel_core.fmc_type_`$feature_style`")}{else}<span class="muted">—</span>{/if}
                 </td>
                 <td data-th="{__("travel_core.fmc_col_rule")}">{__("travel_core.fmc_rule_`$field`")}</td>
             </tr>
