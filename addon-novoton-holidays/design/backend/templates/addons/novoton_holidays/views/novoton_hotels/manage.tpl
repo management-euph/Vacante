@@ -66,9 +66,10 @@
                         data-ca-bulkedit-enable="[data-ca-bulkedit-expanded-object=true]"
                     />
                 </th>
-                <th width="6%"></th>
+                {* As on Products: the image column takes only the thumbnail's width, so the name sits next to it. *}
+                <th class="table__column-without-title"></th>
                 {foreach from=["name" => "novoton_holidays.hotels_col_hotel", "destination" => "novoton_holidays.hotels_col_destination", "stars" => "novoton_holidays.hotels_col_stars", "synced" => "novoton_holidays.hotels_col_synced", "status" => "novoton_holidays.hotels_col_status", "product" => "novoton_holidays.hotels_col_product"] key=sortKey item=colLabel}
-                    <th>
+                    <th{if $sortKey == "name"} width="30%"{/if}>
                         <a class="cm-ajax" data-ca-target-id="pagination_contents" href="{"novoton_hotels.manage?`$novoton_hotels_query`&sort_by=`$sortKey`&sort_order=`$search.sort_order_rev`"|fn_url}">
                             {__($colLabel)}{if $search.sort_by == $sortKey} {if $search.sort_order == "asc"}&#9650;{else}&#9660;{/if}{/if}
                         </a>
@@ -101,7 +102,7 @@
                             link_css_class="products-list__image--link"
                         }
                     </td>
-                    <td data-th="{__("novoton_holidays.hotels_col_hotel")}">
+                    <td width="30%" class="product-name-column wrap-word" data-th="{__("novoton_holidays.hotels_col_hotel")}">
                         {if $h.product_id}
                             <a href="{"products.update?product_id=`$h.product_id`"|fn_url}" class="row-status">{$h.name|escape:html}</a>
                         {else}
