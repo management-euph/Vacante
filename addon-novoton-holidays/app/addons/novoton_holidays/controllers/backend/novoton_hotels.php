@@ -338,6 +338,27 @@ $nvtHotelsSelected = static function (): array {
 };
 
 /**
+ * Mode: places — the "City or region" filter's type-to-search (CS-Cart's
+ * object picker): the cities and regions matching what was typed.
+ */
+if ($mode === 'places') {
+    $names = (new HotelListingRepository())->places(RequestCoerce::string($_REQUEST, 'q'));
+    $objects = array_map(static fn (string $name): array => [
+        'id' => $name,
+        'text' => $name,
+        'data' => ['id' => $name, 'name' => $name, 'text' => $name],
+    ], $names);
+    if (defined('AJAX_REQUEST')) {
+        /** @var \Tygh\Ajax $nvtAjax */
+        $nvtAjax = Tygh::$app['ajax'];
+        $nvtAjax->assign('objects', $objects);
+        $nvtAjax->assign('total_objects', count($objects));
+    }
+
+    exit;
+}
+
+/**
  * Mode: resync — queue the selected hotels: the next hotelinfo run fetches them.
  */
 if ($mode === 'resync' && $_SERVER['REQUEST_METHOD'] === 'POST') {

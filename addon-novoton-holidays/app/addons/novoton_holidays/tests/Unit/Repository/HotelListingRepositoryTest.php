@@ -76,7 +76,7 @@ final class HotelListingRepositoryTest extends TestCase
         self::assertStringContainsString('(h.star_rating IN (4))', $sql, 'an older stars=4 link still works');
         self::assertStringContainsString("(h.hotel_name LIKE '%Beach%' OR h.hotel_id LIKE '%Beach%')", $sql);
         self::assertStringContainsString("h.country = 'Bulgaria'", $sql);
-        self::assertStringContainsString("(h.city LIKE '%Varna%' OR h.region LIKE '%Varna%')", $sql);
+        self::assertStringContainsString("(h.city = 'Varna' OR h.region = 'Varna')", $sql);
 
         $sql = HotelListingRepository::condition($repo->normalize(['sync_status' => 'unmapped']), self::NOW);
         self::assertStringContainsString("END = 'unmapped'", $sql);

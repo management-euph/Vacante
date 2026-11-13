@@ -116,6 +116,7 @@ $schema['novoton_hotels'] = [
     'modes' => [
         'manage'                 => ['permissions' => 'manage_catalog'],
         'resync'                 => ['permissions' => 'novoton_manage_sync'],
+        'places'                 => ['permissions' => 'manage_catalog'],
         'enable_products'        => ['permissions' => 'manage_catalog'],
         'disable_products'       => ['permissions' => 'manage_catalog'],
         'view'                   => ['permissions' => 'manage_catalog'],
