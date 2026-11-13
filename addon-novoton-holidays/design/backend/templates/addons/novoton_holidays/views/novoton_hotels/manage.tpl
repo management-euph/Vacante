@@ -205,26 +205,7 @@
 
 {* Inside the capture: admin AJAX navigation only runs scripts placed here.
    The disable confirmation counts the checked hotels whose product is on sale. *}
-<script>
-(function () {
-    var btn = document.getElementById('nvt_disable_btn');
-    if (!btn) { return; }
-    btn.addEventListener('click', function (e) {
-        var checked = document.querySelectorAll('.nvt-row-check:checked');
-        if (!checked.length) {
-            e.preventDefault();
-            window.alert(btn.getAttribute('data-nvt-none'));
-            return;
-        }
-        var onSale = 0;
-        for (var i = 0; i < checked.length; i++) {
-            if (checked[i].getAttribute('data-nvt-on-sale') === '1') { onSale++; }
-        }
-        var text = btn.getAttribute('data-nvt-confirm').replace('[n]', checked.length).replace('[on_sale]', onSale);
-        if (!window.confirm(text)) { e.preventDefault(); }
-    });
-}());
-</script>
+{script src="js/addons/novoton_holidays/hotels-monitor.js"}
 
 {include file="common/pagination.tpl"}
 

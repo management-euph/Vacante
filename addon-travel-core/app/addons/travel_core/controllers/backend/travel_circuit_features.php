@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             fn_set_notification('N', __('notice'), __('travel_core.fmc_applied', ['[count]' => $result['written']]));
             if ($result['notes'] !== []) {
                 // Why some mapped features were not written: one line each, never silent.
-                fn_set_notification('W', __('warning'), __('travel_core.fmc_not_written') . ': ' . implode('; ', $result['notes']));
+                fn_set_notification('W', __('warning'), TypeCoerce::toString(__('travel_core.fmc_not_written')) . ': ' . implode('; ', $result['notes']));
             }
         }
     }

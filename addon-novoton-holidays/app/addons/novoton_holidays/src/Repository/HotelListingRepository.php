@@ -46,7 +46,7 @@ final class HotelListingRepository
         'destination' => ['h.country', 'h.city', 'h.hotel_name'],
         'stars' => ['h.star_rating', 'h.hotel_name'],
         'synced' => ['h.hotelinfo_synced_at', 'h.hotel_name'],
-        'status' => ["FIELD(" . self::STATUS_SQL . ", 'error', 'unmapped', 'pending', 'active')", 'h.hotel_name'],
+        'status' => ['FIELD(' . self::STATUS_SQL . ", 'error', 'unmapped', 'pending', 'active')", 'h.hotel_name'],
         'product' => ['(p.product_id IS NULL)', 'h.product_id', 'h.hotel_name'],
     ];
 

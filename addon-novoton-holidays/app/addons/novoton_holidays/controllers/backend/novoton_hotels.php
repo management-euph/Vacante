@@ -426,10 +426,12 @@ if ($mode === 'manage') {
     ));
     $answers = $errorIds !== [] ? $listing->lastAnswers($errorIds) : [];
     foreach ($rows as $i => $row) {
-        $rows[$i]['answer'] = $row['status'] === 'error' ? HotelListView::answerExcerpt($answers[$row['id']] ?? '') : '';
+        $hotelId = TypeCoerce::toString($row['id']);
+        $triedRaw = TypeCoerce::toString($row['tried_raw']);
+        $rows[$i]['answer'] = $row['status'] === 'error' ? HotelListView::answerExcerpt($answers[$hotelId] ?? '') : '';
         // When an automatic retry is due: a day after the failed request (ChangedHotelDetector).
-        $rows[$i]['next_try'] = $row['status'] === 'error' && $row['tried_raw'] !== ''
-            ? HotelListView::when(date('Y-m-d H:i:s', (int) strtotime($row['tried_raw']) + \Tygh\Addons\NovotonHolidays\Helpers\ChangedHotelDetector::RETRY_AFTER))
+        $rows[$i]['next_try'] = $row['status'] === 'error' && $triedRaw !== ''
+            ? HotelListView::when(date('Y-m-d H:i:s', (int) strtotime($triedRaw) + \Tygh\Addons\NovotonHolidays\Helpers\ChangedHotelDetector::RETRY_AFTER))
             : '';
     }
 
