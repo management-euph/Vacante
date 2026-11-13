@@ -147,10 +147,10 @@ final class HotelsGridBulkBarTest extends TestCase
         self::assertStringNotContainsString('bulk-edit__content', $bar, 'the big panel is for pickers, not action lists');
         self::assertStringNotContainsString('bulk-edit-inner', $bar);
 
-        // Every action posts the form through the core's own mechanism: the
-        // dispatch rides on data-ca-dispatch, so it survives cm-confirm
-        // re-submitting the form (a <button name="dispatch[…]"> does not,
-        // which is why Delete did nothing).
+        // Every action posts the form through the core's own mechanism
+        // (submitForm): cm-submit makes the core inject a real submit input
+        // named by data-ca-dispatch into data-ca-target-form and click it,
+        // so the dispatch arrives as the submitter.
         self::assertSame(4, substr_count($bar, 'class="cm-process-items cm-submit'), 'two statuses + two actions');
         self::assertSame(4, substr_count($bar, 'data-ca-target-form="sphinx_bulk_form"'));
         self::assertStringNotContainsString('<button type="submit"', $bar, 'actions are links, not submit buttons');

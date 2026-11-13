@@ -145,13 +145,15 @@
             </li>
 
             {* A short list of actions is a plain dropdown menu, as the
-               orders grid's status menu is. Each item posts the form through
-               the core's cm-process-items + cm-submit: the dispatch rides on
-               data-ca-dispatch, so it still arrives when cm-confirm submits
-               the form itself (a <button name="dispatch[…]"> loses its name
-               that way, which is why Delete did nothing). The status goes in
-               the hidden sphinx_bulk_action, set by the item's own click
-               before the core's handler runs. *}
+               orders grid's status menu is. Each item posts the form the way
+               the core's own grids do (js/tygh/core.js, submitForm):
+               cm-submit hands the click to the core, which puts a real
+               <input type="submit" name="{data-ca-dispatch}"> into the form
+               named by data-ca-target-form and clicks it — so the dispatch
+               arrives as the submitter. cm-process-items first refuses when
+               no cm-item box is ticked, and cm-confirm asks before Delete.
+               The status goes in the hidden sphinx_bulk_action, set by the
+               item's own click, which runs before the core's handler. *}
             <li class="btn bulk-edit__btn bulk-edit__btn--status dropleft-mod">
                 <span class="bulk-edit__btn-content dropdown-toggle" data-toggle="dropdown">
                     {__("status")}
