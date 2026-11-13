@@ -52,7 +52,7 @@ class CircuitRepository
         $have = db_get_row("SHOW COLUMNS FROM ?:sphinx_circuits LIKE 'departure_months'");
         if (empty($have)) {
             db_query(
-                "ALTER TABLE ?:sphinx_circuits ADD COLUMN `departure_months` VARCHAR(255) DEFAULT NULL"
+                'ALTER TABLE ?:sphinx_circuits ADD COLUMN `departure_months` VARCHAR(255) DEFAULT NULL'
                 . " COMMENT 'Months (Y-m, JSON list) with a departure still priced (circuits/rates)' AFTER `departure_names`",
             );
         }

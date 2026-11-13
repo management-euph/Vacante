@@ -147,8 +147,8 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
         // The products of the circuits just read follow Sphinx's text: an
         // incremental run reads only the changed circuits, a full one all.
         if (!empty($allCircuits)) {
-            $languages = ConfigProvider::getProductLanguages();
-            $refreshed = (new CircuitProductFactory(new CircuitRepository()))->refreshDescriptions($allCircuits, $languages !== [] ? $languages : [CART_LANGUAGE]);
+            $languages = TypeCoerce::toStringList(ConfigProvider::getProductLanguages());
+            $refreshed = (new CircuitProductFactory(new CircuitRepository()))->refreshDescriptions($allCircuits, $languages !== [] ? $languages : [TypeCoerce::toString(CART_LANGUAGE)]);
             if ($refreshed > 0) {
                 $this->output("Descriptions updated on {$refreshed} circuit products.");
             }
