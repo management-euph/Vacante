@@ -8,14 +8,18 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Pins the admin Hotels grid's adoption of CS-Cart's NATIVE bulk-action
- * pattern (the products.manage "N selected" contextual bar).
+ * pattern, as views/products/manage.tpl + common/context_menu_wrapper.tpl
+ * build it: the contextual bar is a sticky block ABOVE the table, the real
+ * header collapses behind it, and the counter comes from
+ * common/check_items.tpl.
  *
  * CS-Cart core is not vendored in this repo — the microformats resolve
  * against the deployed store's js/tygh/backend/bulkedit.js + tap/longtap
- * driver (their contract was extracted from the live store's own assets).
- * This scan is therefore the CI-checkable proxy: it fails if the required
- * markers are removed or if the old hand-rolled bar/JS creeps back, and it
- * pins the POST contract the three unchanged backend handlers rely on.
+ * driver. This scan is therefore the CI-checkable proxy: it fails if the
+ * required markers are removed, if the bar is nested back INSIDE the table
+ * (where .bulk-edit's position:sticky painted it over the rows), or if a
+ * hand-rolled bar creeps back; and it pins the POST contract the three
+ * unchanged backend handlers rely on.
  */
 final class HotelsGridBulkBarTest extends TestCase
 {
@@ -34,21 +38,50 @@ final class HotelsGridBulkBarTest extends TestCase
 
         foreach ([
             '{script src="js/tygh/backend/bulkedit.js"}',
-            'data-ca-bulkedit-component="true"',
             'data-ca-longtap="true"',
+            // The core's own component values, not a home-made "true".
+            'data-ca-bulkedit-component="expandedObject"',
+            'data-ca-bulkedit-component="defaultObject"',
             'data-ca-bulkedit-default-object="true"',
             'data-ca-bulkedit-expanded-object="true"',
-            'class="bulkedit-toggler"',
-            'class="bulkedit-disabler btn"',
+            'class="bulk-edit clearfix hidden"',
+            'class="btn-group bulk-edit__wrapper"',
+            // The toggler is hidden and clicked by the longtap driver.
+            'class="bulkedit-toggler hide"',
+            'bulkedit-disabler',
             'data-ca-longtap-selected-counter="true"',
-            'class="bulkedit-deselect"',
-            'class="cm-check-items"',
+            // Check all / check none come from the core's own include.
+            'common/check_items.tpl',
             'data-ca-longtap-action="setCheckBox"',
             'data-ca-longtap-target="input.cm-item"',
             'class="cm-item"',
         ] as $marker) {
             self::assertStringContainsString($marker, $tpl, "missing native bulk-bar marker: {$marker}");
         }
+    }
+
+    /**
+     * The bug this layout fixes: .bulk-edit is position:sticky in the core's
+     * css/tygh/utils/bulk_edit.less, so nested in a <thead> it floated over
+     * the rows it belongs to. It must sit before the table, inside the
+     * longtap container, as the core's context_menu_wrapper puts it.
+     */
+    public function testTheBarSitsAboveTheTableNotInsideIt(): void
+    {
+        $tpl = self::template();
+
+        $bar = strpos($tpl, 'class="bulk-edit clearfix hidden"');
+        $table = strpos($tpl, '<table');
+        self::assertIsInt($bar);
+        self::assertIsInt($table);
+        self::assertLessThan($table, $bar, 'the bulk bar must be rendered before the table opens');
+
+        // One table, one header: the second header that used to hold the bar is gone.
+        self::assertSame(1, substr_count($tpl, '</thead>'), 'the expanded header bar is gone');
+        self::assertSame(1, substr_count($tpl, '</table>'));
+        self::assertStringNotContainsString('<thead class="hidden"', $tpl);
+        // The header collapses rather than hiding, so the columns keep their widths.
+        self::assertStringContainsString('data-target=".sphinx-hotels-table"', $tpl);
     }
 
     public function testActionsPostToTheUnchangedHandlers(): void
@@ -80,29 +113,26 @@ final class HotelsGridBulkBarTest extends TestCase
     }
 
     /**
-     * The bar is laid out like products.manage: three dropdowns
-     * ("N Selected ▾" with All/None, "Status ▾" with Change to Active/Disabled,
-     * "Actions ▾" with Sync Images/Delete Selected) and NO icon glyphs.
+     * The bar is laid out like products.manage: the counter with check
+     * all/none, then "Status" and "Actions", each a bulk-edit dropdown, and
+     * NO icon glyphs.
      */
-    public function testBarIsThreeDropdownsWithoutIcons(): void
+    public function testBarIsTheCounterAndTwoDropdownsWithoutIcons(): void
     {
         $bar = self::expandedBar();
 
-        self::assertSame(
-            3,
-            substr_count($bar, 'dropdown-toggle'),
-            'the bar has exactly three dropdowns: Selected / Status / Actions',
-        );
+        // Each button is a core bulk-edit button; the two menus are core
+        // dropdowns (bulk-edit-toggle opens them, bulkedit.js line ~293).
+        self::assertSame(3, substr_count($bar, 'class="btn bulk-edit__btn'), 'counter + Status + Actions');
+        self::assertSame(2, substr_count($bar, 'bulk-edit-toggle'), 'Status and Actions are dropdowns');
+        self::assertSame(2, substr_count($bar, 'bulk-edit--overlay'), 'each dropdown closes on its overlay');
+        self::assertStringContainsString('bulk-edit__btn--status', $bar);
+        self::assertStringContainsString('bulk-edit__btn--actions', $bar);
 
-        // "N Selected ▾" — live counter inside the toggle; All + None items.
+        // The counter, and check all / check none from the core include.
         self::assertStringContainsString('data-ca-longtap-selected-counter="true"', $bar);
-        self::assertStringContainsString('sphinx_holidays.bulk_select_all', $bar);
-        self::assertStringContainsString('sphinx_holidays.bulk_select_none', $bar);
-        // "All" drives the native check_all control (same handlers as a user click).
-        self::assertStringContainsString("getElementById('sphinx_check_all')", $bar);
-        self::assertStringContainsString('id="sphinx_check_all"', $bar);
-        // "None" rides the core deselect handler.
-        self::assertStringContainsString('class="bulkedit-deselect"', $bar);
+        self::assertStringContainsString('common/check_items.tpl', $bar);
+        self::assertStringContainsString('is_check_all_shown=true', $bar);
 
         // "Status ▾" — products.manage wording.
         self::assertStringContainsString('sphinx_holidays.bulk_change_to_active', $bar);
@@ -119,14 +149,14 @@ final class HotelsGridBulkBarTest extends TestCase
         self::assertStringNotContainsString('<i class="icon-', $bar, 'the bulk bar is plain text — no icons');
     }
 
-    /** The expanded (bulk-mode) <thead> region only. */
+    /** The contextual bar only: the .bulk-edit block above the table. */
     private static function expandedBar(): string
     {
         $tpl = self::template();
 
-        $start = strpos($tpl, 'data-ca-bulkedit-expanded-object="true"');
+        $start = strpos($tpl, 'class="bulk-edit clearfix hidden"');
         self::assertIsInt($start);
-        $end = strpos($tpl, '</thead>', $start);
+        $end = strpos($tpl, '</ul>', $start);
         self::assertIsInt($end);
 
         return substr($tpl, $start, $end - $start);
