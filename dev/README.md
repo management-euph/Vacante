@@ -71,14 +71,19 @@ and heal the store itself:
   `&raw=1`. Nothing is booked or written; the store's circuit breaker is not
   touched; neither the API address nor the account is printed, errors
   included. `http://localhost:8080/dev/tools/eurosite-packages.php`
-- `tools/sphinx-circuit.php` — what Sphinx sends for ONE circuit, and what the
-  store keeps of it, READ-ONLY, with the store's own API key (never printed).
-  (1) The static API answer, `GET /api/v1/static/circuits/:id`, as JSON.
+- `tools/sphinx-circuit.php` — what Sphinx is asked and sends for one or a few
+  circuits, and what the store keeps of them, READ-ONLY, with the store's own
+  API key (never printed). (1) The request (method, URL and headers, the
+  address and key masked), the HTTP status, size and time, and the static API
+  answer, `GET /api/v1/static/circuits/:id`, as JSON (`&raw=1`: the whole body
+  as sent).
   (2) The stored `sphinx_circuits` row (long JSON columns decoded) and its
   product. (3) The facts its product's features are made of (the same code the
   sync uses): an empty one says why a feature stays empty. (4) With `&rates=1`,
   the departure months and cities from `circuits/rates` (18 calls: slow).
-  `?circuit=641` or `?product=1649` (the circuit of a CS-Cart product),
+  `?circuit=641` or `?circuit=641,642,650` (up to 20), `?sample=3` (the first
+  stored circuits, or of the API list when none is stored), `?product=1649`
+  (the circuit of a CS-Cart product; also a comma list),
   `&only=included,not_included` (only these keys of the answer),
   `&api=0` / `&stored=0` / `&facts=0`.
   `http://localhost:8080/dev/tools/sphinx-circuit.php?circuit=641`
