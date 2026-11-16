@@ -3825,6 +3825,98 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Optional extras, chosen when you book:',
         'ro' => 'Extra opționale, alese la rezervare:',
     ],
+    'travel_core.circuit_admin_tab' => [
+        'en' => 'Circuit',
+        'ro' => 'Circuit',
+    ],
+    'travel_core.circuit_admin_readonly' => [
+        'en' => 'Read-only: this content comes from the supplier.',
+        'ro' => 'Doar citire: conținutul vine de la furnizor.',
+    ],
+    'travel_core.circuit_admin_readonly_text' => [
+        'en' => 'Every [provider] circuits sync replaces it, so it cannot be edited here. To change it, change the circuit at the supplier.',
+        'ro' => 'Fiecare sincronizare a circuitelor [provider] îl înlocuiește, deci nu se poate edita aici. Pentru a-l schimba, modifică circuitul la furnizor.',
+    ],
+    'travel_core.circuit_admin_id' => [
+        'en' => 'Supplier, circuit ID',
+        'ro' => 'Furnizor, ID circuit',
+    ],
+    'travel_core.circuit_admin_transport' => [
+        'en' => 'Transport',
+        'ro' => 'Transport',
+    ],
+    'travel_core.circuit_admin_duration' => [
+        'en' => 'Days / nights',
+        'ro' => 'Zile / nopți',
+    ],
+    'travel_core.circuit_admin_group' => [
+        'en' => 'Group size',
+        'ro' => 'Mărimea grupului',
+    ],
+    'travel_core.circuit_admin_age' => [
+        'en' => 'Age',
+        'ro' => 'Vârstă',
+    ],
+    'travel_core.circuit_admin_day_title' => [
+        'en' => 'Title',
+        'ro' => 'Titlu',
+    ],
+    'travel_core.circuit_admin_meals' => [
+        'en' => 'Meals',
+        'ro' => 'Mese',
+    ],
+    'travel_core.circuit_admin_photos' => [
+        'en' => 'Photos',
+        'ro' => 'Fotografii',
+    ],
+    'travel_core.circuit_admin_notes' => [
+        'en' => 'Notes and where the page shows them',
+        'ro' => 'Note și unde le arată pagina',
+    ],
+    'travel_core.circuit_admin_note_title' => [
+        'en' => 'Title from the supplier',
+        'ro' => 'Titlu de la furnizor',
+    ],
+    'travel_core.circuit_admin_shown_in' => [
+        'en' => 'Shown in',
+        'ro' => 'Afișată în',
+    ],
+    'travel_core.circuit_admin_section_highlights' => [
+        'en' => 'Highlights',
+        'ro' => 'Puncte de atracție',
+    ],
+    'travel_core.circuit_admin_section_excursions' => [
+        'en' => 'Optional excursions',
+        'ro' => 'Excursii opționale',
+    ],
+    'travel_core.circuit_admin_section_prices' => [
+        'en' => 'Discounts and supplements',
+        'ro' => 'Reduceri și suplimente',
+    ],
+    'travel_core.circuit_admin_section_notes' => [
+        'en' => 'Good to know',
+        'ro' => 'De știut',
+    ],
+    'travel_core.circuit_admin_departures' => [
+        'en' => 'Departures from today ([n])',
+        'ro' => 'Plecări de azi încolo ([n])',
+    ],
+    'travel_core.circuit_admin_supplier_price' => [
+        'en' => 'Supplier price, 2 adults',
+        'ro' => 'Preț furnizor, 2 adulți',
+    ],
+    'travel_core.circuit_admin_availability' => [
+        'en' => 'Availability',
+        'ro' => 'Disponibilitate',
+    ],
+    'travel_core.circuit_admin_more_departures' => [
+        'en' => '[n] more departures.',
+        'ro' => 'Încă [n] plecări.',
+    ],
+    'travel_core.circuit_admin_no_departures' => [
+        'en' => 'No departure saved: run the circuits sync.',
+        'ro' => 'Nicio plecare salvată: rulează sincronizarea circuitelor.',
+    ],
     'travel_core.circuit_route' => [
         'en' => 'Route',
         'ro' => 'Traseu',
