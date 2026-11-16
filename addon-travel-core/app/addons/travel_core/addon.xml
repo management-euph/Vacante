@@ -683,6 +683,40 @@
         KEY `idx_created` (`created_at`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         </item>
+        <!-- The circuits' departures: each supplier's sync writes its circuits' dates,
+             cities and prices (CircuitDepartureRepository; docs/circuit-page-plan.md) -->
+        <item>
+            CREATE TABLE IF NOT EXISTS `?:travel_circuit_departures` (
+        `provider`       VARCHAR(32)       NOT NULL COMMENT 'Registry name: sphinx, eurosite',
+        `circuit_id`     VARCHAR(64)       NOT NULL COMMENT 'Supplier circuit id',
+        `departure_code` VARCHAR(64)       NOT NULL DEFAULT '' COMMENT 'Supplier id of the city it leaves from; empty when the supplier names none',
+        `departure_date` DATE              NOT NULL,
+        `departure_name` VARCHAR(128)      NOT NULL DEFAULT '' COMMENT 'The city, as the supplier names it',
+        `price`          DECIMAL(12,2)     NOT NULL DEFAULT 0 COMMENT 'Supplier price for 2 adults, before the store commission: the lowest of that date',
+        `currency`       CHAR(3)           NOT NULL DEFAULT '',
+        `availability`   VARCHAR(12)       NOT NULL DEFAULT '' COMMENT 'immediate or on_request; empty when the supplier does not say',
+        `seats`          SMALLINT UNSIGNED DEFAULT NULL COMMENT 'Seats left, when the supplier says',
+        `updated_at`     DATETIME          NOT NULL COMMENT 'The reading that last had it',
+        PRIMARY KEY (`provider`, `circuit_id`, `departure_code`, `departure_date`),
+        KEY `idx_date` (`provider`, `departure_date`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        </item>
+        <item for="upgrade">
+            CREATE TABLE IF NOT EXISTS `?:travel_circuit_departures` (
+        `provider`       VARCHAR(32)       NOT NULL COMMENT 'Registry name: sphinx, eurosite',
+        `circuit_id`     VARCHAR(64)       NOT NULL COMMENT 'Supplier circuit id',
+        `departure_code` VARCHAR(64)       NOT NULL DEFAULT '' COMMENT 'Supplier id of the city it leaves from; empty when the supplier names none',
+        `departure_date` DATE              NOT NULL,
+        `departure_name` VARCHAR(128)      NOT NULL DEFAULT '' COMMENT 'The city, as the supplier names it',
+        `price`          DECIMAL(12,2)     NOT NULL DEFAULT 0 COMMENT 'Supplier price for 2 adults, before the store commission: the lowest of that date',
+        `currency`       CHAR(3)           NOT NULL DEFAULT '',
+        `availability`   VARCHAR(12)       NOT NULL DEFAULT '' COMMENT 'immediate or on_request; empty when the supplier does not say',
+        `seats`          SMALLINT UNSIGNED DEFAULT NULL COMMENT 'Seats left, when the supplier says',
+        `updated_at`     DATETIME          NOT NULL COMMENT 'The reading that last had it',
+        PRIMARY KEY (`provider`, `circuit_id`, `departure_code`, `departure_date`),
+        KEY `idx_date` (`provider`, `departure_date`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        </item>
         <item for="uninstall">DELETE FROM ?:language_values WHERE name LIKE 'travel_core.%'</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:travel_api_alias`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:travel_unmapped_values`</item>
@@ -692,6 +726,7 @@
         <item for="uninstall">DROP TABLE IF EXISTS `?:travel_balances`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:travel_hotel_availability`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:travel_hotel_state_log`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:travel_circuit_departures`</item>
     </queries>
 
     <language_variables>
