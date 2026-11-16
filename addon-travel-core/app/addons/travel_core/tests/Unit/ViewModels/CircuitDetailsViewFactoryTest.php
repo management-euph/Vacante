@@ -45,7 +45,7 @@ final class CircuitDetailsViewFactoryTest extends TestCase
         $view = (new CircuitDetailsViewFactory())->view(self::creta());
 
         self::assertSame([1, 2, 3, 4, 5], array_column($view['days'], 'number'));
-        self::assertSame(['number' => 1, 'title' => 'Sosire în Heraklion', 'paragraphs' => ['Zbor din București, transfer la hotel.', 'Seara liberă pe faleza veche.'], 'hotel' => 'Hotel Atrion', 'stars' => 4, 'meals' => 'cină'], $view['days'][0]);
+        self::assertSame(['number' => 1, 'title' => 'Sosire în Heraklion', 'paragraphs' => ['Zbor din București, transfer la hotel.', 'Seara liberă pe faleza veche.'], 'hotel' => 'Hotel Atrion', 'stars' => 4, 'meals' => 'cină', 'photos' => [], 'highlighted' => false], $view['days'][0]);
     }
 
     public function testNightsInARowAtTheSameHotelMakeOneStay(): void
@@ -114,6 +114,11 @@ final class CircuitDetailsViewFactoryTest extends TestCase
             'group_min' => 18,
             'group_max' => 40,
             'group_form' => 'many',
+            'stars_min' => 4,
+            'stars_max' => 4,
+            'difficulty' => 0,
+            'age_min' => 0,
+            'age_max' => 0,
         ], (new CircuitDetailsViewFactory())->facts($page, self::creta()), 'the city the bar starts on; the noun follows the last number');
     }
 
@@ -125,6 +130,58 @@ final class CircuitDetailsViewFactoryTest extends TestCase
 
         $odd = (new CircuitDetailsViewFactory())->facts(new CircuitPage('sphinx', '17', 'Creta', [], 5, 4), new CircuitDetails(groupMin: 18, groupMax: 10));
         self::assertSame([18, 0, 'few'], [$odd['group_min'], $odd['group_max'], $odd['group_form']], 'a largest group under the smallest says nothing');
+    }
+
+    /**
+     * Step 3 (docs/circuit-page-plan.md): the trip's own hotel's stars win
+     * over the route's; the difficulty and the age asked come under the title.
+     */
+    public function testTheTripsHotelDifficultyAndAgeAreFacts(): void
+    {
+        $page = new CircuitPage('sphinx', '1', 'Malta', [], 8, 7, 3, 4);
+        $facts = (new CircuitDetailsViewFactory())->facts($page, new CircuitDetails(
+            ageMin: 12,
+            ageMax: 65,
+            difficulty: 2,
+            accommodation: ['hotel' => 'Hotel Topaz', 'stars' => 3, 'text' => ''],
+        ));
+
+        self::assertSame([3, 3, 2, 12, 65], [$facts['stars_min'], $facts['stars_max'], $facts['difficulty'], $facts['age_min'], $facts['age_max']]);
+
+        $route = (new CircuitDetailsViewFactory())->facts($page, new CircuitDetails(ageMin: 30, ageMax: 18, difficulty: 9));
+        self::assertSame([3, 4, 0, 30, 0], [$route['stars_min'], $route['stars_max'], $route['difficulty'], $route['age_min'], $route['age_max']], 'no hotel named: the route\'s stars; an odd level or oldest says nothing');
+    }
+
+    /** The hotel, the excursions, the high points, the price notes and the documents: each its section. */
+    public function testTheNewSectionsAndTheMenu(): void
+    {
+        $view = (new CircuitDetailsViewFactory())->view(new CircuitDetails(
+            days: [new CircuitDay('Malta', 'Sosire.', '', 0, '', ['https://cdn.example/1.jpg', 'https://cdn.example/2.jpg', 'https://cdn.example/3.jpg', 'https://cdn.example/4.jpg'], true)],
+            highlights: ['title' => 'Ce te va incanta', 'items' => ['Valletta', 'Gozo']],
+            accommodation: ['hotel' => 'Hotel Topaz', 'stars' => 3, 'text' => "Aproape de plaja.\n# Facilitati camere\nAer conditionat.\n\nSeif.\n# Localizare\nBugibba."],
+            excursions: [
+                ['title' => 'Insula Gozo', 'text' => 'O zi pe insula.', 'duration' => '8', 'price' => 45.0, 'currency' => 'EUR', 'highlighted' => true],
+                ['title' => 'Cele Trei Orase', 'text' => '', 'duration' => '', 'price' => 1090.5, 'currency' => 'EUR', 'highlighted' => false],
+                ['title' => 'Fara pret', 'text' => '', 'duration' => '', 'price' => 0.0, 'currency' => '', 'highlighted' => false],
+            ],
+            priceNotes: [['title' => 'Reduceri si suplimente', 'text' => "Supliment SGL: 150 euro\n• Copil 2-11.99 ani: reducere 100 euro\n\n"]],
+            documents: [['title' => 'Program', 'url' => 'https://cdn.example/p.pdf']],
+        ));
+
+        self::assertSame(['program', 'stays', 'excursions', 'notes'], $view['menu'], 'the trip\'s hotel alone opens Accommodation; the documents and price notes alone open Good to know');
+        self::assertCount(3, $view['days'][0]['photos'], 'three photos at most under a day');
+        self::assertTrue($view['days'][0]['highlighted']);
+        self::assertSame(['title' => 'Ce te va incanta', 'items' => ['Valletta', 'Gozo']], $view['highlights']);
+        self::assertSame([
+            ['title' => '', 'paragraphs' => ['Aproape de plaja.']],
+            ['title' => 'Facilitati camere', 'paragraphs' => ['Aer conditionat.', 'Seif.']],
+            ['title' => 'Localizare', 'paragraphs' => ['Bugibba.']],
+        ], $view['accommodation']['sections'], 'the supplier\'s "# Title" lines start the parts');
+        self::assertSame(['45 EUR', '1.090,50 EUR', ''], array_column($view['excursions'], 'price'), 'a price as it reads; none when the supplier does not know it');
+        self::assertSame([['title' => 'Reduceri si suplimente', 'lines' => ['Supliment SGL: 150 euro', 'Copil 2-11.99 ani: reducere 100 euro']]], $view['price_notes'], 'a line each, the typed bullet left out');
+        self::assertSame([['title' => 'Program', 'url' => 'https://cdn.example/p.pdf']], $view['documents']);
+        self::assertTrue($view['notes_shown']);
+        self::assertFalse((new CircuitDetails(documents: [['title' => 'x', 'url' => 'https://x.example/a.pdf']]))->isEmpty());
     }
 
     /** Suppliers send HTML: the page gets plain text (it escapes it), its paragraphs and line breaks kept. */

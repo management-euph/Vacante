@@ -147,6 +147,58 @@ final class SphinxCircuitProductProviderTest extends TestCase
         self::assertSame([17], self::$queries[0][1]);
     }
 
+    /**
+     * Step 3 (docs/circuit-page-plan.md): the notes go where their title
+     * says, and the hotel, difficulty, excursions, documents and day photos
+     * the sync now keeps reach the page.
+     */
+    public function testTheNewDetailsReachThePage(): void
+    {
+        $details = SphinxCircuitProductProvider::details(
+            (string) json_encode([
+                ['title' => 'Valletta', 'description' => 'Tur.', 'is_highlighted' => true, 'images' => [['url' => 'https://cdn.example/d1.jpg'], ['url' => 'javascript:x'], 'https://cdn.example/d1.jpg']],
+            ]),
+            (string) json_encode([
+                'additional_info' => [
+                    ['title' => 'Ce te va incanta in aceasta calatorie', 'description' => "• Valletta\n• Gozo"],
+                    ['title' => 'Reduceri si suplimente', 'description' => "Supliment SGL: 150 euro"],
+                    ['title' => 'Note excursii optionale', 'description' => 'Se achita la ghid.'],
+                    ['title' => 'Note importante', 'description' => 'Prezenta la aeroport cu 3 ore inainte.'],
+                ],
+                'difficulty' => ['level' => 2],
+                'accommodation' => ['hotel' => 'Hotel Topaz', 'category' => '3', 'description' => "# Facilitati camere\nAer conditionat."],
+                'activities' => [
+                    ['title' => 'Insula Gozo', 'description' => 'O zi pe insula.', 'price' => 45, 'currency' => 'EUR', 'highlighted' => true],
+                    ['title' => 'Test', 'description' => 'Test'],
+                ],
+                'documents' => [['title' => 'Program', 'url' => 'https://cdn.example/p.pdf'], ['title' => 'Fara', 'url' => '']],
+            ]),
+        );
+
+        self::assertSame(['https://cdn.example/d1.jpg'], $details->days[0]->photos);
+        self::assertTrue($details->days[0]->highlighted);
+        self::assertSame(['title' => 'Ce te va incanta in aceasta calatorie', 'items' => ['Valletta', 'Gozo']], $details->highlights);
+        self::assertSame([['title' => 'Reduceri si suplimente', 'text' => 'Supliment SGL: 150 euro']], $details->priceNotes);
+        self::assertSame([['title' => 'Note excursii optionale', 'text' => 'Se achita la ghid.']], $details->excursionNotes);
+        self::assertSame([['title' => 'Note importante', 'text' => 'Prezenta la aeroport cu 3 ore inainte.']], $details->notes, 'any other title is a thing to know');
+        self::assertSame(2, $details->difficulty);
+        self::assertSame(['hotel' => 'Hotel Topaz', 'stars' => 3, 'text' => "# Facilitati camere\nAer conditionat."], $details->accommodation, 'its lines kept: "# Title" starts a part');
+        self::assertSame([
+            ['title' => 'Insula Gozo', 'text' => 'O zi pe insula.', 'duration' => '', 'price' => 45.0, 'currency' => 'EUR', 'highlighted' => true],
+            ['title' => 'Test', 'text' => '', 'duration' => '', 'price' => 0.0, 'currency' => '', 'highlighted' => false],
+        ], $details->excursions, 'a description that only repeats the title is left out');
+        self::assertSame([['title' => 'Program', 'url' => 'https://cdn.example/p.pdf']], $details->documents);
+    }
+
+    public function testANoteGoesWhereItsTitleSays(): void
+    {
+        self::assertSame('highlights', SphinxCircuitProductProvider::noteSection('Ce te va încânta'));
+        self::assertSame('excursions', SphinxCircuitProductProvider::noteSection('Excursii optionale'));
+        self::assertSame('prices', SphinxCircuitProductProvider::noteSection('Reduceri și suplimente'));
+        self::assertSame('notes', SphinxCircuitProductProvider::noteSection('Bine de stiut'));
+        self::assertSame('notes', SphinxCircuitProductProvider::noteSection(''));
+    }
+
     public function testACircuitNotSoldOrUnsyncedShowsNothing(): void
     {
         self::answer([]);

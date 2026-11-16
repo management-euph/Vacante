@@ -3149,12 +3149,239 @@
 .travel-pdpa .travel-circuit-include__list--no .travel-pdpa-ico {
     color: #6b7280;
 }
+/* Step 3 (docs/circuit-page-plan.md): the trip's high points, each day
+   opening and closing (<details>), its photos, the trip's hotel, the notes
+   that open, the documents and the optional excursions. */
+.travel-pdpa .travel-circuit-highlights {
+    margin: 0 0 28px;
+    padding: 18px 20px;
+    border-radius: 10px;
+    background: #f5f7fa;
+}
+.travel-pdpa .travel-circuit-highlights__title {
+    margin: 0 0 12px;
+    font-size: 17px;
+    font-weight: 700;
+}
+.travel-pdpa .travel-circuit-highlights__list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 24px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 15px;
+    line-height: 1.5;
+}
+.travel-pdpa .travel-circuit-highlights__list > li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+.travel-pdpa .travel-circuit-highlights__list .travel-pdpa-ico {
+    flex: 0 0 auto;
+    margin-top: 3px;
+    color: #1f7a3a;
+}
+.travel-pdpa .travel-circuit-program__toggle {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin: 0 0 14px;
+    padding: 0 14px;
+    border: 1px solid var(--travel-pdpa-link);
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--travel-pdpa-link);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.travel-pdpa .travel-circuit-program__toggle[hidden] {
+    display: none;
+}
+.travel-pdpa .travel-circuit-day__summary,
+.travel-pdpa .travel-circuit-note__summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 44px;
+    list-style: none;
+    cursor: pointer;
+}
+.travel-pdpa .travel-circuit-day__summary::-webkit-details-marker,
+.travel-pdpa .travel-circuit-note__summary::-webkit-details-marker {
+    display: none;
+}
+.travel-pdpa .travel-circuit-day__summary .travel-circuit-day__title,
+.travel-pdpa .travel-circuit-note__summary .travel-circuit-card__subtitle {
+    margin: 0;
+}
+.travel-pdpa .travel-circuit-day__chev {
+    flex: 0 0 auto;
+    display: inline-flex;
+    color: var(--travel-pdpa-muted);
+    transform: rotate(90deg);
+    transition: transform 0.15s ease;
+}
+.travel-pdpa details[open] > summary .travel-circuit-day__chev {
+    transform: rotate(-90deg);
+}
+.travel-pdpa .travel-circuit-day__summary:focus-visible,
+.travel-pdpa .travel-circuit-note__summary:focus-visible {
+    outline: 2px solid var(--travel-pdpa-link);
+    outline-offset: 2px;
+}
+.travel-pdpa .travel-circuit-day__badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #fff4d6;
+    color: #7a4b00;
+    font-size: 12px;
+    font-weight: 600;
+    vertical-align: middle;
+}
+.travel-pdpa .travel-circuit-day__photos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 4px 0 10px;
+    padding: 0;
+    list-style: none;
+}
+.travel-pdpa .travel-circuit-day__photos img {
+    display: block;
+    width: 160px;
+    max-width: 100%;
+    height: 108px;
+    border-radius: 6px;
+    background: var(--travel-pdpa-tile);
+    object-fit: cover;
+}
+.travel-pdpa .travel-circuit-hotel {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 8px;
+    margin: 0 0 10px;
+}
+.travel-pdpa .travel-circuit-hotel__name {
+    font-size: 15px;
+    font-weight: 700;
+}
+.travel-pdpa .travel-circuit-hotel__stars {
+    color: #a15c00;
+    letter-spacing: 1px;
+}
+.travel-pdpa .travel-circuit-hotel__similar {
+    font-size: 13px;
+    color: var(--travel-pdpa-muted);
+}
+.travel-pdpa .travel-circuit-hotel ~ .travel-circuit-stays {
+    margin-top: 12px;
+}
+.travel-pdpa .travel-circuit-note {
+    border-top: 1px solid #e3e8ef;
+}
+.travel-pdpa .travel-circuit-note:first-of-type {
+    margin-top: 8px;
+}
+.travel-pdpa .travel-circuit-card__lines {
+    margin: 0 0 8px;
+    padding: 0 0 0 18px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #4b5563;
+}
+.travel-pdpa .travel-circuit-docs {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.travel-pdpa .travel-circuit-docs__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    font-weight: 600;
+    color: var(--travel-pdpa-link);
+}
+.travel-pdpa .travel-circuit-level {
+    display: inline-flex;
+    gap: 3px;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+.travel-pdpa .travel-circuit-level__dot {
+    width: 8px;
+    height: 8px;
+    border: 1.5px solid #6b7280;
+    border-radius: 50%;
+    box-sizing: border-box;
+}
+.travel-pdpa .travel-circuit-level__dot--on {
+    border-color: var(--travel-pdpa-navy);
+    background: var(--travel-pdpa-navy);
+}
+.travel-pdpa .travel-circuit-excursions {
+    margin: 32px 0 0;
+    scroll-margin-top: 16px;
+}
+.travel-pdpa .travel-circuit-excursions__intro {
+    margin: 0 0 14px;
+    font-size: 14px;
+    color: var(--travel-pdpa-muted);
+}
+.travel-pdpa .travel-circuit-excursions__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.travel-pdpa .travel-circuit-excursion {
+    padding: 14px 16px;
+    border: 1px solid #e3e8ef;
+    border-radius: 10px;
+    background: #ffffff;
+}
+.travel-pdpa .travel-circuit-excursion__title {
+    margin: 0 0 6px;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+.travel-pdpa .travel-circuit-excursion__text {
+    margin: 0 0 6px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #374151;
+}
+.travel-pdpa .travel-circuit-excursion__price {
+    margin: 8px 0 0;
+    font-weight: 700;
+}
+.travel-pdpa .travel-circuit-excursions__note {
+    margin: 16px 0 0;
+    padding: 14px 16px;
+    border-radius: 8px;
+    background: #f5f7fa;
+}
 @media (max-width: 767px) {
     .travel-pdpa .travel-circuit-details {
         margin-top: 28px;
     }
     .travel-pdpa .travel-circuit-details__grid,
     .travel-pdpa .travel-circuit-include__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .travel-pdpa .travel-circuit-highlights__list {
         grid-template-columns: minmax(0, 1fr);
     }
     .travel-pdpa .travel-circuit-menu__list {

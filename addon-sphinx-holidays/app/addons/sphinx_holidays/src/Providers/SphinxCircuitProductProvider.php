@@ -10,6 +10,7 @@ use Tygh\Addons\TravelCore\Dto\Circuit\CircuitDetails;
 use Tygh\Addons\TravelCore\Dto\Circuit\CircuitPage;
 use Tygh\Addons\TravelCore\Helpers\PlainText;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\ViewModels\CircuitDetailsViewFactory;
 
 /**
  * Claims the products that are Sphinx circuits: a row of ?:sphinx_circuits
@@ -110,11 +111,26 @@ final class SphinxCircuitProductProvider implements CircuitProductProviderInterf
     }
 
     /**
+     * Sphinx's additional_info notes have no type ("category": "other"):
+     * these words in a note's title say where the page shows it. Any other
+     * note is a thing to know.
+     *
+     * @var array<string, string> section => title pattern
+     */
+    public const array NOTE_SECTIONS = [
+        'highlights' => '/(incant|încânt|highlight|de ce sa|de ce să|puncte de atractie|puncte de atracție)/iu',
+        'excursions' => '/excursi/iu',
+        'prices' => '/(reduceri|supliment|discount)/iu',
+    ];
+
+    /**
      * The page's program and details from what the circuits sync keeps:
      * each itinerary day (its title, its description and additional info,
-     * its hotel and stars, its meals) and the details (included, not
-     * included, the things to know, the group's size, the age asked). The
-     * texts come as plain text: Sphinx may send HTML.
+     * its hotel and stars, its meals, its photos, whether it is a high
+     * point) and the details (CircuitStaticContent::details(): included,
+     * not included, the notes by where they show, the group's size, the age
+     * asked, the difficulty, the hotel, the optional excursions, the
+     * documents). The texts come as plain text: Sphinx may send HTML.
      *
      * @param mixed $itinerary the itinerary_json column (a JSON list of days)
      * @param mixed $details the details_json column (CircuitStaticContent::details())
@@ -133,6 +149,8 @@ final class SphinxCircuitProductProvider implements CircuitProductProviderInterf
                 $plain($accommodation['hotel'] ?? ''),
                 self::stars(TypeCoerce::toString($accommodation['category'] ?? '')),
                 $plain(TypeCoerce::toStringMap($day['meals'] ?? null)['description'] ?? ''),
+                self::photos($day['images'] ?? null),
+                ($day['is_highlighted'] ?? false) === true,
             );
             if ($circuitDay->title !== '' || $circuitDay->text !== '' || $circuitDay->hotel !== '' || $circuitDay->meals !== '') {
                 $days[] = $circuitDay;
@@ -153,26 +171,146 @@ final class SphinxCircuitProductProvider implements CircuitProductProviderInterf
 
             return $out;
         };
-        $notes = [];
+        $sections = ['notes' => [], 'highlights' => [], 'excursions' => [], 'prices' => []];
         foreach (TypeCoerce::toRowList($map['additional_info'] ?? []) as $item) {
             $note = ['title' => $plain($item['title'] ?? ''), 'text' => $plain($item['description'] ?? '')];
             if ($note['title'] !== '' || $note['text'] !== '') {
-                $notes[] = $note;
+                $sections[self::noteSection($note['title'])][] = $note;
             }
         }
         $group = TypeCoerce::toStringMap($map['group_size'] ?? null);
         $age = TypeCoerce::toStringMap($map['age'] ?? null);
+        $hotel = TypeCoerce::toStringMap($map['accommodation'] ?? null);
 
         return new CircuitDetails(
             $days,
             $titles($map['included'] ?? []),
             $titles($map['not_included'] ?? []),
-            $notes,
+            $sections['notes'],
             max(0, TypeCoerce::toInt($group['min'] ?? 0)),
             max(0, TypeCoerce::toInt($group['max'] ?? 0)),
             max(0, TypeCoerce::toInt($age['min'] ?? 0)),
             max(0, TypeCoerce::toInt($age['max'] ?? 0)),
+            self::highlights($sections['highlights']),
+            self::difficulty($map['difficulty'] ?? null),
+            [
+                'hotel' => $plain($hotel['hotel'] ?? ''),
+                'stars' => self::stars(TypeCoerce::toString($hotel['category'] ?? '')),
+                'text' => self::keepLines(TypeCoerce::toString($hotel['description'] ?? '')),
+            ],
+            self::excursions($map['activities'] ?? null),
+            $sections['excursions'],
+            $sections['prices'],
+            self::documents($map['documents'] ?? null, $plain),
         );
+    }
+
+    /** Where a note with this title shows: highlights, excursions, prices, or notes. */
+    public static function noteSection(string $title): string
+    {
+        foreach (self::NOTE_SECTIONS as $section => $pattern) {
+            if (preg_match($pattern, $title) === 1) {
+                return $section;
+            }
+        }
+
+        return 'notes';
+    }
+
+    /**
+     * The trip's high points: the first highlights note's title and its
+     * lines (each a point), the others' lines after them.
+     *
+     * @param list<array{title: string, text: string}> $notes
+     *
+     * @return array{title: string, items: list<string>}
+     */
+    private static function highlights(array $notes): array
+    {
+        $items = [];
+        foreach ($notes as $note) {
+            array_push($items, ...CircuitDetailsViewFactory::lines($note['text']));
+        }
+
+        return ['title' => $notes[0]['title'] ?? '', 'items' => $items];
+    }
+
+    /** The difficulty, 1 to 5; 0 when the details say none. */
+    private static function difficulty(mixed $raw): int
+    {
+        $level = TypeCoerce::toInt(TypeCoerce::toStringMap($raw)['level'] ?? 0);
+
+        return $level >= 1 && $level <= 5 ? $level : 0;
+    }
+
+    /**
+     * A text that may be HTML, as plain text with its lines kept (the
+     * hotel's "# Facilitati camere" titles start lines).
+     */
+    private static function keepLines(string $text): string
+    {
+        return trim(PlainText::fromHtml(str_replace(["\r\n", "\r"], "\n", $text)));
+    }
+
+    /**
+     * @return list<array{title: string, text: string, duration: string, price: float, currency: string, highlighted: bool}>
+     */
+    private static function excursions(mixed $list): array
+    {
+        $out = [];
+        foreach (TypeCoerce::toRowList($list) as $activity) {
+            $title = PlainText::fromHtml(TypeCoerce::toString($activity['title'] ?? ''));
+            $text = PlainText::fromHtml(TypeCoerce::toString($activity['description'] ?? ''));
+            if ($title === '' && $text === '') {
+                continue;
+            }
+            $out[] = [
+                'title' => $title !== '' ? $title : $text,
+                'text' => $title !== '' && $text !== $title ? $text : '',
+                'duration' => TypeCoerce::toString($activity['duration'] ?? ''),
+                'price' => max(0.0, TypeCoerce::toFloat($activity['price'] ?? 0)),
+                'currency' => TypeCoerce::toString($activity['currency'] ?? ''),
+                'highlighted' => ($activity['highlighted'] ?? false) === true,
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param \Closure(mixed): string $plain
+     *
+     * @return list<array{title: string, url: string}>
+     */
+    private static function documents(mixed $list, \Closure $plain): array
+    {
+        $out = [];
+        foreach (TypeCoerce::toRowList($list) as $document) {
+            $url = TypeCoerce::toString($document['url'] ?? '');
+            if (preg_match('#^https?://\S+$#i', $url) === 1) {
+                $out[] = ['title' => $plain($document['title'] ?? ''), 'url' => $url];
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * A day's photos: their web links, each once.
+     *
+     * @return list<string>
+     */
+    private static function photos(mixed $images): array
+    {
+        $urls = [];
+        foreach (TypeCoerce::toList($images) as $image) {
+            $url = trim(TypeCoerce::toString(is_array($image) ? ($image['url'] ?? '') : $image));
+            if (preg_match('#^https?://\S+$#i', $url) === 1) {
+                $urls[$url] = true;
+            }
+        }
+
+        return array_keys($urls);
     }
 
     /**

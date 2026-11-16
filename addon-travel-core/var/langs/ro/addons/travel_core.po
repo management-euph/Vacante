@@ -4490,6 +4490,98 @@ msgctxt "Languages::travel_core.circuit_age_max_many"
 msgid "Travellers must be at most [n] years old."
 msgstr "Turiștii trebuie să aibă cel mult [n] de ani."
 
+msgctxt "Languages::travel_core.circuit_menu_excursions"
+msgid "Optional excursions"
+msgstr "Excursii opționale"
+
+msgctxt "Languages::travel_core.circuit_highlights"
+msgid "Why you'll love this trip"
+msgstr "Ce te va încânta"
+
+msgctxt "Languages::travel_core.circuit_expand_all"
+msgid "Expand all days"
+msgstr "Deschide toate zilele"
+
+msgctxt "Languages::travel_core.circuit_collapse_all"
+msgid "Collapse all days"
+msgstr "Închide toate zilele"
+
+msgctxt "Languages::travel_core.circuit_day_highlight"
+msgid "Highlight"
+msgstr "Punct de atracție"
+
+msgctxt "Languages::travel_core.circuit_day_photo"
+msgid "Day [n], photo [m]"
+msgstr "Ziua [n], fotografia [m]"
+
+msgctxt "Languages::travel_core.circuit_excursions_intro"
+msgid "Not included in the price: you book and pay for them separately."
+msgstr "Nu sunt incluse în preț: se rezervă și se plătesc separat."
+
+msgctxt "Languages::travel_core.circuit_excursion_price"
+msgid "[price] / person"
+msgstr "[price] / persoană"
+
+msgctxt "Languages::travel_core.circuit_price_notes"
+msgid "Discounts and supplements"
+msgstr "Reduceri și suplimente"
+
+msgctxt "Languages::travel_core.circuit_documents"
+msgid "Documents"
+msgstr "Documente"
+
+msgctxt "Languages::travel_core.circuit_new_tab"
+msgid "opens in a new tab"
+msgstr "se deschide într-o filă nouă"
+
+msgctxt "Languages::travel_core.circuit_difficulty"
+msgid "Difficulty"
+msgstr "Dificultate"
+
+msgctxt "Languages::travel_core.circuit_difficulty_1"
+msgid "Easy"
+msgstr "Ușor"
+
+msgctxt "Languages::travel_core.circuit_difficulty_2"
+msgid "Light"
+msgstr "Lejer"
+
+msgctxt "Languages::travel_core.circuit_difficulty_3"
+msgid "Moderate"
+msgstr "Moderat"
+
+msgctxt "Languages::travel_core.circuit_difficulty_4"
+msgid "Demanding"
+msgstr "Solicitant"
+
+msgctxt "Languages::travel_core.circuit_difficulty_5"
+msgid "Challenging"
+msgstr "Dificil"
+
+msgctxt "Languages::travel_core.circuit_difficulty_level"
+msgid "Level [n] of 5"
+msgstr "Nivelul [n] din 5"
+
+msgctxt "Languages::travel_core.circuit_hotel_stars"
+msgid "[n]★ hotel"
+msgstr "Hotel [n]★"
+
+msgctxt "Languages::travel_core.circuit_hotels_range"
+msgid "[min]–[max]★ hotels"
+msgstr "Hoteluri [min]–[max]★"
+
+msgctxt "Languages::travel_core.circuit_age_range"
+msgid "Age [min]–[max]"
+msgstr "Vârsta [min]–[max] ani"
+
+msgctxt "Languages::travel_core.circuit_age_from"
+msgid "Age [n]+"
+msgstr "Vârsta minimă [n] ani"
+
+msgctxt "Languages::travel_core.circuit_age_up_to"
+msgid "Age up to [n]"
+msgstr "Vârsta maximă [n] ani"
+
 msgctxt "Languages::travel_core.circuit_route"
 msgid "Route"
 msgstr "Traseu"
