@@ -164,25 +164,24 @@ final class CircuitDetailsViewFactory
      */
     public static function sections(string $text): array
     {
+        $titles = [''];
+        $lines = [[]];
+        foreach (preg_split('/\R/u', $text) ?: [] as $line) {
+            if (preg_match('/^\s*#+\s*(.+?)\s*$/u', $line, $m) === 1) {
+                $titles[] = $m[1];
+                $lines[] = [];
+                continue;
+            }
+            $lines[count($lines) - 1][] = $line;
+        }
+
         $sections = [];
-        $title = '';
-        $body = [];
-        $close = static function () use (&$sections, &$title, &$body): void {
-            $paragraphs = PlainText::paragraphs(implode("\n", $body));
+        foreach ($titles as $i => $title) {
+            $paragraphs = PlainText::paragraphs(implode("\n", $lines[$i] ?? []));
             if ($title !== '' || $paragraphs !== []) {
                 $sections[] = ['title' => $title, 'paragraphs' => $paragraphs];
             }
-        };
-        foreach (preg_split('/\R/u', $text) ?: [] as $line) {
-            if (preg_match('/^\s*#+\s*(.+?)\s*$/u', $line, $m) === 1) {
-                $close();
-                $title = $m[1];
-                $body = [];
-                continue;
-            }
-            $body[] = $line;
         }
-        $close();
 
         return $sections;
     }
