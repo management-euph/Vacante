@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { groupByMonth, pickDate, monthIndexOf, missingAges, quoteUrl } from '../../addon-travel-core/react-src/src/circuitDates.js';
+import { groupByMonth, pickDate, monthIndexOf, missingAges, quoteUrl, monthGrid } from '../../addon-travel-core/react-src/src/circuitDates.js';
 
 /**
  * The circuit bar on a circuit's page (board 16.3): its departures by month
@@ -80,5 +80,20 @@ describe('quoteUrl', () => {
             { adults: 2, children: 1, childrenAges: [7] },
             { adults: 1, children: 0, childrenAges: [] },
         ]);
+    });
+});
+
+describe('monthGrid', () => {
+    it('gives each year with a departure its twelve months, each with its lowest price, the others unselectable', () => {
+        const groups = groupByMonth([...departures, { date: '2028-01-10', price: 900, currency: 'EUR' }]);
+        const grid = monthGrid(groups, '2027-08');
+
+        expect(grid.map((y) => y.year)).toEqual(['2027', '2028']);
+        expect(grid[0].months).toHaveLength(12);
+        expect(grid[0].months[6]).toEqual({ month: '2027-07', index: 0, price: 1092, currency: 'EUR', selected: false });
+        expect(grid[0].months[7]).toEqual({ month: '2027-08', index: 1, price: 1150, currency: 'EUR', selected: true });
+        expect(grid[0].months[0]).toEqual({ month: '2027-01', index: -1, price: 0, currency: '', selected: false });
+        expect(grid[1].months[0].index).toBe(2);
+        expect(monthGrid([], '')).toEqual([]);
     });
 });

@@ -15,15 +15,22 @@
  * {departures: [{date, price, currency}], error}; the rooms from
  * config.quoteDispatch (sphinx_booking.circuit_quote). The logic without
  * React lives in circuitDates.js and circuitRooms.js.
+ *
+ * With departures in more than one month, a month grid (each month's lowest
+ * price, months without a departure greyed) picks the month whose dates the
+ * chips show. The page's transport fact ("Avion din București") opens the
+ * flights dialog: the flights of the chosen date, from the rooms' quote
+ * (asked when not asked yet), each with its lowest price; choosing one
+ * scrolls to its rooms (docs/circuit-page-plan.md step 4).
  */
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import GuestPicker from './GuestPicker';
-import CircuitRooms from './CircuitRooms';
-import { CalendarIcon, GuestIcon, ChevronDown, ChevronLeft, ChevronRight, PinIcon } from './icons';
+import CircuitRooms, { Leg } from './CircuitRooms';
+import { CalendarIcon, GuestIcon, ChevronDown, PinIcon } from './icons';
 import { parseDate, formatDateField, getLocale, t } from './utils';
 import { injectStyles } from './styles';
-import { groupByMonth, pickDate, monthIndexOf, missingAges, quoteUrl } from './circuitDates';
+import { groupByMonth, pickDate, monthIndexOf, missingAges, quoteUrl, monthGrid } from './circuitDates';
 import { chipDate, formatPrice, partySummary } from './circuitFormat';
 import { roomsKey, bookUrl } from './circuitRooms';
 
@@ -91,6 +98,9 @@ export default function CircuitBar({ config }) {
     const datesRef = useRef(null);
     const roomsRef = useRef(null);
     const scrollToRoomsRef = useRef(false);
+    const [showFlights, setShowFlights] = useState(false);
+    const flightsCloseRef = useRef(null);
+    const submitRef = useRef(null);
 
     // The departures from the chosen city (asked again when it changes).
     useEffect(() => {
@@ -209,9 +219,48 @@ export default function CircuitBar({ config }) {
         scrollToRoomsRef.current = true;
     };
 
+    submitRef.current = handleSubmit;
+
+    // The page's transport fact asks for the flights (pdp-design-a.js).
+    useEffect(() => {
+        const open = () => {
+            setShowFlights(true);
+            if (!asked && submitRef.current) {
+                scrollToRoomsRef.current = false;
+                submitRef.current();
+                scrollToRoomsRef.current = false;
+            }
+        };
+        document.addEventListener('travel:circuit-flights', open);
+        return () => document.removeEventListener('travel:circuit-flights', open);
+    }, [asked]);
+
+    useEffect(() => {
+        if (!showFlights) return undefined;
+        if (flightsCloseRef.current) flightsCloseRef.current.focus();
+        const onKey = (event) => { if (event.key === 'Escape') setShowFlights(false); };
+        document.addEventListener('keydown', onKey);
+        return () => document.removeEventListener('keydown', onKey);
+    }, [showFlights]);
+
+    const chooseFlight = (index) => {
+        setShowFlights(false);
+        const block = roomsRef.current ? roomsRef.current.querySelectorAll('.travel-circuit-block')[index] : null;
+        if (block) {
+            block.scrollIntoView({ block: 'start', behavior: 'smooth' });
+            const book = block.querySelector('.travel-circuit-offer__book');
+            if (book) book.focus({ preventScroll: true });
+        }
+    };
+
+    const flightBlocks = quote.status === 'ready' && quote.data
+        ? quote.data.blocks.map((block, index) => ({ block, index })).filter((entry) => entry.block.flight)
+        : [];
+
     const bookHref = (offer) => bookUrl(base, bookingDispatch, quote.choice || { circuitId, departureId, date, rooms: settledRooms }, offer);
 
     const group = groups[monthIndex] || null;
+    const grid = useMemo(() => monthGrid(groups, group ? group.month : ''), [groups, group]);
 
     return (
         <div className="nvt-booking-engine nvt-circuit-bar">
@@ -305,16 +354,38 @@ export default function CircuitBar({ config }) {
                 {dates.status === 'ready' && !group && (
                     <p className="travel-circuit-dates__state">{t('noDepartures', 'No departures from [city] in the coming months.').replace('[city]', city)}</p>
                 )}
+                {dates.status === 'ready' && group && grid.length > 0 && groups.length > 1 && (
+                    <div className="travel-circuit-months" role="group" aria-label={t('circuitMonthTitle', 'Choose the month')}>
+                        {grid.map((year) => (
+                            <div className="travel-circuit-months__year" key={year.year}>
+                                <span className="travel-circuit-months__label">{year.year}</span>
+                                <ul className="travel-circuit-months__list">
+                                    {year.months.map((cell) => (
+                                        <li key={cell.month}>
+                                            <button
+                                                type="button"
+                                                className={`travel-circuit-month${cell.selected ? ' travel-circuit-month--selected' : ''}`}
+                                                aria-pressed={cell.selected}
+                                                disabled={cell.index < 0}
+                                                onClick={() => setMonthIndex(cell.index)}
+                                            >
+                                                <span className="travel-circuit-month__name">{monthLabel(cell.month).split(' ')[0].slice(0, 3)}</span>
+                                                <span className="travel-circuit-month__price">
+                                                    {cell.index < 0 ? t('circuitNoDeparturesMonth', 'No departure') : formatPrice(cell.price, cell.currency)}
+                                                </span>
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ))}
+                    </div>
+                )}
                 {dates.status === 'ready' && group && (
                     <>
                         <span className="travel-circuit-dates__title">
                             {t('departuresFrom', 'Departures from [city], [month]:').replace('[city]', city).replace('[month]', monthLabel(group.month))}
                         </span>
-                        {monthIndex > 0 && (
-                            <button type="button" className="travel-circuit-dates__nav" onClick={() => setMonthIndex(monthIndex - 1)}>
-                                <ChevronLeft /> {monthLabel(groups[monthIndex - 1].month)}
-                            </button>
-                        )}
                         <ul className="travel-circuit-dates__list">
                             {group.departures.map((d) => (
                                 <li key={d.date}>
@@ -330,11 +401,6 @@ export default function CircuitBar({ config }) {
                                 </li>
                             ))}
                         </ul>
-                        {monthIndex < groups.length - 1 && (
-                            <button type="button" className="travel-circuit-dates__nav" onClick={() => setMonthIndex(monthIndex + 1)}>
-                                {monthLabel(groups[monthIndex + 1].month)} <ChevronRight />
-                            </button>
-                        )}
                     </>
                 )}
             </div>
@@ -342,6 +408,51 @@ export default function CircuitBar({ config }) {
             {asked && quote.status !== 'idle' && (
                 <div ref={roomsRef}>
                     <CircuitRooms quote={quote} hotelStars={hotelStars} bookHref={bookHref} />
+                </div>
+            )}
+
+            {showFlights && (
+                <div className="travel-circuit-flights" onClick={(event) => { if (event.target === event.currentTarget) setShowFlights(false); }}>
+                    <div className="travel-circuit-flights__dialog" role="dialog" aria-modal="true" aria-labelledby="travel-circuit-flights-title">
+                        <div className="travel-circuit-flights__head">
+                            <h2 className="travel-circuit-flights__title" id="travel-circuit-flights-title">
+                                {t('circuitFlightOptions', 'Flight options')}
+                                {date && <span className="travel-circuit-flights__meta">{`${city} · ${chipDate(date)}`}</span>}
+                            </h2>
+                            <button type="button" className="travel-circuit-flights__close" ref={flightsCloseRef} onClick={() => setShowFlights(false)}>
+                                {t('close', 'Close')}
+                            </button>
+                        </div>
+                        <div aria-live="polite">
+                            {!asked && <p className="travel-circuit-rooms__state">{t('chooseDepartureDate', 'Choose a departure date')}</p>}
+                            {(quote.status === 'loading' || (asked && quote.status === 'idle')) && (
+                                <p className="travel-circuit-rooms__state">{t('circuitFlightsLoading', 'Looking for the flights of this date…')}</p>
+                            )}
+                            {quote.status === 'error' && <p className="travel-circuit-rooms__state">{t('circuitRoomsError', 'The rooms cannot be loaded right now. Please try again.')}</p>}
+                            {quote.status === 'ages' && <p className="travel-circuit-rooms__state">{t('circuitRoomsAges', "Choose each child's age to see the price.")}</p>}
+                            {quote.status === 'ready' && flightBlocks.length === 0 && (
+                                <p className="travel-circuit-rooms__state">{t('circuitNoRooms', 'No rooms left for this departure. Choose another date.')}</p>
+                            )}
+                            {flightBlocks.length > 0 && (
+                                <ul className="travel-circuit-flights__list">
+                                    {flightBlocks.map(({ block, index }) => (
+                                        <li className="travel-circuit-flights__option" key={block.offers[0].offer_id}>
+                                            <dl className="travel-circuit-flight">
+                                                {block.flight.outbound && <Leg label={t('circuitOutbound', 'Outbound')} leg={block.flight.outbound} />}
+                                                {block.flight.inbound && <Leg label={t('circuitInbound', 'Return')} leg={block.flight.inbound} />}
+                                            </dl>
+                                            <div className="travel-circuit-flights__foot">
+                                                <strong>{t('circuitFlightFromPrice', 'from [price]').replace('[price]', formatPrice(block.offers[0].price, block.offers[0].currency))}</strong>
+                                                <button type="button" className="travel-circuit-flights__use" onClick={() => chooseFlight(index)}>
+                                                    {t('circuitUseFlight', "Show this flight's rooms")}
+                                                </button>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

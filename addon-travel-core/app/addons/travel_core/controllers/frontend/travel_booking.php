@@ -160,6 +160,9 @@ if ($mode === 'booking_config') {
                 'circuit_per_person', 'circuit_for_one_adult', 'circuit_book',
                 'circuit_loading_rooms', 'circuit_rooms_error', 'circuit_no_rooms', 'circuit_rooms_ages',
                 'circuit_terms_at_booking',
+                // The month grid and the flights dialog (docs/circuit-page-plan.md step 4)
+                'circuit_month_title', 'circuit_no_departures_month', 'circuit_flight_options',
+                'circuit_use_flight', 'circuit_flights_loading', 'circuit_flight_from_price', 'close',
                 // A hotel's page in a package mode (board 16.2)
                 'package_switch_label', 'package_stay_only', 'package_by_bus', 'package_by_plane',
                 'package_nights', 'package_prices_note_flight', 'package_prices_note_bus',

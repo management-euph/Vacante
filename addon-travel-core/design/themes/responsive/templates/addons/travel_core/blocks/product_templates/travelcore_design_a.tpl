@@ -166,9 +166,26 @@
                         {if $travel_pdp_from_price}
                             <p class="travel-pdpa-from">
                                 <span class="travel-pdpa-from__label">{__("travel_core.pdpa_from")}</span>
-                                <span class="travel-pdpa-from__price">{$travel_pdp_from_price|escape:html} {__("travel_core.pdpa_per_night")}</span>
-                                <span class="travel-pdpa-from__note">{__("travel_core.pdpa_from_note")}</span>
+                                {if $travel_circuit_facts}
+                                    {* A circuit (docs/circuit-page-plan.md step 4): a person's share of its lowest departure for 2 adults *}
+                                    <span class="travel-pdpa-from__price">{$travel_pdp_from_price|escape:html} {__("travel_core.circuit_from_per_person")}</span>
+                                    <span class="travel-pdpa-from__note">{__("travel_core.circuit_from_note")}</span>
+                                {else}
+                                    <span class="travel-pdpa-from__price">{$travel_pdp_from_price|escape:html} {__("travel_core.pdpa_per_night")}</span>
+                                    <span class="travel-pdpa-from__note">{__("travel_core.pdpa_from_note")}</span>
+                                {/if}
                             </p>
+                        {/if}
+                        {* What the supplier says a circuit's price includes: transport, airport taxes, luggage *}
+                        {if $travel_circuit_price_includes}
+                            <ul class="travel-pdpa-includes" aria-label="{__("travel_core.circuit_price_includes")|escape:html}">
+                                {foreach $travel_circuit_price_includes as $travel_circuit_include}
+                                    <li class="travel-pdpa-includes__item{if !$travel_circuit_include.included} travel-pdpa-includes__item--no{/if}">
+                                        {if $travel_circuit_include.included}{include file="addons/travel_core/components/design_a_icon.tpl" icon="check" size=14}{else}{include file="addons/travel_core/components/design_a_icon.tpl" icon="nocheck" size=14}<span class="travel-pdpa-sr">{__("travel_core.circuit_not_included")}: </span>{/if}
+                                        <span>{$travel_circuit_include.text|escape:html}</span>
+                                    </li>
+                                {/foreach}
+                            </ul>
                         {/if}
 
                         <a href="#travel-booking-root" class="ty-btn travel-pdpa-head__dates" data-travel-open-dates>{if $travel_circuit_facts}{__("travel_core.choose_departure_date")}{else}{__("travel_core.pdpa_choose_dates")}{/if}</a>

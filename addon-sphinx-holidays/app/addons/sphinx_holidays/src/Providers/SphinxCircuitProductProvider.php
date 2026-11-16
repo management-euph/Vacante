@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Providers;
 
+use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
+use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Contracts\CircuitProductProviderInterface;
 use Tygh\Addons\TravelCore\Dto\Circuit\CircuitDay;
 use Tygh\Addons\TravelCore\Dto\Circuit\CircuitDetails;
 use Tygh\Addons\TravelCore\Dto\Circuit\CircuitPage;
 use Tygh\Addons\TravelCore\Helpers\PlainText;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Repository\CircuitDepartureRepository;
+use Tygh\Addons\TravelCore\Services\CurrencyService;
 use Tygh\Addons\TravelCore\ViewModels\CircuitDetailsViewFactory;
 
 /**
@@ -30,6 +34,29 @@ final class SphinxCircuitProductProvider implements CircuitProductProviderInterf
      * (?:travel_circuit_departures).
      */
     public const string PROVIDER = 'sphinx';
+
+    /** @var \Closure(string): float circuit id => its "from" price for 2 adults (store price, primary currency; 0 when unknown) */
+    private readonly \Closure $fromPrice;
+
+    /**
+     * Tests inject the price; the default reads the departures the circuits
+     * sync saved, with the store's commission, in its primary currency.
+     *
+     * @param (\Closure(string): float)|null $fromPrice
+     */
+    public function __construct(?\Closure $fromPrice = null)
+    {
+        $this->fromPrice = $fromPrice ?? static function (string $circuitId): float {
+            $lowest = (new CircuitDepartureRepository())->lowestPrice(self::PROVIDER, $circuitId, date('Y-m-d'));
+            if ($lowest === null) {
+                return 0.0;
+            }
+            $primary = defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : 'EUR';
+
+            return (new CurrencyService($lowest['currency'] !== '' ? $lowest['currency'] : ConfigProvider::getDefaultCurrency()))
+                ->convertFromApiCurrency(Container::getCartService()->applyCommission($lowest['price']), $primary);
+        };
+    }
 
     #[\Override]
     public function resolveCircuit(int $productId, string $productCode): ?CircuitPage
@@ -61,6 +88,7 @@ final class SphinxCircuitProductProvider implements CircuitProductProviderInterf
             $starsMax,
             self::transport(TypeCoerce::toString($row['transport_type'] ?? '')),
             self::route(TypeCoerce::toString($row['destination_names'] ?? '')),
+            max(0.0, ($this->fromPrice)((string) $circuitId)),
         );
     }
 

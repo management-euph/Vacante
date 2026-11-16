@@ -103,6 +103,16 @@ final class CircuitDepartureRepositoryTest extends TestCase
         self::assertSame(['eurosite', ['196|EU', '197|EU'], self::NOW], $params);
     }
 
+    public function testTheLowestPriceFromToday(): void
+    {
+        DbStub::$getRow = static fn (): array => ['price' => '1090.50', 'currency' => 'EUR'];
+        self::assertSame(['price' => 1090.5, 'currency' => 'EUR'], (new CircuitDepartureRepository())->lowestPrice('sphinx', '1', '2026-11-16'));
+
+        DbStub::$getRow = static fn (): array => [];
+        self::assertNull((new CircuitDepartureRepository())->lowestPrice('sphinx', '1', '2026-11-16'));
+        self::assertNull((new CircuitDepartureRepository())->lowestPrice('sphinx', '', '2026-11-16'));
+    }
+
     public function testACircuitsDeparturesComeByDateWithTheirTypes(): void
     {
         $asked = [];

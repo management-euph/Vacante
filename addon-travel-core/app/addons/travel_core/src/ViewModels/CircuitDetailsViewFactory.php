@@ -121,6 +121,55 @@ final class CircuitDetailsViewFactory
         ];
     }
 
+    /**
+     * What the price box says the price includes (docs/circuit-page-plan.md
+     * step 4): for the transport, the airport taxes and the luggage, the
+     * supplier's first "included" item about it; for taxes and luggage it
+     * does not include, its first "not included" item about them (shown as
+     * not included). Nothing the supplier's lists do not say is claimed.
+     *
+     * @return list<array{text: string, included: bool}>
+     */
+    public function priceIncludes(?CircuitDetails $details): array
+    {
+        if ($details === null) {
+            return [];
+        }
+        $out = [];
+        foreach (self::PRICE_BOX_TOPICS as $topic => $pattern) {
+            $item = self::firstMatch($details->included, $pattern);
+            if ($item !== '') {
+                $out[] = ['text' => $item, 'included' => true];
+            } elseif ($topic !== 'transport') {
+                $item = self::firstMatch($details->notIncluded, $pattern);
+                if ($item !== '') {
+                    $out[] = ['text' => $item, 'included' => false];
+                }
+            }
+        }
+
+        return $out;
+    }
+
+    /** The price box's topics, each by words of the supplier's items (Romanian and English). */
+    private const array PRICE_BOX_TOPICS = [
+        'transport' => '/(avion|zbor|flight|transport)/iu',
+        'taxes' => '/(taxe|taxa|tax)/iu',
+        'luggage' => '/(bagaj|luggage|baggage)/iu',
+    ];
+
+    /** @param list<string> $items */
+    private static function firstMatch(array $items, string $pattern): string
+    {
+        foreach ($items as $item) {
+            if (preg_match($pattern, $item) === 1) {
+                return $item;
+            }
+        }
+
+        return '';
+    }
+
     /** Photos shown under a day, at most. */
     private const int DAY_PHOTOS = 3;
 

@@ -4335,8 +4335,8 @@ msgid "Choose a departure date"
 msgstr "Alege data plecării"
 
 msgctxt "Languages::travel_core.circuit_see_price"
-msgid "See the price"
-msgstr "Vezi prețul"
+msgid "Check availability"
+msgstr "Verifică disponibilitatea"
 
 msgctxt "Languages::travel_core.circuit_modify"
 msgid "Change"
@@ -4581,6 +4581,46 @@ msgstr "Vârsta minimă [n] ani"
 msgctxt "Languages::travel_core.circuit_age_up_to"
 msgid "Age up to [n]"
 msgstr "Vârsta maximă [n] ani"
+
+msgctxt "Languages::travel_core.circuit_from_per_person"
+msgid "/ person"
+msgstr "/ persoană"
+
+msgctxt "Languages::travel_core.circuit_from_note"
+msgid "indicative price, per person for 2 adults"
+msgstr "preț orientativ, de persoană pentru 2 adulți"
+
+msgctxt "Languages::travel_core.circuit_price_includes"
+msgid "What the price includes"
+msgstr "Ce include prețul"
+
+msgctxt "Languages::travel_core.circuit_flight_options"
+msgid "Flight options"
+msgstr "Variante de zbor"
+
+msgctxt "Languages::travel_core.circuit_transport_details"
+msgid "See the flights"
+msgstr "Vezi zborurile"
+
+msgctxt "Languages::travel_core.circuit_month_title"
+msgid "Choose the month"
+msgstr "Alege luna"
+
+msgctxt "Languages::travel_core.circuit_no_departures_month"
+msgid "No departure"
+msgstr "Fără plecare"
+
+msgctxt "Languages::travel_core.circuit_use_flight"
+msgid "Show this flight's rooms"
+msgstr "Vezi camerele acestui zbor"
+
+msgctxt "Languages::travel_core.circuit_flights_loading"
+msgid "Looking for the flights of this date…"
+msgstr "Căutăm zborurile acestei date…"
+
+msgctxt "Languages::travel_core.circuit_flight_from_price"
+msgid "from [price]"
+msgstr "de la [price]"
 
 msgctxt "Languages::travel_core.circuit_route"
 msgid "Route"

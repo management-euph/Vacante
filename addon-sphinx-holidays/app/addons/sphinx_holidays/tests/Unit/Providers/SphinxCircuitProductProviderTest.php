@@ -70,6 +70,23 @@ final class SphinxCircuitProductProviderTest extends TestCase
         self::assertSame([110], self::$queries[0][1]);
     }
 
+    /** Step 4: the page's "from" price is the lowest saved departure, as the provider prices it. */
+    public function testTheFromPriceIsTheLowestSavedDeparture(): void
+    {
+        self::answer(['circuit_id' => '17', 'name' => 'Creta', 'duration_days' => '5', 'duration_nights' => '4']);
+        $asked = [];
+
+        $circuit = (new SphinxCircuitProductProvider(static function (string $id) use (&$asked): float {
+            $asked[] = $id;
+
+            return 1198.0;
+        }))->resolveCircuit(110, 'SPXC17');
+
+        self::assertNotNull($circuit);
+        self::assertSame(1198.0, $circuit->fromPrice);
+        self::assertSame(['17'], $asked);
+    }
+
     public function testATransportSphinxDoesNotNameIsNotGuessed(): void
     {
         self::answer(['circuit_id' => '17', 'name' => 'Creta', 'transport_type' => 'BUS', 'destination_names' => '']);

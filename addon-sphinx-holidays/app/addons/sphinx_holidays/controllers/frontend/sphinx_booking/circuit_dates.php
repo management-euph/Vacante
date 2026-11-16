@@ -5,7 +5,9 @@ declare(strict_types=1);
  *
  * The departure dates of a circuit from one city, each with its price (2
  * adults, commission included), for the circuit bar on the circuit's page
- * (board 16.3, travel_core CircuitBar.jsx): CircuitDepartureDates.
+ * (board 16.3, travel_core CircuitBar.jsx): the departures the circuits sync
+ * saved (StoredCircuitDates), else Sphinx's rates, live
+ * (CircuitDepartureDates).
  *
  * Only an active circuit of the store is asked about, so the endpoint never
  * relays an arbitrary id to Sphinx.
@@ -16,6 +18,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 use Tygh\Addons\SphinxHolidays\Services\CircuitDepartureDates;
 use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\SphinxHolidays\Services\StoredCircuitDates;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
@@ -29,10 +32,13 @@ $known = $circuitId > 0 && TypeCoerce::toInt(db_get_field(
 )) === $circuitId;
 if ($known) {
     try {
-        $answer = (new CircuitDepartureDates(
-            Container::getApi(),
-            static fn (float $price): float => Container::getCartService()->applyCommission($price),
-        ))->forDeparture($circuitId, $departureId, new \DateTimeImmutable('today'));
+        $commission = static fn (float $price): float => Container::getCartService()->applyCommission($price);
+        $today = new \DateTimeImmutable('today');
+        // What the circuits sync saved, else Sphinx's rates, live.
+        $stored = (new StoredCircuitDates($commission))->forDeparture($circuitId, $departureId, $today);
+        $answer = $stored !== []
+            ? ['departures' => $stored, 'error' => false]
+            : (new CircuitDepartureDates(Container::getApi(), $commission))->forDeparture($circuitId, $departureId, $today);
     } catch (\Throwable $e) {
         fn_log_event('general', 'runtime', [
             'message' => 'Sphinx circuit dates failed: ' . $e->getMessage(),

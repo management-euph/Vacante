@@ -184,6 +184,29 @@ final class CircuitDetailsViewFactoryTest extends TestCase
         self::assertFalse((new CircuitDetails(documents: [['title' => 'x', 'url' => 'https://x.example/a.pdf']]))->isEmpty());
     }
 
+    /** Step 4: the price box says only what the supplier's own lists say. */
+    public function testThePriceBoxTakesTheSuppliersOwnItems(): void
+    {
+        $factory = new CircuitDetailsViewFactory();
+
+        self::assertSame([
+            ['text' => 'Transport avion Bucuresti – Malta – Bucuresti', 'included' => true],
+            ['text' => 'Taxele de aeroport', 'included' => true],
+            ['text' => '1 bagaj la cala de maxim 20Kg', 'included' => true],
+        ], $factory->priceIncludes(new CircuitDetails(
+            included: ['7 nopti cazare la hotel 3*', 'Transport avion Bucuresti – Malta – Bucuresti', 'Taxele de aeroport', 'Transport autocar la destinatie', '1 bagaj la cala de maxim 20Kg'],
+            notIncluded: ['Taxa de statiune'],
+        )), 'one item per topic, the first the supplier lists');
+
+        self::assertSame([
+            ['text' => 'Transport autocar', 'included' => true],
+            ['text' => 'Taxa de statiune: 0,5 €/zi', 'included' => false],
+        ], $factory->priceIncludes(new CircuitDetails(included: ['Transport autocar', 'Ghid'], notIncluded: ['Asigurare', 'Taxa de statiune: 0,5 €/zi'])), 'taxes not included are said so; a topic neither list names is left out');
+
+        self::assertSame([], $factory->priceIncludes(null));
+        self::assertSame([], $factory->priceIncludes(new CircuitDetails(included: ['Ghid'])));
+    }
+
     /** Suppliers send HTML: the page gets plain text (it escapes it), its paragraphs and line breaks kept. */
     public function testASuppliersHtmlBecomesPlainText(): void
     {
