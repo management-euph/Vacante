@@ -4335,8 +4335,8 @@ msgid "Choose a departure date"
 msgstr "Choose a departure date"
 
 msgctxt "Languages::travel_core.circuit_see_price"
-msgid "See the price"
-msgstr "See the price"
+msgid "Check availability"
+msgstr "Check availability"
 
 msgctxt "Languages::travel_core.circuit_modify"
 msgid "Change"
@@ -4581,6 +4581,46 @@ msgstr "Age [n]+"
 msgctxt "Languages::travel_core.circuit_age_up_to"
 msgid "Age up to [n]"
 msgstr "Age up to [n]"
+
+msgctxt "Languages::travel_core.circuit_from_per_person"
+msgid "/ person"
+msgstr "/ person"
+
+msgctxt "Languages::travel_core.circuit_from_note"
+msgid "indicative price, per person for 2 adults"
+msgstr "indicative price, per person for 2 adults"
+
+msgctxt "Languages::travel_core.circuit_price_includes"
+msgid "What the price includes"
+msgstr "What the price includes"
+
+msgctxt "Languages::travel_core.circuit_flight_options"
+msgid "Flight options"
+msgstr "Flight options"
+
+msgctxt "Languages::travel_core.circuit_transport_details"
+msgid "See the flights"
+msgstr "See the flights"
+
+msgctxt "Languages::travel_core.circuit_month_title"
+msgid "Choose the month"
+msgstr "Choose the month"
+
+msgctxt "Languages::travel_core.circuit_no_departures_month"
+msgid "No departure"
+msgstr "No departure"
+
+msgctxt "Languages::travel_core.circuit_use_flight"
+msgid "Show this flight's rooms"
+msgstr "Show this flight's rooms"
+
+msgctxt "Languages::travel_core.circuit_flights_loading"
+msgid "Looking for the flights of this date…"
+msgstr "Looking for the flights of this date…"
+
+msgctxt "Languages::travel_core.circuit_flight_from_price"
+msgid "from [price]"
+msgstr "from [price]"
 
 msgctxt "Languages::travel_core.circuit_route"
 msgid "Route"

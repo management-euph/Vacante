@@ -88,7 +88,8 @@ as sent (day photos, transport legs, labels).
 | 1 | Sync and storage: the shared departures table, the departure city from the static list, the dropped fields kept | done |
 | 2 | Photos: the circuit gallery becomes the product's images (job `sync_circuit_images`, daily 04:05, then `process_image_queue`) | done |
 | 3 | Page sections, both themes, EN/RO: high points, days that open and close with their photos, the trip's hotel, optional excursions, discounts, documents; difficulty, stars and age under the title | done |
-| 4 | Booking card: month picker, price box, availability check, flight dialog, extras | |
+| 4a | Booking bar: dates from the saved departures (live rates as fallback), month grid with each month's lowest price, "Check availability", price box (from / person and what the supplier says the price includes), flights dialog from the transport fact | done |
+| 4b | Booking card: sticky on the right (desktop), bottom bar and sheet (phone), extras with the live total | |
 | 5 | Admin "Circuit" tab | |
 | 6 | Optional: difficulty, group size and stars as filters; structured data | |
 

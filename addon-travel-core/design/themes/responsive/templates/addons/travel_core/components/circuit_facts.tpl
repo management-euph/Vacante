@@ -19,6 +19,8 @@
         <li class="travel-pdpa-fact">
             {include file="addons/travel_core/components/design_a_icon.tpl" icon="plane" size=14}
             <span>{if $travel_circuit_facts.from_city}{__("travel_core.circuit_flight_from", ["[city]" => $travel_circuit_facts.from_city|escape:html])}{else}{__("travel_core.circuit_flight")}{/if}</span>
+            {* Opens the flights of the chosen date (CircuitBar.jsx); pdp-design-a.js shows it when the bar is on the page. *}
+            <button type="button" class="travel-pdpa-fact__more" data-travel-circuit-flights hidden aria-haspopup="dialog">{__("travel_core.circuit_transport_details")}</button>
         </li>
     {elseif $travel_circuit_facts.transport == "bus"}
         <li class="travel-pdpa-fact">

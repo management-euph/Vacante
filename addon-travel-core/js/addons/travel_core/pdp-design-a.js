@@ -1552,6 +1552,12 @@
             fitGallery(page);
             fitPhotos(page);
             initCircuitDays(page);
+            // A circuit's "See the flights": only with the bar that answers it.
+            if (document.getElementById('travel-booking-root')) {
+                Array.prototype.forEach.call(page.querySelectorAll('[data-travel-circuit-flights]'), function (button) {
+                    button.hidden = false;
+                });
+            }
         });
         armLiveResults();
     }
@@ -1602,6 +1608,11 @@
         }
         var page = target ? target.closest('.travel-pdpa') : null;
         if (!page) {
+            return;
+        }
+        // A circuit's transport fact: the bar (CircuitBar.jsx) opens its flights dialog.
+        if (target.closest('[data-travel-circuit-flights]')) {
+            document.dispatchEvent(new CustomEvent('travel:circuit-flights'));
             return;
         }
         if (sheetClick(target) || resultsClick(target)) {

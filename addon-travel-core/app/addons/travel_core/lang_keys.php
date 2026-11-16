@@ -3525,8 +3525,8 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'ro' => 'Alege data plecării',
     ],
     'travel_core.circuit_see_price' => [
-        'en' => 'See the price',
-        'ro' => 'Vezi prețul',
+        'en' => 'Check availability',
+        'ro' => 'Verifică disponibilitatea',
     ],
     // Its rooms: "Camera pentru tot circuitul" (board 16.3, CircuitBar.jsx).
     'travel_core.circuit_modify' => [
@@ -3780,6 +3780,46 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
     'travel_core.circuit_age_up_to' => [
         'en' => 'Age up to [n]',
         'ro' => 'Vârsta maximă [n] ani',
+    ],
+    'travel_core.circuit_from_per_person' => [
+        'en' => '/ person',
+        'ro' => '/ persoană',
+    ],
+    'travel_core.circuit_from_note' => [
+        'en' => 'indicative price, per person for 2 adults',
+        'ro' => 'preț orientativ, de persoană pentru 2 adulți',
+    ],
+    'travel_core.circuit_price_includes' => [
+        'en' => 'What the price includes',
+        'ro' => 'Ce include prețul',
+    ],
+    'travel_core.circuit_flight_options' => [
+        'en' => 'Flight options',
+        'ro' => 'Variante de zbor',
+    ],
+    'travel_core.circuit_transport_details' => [
+        'en' => 'See the flights',
+        'ro' => 'Vezi zborurile',
+    ],
+    'travel_core.circuit_month_title' => [
+        'en' => 'Choose the month',
+        'ro' => 'Alege luna',
+    ],
+    'travel_core.circuit_no_departures_month' => [
+        'en' => 'No departure',
+        'ro' => 'Fără plecare',
+    ],
+    'travel_core.circuit_use_flight' => [
+        'en' => 'Show this flight\'s rooms',
+        'ro' => 'Vezi camerele acestui zbor',
+    ],
+    'travel_core.circuit_flights_loading' => [
+        'en' => 'Looking for the flights of this date…',
+        'ro' => 'Căutăm zborurile acestei date…',
+    ],
+    'travel_core.circuit_flight_from_price' => [
+        'en' => 'from [price]',
+        'ro' => 'de la [price]',
     ],
     'travel_core.circuit_route' => [
         'en' => 'Route',

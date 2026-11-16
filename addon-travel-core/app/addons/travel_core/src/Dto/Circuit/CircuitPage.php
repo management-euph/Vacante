@@ -28,6 +28,7 @@ final readonly class CircuitPage
      * @param int $hotelStarsMax the most stars of its hotels on the route (0 when unknown)
      * @param string $transport how it travels: self::FLIGHT, self::BUS, or '' when the supplier does not say
      * @param list<string> $route the places on its route, in the supplier's order
+     * @param float $fromPrice its lowest departure price for 2 adults, the store's selling price in its primary currency (0 when unknown)
      */
     public function __construct(
         public string $providerName,
@@ -40,6 +41,7 @@ final readonly class CircuitPage
         public int $hotelStarsMax = 0,
         public string $transport = '',
         public array $route = [],
+        public float $fromPrice = 0.0,
     ) {
     }
 

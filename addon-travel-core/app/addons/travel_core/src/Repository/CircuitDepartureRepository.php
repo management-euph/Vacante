@@ -177,6 +177,32 @@ final class CircuitDepartureRepository
     }
 
     /**
+     * A circuit's lowest departure price from $from on (Y-m-d), with its
+     * currency; null when it has none stored.
+     *
+     * @return array{price: float, currency: string}|null
+     */
+    public function lowestPrice(string $provider, string $circuitId, string $from): ?array
+    {
+        if ($provider === '' || $circuitId === '') {
+            return null;
+        }
+        self::ensureTable();
+        $row = TypeCoerce::toStringMap(db_get_row(
+            'SELECT price, currency FROM ?:travel_circuit_departures
+             WHERE provider = ?s AND circuit_id = ?s AND departure_date >= ?s AND price > 0
+             ORDER BY price LIMIT 1',
+            $provider,
+            $circuitId,
+            $from,
+        ));
+
+        $price = TypeCoerce::toFloat($row['price'] ?? 0);
+
+        return $price > 0 ? ['price' => $price, 'currency' => TypeCoerce::toString($row['currency'] ?? '')] : null;
+    }
+
+    /**
      * The rows that can be stored, each circuit, city and date once: one
      * without its circuit or a Y-m-d date is left out, and of two for the
      * same departure the cheaper stays.

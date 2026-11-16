@@ -214,6 +214,14 @@ function fn_travel_core_dispatch_before_display(): void
                 $circuitView = new CircuitDetailsViewFactory();
                 // Its route, length, transport and group, under its title.
                 $view->assign('travel_circuit_facts', $circuitView->facts($circuit, $circuitDetails));
+                // The price box (docs/circuit-page-plan.md step 4): "from" a
+                // person's share of the lowest saved departure for 2 adults,
+                // and what the supplier says the price includes.
+                $view->assign(
+                    'travel_pdp_from_price',
+                    $circuit->fromPrice > 0 ? \Tygh\Addons\TravelCore\Services\MoneyFormatter::forStore(true)->format($circuit->fromPrice / 2) : '',
+                );
+                $view->assign('travel_circuit_price_includes', $circuitView->priceIncludes($circuitDetails));
                 if ($circuitDetails !== null) {
                     $view->assign('travel_circuit', $circuitView->view($circuitDetails));
                 }
