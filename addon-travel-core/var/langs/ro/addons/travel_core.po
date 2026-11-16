@@ -4626,6 +4626,98 @@ msgctxt "Languages::travel_core.circuit_extras_at_booking"
 msgid "Optional extras, chosen when you book:"
 msgstr "Extra opționale, alese la rezervare:"
 
+msgctxt "Languages::travel_core.circuit_admin_tab"
+msgid "Circuit"
+msgstr "Circuit"
+
+msgctxt "Languages::travel_core.circuit_admin_readonly"
+msgid "Read-only: this content comes from the supplier."
+msgstr "Doar citire: conținutul vine de la furnizor."
+
+msgctxt "Languages::travel_core.circuit_admin_readonly_text"
+msgid "Every [provider] circuits sync replaces it, so it cannot be edited here. To change it, change the circuit at the supplier."
+msgstr "Fiecare sincronizare a circuitelor [provider] îl înlocuiește, deci nu se poate edita aici. Pentru a-l schimba, modifică circuitul la furnizor."
+
+msgctxt "Languages::travel_core.circuit_admin_id"
+msgid "Supplier, circuit ID"
+msgstr "Furnizor, ID circuit"
+
+msgctxt "Languages::travel_core.circuit_admin_transport"
+msgid "Transport"
+msgstr "Transport"
+
+msgctxt "Languages::travel_core.circuit_admin_duration"
+msgid "Days / nights"
+msgstr "Zile / nopți"
+
+msgctxt "Languages::travel_core.circuit_admin_group"
+msgid "Group size"
+msgstr "Mărimea grupului"
+
+msgctxt "Languages::travel_core.circuit_admin_age"
+msgid "Age"
+msgstr "Vârstă"
+
+msgctxt "Languages::travel_core.circuit_admin_day_title"
+msgid "Title"
+msgstr "Titlu"
+
+msgctxt "Languages::travel_core.circuit_admin_meals"
+msgid "Meals"
+msgstr "Mese"
+
+msgctxt "Languages::travel_core.circuit_admin_photos"
+msgid "Photos"
+msgstr "Fotografii"
+
+msgctxt "Languages::travel_core.circuit_admin_notes"
+msgid "Notes and where the page shows them"
+msgstr "Note și unde le arată pagina"
+
+msgctxt "Languages::travel_core.circuit_admin_note_title"
+msgid "Title from the supplier"
+msgstr "Titlu de la furnizor"
+
+msgctxt "Languages::travel_core.circuit_admin_shown_in"
+msgid "Shown in"
+msgstr "Afișată în"
+
+msgctxt "Languages::travel_core.circuit_admin_section_highlights"
+msgid "Highlights"
+msgstr "Puncte de atracție"
+
+msgctxt "Languages::travel_core.circuit_admin_section_excursions"
+msgid "Optional excursions"
+msgstr "Excursii opționale"
+
+msgctxt "Languages::travel_core.circuit_admin_section_prices"
+msgid "Discounts and supplements"
+msgstr "Reduceri și suplimente"
+
+msgctxt "Languages::travel_core.circuit_admin_section_notes"
+msgid "Good to know"
+msgstr "De știut"
+
+msgctxt "Languages::travel_core.circuit_admin_departures"
+msgid "Departures from today ([n])"
+msgstr "Plecări de azi încolo ([n])"
+
+msgctxt "Languages::travel_core.circuit_admin_supplier_price"
+msgid "Supplier price, 2 adults"
+msgstr "Preț furnizor, 2 adulți"
+
+msgctxt "Languages::travel_core.circuit_admin_availability"
+msgid "Availability"
+msgstr "Disponibilitate"
+
+msgctxt "Languages::travel_core.circuit_admin_more_departures"
+msgid "[n] more departures."
+msgstr "Încă [n] plecări."
+
+msgctxt "Languages::travel_core.circuit_admin_no_departures"
+msgid "No departure saved: run the circuits sync."
+msgstr "Nicio plecare salvată: rulează sincronizarea circuitelor."
+
 msgctxt "Languages::travel_core.circuit_route"
 msgid "Route"
 msgstr "Traseu"

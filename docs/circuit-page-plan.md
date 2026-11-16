@@ -90,7 +90,7 @@ as sent (day photos, transport legs, labels).
 | 3 | Page sections, both themes, EN/RO: high points, days that open and close with their photos, the trip's hotel, optional excursions, discounts, documents; difficulty, stars and age under the title | done |
 | 4a | Booking bar: dates from the saved departures (live rates as fallback), month grid with each month's lowest price, "Check availability", price box (from / person and what the supplier says the price includes), flights dialog from the transport fact | done |
 | 4b | Booking card: sticky in a right column (wide screens), bottom bar with the price and "Alege data plecării" (phones, tablets), the optional extras each flight's offer has previewed under its rooms (they are chosen, with the live total, on the booking form) | done |
-| 5 | Admin "Circuit" tab | |
+| 5 | Admin "Circuit" tab (read-only, Travel Core, any supplier): facts, program, inclusions, excursions, where each note shows, saved departures, documents. A "Sync this circuit now" button is left for later | done |
 | 6 | Optional: difficulty, group size and stars as filters; structured data | |
 
 After step 4 the old columns `departure_ids`, `departure_names` and
