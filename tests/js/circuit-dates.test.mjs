@@ -84,16 +84,16 @@ describe('quoteUrl', () => {
 });
 
 describe('monthGrid', () => {
-    it('gives each year with a departure its twelve months, each with its lowest price, the others unselectable', () => {
+    it('gives the months from the first departure to the last, by year, each with its lowest price, the others unselectable', () => {
         const groups = groupByMonth([...departures, { date: '2028-01-10', price: 900, currency: 'EUR' }]);
         const grid = monthGrid(groups, '2027-08');
 
         expect(grid.map((y) => y.year)).toEqual(['2027', '2028']);
-        expect(grid[0].months).toHaveLength(12);
-        expect(grid[0].months[6]).toEqual({ month: '2027-07', index: 0, price: 1092, currency: 'EUR', selected: false });
-        expect(grid[0].months[7]).toEqual({ month: '2027-08', index: 1, price: 1150, currency: 'EUR', selected: true });
-        expect(grid[0].months[0]).toEqual({ month: '2027-01', index: -1, price: 0, currency: '', selected: false });
-        expect(grid[1].months[0].index).toBe(2);
+        expect(grid[0].months.map((m) => m.month)).toEqual(['2027-07', '2027-08', '2027-09', '2027-10', '2027-11', '2027-12']);
+        expect(grid[0].months[0]).toEqual({ month: '2027-07', index: 0, price: 1092, currency: 'EUR', selected: false });
+        expect(grid[0].months[1]).toEqual({ month: '2027-08', index: 1, price: 1150, currency: 'EUR', selected: true });
+        expect(grid[0].months[2]).toEqual({ month: '2027-09', index: -1, price: 0, currency: '', selected: false });
+        expect(grid[1].months).toEqual([{ month: '2028-01', index: 2, price: 900, currency: 'EUR', selected: false }]);
         expect(monthGrid([], '')).toEqual([]);
     });
 });

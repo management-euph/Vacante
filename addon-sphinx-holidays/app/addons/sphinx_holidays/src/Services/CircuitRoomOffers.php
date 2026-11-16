@@ -52,7 +52,7 @@ final class CircuitRoomOffers
      * @param list<array{adults: int, children_ages: list<int>}> $occupancy one entry per room
      * @param int $now the current time
      *
-     * @return array{blocks: list<array{flight: array{outbound: array<string, string>|null, inbound: array<string, string>|null}|null, nights: int, offers: list<array{offer_id: string, key: string, rooms: list<array{name: string, count: int}>, meal: string, price: float, currency: string}>}>, error: bool} error when Sphinx gave no answer
+     * @return array{blocks: list<array{flight: array{outbound: array<string, string>|null, inbound: array<string, string>|null}|null, nights: int, extras: list<array{title: string, price: float, currency: string}>, offers: list<array{offer_id: string, key: string, rooms: list<array{name: string, count: int}>, meal: string, price: float, currency: string}>}>, error: bool} error when Sphinx gave no answer
      */
     public function forDeparture(int $circuitId, int $departureId, string $date, array $occupancy, int $now): array
     {
@@ -82,7 +82,9 @@ final class CircuitRoomOffers
                 'flight' => $flight,
                 'nights' => TypeCoerce::toInt(TypeCoerce::toStringMap($quote['duration'] ?? null)['nights'] ?? 0),
                 'offers' => [],
+                'extras' => [],
             ];
+            $blocks[$blockKey]['extras'] = self::extras($blocks[$blockKey]['extras'], $quote['additional_services'] ?? null, $this->commission);
             $blocks[$blockKey]['offers'][] = [
                 'offer_id' => $offerId,
                 'key' => self::key($quote),
@@ -103,6 +105,39 @@ final class CircuitRoomOffers
         usort($blocks, static fn (array $a, array $b): int => $a['offers'][0]['price'] <=> $b['offers'][0]['price']);
 
         return ['blocks' => $blocks, 'error' => false];
+    }
+
+    /**
+     * The optional extras an offer can be booked with (its
+     * additional_services of type "optional"), added to those already
+     * listed for its block, each once by title: what the booking form will
+     * offer, shown under the rooms (docs/circuit-page-plan.md step 4b). The
+     * price is the store's (commission added); 0 when Sphinx gives none.
+     *
+     * @param list<array{title: string, price: float, currency: string}> $known
+     * @param \Closure(float): float $commission
+     *
+     * @return list<array{title: string, price: float, currency: string}>
+     */
+    public static function extras(array $known, mixed $services, \Closure $commission): array
+    {
+        $titles = array_column($known, 'title');
+        foreach (TypeCoerce::toRowList($services) as $service) {
+            $title = trim(TypeCoerce::toString($service['title'] ?? ''));
+            if ($title === '' || TypeCoerce::toString($service['type'] ?? '') !== 'optional' || in_array($title, $titles, true)) {
+                continue;
+            }
+            $pricing = TypeCoerce::toStringMap($service['pricing'] ?? null);
+            $price = TypeCoerce::toFloat($pricing['selling_price'] ?? 0);
+            $known[] = [
+                'title' => $title,
+                'price' => $price > 0 ? round($commission($price), 2) : 0.0,
+                'currency' => TypeCoerce::toString($pricing['currency'] ?? ''),
+            ];
+            $titles[] = $title;
+        }
+
+        return $known;
     }
 
     /**

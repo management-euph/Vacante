@@ -1489,6 +1489,31 @@ button.nvt-field-input:active {
     font-size: 14px;
     color: var(--nvt-text-light, #4b5563);
 }
+.travel-circuit-extras {
+    margin: 10px 0 0;
+    font-size: 13px;
+    color: var(--nvt-text-light, #4b5563);
+}
+.travel-circuit-extras__title {
+    margin: 0 0 4px;
+    font-weight: 600;
+}
+.travel-circuit-extras__list {
+    display: grid;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.travel-circuit-extras__list > li {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+.travel-circuit-extras__price {
+    font-weight: 600;
+    white-space: nowrap;
+}
 .travel-circuit-offers__list {
     margin: 0;
     padding: 0;

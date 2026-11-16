@@ -302,4 +302,21 @@ final class CircuitRoomOffersTest extends TestCase
         );
         self::assertSame([], CircuitRoomOffers::occupancyOf(['rooms' => [['code' => 'dbl']]]), 'a room without its adults says nothing');
     }
+
+    /** Step 4b: the extras the booking form will offer, previewed under the rooms. */
+    public function testTheOptionalExtrasOfABlockArePreviewedOnce(): void
+    {
+        $extras = CircuitRoomOffers::extras([], [
+            ['code' => '1', 'title' => 'Excursie Gozo', 'type' => 'optional', 'pricing' => ['selling_price' => 90, 'currency' => 'EUR']],
+            ['code' => '2', 'title' => 'Taxe obligatorii', 'type' => 'mandatory', 'pricing' => ['selling_price' => 30, 'currency' => 'EUR']],
+            ['code' => '3', 'title' => 'Asigurare', 'type' => 'optional', 'pricing' => []],
+        ], static fn (float $p): float => $p * 1.1);
+
+        self::assertSame([
+            ['title' => 'Excursie Gozo', 'price' => 99.0, 'currency' => 'EUR'],
+            ['title' => 'Asigurare', 'price' => 0.0, 'currency' => ''],
+        ], $extras, 'mandatory ones are in the price already; a price Sphinx does not give stays 0');
+
+        self::assertCount(2, CircuitRoomOffers::extras($extras, [['title' => 'Excursie Gozo', 'type' => 'optional']], static fn (float $p): float => $p), 'each once per block');
+    }
 }

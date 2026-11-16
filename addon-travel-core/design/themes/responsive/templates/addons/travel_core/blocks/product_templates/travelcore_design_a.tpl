@@ -372,6 +372,10 @@
 
     {* #50. Product tabs (the booking form mount renders in its pre-hook) *}
     {if $show_product_tabs}
+        {* A circuit (docs/circuit-page-plan.md step 4b): the booking card the
+           pre-hook renders goes to a right column on a wide screen and stays
+           in view (design-a.css). *}
+        {if $travel_circuit_facts}<div class="travel-pdpa-circuit-layout">{/if}
         {hook name="products:product_tabs"}
             {* #45. A circuit's program, under its rooms (the bar comes from the pre-hook) *}
             {if $travel_circuit}
@@ -398,8 +402,21 @@
                 {/if}
             </div>
         {/hook}
+        {if $travel_circuit_facts}</div>{/if}
     {/if}
     {* /Product tabs *}
+
+    {* A circuit on a phone or tablet: the price and "Alege data plecării" at
+       the bottom of the screen while the booking card is out of view
+       (pdp-design-a.js shows it; hidden on a wide screen, design-a.css). *}
+    {if $travel_circuit_facts && $travel_booking_product_id}
+        <div class="travel-pdpa-bookbar" data-travel-pdpa-bookbar hidden>
+            {if $travel_pdp_from_price}
+                <span class="travel-pdpa-bookbar__price">{__("travel_core.pdpa_from")} <strong>{$travel_pdp_from_price|escape:html}</strong> {__("travel_core.circuit_from_per_person")}</span>
+            {/if}
+            <a href="#travel-booking-root" class="travel-pdpa-bookbar__cta" data-travel-open-dates>{__("travel_core.choose_departure_date")}</a>
+        </div>
+    {/if}
 
 </div>
 
