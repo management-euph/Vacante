@@ -33,6 +33,9 @@
  *    its own size, over a blurred copy of itself (design-a.css,
  *    .travel-pdpa-gallery__tile--whole).
  *
+ *  - A circuit's program: "Expand all days" opens or closes every day
+ *    (each day is a <details> that also opens on its own).
+ *
  * Document-level listeners: the results arrive later (inline swap) and keep
  * working without re-initialising.
  */
@@ -1548,8 +1551,47 @@
             initHeader(page);
             fitGallery(page);
             fitPhotos(page);
+            initCircuitDays(page);
         });
         armLiveResults();
+    }
+
+    /**
+     * A circuit's program (components/circuit_details.tpl): each day is a
+     * <details> that opens on its own; the button opens or closes them all.
+     * It stays hidden without this script, and follows the days the visitor
+     * opens one by one.
+     */
+    function initCircuitDays(page) {
+        Array.prototype.forEach.call(page.querySelectorAll('[data-travel-circuit-expand]'), function (button) {
+            var program = button.closest('.travel-circuit-program');
+            var days = program ? program.querySelectorAll('.travel-circuit-day__body') : [];
+            if (!days.length) {
+                return;
+            }
+            var allOpen = function () {
+                return Array.prototype.every.call(days, function (day) {
+                    return day.open;
+                });
+            };
+            var label = function () {
+                var open = allOpen();
+                button.setAttribute('aria-pressed', open ? 'true' : 'false');
+                button.textContent = button.getAttribute(open ? 'data-label-collapse' : 'data-label-expand') || button.textContent;
+            };
+            button.addEventListener('click', function () {
+                var open = !allOpen();
+                Array.prototype.forEach.call(days, function (day) {
+                    day.open = open;
+                });
+                label();
+            });
+            Array.prototype.forEach.call(days, function (day) {
+                day.addEventListener('toggle', label);
+            });
+            button.hidden = false;
+            label();
+        });
     }
 
     document.addEventListener('click', function (event) {

@@ -17,6 +17,8 @@ final readonly class CircuitDay
      * @param string $hotel the night's hotel ('' when none: the last day, a night on the road)
      * @param int $stars its stars, 1 to 5 (0 when unknown)
      * @param string $meals the day's meals, as the supplier writes them ('' when unknown)
+     * @param list<string> $photos the day's photos, web links on the supplier's servers
+     * @param bool $highlighted the supplier marks it as a high point of the trip
      */
     public function __construct(
         public string $title,
@@ -24,6 +26,8 @@ final readonly class CircuitDay
         public string $hotel = '',
         public int $stars = 0,
         public string $meals = '',
+        public array $photos = [],
+        public bool $highlighted = false,
     ) {
     }
 }

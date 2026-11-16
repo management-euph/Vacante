@@ -4490,6 +4490,98 @@ msgctxt "Languages::travel_core.circuit_age_max_many"
 msgid "Travellers must be at most [n] years old."
 msgstr "Travellers must be at most [n] years old."
 
+msgctxt "Languages::travel_core.circuit_menu_excursions"
+msgid "Optional excursions"
+msgstr "Optional excursions"
+
+msgctxt "Languages::travel_core.circuit_highlights"
+msgid "Why you'll love this trip"
+msgstr "Why you'll love this trip"
+
+msgctxt "Languages::travel_core.circuit_expand_all"
+msgid "Expand all days"
+msgstr "Expand all days"
+
+msgctxt "Languages::travel_core.circuit_collapse_all"
+msgid "Collapse all days"
+msgstr "Collapse all days"
+
+msgctxt "Languages::travel_core.circuit_day_highlight"
+msgid "Highlight"
+msgstr "Highlight"
+
+msgctxt "Languages::travel_core.circuit_day_photo"
+msgid "Day [n], photo [m]"
+msgstr "Day [n], photo [m]"
+
+msgctxt "Languages::travel_core.circuit_excursions_intro"
+msgid "Not included in the price: you book and pay for them separately."
+msgstr "Not included in the price: you book and pay for them separately."
+
+msgctxt "Languages::travel_core.circuit_excursion_price"
+msgid "[price] / person"
+msgstr "[price] / person"
+
+msgctxt "Languages::travel_core.circuit_price_notes"
+msgid "Discounts and supplements"
+msgstr "Discounts and supplements"
+
+msgctxt "Languages::travel_core.circuit_documents"
+msgid "Documents"
+msgstr "Documents"
+
+msgctxt "Languages::travel_core.circuit_new_tab"
+msgid "opens in a new tab"
+msgstr "opens in a new tab"
+
+msgctxt "Languages::travel_core.circuit_difficulty"
+msgid "Difficulty"
+msgstr "Difficulty"
+
+msgctxt "Languages::travel_core.circuit_difficulty_1"
+msgid "Easy"
+msgstr "Easy"
+
+msgctxt "Languages::travel_core.circuit_difficulty_2"
+msgid "Light"
+msgstr "Light"
+
+msgctxt "Languages::travel_core.circuit_difficulty_3"
+msgid "Moderate"
+msgstr "Moderate"
+
+msgctxt "Languages::travel_core.circuit_difficulty_4"
+msgid "Demanding"
+msgstr "Demanding"
+
+msgctxt "Languages::travel_core.circuit_difficulty_5"
+msgid "Challenging"
+msgstr "Challenging"
+
+msgctxt "Languages::travel_core.circuit_difficulty_level"
+msgid "Level [n] of 5"
+msgstr "Level [n] of 5"
+
+msgctxt "Languages::travel_core.circuit_hotel_stars"
+msgid "[n]★ hotel"
+msgstr "[n]★ hotel"
+
+msgctxt "Languages::travel_core.circuit_hotels_range"
+msgid "[min]–[max]★ hotels"
+msgstr "[min]–[max]★ hotels"
+
+msgctxt "Languages::travel_core.circuit_age_range"
+msgid "Age [min]–[max]"
+msgstr "Age [min]–[max]"
+
+msgctxt "Languages::travel_core.circuit_age_from"
+msgid "Age [n]+"
+msgstr "Age [n]+"
+
+msgctxt "Languages::travel_core.circuit_age_up_to"
+msgid "Age up to [n]"
+msgstr "Age up to [n]"
+
 msgctxt "Languages::travel_core.circuit_route"
 msgid "Route"
 msgstr "Route"

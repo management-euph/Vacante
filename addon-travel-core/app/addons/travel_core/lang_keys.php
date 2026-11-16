@@ -3689,6 +3689,98 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
     ],
     // Under its title: the route, the length, the transport and the group (board 16.3,
     // components/circuit_facts.tpl).
+    'travel_core.circuit_menu_excursions' => [
+        'en' => 'Optional excursions',
+        'ro' => 'Excursii opționale',
+    ],
+    'travel_core.circuit_highlights' => [
+        'en' => 'Why you\'ll love this trip',
+        'ro' => 'Ce te va încânta',
+    ],
+    'travel_core.circuit_expand_all' => [
+        'en' => 'Expand all days',
+        'ro' => 'Deschide toate zilele',
+    ],
+    'travel_core.circuit_collapse_all' => [
+        'en' => 'Collapse all days',
+        'ro' => 'Închide toate zilele',
+    ],
+    'travel_core.circuit_day_highlight' => [
+        'en' => 'Highlight',
+        'ro' => 'Punct de atracție',
+    ],
+    'travel_core.circuit_day_photo' => [
+        'en' => 'Day [n], photo [m]',
+        'ro' => 'Ziua [n], fotografia [m]',
+    ],
+    'travel_core.circuit_excursions_intro' => [
+        'en' => 'Not included in the price: you book and pay for them separately.',
+        'ro' => 'Nu sunt incluse în preț: se rezervă și se plătesc separat.',
+    ],
+    'travel_core.circuit_excursion_price' => [
+        'en' => '[price] / person',
+        'ro' => '[price] / persoană',
+    ],
+    'travel_core.circuit_price_notes' => [
+        'en' => 'Discounts and supplements',
+        'ro' => 'Reduceri și suplimente',
+    ],
+    'travel_core.circuit_documents' => [
+        'en' => 'Documents',
+        'ro' => 'Documente',
+    ],
+    'travel_core.circuit_new_tab' => [
+        'en' => 'opens in a new tab',
+        'ro' => 'se deschide într-o filă nouă',
+    ],
+    'travel_core.circuit_difficulty' => [
+        'en' => 'Difficulty',
+        'ro' => 'Dificultate',
+    ],
+    'travel_core.circuit_difficulty_1' => [
+        'en' => 'Easy',
+        'ro' => 'Ușor',
+    ],
+    'travel_core.circuit_difficulty_2' => [
+        'en' => 'Light',
+        'ro' => 'Lejer',
+    ],
+    'travel_core.circuit_difficulty_3' => [
+        'en' => 'Moderate',
+        'ro' => 'Moderat',
+    ],
+    'travel_core.circuit_difficulty_4' => [
+        'en' => 'Demanding',
+        'ro' => 'Solicitant',
+    ],
+    'travel_core.circuit_difficulty_5' => [
+        'en' => 'Challenging',
+        'ro' => 'Dificil',
+    ],
+    'travel_core.circuit_difficulty_level' => [
+        'en' => 'Level [n] of 5',
+        'ro' => 'Nivelul [n] din 5',
+    ],
+    'travel_core.circuit_hotel_stars' => [
+        'en' => '[n]★ hotel',
+        'ro' => 'Hotel [n]★',
+    ],
+    'travel_core.circuit_hotels_range' => [
+        'en' => '[min]–[max]★ hotels',
+        'ro' => 'Hoteluri [min]–[max]★',
+    ],
+    'travel_core.circuit_age_range' => [
+        'en' => 'Age [min]–[max]',
+        'ro' => 'Vârsta [min]–[max] ani',
+    ],
+    'travel_core.circuit_age_from' => [
+        'en' => 'Age [n]+',
+        'ro' => 'Vârsta minimă [n] ani',
+    ],
+    'travel_core.circuit_age_up_to' => [
+        'en' => 'Age up to [n]',
+        'ro' => 'Vârsta maximă [n] ani',
+    ],
     'travel_core.circuit_route' => [
         'en' => 'Route',
         'ro' => 'Traseu',
