@@ -352,6 +352,21 @@ final class SphinxCircuitProductProvider implements CircuitProductProviderInterf
      */
     public static function hotelStars(mixed $itinerary): array
     {
+        $stars = self::routeStars($itinerary);
+
+        return $stars === [] ? [0, 0] : [min($stars), max($stars)];
+    }
+
+    /**
+     * The stars of the hotels on the route, each once, lowest first: each
+     * itinerary day's accommodation category ("4"), 1 to 5.
+     *
+     * @param mixed $itinerary the itinerary_json column (a JSON list of days)
+     *
+     * @return list<int>
+     */
+    public static function routeStars(mixed $itinerary): array
+    {
         $stars = [];
         foreach (self::jsonRows($itinerary) as $day) {
             $count = self::stars(TypeCoerce::toString(TypeCoerce::toStringMap($day['accommodation'] ?? null)['category'] ?? ''));
@@ -359,12 +374,14 @@ final class SphinxCircuitProductProvider implements CircuitProductProviderInterf
                 $stars[] = $count;
             }
         }
+        $stars = array_values(array_unique($stars));
+        sort($stars);
 
-        return $stars === [] ? [0, 0] : [min($stars), max($stars)];
+        return $stars;
     }
 
     /** A hotel category ("4", "4*") as stars, 1 to 5; 0 for anything else ("10", "4.5", "lux"). */
-    private static function stars(string $category): int
+    public static function stars(string $category): int
     {
         return preg_match('/^\s*([1-5])(?![\d.,])/', $category, $m) === 1 ? (int) $m[1] : 0;
     }

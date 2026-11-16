@@ -1,6 +1,6 @@
 {*
- * Travel Core: booking form (after-description position) + JSON-LD + debug
- * panel for hotel product pages.
+ * Travel Core: booking form (after-description position) + JSON-LD (hotels
+ * and circuits) + debug panel for travel product pages.
  *
  * The booking form renders here only when the shared travel_core setting
  * booking_form_position is 'after_description'; the default before-tabs
@@ -32,9 +32,11 @@
 <script src="{$config.current_location}/js/addons/travel_core/debug.js?v=1" defer></script>
 {/if}
 
-{* ── JSON-LD Structured Data ── *}
-{if $travel_hotel_schema_json}
+{* ── JSON-LD Structured Data ──
+   A hotel's, or a circuit's (TouristTrip): a page is one or the other. Both
+   are encoded with JSON_HEX_TAG (JsonLdEscapingTest, CircuitSchemaTest). *}
+{if $travel_hotel_schema_json || $travel_circuit_schema_json}
 <script type="application/ld+json">
-{$travel_hotel_schema_json nofilter}
+{if $travel_hotel_schema_json}{$travel_hotel_schema_json nofilter}{else}{$travel_circuit_schema_json nofilter}{/if}
 </script>
 {/if}

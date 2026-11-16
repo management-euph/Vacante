@@ -108,4 +108,37 @@ final class CircuitFeaturesTest extends TestCase
             self::assertSame([], $facts->notIncluded);
         }
     }
+
+    public function testDifficultyGroupSizeAndStarsBecomeFacts(): void
+    {
+        $facts = CircuitFeatures::facts([
+            'details_json' => json_encode([
+                'difficulty' => ['level' => 3, 'description' => 'moderat'],
+                'group_size' => ['min' => 10, 'max' => 30],
+                'accommodation' => ['hotel' => 'Hotel Roma', 'category' => '5*'],
+            ]),
+            'itinerary_json' => json_encode([
+                ['accommodation' => ['category' => '4']],
+                ['accommodation' => ['category' => '3*']],
+                ['accommodation' => ['category' => '4']],
+                ['accommodation' => ['category' => 'lux']],
+                [],
+            ]),
+        ], [], '2026-11');
+
+        self::assertSame(3, $facts->difficulty);
+        self::assertSame(30, $facts->groupSize, 'the most people in the group');
+        self::assertSame([3, 4, 5], $facts->stars, 'the route and the trip\'s own hotel, each once, lowest first');
+    }
+
+    public function testAGroupWithOnlyItsFewestAndNoDifficultyOrStars(): void
+    {
+        $facts = CircuitFeatures::facts([
+            'details_json' => json_encode(['difficulty' => ['level' => 9], 'group_size' => ['min' => 15, 'max' => null]]),
+        ], [], '2026-11');
+
+        self::assertSame(0, $facts->difficulty, 'a level outside 1–5 is not one');
+        self::assertSame(15, $facts->groupSize, 'the fewest when there is no most');
+        self::assertSame([], $facts->stars);
+    }
 }
