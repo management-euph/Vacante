@@ -70,7 +70,7 @@ final class CircuitBarWiringTest extends TestCase
         self::assertStringContainsString("`details_json`      {$definition},", $xml, 'the CREATE TABLE');
         self::assertStringContainsString("ALTER TABLE `?:sphinx_circuits`\n                ADD COLUMN `details_json` JSON DEFAULT NULL", $xml, 'the upgrade item');
         self::assertStringContainsString("'details_json' => \"ADD COLUMN `details_json` {$definition} AFTER `itinerary_json`\"", self::read('src/Install/SchemaMigrator.php'));
-        self::assertStringContainsString("'details_json' => self::details(\$raw),", self::read('src/Services/CircuitSyncService.php'));
+        self::assertStringContainsString("'details_json' => CircuitStaticContent::details(\$raw),", self::read('src/Services/CircuitSyncService.php'));
     }
 
     /**

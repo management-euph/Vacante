@@ -103,6 +103,53 @@ final class BookableCircuitsTest extends TestCase
         self::assertNull((new BookableCircuits($this->api([], $asked)))->ids('2026-11-08', []), 'no circuit to ask about');
     }
 
+    /**
+     * The rates the sync reads anyway hold every departure: its date, the
+     * cities it leaves from and its price for 2 adults. They are kept for
+     * the circuits asked about (docs/circuit-page-plan.md §3): the lowest
+     * price of a day under each city, '' when the rate names none.
+     */
+    public function testTheDeparturesOfTheCircuitsAskedAboutAreKept(): void
+    {
+        $asked = [];
+        $rate = static fn (int $id, string $date, float $price, array $cities = []): array => [
+            'circuit_id' => $id,
+            'departure_date' => $date,
+            'departures' => $cities,
+            'pricing' => ['selling_price' => $price, 'currency' => 'EUR'],
+        ];
+        $bucharest = ['id' => 202405, 'name' => 'Bucuresti'];
+        $pages = [
+            self::page([
+                $rate(1, '2026-11-01', 900.0, [$bucharest]),
+                $rate(1, '2026-11-20', 1258.0, [$bucharest, ['id' => 197128, 'name' => 'Timisoara']]),
+                $rate(1, '2026-11-20', 1198.0, [$bucharest]),
+                $rate(1, '2026-11-27', 0.0, [$bucharest]),
+                $rate(9, '2026-11-20', 500.0, [$bucharest]),
+                $rate(2, '2026-11-22', 700.0),
+                ['circuit_id' => 2, 'departure_date' => '', 'pricing' => ['selling_price' => 650, 'currency' => 'EUR']],
+            ], 1),
+            self::page([$rate(1, '2026-12-04', 1300.0, [['id' => 197128, 'name' => '']])], 1),
+            ...array_fill(0, 16, self::page([], 1)),
+        ];
+
+        $rates = new BookableCircuits($this->api($pages, $asked));
+        $rates->ids('2026-11-08', [1, 2], true);
+
+        self::assertSame([
+            1 => [
+                ['code' => '197128', 'name' => 'Timisoara', 'date' => '2026-11-20', 'price' => 1258.0, 'currency' => 'EUR'],
+                ['code' => '202405', 'name' => 'Bucuresti', 'date' => '2026-11-20', 'price' => 1198.0, 'currency' => 'EUR'],
+                ['code' => '197128', 'name' => 'Timisoara', 'date' => '2026-12-04', 'price' => 1300.0, 'currency' => 'EUR'],
+            ],
+            2 => [['code' => '', 'name' => '', 'date' => '2026-11-22', 'price' => 700.0, 'currency' => 'EUR']],
+        ], $rates->departures(), 'from today on, priced and dated; the same day twice keeps its lowest price; a city named once is named everywhere; circuit 9 was not asked about');
+
+        // A new reading starts empty: nothing of the last one is carried over.
+        $rates->ids('2026-11-08', [1], true);
+        self::assertSame([], $rates->departures());
+    }
+
     public function testEighteenMonthsFromThisOne(): void
     {
         $months = BookableCircuits::months('2026-11-08');

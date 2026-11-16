@@ -78,7 +78,8 @@ and heal the store itself:
   answer, `GET /api/v1/static/circuits/:id`, as JSON (`&raw=1`: the whole body
   as sent).
   (2) The stored `sphinx_circuits` row (long JSON columns decoded) and its
-  product. (3) The facts its product's features are made of (the same code the
+  product, then the departures the sync saved for it in
+  `travel_circuit_departures` (each date, city and price from today on). (3) The facts its product's features are made of (the same code the
   sync uses): an empty one says why a feature stays empty. (4) With `&rates=1`,
   the departure months and cities from `circuits/rates` (18 calls: slow).
   `?circuit=641` or `?circuit=641,642,650` (up to 20), `?sample=3` (the first

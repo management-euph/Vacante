@@ -14,7 +14,9 @@
  *      and time, and the static API answer, GET /api/v1/static/circuits/:id,
  *      as JSON (&raw=1: the body exactly as Sphinx sent it).
  *   2. The stored circuit (sphinx_circuits): what the sync kept, long JSON
- *      columns decoded, and the CS-Cart product it is linked to.
+ *      columns decoded, and the CS-Cart product it is linked to; then the
+ *      departures the sync saved for it (travel_circuit_departures): each
+ *      date, city and price from today on.
  *   3. The facts its product's features are made of (CircuitFeatures): the
  *      same code the sync and "Apply to all circuits" use.
  *   4. With &rates=1: the departures Sphinx prices for it (circuits/rates,
@@ -44,6 +46,7 @@ use Tygh\Addons\SphinxHolidays\Services\CircuitFeatures;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Registry;
 
 $sc_is_cli = PHP_SAPI === 'cli';
 
@@ -227,6 +230,34 @@ foreach ($sc_ids as $sc_circuit) {
                 }
                 echo str_pad((string) $sc_column, 18), ' ', $sc_text === '' ? '(empty)' : $sc_text, "\n";
             }
+        }
+
+        // The departures the sync saved (Travel Core's shared table). Read
+        // with a plain SELECT, and only when the table is there: the
+        // repository would create it, and this page writes nothing.
+        sc_h('2b. Stored — travel_circuit_departures (each date, city and price, from today on)');
+        $sc_table = TypeCoerce::toString(Registry::get('config.table_prefix')) . 'travel_circuit_departures';
+        if (TypeCoerce::toString(db_get_field('SHOW TABLES LIKE ?l', $sc_table)) === '') {
+            echo "The table is not there yet: open any admin page once (Travel Core creates it), then run the circuits sync.\n";
+        } else {
+            $sc_departures = TypeCoerce::toRowList(db_get_array(
+                'SELECT departure_date, departure_code, departure_name, price, currency, updated_at FROM ?:travel_circuit_departures'
+                . ' WHERE provider = ?s AND circuit_id = ?s AND departure_date >= ?s ORDER BY departure_date, departure_name',
+                'sphinx',
+                (string) $sc_circuit,
+                date('Y-m-d'),
+            ));
+            foreach ($sc_departures as $sc_departure) {
+                $sc_city = TypeCoerce::toString($sc_departure['departure_name'] ?? '');
+                $sc_code = TypeCoerce::toString($sc_departure['departure_code'] ?? '');
+                echo TypeCoerce::toString($sc_departure['departure_date'] ?? ''), '  ',
+                    str_pad($sc_code === '' ? '(no city)' : ($sc_city !== '' ? $sc_city : '?') . ' [' . $sc_code . ']', 30),
+                    str_pad(number_format(TypeCoerce::toFloat($sc_departure['price'] ?? 0), 2, '.', ''), 10, ' ', STR_PAD_LEFT), ' ',
+                    TypeCoerce::toString($sc_departure['currency'] ?? ''), '   saved ', TypeCoerce::toString($sc_departure['updated_at'] ?? ''), "\n";
+            }
+            echo $sc_departures === []
+                ? "None saved: the circuits sync writes them from the rates it reads (run it once).\n"
+                : count($sc_departures) . " departures. The price is Sphinx's for 2 adults, before the store's commission.\n";
         }
     }
 
