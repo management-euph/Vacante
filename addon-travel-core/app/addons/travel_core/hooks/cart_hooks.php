@@ -269,7 +269,7 @@ function _travel_core_circuit_schema_json(int $productId, \Tygh\Addons\TravelCor
         TypeCoerce::toString($detailed['image_path'] ?? ''),
         TypeCoerce::toString(fn_url('products.view?product_id=' . $productId)),
         $circuit->fromPrice / 2,
-        CART_PRIMARY_CURRENCY,
+        defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : '',
     ));
 }
 

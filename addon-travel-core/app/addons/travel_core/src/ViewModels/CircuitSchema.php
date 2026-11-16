@@ -69,7 +69,7 @@ final class CircuitSchema
 
         // Each day of the program, in order, as a part of the trip.
         $days = [];
-        foreach (array_slice($details?->days ?? [], 0, self::MAX_DAYS) as $day) {
+        foreach (array_slice($details === null ? [] : $details->days, 0, self::MAX_DAYS) as $day) {
             $title = trim($day->title);
             if ($title !== '') {
                 $days[] = ['@type' => 'TouristTrip', 'name' => $title];
