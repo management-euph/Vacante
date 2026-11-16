@@ -4622,6 +4622,10 @@ msgctxt "Languages::travel_core.circuit_flight_from_price"
 msgid "from [price]"
 msgstr "de la [price]"
 
+msgctxt "Languages::travel_core.circuit_extras_at_booking"
+msgid "Optional extras, chosen when you book:"
+msgstr "Extra opționale, alese la rezervare:"
+
 msgctxt "Languages::travel_core.circuit_route"
 msgid "Route"
 msgstr "Traseu"

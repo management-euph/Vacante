@@ -3821,6 +3821,10 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'from [price]',
         'ro' => 'de la [price]',
     ],
+    'travel_core.circuit_extras_at_booking' => [
+        'en' => 'Optional extras, chosen when you book:',
+        'ro' => 'Extra opționale, alese la rezervare:',
+    ],
     'travel_core.circuit_route' => [
         'en' => 'Route',
         'ro' => 'Traseu',

@@ -86,6 +86,19 @@ export default function CircuitRooms({ quote, hotelStars, bookHref }) {
                                     {(nights || meal) && (
                                         <p className="travel-circuit-stay__text">{[nights, meal].filter(Boolean).join(' · ')}</p>
                                     )}
+                                    {Array.isArray(block.extras) && block.extras.length > 0 && (
+                                        <div className="travel-circuit-extras">
+                                            <p className="travel-circuit-extras__title">{t('circuitExtrasAtBooking', 'Optional extras, chosen when you book:')}</p>
+                                            <ul className="travel-circuit-extras__list">
+                                                {block.extras.map((extra) => (
+                                                    <li key={extra.title}>
+                                                        <span>{extra.title}</span>
+                                                        {extra.price > 0 && <span className="travel-circuit-extras__price">{`+${formatPrice(extra.price, extra.currency)}`}</span>}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <ul className="travel-circuit-offers__list">

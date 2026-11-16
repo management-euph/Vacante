@@ -1552,6 +1552,7 @@
             fitGallery(page);
             fitPhotos(page);
             initCircuitDays(page);
+            initBookbar(page);
             // A circuit's "See the flights": only with the bar that answers it.
             if (document.getElementById('travel-booking-root')) {
                 Array.prototype.forEach.call(page.querySelectorAll('[data-travel-circuit-flights]'), function (button) {
@@ -1560,6 +1561,37 @@
             }
         });
         armLiveResults();
+    }
+
+    /**
+     * A circuit's bottom bar (phone, tablet): shown while the booking card
+     * is out of view and the page has scrolled past the title row; the
+     * stylesheet hides it on a wide screen, where the card stays in view.
+     */
+    function initBookbar(page) {
+        var bar = page.querySelector('[data-travel-pdpa-bookbar]');
+        var card = document.getElementById('travel-booking-root');
+        if (!bar || !card || typeof IntersectionObserver !== 'function') {
+            return;
+        }
+        var cardSeen = true;
+        var headSeen = true;
+        var update = function () {
+            bar.hidden = cardSeen || headSeen;
+        };
+        new IntersectionObserver(function (entries) {
+            cardSeen = entries[0].isIntersecting;
+            update();
+        }).observe(card);
+        var head = page.querySelector('.travel-pdpa-head');
+        if (head) {
+            new IntersectionObserver(function (entries) {
+                headSeen = entries[0].isIntersecting;
+                update();
+            }).observe(head);
+        } else {
+            headSeen = false;
+        }
     }
 
     /**

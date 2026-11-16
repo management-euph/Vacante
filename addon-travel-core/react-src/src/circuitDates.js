@@ -51,32 +51,38 @@ export function monthIndexOf(groups, date) {
 }
 
 /**
- * The month grid over the departures: each year that has one, its twelve
- * months, each with its lowest price and its index in groups (-1 for a
- * month without a departure). The selected month is the one shown.
+ * The month grid over the departures: the months from the first with a
+ * departure to the last, by year, each with its lowest price and its index
+ * in groups (-1 for a month without a departure). The selected month is
+ * the one shown.
  *
  * @param {Array<{month: string, departures: Array<{price: number, currency: string}>}>} groups groupByMonth()
  * @param {string} selected YYYY-MM
  * @returns {Array<{year: string, months: Array<{month: string, index: number, price: number, currency: string, selected: boolean}>}>}
  */
 export function monthGrid(groups, selected) {
-    const years = [...new Set((groups || []).map((g) => g.month.slice(0, 4)))];
+    const list = groups || [];
+    if (list.length === 0) return [];
+    const first = list[0].month;
+    const last = list[list.length - 1].month;
+    const years = [...new Set(list.map((g) => g.month.slice(0, 4)))];
     return years.map((year) => ({
         year,
-        months: Array.from({ length: 12 }, (_, i) => {
-            const month = `${year}-${String(i + 1).padStart(2, '0')}`;
-            const index = groups.findIndex((g) => g.month === month);
-            const cheapest = index >= 0
-                ? groups[index].departures.reduce((low, d) => (low === null || d.price < low.price ? d : low), null)
-                : null;
-            return {
-                month,
-                index,
-                price: cheapest ? cheapest.price : 0,
-                currency: cheapest ? cheapest.currency : '',
-                selected: month === selected,
-            };
-        }),
+        months: Array.from({ length: 12 }, (_, i) => `${year}-${String(i + 1).padStart(2, '0')}`)
+            .filter((month) => month >= first && month <= last)
+            .map((month) => {
+                const index = list.findIndex((g) => g.month === month);
+                const cheapest = index >= 0
+                    ? list[index].departures.reduce((low, d) => (low === null || d.price < low.price ? d : low), null)
+                    : null;
+                return {
+                    month,
+                    index,
+                    price: cheapest ? cheapest.price : 0,
+                    currency: cheapest ? cheapest.currency : '',
+                    selected: month === selected,
+                };
+            }),
     }));
 }
 

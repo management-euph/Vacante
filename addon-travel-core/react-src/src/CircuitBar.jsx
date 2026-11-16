@@ -367,11 +367,12 @@ export default function CircuitBar({ config }) {
                                                 className={`travel-circuit-month${cell.selected ? ' travel-circuit-month--selected' : ''}`}
                                                 aria-pressed={cell.selected}
                                                 disabled={cell.index < 0}
+                                                title={cell.index < 0 ? t('circuitNoDeparturesMonth', 'No departure') : undefined}
                                                 onClick={() => setMonthIndex(cell.index)}
                                             >
                                                 <span className="travel-circuit-month__name">{monthLabel(cell.month).split(' ')[0].slice(0, 3)}</span>
                                                 <span className="travel-circuit-month__price">
-                                                    {cell.index < 0 ? t('circuitNoDeparturesMonth', 'No departure') : formatPrice(cell.price, cell.currency)}
+                                                    {cell.index < 0 ? '—' : formatPrice(cell.price, cell.currency)}
                                                 </span>
                                             </button>
                                         </li>
