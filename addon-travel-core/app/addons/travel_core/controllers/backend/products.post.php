@@ -15,6 +15,7 @@ use Tygh\Addons\TravelCore\Repository\CircuitDepartureRepository;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
 use Tygh\Addons\TravelCore\ViewModels\CircuitAdminView;
 use Tygh\Registry;
+use Tygh\Tygh;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
