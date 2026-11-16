@@ -18,7 +18,8 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  * destination tree, products need the hotels, the location jobs flag a hotel
  * whose City or Region changed and update_products carries it onto the
  * product, calendar prices are read for the hotels that have a product, and
- * images are queued from the hotels' image lists, then downloaded.
+ * images are queued from the hotels' and the circuits' image lists, then
+ * downloaded.
  */
 final class CronPlan extends CronJobPlan
 {
@@ -45,7 +46,7 @@ final class CronPlan extends CronJobPlan
         'catalogue' => ['hotels', 'circuits', 'package_routes'],
         'products' => ['add_products', 'add_circuit_products', 'discover_boards', 'assign_boards'],
         'locations' => ['backfill_hotel_locations', 'geocode_hotels', 'update_products', 'calendar_prices'],
-        'images' => ['enrich_hotel_data', 'sync_images', 'process_image_queue'],
+        'images' => ['enrich_hotel_data', 'sync_images', 'sync_circuit_images', 'process_image_queue'],
         'upkeep' => ['order_status', 'cleanup'],
     ];
 
@@ -91,6 +92,7 @@ final class CronPlan extends CronJobPlan
         'calendar_prices' => ['cron' => '30 6 * * *', 'late_after_hours' => 48],
         'enrich_hotel_data' => ['cron' => '*/5 * * * *', 'late_after_hours' => 2],
         'sync_images' => ['cron' => '0 4 * * *', 'late_after_hours' => 48],
+        'sync_circuit_images' => ['cron' => '5 4 * * *', 'late_after_hours' => 48],
         'process_image_queue' => ['cron' => '*/2 * * * *', 'late_after_hours' => 2],
         'order_status' => ['cron' => '*/15 * * * *', 'late_after_hours' => 2],
         'cleanup' => ['cron' => '0 5 * * *', 'late_after_hours' => 48],
@@ -143,13 +145,15 @@ final class CronPlan extends CronJobPlan
 
     /**
      * Sphinx's own ⋯ menu items: retry the hotels Create products skipped,
-     * queue every hotel's images again, retry the downloads that failed.
+     * queue every hotel's images again, retry the downloads that failed (of
+     * every image, or a circuit's: Queue circuit images with force=Y).
      *
      * @var array<string, list<array{action: string, label: string, confirm?: string}>>
      */
     protected const array EXTRA_ACTIONS = [
         'add_products' => [['action' => 'retry_skipped', 'label' => 'sphinx_holidays.retry_skipped', 'confirm' => 'sphinx_holidays.retry_skipped_confirm']],
         'sync_images' => [['action' => 'requeue', 'label' => 'sphinx_holidays.jobs_requeue_images', 'confirm' => 'sphinx_holidays.jobs_requeue_images_confirm']],
+        'sync_circuit_images' => [['action' => 'requeue', 'label' => 'sphinx_holidays.jobs_retry_failed_images']],
         'process_image_queue' => [['action' => 'retry_failed', 'label' => 'sphinx_holidays.jobs_retry_failed_images']],
     ];
 

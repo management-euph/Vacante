@@ -57,6 +57,7 @@ class FullSyncCommand extends AbstractSyncCommand
         'add_products',
         'update_products',
         'sync_images',
+        'sync_circuit_images',
         'process_image_queue',
         'cleanup',
     ];

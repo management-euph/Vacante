@@ -186,6 +186,25 @@ class CircuitRepository
         return $ids;
     }
 
+    /**
+     * The active circuits that have a product, with their photos
+     * (details_json, image_url): what sync_circuit_images queues.
+     *
+     * @param int $limit 0 for all
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findLinkedForImages(int $limit = 0): array
+    {
+        return TypeCoerce::toRowList(db_get_array(
+            "SELECT circuit_id, product_id, name, image_url, details_json
+             FROM ?:sphinx_circuits
+             WHERE product_id > 0 AND sync_status = 'active'
+             ORDER BY circuit_id ?p",
+            $limit > 0 ? db_quote('LIMIT ?i', $limit) : '',
+        ));
+    }
+
     /** Total number of stored circuits (for the grid's freshness line). */
     public function countAll(): int
     {

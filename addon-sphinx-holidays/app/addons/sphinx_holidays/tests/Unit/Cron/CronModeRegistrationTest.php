@@ -43,6 +43,7 @@ final class CronModeRegistrationTest extends TestCase
         'process_image_queue',
         'reassign_features',
         'sync_and_upload_images',
+        'sync_circuit_images',
         'sync_images',
         'update_products',
     ];

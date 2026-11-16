@@ -1227,6 +1227,14 @@ return [
         'en' => 'Queues each hotel\'s images from the database. No API calls. For fewer hotels: Queue images for a scope, below.',
         'ro' => 'Pune în coadă imaginile fiecărui hotel, din baza de date. Fără apeluri API. Pentru mai puține hoteluri: Pune imaginile în coadă pentru un domeniu, mai jos.',
     ],
+    'sphinx_holidays.jobs_job_sync_circuit_images' => [
+        'en' => 'Queue circuit images',
+        'ro' => 'Pune în coadă imaginile circuitelor',
+    ],
+    'sphinx_holidays.jobs_job_sync_circuit_images_desc' => [
+        'en' => 'Queues the photos of each circuit that has a product, from the database. No API calls. Only photos Sphinx added since are new.',
+        'ro' => 'Pune în coadă fotografiile fiecărui circuit care are produs, din baza de date. Fără apeluri API. Noi sunt doar fotografiile adăugate de Sphinx între timp.',
+    ],
     'sphinx_holidays.jobs_job_process_image_queue' => [
         'en' => 'Download images',
         'ro' => 'Descarcă imaginile',

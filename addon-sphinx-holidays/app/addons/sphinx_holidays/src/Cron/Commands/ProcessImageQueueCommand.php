@@ -11,7 +11,8 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 /**
  * Cron command: process pending rows from the image sync queue.
  *
- * Downloads and attaches images that were queued by sync_images.
+ * Downloads and attaches images that were queued by sync_images (hotels)
+ * and sync_circuit_images (circuits).
  * Safe to run every 1-5 minutes — atomic status updates prevent double-processing
  * even when two cron instances run concurrently.
  *
@@ -36,7 +37,7 @@ class ProcessImageQueueCommand extends AbstractSyncCommand
     #[\Override]
     public static function getDescription(): string
     {
-        return 'Download and attach queued hotel images (run after sync_images)';
+        return 'Download and attach queued hotel and circuit images (run after sync_images, sync_circuit_images)';
     }
 
     /**
