@@ -1664,6 +1664,14 @@ msgctxt "Languages::sphinx_holidays.jobs_job_sync_images_desc"
 msgid "Queues each hotel's images from the database. No API calls. For fewer hotels: Queue images for a scope, below."
 msgstr "Queues each hotel's images from the database. No API calls. For fewer hotels: Queue images for a scope, below."
 
+msgctxt "Languages::sphinx_holidays.jobs_job_sync_circuit_images"
+msgid "Queue circuit images"
+msgstr "Queue circuit images"
+
+msgctxt "Languages::sphinx_holidays.jobs_job_sync_circuit_images_desc"
+msgid "Queues the photos of each circuit that has a product, from the database. No API calls. Only photos Sphinx added since are new."
+msgstr "Queues the photos of each circuit that has a product, from the database. No API calls. Only photos Sphinx added since are new."
+
 msgctxt "Languages::sphinx_holidays.jobs_job_process_image_queue"
 msgid "Download images"
 msgstr "Download images"

@@ -86,7 +86,7 @@ as sent (day photos, transport legs, labels).
 | # | Step | Status |
 |---|---|---|
 | 1 | Sync and storage: the shared departures table, the departure city from the static list, the dropped fields kept | done |
-| 2 | Photos: the circuit gallery becomes the product's images | |
+| 2 | Photos: the circuit gallery becomes the product's images (job `sync_circuit_images`, daily 04:05, then `process_image_queue`) | done |
 | 3 | Page sections, both themes, EN/RO | |
 | 4 | Booking card: month picker, price box, availability check, flight dialog, extras | |
 | 5 | Admin "Circuit" tab | |

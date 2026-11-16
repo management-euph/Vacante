@@ -90,7 +90,7 @@ final class CronPlanTest extends TestCase
             'hotels', 'circuits', 'package_routes',
             'add_products', 'add_circuit_products', 'discover_boards', 'assign_boards',
             'backfill_hotel_locations', 'geocode_hotels', 'update_products', 'calendar_prices',
-            'enrich_hotel_data', 'sync_images', 'process_image_queue',
+            'enrich_hotel_data', 'sync_images', 'sync_circuit_images', 'process_image_queue',
             'order_status', 'cleanup',
         ], self::flatten($stages));
     }
@@ -112,6 +112,8 @@ final class CronPlanTest extends TestCase
             ['hotels', 'enrich_hotel_data'],
             ['enrich_hotel_data', 'sync_images'],
             ['sync_images', 'process_image_queue'],
+            ['add_circuit_products', 'sync_circuit_images'],
+            ['sync_circuit_images', 'process_image_queue'],
         ] as [$first, $then]) {
             self::assertLessThan($order[$then], $order[$first], "{$first} must come before {$then}");
         }
@@ -139,6 +141,7 @@ final class CronPlanTest extends TestCase
             'calendar_prices' => '30 6 * * *',
             'enrich_hotel_data' => '*/5 * * * *',
             'sync_images' => '0 4 * * *',
+            'sync_circuit_images' => '5 4 * * *',
             'process_image_queue' => '*/2 * * * *',
             'order_status' => '*/15 * * * *',
             'cleanup' => '0 5 * * *',
@@ -179,6 +182,7 @@ final class CronPlanTest extends TestCase
             ['circuits', 'add_circuit_products'],
             ['add_products', 'calendar_prices'],
             ['update_products', 'calendar_prices'],
+            ['add_circuit_products', 'sync_circuit_images'],
         ] as [$first, $then]) {
             self::assertGreaterThan(self::startsAt($first), self::startsAt($then), "{$then} starts before {$first}, whose data it uses");
         }
@@ -260,7 +264,7 @@ final class CronPlanTest extends TestCase
         self::assertSame('0 2 * * 0  php /var/www/html/app/addons/sphinx_holidays/cron.php access_key=' . self::KEY . ' mode=destinations', $lines[3]);
 
         $commands = array_values(array_filter($lines, static fn (string $l): bool => $l !== '' && !str_starts_with($l, '#')));
-        self::assertCount(17, $commands);
+        self::assertCount(18, $commands);
         foreach ($commands as $line) {
             self::assertMatchesRegularExpression('/^\S+ \S+ \S+ \S+ \S+  php \//', $line);
         }
@@ -286,6 +290,7 @@ final class CronPlanTest extends TestCase
         yield 'assign_boards: resumes' => ['assign_boards', ['status', 'reset']];
         yield 'geocode_hotels: every hotel again' => ['geocode_hotels', ['status', 'force']];
         yield 'sync_images: queue every hotel again' => ['sync_images', ['requeue']];
+        yield 'sync_circuit_images: retry the failed photos' => ['sync_circuit_images', ['requeue']];
         yield 'process_image_queue: retry the failed' => ['process_image_queue', ['retry_failed']];
         yield 'cleanup: nothing more' => ['cleanup', []];
         yield 'full: nothing more' => ['full', []];
@@ -489,7 +494,7 @@ final class CronPlanTest extends TestCase
             $keys[] = (string) $job['desc_key'];
         }
 
-        self::assertCount(57, array_unique($keys), '6 stages, 23 jobs with a description each, 3 menu items, 2 of them with a question');
+        self::assertCount(59, array_unique($keys), '6 stages, 24 jobs with a description each, 3 menu items, 2 of them with a question');
         foreach (array_unique($keys) as $key) {
             self::assertArrayHasKey($key, $langs, "{$key} has no text");
             self::assertNotSame('', trim($langs[$key]['en'] ?? ''), "{$key} has no English text");
