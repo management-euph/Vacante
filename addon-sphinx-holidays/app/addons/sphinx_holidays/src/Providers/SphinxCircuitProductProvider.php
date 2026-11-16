@@ -23,6 +23,13 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  */
 final class SphinxCircuitProductProvider implements CircuitProductProviderInterface
 {
+    /**
+     * This add-on's name in Travel Core's provider registry: the supplier of
+     * its circuits' pages, and of their rows in the shared departures table
+     * (?:travel_circuit_departures).
+     */
+    public const string PROVIDER = 'sphinx';
+
     #[\Override]
     public function resolveCircuit(int $productId, string $productCode): ?CircuitPage
     {
@@ -43,7 +50,7 @@ final class SphinxCircuitProductProvider implements CircuitProductProviderInterf
         [$starsMin, $starsMax] = self::hotelStars($row['itinerary_json'] ?? null);
 
         return new CircuitPage(
-            'sphinx',
+            self::PROVIDER,
             (string) $circuitId,
             TypeCoerce::toString($row['name'] ?? ''),
             self::departures($row['departure_ids'] ?? null, TypeCoerce::toString($row['departure_names'] ?? '')),
@@ -110,7 +117,7 @@ final class SphinxCircuitProductProvider implements CircuitProductProviderInterf
      * texts come as plain text: Sphinx may send HTML.
      *
      * @param mixed $itinerary the itinerary_json column (a JSON list of days)
-     * @param mixed $details the details_json column (CircuitSyncService::details())
+     * @param mixed $details the details_json column (CircuitStaticContent::details())
      */
     public static function details(mixed $itinerary, mixed $details): CircuitDetails
     {

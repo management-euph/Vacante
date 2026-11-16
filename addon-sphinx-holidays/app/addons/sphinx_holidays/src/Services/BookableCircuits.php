@@ -23,6 +23,10 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  * ids() is null when the rates could not be read (an API failure, too
  * many pages) or priced no circuit at all: the sync then keeps what it
  * has, never drops every circuit on a bad answer.
+ *
+ * The same pages hold every departure with its price, so they are kept
+ * too (departures()): the sync saves them for the circuits' pages
+ * (docs/circuit-page-plan.md §3) without asking Sphinx anything more.
  */
 final class BookableCircuits
 {
@@ -37,8 +41,49 @@ final class BookableCircuits
     /** @var array<int, array{months: array<string, true>, departures: array<int, string>}> what the rates read so far say of each circuit */
     private array $facts = [];
 
+    /** @var array<int, true> the circuits asked about (ids()): only their departures are kept */
+    private array $wanted = [];
+
+    /** @var array<int, array<int, array<string, array{price: float, currency: string}>>> circuit id => departure point id (0: the rate names none) => date => that day's lowest price */
+    private array $departures = [];
+
+    /** @var array<int, string> departure point id => its name, as the rates say it */
+    private array $pointNames = [];
+
     public function __construct(private readonly SphinxApi $api)
     {
+    }
+
+    /**
+     * The priced departures the rates read by ids() have of each circuit
+     * asked about: every date it leaves on from today, under each city the
+     * rate names ('' when it names none), with that day's lowest price for
+     * 2 adults: Sphinx's, before the store's commission. Complete only after
+     * ids() ran with $everyMonth.
+     *
+     * @return array<int, list<array{code: string, name: string, date: string, price: float, currency: string}>> by circuit id, each by date
+     */
+    public function departures(): array
+    {
+        $departures = [];
+        foreach ($this->departures as $id => $points) {
+            $rows = [];
+            foreach ($points as $pointId => $dates) {
+                foreach ($dates as $date => $offer) {
+                    $rows[] = [
+                        'code' => $pointId > 0 ? (string) $pointId : '',
+                        'name' => $this->pointNames[$pointId] ?? '',
+                        'date' => $date,
+                        'price' => $offer['price'],
+                        'currency' => $offer['currency'],
+                    ];
+                }
+            }
+            usort($rows, static fn (array $a, array $b): int => [$a['date'], $a['code']] <=> [$b['date'], $b['code']]);
+            $departures[$id] = $rows;
+        }
+
+        return $departures;
     }
 
     /**
@@ -70,7 +115,10 @@ final class BookableCircuits
     public function ids(string $today, array $candidates, bool $everyMonth = false): ?array
     {
         $this->facts = [];
+        $this->departures = [];
+        $this->pointNames = [];
         $remaining = array_values(array_unique(array_filter($candidates, static fn (int $id): bool => $id > 0)));
+        $this->wanted = array_fill_keys($remaining, true);
         if ($remaining === []) {
             return null;
         }
@@ -123,6 +171,7 @@ final class BookableCircuits
                             $this->facts[$id]['departures'][$departureId] = $name;
                         }
                     }
+                    $this->keepDeparture($id, $date, $rate);
                 }
             }
             $lastPage = TypeCoerce::toInt(TypeCoerce::toStringMap($response['meta'] ?? null)['last_page'] ?? 0);
@@ -132,6 +181,42 @@ final class BookableCircuits
         }
 
         return null;
+    }
+
+    /**
+     * One rate of a circuit asked about, kept as a departure when it has a
+     * date and a price: under each city it names (0 when it names none), the
+     * lowest price of that day (the same day comes twice with another
+     * transport or offer).
+     *
+     * @param array<string, mixed> $rate one row of circuits/rates
+     */
+    private function keepDeparture(int $id, string $date, array $rate): void
+    {
+        $pricing = TypeCoerce::toStringMap($rate['pricing'] ?? null);
+        $price = TypeCoerce::toFloat($pricing['selling_price'] ?? 0);
+        if (!isset($this->wanted[$id]) || $price <= 0 || preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) !== 1) {
+            return;
+        }
+
+        $points = [];
+        foreach (TypeCoerce::toRowList($rate['departures'] ?? []) as $departure) {
+            $pointId = TypeCoerce::toInt($departure['id'] ?? 0);
+            if ($pointId > 0) {
+                $points[] = $pointId;
+                $name = trim(TypeCoerce::toString($departure['name'] ?? ''));
+                if ($name !== '') {
+                    $this->pointNames[$pointId] = $name;
+                }
+            }
+        }
+
+        foreach ($points !== [] ? $points : [0] as $point) {
+            $kept = $this->departures[$id][$point][$date] ?? null;
+            if ($kept === null || $price < $kept['price']) {
+                $this->departures[$id][$point][$date] = ['price' => $price, 'currency' => TypeCoerce::toString($pricing['currency'] ?? '')];
+            }
+        }
     }
 
     /**

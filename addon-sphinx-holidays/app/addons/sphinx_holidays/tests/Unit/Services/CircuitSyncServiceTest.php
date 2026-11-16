@@ -48,36 +48,90 @@ final class CircuitSyncServiceTest extends TestCase
     }
 
     /**
-     * A circuit's page (board 16.3) shows what the price includes and does
-     * not, the things to know, the group's size and the age asked: the
-     * sync used to drop all of it.
+     * The static list sends a departure as {date, time, destination_id}: the
+     * city is a static destination. The sync used to look only for {id,
+     * name}, so it learned no city from the list.
      */
-    public function testThePagesDetailsAreKept(): void
+    public function testTheDepartureCitiesAreReadFromTheStaticDepartures(): void
     {
-        $json = CircuitSyncService::details([
-            'included' => [['title' => 'Zbor dus-întors', 'description' => '', 'category' => 'transport'], ['title' => '', 'description' => '']],
-            'not_included' => [['title' => 'Taxele locale', 'description' => 'Se achită la hotel.', 'category' => 'other']],
-            'additional_info' => [['title' => 'Documente', 'description' => 'Carte de identitate valabilă.', 'category' => 'other']],
-            'age_requirments' => ['min' => 18, 'max' => 60, 'description' => null, 'is_required' => true],
-            'group_size' => ['min' => 18, 'max' => 40, 'description' => null],
-            'activities' => [['title' => 'Defileul Samaria', 'price' => ['amount' => 90, 'currency' => 'EUR', 'is_unknown' => false]]],
-            'tags' => [['id' => 1, 'name' => 'tag']],
-        ]);
+        $asked = [];
+        DbStub::$getHashSingleArray = static function (string $q, array $fields, ...$p) use (&$asked): array {
+            $asked[] = $p[0];
 
-        self::assertNotNull($json);
-        self::assertSame([
-            'included' => [['title' => 'Zbor dus-întors', 'description' => '']],
-            'not_included' => [['title' => 'Taxele locale', 'description' => 'Se achită la hotel.']],
-            'additional_info' => [['title' => 'Documente', 'description' => 'Carte de identitate valabilă.']],
-            'group_size' => ['min' => 18, 'max' => 40],
-            'age' => ['min' => 18, 'max' => 60],
-        ], json_decode($json, true), 'only what the page shows; an empty item is left out');
+            return [202405 => 'Bucuresti', 197128 => 'Timisoara'];
+        };
+
+        $row = $this->normalize(['id' => 1, 'title' => 'Malta', 'departures' => [
+            ['date' => '2020-05-07', 'time' => null, 'destination_id' => 555],
+            ['date' => '2999-05-04', 'time' => null, 'destination_id' => 202405],
+            ['date' => '2999-05-11', 'time' => null, 'destination_id' => 202405],
+            ['date' => '2999-06-01', 'time' => null, 'destination_id' => 197128],
+            ['date' => '2999-06-08', 'time' => null, 'destination_id' => 900],
+        ]]);
+
+        self::assertSame([[202405, 197128, 900]], $asked, 'named from sphinx_destinations; a departure already past names no city');
+        self::assertSame('[202405,197128]', $row['departure_ids'], 'each city once; 900 is not a stored destination, so it is left to the rates');
+        self::assertSame('Bucuresti, Timisoara', $row['departure_names'], 'as many names as ids: the bar pairs them by position');
     }
 
-    public function testAnAgeTheCircuitDoesNotAskIsNotKept(): void
+    public function testDepartureObjectsAreStillRead(): void
     {
-        self::assertNull(CircuitSyncService::details(['age_requirments' => ['min' => 18, 'max' => 60, 'is_required' => false]]));
-        self::assertNull(CircuitSyncService::details(['group_size' => ['min' => 0, 'max' => null], 'included' => []]), 'nothing to keep');
+        $row = $this->normalize(['id' => 2, 'title' => 'Grecia', 'departures' => [['id' => 111, 'name' => 'Cluj-Napoca'], ['id' => 222, 'name' => 'Iasi']]]);
+
+        self::assertSame('[111,222]', $row['departure_ids']);
+        self::assertSame('Cluj-Napoca, Iasi', $row['departure_names']);
+    }
+
+    /** Without a city in the list the two columns are not written: they keep what the rates gave. */
+    public function testACircuitWhoseListNamesNoCityLeavesTheDepartureColumnsAlone(): void
+    {
+        $row = $this->normalize(['id' => 3, 'title' => 'Fara', 'departures' => [['date' => '2020-05-07', 'destination_id' => 202405]]]);
+
+        self::assertArrayNotHasKey('departure_ids', $row);
+        self::assertArrayNotHasKey('departure_names', $row);
+    }
+
+    /** The rates have the last word on the cities; the static list's stand in when the rates name none. */
+    public function testTheStaticCitiesStandInWhenTheRatesNameNone(): void
+    {
+        $facts = CircuitSyncService::withStaticCities(
+            [
+                1 => ['months' => ['2027-05'], 'departures' => []],
+                2 => ['months' => ['2027-06'], 'departures' => [111 => 'Cluj-Napoca']],
+                3 => ['months' => ['2027-07'], 'departures' => []],
+            ],
+            [1 => [202405 => 'Bucuresti'], 2 => [202405 => 'Bucuresti'], 3 => []],
+        );
+
+        self::assertSame([202405 => 'Bucuresti'], $facts[1]['departures']);
+        self::assertSame([111 => 'Cluj-Napoca'], $facts[2]['departures'], 'the rates name it: theirs');
+        self::assertSame([], $facts[3]['departures'], 'neither says: none, as before');
+        self::assertSame(['2027-05'], $facts[1]['months']);
+    }
+
+    public function testTheListsFirstPhotoIsTheCircuitsImage(): void
+    {
+        $row = $this->normalize(['id' => 4, 'title' => 'Malta', 'images' => [['url' => 'https://cdn.example/a.jpg'], ['url' => 'https://cdn.example/b.jpg']]]);
+
+        self::assertSame('https://cdn.example/a.jpg', $row['image_url'], 'the API names no single image: the first photo');
+    }
+
+    /**
+     * The departures go to Travel Core's shared table once the rates were
+     * read in full, after the circuits' own facts; a failure there is
+     * reported and never stops the sync.
+     */
+    public function testTheDeparturesAreSavedFromACompleteReadingOfTheRates(): void
+    {
+        $sync = (string) file_get_contents(dirname(__DIR__, 3) . '/src/Services/CircuitSyncService.php');
+
+        $guard = (int) strpos($sync, "if (\$bookable !== null) {\n            (new CircuitRepository())->saveDepartureFacts(self::withStaticCities(");
+        self::assertGreaterThan(0, $guard, 'only when the rates answered in full');
+        $save = (int) strpos($sync, '$this->saveDepartures($rates->departures(), $bookable);');
+        self::assertGreaterThan($guard, $save);
+        self::assertLessThan((int) strpos($sync, '$features = new CircuitFeatures();'), $save, 'before the features');
+        self::assertStringContainsString('(new CircuitDepartureRepository())->replace(SphinxCircuitProductProvider::PROVIDER, $rows, date(\'Y-m-d H:i:s\'));', $sync);
+        self::assertStringContainsString("} catch (\\Throwable \$e) {\n            \$this->output('WARNING: the departures could not be saved: '", $sync);
     }
 
     public function testFullSyncDoesNotReadTheWatermark(): void

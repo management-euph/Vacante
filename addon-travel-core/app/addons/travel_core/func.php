@@ -69,6 +69,7 @@ function fn_travel_core_uninstall(): bool
     db_query('DROP TABLE IF EXISTS ?:travel_balances');
     db_query('DROP TABLE IF EXISTS ?:travel_hotel_availability');
     db_query('DROP TABLE IF EXISTS ?:travel_hotel_state_log');
+    db_query('DROP TABLE IF EXISTS ?:travel_circuit_departures');
     db_query('DROP TABLE IF EXISTS ?:travel_feature_map');
 
     // Placed stay-summary blocks (dedicated type travel_stay_summary), with
@@ -223,6 +224,10 @@ function fn_travel_core_ensure_schema(): void
     // columns (audit data-perf-2: the table had no runtime heal).
     require_once __DIR__ . '/src/Repository/AlternativeRequestRepository.php';
     \Tygh\Addons\TravelCore\Repository\AlternativeRequestRepository::ensureTable();
+    // The circuits' departures, which each supplier's sync writes
+    // (docs/circuit-page-plan.md), for stores that upgraded by pulling code.
+    require_once __DIR__ . '/src/Repository/CircuitDepartureRepository.php';
+    \Tygh\Addons\TravelCore\Repository\CircuitDepartureRepository::ensureTable();
 }
 
 /**
