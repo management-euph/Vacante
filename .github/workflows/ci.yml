@@ -622,6 +622,10 @@ jobs:
       - lint
       - eslint
     runs-on: ubuntu-latest
+    # A scan takes about 4 minutes. A hung one (seen on pull_request runs,
+    # stuck in "Qodana Scan" with no log) fails here instead of holding the
+    # PR for GitHub's 6-hour default.
+    timeout-minutes: 20
     permissions:
       contents: write
       pull-requests: write
