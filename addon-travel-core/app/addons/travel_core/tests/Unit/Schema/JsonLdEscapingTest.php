@@ -80,6 +80,7 @@ final class JsonLdEscapingTest extends TestCase
         $tpl = self::read(self::TEMPLATE);
 
         self::assertStringContainsString('{$travel_hotel_schema_json nofilter}', $tpl);
+        self::assertStringContainsString('{$travel_circuit_schema_json nofilter}', $tpl, 'a circuit\'s is printed raw too: CircuitSchemaTest pins its encoding');
         self::assertStringContainsString('application/ld+json', $tpl);
     }
 

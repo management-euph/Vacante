@@ -91,7 +91,7 @@ as sent (day photos, transport legs, labels).
 | 4a | Booking bar: dates from the saved departures (live rates as fallback), month grid with each month's lowest price, "Check availability", price box (from / person and what the supplier says the price includes), flights dialog from the transport fact | done |
 | 4b | Booking card: sticky in a right column (wide screens), bottom bar with the price and "Alege data plecării" (phones, tablets), the optional extras each flight's offer has previewed under its rooms (they are chosen, with the live total, on the booking form) | done |
 | 5 | Admin "Circuit" tab (read-only, Travel Core, any supplier): facts, program, inclusions, excursions, where each note shows, saved departures, documents. A "Sync this circuit now" button is left for later | done |
-| 6 | Optional: difficulty, group size and stars as filters; structured data | |
+| 6 | Filters and structured data: difficulty, group size and hotel stars as facts in Feature Mappings › Circuits (a Number feature gets the number, a list the value that starts with it, made when missing: "3 – Moderate", "20 people", "4 stars"); a schema.org TouristTrip on the page (route, days, an offer from the lowest saved departure a person), encoded with JSON_HEX_TAG | done |
 
 After step 4 the old columns `departure_ids`, `departure_names` and
 `departure_months` of `?:sphinx_circuits` can go: the table replaces them.

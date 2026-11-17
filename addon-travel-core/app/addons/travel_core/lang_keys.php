@@ -4586,6 +4586,30 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Each "not included" item of the circuit, by its title, as one value of the feature (use a checkbox feature). A missing value is created; a title is cut at 255 letters.',
         'ro' => 'Fiecare element „neinclus” al circuitului, după titlu, ca o valoare a caracteristicii (folosiți o caracteristică cu căsuțe). O valoare lipsă este creată; un titlu este tăiat la 255 de litere.',
     ],
+    'travel_core.fmc_field_difficulty' => [
+        'en' => 'Difficulty',
+        'ro' => 'Dificultate',
+    ],
+    'travel_core.fmc_field_group_size' => [
+        'en' => 'Group size',
+        'ro' => 'Mărimea grupului',
+    ],
+    'travel_core.fmc_field_stars' => [
+        'en' => 'Hotel stars',
+        'ro' => 'Stelele hotelurilor',
+    ],
+    'travel_core.fmc_rule_difficulty' => [
+        'en' => 'The level, 1 (easy) to 5 (challenging), in the feature\'s own style: the number for a Number feature, the matching value of a list (e.g. „3 – Moderate”, or a value named „Moderate”; created when missing).',
+        'ro' => 'Nivelul, de la 1 (ușor) la 5 (dificil), în stilul caracteristicii: numărul pentru o caracteristică Număr, valoarea potrivită dintr-o listă (de ex. „3 – Moderat” sau o valoare numită „Moderat”; creată dacă lipsește).',
+    ],
+    'travel_core.fmc_rule_group_size' => [
+        'en' => 'The most people in the group (the fewest when only that is known): the number for a Number feature (best for a range filter), the matching value of a list (e.g. „20 people”; created when missing).',
+        'ro' => 'Numărul maxim de persoane din grup (minimul, când doar acesta e cunoscut): numărul pentru o caracteristică Număr (potrivită pentru un filtru pe interval), valoarea potrivită dintr-o listă (de ex. „20 persoane”; creată dacă lipsește).',
+    ],
+    'travel_core.fmc_rule_stars' => [
+        'en' => 'The stars of the hotels on the route: each as a value of a checkbox feature (e.g. „4 stars”; created when missing), the lowest for a one-value list or a Number feature.',
+        'ro' => 'Stelele hotelurilor de pe traseu: fiecare ca valoare a unei caracteristici cu căsuțe (de ex. „4 stele”; creată dacă lipsește), cea mai mică pentru o listă cu o valoare sau o caracteristică Număr.',
+    ],
     'travel_core.fmc_type_C' => [
         'en' => 'Single checkbox (yes/no): cannot hold these values',
         'ro' => 'O singură căsuță (da/nu): nu poate păstra aceste valori',

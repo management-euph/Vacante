@@ -101,4 +101,24 @@ final class CircuitFeatureMappingTest extends TestCase
         self::assertNotSame($long, $fit);
         self::assertSame('x', CircuitFeatureAssigner::fit('x'), 'a short name is left as it is');
     }
+
+    public function testANumberFindsTheValueThatStartsWithIt(): void
+    {
+        $variants = ['14 stars' => 9, '4 stars' => 1, '4 stele' => 2, 'Luxury' => 3];
+
+        self::assertSame(1, CircuitFeatureAssigner::numberVariant(4, $variants));
+        self::assertSame(0, CircuitFeatureAssigner::numberVariant(1, $variants), '14 is not 1');
+        self::assertSame(0, CircuitFeatureAssigner::numberVariant(5, $variants));
+    }
+
+    public function testTheLabelsOfNewDifficultyGroupAndStarsValues(): void
+    {
+        self::assertSame('1 – Easy', CircuitFeatureAssigner::difficultyLabel(1, 'en'));
+        self::assertSame('5 – Dificil', CircuitFeatureAssigner::difficultyLabel(5, 'ro'));
+        self::assertSame('20 people', CircuitFeatureAssigner::groupLabel(20, 'en'));
+        self::assertSame('20 persoane', CircuitFeatureAssigner::groupLabel(20, 'ro'));
+        self::assertSame('1 star', CircuitFeatureAssigner::starsLabel(1, 'en'));
+        self::assertSame('4 stele', CircuitFeatureAssigner::starsLabel(4, 'ro'));
+        self::assertSame('1 stea', CircuitFeatureAssigner::starsLabel(1, 'ro'));
+    }
 }

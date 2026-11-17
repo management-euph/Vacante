@@ -225,6 +225,9 @@ function fn_travel_core_dispatch_before_display(): void
                 if ($circuitDetails !== null) {
                     $view->assign('travel_circuit', $circuitView->view($circuitDetails));
                 }
+                // Structured data (docs/circuit-page-plan.md step 6), printed
+                // by product_detail_bottom.post.tpl.
+                $view->assign('travel_circuit_schema_json', _travel_core_circuit_schema_json($productId, $circuit, $circuitDetails));
             }
         }
 
@@ -239,6 +242,35 @@ function fn_travel_core_dispatch_before_display(): void
     if (!empty($_REQUEST['travel_debug'])) {
         _travel_core_render_debug($dispatch);
     }
+}
+
+/**
+ * A circuit page's JSON-LD (schema.org TouristTrip, CircuitSchema): its
+ * name, the product's description and main image, the route, the days, and
+ * "from" a person's share of the lowest saved departure in the store's
+ * primary currency. Every value comes from the supplier or the admin, so it
+ * is encoded with JSON_HEX_TAG (CircuitSchema::json()).
+ */
+function _travel_core_circuit_schema_json(int $productId, \Tygh\Addons\TravelCore\Dto\Circuit\CircuitPage $circuit, ?\Tygh\Addons\TravelCore\Dto\Circuit\CircuitDetails $details): string
+{
+    $description = TypeCoerce::toString(db_get_field(
+        'SELECT full_description FROM ?:product_descriptions WHERE product_id = ?i AND lang_code = ?s',
+        $productId,
+        CART_LANGUAGE,
+    ));
+    $description = trim(preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags($description), ENT_QUOTES | ENT_HTML5, 'UTF-8')) ?? '');
+    $pair = fn_travel_core_product_main_pair($productId);
+    $detailed = TypeCoerce::toStringMap($pair['detailed'] ?? null);
+
+    return \Tygh\Addons\TravelCore\ViewModels\CircuitSchema::json(\Tygh\Addons\TravelCore\ViewModels\CircuitSchema::build(
+        $circuit,
+        $details,
+        fn_travel_core_truncate_seo($description, 300),
+        TypeCoerce::toString($detailed['image_path'] ?? ''),
+        TypeCoerce::toString(fn_url('products.view?product_id=' . $productId)),
+        $circuit->fromPrice / 2,
+        defined('CART_PRIMARY_CURRENCY') ? TypeCoerce::toString(CART_PRIMARY_CURRENCY) : '',
+    ));
 }
 
 /**

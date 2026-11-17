@@ -4,6 +4,12 @@
 
 version: "1.0"
 linter: qodana-php
+# The exact image: Qodana for PHP 2026.2.4 (build QDPHP-262.12666), the
+# 2026.2 tag's digest on 2026-11-13. "linter:" alone follows the floating
+# jetbrains/qodana-php:<major.minor> tag, which on 2026-11-16 moved 2026.1
+# to a build that hung on every scan started without a cache. Update the
+# digest deliberately, together with the action's version in ci.yml.
+image: jetbrains/qodana-php@sha256:5556c61cf580e22955b762033ea10186e4a29ab49967ce90b283868c05f0759d
 profile:
   name: qodana.recommended
 

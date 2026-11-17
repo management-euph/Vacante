@@ -21,7 +21,11 @@ use Tygh\Addons\TravelCore\Traits\CsCartFeatureAssignment;
  *  - countries, departure city, tags, included, not included: open lists; a
  *    value the feature does not have yet is created (cut to the 255 letters a
  *    value name holds).
- *  - duration: the nights, in the feature's own style.
+ *  - duration, difficulty, group size, stars: numbers, in the feature's own
+ *    style: a Number feature gets the number (the lowest of the stars), a
+ *    Text feature its words ("7 nights", "4 stars"), a list the value that
+ *    starts with the number ("7", "4 stars"), made when missing. A
+ *    difficulty value may also be named by its word alone ("Moderate").
  *
  * A fact the provider does not know leaves its feature as it is, except
  * the months: no departure on sale means no month.
@@ -98,7 +102,24 @@ final class CircuitFeatureAssigner
             if ($facts->nights <= 0) {
                 $this->report['duration'] = self::REPORT_NO_DATA;
             } else {
-                $written += $this->note('duration', $this->setDuration($productId, $features['duration'], $facts->nights));
+                $written += $this->note('duration', $this->setNumbers($productId, $features['duration'], [$facts->nights], self::nightsLabel(...)));
+            }
+        }
+
+        $numbers = [
+            'difficulty' => $facts->difficulty >= 1 && $facts->difficulty <= 5 ? [$facts->difficulty] : [],
+            'group_size' => $facts->groupSize > 0 ? [$facts->groupSize] : [],
+            'stars' => array_values(array_filter($facts->stars, static fn (int $n): bool => $n >= 1 && $n <= 5)),
+        ];
+        $labels = ['difficulty' => self::difficultyLabel(...), 'group_size' => self::groupLabel(...), 'stars' => self::starsLabel(...)];
+        foreach ($numbers as $field => $values) {
+            if ($features[$field] <= 0) {
+                continue;
+            }
+            if ($values === []) {
+                $this->report[$field] = self::REPORT_NO_DATA;
+            } else {
+                $written += $this->note($field, $this->setNumbers($productId, $features[$field], $values, $labels[$field], $field === 'difficulty' ? self::difficultyWords() : []));
             }
         }
 
@@ -181,8 +202,19 @@ final class CircuitFeatureAssigner
      */
     public static function nightsVariant(int $nights, array $variants): int
     {
+        return self::numberVariant($nights, $variants);
+    }
+
+    /**
+     * The value of a list feature whose name starts with $number ("4",
+     * "4 stars", "4 stele"); 0 when none does.
+     *
+     * @param array<int|string, int> $variants variant name => variant_id
+     */
+    public static function numberVariant(int $number, array $variants): int
+    {
         foreach ($variants as $name => $id) {
-            if (preg_match('/^\s*(\d+)(?!\d)/', (string) $name, $m) === 1 && (int) $m[1] === $nights) {
+            if (preg_match('/^\s*(\d+)(?!\d)/', (string) $name, $m) === 1 && (int) $m[1] === $number) {
                 return $id;
             }
         }
@@ -211,36 +243,121 @@ final class CircuitFeatureAssigner
         return $nights . ($nights === 1 ? ' night' : ' nights');
     }
 
-    private function setDuration(int $productId, int $featureId, int $nights): int
+    /** The difficulty's words, by level 1–5 (the page's own: travel_core.circuit_difficulty_N). */
+    private const array DIFFICULTY_WORDS = [
+        'en' => [1 => 'Easy', 2 => 'Light', 3 => 'Moderate', 4 => 'Demanding', 5 => 'Challenging'],
+        'ro' => [1 => 'Ușor', 2 => 'Lejer', 3 => 'Moderat', 4 => 'Solicitant', 5 => 'Dificil'],
+    ];
+
+    /** "3 – Moderate" / "3 – Moderat": the value made for a difficulty level. */
+    public static function difficultyLabel(int $level, string $lang): string
     {
+        $words = self::DIFFICULTY_WORDS[$lang === 'ro' ? 'ro' : 'en'];
+
+        return isset($words[$level]) ? $level . ' – ' . $words[$level] : (string) $level;
+    }
+
+    /**
+     * Each level's words in every language ("Moderate", "Moderat"): a list
+     * value named so stands for the level.
+     *
+     * @return array<int, list<string>>
+     */
+    private static function difficultyWords(): array
+    {
+        $words = [];
+        foreach (self::DIFFICULTY_WORDS as $byLevel) {
+            foreach ($byLevel as $level => $word) {
+                $words[$level][] = $word;
+            }
+        }
+
+        return $words;
+    }
+
+    /** "20 people" / "20 persoane": the value made for a group size. */
+    public static function groupLabel(int $people, string $lang): string
+    {
+        if ($lang === 'ro') {
+            return $people . ($people === 1 ? ' persoană' : ' persoane');
+        }
+
+        return $people . ($people === 1 ? ' person' : ' people');
+    }
+
+    /** "4 stars" / "4 stele": the value made for the hotels' stars. */
+    public static function starsLabel(int $stars, string $lang): string
+    {
+        if ($lang === 'ro') {
+            return $stars . ($stars === 1 ? ' stea' : ' stele');
+        }
+
+        return $stars . ($stars === 1 ? ' star' : ' stars');
+    }
+
+    /**
+     * Numbers (the nights, a difficulty, a group size, the stars) in the
+     * feature's own style: a Number feature holds the lowest, a Text
+     * feature their words, a list the values that start with each number
+     * (several for checkboxes, the lowest otherwise), made when missing.
+     *
+     * @param list<int> $numbers at least one, each above 0
+     * @param \Closure(int, string): string $label a number's words in a language
+     * @param array<int, list<string>> $words number => other names a list value may have for it
+     */
+    private function setNumbers(int $productId, int $featureId, array $numbers, \Closure $label, array $words = []): int
+    {
+        $numbers = array_values(array_unique($numbers));
+        sort($numbers);
+        $lowest = $numbers[0] ?? 0;
+        if ($lowest <= 0) {
+            return 0;
+        }
         $type = $this->type($featureId);
         if ($type === 'O') {
-            return $this->setPlainValue($productId, $featureId, static fn (string $lang): array => ['value' => '', 'value_int' => $nights]);
+            return $this->setPlainValue($productId, $featureId, static fn (string $lang): array => ['value' => '', 'value_int' => $lowest]);
         }
         if ($type === 'T') {
-            return $this->setPlainValue($productId, $featureId, static fn (string $lang): array => ['value' => self::nightsLabel($nights, $lang), 'value_int' => null]);
+            return $this->setPlainValue($productId, $featureId, static fn (string $lang): array => [
+                'value' => implode(', ', array_map(static fn (int $n): string => $label($n, $lang), $numbers)),
+                'value_int' => null,
+            ]);
         }
         if (!in_array($type, self::VARIANT_TYPES, true)) {
             return 0;
         }
 
-        $variantId = self::nightsVariant($nights, $this->variantNames($featureId));
-        if ($variantId === 0) {
-            // A Number list holds bare numbers; a text list reads "7 nights".
-            $variantId = $type === 'N'
-                ? $this->createVariant($featureId, (string) $nights)
-                : $this->createVariant($featureId, self::nightsLabel($nights, 'en'), self::nightsLabel($nights, 'ro'));
+        $variantIds = [];
+        foreach ($type === 'M' ? $numbers : [$lowest] as $number) {
+            $known = $this->variantNames($featureId);
+            $variantId = self::numberVariant($number, $known);
+            foreach ($variantId === 0 ? ($words[$number] ?? []) : [] as $word) {
+                // A value named by its words alone ("Moderate") stands for the number too.
+                $variantId = VariantResolver::matchName($word, $known) ?? 0;
+                if ($variantId > 0) {
+                    break;
+                }
+            }
+            if ($variantId === 0) {
+                // A Number list holds bare numbers; a text list reads "7 nights".
+                $variantId = $type === 'N'
+                    ? $this->createVariant($featureId, (string) $number)
+                    : $this->createVariant($featureId, $label($number, 'en'), $label($number, 'ro'));
+                if ($variantId > 0) {
+                    $this->variants[$featureId][(string) $number] = $variantId;
+                }
+            }
             if ($variantId > 0) {
-                $this->variants[$featureId][(string) $nights] = $variantId;
+                $variantIds[] = $variantId;
             }
         }
-        if ($variantId === 0) {
+        if ($variantIds === []) {
             return 0;
         }
-        $written = $this->setVariants($productId, $featureId, [$variantId]);
+        $written = $this->setVariants($productId, $featureId, $variantIds);
         if ($type === 'N') {
             // A Number list filters on value_int: the number, not the variant id.
-            db_query('UPDATE ?:product_features_values SET value_int = ?d WHERE feature_id = ?i AND product_id = ?i', $nights, $featureId, $productId);
+            db_query('UPDATE ?:product_features_values SET value_int = ?d WHERE feature_id = ?i AND product_id = ?i', $lowest, $featureId, $productId);
         }
 
         return $written;

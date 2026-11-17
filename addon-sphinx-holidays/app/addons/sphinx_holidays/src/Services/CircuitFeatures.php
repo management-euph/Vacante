@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
 
+use Tygh\Addons\SphinxHolidays\Providers\SphinxCircuitProductProvider;
 use Tygh\Addons\SphinxHolidays\Repository\CircuitRepository;
 use Tygh\Addons\TravelCore\Dto\Circuit\CircuitFeatureFacts;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
@@ -24,6 +25,10 @@ use Tygh\Addons\TravelCore\Services\CircuitFeatureConfig;
  *  - tags: the tag names
  *  - included, not included: the titles of what the price includes and does
  *    not (details_json, saved from the static list)
+ *  - difficulty: details_json difficulty.level (1–5)
+ *  - group size: details_json group_size.max (min when there is no max)
+ *  - stars: the itinerary days' hotel categories and the trip's own hotel
+ *    (details_json accommodation.category)
  */
 final class CircuitFeatures
 {
@@ -152,7 +157,46 @@ final class CircuitFeatures
             tags: array_values(array_unique($tags)),
             included: self::titles($details['included'] ?? []),
             notIncluded: self::titles($details['not_included'] ?? []),
+            difficulty: self::difficulty($details['difficulty'] ?? null),
+            groupSize: self::groupSize($details['group_size'] ?? null),
+            stars: self::stars($row['itinerary_json'] ?? null, $details['accommodation'] ?? null),
         );
+    }
+
+    /** details_json difficulty.level, 1 to 5; 0 for anything else. */
+    private static function difficulty(mixed $difficulty): int
+    {
+        $level = TypeCoerce::toInt(TypeCoerce::toStringMap($difficulty)['level'] ?? 0);
+
+        return $level >= 1 && $level <= 5 ? $level : 0;
+    }
+
+    /** details_json group_size: its max, else its min; 0 when it gives neither. */
+    private static function groupSize(mixed $group): int
+    {
+        $group = TypeCoerce::toStringMap($group);
+        $max = TypeCoerce::toInt($group['max'] ?? 0);
+
+        return $max > 0 ? $max : max(0, TypeCoerce::toInt($group['min'] ?? 0));
+    }
+
+    /**
+     * The stars of the circuit's hotels: those on the route and the trip's
+     * own hotel, each once, lowest first.
+     *
+     * @return list<int>
+     */
+    private static function stars(mixed $itinerary, mixed $accommodation): array
+    {
+        $stars = SphinxCircuitProductProvider::routeStars($itinerary);
+        $own = SphinxCircuitProductProvider::stars(TypeCoerce::toString(TypeCoerce::toStringMap($accommodation)['category'] ?? ''));
+        if ($own > 0) {
+            $stars[] = $own;
+        }
+        $stars = array_values(array_unique($stars));
+        sort($stars);
+
+        return $stars;
     }
 
     /**

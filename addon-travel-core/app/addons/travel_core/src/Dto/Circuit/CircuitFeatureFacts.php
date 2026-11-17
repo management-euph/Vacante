@@ -21,6 +21,9 @@ final readonly class CircuitFeatureFacts
      * @param list<string> $tags the provider's tags, by name
      * @param list<string> $included what the price includes, one entry per item
      * @param list<string> $notIncluded what it does not include, one entry per item
+     * @param int $difficulty how demanding it is, 1 (easy) to 5 (challenging); 0 when unknown
+     * @param int $groupSize the most people in its group (the fewest when only that is known); 0 when unknown
+     * @param list<int> $stars the stars of its hotels (1–5), each once, lowest first
      */
     public function __construct(
         public string $transport = '',
@@ -31,6 +34,9 @@ final readonly class CircuitFeatureFacts
         public array $tags = [],
         public array $included = [],
         public array $notIncluded = [],
+        public int $difficulty = 0,
+        public int $groupSize = 0,
+        public array $stars = [],
     ) {
     }
 }
