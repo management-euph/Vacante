@@ -622,9 +622,9 @@ jobs:
       - lint
       - eslint
     runs-on: ubuntu-latest
-    # A scan takes about 4 minutes. A hung one (seen on pull_request runs,
-    # stuck in "Qodana Scan" with no log) fails here instead of holding the
-    # PR for GitHub's 6-hour default.
+    # A scan takes about 4 minutes. A hung one (Qodana for PHP 2026.1.6 never
+    # finished "Project opening" when it started with no cache) fails here
+    # instead of holding the PR for GitHub's 6-hour default.
     timeout-minutes: 20
     permissions:
       contents: write
@@ -636,15 +636,19 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}  # actual PR commit on PRs; empty on push → defaults to the pushed commit
           fetch-depth: 0                                   # full history required for Qodana PR analysis
       - name: 'Qodana Scan'
-        uses: JetBrains/qodana-action@v2026.1
+        # The action's version picks the Qodana CLI, and the CLI the linter
+        # image: jetbrains/qodana-php:<major.minor>, a tag JetBrains moves to
+        # each patch release (2026.1 moved from 2026.1.4 to 2026.1.6 on
+        # 2026-11-16, and every scan that started with no cache hung after it).
+        uses: JetBrains/qodana-action@v2026.2
         with:
           pr-mode: false
           upload-result: true   # publish qodana.sarif.json as a build artifact for offline triage
           # A pull_request run has no cache of its own (refs/pull/N/merge) and
-          # cannot read the head branch's; started cold, the scan has hung in
-          # "Project opening" until the timeout. It may read the base
-          # branch's cache, so fall back to that one (push runs keep their own).
-          additional-cache-key: qodana-2026.1-${{ github.event_name == 'pull_request' && format('refs/heads/{0}', github.base_ref) || github.ref }}
+          # cannot read the head branch's, but it may read the base branch's:
+          # start from that one (push runs keep their own). Keep the version
+          # in this key in step with the action's.
+          additional-cache-key: qodana-2026.2-${{ github.event_name == 'pull_request' && format('refs/heads/{0}', github.base_ref) || github.ref }}
         env:
           QODANA_TOKEN: ${{ secrets.QODANA_TOKEN || secrets.QODANA_TOKEN_1766855460 }}
           QODANA_ENDPOINT: 'https://qodana.cloud'
