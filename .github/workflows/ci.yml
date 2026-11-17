@@ -640,6 +640,11 @@ jobs:
         with:
           pr-mode: false
           upload-result: true   # publish qodana.sarif.json as a build artifact for offline triage
+          # A pull_request run has no cache of its own (refs/pull/N/merge) and
+          # cannot read the head branch's; started cold, the scan has hung in
+          # "Project opening" until the timeout. It may read the base
+          # branch's cache, so fall back to that one (push runs keep their own).
+          additional-cache-key: qodana-2026.1-${{ github.event_name == 'pull_request' && format('refs/heads/{0}', github.base_ref) || github.ref }}
         env:
           QODANA_TOKEN: ${{ secrets.QODANA_TOKEN || secrets.QODANA_TOKEN_1766855460 }}
           QODANA_ENDPOINT: 'https://qodana.cloud'
