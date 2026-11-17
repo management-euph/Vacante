@@ -635,12 +635,23 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}  # actual PR commit on PRs; empty on push → defaults to the pushed commit
           fetch-depth: 0                                   # full history required for Qodana PR analysis
+      # The PHP packages are installed here, so the IDE skips its own
+      # "composer install" during Project opening (the step where Qodana for
+      # PHP 2026.1.6 hung). The container mounts this checkout as is.
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+      - name: Install root dev dependencies
+        run: composer install --no-progress --no-interaction
       - name: 'Qodana Scan'
-        # The action's version picks the Qodana CLI, and the CLI the linter
-        # image: jetbrains/qodana-php:<major.minor>, a tag JetBrains moves to
-        # each patch release (2026.1 moved from 2026.1.4 to 2026.1.6 on
-        # 2026-11-16, and every scan that started with no cache hung after it).
-        uses: JetBrains/qodana-action@v2026.2
+        # Exact versions, updated on purpose: @v2026.2 is a branch, and the
+        # image tag it would pull moves with every patch release (2026.1
+        # moved from 2026.1.4 to 2026.1.6 on 2026-11-16, and every scan that
+        # started with no cache hung after it). The image is pinned by digest
+        # in qodana.yaml.
+        uses: JetBrains/qodana-action@v2026.2.2
         with:
           pr-mode: false
           upload-result: true   # publish qodana.sarif.json as a build artifact for offline triage
