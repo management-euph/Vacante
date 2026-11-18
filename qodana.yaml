@@ -102,6 +102,10 @@ exclude:
   - name: JSEqualityComparisonWithCoercion
   # Don't analyse third-party code, build output, or the test scaffolding
   # (its guarded fn_* stubs trip the duplicate-declaration check):
+  # PHPStan and PHP CS Fixer run as their own CI jobs (ci.yml), as gates;
+  # Qodana does not run them again. This only notices that composer.json
+  # lists them while Qodana's own runner for them is off.
+  - name: PhpDisabledQualityToolComposerInspection
   - name: All
     paths:
       - vendor
@@ -124,8 +128,3 @@ exclude:
 
 include:
   - name: CheckDependencyLicenses
-  # The quality tools the CI job installs before the scan (composer.json
-  # require-dev), run by Qodana too, with the repo's own configs
-  # (phpstan.neon with its baseline, .php-cs-fixer.dist.php).
-  - name: PhpStanGlobal
-  - name: PhpCSFixerValidationInspection
