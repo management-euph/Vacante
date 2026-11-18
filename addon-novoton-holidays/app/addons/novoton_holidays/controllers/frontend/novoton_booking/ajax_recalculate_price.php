@@ -55,8 +55,9 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
     // Helper function to send JSON response and exit
     $sendJson = function(array $response) use (&$debug_enabled, &$debug_messages, &$_nvt_caught_warnings) {
-        // Include debug log in response when debug is enabled
-        if ($debug_enabled && !empty($debug_messages)) {
+        // The debug log (raw requests and answers, net prices) goes to the
+        // store's log; the browser gets it only when an admin is signed in.
+        if ($debug_enabled && !empty($debug_messages) && \Tygh\Addons\NovotonHolidays\Helpers\StorefrontDebug::forThisVisitor()) {
             $response['_debug'] = $debug_messages;
         }
         // Log any caught warnings to CS-Cart log (visible in admin, not in response)

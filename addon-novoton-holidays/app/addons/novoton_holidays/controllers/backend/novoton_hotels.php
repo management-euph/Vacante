@@ -189,11 +189,11 @@ if ($mode === 'check_packages') {
             $hotels = $hotelRepo->findByCountryWithLimit($country, $limit);
 
             if (empty($hotels)) {
-                echo "<div class='country-header'>{$country}: 0 hotels in DB</div>\n";
+                echo "<div class='country-header'>" . htmlspecialchars($country) . ": 0 hotels in DB</div>\n";
                 continue;
             }
 
-            echo "<div class='country-header'>{$country}: " . count($hotels) . " hotels</div>\n";
+            echo "<div class='country-header'>" . htmlspecialchars($country) . ': ' . count($hotels) . " hotels</div>\n";
             flush();
 
             foreach ($hotels as $hotel) {
@@ -241,7 +241,7 @@ if ($mode === 'check_packages') {
                         $hotelRepo->updatePackagesCount($hotel_id, count($packages));
 
                         $display_pkgs = implode(', ', array_slice($pkg_names, 0, 2)) . (count($pkg_names) > 2 ? '...' : '');
-                        echo "<span class='success'>&check; NVT-{$hotel_id} | {$hotel_name} &rarr; " . count($packages) . " pkg: " . htmlspecialchars($display_pkgs) . "</span><br>\n";
+                        echo "<span class='success'>&check; NVT-" . htmlspecialchars($hotel_id) . ' | ' . htmlspecialchars($hotel_name) . ' &rarr; ' . count($packages) . " pkg: " . htmlspecialchars($display_pkgs) . "</span><br>\n";
 
                         $results_table[] = [
                             'hotel_id' => $hotel_id,
@@ -251,11 +251,11 @@ if ($mode === 'check_packages') {
                         ];
                     } else {
                         $without_packages++;
-                        echo "<span class='skip'>&cir; NVT-{$hotel_id} | {$hotel_name} - No packages</span><br>\n";
+                        echo "<span class='skip'>&cir; NVT-" . htmlspecialchars($hotel_id) . ' | ' . htmlspecialchars($hotel_name) . " - No packages</span><br>\n";
                     }
                 } catch (Exception $e) {
                     $errors++;
-                    echo "<span class='error'>&cross; NVT-{$hotel_id} | {$hotel_name} - Error: " . htmlspecialchars($e->getMessage()) . "</span><br>\n";
+                    echo "<span class='error'>&cross; NVT-" . htmlspecialchars($hotel_id) . ' | ' . htmlspecialchars($hotel_name) . ' - Error: ' . htmlspecialchars($e->getMessage()) . "</span><br>\n";
                 }
 
                 if ($grand_total % 25 === 0) {

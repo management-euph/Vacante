@@ -109,10 +109,7 @@ function fn_novoton_holidays_check_reservation_status($booking_id = 0): array
     ];
 
     foreach ($bookings as $booking) {
-        // Reservation reference: confirmation id from booking, else the
-        // ResNum learned via resinfo (same precedence as ResInfoCommand).
-        $reservation_ref = TypeCoerce::toString($booking['novoton_confirm_id'] ?? '')
-            ?: TypeCoerce::toString($booking['novoton_res_num'] ?? '');
+        $reservation_ref = \Tygh\Addons\NovotonHolidays\Helpers\ReservationNumber::of($booking);
         if ($reservation_ref === '') continue;
         $result['checked']++;
 

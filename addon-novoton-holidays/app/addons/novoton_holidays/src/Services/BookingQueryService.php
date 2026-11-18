@@ -18,6 +18,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\NovotonHolidays\Helpers\ReservationNumber;
 use Tygh\Addons\NovotonHolidays\Repository\BookingReportingRepositoryInterface;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
@@ -172,9 +173,8 @@ class BookingQueryService implements BookingQueryServiceInterface
             'novoton_status' => $nb['novoton_status'] ?? '',
             'novoton_invoice_id' => $nb['novoton_invoice_id'] ?? '',
             'novoton_confirm_id' => $nb['novoton_confirm_id'] ?? '',
-            // Derived: no novoton_reservation_id column exists — the
-            // reference is confirm id, else the resinfo ResNum.
-            'novoton_reservation_id' => ($nb['novoton_confirm_id'] ?? '') ?: ($nb['novoton_res_num'] ?? ''),
+            // Derived: no novoton_reservation_id column exists.
+            'novoton_reservation_id' => ReservationNumber::of($nb),
             'api_request' => $nb['api_request'] ?? null,
             'api_response' => $nb['api_response'] ?? null,
             'alternatives_data' => $nb['alternatives_data'] ?? null,

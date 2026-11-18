@@ -117,7 +117,7 @@ class ConfigProvider extends AbstractConfigProvider
 
     public static function isDebugLogging(): bool
     {
-        return (self::settings()['debug_logging'] ?? 'Y') === 'Y';
+        return (self::settings()['debug_logging'] ?? 'N') === 'Y';
     }
 
     public static function isApiDisabled(): bool

@@ -387,7 +387,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
 
         $fullRequest = $debugInfo->lastRequest;
         if ($fullRequest !== '') {
-            $masked = (string) preg_replace('/<psw>[^<]*<\/psw>/', '<psw>***</psw>', $fullRequest);
+            $masked = (string) preg_replace(['/<usr>[^<]*<\/usr>/', '/<psw>[^<]*<\/psw>/'], ['<usr>***</usr>', '<psw>***</psw>'], $fullRequest);
             $this->log('  -> Full XML Request: ' . substr(htmlspecialchars($masked), 0, 1500));
         }
 

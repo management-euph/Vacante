@@ -21,6 +21,7 @@ declare(strict_types=1);
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
+use Tygh\Addons\NovotonHolidays\Helpers\PriceCheckCountries;
 use Tygh\Addons\NovotonHolidays\Helpers\PriceCheckFlags;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
@@ -119,16 +120,8 @@ if ($mode === 'check_prices') {
     $default_check_in = PriceCheckFlags::nextPeakCheckIn(new \DateTimeImmutable('today'));
     $default_check_out = date('Y-m-d', (int) strtotime($default_check_in . ' +7 days'));
 
-    // Parse countries: support both multi-select array and legacy single string
-    $selected_countries = [];
-    $rawCountries = RequestCoerce::list($_REQUEST, 'countries');
-    if (!empty($rawCountries)) {
-        foreach ($rawCountries as $rc) {
-            $selected_countries[] = strtoupper(trim(TypeCoerce::toString($rc)));
-        }
-    } elseif (!empty($_REQUEST['country'])) {
-        $selected_countries = [strtoupper(trim(RequestCoerce::string($_REQUEST, 'country')))];
-    }
+    // The countries asked for, only those the add-on knows
+    $selected_countries = PriceCheckCountries::fromRequest($_REQUEST);
 
     $check_in = RequestCoerce::string($_REQUEST, 'check_in', $default_check_in);
     $check_out = RequestCoerce::string($_REQUEST, 'check_out', $default_check_out);
@@ -318,7 +311,7 @@ if ($mode === 'check_prices') {
             $unknown_hotels = array_diff_key($hotels_with_prices, $all_hotels);
             $grand_unknown += count($unknown_hotels);
 
-            echo "<br><strong>{$country} summary:</strong> ";
+            echo '<br><strong>' . htmlspecialchars($country) . ' summary:</strong> ';
             echo "Resorts: {$total_resorts}" . ($resort_errors > 0 ? " ({$resort_errors} errors)" : '') . " | ";
             echo "DB: {$total_hotels} | ";
             echo "With prices: <span class='success'><strong>{$with_prices_count}</strong></span> | ";
@@ -377,16 +370,8 @@ if ($mode === 'check_prices_hotel') {
     $default_check_in = PriceCheckFlags::nextPeakCheckIn(new \DateTimeImmutable('today'));
     $default_check_out = date('Y-m-d', (int) strtotime($default_check_in . ' +7 days'));
 
-    // Parse countries: support both multi-select array and legacy single string
-    $selected_countries = [];
-    $rawCountries = RequestCoerce::list($_REQUEST, 'countries');
-    if (!empty($rawCountries)) {
-        foreach ($rawCountries as $rc) {
-            $selected_countries[] = strtoupper(trim(TypeCoerce::toString($rc)));
-        }
-    } elseif (!empty($_REQUEST['country'])) {
-        $selected_countries = [strtoupper(trim(RequestCoerce::string($_REQUEST, 'country')))];
-    }
+    // The countries asked for, only those the add-on knows
+    $selected_countries = PriceCheckCountries::fromRequest($_REQUEST);
 
     $check_in = RequestCoerce::string($_REQUEST, 'check_in', $default_check_in);
     $check_out = RequestCoerce::string($_REQUEST, 'check_out', $default_check_out);
@@ -553,7 +538,7 @@ if ($mode === 'check_prices_hotel') {
         $grand_no_prices += $no_prices;
         $grand_errors += $errors;
 
-        echo "<br><strong>{$country} summary:</strong> ";
+        echo '<br><strong>' . htmlspecialchars($country) . ' summary:</strong> ';
         echo "Hotels: {$total_hotels} | Empty city: {$hotels_with_no_city} | ";
         echo "With prices: <span class='success'><strong>{$with_prices}</strong></span> | ";
         echo "No prices: {$no_prices} | Errors: {$errors}<br><br>\n";

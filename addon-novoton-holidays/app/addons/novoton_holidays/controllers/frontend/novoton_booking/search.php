@@ -14,7 +14,6 @@ declare(strict_types=1);
  */
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
-use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\HotelAvailabilitySearcher;
 use Tygh\Addons\NovotonHolidays\Services\AlternativeDateSearcher;
 use Tygh\Addons\NovotonHolidays\Services\Container;
@@ -44,7 +43,8 @@ try {
     }
 
     // ── 3. Debug mode (server-side config only) ──────────────────────
-    $debug = ConfigProvider::isDebugMode();
+    // The searchers' debug lines (raw requests and answers) are for admins only.
+    $debug = \Tygh\Addons\NovotonHolidays\Helpers\StorefrontDebug::forThisVisitor();
 
     // ── 4. Hotel-specific search ─────────────────────────────────────
     if ($query->isHotelScoped()) {
@@ -149,7 +149,7 @@ try {
     $formatter = Container::getInstance()->searchResultFormatter();
     $formatter->assignDefaults();
 
-    if (ConfigProvider::isDebugMode()) {
+    if (\Tygh\Addons\NovotonHolidays\Helpers\StorefrontDebug::forThisVisitor()) {
         fn_novoton_holidays_get_view()->assign('novoton_debug', [
             '=== SEARCH ERROR ===',
             $e->getMessage(),

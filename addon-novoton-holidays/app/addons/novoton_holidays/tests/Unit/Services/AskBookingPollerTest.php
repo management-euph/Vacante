@@ -50,10 +50,16 @@ final class AskBookingPollerTest extends TestCase
         return new AskBookingPoller($api, $repo, null, $answered);
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * A booking on request as BookingSubmissionService writes it: the
+     * reservation number (IdNum) in novoton_invoice_id, the two older
+     * reference columns empty.
+     *
+     * @return array<string, mixed>
+     */
     private static function booking(int $id, string $reservation): array
     {
-        return ['booking_id' => $id, 'novoton_confirm_id' => $reservation, 'novoton_res_num' => '', 'status' => 'ask', 'novoton_status' => 'ASK'];
+        return ['booking_id' => $id, 'novoton_invoice_id' => $reservation, 'novoton_confirm_id' => null, 'novoton_res_num' => null, 'status' => 'ask', 'novoton_status' => 'ASK'];
     }
 
     /** @return array<int, array<string, mixed>> booking id => what was written */
@@ -81,6 +87,15 @@ final class AskBookingPollerTest extends TestCase
         self::assertArrayNotHasKey('novoton_status', $w[4], 'still ASK: asked again on the next run');
         self::assertArrayHasKey('last_status_check', $w[4]);
         self::assertSame(['checked' => 4, 'changed' => 3, 'errors' => 0], $stats);
+    }
+
+    public function testAnOlderRowWithItsNumberInConfirmIdIsStillAsked(): void
+    {
+        $older = ['booking_id' => 5, 'novoton_invoice_id' => '', 'novoton_confirm_id' => 'R5', 'novoton_res_num' => '', 'status' => 'ask', 'novoton_status' => 'ASK'];
+        $stats = $this->poller(['R5' => 'OK'], [$older])->poll();
+
+        self::assertSame('confirmed', $this->written()[5]['status']);
+        self::assertSame(['checked' => 1, 'changed' => 1, 'errors' => 0], $stats);
     }
 
     public function testOneUnansweredBookingDoesNotStopTheOthers(): void

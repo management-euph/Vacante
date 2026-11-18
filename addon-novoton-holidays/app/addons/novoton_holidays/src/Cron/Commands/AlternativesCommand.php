@@ -6,6 +6,7 @@ namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
+use Tygh\Addons\NovotonHolidays\Helpers\ReservationNumber;
 use Tygh\Addons\NovotonHolidays\Services\AlternativeEmail;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
@@ -156,10 +157,7 @@ class AlternativesCommand extends AbstractCronCommand
             $bookingId = TypeCoerce::toInt($booking['booking_id']);
             $this->output("Booking #{$bookingId}... ", false);
 
-            // Reservation reference: confirmation id from booking, else the
-            // ResNum learned via resinfo (same precedence as ResInfoCommand).
-            $reservationRef = TypeCoerce::toString($booking['novoton_confirm_id'] ?? '')
-                ?: TypeCoerce::toString($booking['novoton_res_num'] ?? '');
+            $reservationRef = ReservationNumber::of($booking);
 
             if ($reservationRef !== '') {
                 $this->api->reservations()->getAlternatives($reservationRef);
