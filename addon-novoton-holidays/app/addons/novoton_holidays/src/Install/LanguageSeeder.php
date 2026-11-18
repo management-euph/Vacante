@@ -24,7 +24,7 @@ use Tygh\Addons\TravelCore\Support\PoFile;
  *
  * Its sources are the .po files (var/langs/<lang>/addons/novoton_holidays.po),
  * then lang_keys.php and addon.xml on top. It used to read only the last two,
- * while most labels (710 of 1041) live only in the .po files: CS-Cart imports
+ * while most labels live only in the .po files: CS-Cart imports
  * those at install, so every label added to a .po afterwards never reached
  * an upgraded store, which showed the raw "_novoton_holidays.…" key.
  */
