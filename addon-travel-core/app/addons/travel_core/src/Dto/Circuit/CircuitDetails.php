@@ -31,6 +31,8 @@ final readonly class CircuitDetails
      * @param list<array{title: string, text: string}> $excursionNotes the supplier's notes on the excursions
      * @param list<array{title: string, text: string}> $priceNotes the supplier's discounts and supplements
      * @param list<array{title: string, url: string}> $documents files to download, on the supplier's servers
+     * @param list<string> $tags the supplier's labels for the trip ("Senior Voyage")
+     * @param int $photoCount the trip's own photos (the product's images are made from them)
      */
     public function __construct(
         public array $days = [],
@@ -48,6 +50,8 @@ final readonly class CircuitDetails
         public array $excursionNotes = [],
         public array $priceNotes = [],
         public array $documents = [],
+        public array $tags = [],
+        public int $photoCount = 0,
     ) {
     }
 

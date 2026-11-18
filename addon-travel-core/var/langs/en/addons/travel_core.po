@@ -5397,3 +5397,91 @@ msgstr "The most people in the group (the fewest when only that is known): the n
 msgctxt "Languages::travel_core.fmc_rule_stars"
 msgid "The stars of the hotels on the route: each as a value of a checkbox feature (e.g. „4 stars”; created when missing), the lowest for a one-value list or a Number feature."
 msgstr "The stars of the hotels on the route: each as a value of a checkbox feature (e.g. „4 stars”; created when missing), the lowest for a one-value list or a Number feature."
+
+msgctxt "Languages::travel_core.circuit_admin_status"
+msgid "Status"
+msgstr "Status"
+
+msgctxt "Languages::travel_core.circuit_admin_active"
+msgid "Active"
+msgstr "Active"
+
+msgctxt "Languages::travel_core.circuit_admin_departures_ahead"
+msgid "[n] departures ahead"
+msgstr "[n] departures ahead"
+
+msgctxt "Languages::travel_core.circuit_admin_transport_flight"
+msgid "Flight"
+msgstr "Flight"
+
+msgctxt "Languages::travel_core.circuit_admin_transport_bus"
+msgid "Coach"
+msgstr "Coach"
+
+msgctxt "Languages::travel_core.circuit_admin_days_nights"
+msgid "[days] days / [nights] nights"
+msgstr "[days] days / [nights] nights"
+
+msgctxt "Languages::travel_core.circuit_admin_destinations"
+msgid "Destinations"
+msgstr "Destinations"
+
+msgctxt "Languages::travel_core.circuit_admin_departure_cities"
+msgid "Departure cities"
+msgstr "Departure cities"
+
+msgctxt "Languages::travel_core.circuit_admin_tags"
+msgid "Tags"
+msgstr "Tags"
+
+msgctxt "Languages::travel_core.circuit_admin_difficulty_value"
+msgid "[level] of 5"
+msgstr "[level] of 5"
+
+msgctxt "Languages::travel_core.circuit_admin_travellers"
+msgid "[min]–[max] travellers"
+msgstr "[min]–[max] travellers"
+
+msgctxt "Languages::travel_core.circuit_admin_age_not_required"
+msgid "Not required"
+msgstr "Not required"
+
+msgctxt "Languages::travel_core.circuit_admin_accommodation"
+msgid "Accommodation"
+msgstr "Accommodation"
+
+msgctxt "Languages::travel_core.circuit_admin_media"
+msgid "Photos and documents"
+msgstr "Photos and documents"
+
+msgctxt "Languages::travel_core.circuit_admin_media_value"
+msgid "[photos] photos · [documents] documents"
+msgstr "[photos] photos · [documents] documents"
+
+msgctxt "Languages::travel_core.circuit_admin_not_sent"
+msgid "Not sent by the supplier"
+msgstr "Not sent by the supplier"
+
+msgctxt "Languages::travel_core.circuit_admin_itinerary"
+msgid "Itinerary · [n] days"
+msgstr "Itinerary · [n] days"
+
+msgctxt "Languages::travel_core.circuit_admin_day"
+msgid "Day"
+msgstr "Day"
+
+msgctxt "Languages::travel_core.circuit_admin_text"
+msgid "Text"
+msgstr "Text"
+
+msgctxt "Languages::travel_core.circuit_admin_show"
+msgid "Show"
+msgstr "Show"
+
+msgctxt "Languages::travel_core.circuit_admin_none"
+msgid "None"
+msgstr "None"
+
+msgctxt "Languages::travel_core.circuit_admin_no_program"
+msgid "The supplier sent no day-by-day program for this circuit."
+msgstr "The supplier sent no day-by-day program for this circuit."

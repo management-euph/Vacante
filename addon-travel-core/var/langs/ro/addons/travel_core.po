@@ -5397,3 +5397,91 @@ msgstr "Numărul maxim de persoane din grup (minimul, când doar acesta e cunosc
 msgctxt "Languages::travel_core.fmc_rule_stars"
 msgid "The stars of the hotels on the route: each as a value of a checkbox feature (e.g. „4 stars”; created when missing), the lowest for a one-value list or a Number feature."
 msgstr "Stelele hotelurilor de pe traseu: fiecare ca valoare a unei caracteristici cu căsuțe (de ex. „4 stele”; creată dacă lipsește), cea mai mică pentru o listă cu o valoare sau o caracteristică Număr."
+
+msgctxt "Languages::travel_core.circuit_admin_status"
+msgid "Status"
+msgstr "Stare"
+
+msgctxt "Languages::travel_core.circuit_admin_active"
+msgid "Active"
+msgstr "Activ"
+
+msgctxt "Languages::travel_core.circuit_admin_departures_ahead"
+msgid "[n] departures ahead"
+msgstr "[n] plecări viitoare"
+
+msgctxt "Languages::travel_core.circuit_admin_transport_flight"
+msgid "Flight"
+msgstr "Avion"
+
+msgctxt "Languages::travel_core.circuit_admin_transport_bus"
+msgid "Coach"
+msgstr "Autocar"
+
+msgctxt "Languages::travel_core.circuit_admin_days_nights"
+msgid "[days] days / [nights] nights"
+msgstr "[days] zile / [nights] nopți"
+
+msgctxt "Languages::travel_core.circuit_admin_destinations"
+msgid "Destinations"
+msgstr "Destinații"
+
+msgctxt "Languages::travel_core.circuit_admin_departure_cities"
+msgid "Departure cities"
+msgstr "Orașe de plecare"
+
+msgctxt "Languages::travel_core.circuit_admin_tags"
+msgid "Tags"
+msgstr "Etichete"
+
+msgctxt "Languages::travel_core.circuit_admin_difficulty_value"
+msgid "[level] of 5"
+msgstr "[level] din 5"
+
+msgctxt "Languages::travel_core.circuit_admin_travellers"
+msgid "[min]–[max] travellers"
+msgstr "[min]–[max] călători"
+
+msgctxt "Languages::travel_core.circuit_admin_age_not_required"
+msgid "Not required"
+msgstr "Nu se cere"
+
+msgctxt "Languages::travel_core.circuit_admin_accommodation"
+msgid "Accommodation"
+msgstr "Cazare"
+
+msgctxt "Languages::travel_core.circuit_admin_media"
+msgid "Photos and documents"
+msgstr "Fotografii și documente"
+
+msgctxt "Languages::travel_core.circuit_admin_media_value"
+msgid "[photos] photos · [documents] documents"
+msgstr "[photos] fotografii · [documents] documente"
+
+msgctxt "Languages::travel_core.circuit_admin_not_sent"
+msgid "Not sent by the supplier"
+msgstr "Netrimis de furnizor"
+
+msgctxt "Languages::travel_core.circuit_admin_itinerary"
+msgid "Itinerary · [n] days"
+msgstr "Program · [n] zile"
+
+msgctxt "Languages::travel_core.circuit_admin_day"
+msgid "Day"
+msgstr "Ziua"
+
+msgctxt "Languages::travel_core.circuit_admin_text"
+msgid "Text"
+msgstr "Text"
+
+msgctxt "Languages::travel_core.circuit_admin_show"
+msgid "Show"
+msgstr "Arată"
+
+msgctxt "Languages::travel_core.circuit_admin_none"
+msgid "None"
+msgstr "Niciuna"
+
+msgctxt "Languages::travel_core.circuit_admin_no_program"
+msgid "The supplier sent no day-by-day program for this circuit."
+msgstr "Furnizorul nu a trimis programul pe zile pentru acest circuit."
