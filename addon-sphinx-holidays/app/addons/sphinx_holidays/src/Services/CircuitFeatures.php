@@ -8,6 +8,7 @@ use Tygh\Addons\SphinxHolidays\Providers\SphinxCircuitProductProvider;
 use Tygh\Addons\SphinxHolidays\Repository\CircuitRepository;
 use Tygh\Addons\TravelCore\Dto\Circuit\CircuitFeatureFacts;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Repository\CircuitDepartureRepository;
 use Tygh\Addons\TravelCore\Services\CircuitFeatureAssigner;
 use Tygh\Addons\TravelCore\Services\CircuitFeatureConfig;
 
@@ -20,8 +21,8 @@ use Tygh\Addons\TravelCore\Services\CircuitFeatureConfig;
  *  - nights: duration.nights
  *  - countries: the destination ids, each rolled up to its country in the
  *    static destinations
- *  - months, departure cities: from the rates (the static list's departures
- *    are dates with no city, and keep past dates)
+ *  - months, departure cities: from the departures the sync saved
+ *    (?:travel_circuit_departures, read from the rates), from today on
  *  - tags: the tag names
  *  - included, not included: the titles of what the price includes and does
  *    not (details_json, saved from the static list)
@@ -35,6 +36,9 @@ final class CircuitFeatures
     /** Months counted from this one: a year, so a calendar month means one departure month. */
     private const int MONTHS_AHEAD = 12;
 
+    /** A circuit with no departure saved from today on. */
+    private const array NO_DEPARTURES = ['cities' => [], 'months' => []];
+
     private readonly CircuitRepository $circuits;
 
     /** @var array<string, int> "fact: reason" => how many circuits (every circuit applied by this object) */
@@ -43,9 +47,17 @@ final class CircuitFeatures
     /** @var list<string> "fact: reason" of the last circuit applied */
     private array $lastNotes = [];
 
-    public function __construct(?CircuitRepository $circuits = null, private ?CircuitFeatureAssigner $assigner = null)
+    /** @var \Closure(list<string>|null): array<string, array{cities: list<array{id: string, name: string}>, months: list<string>}> circuit ids (null: all) => their saved departures' cities and months */
+    private readonly \Closure $departures;
+
+    /**
+     * @param (\Closure(list<string>|null): array<string, array{cities: list<array{id: string, name: string}>, months: list<string>}>)|null $departures tests inject them; the default reads ?:travel_circuit_departures from today on
+     */
+    public function __construct(?CircuitRepository $circuits = null, private ?CircuitFeatureAssigner $assigner = null, ?\Closure $departures = null)
     {
         $this->circuits = $circuits ?? new CircuitRepository();
+        $this->departures = $departures ?? static fn (?array $circuitIds): array => (new CircuitDepartureRepository())
+            ->summaries(SphinxCircuitProductProvider::PROVIDER, date('Y-m-d'), $circuitIds);
     }
 
     /**
@@ -59,8 +71,9 @@ final class CircuitFeatures
             return 0;
         }
         $written = 0;
+        $departures = ($this->departures)(null);
         foreach ($this->circuits->findLinkedForFeatures() as $row) {
-            $written += $this->applyRow($row) ? 1 : 0;
+            $written += $this->applyRow($row, $departures[TypeCoerce::toString($row['circuit_id'] ?? '')] ?? self::NO_DEPARTURES) ? 1 : 0;
         }
 
         return $written;
@@ -75,20 +88,23 @@ final class CircuitFeatures
             return false;
         }
 
-        return $this->applyRow($this->circuits->findForFeatures($circuitId));
+        $id = (string) $circuitId;
+
+        return $this->applyRow($this->circuits->findForFeatures($circuitId), ($this->departures)([$id])[$id] ?? self::NO_DEPARTURES);
     }
 
     /**
      * @param array<string, mixed> $row a sphinx_circuits row (findLinkedForFeatures())
+     * @param array{cities: list<array{id: string, name: string}>, months: list<string>} $departures its saved departures (CircuitDepartureRepository::summaries())
      */
-    private function applyRow(array $row): bool
+    private function applyRow(array $row, array $departures): bool
     {
         $productId = TypeCoerce::toInt($row['product_id'] ?? 0);
         if ($productId <= 0) {
             return false;
         }
         $destinationIds = TypeCoerce::toIntList(json_decode(TypeCoerce::toString($row['destination_ids'] ?? ''), true) ?: []);
-        $facts = self::facts($row, $this->circuits->countryNames($destinationIds), date('Y-m'));
+        $facts = self::facts($row, $this->circuits->countryNames($destinationIds), date('Y-m'), $departures);
         $this->assigner ??= new CircuitFeatureAssigner();
 
         $written = $this->assigner->assign($productId, $facts);
@@ -134,8 +150,9 @@ final class CircuitFeatures
      * @param array<string, mixed> $row a sphinx_circuits row
      * @param list<string> $countries its destinations' countries (CircuitRepository::countryNames())
      * @param string $thisMonth Y-m
+     * @param array{cities: list<array{id: string, name: string}>, months: list<string>} $departures its saved departures (CircuitDepartureRepository::summaries())
      */
-    public static function facts(array $row, array $countries, string $thisMonth): CircuitFeatureFacts
+    public static function facts(array $row, array $countries, string $thisMonth, array $departures = self::NO_DEPARTURES): CircuitFeatureFacts
     {
         $tags = [];
         foreach (TypeCoerce::toRowList(json_decode(TypeCoerce::toString($row['tags_json'] ?? ''), true) ?: []) as $tag) {
@@ -152,8 +169,8 @@ final class CircuitFeatures
             transport: strtolower(trim(TypeCoerce::toString($row['transport_type'] ?? ''))),
             nights: TypeCoerce::toInt($row['duration_nights'] ?? 0),
             countries: $countries,
-            months: self::months(TypeCoerce::toStringList(json_decode(TypeCoerce::toString($row['departure_months'] ?? ''), true) ?: []), $thisMonth),
-            departureCities: array_values(array_filter(array_map('trim', explode(',', TypeCoerce::toString($row['departure_names'] ?? ''))), static fn (string $name): bool => $name !== '')),
+            months: self::months($departures['months'], $thisMonth),
+            departureCities: array_values(array_unique(array_filter(array_column($departures['cities'], 'name'), static fn (string $name): bool => $name !== ''))),
             tags: array_values(array_unique($tags)),
             included: self::titles($details['included'] ?? []),
             notIncluded: self::titles($details['not_included'] ?? []),

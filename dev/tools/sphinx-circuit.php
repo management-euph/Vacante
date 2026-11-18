@@ -40,12 +40,14 @@
  *   CLI: docker compose exec app php /var/www/html/dev/tools/sphinx-circuit.php circuit=641,642
  */
 
+use Tygh\Addons\SphinxHolidays\Providers\SphinxCircuitProductProvider;
 use Tygh\Addons\SphinxHolidays\Repository\CircuitRepository;
 use Tygh\Addons\SphinxHolidays\Services\BookableCircuits;
 use Tygh\Addons\SphinxHolidays\Services\CircuitFeatures;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Repository\CircuitDepartureRepository;
 use Tygh\Registry;
 
 $sc_is_cli = PHP_SAPI === 'cli';
@@ -270,7 +272,9 @@ foreach ($sc_ids as $sc_circuit) {
         } else {
             $sc_repo = new CircuitRepository();
             $sc_destinations = TypeCoerce::toIntList(json_decode(TypeCoerce::toString($sc_row['destination_ids'] ?? ''), true) ?: []);
-            $sc_facts = CircuitFeatures::facts($sc_row, $sc_repo->countryNames($sc_destinations), date('Y-m'));
+            $sc_id = TypeCoerce::toString($sc_row['circuit_id'] ?? '');
+            $sc_summary = (new CircuitDepartureRepository())->summaries(SphinxCircuitProductProvider::PROVIDER, date('Y-m-d'), [$sc_id])[$sc_id] ?? ['cities' => [], 'months' => []];
+            $sc_facts = CircuitFeatures::facts($sc_row, $sc_repo->countryNames($sc_destinations), date('Y-m'), $sc_summary);
             echo sc_json(get_object_vars($sc_facts)), "\n";
             echo "\nAn empty list or value here is why its feature stays empty: the sync has not stored it (run a full circuits sync),\nor the API does not send it.\n";
         }

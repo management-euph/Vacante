@@ -48,65 +48,19 @@ final class CircuitSyncServiceTest extends TestCase
     }
 
     /**
-     * The static list sends a departure as {date, time, destination_id}: the
-     * city is a static destination. The sync used to look only for {id,
-     * name}, so it learned no city from the list.
+     * A circuit's departure cities and months live only in Travel Core's
+     * departures table (saveDepartures): the circuit's row keeps none.
      */
-    public function testTheDepartureCitiesAreReadFromTheStaticDepartures(): void
+    public function testTheCircuitsRowKeepsNoDepartureColumns(): void
     {
-        $asked = [];
-        DbStub::$getHashSingleArray = static function (string $q, array $fields, ...$p) use (&$asked): array {
-            $asked[] = $p[0];
-
-            return [202405 => 'Bucuresti', 197128 => 'Timisoara'];
-        };
-
         $row = $this->normalize(['id' => 1, 'title' => 'Malta', 'departures' => [
-            ['date' => '2020-05-07', 'time' => null, 'destination_id' => 555],
             ['date' => '2999-05-04', 'time' => null, 'destination_id' => 202405],
-            ['date' => '2999-05-11', 'time' => null, 'destination_id' => 202405],
-            ['date' => '2999-06-01', 'time' => null, 'destination_id' => 197128],
-            ['date' => '2999-06-08', 'time' => null, 'destination_id' => 900],
+            ['id' => 111, 'name' => 'Cluj-Napoca'],
         ]]);
 
-        self::assertSame([[202405, 197128, 900]], $asked, 'named from sphinx_destinations; a departure already past names no city');
-        self::assertSame('[202405,197128]', $row['departure_ids'], 'each city once; 900 is not a stored destination, so it is left to the rates');
-        self::assertSame('Bucuresti, Timisoara', $row['departure_names'], 'as many names as ids: the bar pairs them by position');
-    }
-
-    public function testDepartureObjectsAreStillRead(): void
-    {
-        $row = $this->normalize(['id' => 2, 'title' => 'Grecia', 'departures' => [['id' => 111, 'name' => 'Cluj-Napoca'], ['id' => 222, 'name' => 'Iasi']]]);
-
-        self::assertSame('[111,222]', $row['departure_ids']);
-        self::assertSame('Cluj-Napoca, Iasi', $row['departure_names']);
-    }
-
-    /** Without a city in the list the two columns are not written: they keep what the rates gave. */
-    public function testACircuitWhoseListNamesNoCityLeavesTheDepartureColumnsAlone(): void
-    {
-        $row = $this->normalize(['id' => 3, 'title' => 'Fara', 'departures' => [['date' => '2020-05-07', 'destination_id' => 202405]]]);
-
-        self::assertArrayNotHasKey('departure_ids', $row);
-        self::assertArrayNotHasKey('departure_names', $row);
-    }
-
-    /** The rates have the last word on the cities; the static list's stand in when the rates name none. */
-    public function testTheStaticCitiesStandInWhenTheRatesNameNone(): void
-    {
-        $facts = CircuitSyncService::withStaticCities(
-            [
-                1 => ['months' => ['2027-05'], 'departures' => []],
-                2 => ['months' => ['2027-06'], 'departures' => [111 => 'Cluj-Napoca']],
-                3 => ['months' => ['2027-07'], 'departures' => []],
-            ],
-            [1 => [202405 => 'Bucuresti'], 2 => [202405 => 'Bucuresti'], 3 => []],
-        );
-
-        self::assertSame([202405 => 'Bucuresti'], $facts[1]['departures']);
-        self::assertSame([111 => 'Cluj-Napoca'], $facts[2]['departures'], 'the rates name it: theirs');
-        self::assertSame([], $facts[3]['departures'], 'neither says: none, as before');
-        self::assertSame(['2027-05'], $facts[1]['months']);
+        foreach (['departure_ids', 'departure_names', 'departure_months'] as $column) {
+            self::assertArrayNotHasKey($column, $row);
+        }
     }
 
     public function testTheListsFirstPhotoIsTheCircuitsImage(): void
@@ -118,14 +72,14 @@ final class CircuitSyncServiceTest extends TestCase
 
     /**
      * The departures go to Travel Core's shared table once the rates were
-     * read in full, after the circuits' own facts; a failure there is
+     * read in full, before the features read them; a failure there is
      * reported and never stops the sync.
      */
     public function testTheDeparturesAreSavedFromACompleteReadingOfTheRates(): void
     {
         $sync = (string) file_get_contents(dirname(__DIR__, 3) . '/src/Services/CircuitSyncService.php');
 
-        $guard = (int) strpos($sync, "if (\$bookable !== null) {\n            (new CircuitRepository())->saveDepartureFacts(self::withStaticCities(");
+        $guard = (int) strpos($sync, "if (\$bookable !== null) {\n            \$this->saveDepartures(");
         self::assertGreaterThan(0, $guard, 'only when the rates answered in full');
         $save = (int) strpos($sync, '$this->saveDepartures($rates->departures(), $bookable);');
         self::assertGreaterThan($guard, $save);

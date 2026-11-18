@@ -161,14 +161,11 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
             }
         }
 
-        // The departure cities and months of the circuits on sale, then
-        // their products' features (Feature Mappings › Circuits): the months
+        // The departures of the circuits on sale (their cities, dates and
+        // prices: ?:travel_circuit_departures), then their products'
+        // features (Feature Mappings › Circuits), read from them: the months
         // change as departures pass, so every run writes them again.
         if ($bookable !== null) {
-            (new CircuitRepository())->saveDepartureFacts(self::withStaticCities(
-                array_intersect_key($rates->facts(), array_flip($bookable)),
-                $this->staticCities,
-            ));
             $this->saveDepartures($rates->departures(), $bookable);
             $features = new CircuitFeatures();
             $withFeatures = $features->applyAll();
@@ -209,28 +206,6 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
     }
 
     /**
-     * The departure cities to save for each circuit: the rates' (facts),
-     * and, for a circuit whose rates name no city, the ones the static list
-     * gave this run. Without either the circuit keeps none, as before.
-     *
-     * @param array<int, array{months: list<string>, departures: array<int, string>}> $facts by circuit id (BookableCircuits::facts())
-     * @param array<int, array<int, string>> $staticCities circuit id => destination id => name, for the circuits read this run
-     *
-     * @return array<int, array{months: list<string>, departures: array<int, string>}>
-     */
-    public static function withStaticCities(array $facts, array $staticCities): array
-    {
-        foreach ($facts as $circuitId => $fact) {
-            $cities = $staticCities[$circuitId] ?? [];
-            if ($fact['departures'] === [] && $cities !== []) {
-                $facts[$circuitId]['departures'] = $cities;
-            }
-        }
-
-        return $facts;
-    }
-
-    /**
      * Saves the departures of the circuits on sale (one complete reading of
      * the rates: every month, every page) to Travel Core's shared table,
      * where the circuit's page and the admin read them. What the reading no
@@ -254,9 +229,6 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
 
     /** @var array<int, string> destination_id => name, filled as circuits are read */
     private array $destinationNames = [];
-
-    /** @var array<int, array<int, string>> circuit id => destination id => name: the cities the static list's departures name, for the circuits read this run */
-    private array $staticCities = [];
 
     /** @var array<int, array<string, int>> circuit id => Y-m-d => destination id: the city of each dated departure of the static list, for the circuits read this run */
     private array $staticCityByDate = [];
@@ -341,42 +313,15 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
 
         [$destIds, $destNames] = $this->destinations($raw['destinations'] ?? $raw['destinatons'] ?? []);
 
-        $departures = $raw['departures'] ?? [];
-        $depIds = [];
-        $depNames = [];
-        foreach (TypeCoerce::toRowList($departures) as $dep) {
-            if (isset($dep['id'])) {
-                $depIds[] = TypeCoerce::toInt($dep['id']);
-            }
-            if (isset($dep['name'])) {
-                $depNames[] = TypeCoerce::toString($dep['name']);
-            }
-        }
-        if ($depIds === []) {
-            // As the static list sends them, {date, time, destination_id}:
-            // the city is a static destination, named from the stored tree.
-            // Only departures from today on count (the list keeps past ones).
-            $today = date('Y-m-d');
-            $cities = $this->cityNames(CircuitStaticContent::departureCities($raw, $today));
-            $this->staticCities[$id] = $cities;
-            $this->staticCityByDate[$id] = CircuitStaticContent::departureCityByDate($raw, $today);
-            $depIds = array_keys($cities);
-            $depNames = array_values($cities);
-        }
+        // The city of each dated departure of the static list
+        // ({date, time, destination_id}), from today on: it names a rate
+        // that names no city when the departures are saved (saveDepartures).
+        $this->staticCityByDate[$id] = CircuitStaticContent::departureCityByDate($raw, date('Y-m-d'));
 
         $duration = TypeCoerce::toStringMap($raw['duration'] ?? []);
         $pricing = TypeCoerce::toStringMap($raw['pricing'] ?? []);
 
-        // The two columns are written only when the static list names
-        // cities: otherwise they keep what the rates gave
-        // (saveDepartureFacts), not NULL. The rates, read next, have the
-        // last word on them.
-        $departureColumns = $depIds !== [] ? [
-            'departure_ids' => json_encode($depIds),
-            'departure_names' => $depNames !== [] ? implode(', ', $depNames) : null,
-        ] : [];
-
-        return $departureColumns + [
+        return [
             'circuit_id' => $id,
             'name' => $name,
             'summary' => TypeCoerce::toString($raw['summary'] ?? ''),

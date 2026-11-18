@@ -24,21 +24,22 @@ final class CircuitFeaturesTest extends TestCase
         self::assertSame([], CircuitFeatures::months([], '2026-11'));
     }
 
-    public function testTheStoredCircuitIsReadIntoFacts(): void
+    public function testTheStoredCircuitAndItsSavedDeparturesAreReadIntoFacts(): void
     {
         $facts = CircuitFeatures::facts([
             'transport_type' => ' Flight ',
             'duration_nights' => '7',
-            'departure_names' => 'București, Cluj-Napoca, ',
-            'departure_months' => '["2027-05","2027-06","2027-05"]',
             'tags_json' => '[{"id":2,"name":"Senior Voyage"},{"id":3,"name":""}]',
-        ], ['Malta'], '2026-11');
+        ], ['Malta'], '2026-11', [
+            'cities' => [['id' => '202405', 'name' => 'București'], ['id' => '197128', 'name' => 'Cluj-Napoca'], ['id' => '300', 'name' => '']],
+            'months' => ['2027-05', '2027-06', '2028-01'],
+        ]);
 
         self::assertSame('flight', $facts->transport);
         self::assertSame(7, $facts->nights);
         self::assertSame(['Malta'], $facts->countries);
-        self::assertSame([5, 6], $facts->months);
-        self::assertSame(['București', 'Cluj-Napoca'], $facts->departureCities);
+        self::assertSame([5, 6], $facts->months, 'the saved departures\' months, a year ahead');
+        self::assertSame(['București', 'Cluj-Napoca'], $facts->departureCities, 'their cities, a city with no name left out');
         self::assertSame(['Senior Voyage'], $facts->tags);
     }
 

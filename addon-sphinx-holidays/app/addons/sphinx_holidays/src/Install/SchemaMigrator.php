@@ -14,7 +14,8 @@ namespace Tygh\Addons\SphinxHolidays\Install;
  * this as a manual deploy-checklist step). Mirrors travel_core's
  * fn_travel_core_ensure_schema(): called on admin page load (init.php via
  * the fn_sphinx_holidays_ensure_schema shell, AREA 'A'), guarded once per
- * request, and only ever ADDS what is missing — fresh installs already get
+ * request. It ADDS what is missing and DROPS the retired columns
+ * ($retiredColumns) that are still there — fresh installs already get
  * complete tables from the base CREATEs, and tables that don't exist yet
  * are skipped entirely.
  *
@@ -63,7 +64,6 @@ final class SchemaMigrator
             'sphinx_circuits' => [
                 'details_json' => "ADD COLUMN `details_json` JSON DEFAULT NULL COMMENT 'Included, not included, things to know, group size and age (static API)' AFTER `itinerary_json`",
                 'product_hidden' => "ADD COLUMN `product_hidden` ENUM('Y','N') NOT NULL DEFAULT 'N' COMMENT 'Product hidden by the circuits sync (no rate ahead); shown again with the circuit' AFTER `sync_status`",
-                'departure_months' => "ADD COLUMN `departure_months` VARCHAR(255) DEFAULT NULL COMMENT 'Months (Y-m, JSON list) with a departure still priced (circuits/rates)' AFTER `departure_names`",
             ],
             'sphinx_destinations' => [
                 'full_path' => "ADD COLUMN `full_path` VARCHAR(500) DEFAULT NULL COMMENT 'Breadcrumb: City, Region, Country, Continent' AFTER `country_code`",
@@ -79,6 +79,14 @@ final class SchemaMigrator
                 'cancellation_fees_json' => "ADD COLUMN `cancellation_fees_json` JSON DEFAULT NULL COMMENT 'Cancellation fees from API (verify / orders sync)' AFTER `payment_terms_json`",
                 'pricing_json' => "ADD COLUMN `pricing_json` JSON DEFAULT NULL COMMENT 'Full pricing breakdown from verify (marketing/discount/selling/commission/supplier/taxes/fees)' AFTER `cancellation_fees_json`",
             ],
+        ];
+
+        // table => columns no code reads or writes any more, dropped where
+        // still there. sphinx_circuits' departure columns: a circuit's
+        // departure cities and months are kept only in Travel Core's
+        // ?:travel_circuit_departures (docs/circuit-page-plan.md §3).
+        $retiredColumns = [
+            'sphinx_circuits' => ['departure_ids', 'departure_names', 'departure_months'],
         ];
 
         // table => index => ADD KEY definition
@@ -98,7 +106,7 @@ final class SchemaMigrator
             ],
         ];
 
-        $tables = array_values(array_unique(array_merge(array_keys($columns), array_keys($indexes), ['sphinx_cache'])));
+        $tables = array_values(array_unique(array_merge(array_keys($columns), array_keys($indexes), array_keys($retiredColumns), ['sphinx_cache'])));
         $prefixed = array_map(static fn (string $t): string => $prefix . $t, $tables);
 
         // Two catalog reads cover every check below.
@@ -148,6 +156,14 @@ final class SchemaMigrator
                 if (!isset($haveColumn[$prefix . $table][$column])) {
                     db_query('ALTER TABLE ?:' . $table . ' ' . $ddl);
                     $added[$table][$column] = true;
+                }
+            }
+        }
+
+        foreach ($retiredColumns as $table => $retired) {
+            foreach ($retired as $column) {
+                if (isset($haveColumn[$prefix . $table][$column])) {
+                    db_query('ALTER TABLE ?:' . $table . ' DROP COLUMN `' . $column . '`');
                 }
             }
         }

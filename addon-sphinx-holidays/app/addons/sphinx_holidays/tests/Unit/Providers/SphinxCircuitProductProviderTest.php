@@ -46,13 +46,20 @@ final class SphinxCircuitProductProviderTest extends TestCase
     {
         self::answer([
             'circuit_id' => '17', 'name' => 'Creta clasică', 'duration_days' => '5', 'duration_nights' => '4',
-            'departure_ids' => '[111,222,333]', 'departure_names' => 'Cluj-Napoca, București, Iași',
             'transport_type' => 'flight', 'destination_names' => 'Heraklion, Rethymno, Chania, Heraklion',
         ]);
 
-        $circuit = (new SphinxCircuitProductProvider())->resolveCircuit(110, 'SPXC17');
+        $cities = [['id' => '111', 'name' => 'Cluj-Napoca'], ['id' => '222', 'name' => 'București'], ['id' => '333', 'name' => 'Iași']];
+        $asked = [];
+        $circuit = (new SphinxCircuitProductProvider(null, static function (string $id) use (&$asked, $cities): array {
+            $asked[] = $id;
+
+            return $cities;
+        }))->resolveCircuit(110, 'SPXC17');
 
         self::assertNotNull($circuit);
+        self::assertSame(['17'], $asked, 'the cities come from the saved departures (travel_circuit_departures)');
+        self::assertStringNotContainsString('departure_', self::$queries[0][0], 'not from sphinx_circuits columns');
         self::assertSame('sphinx', $circuit->providerName);
         self::assertSame('17', $circuit->circuitId);
         self::assertSame([5, 4], [$circuit->durationDays, $circuit->durationNights]);
@@ -112,7 +119,6 @@ final class SphinxCircuitProductProviderTest extends TestCase
     {
         self::answer([
             'circuit_id' => '17', 'name' => 'Creta clasică', 'duration_days' => '5', 'duration_nights' => '4',
-            'departure_ids' => '[111]', 'departure_names' => 'București',
             'itinerary_json' => '[{"label":"Day 1","accommodation":{"hotel":"Atrion","category":"4"}},{"label":"Day 3","accommodation":{"hotel":"Fortezza","category":"3"}},{"label":"Day 5","accommodation":null}]',
         ]);
 
@@ -237,16 +243,5 @@ final class SphinxCircuitProductProviderTest extends TestCase
         self::assertCount(1, self::$queries);
 
         self::assertTrue(SphinxCircuitProductProvider::details(null, null)->isEmpty(), 'synced before the details were kept');
-    }
-
-    /** A name with ", " in it breaks the pairing: a lone id keeps the whole text, several get none. */
-    public function testNamesThatDoNotPairAreNotGuessed(): void
-    {
-        self::assertSame([['id' => '1', 'name' => 'Cluj, Napoca']], SphinxCircuitProductProvider::departures('[1]', 'Cluj, Napoca'));
-        self::assertSame(
-            [['id' => '1', 'name' => ''], ['id' => '2', 'name' => '']],
-            SphinxCircuitProductProvider::departures('[1,2]', 'Cluj, Napoca, București'),
-        );
-        self::assertSame([], SphinxCircuitProductProvider::departures(null, ''));
     }
 }

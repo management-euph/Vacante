@@ -34,30 +34,6 @@ class CircuitRepository
         return $val === '' ? null : $val;
     }
 
-    private static bool $columnsChecked = false;
-
-    /**
-     * Adds departure_months when the table lacks it. The schema self-heal
-     * (SchemaMigrator, once per deployed version, and stamped even when it
-     * failed) is not something this code may count on: a store where it did
-     * not run died with "Unknown column 'departure_months'". Checked once per
-     * request; a no-op once the column is there.
-     */
-    public function ensureColumns(): void
-    {
-        if (self::$columnsChecked) {
-            return;
-        }
-        self::$columnsChecked = true;
-        $have = db_get_row("SHOW COLUMNS FROM ?:sphinx_circuits LIKE 'departure_months'");
-        if (empty($have)) {
-            db_query(
-                'ALTER TABLE ?:sphinx_circuits ADD COLUMN `departure_months` VARCHAR(255) DEFAULT NULL'
-                . " COMMENT 'Months (Y-m, JSON list) with a departure still priced (circuits/rates)' AFTER `departure_names`",
-            );
-        }
-    }
-
     /**
      * @param array<string, mixed> $data
      */
@@ -88,25 +64,6 @@ class CircuitRepository
     }
 
     /**
-     * What the rates say of each circuit (BookableCircuits::facts()): the
-     * cities it leaves from and the months it still leaves in. The static
-     * list has neither, so the circuits sync writes them here.
-     *
-     * @param array<int, array{months: list<string>, departures: array<int, string>}> $facts by circuit id
-     */
-    public function saveDepartureFacts(array $facts): void
-    {
-        $this->ensureColumns();
-        foreach ($facts as $circuitId => $fact) {
-            $this->update((int) $circuitId, [
-                'departure_ids' => $fact['departures'] !== [] ? json_encode(array_keys($fact['departures'])) : null,
-                'departure_names' => $fact['departures'] !== [] ? implode(', ', $fact['departures']) : null,
-                'departure_months' => $fact['months'] !== [] ? json_encode($fact['months']) : null,
-            ]);
-        }
-    }
-
-    /**
      * The active circuits that have a product, with what their product's
      * features are made of (CircuitFeatures).
      *
@@ -114,10 +71,9 @@ class CircuitRepository
      */
     public function findLinkedForFeatures(): array
     {
-        $this->ensureColumns();
         return TypeCoerce::toRowList(db_get_array(
             "SELECT circuit_id, product_id, transport_type, duration_nights, destination_ids,
-                    departure_names, departure_months, tags_json, details_json, itinerary_json
+                    tags_json, details_json, itinerary_json
              FROM ?:sphinx_circuits
              WHERE product_id > 0 AND sync_status = 'active'
              ORDER BY circuit_id",
@@ -131,10 +87,9 @@ class CircuitRepository
      */
     public function findForFeatures(int $circuitId): array
     {
-        $this->ensureColumns();
         return TypeCoerce::toStringMap(db_get_row(
             'SELECT circuit_id, product_id, transport_type, duration_nights, destination_ids,
-                    departure_names, departure_months, tags_json, details_json, itinerary_json
+                    tags_json, details_json, itinerary_json
              FROM ?:sphinx_circuits WHERE circuit_id = ?i',
             $circuitId,
         ));
