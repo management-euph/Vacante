@@ -10,6 +10,11 @@ linter: qodana-php
 # to a build that hung on every scan started without a cache. Update the
 # digest deliberately, together with the action's version in ci.yml.
 image: jetbrains/qodana-php@sha256:5556c61cf580e22955b762033ea10186e4a29ab49967ce90b283868c05f0759d
+# Any problem in the report fails the Qodana job (and so the PR): no new
+# problem gets in quietly. Problems Qodana is told to ignore (exclude:
+# below) do not count.
+failThreshold: 0
+
 profile:
   name: qodana.recommended
 
