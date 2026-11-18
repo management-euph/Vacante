@@ -124,3 +124,8 @@ exclude:
 
 include:
   - name: CheckDependencyLicenses
+  # The quality tools the CI job installs before the scan (composer.json
+  # require-dev), run by Qodana too, with the repo's own configs
+  # (phpstan.neon with its baseline, .php-cs-fixer.dist.php).
+  - name: PhpStanGlobal
+  - name: PhpCSFixerValidationInspection
