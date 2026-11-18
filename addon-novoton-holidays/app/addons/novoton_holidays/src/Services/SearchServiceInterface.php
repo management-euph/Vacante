@@ -11,18 +11,6 @@ namespace Tygh\Addons\NovotonHolidays\Services;
  */
 interface SearchServiceInterface
 {
-    /**
-     * @param array<string, mixed> $request
-     * @return array<string, mixed>
-     */
-    public function parseSearchParams(array $request): array;
-
-    /**
-     * @param list<array<string, mixed>> $rooms_data
-     * @return array{adults: int, children: int, ages: list<int>}
-     */
-    public function calculateRoomTotals(array $rooms_data): array;
-
     public function getBoardName(string $board_id): string;
 
     /**

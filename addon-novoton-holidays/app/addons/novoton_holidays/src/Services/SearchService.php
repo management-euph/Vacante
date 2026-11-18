@@ -25,9 +25,6 @@ class SearchService implements SearchServiceInterface
     /** Narrow sub-client for applyCommission() used by parseRoomPriceResponse(). */
     private readonly PricingApiClientInterface $pricing;
 
-    /** Pure request -> normalized search-params transformation. */
-    private readonly SearchParamsNormalizer $paramsNormalizer;
-
     /**
      * Constructor.
      *
@@ -48,29 +45,6 @@ class SearchService implements SearchServiceInterface
             $pricing = $api->pricing();
         }
         $this->pricing = $pricing;
-        $this->paramsNormalizer = new SearchParamsNormalizer();
-    }
-
-    /**
-     * Parse search parameters from request
-     *
-     * @param array<string, mixed> $request Request parameters
-     * @return array<string, mixed> Normalized search parameters
-     */
-    public function parseSearchParams(array $request): array
-    {
-        return $this->paramsNormalizer->parseSearchParams($request);
-    }
-
-    /**
-     * Calculate totals from rooms data
-     *
-     * @param list<array<string, mixed>> $rooms_data Rooms configuration
-     * @return array{adults: int, children: int, ages: list<int>}
-     */
-    public function calculateRoomTotals(array $rooms_data): array
-    {
-        return $this->paramsNormalizer->calculateRoomTotals($rooms_data);
     }
 
     /**
