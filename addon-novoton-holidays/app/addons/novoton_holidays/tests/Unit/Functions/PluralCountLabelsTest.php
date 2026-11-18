@@ -39,7 +39,8 @@ final class PluralCountLabelsTest extends TestCase
         self::assertSame('[n] Ofertă|[n] Oferte|[n] de Oferte', $vars['novoton_holidays.n_offers']['ro']);
         self::assertSame('[n] Offer|[n] Offers', $vars['novoton_holidays.n_offers']['en']);
 
-        foreach (['n_rooms', 'n_adults', 'n_children', 'n_offers'] as $k) {
+        // Room counts use travel_core.n_rooms (the shared booking card); novoton's own was unused.
+        foreach (['n_adults', 'n_children', 'n_offers'] as $k) {
             $key = 'novoton_holidays.' . $k;
             self::assertArrayHasKey($key, $vars, "{$key} must be seeded for the badge counts");
             self::assertCount(

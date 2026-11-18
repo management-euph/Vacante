@@ -251,62 +251,8 @@ function fn_novoton_holidays_setup_db(): void
         return str_replace('?:', $table_prefix, $table);
     };
 
-    // ── Language variables ──
-    $lang_vars = [
-        'novoton_holidays.until'                     => ['en' => 'until',                     'ro' => 'până la'],
-        'novoton_holidays.free_cancellation'          => ['en' => 'Free Cancellation',          'ro' => 'Anulare gratuită'],
-        'novoton_holidays.free_cancellation_until'    => ['en' => 'Free cancellation until',    'ro' => 'Anulare gratuită până la'],
-        'novoton_holidays.on_booking'                 => ['en' => 'on booking',                 'ro' => 'la rezervare'],
-        // SEO Templates section
-        'novoton_holidays.seo_templates'              => ['en' => 'SEO Templates',               'ro' => 'Șabloane SEO'],
-        'novoton_holidays.seo_templates_header'       => ['en' => 'SEO Template Patterns',       'ro' => 'Șabloane SEO'],
-        'novoton_holidays.seo_placeholders_info'      => ['en' => 'Available placeholders',      'ro' => 'Placeholder-e disponibile'],
-        'novoton_holidays.seo_product_name'           => ['en' => 'Product name pattern',        'ro' => 'Șablon nume produs'],
-        'novoton_holidays.seo_product_name.tooltip'   => [
-            'en' => 'Template for the product name. Available placeholders: {{name}}, {{raw_name}}, {{city}}, {{country}}, {{region}}, {{star_rating}}, {{hotel_type}}, {{property_type}}, {{year}}, {{facilities}}',
-            'ro' => 'Șablon pentru numele produsului. Placeholder-e disponibile: {{name}}, {{raw_name}}, {{city}}, {{country}}, {{region}}, {{star_rating}}, {{hotel_type}}, {{property_type}}, {{year}}, {{facilities}}',
-        ],
-        'novoton_holidays.seo_page_title'             => ['en' => 'Page title pattern',          'ro' => 'Șablon titlu pagină'],
-        'novoton_holidays.seo_page_title.tooltip'     => [
-            'en' => 'Template for the HTML page title (SEO). Available placeholders: {{name}}, {{raw_name}}, {{city}}, {{country}}, {{region}}, {{star_rating}}, {{hotel_type}}, {{property_type}}, {{year}}, {{facilities}}',
-            'ro' => 'Șablon pentru titlul paginii HTML (SEO). Placeholder-e disponibile: {{name}}, {{raw_name}}, {{city}}, {{country}}, {{region}}, {{star_rating}}, {{hotel_type}}, {{property_type}}, {{year}}, {{facilities}}',
-        ],
-        'novoton_holidays.seo_meta_description'       => ['en' => 'Meta description pattern',    'ro' => 'Șablon meta descriere'],
-        'novoton_holidays.seo_meta_description.tooltip' => [
-            'en' => 'Template for the meta description tag. Available placeholders: {{name}}, {{raw_name}}, {{city}}, {{country}}, {{region}}, {{star_rating}}, {{hotel_type}}, {{property_type}}, {{year}}, {{facilities}}',
-            'ro' => 'Șablon pentru tag-ul meta description. Placeholder-e disponibile: {{name}}, {{raw_name}}, {{city}}, {{country}}, {{region}}, {{star_rating}}, {{hotel_type}}, {{property_type}}, {{year}}, {{facilities}}',
-        ],
-        'novoton_holidays.seo_meta_keywords'          => ['en' => 'Meta keywords pattern',       'ro' => 'Șablon meta cuvinte cheie'],
-        'novoton_holidays.seo_meta_keywords.tooltip'   => [
-            'en' => 'Template for the meta keywords tag. Available placeholders: {{name}}, {{raw_name}}, {{city}}, {{country}}, {{region}}, {{star_rating}}, {{hotel_type}}, {{property_type}}, {{year}}, {{facilities}}',
-            'ro' => 'Șablon pentru tag-ul meta keywords. Placeholder-e disponibile: {{name}}, {{raw_name}}, {{city}}, {{country}}, {{region}}, {{star_rating}}, {{hotel_type}}, {{property_type}}, {{year}}, {{facilities}}',
-        ],
-        'novoton_holidays.seo_name_slug'              => ['en' => 'SEO URL slug pattern',        'ro' => 'Șablon URL SEO (slug)'],
-        'novoton_holidays.seo_name_slug.tooltip'       => [
-            'en' => 'Template for the SEO-friendly URL slug. Result is automatically sanitized. Available placeholders: {{name}}, {{city}}, {{country}}, {{region}}, {{property_type}}',
-            'ro' => 'Șablon pentru slug-ul URL SEO. Rezultatul este sanitizat automat. Placeholder-e disponibile: {{name}}, {{city}}, {{country}}, {{region}}, {{property_type}}',
-        ],
-        'novoton_holidays.seo_full_description'       => ['en' => 'Full description pattern (optional)', 'ro' => 'Șablon descriere completă (opțional)'],
-        'novoton_holidays.seo_full_description.tooltip' => [
-            'en' => 'Optional template to wrap or replace the API description. Leave empty to use the raw API description. Available placeholders: {{name}}, {{city}}, {{country}}, {{description}}, {{facilities}}, {{star_rating}}',
-            'ro' => 'Șablon opțional pentru a înfășura sau înlocui descrierea API. Lăsați gol pentru a folosi descrierea API. Placeholder-e disponibile: {{name}}, {{city}}, {{country}}, {{description}}, {{facilities}}, {{star_rating}}',
-        ],
-    ];
-
-    foreach ($lang_vars as $name => $translations) {
-        foreach ($translations as $lang_code => $value) {
-            $exists = db_get_field(
-                "SELECT COUNT(*) FROM ?:language_values WHERE name = ?s AND lang_code = ?s",
-                $name, $lang_code
-            );
-            if (!$exists) {
-                db_query(
-                    "INSERT INTO ?:language_values (name, lang_code, value) VALUES (?s, ?s, ?s)",
-                    $name, $lang_code, $value
-                );
-            }
-        }
-    }
+    // Language variables come from the .po files (installed by CS-Cart,
+    // then delivered to upgraded stores by Install\LanguageSeeder).
 
     // ── Schema migrations (idempotent — only adds columns if missing) ──
     $migrations = [
