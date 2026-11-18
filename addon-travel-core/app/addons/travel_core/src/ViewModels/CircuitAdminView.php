@@ -12,7 +12,9 @@ use Tygh\Addons\TravelCore\Dto\Circuit\CircuitPage;
  * (design/backend/templates/addons/travel_core/hooks/products/tabs_extra.post.tpl;
  * docs/circuit-page-plan.md step 5): what the circuit's supplier sync holds
  * for the product, laid out as the circuit's page uses it. Nothing here is
- * editable: the supplier's next sync would overwrite it.
+ * editable: the supplier's next sync would overwrite it. Every fact keeps its
+ * row: one the supplier did not send says so, so a gap in the supplier's
+ * data shows here rather than as a missing line.
  */
 final class CircuitAdminView
 {
@@ -38,7 +40,10 @@ final class CircuitAdminView
      *     age_max: int,
      *     hotel: string,
      *     hotel_stars: int,
-     *     days_list: list<array{number: int, title: string, hotel: string, stars: int, meals: string, photos: int, highlighted: bool}>,
+     *     tags: list<string>,
+     *     photo_count: int,
+     *     has_details: bool,
+     *     days_list: list<array{number: int, title: string, text: string, hotel: string, stars: int, meals: string, photos: int, highlighted: bool}>,
      *     included: list<string>,
      *     not_included: list<string>,
      *     excursions: list<array{title: string, price: string}>,
@@ -55,6 +60,7 @@ final class CircuitAdminView
             $days[] = [
                 'number' => $i + 1,
                 'title' => $day->title,
+                'text' => $day->text,
                 'hotel' => $day->hotel,
                 'stars' => $day->stars,
                 'meals' => $day->meals,
@@ -103,6 +109,9 @@ final class CircuitAdminView
             'age_max' => $details->ageMax ?? 0,
             'hotel' => $details->accommodation['hotel'] ?? '',
             'hotel_stars' => $details->accommodation['stars'] ?? 0,
+            'tags' => $details->tags ?? [],
+            'photo_count' => $details->photoCount ?? 0,
+            'has_details' => $details !== null,
             'days_list' => $days,
             'included' => $details->included ?? [],
             'not_included' => $details->notIncluded ?? [],

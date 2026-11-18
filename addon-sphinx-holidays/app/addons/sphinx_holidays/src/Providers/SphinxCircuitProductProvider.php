@@ -135,7 +135,7 @@ final class SphinxCircuitProductProvider implements CircuitProductProviderInterf
             $id,
         ));
 
-        return $row === [] ? null : self::details($row['itinerary_json'] ?? null, $row['details_json'] ?? null);
+        return $row === [] ? null : self::details($row['itinerary_json'] ?? null, $row['details_json'] ?? null, $row['tags_json'] ?? null);
     }
 
     /**
@@ -162,8 +162,9 @@ final class SphinxCircuitProductProvider implements CircuitProductProviderInterf
      *
      * @param mixed $itinerary the itinerary_json column (a JSON list of days)
      * @param mixed $details the details_json column (CircuitStaticContent::details())
+     * @param mixed $tags the tags_json column (a JSON list of {name})
      */
-    public static function details(mixed $itinerary, mixed $details): CircuitDetails
+    public static function details(mixed $itinerary, mixed $details, mixed $tags = null): CircuitDetails
     {
         $plain = static fn (mixed $value): string => PlainText::fromHtml(TypeCoerce::toString($value));
 
@@ -230,7 +231,29 @@ final class SphinxCircuitProductProvider implements CircuitProductProviderInterf
             $sections['excursions'],
             $sections['prices'],
             self::documents($map['documents'] ?? null, $plain),
+            self::tags($tags, $plain),
+            count(TypeCoerce::toList($map['images'] ?? null)),
         );
+    }
+
+    /**
+     * The tag names, each once.
+     *
+     * @param \Closure(mixed): string $plain
+     *
+     * @return list<string>
+     */
+    private static function tags(mixed $json, \Closure $plain): array
+    {
+        $names = [];
+        foreach (self::jsonRows($json) as $tag) {
+            $name = $plain($tag['name'] ?? '');
+            if ($name !== '' && !in_array($name, $names, true)) {
+                $names[] = $name;
+            }
+        }
+
+        return $names;
     }
 
     /** Where a note with this title shows: highlights, excursions, prices, or notes. */

@@ -207,6 +207,19 @@ final class SphinxCircuitProductProviderTest extends TestCase
         self::assertSame([['title' => 'Program', 'url' => 'https://cdn.example/p.pdf']], $details->documents);
     }
 
+    public function testTheTagsAndPhotoCountReachTheAdminTab(): void
+    {
+        $details = SphinxCircuitProductProvider::details(
+            null,
+            json_encode(['images' => ['https://x.example/1.jpg', 'https://x.example/2.jpg']]),
+            json_encode([['id' => 3, 'name' => 'Senior Voyage'], ['id' => 4, 'name' => ' Senior Voyage '], ['id' => 5, 'name' => '']]),
+        );
+
+        self::assertSame(['Senior Voyage'], $details->tags, 'each name once, empty ones left out');
+        self::assertSame(2, $details->photoCount);
+        self::assertSame([], SphinxCircuitProductProvider::details(null, null)->tags);
+    }
+
     public function testANoteGoesWhereItsTitleSays(): void
     {
         self::assertSame('highlights', SphinxCircuitProductProvider::noteSection('Ce te va încânta'));

@@ -3825,6 +3825,94 @@ Acesta este singurul e-mail pe acest subiect: am șters adresa dvs. de e-mail di
         'en' => 'Optional extras, chosen when you book:',
         'ro' => 'Extra opționale, alese la rezervare:',
     ],
+    'travel_core.circuit_admin_status' => [
+        'en' => 'Status',
+        'ro' => 'Stare',
+    ],
+    'travel_core.circuit_admin_active' => [
+        'en' => 'Active',
+        'ro' => 'Activ',
+    ],
+    'travel_core.circuit_admin_departures_ahead' => [
+        'en' => '[n] departures ahead',
+        'ro' => '[n] plecări viitoare',
+    ],
+    'travel_core.circuit_admin_transport_flight' => [
+        'en' => 'Flight',
+        'ro' => 'Avion',
+    ],
+    'travel_core.circuit_admin_transport_bus' => [
+        'en' => 'Coach',
+        'ro' => 'Autocar',
+    ],
+    'travel_core.circuit_admin_days_nights' => [
+        'en' => '[days] days / [nights] nights',
+        'ro' => '[days] zile / [nights] nopți',
+    ],
+    'travel_core.circuit_admin_destinations' => [
+        'en' => 'Destinations',
+        'ro' => 'Destinații',
+    ],
+    'travel_core.circuit_admin_departure_cities' => [
+        'en' => 'Departure cities',
+        'ro' => 'Orașe de plecare',
+    ],
+    'travel_core.circuit_admin_tags' => [
+        'en' => 'Tags',
+        'ro' => 'Etichete',
+    ],
+    'travel_core.circuit_admin_difficulty_value' => [
+        'en' => '[level] of 5',
+        'ro' => '[level] din 5',
+    ],
+    'travel_core.circuit_admin_travellers' => [
+        'en' => '[min]–[max] travellers',
+        'ro' => '[min]–[max] călători',
+    ],
+    'travel_core.circuit_admin_age_not_required' => [
+        'en' => 'Not required',
+        'ro' => 'Nu se cere',
+    ],
+    'travel_core.circuit_admin_accommodation' => [
+        'en' => 'Accommodation',
+        'ro' => 'Cazare',
+    ],
+    'travel_core.circuit_admin_media' => [
+        'en' => 'Photos and documents',
+        'ro' => 'Fotografii și documente',
+    ],
+    'travel_core.circuit_admin_media_value' => [
+        'en' => '[photos] photos · [documents] documents',
+        'ro' => '[photos] fotografii · [documents] documente',
+    ],
+    'travel_core.circuit_admin_not_sent' => [
+        'en' => 'Not sent by the supplier',
+        'ro' => 'Netrimis de furnizor',
+    ],
+    'travel_core.circuit_admin_itinerary' => [
+        'en' => 'Itinerary · [n] days',
+        'ro' => 'Program · [n] zile',
+    ],
+    'travel_core.circuit_admin_day' => [
+        'en' => 'Day',
+        'ro' => 'Ziua',
+    ],
+    'travel_core.circuit_admin_text' => [
+        'en' => 'Text',
+        'ro' => 'Text',
+    ],
+    'travel_core.circuit_admin_show' => [
+        'en' => 'Show',
+        'ro' => 'Arată',
+    ],
+    'travel_core.circuit_admin_none' => [
+        'en' => 'None',
+        'ro' => 'Niciuna',
+    ],
+    'travel_core.circuit_admin_no_program' => [
+        'en' => 'The supplier sent no day-by-day program for this circuit.',
+        'ro' => 'Furnizorul nu a trimis programul pe zile pentru acest circuit.',
+    ],
     'travel_core.circuit_admin_tab' => [
         'en' => 'Circuit',
         'ro' => 'Circuit',

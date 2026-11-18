@@ -33,6 +33,9 @@ final class CircuitAdminViewTest extends TestCase
             excursions: [['title' => 'Gozo', 'text' => '', 'duration' => '', 'price' => 45.0, 'currency' => 'EUR', 'highlighted' => false]],
             excursionNotes: [['title' => 'Note excursii', 'text' => 'x']],
             priceNotes: [['title' => 'Reduceri', 'text' => 'x']],
+            documents: [['title' => 'Program', 'url' => 'https://x.example/p.pdf']],
+            tags: ['Senior Voyage'],
+            photoCount: 22,
         );
         $departures = [];
         for ($i = 1; $i <= 32; $i++) {
@@ -43,7 +46,8 @@ final class CircuitAdminViewTest extends TestCase
 
         self::assertSame(['sphinx', '1', 'flight', 8, 7, 'Valletta · Gozo', 'Bucuresti'], [$view['provider'], $view['circuit_id'], $view['transport'], $view['days'], $view['nights'], $view['route'], $view['departure_cities']]);
         self::assertSame([1, 10, 25, 'Hotel Topaz', 3], [$view['difficulty'], $view['group_min'], $view['group_max'], $view['hotel'], $view['hotel_stars']]);
-        self::assertSame([['number' => 1, 'title' => 'Sosire', 'hotel' => 'Hotel Topaz', 'stars' => 3, 'meals' => 'Cina', 'photos' => 2, 'highlighted' => true]], $view['days_list']);
+        self::assertSame([['number' => 1, 'title' => 'Sosire', 'text' => 'Text', 'hotel' => 'Hotel Topaz', 'stars' => 3, 'meals' => 'Cina', 'photos' => 2, 'highlighted' => true]], $view['days_list']);
+        self::assertSame([['Senior Voyage'], 22, true], [$view['tags'], $view['photo_count'], $view['has_details']]);
         self::assertSame([
             ['title' => 'Ce te va incanta', 'shown_in' => 'highlights'],
             ['title' => 'Note excursii', 'shown_in' => 'excursions'],
@@ -61,5 +65,6 @@ final class CircuitAdminViewTest extends TestCase
         $view = (new CircuitAdminView())->build(new CircuitPage('sphinx', '2', 'X', [], 0, 0), null, []);
 
         self::assertSame([[], [], [], 0, 0], [$view['days_list'], $view['notes'], $view['departures'], $view['departures_total'], $view['difficulty']]);
+        self::assertSame([[], 0, false], [$view['tags'], $view['photo_count'], $view['has_details']], 'without details the tab says "not sent", not "not required"');
     }
 }
