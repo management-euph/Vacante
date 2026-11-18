@@ -57,7 +57,7 @@ final class CircuitFeatures
     {
         $this->circuits = $circuits ?? new CircuitRepository();
         $this->departures = $departures ?? static fn (?array $circuitIds): array => (new CircuitDepartureRepository())
-            ->summaries(SphinxCircuitProductProvider::PROVIDER, date('Y-m-d'), $circuitIds);
+            ->summaries(SphinxCircuitProductProvider::PROVIDER, date('Y-m-d'), $circuitIds === null ? null : TypeCoerce::toStringList($circuitIds));
     }
 
     /**
