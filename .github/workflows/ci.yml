@@ -562,7 +562,12 @@ jobs:
                addon-eurosite/app/addons/eurosite \
                Addon-euph-profile_types/app/addons/euph_profile_types \
                addon-euph-pages-in-blocks/app/addons/euph_pages_in_blocks \
+               dev scripts \
                -path '*/vendor' -prune -o -name '*.php' -print0 | xargs -0 -n 50 php -l
+          # The repo root's own PHP (rector.php, the php-cs-fixer configs).
+          # Qodana does not report a file that does not parse, so this job is
+          # what catches a syntax error in them and in dev/ and scripts/.
+          find . -maxdepth 1 -name '*.php' -print0 | xargs -0 -n 50 php -l
 
   # ── ESLint + Vitest (frontend JS / JSX) ──
   # Lints the addons' standalone JS (addon-*/js) and the React booking-engine
