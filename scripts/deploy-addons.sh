@@ -33,13 +33,17 @@
 #                   (var/cache/templates); otherwise use Admin -> Clear cache
 #   --backup        before deploying, save the add-on folders (tar) and the
 #                   database (mysqldump, credentials read from the store's own
-#                   config.local.php) to ~/deploy-backups on the store, outside
-#                   the web root; the newest 10 of each are kept
+#                   config.local.php) to ~/deploy-backups/<store>/ on the
+#                   store, outside the web root; the newest 10 of each are kept
 #   --any-commit    deploy HEAD even when it is not origin/main
+#
+# <store> is the store folder's name and a code made from its full path
+# (dev-1a2b3c4d): stores the same SSH user deploys, such as dev and production
+# on one server, keep their backups apart and never rotate out each other's.
 #
 # Files are swapped in at the end of each folder's transfer (--delay-updates),
 # so a visitor rarely meets a half-copied folder. Every real deploy appends a
-# line (time, commit, add-ons) to ~/deploy-backups/deploy.log on the store.
+# line (time, commit, add-ons) to ~/deploy-backups/<store>/deploy.log.
 #
 # After a deploy: clear the cache (unless --clear-cache), open any admin page
 # once (new language labels add themselves), then check the storefront.
@@ -93,6 +97,11 @@ elif [[ "$target" == *:* ]]; then
 else
     host='' root=$target
 fi
+# This store's backups and deploy log, under the SSH user's home (see above).
+read -r crc _ < <(printf '%s' "$root" | cksum)
+store_id=${root##*/}
+store_id=${store_id//[^A-Za-z0-9._-]/_}-$(printf '%08x' "$crc")
+backups=deploy-backups/$store_id
 
 for tool in git tar rsync; do
     command -v "$tool" >/dev/null || die "$tool not found (Ubuntu/WSL: sudo apt install $tool)"
@@ -218,27 +227,29 @@ if [ "$go" -eq 1 ]; then rsync_opts+=(--delay-updates); else rsync_opts+=(--dry-
 
 echo "Deploying $(git -C "$repo" log -1 --format='%h %s' HEAD)"
 echo "      to $target (CS-Cart ${store_version:-?}, themes: ${themes[*]:-none})"
+echo " backups ~/$backups/ on the store"
 for w in ${version_warnings[@]+"${version_warnings[@]}"}; do echo "WARNING: $w"; done
 [ "$go" -eq 1 ] || echo "      DRY RUN: nothing changes on the store; add --go to deploy."
 echo
 
 if [ "$go" -eq 1 ] && [ "$backup" -eq 1 ]; then
-    echo "Backing up the store first (~/deploy-backups on the store):"
+    echo "Backing up the store first (~/$backups on the store):"
     folders=()
     for job in "${tasks[@]}" ${files[@]+"${files[@]}"}; do folders+=("${job##*$'\t'}"); done
-    on_store_script "$root" "$(date -u +%Y%m%d-%H%M%S)-$(git -C "$repo" rev-parse --short HEAD)" "${folders[@]}" <<'BACKUP' \
+    on_store_script "$root" "$backups" "$(date -u +%Y%m%d-%H%M%S)-$(git -C "$repo" rev-parse --short HEAD)" "${folders[@]}" <<'BACKUP' \
         || die "backup failed: nothing was deployed"
 set -euo pipefail
-root=$1 stamp=$2
-shift 2
-dir="$HOME/deploy-backups"
-case "$dir/" in "$root"/*) echo "the backup folder $dir is inside the store root: refusing" >&2; exit 1 ;; esac
-mkdir -p "$dir" && chmod 700 "$dir"
+root=$1 backups=$2 stamp=$3
+shift 3
+# Shown as ~/...: the full path names the SSH user, and the logs can be public.
+dir="$HOME/$backups"
+case "$dir/" in "$root"/*) echo "the backup folder ~/$backups is inside the store root: refusing" >&2; exit 1 ;; esac
+mkdir -p "$dir" && chmod 700 "${dir%/*}" "$dir"
 existing=()
 for d in "$@"; do if [ -e "$root/$d" ]; then existing+=("$d"); fi; done
 if [ ${#existing[@]} -gt 0 ]; then
     tar -czf "$dir/addons-$stamp.tgz" -C "$root" "${existing[@]}"
-    echo "  add-on files: $dir/addons-$stamp.tgz"
+    echo "  add-on files: ~/$backups/addons-$stamp.tgz"
 else
     echo "  add-on files: none yet (first deploy)"
 fi
@@ -280,7 +291,7 @@ if [ -f "$root/config.local.php" ]; then
     } > "$cnf"
     "$dump" --defaults-extra-file="$cnf" --single-transaction --quick --no-tablespaces \
         --default-character-set=utf8mb4 "$dbname" | gzip > "$dir/db-$stamp.sql.gz"
-    echo "  database:     $dir/db-$stamp.sql.gz"
+    echo "  database:     ~/$backups/db-$stamp.sql.gz"
 else
     echo "  database:     no config.local.php, skipped"
 fi
@@ -337,7 +348,7 @@ deleted=$(grep -c '^\*deleting' "$log" || true)
 echo
 if [ "$go" -eq 1 ]; then
     echo "Done: $updated file(s) copied, $deleted deleted."
-    on_store "mkdir -p ~/deploy-backups && chmod 700 ~/deploy-backups && echo $(q "$(date -u '+%Y-%m-%d %H:%M:%S UTC')  $(git -C "$repo" rev-parse --short HEAD)  $addons  copied=$updated deleted=$deleted") >> ~/deploy-backups/deploy.log"
+    on_store "mkdir -p ~/$(q "$backups") && chmod 700 ~/deploy-backups ~/$(q "$backups") && echo $(q "$(date -u '+%Y-%m-%d %H:%M:%S UTC')  $(git -C "$repo" rev-parse --short HEAD)  $addons  copied=$updated deleted=$deleted") >> ~/$(q "$backups")/deploy.log"
     if [ "$clear_cache" -eq 1 ]; then
         on_store "rm -rf $(q "$root/var/cache/templates")"
         echo "Compiled templates cleared (var/cache/templates)."

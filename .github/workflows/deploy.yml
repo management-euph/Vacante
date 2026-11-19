@@ -6,8 +6,8 @@ name: Deploy
 # scripts/smoke-test.sh checks the store answers. See docs/DEPLOY.md.
 #
 # Actions -> Deploy -> Run workflow:
-#   "Use workflow from"  main for a release; a tag (v2026.10.10) to roll back
-#   environment          production (or staging)
+#   "Use workflow from"  the release's tag (v2026.10.10) or main; an older tag to roll back
+#   environment          dev first, then production (waits for approval)
 #   go                   unticked: a dry run that only lists the changes
 #
 # The repository is public and so are these logs: the server is reached as the
@@ -99,7 +99,7 @@ jobs:
             echo "## ${{ inputs.go && 'Deployed' || 'Dry run' }}: $(git log -1 --format='%h %s')"
             echo
             echo '```'
-            grep -E '^(Done|Dry run|== |   \*deleting)' deploy.txt | head -200
+            grep -E '^(Done|Dry run|== |   \*deleting|  (add-on files|database):)' deploy.txt | head -200
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -108,13 +108,23 @@ jobs:
         env:
           STORE_URL: ${{ vars.STORE_URL }}
           STORE_ADMIN_URL: ${{ vars.STORE_ADMIN_URL }}
+          # Environment secret, while the storefront is closed: lets the test
+          # see it (scripts/smoke-test.sh).
+          STORE_ACCESS_KEY: ${{ secrets.STORE_ACCESS_KEY }}
         run: |
+          set -uo pipefail
           if [ -z "$STORE_URL" ]; then
             echo "::warning::Variable STORE_URL is not set on this environment: smoke test skipped."
             exit 0
           fi
-          bash scripts/smoke-test.sh "$STORE_URL" "$STORE_ADMIN_URL" | tee smoke.txt
+          # pipefail: the test's own status, not tee's, decides the step.
+          status=0
+          bash scripts/smoke-test.sh "$STORE_URL" "$STORE_ADMIN_URL" | tee smoke.txt || status=$?
           { echo "## Smoke test"; echo; echo '```'; cat smoke.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$status" -ne 0 ]; then
+            echo "::error::Smoke test failed. The release is on the store: check it now, and roll back if it is broken (docs/DEPLOY.md, section 7)."
+          fi
+          exit "$status"
 
       - name: Next steps
         if: inputs.go && success()
