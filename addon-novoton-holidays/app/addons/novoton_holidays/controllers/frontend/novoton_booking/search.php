@@ -16,6 +16,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 use Tygh\Addons\NovotonHolidays\Services\HotelAvailabilitySearcher;
 use Tygh\Addons\NovotonHolidays\Services\AlternativeDateSearcher;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\DesignARates;
 use Tygh\Addons\NovotonHolidays\Services\NovotonAvailabilityRecorder;
@@ -39,6 +40,14 @@ try {
     // ── 2. Early return: no check-in date ────────────────────────────
     if ($query->checkIn === '') {
         $formatter->assignDefaults('novoton_holidays.please_fill_required_fields');
+        return;
+    }
+
+    // ── 2b. Each search can make dozens of supplier calls: a limit per
+    // visitor address, which a client cannot reset by dropping its cookie.
+    if (!$security->checkVisitorLimit('search', ConfigProvider::getRateLimitRequestsPerMin(), 60)) {
+        $security->logSecurityEvent('rate_limit_exceeded', ['mode' => 'search', 'ip' => \Tygh\Addons\NovotonHolidays\Services\SecurityService::visitorIp()]);
+        $formatter->assignDefaults('novoton_holidays.too_many_searches');
         return;
     }
 

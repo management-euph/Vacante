@@ -79,7 +79,6 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
      *
      * @param array<string, mixed> $params {
      *                                     hotel_id: string,
-     *                                     hotel_name: string,
      *                                     check_in: string,
      *                                     check_out: string,
      *                                     nights: int,
@@ -97,7 +96,6 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
         $security = $this->getSecurity();
 
         $hotelId = TypeCoerce::toString($params['hotel_id'] ?? '');
-        $hotelName = TypeCoerce::toString($params['hotel_name'] ?? '');
         $checkIn = TypeCoerce::toString($params['check_in'] ?? '');
         $checkOut = TypeCoerce::toString($params['check_out'] ?? '');
         $nights = TypeCoerce::toInt($params['nights'] ?? 7);
@@ -119,9 +117,11 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
             ];
         }
 
-        // Verify hotel exists (FK constraint: novoton_alternative_requests.hotel_id -> novoton_hotels.hotel_id)
-        $hotelExists = db_get_field('SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id = ?s', $hotelId);
-        if (!$hotelExists) {
+        // Verify hotel exists (FK constraint: novoton_alternative_requests.hotel_id -> novoton_hotels.hotel_id).
+        // The name comes from our own table, never from the form: it goes into
+        // the e-mail sent to the address typed in, and into the staff alert.
+        $hotelRow = db_get_row('SELECT hotel_id, hotel_name FROM ?:novoton_hotels WHERE hotel_id = ?s', $hotelId);
+        if (!is_array($hotelRow) || TypeCoerce::toString($hotelRow['hotel_id'] ?? '') === '') {
             return [
                 'success' => false,
                 'request_id' => 0,
@@ -129,6 +129,10 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
                 'message' => '',
                 'error' => 'invalid_hotel',
             ];
+        }
+        $hotelName = TypeCoerce::toString($hotelRow['hotel_name'] ?? '');
+        if ($hotelName === '') {
+            $hotelName = $hotelId;
         }
 
         if (filter_var($contactEmail, FILTER_VALIDATE_EMAIL) === false) {

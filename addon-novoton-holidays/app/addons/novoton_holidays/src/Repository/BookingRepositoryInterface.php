@@ -28,8 +28,11 @@ interface BookingRepositoryInterface
     public function findByHotelId(string $hotel_id, int $limit = 100): array;
     /** @return list<BookingRow> */
     public function findPending(int $limit = 500): array;
-    /** @return BookingRow|null */
-    public function findExisting(string $hotel_id, string $check_in, string $check_out, string $holder_name, int $hours = 1): ?array;
+    /**
+     * The session's own booking for this stay and holder with no order yet.
+     * @return BookingRow|null
+     */
+    public function findExisting(string $hotel_id, string $check_in, string $check_out, string $holder_name, string $session_id, int $hours = 1): ?array;
     /**
      * @param list<string> $statuses
      * @return list<BookingRow>
@@ -47,6 +50,11 @@ interface BookingRepositoryInterface
      */
     public function update(int $booking_id, array $data): bool;
     public function updateStatus(int $booking_id, string $status, string $novoton_status = ''): bool;
+    /**
+     * Link a cart booking to its order only while no order has it: true when
+     * this call linked it. The claim before the booking is sent to Novoton.
+     */
+    public function claimForOrder(int $booking_id, int $order_id): bool;
     public function linkToOrder(int $booking_id, int $order_id): bool;
     /**
      * @param mixed $request
@@ -56,7 +64,6 @@ interface BookingRepositoryInterface
     public function delete(int $booking_id): bool;
     public function deleteOrphans(int $hours = 24): int;
     public function linkToUserBySession(int $user_id, string $session_id): int;
-    public function linkToUserByEmail(int $user_id, string $email): int;
     public function deleteByProductId(int $product_id): int;
     public function getGuestsData(int $booking_id): ?string;
     /** @return BookingRow|null */

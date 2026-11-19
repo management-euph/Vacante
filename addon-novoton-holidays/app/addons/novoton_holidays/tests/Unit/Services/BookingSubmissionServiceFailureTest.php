@@ -52,6 +52,7 @@ final class BookingSubmissionServiceFailureTest extends TestCase
         }
 
         $repo = $this->createMock(BookingRepositoryInterface::class);
+        $repo->method('claimForOrder')->willReturn(true);
         $repo->method('findById')->willReturn(['booking_id' => 12, 'order_id' => 0]);
         $repo->method('findByIdHydrated')->willReturn([
             'booking_id' => 12, 'hotel_id' => '476', 'hotel_name' => 'Admiral', 'package_name' => $packages[0],
@@ -101,12 +102,21 @@ final class BookingSubmissionServiceFailureTest extends TestCase
         self::assertSame('confirmed', $this->rows[14]['status']);
     }
 
+    public function testATimedOutReservationIsNotSentAgainAndSaysItMayExist(): void
+    {
+        $this->submit([ApiException::maybeProcessed('hotel_res_RQ', 'Operation timed out after 120000 milliseconds', 0, 1), self::GOOD, self::GOOD]);
+
+        self::assertSame('failed', $this->rows[12]['status']);
+        self::assertStringContainsString('may exist: check OrderNum 55-G1 with Novoton before booking again', (string) $this->rows[12]['notes']);
+    }
+
     public function testARefusalFailsItsGroupWithNovotonsReason(): void
     {
         $this->submit([ApiException::refused('hotel_res_RQ', 'Invalid username or password!'), self::GOOD, self::GOOD]);
 
         self::assertSame('failed', $this->rows[12]['status']);
         self::assertStringContainsString('Invalid username or password!', (string) $this->rows[12]['notes']);
+        self::assertStringNotContainsString('may exist', (string) $this->rows[12]['notes'], 'a refusal booked nothing');
         self::assertSame(['confirmed', 'confirmed'], [$this->rows[13]['status'], $this->rows[14]['status']]);
     }
 

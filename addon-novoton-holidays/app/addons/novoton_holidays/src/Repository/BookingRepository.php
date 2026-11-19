@@ -184,20 +184,27 @@ class BookingRepository implements BookingRepositoryInterface
     }
 
     /**
-     * Find existing booking (for duplicate prevention)
+     * This visitor's own booking for the same stay and holder, not yet on an
+     * order (a form sent twice). Only the session that made it finds it: a
+     * holder's name is no proof, anyone can type it.
      * @return array<string, mixed>|null
      */
-    public function findExisting(string $hotel_id, string $check_in, string $check_out, string $holder_name, int $hours = 1): ?array
+    public function findExisting(string $hotel_id, string $check_in, string $check_out, string $holder_name, string $session_id, int $hours = 1): ?array
     {
+        if ($session_id === '') {
+            return null;
+        }
         $booking = self::asRow(db_get_row(
             'SELECT * FROM ?:novoton_bookings
              WHERE order_id = 0
+               AND session_id = ?s
                AND hotel_id = ?s
                AND check_in = ?s
                AND check_out = ?s
                AND holder_name = ?s
                AND created_at > DATE_SUB(NOW(), INTERVAL ?i HOUR)
              LIMIT 1',
+            $session_id,
             $hotel_id,
             $check_in,
             $check_out,
@@ -245,6 +252,34 @@ class BookingRepository implements BookingRepositoryInterface
 
             return true;
         });
+    }
+
+    /**
+     * Link a cart booking to its order, only while no order has it: true
+     * when this very call linked it (one row changed).
+     *
+     * The claim before a booking is sent to Novoton. Two place-order
+     * requests for one cart both read order_id = 0; a read-then-write let
+     * both send the reservation, a duplicate at the hotel. The conditional
+     * UPDATE lets exactly one of them through: db_query() returns the
+     * affected-row count for an UPDATE (as fgo_invoicing's claimForRetry()).
+     */
+    public function claimForOrder(int $booking_id, int $order_id): bool
+    {
+        if ($booking_id <= 0 || $order_id <= 0) {
+            return false;
+        }
+        $changed = db_query(
+            'UPDATE ?:novoton_bookings SET order_id = ?i WHERE booking_id = ?i AND (order_id = 0 OR order_id IS NULL)',
+            $order_id,
+            $booking_id,
+        );
+        if (TypeCoerce::toInt($changed) !== 1) {
+            return false;
+        }
+        $this->syncRepo->applyBookingUpdate($booking_id, ['order_id' => $order_id]);
+
+        return true;
     }
 
     /**
@@ -374,34 +409,6 @@ class BookingRepository implements BookingRepositoryInterface
                 $session_id,
                 $user_id,
             ));
-            $this->syncRepo->assignUser($user_id, $id_strings);
-        }
-
-        return $affected;
-    }
-
-    /**
-     * Link unassigned bookings to a user by email.
-     *
-     * Used after login/registration to claim bookings made with the same email.
-     *
-     * @return int Number of bookings linked
-     */
-    public function linkToUserByEmail(int $user_id, string $email): int
-    {
-        // Get affected booking IDs before the update
-        $id_strings = self::asStringList(db_get_fields(
-            'SELECT booking_id FROM ?:novoton_bookings WHERE guest_email = ?s AND user_id = 0',
-            $email,
-        ));
-
-        $affected = TypeCoerce::toInt(db_query(
-            'UPDATE ?:novoton_bookings SET user_id = ?i WHERE guest_email = ?s AND user_id = 0',
-            $user_id,
-            $email,
-        ));
-
-        if ($affected > 0) {
             $this->syncRepo->assignUser($user_id, $id_strings);
         }
 

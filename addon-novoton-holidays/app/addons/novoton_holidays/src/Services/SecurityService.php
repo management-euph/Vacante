@@ -16,6 +16,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Repository\CacheRepository;
 use Tygh\Addons\NovotonHolidays\Repository\CacheRepositoryInterface;
+use Tygh\Addons\TravelCore\Helpers\SessionAccessor;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 use Tygh\Addons\TravelCore\TravelConstants;
@@ -348,6 +349,65 @@ class SecurityService implements SecurityServiceInterface
             'remaining' => max(0, $maxRequests - $data['count']),
             'reset' => $data['reset'],
         ];
+    }
+
+    /**
+     * The visitor's address (REMOTE_ADDR, never a forwarded-for header a
+     * client can write): what a client cannot change by dropping its cookie.
+     * '' outside a web request.
+     */
+    public static function visitorIp(): string
+    {
+        $ip = TypeCoerce::toString($_SERVER['REMOTE_ADDR'] ?? '');
+
+        return filter_var($ip, FILTER_VALIDATE_IP) !== false ? $ip : '';
+    }
+
+    /**
+     * Whether this visitor's address may make another $action request: at
+     * most $max within $window seconds. The session-keyed limits gave a
+     * client without a cookie a fresh allowance on every request; the
+     * address does not reset. No address (CLI): not limited.
+     */
+    public function checkVisitorLimit(string $action, int $max, int $window): bool
+    {
+        $ip = self::visitorIp();
+        if ($ip === '') {
+            return true;
+        }
+
+        return $this->checkRateLimit($action . '_ip_' . $ip, $max, $window)['allowed'];
+    }
+
+    /**
+     * The current visitor's account (user id), else its session id: the key
+     * of the per-visitor booking limit.
+     */
+    public static function sessionIdentity(): string
+    {
+        $userId = TypeCoerce::toInt((new SessionAccessor())->auth()['user_id'] ?? 0);
+        if ($userId > 0) {
+            return (string) $userId;
+        }
+
+        return TypeCoerce::toString(session_id());
+    }
+
+    /**
+     * Whether a visitor may send another booking-type request ($mode:
+     * add_to_cart, request_alternatives): within the limit of its account or
+     * session ($identity) AND of its address. A client that sends no cookie
+     * gets a new session each time; its address stays. A refusal is logged.
+     */
+    public function allowsBookingRequest(string $mode, string $identity): bool
+    {
+        $max = ConfigProvider::getRateLimitBookingsPerHour();
+        if ($this->checkBookingRateLimit($identity) && $this->checkVisitorLimit($mode, $max, 3600)) {
+            return true;
+        }
+        $this->logSecurityEvent('rate_limit_exceeded', ['mode' => $mode, 'identifier' => $identity, 'ip' => self::visitorIp()]);
+
+        return false;
     }
 
     /**

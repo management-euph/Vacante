@@ -18,8 +18,12 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class AlternativeDateSearcher implements AlternativeDateSearcherInterface
 {
-    /** Maximum total API calls across all dates/rooms/boards to prevent runaway loops */
-    private const int MAX_API_CALLS = 50;
+    /**
+     * Maximum total API calls across all dates/rooms/boards. Every anonymous
+     * search with no availability makes them; 50 let a few visitors take
+     * the store's whole Novoton allowance (5 a second).
+     */
+    private const int MAX_API_CALLS = 20;
 
     /**  */
     private bool $debug;

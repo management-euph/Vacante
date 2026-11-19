@@ -4719,3 +4719,19 @@ msgstr "Disable the products of the selected hotels? Products on sale disappear 
 msgctxt "Languages::novoton_holidays.hotels_city_type_to_search"
 msgid "Type to search a city or region"
 msgstr "Type to search a city or region"
+
+msgctxt "Languages::novoton_holidays.too_many_searches"
+msgid "Too many searches from your connection. Please wait a minute and try again."
+msgstr "Too many searches from your connection. Please wait a minute and try again."
+
+msgctxt "Languages::novoton_holidays.too_many_requests"
+msgid "Too many requests. Please wait a while and try again."
+msgstr "Too many requests. Please wait a while and try again."
+
+msgctxt "Languages::novoton_holidays.too_many_bookings"
+msgid "Too many booking requests. Please try again later."
+msgstr "Too many booking requests. Please try again later."
+
+msgctxt "Languages::novoton_holidays.price_check_unavailable"
+msgid "We could not check the price with the hotel just now. Please try again in a moment."
+msgstr "We could not check the price with the hotel just now. Please try again in a moment."

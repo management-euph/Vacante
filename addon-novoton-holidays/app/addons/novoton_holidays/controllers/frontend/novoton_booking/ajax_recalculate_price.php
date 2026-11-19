@@ -143,6 +143,15 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
         $sendJson(['success' => false, 'message' => 'Missing required fields']);
     }
 
+    // Every call asks Novoton live (nocache): only for a hotel the store
+    // has, and within a limit per visitor address.
+    if (!\Tygh\Addons\NovotonHolidays\Services\Container::getInstance()->hotelRepository()->exists((string) $hotel_id)) {
+        $sendJson(['success' => false, 'message' => 'Unknown hotel']);
+    }
+    if (!_nvt_get_security_service()->checkVisitorLimit('recalc', \Tygh\Addons\NovotonHolidays\Services\ConfigProvider::getRateLimitRequestsPerMin(), 60)) {
+        $sendJson(['success' => false, 'message' => __('novoton_holidays.too_many_requests')]);
+    }
+
     // Calculate check-out date
     $check_out = date('Y-m-d', (int) strtotime($check_in . ' + ' . $nights . ' days'));
 

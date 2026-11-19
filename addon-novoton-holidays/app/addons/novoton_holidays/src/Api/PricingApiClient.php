@@ -269,8 +269,11 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
             return false;
         }
 
+        // "No availability" is cached too, for the same few minutes: the
+        // alternative-dates search asks up to 20 dates, and each repeated
+        // search asked them all again. A refusal (a wrong password) is not.
         $prices = $result->xpath('//Price');
-        if (!empty($prices)) {
+        if (!empty($prices) || Refusal::reason($result) === null) {
             $this->saveToCache(Constants::API_FUNCTION_ROOM_PRICE, $cacheKey, $response);
         }
 

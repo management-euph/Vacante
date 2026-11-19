@@ -46,6 +46,7 @@ final class BookingSubmissionServiceOneRequestTest extends TestCase
         }
 
         $repo = $this->createMock(BookingRepositoryInterface::class);
+        $repo->method('claimForOrder')->willReturn(true);
         $repo->method('findById')->willReturn(['booking_id' => 12, 'order_id' => 0]);
         $repo->method('findByIdHydrated')->willReturn([
             'booking_id' => 12, 'hotel_id' => '476', 'hotel_name' => 'Admiral', 'package_name' => $packages[0],

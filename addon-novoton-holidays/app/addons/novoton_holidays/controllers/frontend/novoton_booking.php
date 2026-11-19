@@ -161,6 +161,12 @@ function _nvt_get_cached_hotel_info($hotel_id, $force = false) {
 
 $_nvt_mode_dir = __DIR__ . '/novoton_booking';
 
+// A customer's page: a reading request to Novoton gives up after
+// NovotonHttpClient::CUSTOMER_GATE_WAIT while the store's allowance is busy.
+if (!defined('NOVOTON_CUSTOMER_PAGE')) {
+    define('NOVOTON_CUSTOMER_PAGE', true);
+}
+
 if ($mode === 'search') {
     $__nvt_result = include($_nvt_mode_dir . '/search.php');
     if ($__nvt_result !== 1) return $__nvt_result;

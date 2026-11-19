@@ -13,8 +13,11 @@ use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 /**
  * CS-Cart runs place_order_post again for a cart whose booking was already
- * sent (order edits, the parent order after its vendor sub-orders). A second
- * hotel_res_RQ would be a duplicate reservation at the hotel.
+ * sent (order edits, the parent order after its vendor sub-orders), and two
+ * place-order requests can run at once. A second hotel_res_RQ would be a
+ * duplicate reservation at the hotel: only the request that claims the
+ * booking for its order (BookingRepository::claimForOrder, a conditional
+ * UPDATE) sends it.
  */
 #[CoversClass(BookingSubmissionService::class)]
 final class BookingSubmissionServiceResubmitTest extends TestCase
@@ -32,10 +35,10 @@ final class BookingSubmissionServiceResubmitTest extends TestCase
         ]];
     }
 
-    public function testABookingLinkedToAnOrderIsNeverResent(): void
+    public function testABookingAnotherRequestClaimedIsNeverSent(): void
     {
         $repo = $this->createMock(BookingRepositoryInterface::class);
-        $repo->method('findById')->with(12)->willReturn(['booking_id' => 12, 'order_id' => 55]);
+        $repo->expects(self::once())->method('claimForOrder')->with(12, 55)->willReturn(false);
         $repo->expects(self::never())->method('update');
         $repo->expects(self::never())->method('create');
         $repo->expects(self::never())->method('findByIdHydrated');
@@ -46,10 +49,10 @@ final class BookingSubmissionServiceResubmitTest extends TestCase
         (new BookingSubmissionService($repo, $reservations))->submitOrder(55, self::cart());
     }
 
-    public function testAnUnlinkedBookingGoesOnToSubmission(): void
+    public function testTheRequestThatClaimsTheBookingGoesOnToSubmission(): void
     {
         $repo = $this->createMock(BookingRepositoryInterface::class);
-        $repo->method('findById')->willReturn(['booking_id' => 12, 'order_id' => 0]);
+        $repo->expects(self::once())->method('claimForOrder')->with(12, 55)->willReturn(true);
         // Reaching the DB hydration step proves the booking was not skipped.
         $repo->expects(self::once())->method('findByIdHydrated')->with(12)
             ->willThrowException(new \RuntimeException('stop here'));

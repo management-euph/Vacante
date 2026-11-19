@@ -85,7 +85,7 @@ class BookingService implements BookingServiceInterface
         // Get current user/session
         $auth = $this->session->auth();
         $user_id = !empty($auth['user_id']) ? TypeCoerce::toInt($auth['user_id']) : 0;
-        $session_id = session_id();
+        $session_id = TypeCoerce::toString(session_id());
 
         // Parse and validate data
         $rooms_data = $this->roomsParser->parseRoomsData($bookingData);
@@ -148,6 +148,7 @@ class BookingService implements BookingServiceInterface
             TypeCoerce::toString($booking_record['check_in']),
             TypeCoerce::toString($booking_record['check_out']),
             $booking_record['holder_name'],
+            $session_id,
             1, // hours
         );
         $existing_id = !empty($existing) ? TypeCoerce::toInt($existing['booking_id']) : null;

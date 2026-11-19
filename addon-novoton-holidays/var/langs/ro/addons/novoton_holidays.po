@@ -4719,3 +4719,19 @@ msgstr "Dezactivați produsele hotelurilor selectate? Produsele la vânzare disp
 msgctxt "Languages::novoton_holidays.hotels_city_type_to_search"
 msgid "Type to search a city or region"
 msgstr "Scrieți pentru a căuta un oraș sau o regiune"
+
+msgctxt "Languages::novoton_holidays.too_many_searches"
+msgid "Too many searches from your connection. Please wait a minute and try again."
+msgstr "Prea multe căutări de la conexiunea dumneavoastră. Vă rugăm să așteptați un minut și să încercați din nou."
+
+msgctxt "Languages::novoton_holidays.too_many_requests"
+msgid "Too many requests. Please wait a while and try again."
+msgstr "Prea multe cereri. Vă rugăm să așteptați puțin și să încercați din nou."
+
+msgctxt "Languages::novoton_holidays.too_many_bookings"
+msgid "Too many booking requests. Please try again later."
+msgstr "Prea multe cereri de rezervare. Vă rugăm să încercați mai târziu."
+
+msgctxt "Languages::novoton_holidays.price_check_unavailable"
+msgid "We could not check the price with the hotel just now. Please try again in a moment."
+msgstr "Nu am putut verifica prețul cu hotelul în acest moment. Vă rugăm să încercați din nou peste câteva momente."

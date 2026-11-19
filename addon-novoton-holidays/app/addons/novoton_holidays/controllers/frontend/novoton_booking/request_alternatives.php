@@ -7,28 +7,33 @@ declare(strict_types=1);
  */
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
-use Tygh\Tygh;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
+    // Sends a hotel_request to Novoton and an e-mail to the address typed in:
+    // POST only (CS-Cart checks the form's security hash on POST).
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+        return [CONTROLLER_STATUS_REDIRECT, 'novoton_booking.search'];
+    }
+
+    // The honeypot: people never see the field, bots fill it. Pretend it worked.
+    if (RequestCoerce::string($_REQUEST, 'website') !== '') {
+        fn_set_notification('N', __('notice'), __('novoton_holidays.alternatives_request_sent'));
+        return [CONTROLLER_STATUS_REDIRECT, 'novoton_booking.search'];
+    }
+
     $security = _nvt_get_security_service();
 
-    // --- Rate limiting ---
-    // CS-Cart's session is an ArrayAccess container object; a plain (non-reference)
-    // local binds the same object handle, so offset reads below operate on the
-    // live session exactly as direct `Tygh::$app['session'][...]` access would.
-    $session = Tygh::$app['session'];
-    if (!is_array($session) && !$session instanceof \ArrayAccess) {
-        $session = [];
+    // --- Rate limiting (per account or session, and per address) ---
+    if (!$security->allowsBookingRequest('request_alternatives', \Tygh\Addons\NovotonHolidays\Services\SecurityService::sessionIdentity())) {
+        fn_set_notification('E', __('error'), __('novoton_holidays.too_many_requests'));
+        return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
     }
-    $auth = TypeCoerce::toStringMap($session['auth'] ?? []);
-    $session_id = is_object($session) && method_exists($session, 'getID')
-        ? TypeCoerce::toString($session->getID())
-        : '';
-    $rate_id = !empty($auth['user_id']) ? TypeCoerce::toString($auth['user_id']) : $session_id;
-    if (!$security->checkBookingRateLimit($rate_id)) {
-        $security->logSecurityEvent('rate_limit_exceeded', ['mode' => 'request_alternatives', 'identifier' => $rate_id]);
-        fn_set_notification('E', __('error'), 'Too many requests. Please try again later.');
+    // The confirmation goes to the address typed in: a few a day per address,
+    // whatever connection asks.
+    $contact_email = mb_strtolower(trim(RequestCoerce::string($_REQUEST, 'contact_email')));
+    if ($contact_email !== '' && !$security->checkRateLimit('alternatives_email_' . $contact_email, 3, 86400)['allowed']) {
+        fn_set_notification('E', __('error'), __('novoton_holidays.too_many_requests'));
         return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
     }
 
@@ -43,7 +48,6 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
     $altService = _nvt_alternative_request_service();
     $result = $altService->submitAlternativeBookingRequest([
         'hotel_id' => $hotel_id,
-        'hotel_name' => strip_tags(mb_substr(RequestCoerce::string($_REQUEST, 'hotel_name'), 0, 200)),
         'check_in' => $check_in,
         'check_out' => $sanitized['check_out'] ?? ($_REQUEST['check_out'] ?? ''),
         'nights' => $nights,

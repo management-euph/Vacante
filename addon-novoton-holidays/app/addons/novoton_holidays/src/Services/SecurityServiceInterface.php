@@ -45,6 +45,15 @@ interface SecurityServiceInterface extends BaseSecurityServiceInterface
     public function checkRateLimit(string $key, ?int $maxRequests = null, ?int $window = null): array;
 
     /**
+     * Whether this visitor's address may make another $action request: at
+     * most $max within $window seconds.
+     */
+    public function checkVisitorLimit(string $action, int $max, int $window): bool;
+
+    /** Whether a visitor ($identity: account or session) may send another booking-type request ($mode). */
+    public function allowsBookingRequest(string $mode, string $identity): bool;
+
+    /**
      * Encrypt sensitive data.
      *
      * @param string $data Data to encrypt

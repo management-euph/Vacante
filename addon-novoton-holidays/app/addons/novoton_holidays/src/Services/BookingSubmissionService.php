@@ -100,15 +100,15 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
 
             // Once submitted, a booking is linked to its order. CS-Cart runs
             // place_order_post again for the same cart (order edits, the parent
-            // after its vendor sub-orders): a second reservation would be a
-            // duplicate at the hotel, so a linked booking is never resent.
-            $linkedOrderId = $this->linkedOrderId($originalBookingId);
-            if ($linkedOrderId > 0) {
+            // after its vendor sub-orders), and two place-order requests can run
+            // at once: a second reservation would be a duplicate at the hotel.
+            // So the booking is claimed for this order first, atomically, and
+            // only the request that claimed it sends it.
+            if (!$this->bookingRepo->claimForOrder($originalBookingId, $orderId)) {
                 if ($debugLogging) {
                     fn_log_event('general', 'runtime', [
-                        'message' => 'Novoton - Booking already submitted, skipped',
+                        'message' => 'Novoton - Booking already linked to an order (or gone), not sent',
                         'booking_id' => $originalBookingId,
-                        'linked_order_id' => $linkedOrderId,
                         'order_id' => $orderId,
                     ]);
                 }
@@ -269,20 +269,6 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
             'group' => $groupNum . ' of ' . $groupCount,
             'error' => $reason,
         ]);
-    }
-
-    /**
-     * The order a cart booking is already linked to; 0 when it is not (or
-     * has no row yet).
-     */
-    private function linkedOrderId(int $bookingId): int
-    {
-        if ($bookingId <= 0) {
-            return 0;
-        }
-        $row = $this->bookingRepo->findById($bookingId);
-
-        return PriceInfoFormatter::toInt($row['order_id'] ?? 0);
     }
 
     /**
@@ -450,9 +436,12 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
                 ]);
             }
         } catch (ApiException $e) {
+            // A reservation that may have reached Novoton was not sent again
+            // (NovotonHttpClient): whether it exists is checked there first.
             $this->bookingRepo->update($bookingId, [
                 'status' => TravelConstants::STATUS_FAILED,
-                'notes' => 'API Error (' . $e->getApiFunction() . ', HTTP ' . $e->getHttpCode() . '): ' . $e->getMessage(),
+                'notes' => 'API Error (' . $e->getApiFunction() . ', HTTP ' . $e->getHttpCode() . '): ' . $e->getMessage()
+                    . ($e->mayHaveReachedNovoton() ? '. The reservation may exist: check OrderNum ' . $orderNum . ' with Novoton before booking again.' : ''),
             ]);
 
             fn_log_event('general', 'runtime', [
