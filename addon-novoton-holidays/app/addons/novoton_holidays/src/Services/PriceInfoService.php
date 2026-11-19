@@ -6,7 +6,8 @@ declare(strict_types=1);
  * Novoton PriceInfo Service
  *
  * Handles season-based price information for product tab display.
- * This is DIFFERENT from real-time booking prices (RoomPriceService).
+ * This is DIFFERENT from real-time booking prices (room_price,
+ * PricingApiClient::getRoomPrice).
  *
  * V3 Architecture:
  * - Season prices are stored in novoton_hotel_packages.priceinfo_data JSON

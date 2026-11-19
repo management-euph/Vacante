@@ -5,8 +5,6 @@ namespace Tygh\Addons\NovotonHolidays\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\TravelCore\Services\CommissionCalculator;
-use Tygh\Addons\NovotonHolidays\Services\CartAssemblyService;
-use Tygh\Addons\NovotonHolidays\Services\RoomsDataParser;
 use Tygh\Addons\NovotonHolidays\Services\AlternativeDateSearcher;
 use Tygh\Addons\NovotonHolidays\Services\SearchService;
 
@@ -60,123 +58,6 @@ class IntegrationPathsTest extends TestCase
     {
         $calc = new CommissionCalculator(10.0, 'N');
         $this->assertEqualsWithDelta(0.0, $calc->apply(0.0), 0.001);
-    }
-
-    // ====================================================================
-    // CartAssemblyService — cart product structure
-    // ====================================================================
-
-    public function testAssembleCartProductReturnsRequiredKeys(): void
-    {
-        $service = new CartAssemblyService();
-
-        $bookingData = [
-            'hotel_id' => 'H123',
-            'hotel_name' => 'Test Hotel',
-            'room_id' => 'DBL',
-            'board_id' => 'AI',
-            'check_in' => '2026-07-01',
-            'check_out' => '2026-07-08',
-            'adults' => 2,
-            'children' => 0,
-        ];
-
-        $hotelInfo = [
-            'hotel_name' => 'Test Hotel',
-            'city' => 'Sunny Beach',
-            'country' => 'BULGARIA',
-            'star_rating' => '4',
-        ];
-
-        $guestsData = [
-            ['name' => 'John Doe', 'type' => 'adult', 'age' => 33],
-            ['name' => 'Jane Doe', 'type' => 'adult', 'age' => 30],
-        ];
-
-        $priceResult = [
-            'total_price' => 850.00,
-            'base_price' => 750.00,
-            'terms_of_payment' => '<TermsOfPayment/>',
-            'terms_of_cancellation' => '<TermsOfCancellation/>',
-            'remark' => '',
-            'important' => '',
-        ];
-
-        $result = $service->assembleCartProduct(
-            42, 1, $bookingData, $hotelInfo, $guestsData, $priceResult, []
-        );
-
-        $this->assertArrayHasKey('product_id', $result);
-        $this->assertArrayHasKey('price', $result);
-        $this->assertArrayHasKey('extra', $result);
-        $this->assertEquals(42, $result['product_id']);
-        $this->assertEqualsWithDelta(850.00, $result['price'], 0.01);
-        $this->assertTrue($result['extra']['novoton_booking'] ?? false);
-        $this->assertEquals('H123', $result['extra']['hotel_id']);
-        $this->assertEquals('AI', $result['extra']['board_id']);
-    }
-
-    public function testAssembleCartProductExtractsChildAges(): void
-    {
-        $service = new CartAssemblyService();
-
-        $guestsData = [
-            ['name' => 'Parent', 'type' => 'adult', 'age' => 35],
-            ['name' => 'Child 1', 'type' => 'child', 'age' => 8],
-            ['name' => 'Child 2', 'type' => 'child', 'age' => 3],
-        ];
-
-        $result = $service->assembleCartProduct(
-            1, 1,
-            ['hotel_id' => 'H1', 'room_id' => 'R1', 'board_id' => 'BB',
-             'check_in' => '2026-08-01', 'check_out' => '2026-08-08',
-             'adults' => 1, 'children' => 2],
-            ['hotel_name' => 'X', 'city' => '', 'country' => ''],
-            $guestsData,
-            ['total_price' => 500.00, 'base_price' => 450.0,
-             'terms_of_payment' => '', 'terms_of_cancellation' => '',
-             'remark' => '', 'important' => ''],
-            []
-        );
-
-        $this->assertEquals('8,3', $result['extra']['children_ages']);
-    }
-
-    // ====================================================================
-    // CartAssemblyService — night calculation
-    // ====================================================================
-
-    public function testCalculateNightsReturnsCorrectCount(): void
-    {
-        $nights = CartAssemblyService::calculateNights('2026-07-01', '2026-07-08');
-        $this->assertEquals(7, $nights);
-    }
-
-    public function testCalculateNightsSameDayReturnsOne(): void
-    {
-        // Edge case: same-day should be at least 1 night
-        $nights = CartAssemblyService::calculateNights('2026-07-01', '2026-07-01');
-        $this->assertGreaterThanOrEqual(0, $nights);
-    }
-
-    // ====================================================================
-    // RoomsDataParser — parsing rooms from form data
-    // ====================================================================
-
-    public function testParseRoomsDataSingleRoom(): void
-    {
-        $parser = new RoomsDataParser();
-
-        $bookingData = [
-            'adults' => 2,
-            'children' => 1,
-            'children_ages' => '5',
-            'num_rooms' => 1,
-        ];
-
-        $result = $parser->parseRoomsData($bookingData);
-        $this->assertIsArray($result);
-        $this->assertNotEmpty($result);
     }
 
     // ====================================================================

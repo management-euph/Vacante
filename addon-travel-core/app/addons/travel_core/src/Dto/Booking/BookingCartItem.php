@@ -10,7 +10,7 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  * Typed view of a Novoton cart item.
  *
  * Replaces the ~30-key `array<string, mixed>` `extra` sub-array written by
- * {@see \Tygh\Addons\NovotonHolidays\Services\CartAssemblyService} and
+ * Novoton's add_to_cart (controllers/frontend/novoton_booking/add_to_cart.php) and
  * consumed downstream by cart/order hooks, the React mount, admin emails,
  * and the reservation-API payload builder.
  *
@@ -49,7 +49,7 @@ final readonly class BookingCartItem
 
     /**
      * Reconstruct from a cart-product `extra` array (the shape written by
-     * CartAssemblyService / read by cart_hooks.php and friends).
+     * Novoton's add_to_cart / read by cart_hooks.php and friends).
      *
      * @param array<string, mixed> $extra the `extra` sub-array
      * @param array<string, mixed>|null $outer optional outer cart-product row
@@ -168,8 +168,9 @@ final readonly class BookingCartItem
 
     /**
      * Emit the full outer cart-product row (CS-Cart's expected shape with
-     * `product_id`, `amount`, `price`, `extra`, …). Mirrors what
-     * CartAssemblyService::assembleCartProduct() used to return.
+     * `product_id`, `amount`, `price`, `extra`, …). Mirrors what Novoton's
+     * CartAssemblyService::assembleCartProduct() returned (since removed:
+     * nothing built cart lines through it).
      *
      * @return array{
      *   product_id: int,

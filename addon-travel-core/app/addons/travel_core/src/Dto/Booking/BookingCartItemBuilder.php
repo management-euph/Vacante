@@ -7,7 +7,7 @@ namespace Tygh\Addons\TravelCore\Dto\Booking;
 /**
  * Mutable builder for {@see BookingCartItem}.
  *
- * Cart assembly is inherently mutational today (CartAssemblyService
+ * Cart assembly is inherently mutational today (Novoton's add_to_cart
  * accumulates fields from multiple sources: booking form, hotel row,
  * parsed guests data, pricing result, rooms data). A readonly DTO is
  * the wrong tool for assembly but the right tool for consumption, so

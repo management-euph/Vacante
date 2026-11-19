@@ -12,10 +12,6 @@ declare(strict_types=1);
  *
  * Removed duplicate helpers - use services directly:
  * - CacheService::remember() instead of _nvt_cached_fetch()
- * - SearchService::parseSearchParams() for search parameter parsing
- * - SearchService::calculateRoomTotals() for room totals
- * - BookingService::createBooking() for bookings
- * - RoomPriceService::getRoomPrice() for room prices (has built-in caching)
  *
  * v2.8.0: Split into mode handler files under novoton_booking/ directory.
  * Each mode is in its own file for maintainability (~350 lines dispatcher
@@ -38,10 +34,8 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 // SERVICE LOADER
 // A79: Load all services via ServiceLoader.php for lazy-loaded singletons
 // Available functions:
-//   _nvt_booking_service()   - Booking creation, cart, orders
 //   _nvt_guest_service()     - Guest data parsing, validation
-//   _nvt_search_service()    - Search parameter parsing
-//   _nvt_price_service()     - Price calculations, commission
+//   _nvt_search_service()    - Availability search results
 //   _nvt_security_service()  - Input validation, sanitization
 //   _nvt_cache_service()     - API response caching
 //   _nvt_hotel_repo()        - Hotel database access
@@ -62,14 +56,8 @@ if (!function_exists('_nvt_get_cache_service')) {
 }
 
 // Service delegation helpers (remaining ones have live callers; the
-// _nvt_get_search_service and _nvt_get_booking_service wrappers were
-// dropped in the audit cleanup — zero callers anywhere in the three addons.)
-if (!function_exists('_nvt_get_price_service')) {
-    /** @return \Tygh\Addons\NovotonHolidays\Services\RoomPriceServiceInterface */
-    function _nvt_get_price_service() {
-        return _nvt_price_service();
-    }
-}
+// _nvt_get_search_service, _nvt_get_booking_service and
+// _nvt_get_price_service wrappers were dropped: no callers anywhere.)
 if (!function_exists('_nvt_get_security_service')) {
     /** @return \Tygh\Addons\NovotonHolidays\Services\SecurityServiceInterface */
     function _nvt_get_security_service() {
@@ -148,9 +136,6 @@ function _nvt_get_cached_hotel_info($hotel_id, $force = false) {
     return $hotelInfo;
 }
 } // end function_exists _nvt_get_cached_hotel_info
-
-// A72: Use RoomPriceService::getRoomPrice() for room prices (it has built-in caching)
-// Example: $priceService = _nvt_get_price_service(); $price = $priceService->getRoomPrice($params);
 
 //=============================================================================
 // MODE DISPATCHER
