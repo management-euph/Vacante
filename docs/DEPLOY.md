@@ -15,9 +15,9 @@ pull request ──► CI (PHPStan, tests, lint…) ──► merge to main
 | Piece | What it does |
 |---|---|
 | `.github/workflows/server-check.yml` | **Server check**: can GitHub reach the server over SSH, and does it have rsync, PHP 8.3, mysqldump, CS-Cart, write access? Changes nothing. |
-| `.github/workflows/deploy.yml` | **Deploy**: CI on the exact commit, then the deploy, then the smoke test. A dry run unless *go* is ticked. |
-| `scripts/deploy-addons.sh` | The deploy itself (also usable by hand). Copies only the add-ons' own folders, deletes what a release removed, backs up first. |
-| `scripts/smoke-test.sh` | Storefront and admin login answer 200 with no PHP/Smarty error. |
+| `.github/workflows/deploy.yml` | **Deploy**: CI on the exact commit, then the deploy, then the smoke test (a failed smoke test turns the run red). A dry run unless *go* is ticked. |
+| `scripts/deploy-addons.sh` | The deploy itself (also usable by hand). Copies only the add-ons' own folders, deletes what a release removed, backs up first, into a backup folder of that store's own. |
+| `scripts/smoke-test.sh` | Storefront and admin login answer 200 with no PHP/Smarty error. A closed storefront is looked at with its access key (`STORE_ACCESS_KEY`). |
 
 Why rsync and not "Upload & install" or FTP: those only add or overwrite files.
 A template a release deletes stays on the server and keeps rendering (the old
@@ -50,7 +50,8 @@ an unmanaged VPS or any Linux server with SSH. On Hetzner's managed products
   section 1). A newer CS-Cart refuses to install the add-ons until their
   `<max>` is raised, after testing that release in Docker.
 - The SSH user's home directory **outside** the web root: backups are kept in
-  `~/deploy-backups` (the deploy refuses a backup folder inside the store).
+  `~/deploy-backups`, one folder per store (the deploy refuses a backup
+  folder inside the store).
 
 **Which user GitHub logs in as.** `root` works, but a key for root lets a
 leaked secret do anything on the VPS. Safer: the user that owns the site's
@@ -131,9 +132,9 @@ store on the same VPS):
 | `DEPLOY_KNOWN_HOSTS` | *(optional)* the key lines of `ssh-keyscan -p 222 …` (step 2): pins the server. Without it the key is trusted on first use, as in the tutorial, and its fingerprint is shown in each run's summary. |
 
 **One environment per store** — Settings → Environments → New environment.
-Each holds only **variables**, not secrets: in the environment, *Environment
+The settings below are **variables**: in the environment, *Environment
 variables* → **Add environment variable** (the workflows read these as
-variables, and a setting saved under *Environment secrets* is reported as
+variables, and one saved under *Environment secrets* is reported as
 misplaced). The repository is public, and so are the workflow logs: the host
 and user stay secrets, the server is reached as the alias `store` and never
 named in a log.
@@ -141,19 +142,55 @@ named in a log.
 | Environment | `DEPLOY_PATH` | `STORE_URL` | `STORE_ADMIN_URL` |
 |---|---|---|---|
 | `dev` | the CS-Cart folder of https://socialtrip.ro/dev/ on the server (where `config.php` is), e.g. `/usr/home/sociad/public_html/dev` | `https://socialtrip.ro/dev/` | `https://socialtrip.ro/dev/admin.php` (or the renamed admin script) |
-| `production` (later) | the live store's folder | its URL | its admin URL |
+| `production` | the live store's CS-Cart folder on the same server (where its `config.php` is) | its address, `https://<live domain>/` | its admin script, `https://<live domain>/admin.php` (or the renamed one) |
 
 Add `DEPLOY_PORT` to an environment when SSH is not on port 22: **`222` on
-a Hetzner managed server**. For
-`production`, also set **Required reviewers** (you) and **Deployment branches
-and tags** → *Selected* → `main` and `v*` (tags are how you roll back).
+a Hetzner managed server** (in both environments: it is one server).
+
+**Environment secrets**, only where they apply — in the environment,
+*Environment secrets* → **Add environment secret**:
+
+| Secret | When |
+|---|---|
+| `STORE_ACCESS_KEY` | While the storefront is closed (Administration → Stores → the storefront → status *Closed*): its *Access key to temporarily closed store*. The smoke test sends it as `store_access_key`, as CS-Cart allows, and checks the storefront behind the closed page. Without it a closed storefront fails the smoke test: CS-Cart's error page looks like the closed one, so a closed store is never taken for a healthy one. `dev` needs it for as long as it stays closed, `production` until it opens. |
+| `ARTIFACT_USERNAME`, `ARTIFACT_SSH_KEY` | Only for a store whose files belong to another SSH user than the repository secrets' (see "Production on the same server" below). An environment secret overrides the repository secret of the same name, for that environment only. |
+
+**Protect `production`**, in its environment page:
+
+- **Required reviewers**: you. Each production deploy then waits, after CI,
+  until you press *Review deployments → Approve*. Leave **Prevent
+  self-review** unticked while you are the only reviewer: it would stop you
+  approving your own runs.
+- **Deployment branches and tags** → *Selected branches and tags* → add the
+  branch `main` and the tag rule `v*` (tags are how you roll back). A run
+  from any other branch is refused before it reaches the server.
 
 The workflows appear under **Actions** once this pull request is merged into
 `main` (GitHub only lists manual workflows that are on the default branch).
 
+### Production on the same server, another domain
+
+The live store sits on the same server as `dev`, with its own domain and
+folder. The repository secrets already reach that server, and its host key
+(`DEPLOY_KNOWN_HOSTS`) is the same. What differs is the folder, the
+addresses, and perhaps the SSH user: see who owns the live store's files
+(the third column of `ls -l /path/to/the/live/store/config.php`), or whether
+konsoleH lists its domain under the same account as `dev`.
+
+- **The same user as `ARTIFACT_USERNAME`** (the domain was added to the same
+  konsoleH account): nothing more to set. The deploy keeps each store's
+  backups and log in a folder of its own under `~/deploy-backups`, so dev
+  deploys never rotate out the live store's backups.
+- **Another user** (the domain is a konsoleH account of its own, with its own
+  main FTP user): add the line of `github_deploy.pub` to that account too
+  (step 2: Settings → Login data → Public SSH Keys and Public SFTP Keys),
+  check that `ssh -i … -p 222 <that user>@<server>` logs in, and save that
+  user as the environment secret `ARTIFACT_USERNAME` of `production`.
+
 ## 4. Check the server
 
-**Actions → Server check → Run workflow** → environment `dev`.
+**Actions → Server check → Run workflow** → environment `dev` (and
+`production`, once it exists).
 
 The run summary is a checklist: SSH from GitHub, the tools, PHP version, CS-Cart
 found at `DEPLOY_PATH` (with its version, compared with what the add-ons
@@ -180,7 +217,8 @@ Do it on `dev` first, then the same on `production`.
 2. **Server check** again: everything OK.
 3. **Actions → Deploy → Run workflow**: *Use workflow from* `main`,
    environment `dev`, *go* **unticked** → the run lists every file it would
-   copy. Run it again with *go* ticked (on `production`, approve it).
+   copy. Run it again with *go* ticked (on `production`, approve it; while
+   its storefront stays closed, set its `STORE_ACCESS_KEY` first, section 3).
 4. Admin → Add-ons → **Downloaded add-ons**: install them **in order** and configure them
    (`docs/INSTALL.md`, sections 3–5). The deploy copies files; installing
    is a one-time admin step.
@@ -188,21 +226,29 @@ Do it on `dev` first, then the same on `production`.
 ## 6. Every release
 
 1. Merge the pull request (CI green).
-2. Optionally tag it, so you can come back to it: `git tag v2026.10.10 && git push origin v2026.10.10`.
-3. **Actions → Deploy → Run workflow**: `main`, `dev` first, *go* ticked;
-   once it looks right there, the same with `production` (and approve). The run:
+2. Tag it, so dev and production get the very same commit and you can come
+   back to it: `git tag v2026.10.10 && git push origin v2026.10.10`.
+3. **Actions → Deploy → Run workflow**: *Use workflow from* the tag, `dev`
+   first, *go* ticked; once it looks right there, the same tag on
+   `production` (and approve). From the tag rather than `main`, production
+   gets what dev ran even if more was merged in between. The run:
    - runs the full CI on that commit (a red CI stops here, nothing deployed);
-   - backs up the add-on folders and the database to `~/deploy-backups`
-     (the newest 10 of each are kept);
+   - backs up the add-on folders and the database into that store's folder,
+     `~/deploy-backups/<store>/` (the newest 10 of each are kept, per store;
+     the run summary names the files);
    - copies the release, deletes removed files, clears compiled templates;
-   - smoke-tests the storefront and the admin login.
+   - smoke-tests the storefront and the admin login. A failure turns the run
+     red: the release is on the store by then, so look at it and roll back
+     (section 7) if it is broken.
 4. Open any admin page once (new language labels add themselves).
 
 Unsure what a release will touch? Run it with *go* unticked first: the summary
 lists every file to copy and every `*deleting` line.
 
-`~/deploy-backups/deploy.log` on the server records every deploy (time,
-commit, add-ons, files copied and deleted).
+`~/deploy-backups/<store>/deploy.log` on the server records every deploy to
+that store (time, commit, add-ons, files copied and deleted). `<store>` is
+the store folder's name and a code made from its path, such as
+`dev-1a2b3c4d`; each run's log shows it on its `backups` line.
 
 ## 7. Rolling back
 
@@ -212,11 +258,14 @@ commit, add-ons, files copied and deleted).
 - **Database**, only if the bad release changed data: on the server,
 
   ```bash
-  ls -t ~/deploy-backups/db-*.sql.gz | head        # pick the one taken before the release
-  gunzip -c ~/deploy-backups/db-<time>-<commit>.sql.gz | mysql -u USER -p DBNAME
+  ls -t ~/deploy-backups/*/db-*.sql.gz | head      # one folder per store: pick that store's, taken before the release
+  gunzip -c ~/deploy-backups/<store>/db-<time>-<commit>.sql.gz | mysql -u USER -p DBNAME
   ```
 
-  The file names carry the time (UTC) and the commit deployed after them.
+  The folder is the store (the deploy run's summary names the files it took);
+  the file names carry the time (UTC) and the commit deployed after them.
+  Backups from before the stores had folders of their own lie directly in
+  `~/deploy-backups`: all of them are dev's.
   Restoring a database brings back that moment's orders too: take a fresh
   backup first and restore only what you must.
 
