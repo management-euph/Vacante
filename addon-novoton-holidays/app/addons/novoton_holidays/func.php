@@ -45,9 +45,9 @@ foreach ($function_files as $file) {
 }
 
 /**
- * Merge the runtime language keys (lang_keys.php) so already-installed stores
- * pick up NEW or CHANGED labels — CS-Cart imports the .po files only at install
- * time. addon.xml <language_variables>, if present, is merged on top.
+ * Every language variable — the .po files, then lang_keys.php, then addon.xml
+ * <language_variables> on top — so already-installed stores pick up NEW or
+ * CHANGED labels: CS-Cart imports the .po files only at install time.
  *
  * @return array<string, array<string, string>> key => [lang_code => value]
  */

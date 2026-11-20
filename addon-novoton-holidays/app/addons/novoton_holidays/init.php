@@ -150,32 +150,12 @@ if (defined('AREA') && AREA === 'A' && function_exists('fn_novoton_holidays_seed
     }
 }
 
-// Repair: the RO .po shipped without the blank line between ph_facilities and
-// location_show_map, so the import glued the admin SEO-placeholder hint
-// ("Facilități principale (separate prin virgulă)") onto the storefront map
-// link. Fingerprint-guarded so a merchant's own label is never overwritten;
-// once repaired the guard no longer matches and this is a single cheap SELECT.
-if (defined('AREA') && AREA === 'A') {
-    $__mapLabel = db_get_field(
-        "SELECT value FROM ?:language_values WHERE name = 'novoton_holidays.location_show_map' AND lang_code = 'ro' LIMIT 1"
-    );
-    if (is_string($__mapLabel) && str_contains($__mapLabel, 'virgul')) {
-        db_query(
-            "INSERT INTO ?:language_values (name, lang_code, value) VALUES ('novoton_holidays.location_show_map', 'ro', ?s)
-             ON DUPLICATE KEY UPDATE value = ?s",
-            'Locație - arată pe hartă', 'Locație - arată pe hartă'
-        );
-        if (function_exists('fn_clear_cache')) {
-            fn_clear_cache();
-        }
-    }
-    unset($__mapLabel);
-}
-
-// Language self-seed: reseed ?:language_values from lang_keys.php + addon.xml
-// whenever an installed language is missing the current source fingerprint —
-// CS-Cart imports .po only at install time, so labels added afterwards would
-// otherwise render as raw "_novoton_holidays.*" forever.
+// Language self-seed: reseed ?:language_values from the .po files,
+// lang_keys.php and addon.xml whenever an installed language is missing the
+// current source fingerprint — CS-Cart imports .po only at install time, so
+// labels added afterwards would otherwise render as raw "_novoton_holidays.*"
+// forever. (It also delivers the RO "location_show_map" label that an older
+// .po glued to the line before it: an admin-request SQL repair did that.)
 //
 // No AREA gate: it used to be admin-only, which meant a deploy followed by
 // storefront-only traffic left CUSTOMERS looking at the raw keys until someone

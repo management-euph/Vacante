@@ -22,10 +22,6 @@ return [
     // Availability badge counts (search results) — pluralized so "1 ofertă"
     // vs "2 oferte" is correct in Romanian. Values mirror the .po entries;
     // n_offers is new.
-    'novoton_holidays.n_rooms' => [
-        'en' => '[n] Room|[n] Rooms',
-        'ro' => '[n] Cameră|[n] Camere|[n] de Camere',
-    ],
     'novoton_holidays.n_offers' => [
         'en' => '[n] Offer|[n] Offers',
         'ro' => '[n] Ofertă|[n] Oferte|[n] de Oferte',
