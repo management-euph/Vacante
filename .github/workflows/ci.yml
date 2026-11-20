@@ -599,13 +599,16 @@ jobs:
 
   # ── Qodana (JetBrains static analysis) ──
   # THE single Qodana entry point for this repo. Each time a Qodana Cloud
-  # project is connected, its setup automation opens a PR (#1, #94) that adds
-  # a second, ungated workflow (.github/workflows/qodana_code_quality.yml)
+  # project is connected, its setup automation opens a PR (#1, #94, #175)
+  # that adds a second, ungated workflow (.github/workflows/qodana_code_quality.yml)
   # and replaces qodana.yaml with a bare default. Don't merge those: the extra
   # workflow duplicates every scan and bypasses the `needs` gate below, and
   # the bare qodana.yaml drops the exclusions. The token is the Qodana Cloud
-  # project token, in the QODANA_TOKEN secret (or the one the automation
-  # stored for project EUPH-VACANTE-OFFICE).
+  # project token, in the QODANA_TOKEN secret: when the project changes (a
+  # new trial or licence), paste the new project's token there. Without that
+  # secret the job uses the one the automation stored for the current project
+  # (QODANA_TOKEN_957079716, with #175; the first trial's project,
+  # EUPH-VACANTE-OFFICE, expired in November 2026).
   # Gated behind the rest of the gauntlet via `needs`, so Qodana runs only
   # AFTER PHPStan / php-cs-fixer / Rector / PHPUnit / Lint / ESLint have all
   # passed — it is the final quality gate, not a parallel one. (If any of those
@@ -666,5 +669,5 @@ jobs:
           # in this key in step with the action's.
           additional-cache-key: qodana-2026.2-${{ github.event_name == 'pull_request' && format('refs/heads/{0}', github.base_ref) || github.ref }}
         env:
-          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN || secrets.QODANA_TOKEN_1766855460 }}
+          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN || secrets.QODANA_TOKEN_957079716 }}
           QODANA_ENDPOINT: 'https://qodana.cloud'
