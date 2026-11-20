@@ -722,13 +722,9 @@ app/addons/novoton_holidays/
 │   ├── Services/             # Service classes
 │   │   ├── Container.php     # DI container (all instantiation goes here)
 │   │   ├── ServiceLoader.php # Global _nvt_*() helpers for procedural code
-│   │   ├── BookingService.php
 │   │   ├── CacheService.php
-│   │   ├── CronService.php
 │   │   ├── DateHelper.php
-│   │   ├── ErrorHandler.php
 │   │   ├── GuestDataService.php
-│   │   ├── RoomPriceService.php
 │   │   ├── PriceInfoService.php
 │   │   ├── SearchService.php
 │   │   ├── SecurityService.php
@@ -752,7 +748,6 @@ app/addons/novoton_holidays/
 │   │   ├── BatchedHotelFacilitiesSync.php
 │   │   ├── CronHelper.php            # Cron utilities
 │   │   ├── DatabaseHelper.php        # Database utilities
-│   │   ├── DatabaseIterator.php      # PHP Generators for memory-efficient iteration
 │   │   ├── StateManager.php          # Sync state management
 │   │   ├── SyncInterface.php         # Sync contract interface
 │   │   └── SyncLogger.php            # Sync logging utilities
@@ -783,16 +778,13 @@ All service and repository instantiation is centralized through two classes:
 | Helper | Returns |
 |--------|---------|
 | `_nvt_api()` | `NovotonApi` |
-| `_nvt_booking_service()` | `BookingServiceInterface` |
 | `_nvt_guest_service()` | `GuestDataServiceInterface` |
 | `_nvt_search_service()` | `SearchServiceInterface` |
-| `_nvt_price_service()` | `RoomPriceServiceInterface` |
 | `_nvt_price_info_service()` | `PriceInfoServiceInterface` |
 | `_nvt_security_service()` | `SecurityServiceInterface` |
 | `_nvt_cache_service()` | `CacheServiceInterface` |
 | `_nvt_validation_helper()` | `ValidationHelper` |
 | `_nvt_date_helper()` | `DateHelper` |
-| `_nvt_cron_service()` | `CronServiceInterface` |
 | `_nvt_diagnostics_service()` | `DiagnosticsServiceInterface` |
 | `_nvt_alternative_request_service()` | `AlternativeRequestServiceInterface` |
 | `_nvt_booking_submission_service()` | `BookingSubmissionServiceInterface` |
@@ -803,24 +795,19 @@ All service and repository instantiation is centralized through two classes:
 | `_nvt_facility_repo()` | `FacilityRepositoryInterface` |
 | `_nvt_sync_log_repo()` | `SyncLogRepositoryInterface` |
 | `_nvt_alternative_request_repo()` | `AlternativeRequestRepositoryInterface` |
-| `_nvt_db_iterator()` | `DatabaseIteratorInterface` |
 | `_nvt_batched_hotelinfo_sync()` | `SyncInterface` |
 
 ### Service Classes
 
 | Service | Purpose |
 |---------|---------|
-| `BookingService` | Create, update, retrieve bookings |
 | `CacheService` | API response caching |
-| `CronService` | Cron job scheduling and execution |
 | `DateHelper` | Date formatting and calculations |
-| `ErrorHandler` | Scoped error handling |
 | `GuestDataService` | Parse and format guest data |
 | `LoggerTrait` | Consistent PSR-3-like logging |
-| `RoomPriceService` | Real-time room price calculations with commission |
 | `PriceInfoService` | Season price list management |
 | `PriceInfoCalculation` | Price info calculation engine |
-| `SearchService` | Search parameter parsing |
+| `SearchService` | Availability search results |
 | `SecurityService` | Input validation, CSRF, sanitization |
 | `ValidationHelper` | Reusable validation rules |
 

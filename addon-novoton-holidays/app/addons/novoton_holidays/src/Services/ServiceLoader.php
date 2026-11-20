@@ -25,13 +25,6 @@ if (!defined('BOOTSTRAP')) {
 
 /**
  */
-function _nvt_booking_service(): \Tygh\Addons\NovotonHolidays\Services\BookingServiceInterface
-{
-    return Container::getInstance()->bookingService();
-}
-
-/**
- */
 function _nvt_guest_service(): \Tygh\Addons\TravelCore\Contracts\GuestDataServiceInterface
 {
     return Container::getInstance()->guestDataService();
@@ -42,13 +35,6 @@ function _nvt_guest_service(): \Tygh\Addons\TravelCore\Contracts\GuestDataServic
 function _nvt_search_service(): \Tygh\Addons\NovotonHolidays\Services\SearchServiceInterface
 {
     return Container::getInstance()->searchService();
-}
-
-/**
- */
-function _nvt_price_service(): \Tygh\Addons\NovotonHolidays\Services\RoomPriceServiceInterface
-{
-    return Container::getInstance()->roomPriceService();
 }
 
 /**
@@ -84,13 +70,6 @@ function _nvt_price_info_service(): \Tygh\Addons\NovotonHolidays\Services\PriceI
 function _nvt_date_helper(): \Tygh\Addons\TravelCore\Services\DateHelper
 {
     return Container::getInstance()->dateHelper();
-}
-
-/**
- */
-function _nvt_cron_service(): \Tygh\Addons\NovotonHolidays\Services\CronServiceInterface
-{
-    return Container::getInstance()->cronService();
 }
 
 /**
@@ -188,15 +167,4 @@ function _nvt_sync_log_repo(): \Tygh\Addons\NovotonHolidays\Repository\SyncLogRe
 function _nvt_alternative_request_repo(): \Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepositoryInterface
 {
     return Container::getInstance()->alternativeRequestRepository();
-}
-
-// =============================================================================
-// HELPER GETTERS
-// =============================================================================
-
-/**
- */
-function _nvt_db_iterator(): \Tygh\Addons\NovotonHolidays\Helpers\DatabaseIteratorInterface
-{
-    return Container::getInstance()->databaseIterator();
 }

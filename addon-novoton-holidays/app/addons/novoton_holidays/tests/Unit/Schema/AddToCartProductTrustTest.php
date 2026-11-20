@@ -30,7 +30,6 @@ final class AddToCartProductTrustTest extends TestCase
             "\$product_id = \\Tygh\\Addons\\NovotonHolidays\\Services\\HotelCartProduct::resolve(\$bdHotelId, TypeCoerce::toInt(\$bookingData['product_id'] ?? 0));",
             $cart,
         );
-        self::assertStringContainsString('return HotelCartProduct::resolve($hotelId, $fallbackProductId);', self::read('src/Services/BookingService.php'));
     }
 
     public function testTheProductIsTheHotelsOwnNovotonProductAndActive(): void

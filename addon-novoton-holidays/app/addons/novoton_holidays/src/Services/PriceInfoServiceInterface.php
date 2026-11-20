@@ -6,7 +6,8 @@ declare(strict_types=1);
  * PriceInfo Service Interface
  *
  * Contract for season-based price information for product tab display.
- * This is DIFFERENT from real-time booking prices (RoomPriceService).
+ * This is DIFFERENT from real-time booking prices (room_price,
+ * PricingApiClient::getRoomPrice).
  *
  * @package NovotonHolidays
  * @since 3.5.0
