@@ -93,8 +93,10 @@ as sent (day photos, transport legs, labels).
 | 5 | Admin "Circuit" tab (read-only, Travel Core, any supplier): facts, program, inclusions, excursions, where each note shows, saved departures, documents. A "Sync this circuit now" button is left for later | done |
 | 6 | Filters and structured data: difficulty, group size and hotel stars as facts in Feature Mappings › Circuits (a Number feature gets the number, a list the value that starts with it, made when missing: "3 – Moderate", "20 people", "4 stars"); a schema.org TouristTrip on the page (route, days, an offer from the lowest saved departure a person), encoded with JSON_HEX_TAG | done |
 
-After step 4 the old columns `departure_ids`, `departure_names` and
-`departure_months` of `?:sphinx_circuits` can go: the table replaces them.
+The old columns `departure_ids`, `departure_names` and `departure_months`
+of `?:sphinx_circuits` are gone: the circuit page's cities and the departure
+month / city features read the table (`CircuitDepartureRepository::summaries()`),
+and the Sphinx add-on's `SchemaMigrator` drops the columns on existing installs.
 
 Sphinx's notes have no type, so `SphinxCircuitProductProvider::NOTE_SECTIONS`
 routes them by words in their title: high points, excursions, discounts and

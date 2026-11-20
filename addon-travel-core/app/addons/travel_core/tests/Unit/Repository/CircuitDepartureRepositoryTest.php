@@ -137,4 +137,34 @@ final class CircuitDepartureRepositoryTest extends TestCase
 
         self::assertSame([], (new CircuitDepartureRepository())->forCircuit('sphinx', '', '2026-11-16'), 'no circuit asked');
     }
+
+    public function testEachCircuitsCitiesAndMonthsFromItsDepartures(): void
+    {
+        $asked = [];
+        DbStub::$getArray = static function (string $query, mixed ...$params) use (&$asked): array {
+            $asked = [$query, array_values($params)];
+
+            return [
+                ['circuit_id' => '1', 'departure_code' => '202405', 'departure_name' => 'Bucuresti', 'departure_date' => '2027-05-04'],
+                ['circuit_id' => '1', 'departure_code' => '200586', 'departure_name' => '', 'departure_date' => '2027-05-04'],
+                ['circuit_id' => '1', 'departure_code' => '200586', 'departure_name' => 'Giurgiu', 'departure_date' => '2027-06-01'],
+                ['circuit_id' => '1', 'departure_code' => '', 'departure_name' => '', 'departure_date' => '2027-08-10'],
+                ['circuit_id' => '1', 'departure_code' => '202405', 'departure_name' => 'Bucuresti', 'departure_date' => '2027-06-01'],
+                ['circuit_id' => '196|EU', 'departure_code' => 'ROBCH1', 'departure_name' => 'Bucuresti', 'departure_date' => '2027-06-01'],
+            ];
+        };
+
+        $summaries = (new CircuitDepartureRepository())->summaries('sphinx', '2026-11-16', ['1', '196|EU']);
+
+        self::assertSame([
+            '1' => [
+                'cities' => [['id' => '202405', 'name' => 'Bucuresti'], ['id' => '200586', 'name' => 'Giurgiu']],
+                'months' => ['2027-05', '2027-06', '2027-08'],
+            ],
+            '196|EU' => ['cities' => [['id' => 'ROBCH1', 'name' => 'Bucuresti']], 'months' => ['2027-06']],
+        ], $summaries, 'cities in the order of their first date, a later name fills an empty one; a departure with no city counts for its month');
+        self::assertStringContainsString('WHERE provider = ?s AND departure_date >= ?s ?p', $asked[0]);
+        self::assertSame(['sphinx', '2026-11-16'], array_slice($asked[1], 0, 2));
+        self::assertSame([], (new CircuitDepartureRepository())->summaries('sphinx', '2026-11-16', []), 'no circuit asked');
+    }
 }

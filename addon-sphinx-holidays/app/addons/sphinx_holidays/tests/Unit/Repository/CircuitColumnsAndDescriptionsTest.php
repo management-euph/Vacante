@@ -10,16 +10,15 @@ use Tygh\Addons\SphinxHolidays\Repository\CircuitRepository;
 use Tygh\Addons\SphinxHolidays\Tests\Support\DbStub;
 
 /**
- * The circuit code adds departure_months itself when the schema self-heal
- * did not (a store died on "Unknown column 'departure_months'"), and the
- * circuits sync keeps linked products' descriptions in step with Sphinx.
+ * The circuit rows the features read carry no departure columns (the
+ * departures live in Travel Core's table), and the circuits sync keeps
+ * linked products' descriptions in step with Sphinx.
  */
 final class CircuitColumnsAndDescriptionsTest extends TestCase
 {
     protected function setUp(): void
     {
         DbStub::reset();
-        (new \ReflectionProperty(CircuitRepository::class, 'columnsChecked'))->setValue(null, false);
     }
 
     protected function tearDown(): void
@@ -27,48 +26,29 @@ final class CircuitColumnsAndDescriptionsTest extends TestCase
         DbStub::reset();
     }
 
-    public function testAMissingColumnIsAddedOnceAndNotWhenItIsThere(): void
+    public function testTheFeatureRowsReadNoDepartureColumns(): void
     {
-        $queries = [];
-        DbStub::$getRow = static fn (string $q, ...$p): array => [];
-        DbStub::$query = static function (string $q, ...$p) use (&$queries): int {
-            $queries[] = $q;
-
-            return 0;
-        };
-        $repo = new CircuitRepository();
-
-        $repo->ensureColumns();
-        $repo->ensureColumns();
-
-        self::assertCount(1, $queries, 'checked once per request');
-        self::assertStringContainsString('ADD COLUMN `departure_months`', $queries[0]);
-
-        (new \ReflectionProperty(CircuitRepository::class, 'columnsChecked'))->setValue(null, false);
-        $queries = [];
-        DbStub::$getRow = static fn (string $q, ...$p): array => ['Field' => 'departure_months'];
-        $repo->ensureColumns();
-        self::assertSame([], $queries, 'nothing to add');
-    }
-
-    public function testTheQueriesThatReadTheColumnCheckItFirst(): void
-    {
-        $order = [];
-        DbStub::$getRow = static function (string $q, ...$p) use (&$order): array {
-            $order[] = str_contains($q, 'SHOW COLUMNS') ? 'check' : 'row';
+        $asked = [];
+        DbStub::$getArray = static function (string $q, ...$p) use (&$asked): array {
+            $asked[] = $q;
 
             return [];
         };
-        DbStub::$getArray = static function (string $q, ...$p) use (&$order): array {
-            $order[] = 'rows';
+        DbStub::$getRow = static function (string $q, ...$p) use (&$asked): array {
+            $asked[] = $q;
 
             return [];
         };
         $repo = new CircuitRepository();
 
         $repo->findLinkedForFeatures();
+        $repo->findForFeatures(5);
 
-        self::assertSame(['check', 'rows'], $order);
+        self::assertCount(2, $asked, 'no column check before the rows');
+        foreach ($asked as $query) {
+            self::assertStringNotContainsString('departure_', $query);
+            self::assertStringContainsString('details_json', $query);
+        }
     }
 
     public function testLinkedProductsGetTheNewSummaryAndDescriptionInEveryLanguage(): void

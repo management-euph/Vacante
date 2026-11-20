@@ -19,8 +19,8 @@ use Tygh\Addons\TravelCore\ViewModels\CircuitDetailsViewFactory;
 /**
  * Claims the products that are Sphinx circuits: a row of ?:sphinx_circuits
  * linked to the product (the add_circuit_products cron's SPXC… products),
- * still sold. Its departures come from the circuits sync: the ids (JSON)
- * and the names (", "-joined), in the same order; its hotels' stars from
+ * still sold. Its departure cities come from the departures the circuits
+ * sync saved (?:travel_circuit_departures), from today on; its hotels' stars from
  * the itinerary the sync keeps (each day's accommodation category). Its
  * page's program, inclusions and things to know come from the itinerary
  * and the details the sync keeps (itinerary_json, details_json); the facts
@@ -38,14 +38,22 @@ final class SphinxCircuitProductProvider implements CircuitProductProviderInterf
     /** @var \Closure(string): float circuit id => its "from" price for 2 adults (store price, primary currency; 0 when unknown) */
     private readonly \Closure $fromPrice;
 
+    /** @var \Closure(string): list<array{id: string, name: string}> circuit id => the cities it leaves from */
+    private readonly \Closure $departureCities;
+
     /**
-     * Tests inject the price; the default reads the departures the circuits
-     * sync saved, with the store's commission, in its primary currency.
+     * Tests inject the price and the cities; the defaults read the
+     * departures the circuits sync saved (?:travel_circuit_departures): the
+     * lowest price, with the store's commission, in its primary currency,
+     * and the cities, from today on.
      *
      * @param (\Closure(string): float)|null $fromPrice
+     * @param (\Closure(string): list<array{id: string, name: string}>)|null $departureCities
      */
-    public function __construct(?\Closure $fromPrice = null)
+    public function __construct(?\Closure $fromPrice = null, ?\Closure $departureCities = null)
     {
+        $this->departureCities = $departureCities ?? static fn (string $circuitId): array => (new CircuitDepartureRepository())
+            ->summaries(self::PROVIDER, date('Y-m-d'), [$circuitId])[$circuitId]['cities'] ?? [];
         $this->fromPrice = $fromPrice ?? static function (string $circuitId): float {
             $lowest = (new CircuitDepartureRepository())->lowestPrice(self::PROVIDER, $circuitId, date('Y-m-d'));
             if ($lowest === null) {
@@ -65,7 +73,7 @@ final class SphinxCircuitProductProvider implements CircuitProductProviderInterf
             return null;
         }
         $row = TypeCoerce::toStringMap(db_get_row(
-            "SELECT circuit_id, name, departure_ids, departure_names, duration_days, duration_nights, itinerary_json,
+            "SELECT circuit_id, name, duration_days, duration_nights, itinerary_json,
                     transport_type, destination_names
              FROM ?:sphinx_circuits WHERE product_id = ?i AND sync_status = 'active' LIMIT 1",
             $productId,
@@ -81,7 +89,7 @@ final class SphinxCircuitProductProvider implements CircuitProductProviderInterf
             self::PROVIDER,
             (string) $circuitId,
             TypeCoerce::toString($row['name'] ?? ''),
-            self::departures($row['departure_ids'] ?? null, TypeCoerce::toString($row['departure_names'] ?? '')),
+            ($this->departureCities)((string) $circuitId),
             TypeCoerce::toInt($row['duration_days'] ?? 0),
             TypeCoerce::toInt($row['duration_nights'] ?? 0),
             $starsMin,
@@ -417,38 +425,5 @@ final class SphinxCircuitProductProvider implements CircuitProductProviderInterf
     private static function jsonRows(mixed $json): array
     {
         return TypeCoerce::toRowList(is_string($json) ? json_decode($json, true) : $json);
-    }
-
-    /**
-     * The departures, each id with its name. The names are paired by
-     * position when there are as many as the ids; otherwise (a name with
-     * ", " in it) a lone id keeps the whole text and several get none, the
-     * bar then naming them by number.
-     *
-     * @param mixed $ids the departure_ids column (a JSON list)
-     * @param string $names the departure_names column (", "-joined)
-     *
-     * @return list<array{id: string, name: string}>
-     */
-    public static function departures(mixed $ids, string $names): array
-    {
-        $idList = [];
-        foreach (TypeCoerce::toList(is_string($ids) ? json_decode($ids, true) : $ids) as $id) {
-            $id = TypeCoerce::toString($id);
-            if ($id !== '' && $id !== '0') {
-                $idList[] = $id;
-            }
-        }
-        $nameList = $names !== '' ? explode(', ', $names) : [];
-        if (count($nameList) !== count($idList)) {
-            $nameList = count($idList) === 1 ? [$names] : [];
-        }
-
-        $departures = [];
-        foreach ($idList as $i => $id) {
-            $departures[] = ['id' => $id, 'name' => trim($nameList[$i] ?? '')];
-        }
-
-        return $departures;
     }
 }

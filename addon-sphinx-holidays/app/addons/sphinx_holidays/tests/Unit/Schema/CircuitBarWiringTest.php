@@ -143,4 +143,21 @@ final class CircuitBarWiringTest extends TestCase
             self::read('controllers/frontend/sphinx_booking/circuit_add_to_cart.php'),
         );
     }
+
+    /**
+     * A circuit's departure cities and months live only in Travel Core's
+     * departures table: fresh installs no longer get sphinx_circuits'
+     * departure columns, and existing installs have them dropped.
+     */
+    public function testTheRetiredDepartureColumnsAreGone(): void
+    {
+        $xml = self::read('addon.xml');
+        foreach (['departure_ids', 'departure_names', 'departure_months'] as $column) {
+            self::assertStringNotContainsString('`' . $column . '`', $xml, $column . ' in addon.xml');
+        }
+        $migrator = self::read('src/Install/SchemaMigrator.php');
+        self::assertStringContainsString("'sphinx_circuits' => ['departure_ids', 'departure_names', 'departure_months'],", $migrator);
+        self::assertStringContainsString('db_query(\'ALTER TABLE ?:\' . $table . \' DROP COLUMN `\' . $column . \'`\');', $migrator);
+        self::assertStringContainsString('if (isset($haveColumn[$prefix . $table][$column])) {', $migrator, 'dropped only where still there');
+    }
 }

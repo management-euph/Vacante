@@ -152,7 +152,7 @@ final class CircuitStaticContentTest extends TestCase
     }
 
     /** The static list's departures are {date, time, destination_id}, and it keeps the past ones. */
-    public function testTheDepartureCitiesAreThoseOfDeparturesFromTodayOn(): void
+    public function testEachDatedDepartureFromTodayOnHasItsCity(): void
     {
         $raw = ['departures' => [
             ['date' => '2024-05-07', 'time' => null, 'destination_id' => 555],
@@ -165,13 +165,11 @@ final class CircuitStaticContentTest extends TestCase
             ['id' => 111, 'name' => 'Cluj-Napoca'],
         ]];
 
-        self::assertSame([202405, 197128, 300, 400], CircuitStaticContent::departureCities($raw, '2026-11-16'), 'each city once, today counts, a past departure does not; one without a date does');
         self::assertSame(
             ['2027-05-04' => 202405, '2027-05-11' => 202405, '2026-11-16' => 300],
             CircuitStaticContent::departureCityByDate($raw, '2026-11-16'),
             'the first city the list has for a day; only dated departures',
         );
-        self::assertSame([], CircuitStaticContent::departureCities([], '2026-11-16'));
         self::assertSame([], CircuitStaticContent::departureCityByDate(['departures' => 'x'], '2026-11-16'));
     }
 }

@@ -7,7 +7,8 @@ namespace Tygh\Addons\TravelCore\Repository;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
- * The circuits' departures (docs/circuit-page-plan.md §3).
+ * The circuits' departures (docs/circuit-page-plan.md §3): the one place a
+ * circuit's departure cities and months are kept (summaries()).
  *
  * ?:travel_circuit_departures holds one row per supplier circuit, city it
  * leaves from and date: the supplier's price for 2 adults that day and,
@@ -200,6 +201,75 @@ final class CircuitDepartureRepository
         $price = TypeCoerce::toFloat($row['price'] ?? 0);
 
         return $price > 0 ? ['price' => $price, 'currency' => TypeCoerce::toString($row['currency'] ?? '')] : null;
+    }
+
+    /**
+     * What the saved departures from $from on (Y-m-d) say of each circuit:
+     * the cities it leaves from, in the order of their first date, and the
+     * months (Y-m) it leaves in. A departure whose city the supplier did not
+     * name counts for its month only.
+     *
+     * @param list<string>|null $circuitIds only these circuits; null for every circuit of the supplier
+     *
+     * @return array<string, array{cities: list<array{id: string, name: string}>, months: list<string>}> by circuit id
+     */
+    public function summaries(string $provider, string $from, ?array $circuitIds = null): array
+    {
+        if ($provider === '' || $circuitIds === []) {
+            return [];
+        }
+        self::ensureTable();
+
+        return self::summarize(TypeCoerce::toRowList(db_get_array(
+            'SELECT circuit_id, departure_code, departure_name, departure_date
+             FROM ?:travel_circuit_departures
+             WHERE provider = ?s AND departure_date >= ?s ?p
+             ORDER BY circuit_id, departure_date, departure_name, departure_code',
+            $provider,
+            $from,
+            $circuitIds !== null ? db_quote('AND circuit_id IN (?a)', $circuitIds) : '',
+        )));
+    }
+
+    /**
+     * @param list<array<string, mixed>> $rows departures by circuit, then date
+     *
+     * @return array<string, array{cities: list<array{id: string, name: string}>, months: list<string>}>
+     */
+    public static function summarize(array $rows): array
+    {
+        /** @var array<string, array{cities: array<string, string>, months: array<string, true>}> $byCircuit */
+        $byCircuit = [];
+        foreach ($rows as $row) {
+            $circuitId = TypeCoerce::toString($row['circuit_id'] ?? '');
+            $date = TypeCoerce::toString($row['departure_date'] ?? '');
+            if ($circuitId === '' || preg_match('/^\d{4}-\d{2}/', $date) !== 1) {
+                continue;
+            }
+            $byCircuit[$circuitId] ??= ['cities' => [], 'months' => []];
+            $byCircuit[$circuitId]['months'][substr($date, 0, 7)] = true;
+            $code = TypeCoerce::toString($row['departure_code'] ?? '');
+            if ($code === '' || $code === '0') {
+                continue;
+            }
+            $name = trim(TypeCoerce::toString($row['departure_name'] ?? ''));
+            if (!isset($byCircuit[$circuitId]['cities'][$code]) || $byCircuit[$circuitId]['cities'][$code] === '') {
+                $byCircuit[$circuitId]['cities'][$code] = $name;
+            }
+        }
+
+        $summaries = [];
+        foreach ($byCircuit as $circuitId => $found) {
+            $cities = [];
+            foreach ($found['cities'] as $code => $name) {
+                $cities[] = ['id' => (string) $code, 'name' => $name];
+            }
+            $months = array_map('strval', array_keys($found['months']));
+            sort($months);
+            $summaries[(string) $circuitId] = ['cities' => $cities, 'months' => $months];
+        }
+
+        return $summaries;
     }
 
     /**

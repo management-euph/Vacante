@@ -85,31 +85,6 @@ final class CircuitStaticContent
     }
 
     /**
-     * The cities the circuit's departures leave from, as the static list
-     * says: each departure is {date, time, destination_id}, the city an id
-     * of the static destinations. Only departures from $today on count (the
-     * list keeps past ones); one without a date counts too.
-     *
-     * @param array<string, mixed> $raw one circuit of static/circuits
-     * @param string $today Y-m-d
-     *
-     * @return list<int> destination ids, each once, in the list's order
-     */
-    public static function departureCities(array $raw, string $today): array
-    {
-        $ids = [];
-        foreach (TypeCoerce::toRowList($raw['departures'] ?? null) as $departure) {
-            $id = TypeCoerce::toInt($departure['destination_id'] ?? 0);
-            $date = substr(TypeCoerce::toString($departure['date'] ?? ''), 0, 10);
-            if ($id > 0 && ($date === '' || $date >= $today)) {
-                $ids[$id] = true;
-            }
-        }
-
-        return array_keys($ids);
-    }
-
-    /**
      * The city each dated departure from $today on leaves from, for a price
      * (circuits/rates) that names no city of its own.
      *
