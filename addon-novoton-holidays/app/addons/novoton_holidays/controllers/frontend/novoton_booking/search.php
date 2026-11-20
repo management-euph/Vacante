@@ -14,9 +14,9 @@ declare(strict_types=1);
  */
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
-use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\HotelAvailabilitySearcher;
 use Tygh\Addons\NovotonHolidays\Services\AlternativeDateSearcher;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\DesignARates;
 use Tygh\Addons\NovotonHolidays\Services\NovotonAvailabilityRecorder;
@@ -43,8 +43,17 @@ try {
         return;
     }
 
+    // ── 2b. Each search can make dozens of supplier calls: a limit per
+    // visitor address, which a client cannot reset by dropping its cookie.
+    if (!$security->checkVisitorLimit('search', ConfigProvider::getRateLimitRequestsPerMin(), 60)) {
+        $security->logSecurityEvent('rate_limit_exceeded', ['mode' => 'search', 'ip' => \Tygh\Addons\NovotonHolidays\Services\SecurityService::visitorIp()]);
+        $formatter->assignDefaults('novoton_holidays.too_many_searches');
+        return;
+    }
+
     // ── 3. Debug mode (server-side config only) ──────────────────────
-    $debug = ConfigProvider::isDebugMode();
+    // The searchers' debug lines (raw requests and answers) are for admins only.
+    $debug = \Tygh\Addons\NovotonHolidays\Helpers\StorefrontDebug::forThisVisitor();
 
     // ── 4. Hotel-specific search ─────────────────────────────────────
     if ($query->isHotelScoped()) {
@@ -149,7 +158,7 @@ try {
     $formatter = Container::getInstance()->searchResultFormatter();
     $formatter->assignDefaults();
 
-    if (ConfigProvider::isDebugMode()) {
+    if (\Tygh\Addons\NovotonHolidays\Helpers\StorefrontDebug::forThisVisitor()) {
         fn_novoton_holidays_get_view()->assign('novoton_debug', [
             '=== SEARCH ERROR ===',
             $e->getMessage(),

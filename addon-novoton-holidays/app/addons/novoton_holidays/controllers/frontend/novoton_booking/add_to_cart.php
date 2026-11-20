@@ -13,24 +13,16 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 
-    // --- Security: Rate limiting ---
+    // --- Security: Rate limiting (per account or session, and per address) ---
     $security = _nvt_get_security_service();
-    // CS-Cart's session is an ArrayAccess container object; a plain (non-reference)
-    // local binds the same object handle, so offset reads below operate on the
-    // live session exactly as direct `Tygh::$app['session'][...]` access would.
+    if (!$security->allowsBookingRequest('add_to_cart', \Tygh\Addons\NovotonHolidays\Services\SecurityService::sessionIdentity())) {
+        fn_set_notification('E', __('error'), __('novoton_holidays.too_many_bookings'));
+        return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
+    }
+    // CS-Cart's session (an ArrayAccess object): reads below act on the live session.
     $session = Tygh::$app['session'];
     if (!is_array($session) && !$session instanceof \ArrayAccess) {
         $session = [];
-    }
-    $auth = TypeCoerce::toStringMap($session['auth'] ?? null);
-    $session_id = (is_object($session) && method_exists($session, 'getID'))
-        ? TypeCoerce::toString($session->getID())
-        : '';
-    $rate_limit_id = !empty($auth['user_id']) ? TypeCoerce::toString($auth['user_id']) : $session_id;
-    if (!$security->checkBookingRateLimit($rate_limit_id)) {
-        $security->logSecurityEvent('rate_limit_exceeded', ['mode' => 'add_to_cart', 'identifier' => $rate_limit_id]);
-        fn_set_notification('E', __('error'), 'Too many booking requests. Please try again later.');
-        return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
     }
 
     $bookingData = TypeCoerce::toStringMap($_REQUEST);
@@ -172,15 +164,22 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
     // children ages and its package; the booked offer of each is the same
     // room + board AND package — never the first <Price> of the answer.
     $api = fn_novoton_holidays_get_api();
-    $quote = $api !== null && $booked_rooms !== null
-        ? (new \Tygh\Addons\NovotonHolidays\Services\RoomsQuote($api->pricing(), $api->availability()))->price(
-            $bdHotelId,
-            $check_in,
-            $check_out,
-            $booked_rooms,
-            ['source' => 'add_to_cart', 'hotel_id' => $bdHotelId],
-        )
-        : null;
+    $quote_unanswered = false;
+    try {
+        $quote = $api !== null && $booked_rooms !== null
+            ? (new \Tygh\Addons\NovotonHolidays\Services\RoomsQuote($api->pricing(), $api->availability()))->price(
+                $bdHotelId,
+                $check_in,
+                $check_out,
+                $booked_rooms,
+                ['source' => 'add_to_cart', 'hotel_id' => $bdHotelId],
+            )
+            : null;
+    } catch (\Tygh\Addons\NovotonHolidays\Exceptions\ApiException $e) {
+        // Novoton did not answer (busy, a timeout): no price, no booking, and
+        // the customer goes back to the form to try again, not to an error page.
+        [$quote, $quote_unanswered] = [null, true];
+    }
 
     // A80: Server-side price validation - safety net
     // If rooms_data does not match the guests, or any room has no price (or
@@ -200,7 +199,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
             'num_rooms' => $booked_rooms !== null ? count($booked_rooms) : TypeCoerce::toInt($bookingData['num_rooms'] ?? 1),
         ]);
 
-        fn_set_notification('E', __('error'), __('novoton_holidays.price_verification_failed', [
+        fn_set_notification('E', __('error'), $quote_unanswered ? __('novoton_holidays.price_check_unavailable') : __('novoton_holidays.price_verification_failed', [
             '[default]' => 'Price verification failed. The booking cannot proceed. Please go back and try refreshing the price, or contact support.'
         ]));
 
@@ -365,93 +364,60 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
     $num_rooms = count($rooms_data);
     $room_id_str = $first_room['room_id'];
 
-    // Check if similar booking already exists (same hotel, dates, holder, no order yet)
-    // This prevents duplicates from form resubmissions
-    $bookingRepo = _nvt_booking_repo();
-    $existing = $bookingRepo->findExisting(
-        $bdHotelId,
-        $check_in,
-        $check_out,
-        $holder_name,
-        1 // within last 1 hour
-    );
-    $existing_booking_id = $existing !== null ? TypeCoerce::toInt($existing['booking_id'] ?? 0) : 0;
-
     // room_id / room_type columns list every room (multi-room bookings too)
     $room_id_column = implode(', ', $room_ids_for_db);
     $room_type_column = implode(', ', $room_types_for_db);
+    $authNow = TypeCoerce::toStringMap($session['auth'] ?? []);
+    $session_id = TypeCoerce::toString(session_id());
+    $booking_record = [
+        'order_id' => 0, // Will be updated when order is placed
+        'user_id' => TypeCoerce::toInt($authNow['user_id'] ?? 0),
+        'session_id' => $session_id,
+        'product_id' => $product_id,
+        'hotel_id' => $bdHotelId,
+        'hotel_name' => TypeCoerce::toString($hotel_info['hotel_name'] ?? ''),
+        'package_name' => $package_name,
+        'room_id' => $room_id_column,
+        'room_type' => $room_type_column,
+        'board_id' => $board_id,
+        'check_in' => $check_in,
+        'check_out' => $check_out,
+        'nights' => $nights,
+        'adults' => $total_adults,
+        'children' => $total_children,
+        'children_ages' => $children_ages,
+        'num_rooms' => $num_rooms,
+        'rooms_data' => json_encode($rooms_data, JSON_UNESCAPED_UNICODE),
+        'guest_name' => $guest_list,
+        'holder_name' => $holder_name,
+        'guest_email' => '',  // Will be set from order at checkout
+        'guest_phone' => TypeCoerce::toString($contact['phone'] ?? ''),
+        'guests_data' => (new GuestDataNormalizer())->toJson($guests_data),
+        'base_price' => $base_price,
+        'total_price' => $total_price,
+        'currency' => ConfigProvider::getApiCurrency(),
+        'status' => 'pending',
+        'api_request' => json_encode([
+            'guests' => $guests_data,
+            'contact' => $contact,
+            'rooms_data' => $rooms_data
+        ])
+    ];
 
-    if ($existing_booking_id > 0) {
-        // Update existing booking instead of creating new one
-        $booking_record = [
-            'room_id' => $room_id_column,
-            'room_type' => $room_type_column,
-            'adults' => $total_adults,
-            'children' => $total_children,
-            'rooms_data' => json_encode($rooms_data, JSON_UNESCAPED_UNICODE),
-            'guest_name' => $guest_list,
-            'guests_data' => (new GuestDataNormalizer())->toJson($guests_data),
-            'base_price' => $base_price,
-            'total_price' => $total_price,
-            'guest_email' => TypeCoerce::toString($contact['email'] ?? ''),
-            'api_request' => json_encode([
-                'guests' => $guests_data,
-                'contact' => $contact,
-                'rooms_data' => $rooms_data
-            ])
-        ];
-        // Update user_id if now logged in
-        $authNow = TypeCoerce::toStringMap($session['auth'] ?? []);
-        if (!empty($authNow['user_id'])) {
-            $booking_record['user_id'] = TypeCoerce::toInt($authNow['user_id']);
+    // This visitor sending the form again (same hotel, dates and holder within
+    // the hour, no order yet) reuses its booking, every column rewritten.
+    // Another visitor's booking is never found, so never changed.
+    $bookingRepo = _nvt_booking_repo();
+    $existing = $bookingRepo->findExisting($bdHotelId, $check_in, $check_out, $holder_name, $session_id, 1);
+    $booking_id = $existing !== null ? TypeCoerce::toInt($existing['booking_id'] ?? 0) : 0;
+    if ($booking_id > 0) {
+        unset($booking_record['order_id'], $booking_record['session_id']);
+        if ($booking_record['user_id'] === 0) {
+            unset($booking_record['user_id']); // logged out since: keep the account it had
         }
-        // A79: Use BookingRepository for update
-        _nvt_booking_repo()->update($existing_booking_id, $booking_record);
-        $booking_id = $existing_booking_id;
+        $bookingRepo->update($booking_id, $booking_record);
     } else {
-        // Get current user and session info
-        $authNow = TypeCoerce::toStringMap($session['auth'] ?? []);
-        $user_id = TypeCoerce::toInt($authNow['user_id'] ?? 0);
-        $session_id = session_id();
-
-        // Create new booking record in database
-        $booking_record = [
-            'order_id' => 0, // Will be updated when order is placed
-            'user_id' => $user_id,
-            'session_id' => $session_id,
-            'product_id' => $product_id,
-            'hotel_id' => $bdHotelId,
-            'hotel_name' => TypeCoerce::toString($hotel_info['hotel_name'] ?? ''),
-            'package_name' => $package_name,
-            'room_id' => $room_id_column,
-            'room_type' => $room_type_column,
-            'board_id' => $board_id,
-            'check_in' => $check_in,
-            'check_out' => $check_out,
-            'nights' => $nights,
-            'adults' => $total_adults,
-            'children' => $total_children,
-            'children_ages' => $children_ages,
-            'num_rooms' => $num_rooms,
-            'rooms_data' => json_encode($rooms_data, JSON_UNESCAPED_UNICODE),
-            'guest_name' => $guest_list,
-            'holder_name' => $holder_name,
-            'guest_email' => '',  // Will be set from order at checkout
-            'guest_phone' => TypeCoerce::toString($contact['phone'] ?? ''),
-            'guests_data' => (new GuestDataNormalizer())->toJson($guests_data),
-            'base_price' => $base_price,
-            'total_price' => $total_price,
-            'currency' => ConfigProvider::getApiCurrency(),
-            'status' => 'pending',
-            'api_request' => json_encode([
-                'guests' => $guests_data,
-                'contact' => $contact,
-                'rooms_data' => $rooms_data
-            ])
-        ];
-
-        // A79: Use BookingRepository for create
-        $booking_id = _nvt_booking_repo()->create($booking_record);
+        $booking_id = $bookingRepo->create($booking_record);
     }
 
     // travel_bookings sync is handled by BookingRepository::create()/update() above

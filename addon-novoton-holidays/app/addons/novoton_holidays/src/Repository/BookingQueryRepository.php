@@ -98,13 +98,8 @@ class BookingQueryRepository
     }
 
     /**
-     * Find bookings that carry a Novoton reservation reference — the
-     * confirmation id captured at booking time, or the ResNum learned from
-     * resinfo. (A `novoton_reservation_id` column was referenced here
-     * historically but never existed in any schema, so this query errored
-     * on schema-faithful installs; the real reference columns are
-     * novoton_confirm_id / novoton_res_num, same precedence as
-     * ResInfoCommand.)
+     * Find bookings that carry a Novoton reservation number in any of
+     * ReservationNumber::COLUMNS (submission writes novoton_invoice_id).
      *
      * @return list<array<string, mixed>>
      */
@@ -112,7 +107,8 @@ class BookingQueryRepository
     {
         return self::asRowList(db_get_array(
             'SELECT ' . self::LIST_COLUMNS . " FROM ?:novoton_bookings
-             WHERE (novoton_confirm_id IS NOT NULL AND novoton_confirm_id != '')
+             WHERE (novoton_invoice_id IS NOT NULL AND novoton_invoice_id != '')
+                OR (novoton_confirm_id IS NOT NULL AND novoton_confirm_id != '')
                 OR (novoton_res_num IS NOT NULL AND novoton_res_num != '')
              ORDER BY created_at DESC LIMIT ?i",
             $limit,

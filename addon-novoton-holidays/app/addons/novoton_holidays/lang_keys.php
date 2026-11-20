@@ -1370,4 +1370,20 @@ return [
         'en' => 'Type to search a city or region',
         'ro' => 'Scrieți pentru a căuta un oraș sau o regiune',
     ],
+    'novoton_holidays.too_many_searches' => [
+        'en' => 'Too many searches from your connection. Please wait a minute and try again.',
+        'ro' => 'Prea multe căutări de la conexiunea dumneavoastră. Vă rugăm să așteptați un minut și să încercați din nou.',
+    ],
+    'novoton_holidays.too_many_requests' => [
+        'en' => 'Too many requests. Please wait a while and try again.',
+        'ro' => 'Prea multe cereri. Vă rugăm să așteptați puțin și să încercați din nou.',
+    ],
+    'novoton_holidays.too_many_bookings' => [
+        'en' => 'Too many booking requests. Please try again later.',
+        'ro' => 'Prea multe cereri de rezervare. Vă rugăm să încercați mai târziu.',
+    ],
+    'novoton_holidays.price_check_unavailable' => [
+        'en' => 'We could not check the price with the hotel just now. Please try again in a moment.',
+        'ro' => 'Nu am putut verifica prețul cu hotelul în acest moment. Vă rugăm să încercați din nou peste câteva momente.',
+    ],
 ];

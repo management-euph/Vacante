@@ -18,6 +18,31 @@ use Tygh\Addons\TravelCore\Http\ResiliencePolicy;
 
 class NovotonHttpClient implements HttpClientInterface
 {
+    /**
+     * Requests that create something at Novoton: a reservation, a request
+     * for alternatives, a cancellation. Sent again only when the first
+     * attempt never left (NOT_SENT_ERRNOS): a timeout, a cut connection or a
+     * 5xx may come after Novoton made the reservation, and a second one
+     * would be a duplicate at the hotel.
+     */
+    private const array UNSAFE_FUNCTIONS = [
+        Constants::API_FUNCTION_RESERVATION,
+        Constants::API_FUNCTION_HOTEL_REQUEST,
+        Constants::API_FUNCTION_CANCEL,
+    ];
+
+    /** curl errors of a request that never reached Novoton: proxy or host not resolved, no connection, TLS handshake failed. */
+    private const array NOT_SENT_ERRNOS = [5, 6, 7, 35];
+
+    /**
+     * How long a customer's page waits for the gate (RequestGate) before it
+     * gives up: the store shares Novoton's 5-at-once allowance, and a page
+     * that waited for ever held a PHP worker while others kept it busy.
+     * Pages opt in by defining NOVOTON_CUSTOMER_PAGE (novoton_booking.php);
+     * jobs, the checkout's price check and reservations wait their turn.
+     */
+    public const float CUSTOMER_GATE_WAIT = 10.0;
+
     private string $apiUrl;
     private bool $allowInsecureApi;
     private string $apiKey;
@@ -168,6 +193,7 @@ class NovotonHttpClient implements HttpClientInterface
         $lastHttpCode = 0;
         $response = false;
         $attempt = 1;
+        $anyMaybeSent = false;
 
         for (; $attempt <= $this->maxRetries; $attempt++) {
             $ch = curl_init();
@@ -188,7 +214,14 @@ class NovotonHttpClient implements HttpClientInterface
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
 
             // One ticket per attempt, given back before any retry wait.
-            $tickets = $this->gate->acquire();
+            $tickets = self::waitsBriefly($function)
+                ? $this->gate->acquireWithin(self::CUSTOMER_GATE_WAIT)
+                : $this->gate->acquire();
+            if ($tickets === null) {
+                curl_close($ch);
+                $this->lastError = 'Busy: no free slot for a Novoton request within ' . self::CUSTOMER_GATE_WAIT . 's';
+                throw ApiException::busy($function, self::CUSTOMER_GATE_WAIT);
+            }
             try {
                 $response = curl_exec($ch);
             } finally {
@@ -196,6 +229,7 @@ class NovotonHttpClient implements HttpClientInterface
             }
             $lastHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $lastError = curl_error($ch);
+            $lastErrno = curl_errno($ch);
 
             curl_close($ch);
 
@@ -204,7 +238,8 @@ class NovotonHttpClient implements HttpClientInterface
                 break;
             }
 
-            $isRetryable = ResiliencePolicy::isRetryableTransportError($lastError, $lastHttpCode);
+            [$isRetryable, $maybeSent] = self::afterFailure($function, $lastErrno, $lastError, $lastHttpCode);
+            $anyMaybeSent = $anyMaybeSent || $maybeSent;
 
             if ($isRetryable && $attempt < $this->maxRetries) {
                 $delayMs = $this->resilience->delayMsForRetry($attempt);
@@ -236,10 +271,39 @@ class NovotonHttpClient implements HttpClientInterface
                 'http_code' => $lastHttpCode,
                 'circuit_status' => $this->getCircuitStatus(),
             ]);
+            if ($anyMaybeSent && in_array($function, self::UNSAFE_FUNCTIONS, true)) {
+                throw ApiException::maybeProcessed($function, $lastError, $lastHttpCode, $attempts);
+            }
             throw ApiException::requestFailed($function, $lastError, $lastHttpCode, $attempts);
         }
 
         return is_string($response) ? $response : '';
+    }
+
+    /** A customer's page asks a reading request: it gives up on a busy gate (CUSTOMER_GATE_WAIT). */
+    public static function waitsBriefly(string $function): bool
+    {
+        return defined('NOVOTON_CUSTOMER_PAGE') && !in_array($function, self::UNSAFE_FUNCTIONS, true);
+    }
+
+    /**
+     * Whether a failed attempt may be sent again, and whether it may have
+     * reached Novoton.
+     *
+     * A request that creates something (UNSAFE_FUNCTIONS) is sent again only
+     * when it never left; any other failure may have reached Novoton. Other
+     * requests follow the shared retry rule.
+     *
+     * @return array{0: bool, 1: bool} [retry, maybe sent]
+     */
+    public static function afterFailure(string $function, int $errno, string $error, int $httpCode): array
+    {
+        $notSent = $httpCode === 0 && in_array($errno, self::NOT_SENT_ERRNOS, true);
+        if (in_array($function, self::UNSAFE_FUNCTIONS, true)) {
+            return [$notSent, !$notSent];
+        }
+
+        return [ResiliencePolicy::isRetryableTransportError($error, $httpCode), !$notSent];
     }
 
     /**

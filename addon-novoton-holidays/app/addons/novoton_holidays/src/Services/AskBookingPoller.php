@@ -7,6 +7,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 use Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Exceptions\NovotonException;
+use Tygh\Addons\NovotonHolidays\Helpers\ReservationNumber;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\TravelConstants;
@@ -79,8 +80,7 @@ final class AskBookingPoller
 
         foreach ($ask as $booking) {
             $bookingId = TypeCoerce::toInt($booking['booking_id'] ?? 0);
-            $reservation = TypeCoerce::toString($booking['novoton_confirm_id'] ?? '')
-                ?: TypeCoerce::toString($booking['novoton_res_num'] ?? '');
+            $reservation = ReservationNumber::of($booking);
             if ($bookingId <= 0 || $reservation === '') {
                 ($this->output)("Booking #{$bookingId}: no reservation number, skipped.");
                 continue;

@@ -678,13 +678,13 @@
                 <form id="request-alternatives-form" method="post" action="{fn_url('novoton_booking.request_alternatives')}">
                     <input type="hidden" name="security_hash" value="{$security_hash}">
                     <input type="hidden" name="hotel_id" value="{$novoton_params.hotel_id}">
-                    <input type="hidden" name="hotel_name" value="{$hotel_name|escape:'html'}">
                     <input type="hidden" name="check_in" value="{$novoton_params.check_in}">
                     <input type="hidden" name="check_out" value="{$novoton_params.check_out}">
                     <input type="hidden" name="nights" value="{$novoton_params.nights}">
                     <input type="hidden" name="adults" value="{$novoton_params.adults}">
                     <input type="hidden" name="children" value="{$novoton_params.children_count}">
                     <input type="hidden" name="num_rooms" value="{$novoton_params.num_rooms}">
+                    <input type="text" name="website" value="" class="travel-avail-notify__trap" tabindex="-1" autocomplete="off" aria-hidden="true">
 
                     <div class="novoton-form-grid">
                         <div class="novoton-form-field">

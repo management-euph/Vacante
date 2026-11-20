@@ -27,6 +27,7 @@ use Tygh\Addons\NovotonHolidays\Api\Contracts\ReservationApiClientInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\NovotonException;
+use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 use Tygh\Addons\NovotonHolidays\Helpers\BookingRoomAssembler;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
@@ -99,15 +100,15 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
 
             // Once submitted, a booking is linked to its order. CS-Cart runs
             // place_order_post again for the same cart (order edits, the parent
-            // after its vendor sub-orders): a second reservation would be a
-            // duplicate at the hotel, so a linked booking is never resent.
-            $linkedOrderId = $this->linkedOrderId($originalBookingId);
-            if ($linkedOrderId > 0) {
+            // after its vendor sub-orders), and two place-order requests can run
+            // at once: a second reservation would be a duplicate at the hotel.
+            // So the booking is claimed for this order first, atomically, and
+            // only the request that claimed it sends it.
+            if (!$this->bookingRepo->claimForOrder($originalBookingId, $orderId)) {
                 if ($debugLogging) {
                     fn_log_event('general', 'runtime', [
-                        'message' => 'Novoton - Booking already submitted, skipped',
+                        'message' => 'Novoton - Booking already linked to an order (or gone), not sent',
                         'booking_id' => $originalBookingId,
-                        'linked_order_id' => $linkedOrderId,
                         'order_id' => $orderId,
                     ]);
                 }
@@ -154,12 +155,17 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
             // spanning the API calls — a remote reservation cannot be undone by a
             // DB ROLLBACK, and keeping a transaction open across the network round
             // trip would lock the booking rows for the entire API call.
-            try {
-                $groupNum = 0;
+            // A group that fails is recorded on its own row and the next group
+            // is still sent: one group's error never marks another group's
+            // (possibly confirmed) row failed.
+            $groupNum = 0;
+            $groupCount = count($roomGroups);
 
-                foreach ($roomGroups as $group) {
-                    $groupNum++;
+            foreach ($roomGroups as $group) {
+                $groupNum++;
+                $bookingId = 0;
 
+                try {
                     // 4. Build per-group guest list + API payload
                     [$allGuests, $apiRooms, $totalApiPrice, $totalGroupPrice] =
                         $this->roomAssembler->buildGroupGuestsAndRooms($group, $guestsData, $bookingData, $commission);
@@ -171,7 +177,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
                         $bookingData,
                         $orderId,
                         $groupNum,
-                        count($roomGroups),
+                        $groupCount,
                         $orderComment,
                     );
 
@@ -183,7 +189,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
                         $product,
                         $orderId,
                         $groupNum,
-                        count($roomGroups),
+                        $groupCount,
                         $totalApiPrice,
                         $totalGroupPrice,
                         $apiData,
@@ -202,7 +208,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
                             'message' => 'Novoton Booking - API Request Prepared',
                             'order_id' => $orderId,
                             'booking_id' => $bookingId,
-                            'group' => $groupNum . ' of ' . count($roomGroups),
+                            'group' => $groupNum . ' of ' . $groupCount,
                             'rooms_in_group' => count($group['rooms']),
                             'api_disabled' => $disableApi ? 'YES' : 'NO',
                         ]);
@@ -218,55 +224,10 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
                         $disableApi,
                         $debugLogging,
                     );
+                } catch (\Throwable $e) {
+                    // Before its row existed, group 1's row is the cart booking.
+                    $this->recordGroupFailure($e, $bookingId > 0 ? $bookingId : ($groupNum === 1 ? $originalBookingId : 0), $originalBookingId, $orderId, $groupNum, $groupCount);
                 }
-
-            } catch (ApiException $e) {
-                // Per-group booking rows are already committed by their own atomic
-                // writes; flag the parent booking failed so the error is visible.
-                if ($originalBookingId > 0) {
-                    $this->bookingRepo->update($originalBookingId, [
-                        'status' => TravelConstants::STATUS_FAILED,
-                        'order_id' => $orderId,
-                        'notes' => 'API Error (' . $e->getApiFunction() . ', HTTP ' . $e->getHttpCode() . '): ' . $e->getMessage(),
-                    ]);
-                }
-
-                fn_log_event('general', 'runtime', [
-                    'message' => 'Novoton Booking submission failed (API error)',
-                    'order_id' => $orderId,
-                    'api_function' => $e->getApiFunction(),
-                    'http_code' => $e->getHttpCode(),
-                    'error' => $e->getMessage(),
-                ]);
-            } catch (NovotonException $e) {
-                if ($originalBookingId > 0) {
-                    $this->bookingRepo->update($originalBookingId, [
-                        'status' => TravelConstants::STATUS_FAILED,
-                        'order_id' => $orderId,
-                        'notes' => 'Booking error (' . json_encode($e->getContext()) . '): ' . $e->getMessage(),
-                    ]);
-                }
-
-                fn_log_event('general', 'runtime', [
-                    'message' => 'Novoton Booking submission failed',
-                    'order_id' => $orderId,
-                    'context' => $e->getContext(),
-                    'error' => $e->getMessage(),
-                ]);
-            } catch (\Throwable $e) {
-                if ($originalBookingId > 0) {
-                    $this->bookingRepo->update($originalBookingId, [
-                        'status' => TravelConstants::STATUS_FAILED,
-                        'order_id' => $orderId,
-                        'notes' => 'Unexpected error: ' . $e->getMessage(),
-                    ]);
-                }
-
-                fn_log_event('general', 'runtime', [
-                    'message' => 'Novoton Booking submission failed (unexpected)',
-                    'order_id' => $orderId,
-                    'error' => $e->getMessage(),
-                ]);
             }
         }
     }
@@ -276,17 +237,38 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
     // =========================================================================
 
     /**
-     * The order a cart booking is already linked to; 0 when it is not (or
-     * has no row yet).
+     * A room group that failed before or while it was sent: its own row is
+     * marked failed with the reason. A group whose row was never written
+     * leaves a note on the cart booking's row (its status untouched: that
+     * group may be booked) and the error in the log.
      */
-    private function linkedOrderId(int $bookingId): int
+    private function recordGroupFailure(\Throwable $e, int $rowId, int $originalBookingId, int $orderId, int $groupNum, int $groupCount): void
     {
-        if ($bookingId <= 0) {
-            return 0;
-        }
-        $row = $this->bookingRepo->findById($bookingId);
+        $reason = match (true) {
+            $e instanceof ApiException => 'API Error (' . $e->getApiFunction() . ', HTTP ' . $e->getHttpCode() . '): ' . $e->getMessage(),
+            $e instanceof NovotonException => 'Booking error (' . json_encode($e->getContext()) . '): ' . $e->getMessage(),
+            default => 'Unexpected error: ' . $e->getMessage(),
+        };
 
-        return PriceInfoFormatter::toInt($row['order_id'] ?? 0);
+        if ($rowId > 0) {
+            $this->bookingRepo->update($rowId, [
+                'status' => TravelConstants::STATUS_FAILED,
+                'order_id' => $orderId,
+                'notes' => $reason,
+            ]);
+        } elseif ($originalBookingId > 0) {
+            $this->bookingRepo->update($originalBookingId, [
+                'notes' => "Room group {$groupNum} of {$groupCount} was not sent: {$reason}",
+            ]);
+        }
+
+        fn_log_event('general', 'runtime', [
+            'message' => 'Novoton Booking submission failed',
+            'order_id' => $orderId,
+            'booking_id' => $rowId,
+            'group' => $groupNum . ' of ' . $groupCount,
+            'error' => $reason,
+        ]);
     }
 
     /**
@@ -392,6 +374,8 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
             return;
         }
 
+        $orderNum = TypeCoerce::toString($apiData['order_num'] ?? '');
+
         try {
             $response = $this->reservations->createReservation($apiData);
 
@@ -412,9 +396,17 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
                 ]),
             ];
 
-            // Map API status to internal status via centralized constant
+            // Map API status to internal status via centralized constant.
+            // An answer without a reservation number booked nothing that can
+            // be looked up: failed, with the reference to check it by, never
+            // a silent "pending".
             $statusMap = Constants::NOVOTON_STATUS_TO_INTERNAL;
-            if (isset($statusMap[$novotonStatus])) {
+            if ($novotonId === '' || $novotonId === '0') {
+                $update['status'] = TravelConstants::STATUS_FAILED;
+                $update['notes'] = 'Novoton answered without a reservation number (Status: '
+                    . ($novotonStatus !== '' ? $novotonStatus : 'none')
+                    . '). Check OrderNum ' . $orderNum . ' with Novoton before booking again.';
+            } elseif (isset($statusMap[$novotonStatus])) {
                 $update['status'] = $statusMap[$novotonStatus];
             }
 
@@ -444,15 +436,34 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
                 ]);
             }
         } catch (ApiException $e) {
+            // A reservation that may have reached Novoton was not sent again
+            // (NovotonHttpClient): whether it exists is checked there first.
             $this->bookingRepo->update($bookingId, [
                 'status' => TravelConstants::STATUS_FAILED,
-                'notes' => 'API Error (' . $e->getApiFunction() . ', HTTP ' . $e->getHttpCode() . '): ' . $e->getMessage(),
+                'notes' => 'API Error (' . $e->getApiFunction() . ', HTTP ' . $e->getHttpCode() . '): ' . $e->getMessage()
+                    . ($e->mayHaveReachedNovoton() ? '. The reservation may exist: check OrderNum ' . $orderNum . ' with Novoton before booking again.' : ''),
             ]);
 
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton Booking API Error',
                 'order_id' => $orderId,
                 'group' => $groupNum,
+                'error' => $e->getMessage(),
+            ]);
+        } catch (XmlParsingException $e) {
+            // The request reached Novoton; its answer could not be read, so
+            // the reservation may exist there.
+            $this->bookingRepo->update($bookingId, [
+                'status' => TravelConstants::STATUS_FAILED,
+                'notes' => "Novoton's answer could not be read (" . $e->getMessage() . '). The reservation may exist: check OrderNum '
+                    . $orderNum . ' with Novoton before booking again.',
+            ]);
+
+            fn_log_event('general', 'runtime', [
+                'message' => 'Novoton Booking - unreadable reservation answer',
+                'order_id' => $orderId,
+                'group' => $groupNum,
+                'order_num' => $orderNum,
                 'error' => $e->getMessage(),
             ]);
         }

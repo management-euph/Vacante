@@ -162,7 +162,7 @@ function fn_novoton_holidays_checkout_pre_dispatch(array &$cart, array &$auth, ?
 {
     $view = fn_novoton_holidays_get_view();
 
-    if (fn_novoton_holidays_is_debug()) {
+    if (\Tygh\Addons\NovotonHolidays\Helpers\StorefrontDebug::forThisVisitor()) {
         $view->assign('novoton_checkout_debug', true);
         $view->assign('novoton_debug_cart_products', $cart['products'] ?? []);
     }

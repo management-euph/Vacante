@@ -12,9 +12,10 @@ use PHPUnit\Framework\TestCase;
  * History: queries and writers referenced a `novoton_reservation_id` column
  * that NO schema ever created — the bulk reservation-status check died with
  * "Unknown column" on schema-faithful installs, and the RQ-alternatives cron
- * silently skipped every booking ("no reservation ID"). The real reference
- * columns are novoton_confirm_id (from booking) and novoton_res_num (from
- * resinfo), with confirm-id precedence as codified by ResInfoCommand.
+ * silently skipped every booking ("no reservation ID"). The fix then read
+ * novoton_confirm_id and novoton_res_num, which nothing writes either:
+ * submission keeps hotel_res_RQ's IdNum in novoton_invoice_id, so every job
+ * that asks Novoton about a booking reads it through ReservationNumber.
  */
 final class BookingReservationRefTest extends TestCase
 {
@@ -31,20 +32,22 @@ final class BookingReservationRefTest extends TestCase
         $src = self::read('src/Repository/BookingQueryRepository.php');
 
         self::assertStringNotContainsString(', novoton_reservation_id FROM', $src);
+        self::assertStringContainsString("novoton_invoice_id IS NOT NULL AND novoton_invoice_id != ''", $src);
         self::assertStringContainsString("novoton_confirm_id IS NOT NULL AND novoton_confirm_id != ''", $src);
         self::assertStringContainsString("novoton_res_num IS NOT NULL AND novoton_res_num != ''", $src);
     }
 
-    public function testStatusCheckAndAlternativesUseConfirmIdThenResNum(): void
+    public function testEveryJobThatAsksNovotonReadsTheNumberSubmissionWrites(): void
     {
-        $bookings = self::read('functions/bookings.php');
-        self::assertStringContainsString("\$booking['novoton_confirm_id'] ?? ''", $bookings);
-        self::assertStringContainsString("\$booking['novoton_res_num'] ?? ''", $bookings);
-        self::assertStringNotContainsString("\$booking['novoton_reservation_id']", $bookings);
+        $submission = self::read('src/Services/BookingSubmissionService.php');
+        self::assertStringContainsString("'novoton_invoice_id' => \$novotonId", $submission);
 
-        $alternatives = self::read('src/Cron/Commands/AlternativesCommand.php');
-        self::assertStringContainsString("novoton_confirm_id", $alternatives);
-        self::assertStringNotContainsString("\$booking['novoton_reservation_id']", $alternatives);
+        foreach (['functions/bookings.php', 'src/Cron/Commands/AlternativesCommand.php', 'src/Services/AskBookingPoller.php'] as $file) {
+            $src = self::read($file);
+            self::assertStringContainsString('ReservationNumber::of($booking)', $src, $file);
+            self::assertStringNotContainsString("\$booking['novoton_confirm_id']", $src, $file);
+            self::assertStringNotContainsString("\$booking['novoton_reservation_id']", $src, $file);
+        }
     }
 
     public function testDeadPhantomColumnWriterIsGone(): void

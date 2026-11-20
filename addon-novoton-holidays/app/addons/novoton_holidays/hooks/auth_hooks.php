@@ -5,10 +5,13 @@ declare(strict_types=1);
  *
  * Responsible for:
  *   - user_login_post: Link session bookings to user account on login
- *   - create_user_post: Link bookings by email on registration
+ *   - create_user_post: the same on registration
  *
- * When a guest creates a booking and later logs in (or registers), these
- * hooks ensure the booking rows are associated with the authenticated user.
+ * When a guest creates a booking and later logs in (or registers) in the same
+ * browser session, these hooks associate the booking rows with the account.
+ * Never by e-mail: CS-Cart does not verify the address an account is opened
+ * with, so anyone could register a guest's address and read their bookings
+ * (names, birth dates, contact details). Sphinx and Eurosite do the same.
  *
  * @package NovotonHolidays
  * @since   3.0.0
@@ -22,8 +25,8 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 /**
  * Hook: After user login - link session bookings to user account.
  *
- * Links by session_id first (exact match for current browser session),
- * then by email (catches bookings from other devices).
+ * Links the bookings made in this browser session (see the file header for
+ * why not by e-mail).
  *
  * @param array<string, mixed> $user_data User profile data
  * @param array<string, mixed> $auth      Authentication context
@@ -51,54 +54,27 @@ function fn_novoton_holidays_user_login_post($user_data, $auth): void
             ]);
         }
     }
-
-    // Link by email (repository syncs to travel_bookings automatically)
-    if (!empty($user_data['email'])) {
-        $updated_by_email = $repo->linkToUserByEmail($user_id, TypeCoerce::toString($user_data['email']));
-
-        if ($updated_by_email > 0) {
-            fn_log_event('general', 'runtime', [
-                'message'         => 'Novoton: Linked email bookings to user on login',
-                'user_id'         => $user_id,
-                'email'           => $user_data['email'],
-                'bookings_linked' => $updated_by_email,
-            ]);
-        }
-    }
 }
 
 /**
- * Hook: After user registration - link bookings by email and session.
+ * Hook: After user registration - link this session's bookings.
  *
- * CS-Cart passes: ($user_id, $user_data, $auth)
+ * CS-Cart passes ($user_id, $user_data, $auth); only the id is needed.
  *
- * @param int   $user_id   Newly created user ID
- * @param array<string, mixed> $user_data Newly created user data (includes email)
- * @param array<string, mixed> $auth      Authentication context
+ * @param int $user_id Newly created user ID
  */
-function fn_novoton_holidays_create_user_post($user_id, $user_data, $auth): void
+function fn_novoton_holidays_create_user_post($user_id): void
 {
-    if (empty($user_id) || empty($user_data['email'])) {
+    $session_id = session_id();
+    if (empty($user_id) || empty($session_id)) {
         return;
     }
 
-    $user_id = (int)$user_id;
-    $repo    = Container::getInstance()->bookingRepository();
-
-    // Link by email
-    $updated = $repo->linkToUserByEmail($user_id, TypeCoerce::toString($user_data['email']));
-
-    // Link by current session
-    $session_id = session_id();
-    if (!empty($session_id)) {
-        $repo->linkToUserBySession($user_id, $session_id);
-    }
-
+    $updated = Container::getInstance()->bookingRepository()->linkToUserBySession((int)$user_id, $session_id);
     if ($updated > 0) {
         fn_log_event('general', 'runtime', [
-            'message'         => 'Novoton: Linked bookings to new user account',
-            'user_id'         => $user_id,
-            'email'           => $user_data['email'],
+            'message'         => 'Novoton: Linked session bookings to new user account',
+            'user_id'         => (int)$user_id,
             'bookings_linked' => $updated,
         ]);
     }

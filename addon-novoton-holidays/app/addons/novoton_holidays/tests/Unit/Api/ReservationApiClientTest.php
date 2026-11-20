@@ -66,9 +66,14 @@ final class ReservationApiClientTest extends TestCase
         );
 
         return new class ($http, new NovotonXmlParser(), null, false) extends ReservationApiClient {
+            /** What was sent to Novoton. */
+            public string $sent = '';
+
             #[\Override]
             protected function callApi(string $function, string $xml, string $lang = 'UK'): string
             {
+                $this->sent = $xml;
+
                 return '<hotel_res_RS><IdNum>311921</IdNum><Status>Good</Status></hotel_res_RS>';
             }
         };
@@ -80,10 +85,13 @@ final class ReservationApiClientTest extends TestCase
         $client->createReservation(self::BOOKING);
         $shown = $client->generateReservationXml(self::BOOKING);
 
-        self::assertStringContainsString(self::LOGIN, $client->lastRequest, 'what goes to Novoton carries the login');
-        self::assertSame(str_replace(self::LOGIN, '<usr>*****</usr><psw>*****</psw>', $client->lastRequest), $shown);
-        self::assertStringNotContainsString('agent-7', $shown);
-        self::assertStringNotContainsString('s3cr', $shown);
+        self::assertStringContainsString(self::LOGIN, $client->sent, 'what goes to Novoton carries the login');
+        self::assertSame(str_replace(self::LOGIN, '<usr>*****</usr><psw>*****</psw>', $client->sent), $shown);
+        self::assertSame($shown, $client->lastRequest, 'the request kept for debugging is the masked one');
+        foreach ([$shown, $client->lastRequest] as $kept) {
+            self::assertStringNotContainsString('agent-7', $kept);
+            self::assertStringNotContainsString('s3cr', $kept);
+        }
     }
 
     public function testBuildingTheRequestSendsNothing(): void

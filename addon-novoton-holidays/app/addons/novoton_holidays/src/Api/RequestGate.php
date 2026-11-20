@@ -92,6 +92,26 @@ final class RequestGate
      */
     public function acquire(int $want = 1): array
     {
+        return $this->acquireUntil(null, $want) ?? [];
+    }
+
+    /**
+     * acquire(), giving up after $seconds: null when no ticket came free in
+     * time. A customer's page waits a few seconds at most, instead of
+     * holding a PHP worker for as long as others keep the gate busy.
+     *
+     * @return list<string>|null
+     */
+    public function acquireWithin(float $seconds, int $want = 1): ?array
+    {
+        return $this->acquireUntil(($this->clock)() + max(0.0, $seconds), $want);
+    }
+
+    /**
+     * @return list<string>|null null once $deadline passed without a ticket
+     */
+    private function acquireUntil(?float $deadline, int $want): ?array
+    {
         $want = max(1, min($this->maxConcurrent, $want));
         while (true) {
             if ($this->broken) {
@@ -124,6 +144,9 @@ final class RequestGate
             });
             if ($tickets !== []) {
                 return $tickets;
+            }
+            if ($deadline !== null && ($this->clock)() >= $deadline) {
+                return null;
             }
             ($this->sleep)(max(0.01, min(self::POLL * 10, $wait)));
         }

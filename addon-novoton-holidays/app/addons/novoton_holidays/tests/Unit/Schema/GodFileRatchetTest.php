@@ -21,8 +21,8 @@ final class GodFileRatchetTest extends TestCase
         'functions/hotels.php' => 800,
         'functions/formatting.php' => 340,
         'functions/install.php' => 720,
-        'controllers/backend/novoton_prices.php' => 738,
-        'controllers/frontend/novoton_booking/add_to_cart.php' => 588,
+        'controllers/backend/novoton_prices.php' => 723,
+        'controllers/frontend/novoton_booking/add_to_cart.php' => 554,
         'functions/email.php' => 684,
         'controllers/backend/novoton_tools.php' => 669,
     ];

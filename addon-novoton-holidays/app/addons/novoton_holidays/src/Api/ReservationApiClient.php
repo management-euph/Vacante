@@ -22,15 +22,17 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
     {
         $xml = $this->buildReservationXml($bookingData);
 
-        $this->lastRequest = $xml;
+        $this->lastRequest = $this->maskCredentials($xml);
 
-        DebugLogger::log('Novoton hotel_res_RQ Request (Test Mode: ' . (ConfigProvider::isTestBooking() ? 'YES' : 'NO') . ')', ['xml' => $this->maskCredentials($xml)]);
+        DebugLogger::log('Novoton hotel_res_RQ Request (Test Mode: ' . (ConfigProvider::isTestBooking() ? 'YES' : 'NO') . ')', ['xml' => $this->lastRequest]);
 
-        $response = $this->callApi(Constants::API_FUNCTION_RESERVATION, $xml, TypeCoerce::toString($bookingData['lang'] ?? 'UK'));
+        // A refusal (<error><err>…</err></error>, e.g. a wrong password or a
+        // room no longer bookable) throws ApiException: it booked nothing.
+        $reply = $this->callApiForAnswer(Constants::API_FUNCTION_RESERVATION, $xml, TypeCoerce::toString($bookingData['lang'] ?? 'UK'));
 
-        DebugLogger::log('Novoton hotel_res_RQ Response', ['response' => $response]);
+        DebugLogger::log('Novoton hotel_res_RQ Response', ['response' => $this->lastResponse]);
 
-        return $this->xmlParser->parse($response);
+        return $reply;
     }
 
     /**

@@ -56,6 +56,33 @@ class ApiException extends NovotonException
         );
     }
 
+    /** A customer's page gave up waiting for a free slot (NovotonHttpClient::CUSTOMER_GATE_WAIT); nothing was sent. */
+    public static function busy(string $function, float $waited): self
+    {
+        return new self("Novoton is busy: no free request slot within {$waited}s", $function, 503, ['busy' => true]);
+    }
+
+    /**
+     * A request that creates something (a reservation) failed after it may
+     * have reached Novoton: a timeout, a cut connection, an error status. It
+     * was not sent again; whether Novoton made it is to be checked there.
+     */
+    public static function maybeProcessed(string $function, string $error, int $httpCode, int $attempts): self
+    {
+        return new self(
+            "API request failed after {$attempts} attempts, and Novoton may have received it: {$error}",
+            $function,
+            $httpCode,
+            ['attempts' => $attempts, 'maybe_processed' => true],
+        );
+    }
+
+    /** True when Novoton may have acted on the request (maybeProcessed()). */
+    public function mayHaveReachedNovoton(): bool
+    {
+        return ($this->getContext()['maybe_processed'] ?? false) === true;
+    }
+
     /** Novoton answered with a refusal (Api\Refusal), e.g. a wrong username or password. */
     public static function refused(string $function, string $reason): self
     {

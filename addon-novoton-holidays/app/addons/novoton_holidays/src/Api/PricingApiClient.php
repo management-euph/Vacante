@@ -258,7 +258,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
         }
 
         $xml = $this->buildRoomPriceXml($params);
-        $this->lastRequest = $xml;
+        $this->lastRequest = $this->maskCredentials($xml);
 
         $response = $this->callApi(Constants::API_FUNCTION_ROOM_PRICE, $xml, TypeCoerce::toString($params['lang'] ?? 'UK'));
 
@@ -269,8 +269,11 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
             return false;
         }
 
+        // "No availability" is cached too, for the same few minutes: the
+        // alternative-dates search asks up to 20 dates, and each repeated
+        // search asked them all again. A refusal (a wrong password) is not.
         $prices = $result->xpath('//Price');
-        if (!empty($prices)) {
+        if (!empty($prices) || Refusal::reason($result) === null) {
             $this->saveToCache(Constants::API_FUNCTION_ROOM_PRICE, $cacheKey, $response);
         }
 
@@ -322,7 +325,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
             <Important>Yes</Important>
         </room_price>';
 
-        $this->lastRequest = $xml;
+        $this->lastRequest = $this->maskCredentials($xml);
         $this->lastRequestFormatted = [
             'resort' => $resort,
             'check_in' => $checkIn,
@@ -414,7 +417,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
             <Important>Yes</Important>
         </room_price>';
 
-        $this->lastRequest = $xml;
+        $this->lastRequest = $this->maskCredentials($xml);
         return $this->callApi(Constants::API_FUNCTION_ROOM_PRICE, $xml, TypeCoerce::toString($params['lang'] ?? 'UK'));
     }
 

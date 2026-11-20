@@ -36,6 +36,7 @@ final class BookingSubmissionServiceRefusalTest extends TestCase
             'guests_data' => ['room1_adult_1' => ['api_name' => 'Ana Pop', 'age' => 40], 'room1_adult_2' => ['api_name' => 'Ion Pop', 'age' => 40]],
         ];
         $repo = $this->createMock(BookingRepositoryInterface::class);
+        $repo->method('claimForOrder')->willReturn(true);
         $repo->method('findById')->willReturn($row);
         $repo->method('findByIdHydrated')->willReturn($row);
         $repo->method('update')->willReturn(true);

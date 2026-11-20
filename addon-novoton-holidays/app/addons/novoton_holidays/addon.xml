@@ -233,7 +233,7 @@
                     </item>
                     <item id="test_booking">
                         <type>checkbox</type>
-                        <default_value>Y</default_value>
+                        <default_value>N</default_value>
                         <variants/>
                     </item>
                     <item id="disable_api_submission">
@@ -243,7 +243,7 @@
                     </item>
                     <item id="debug_logging">
                         <type>checkbox</type>
-                        <default_value>Y</default_value>
+                        <default_value>N</default_value>
                         <variants/>
                     </item>
                     <item id="debug_mode">
